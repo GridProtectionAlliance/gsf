@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents a temperature, in kelvin, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a temperature in kelvin; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a temperature in kelvin; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other temperature representations, specifically
     /// Celsius, Fahrenheit, Newton, Rankine, Delisle, Réaumur and Rømer.
     /// <example>
@@ -86,7 +86,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Temperature : IComparable, IFormattable, IConvertible, IComparable<Temperature>, IComparable<Double>, IEquatable<Temperature>, IEquatable<Double>
     {
         #region [ Members ]
@@ -121,7 +121,7 @@ namespace GSF.Units
         private const double RømerStep = -7.5D;
 
         // Fields
-        private double m_value; // Temperature value stored in kelvin
+        private readonly double m_value; // Temperature value stored in kelvin
 
         #endregion
 
@@ -770,7 +770,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Temperature"/> object as the left hand operand.</param>
         /// <param name="value2">A <see cref="Temperature"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result of the operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Temperature value1, Temperature value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

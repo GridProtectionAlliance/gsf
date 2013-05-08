@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Cipher.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -129,7 +129,7 @@ namespace GSF.Security.Cryptography
 
             // Internal key and initialization vector table
             private Dictionary<string, byte[][]> m_keyIVTable = new Dictionary<string, byte[][]>();
-            private object m_keyIVTableLock = new object();
+            private readonly object m_keyIVTableLock = new object();
 
             // Flag to choose between AesManaged and AesCryptoServiceProvider for encryption
             private bool m_managedEncryption;
@@ -222,7 +222,7 @@ namespace GSF.Security.Cryptography
 
                         key = symmetricAlgorithm.Key;
                         iv = symmetricAlgorithm.IV;
-                        keyIV = new byte[][] { key, iv };
+                        keyIV = new[] { key, iv };
 
                         // Add new crypto key to key table
                         m_keyIVTable.Add(hash, keyIV);
@@ -282,7 +282,7 @@ namespace GSF.Security.Cryptography
                     byte[] iv = Convert.FromBase64String(keyIV[IVIndex]);
 
                     // Assign new crypto key to key table
-                    m_keyIVTable[hash] = new byte[][] { key, iv };
+                    m_keyIVTable[hash] = new[] { key, iv };
                 }
 
                 // Queue up a serialization for this new key
@@ -417,13 +417,13 @@ namespace GSF.Security.Cryptography
         }
 
         // Primary cryptographic key and initialization vector cache.
-        private static KeyIVCache s_keyIVCache;
+        private static readonly KeyIVCache s_keyIVCache;
 
         // Password hash table (run-time optimization)
-        private static Dictionary<string, string> s_passwordHash = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> s_passwordHash = new Dictionary<string, string>();
 
         // Switch to turn off managed encryption and use wrappers over FIPS-compliant algorithms.
-        private static bool s_managedEncryption;
+        private static readonly bool s_managedEncryption;
 
         /// <summary>
         /// Static constructor for the <see cref="Cipher"/> class.
@@ -453,8 +453,8 @@ namespace GSF.Security.Cryptography
             s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
-            localKeyIVCache = new KeyIVCache()
-            {
+            localKeyIVCache = new KeyIVCache
+                {
                 FileName = localCacheFileName,
                 RetryDelayInterval = retryDelayInterval,
                 MaximumRetryAttempts = maximumRetryAttempts,
@@ -503,8 +503,8 @@ namespace GSF.Security.Cryptography
                     File.Copy(localCacheFileName, userCacheFileName);
 
                 // Initialize primary cryptographic key and initialization vector cache within user folder
-                s_keyIVCache = new KeyIVCache()
-                {
+                s_keyIVCache = new KeyIVCache
+                    {
                     FileName = userCacheFileName,
                     RetryDelayInterval = retryDelayInterval,
                     MaximumRetryAttempts = maximumRetryAttempts,
@@ -586,8 +586,8 @@ namespace GSF.Security.Cryptography
                 maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
                 // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
-                commonKeyIVCache = new KeyIVCache()
-                {
+                commonKeyIVCache = new KeyIVCache
+                    {
                     FileName = commonCacheFileName,
                     RetryDelayInterval = retryDelayInterval,
                     MaximumRetryAttempts = maximumRetryAttempts,

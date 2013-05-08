@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataExtensions.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -1155,7 +1155,7 @@ namespace GSF.Data
         /// <param name="row">The input <see cref="DataRow"/>, which acts as the this instance for the extension method.</param>
         /// <param name="field">The name of the column to return the value of.</param>
         /// <returns>The value, of type T, of the <see cref="DataColumn"/> specified by columnName.</returns>
-        public static Nullable<T> ConvertNullableField<T>(this DataRow row, string field) where T : struct
+        public static T? ConvertNullableField<T>(this DataRow row, string field) where T : struct
         {
             object value = row.Field<object>(field);
 
@@ -1226,7 +1226,7 @@ namespace GSF.Data
         /// <param name="parameters">The remaining parameter values to populate the <see cref="OleDbCommand"/> parameters with.</param>
         public static void PopulateParameters(this OleDbCommand command, object parameter1, params object[] parameters)
         {
-            command.PopulateParameters((new object[] { parameter1 }).Concat(parameters).ToArray());
+            command.PopulateParameters((new[] { parameter1 }).Concat(parameters).ToArray());
         }
 
         /// <summary>
@@ -1252,7 +1252,7 @@ namespace GSF.Data
         /// <param name="parameters">The remaining parameter values to populate the <see cref="OdbcCommand"/> parameters with.</param>
         public static void PopulateParameters(this OdbcCommand command, object parameter1, params object[] parameters)
         {
-            command.PopulateParameters((new object[] { parameter1 }).Concat(parameters).ToArray());
+            command.PopulateParameters((new[] { parameter1 }).Concat(parameters).ToArray());
         }
 
         /// <summary>
@@ -1278,7 +1278,7 @@ namespace GSF.Data
         /// <param name="parameters">The remaining parameter values to populate the <see cref="SqlCommand"/> parameters with.</param>
         public static void PopulateParameters(this SqlCommand command, object parameter1, params object[] parameters)
         {
-            command.PopulateParameters((new object[] { parameter1 }).Concat(parameters).ToArray());
+            command.PopulateParameters((new[] { parameter1 }).Concat(parameters).ToArray());
         }
 
         /// <summary>
@@ -1495,7 +1495,7 @@ namespace GSF.Data
             pattern = Regex.Escape(delimiter) + "(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))";
 
             // Remove any leading and trailing whitespaces, carriage returns or line feeds.
-            delimitedData = delimitedData.Trim().Trim(new char[] { '\r', '\n' }).Replace("\n", "");
+            delimitedData = delimitedData.Trim().Trim(new[] { '\r', '\n' }).Replace("\n", "");
 
             string[] lines = delimitedData.Split('\r'); //Splits delimited data into lines.
 
@@ -1510,7 +1510,7 @@ namespace GSF.Data
                 // Uses the first row as header row.
                 for (int i = 0; i < headers.Length; i++)
                 {
-                    table.Columns.Add(new DataColumn(headers[i].Trim(new char[] { '\"' }))); //Remove any leading and trailing quotes from the column name.
+                    table.Columns.Add(new DataColumn(headers[i].Trim(new[] { '\"' }))); //Remove any leading and trailing quotes from the column name.
                 }
                 cursor++;
             }
@@ -1533,7 +1533,7 @@ namespace GSF.Data
                 for (int i = 0; i < fields.Length; i++)
                 {
                     // Removes any leading and trailing quotes from the data.
-                    row[i] = fields[i].Trim(new char[] { '\"' });
+                    row[i] = fields[i].Trim(new[] { '\"' });
                 }
 
                 // Adds the new row.
@@ -1575,7 +1575,7 @@ namespace GSF.Data
                 //Converts data table's data to delimited data.
                 for (int j = 0; j < table.Columns.Count; j++)
                 {
-                    data.Append((quoted ? "\"" : "") + table.Rows[i][j].ToString() + (quoted ? "\"" : ""));
+                    data.Append((quoted ? "\"" : "") + table.Rows[i][j] + (quoted ? "\"" : ""));
 
                     if (j < table.Columns.Count - 1)
                     {

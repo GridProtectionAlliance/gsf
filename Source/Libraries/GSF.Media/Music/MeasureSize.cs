@@ -83,8 +83,8 @@ namespace GSF.Media.Music
         /// <summary>
         /// Creates a new musical measure defined as the number of beats per note value.
         /// </summary>
-        /// <param name="beats">A <see cref="Int32"/> representing the beats.</param>
-        /// <param name="noteValue">A <see cref="Double"/> representing the note value.</param>
+        /// <param name="beats">A <see cref="int"/> representing the beats.</param>
+        /// <param name="noteValue">A <see cref="double"/> representing the note value.</param>
         public MeasureSize(int beats, double noteValue)
         {
             m_beats = beats;
@@ -94,7 +94,7 @@ namespace GSF.Media.Music
         /// <summary>
         /// Creates a new musical measure defined as the number of beats per note value.
         /// </summary>
-        /// <param name="beats">A <see cref="Int32"/> representing the beats.</param>
+        /// <param name="beats">A <see cref="int"/> representing the beats.</param>
         /// <param name="noteValue">A <see cref="NoteValue"/> representing the note value.</param>
         public MeasureSize(int beats, NoteValue noteValue)
         {
@@ -105,7 +105,7 @@ namespace GSF.Media.Music
         /// <summary>
         /// Creates a new musical measure defined as the number of beats per note value.
         /// </summary>
-        /// <param name="beats">A <see cref="Int32"/> representing the beats.</param>
+        /// <param name="beats">A <see cref="int"/> representing the beats.</param>
         /// <param name="noteValue">A <see cref="NoteValueBritish"/> representing the note value.</param>
         public MeasureSize(int beats, NoteValueBritish noteValue)
         {

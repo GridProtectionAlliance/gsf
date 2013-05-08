@@ -201,7 +201,7 @@ namespace GSF
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2)
         {
-            return (new byte[][] { source, other1, other2 }).Combine();
+            return (new[] { source, other1, other2 }).Combine();
         }
 
         /// <summary>
@@ -214,7 +214,7 @@ namespace GSF
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2, byte[] other3)
         {
-            return (new byte[][] { source, other1, other2, other3 }).Combine();
+            return (new[] { source, other1, other2, other3 }).Combine();
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace GSF
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other1, byte[] other2, byte[] other3, byte[] other4)
         {
-            return (new byte[][] { source, other1, other2, other3, other4 }).Combine();
+            return (new[] { source, other1, other2, other3, other4 }).Combine();
         }
 
         /// <summary>

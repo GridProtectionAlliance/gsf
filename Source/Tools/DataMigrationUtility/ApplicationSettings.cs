@@ -27,10 +27,10 @@
 //
 //******************************************************************************************************
 
-using Database;
-using GSF.Configuration;
 using System.ComponentModel;
 using System.Configuration;
+using Database;
+using GSF.Configuration;
 
 /// <summary>
 /// Represent an Application Settings information
@@ -68,7 +68,7 @@ public class ApplicationSettings : CategorizedSettingsBase
     /// <summary>
     /// Get or Set from connection string to this Data Migration Utility
     /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting(), DefaultValue(""), Description("Source connection string.")]
+    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(""), Description("Source connection string.")]
     public string FromConnectionString
     {
         get
@@ -84,7 +84,7 @@ public class ApplicationSettings : CategorizedSettingsBase
     /// <summary>
     /// Get or Set from data Type to this Data Migration Utility
     /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting(), DefaultValue(typeof(DatabaseType), "Unspecified"), Description("Source database type.")]
+    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(typeof(DatabaseType), "Unspecified"), Description("Source database type.")]
     public DatabaseType FromDataType
     {
         get
@@ -101,7 +101,7 @@ public class ApplicationSettings : CategorizedSettingsBase
     /// <summary>
     /// Get or Set To connection string to this Data Migration Utility
     /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting(), DefaultValue(""), Description("Destination connection string.")]
+    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(""), Description("Destination connection string.")]
     public string ToConnectionString
     {
         get
@@ -117,7 +117,7 @@ public class ApplicationSettings : CategorizedSettingsBase
     /// <summary>
     /// Get or Set To Data Type to this Data Migration Utility
     /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting(), DefaultValue(typeof(DatabaseType), "Unspecified"), Description("Destination database type.")]
+    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(typeof(DatabaseType), "Unspecified"), Description("Destination database type.")]
     public DatabaseType ToDataType
     {
         get
@@ -133,7 +133,7 @@ public class ApplicationSettings : CategorizedSettingsBase
     /// <summary>
     /// Get or Set user from connection for RI(referential integrity)
     /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting(), DefaultValue(false), Description("Use source connection string for referential integrity analysis.")]
+    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(false), Description("Use source connection string for referential integrity analysis.")]
     public bool UseFromConnectionForRI
     {
         get
@@ -150,7 +150,7 @@ public class ApplicationSettings : CategorizedSettingsBase
     /// <summary>
     /// Get or set Preserve Primary Key value flag to Data Migration Utility
     /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting(), DefaultValue(false), Description("Preserve value of Primary Key value.")]
+    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(false), Description("Preserve value of Primary Key value.")]
     public bool PreservePrimaryKeyValue
     {
         get

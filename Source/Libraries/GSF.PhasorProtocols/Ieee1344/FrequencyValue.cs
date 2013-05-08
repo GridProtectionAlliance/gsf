@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrequencyValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Runtime.Serialization;
 
@@ -34,7 +33,7 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IFrequencyValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FrequencyValue : FrequencyValueBase
     {
         #region [ Constructors ]

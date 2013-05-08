@@ -42,7 +42,7 @@ namespace GSF.PhasorProtocols.Ieee1344
         #region [ Members ]
 
         // Fields
-        private MemoryStream m_frameQueue;
+        private readonly MemoryStream m_frameQueue;
         private int m_frameCount;
 
         #endregion
@@ -107,9 +107,9 @@ namespace GSF.PhasorProtocols.Ieee1344
         /// <summary>
         /// Appends the current frame image to the frame image collection.
         /// </summary>
-        /// <param name="buffer">A <see cref="Byte"/> array to append to the collection.</param>
-        /// <param name="length">An <see cref="Int32"/> value indicating the number of bytes to read from the <paramref name="buffer"/>.</param>
-        /// <param name="offset">An <see cref="Int32"/> value indicating the offset to read from.</param>
+        /// <param name="buffer">A <see cref="byte"/> array to append to the collection.</param>
+        /// <param name="length">An <see cref="int"/> value indicating the number of bytes to read from the <paramref name="buffer"/>.</param>
+        /// <param name="offset">An <see cref="int"/> value indicating the offset to read from.</param>
         public void AppendFrameImage(byte[] buffer, int offset, int length)
         {
             // Validate CRC of frame image being appended

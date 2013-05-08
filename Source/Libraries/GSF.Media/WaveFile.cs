@@ -61,13 +61,13 @@
 
 #endregion
 
-using GSF.Parsing;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Media;
+using GSF.Parsing;
 
 namespace GSF.Media
 {
@@ -431,10 +431,10 @@ namespace GSF.Media
         #region [ Members ]
 
         // Fields
-        private RiffHeaderChunk m_waveHeader;
-        private WaveFormatChunk m_waveFormat;
-        private WaveDataChunk m_waveData;
-        private ListInfoChunk m_listInfo;
+        private readonly RiffHeaderChunk m_waveHeader;
+        private readonly WaveFormatChunk m_waveFormat;
+        private readonly WaveDataChunk m_waveData;
+        private readonly ListInfoChunk m_listInfo;
 
         #endregion
 
@@ -1005,7 +1005,7 @@ namespace GSF.Media
         public static WaveFile Load(string waveFileName, bool loadData = true)
         {
             FileStream source = File.Open(waveFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            WaveFile waveFile = WaveFile.Load(source, loadData);
+            WaveFile waveFile = Load(source, loadData);
             source.Close();
             return waveFile;
         }

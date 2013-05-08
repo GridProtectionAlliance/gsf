@@ -40,7 +40,7 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the <see cref="SerializableRangeTest"/>s contained in the <see cref="SerializableRangeTestCollection"/>.
         /// </summary>
-        [XmlArray(), DataMember()]
+        [XmlArray, DataMember]
         public SerializableRangeTest[] RangeTests { get; set; }
 
         #endregion

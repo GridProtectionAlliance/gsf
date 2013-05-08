@@ -85,11 +85,11 @@ namespace GSF.Communication
         public const string DefaultConnectionString = "Server=localhost:8888";
 
         // Fields
-        private SimpleCertificateChecker m_defaultCertificateChecker;
+        private readonly SimpleCertificateChecker m_defaultCertificateChecker;
         private ICertificateChecker m_certificateChecker;
         private RemoteCertificateValidationCallback m_remoteCertificateValidationCallback;
         private LocalCertificateSelectionCallback m_localCertificateSelectionCallback;
-        private X509Certificate2Collection m_clientCertificates;
+        private readonly X509Certificate2Collection m_clientCertificates;
         private SslProtocols m_enabledSslProtocols;
         private bool m_checkCertificateRevocation;
         private string m_trustedCertificatesPath;
@@ -102,16 +102,16 @@ namespace GSF.Communication
         private bool m_allowDualStackSocket;
         private int m_connectionAttempts;
         private Socket m_socket;
-        private TransportProvider<SslStream> m_sslClient;
+        private readonly TransportProvider<SslStream> m_sslClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
-        private ConcurrentQueue<TlsClientPayload> m_sendQueue;
+        private readonly ConcurrentQueue<TlsClientPayload> m_sendQueue;
         private SpinLock m_sendLock;
         private int m_maxSendQueueSize;
         private int m_sending;
         private bool m_disposed;
 
-        private EventHandler<SocketAsyncEventArgs> m_connectHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_connectHandler;
 
         #endregion
 

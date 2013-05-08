@@ -45,15 +45,15 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Security;
-using GSF.Web.Hosting;
 using System;
 using System.Net;
 using System.Web;
 using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Web.SessionState;
+using GSF.Configuration;
+using GSF.Security;
+using GSF.Web.Hosting;
 
 namespace GSF.Web
 {
@@ -122,7 +122,7 @@ namespace GSF.Web
         /// </summary>
         private class SessionEnabledHandler : IHttpHandler, IRequiresSessionState
         {
-            public IHttpHandler OriginalHandler;
+            public readonly IHttpHandler OriginalHandler;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="SessionEnabledHandler"/> class.

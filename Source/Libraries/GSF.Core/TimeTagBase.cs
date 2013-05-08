@@ -72,13 +72,13 @@ namespace GSF
     /// <summary>
     /// Represents tha base class for alternate timetag implementations.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IComparable<DateTime>, IEquatable<TimeTagBase>, IEquatable<DateTime>, IFormattable
     {
         #region [ Members ]
 
         // Fields
-        private long m_baseDateOffsetTicks;
+        private readonly long m_baseDateOffsetTicks;
         private double m_seconds;
 
         #endregion
@@ -217,7 +217,7 @@ namespace GSF
         public int CompareTo(TimeTagBase other)
         {
             // Since compared time tags may not have the same base time, we compare using .NET date time.
-            if (object.Equals(other, null))
+            if (Equals(other, null))
                 return 1;
             else
                 return CompareTo(other.ToDateTime());

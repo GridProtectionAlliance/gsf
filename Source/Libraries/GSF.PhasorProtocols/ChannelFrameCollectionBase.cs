@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ChannelFrameCollectionBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,7 +37,7 @@ namespace GSF.PhasorProtocols
     /// Represents a protocol independent collection of <see cref="IChannelFrame"/> objects.
     /// </summary>
     /// <typeparam name="T">Specific <see cref="IChannelFrame"/> type that the <see cref="ChannelFrameCollectionBase{T}"/> contains.</typeparam>
-    [Serializable()]
+    [Serializable]
     public abstract class ChannelFrameCollectionBase<T> : ChannelCollectionBase<T> where T : IChannelFrame
     {
         #region [ Constructors ]
@@ -49,7 +49,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// <paramref name="lastValidIndex"/> is used instead of maximum count so that maximum type values may
         /// be specified as needed. For example, if the protocol specifies a collection with a signed 16-bit
-        /// maximum length you can specify <see cref="Int16.MaxValue"/> (i.e., 32,767) as the last valid index
+        /// maximum length you can specify <see cref="short.MaxValue"/> (i.e., 32,767) as the last valid index
         /// for the collection since total number of items supported would be 32,768.
         /// </remarks>
         protected ChannelFrameCollectionBase(int lastValidIndex)

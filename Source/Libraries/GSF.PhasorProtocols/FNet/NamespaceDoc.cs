@@ -30,7 +30,7 @@ namespace GSF.PhasorProtocols.FNet
     /// <summary>
     /// Contains an implementation of the phasor classes used to parse or generate a stream of data in the F-NET device format.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

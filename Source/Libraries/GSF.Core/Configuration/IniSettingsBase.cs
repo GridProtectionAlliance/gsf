@@ -27,9 +27,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Interop;
 using System;
 using System.ComponentModel;
+using GSF.Interop;
 
 namespace GSF.Configuration
 {

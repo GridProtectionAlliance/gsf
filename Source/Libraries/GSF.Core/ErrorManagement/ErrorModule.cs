@@ -33,6 +33,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Diagnostics;
 using System.Web;
 
@@ -127,7 +128,7 @@ namespace GSF.ErrorManagement
             }
         }
 
-        private void OnError(object sender, System.EventArgs e)
+        private void OnError(object sender, EventArgs e)
         {
             // Log the last encountered exception.
             Logger.Log(HttpContext.Current.Server.GetLastError());
@@ -137,7 +138,7 @@ namespace GSF.ErrorManagement
 
         #region [ Static ]
 
-        private static ErrorLogger s_logger;
+        private static readonly ErrorLogger s_logger;
 
         static ErrorModule()
         {

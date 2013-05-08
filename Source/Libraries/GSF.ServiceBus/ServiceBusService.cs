@@ -35,14 +35,14 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Configuration;
-using GSF.ServiceModel;
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.Text;
 using System.Threading;
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.ServiceModel;
 
 namespace GSF.ServiceBus
 {
@@ -442,9 +442,9 @@ namespace GSF.ServiceBus
                 Registration = registration;
             }
 
-            public Message Message;
+            public readonly Message Message;
 
-            public RegistrationInfo Registration;
+            public readonly RegistrationInfo Registration;
         }
 
         // Constants
@@ -462,12 +462,12 @@ namespace GSF.ServiceBus
         // Fields
         private int m_bufferThreshold;
         private MessageProcessingMode m_processingMode;
-        private Dictionary<string, ClientInfo> m_clients;
-        private Dictionary<string, RegistrationInfo> m_queues;
-        private Dictionary<string, RegistrationInfo> m_topics;
-        private ReaderWriterLockSlim m_clientsLock;
-        private ReaderWriterLockSlim m_queuesLock;
-        private ReaderWriterLockSlim m_topicsLock;
+        private readonly Dictionary<string, ClientInfo> m_clients;
+        private readonly Dictionary<string, RegistrationInfo> m_queues;
+        private readonly Dictionary<string, RegistrationInfo> m_topics;
+        private readonly ReaderWriterLockSlim m_clientsLock;
+        private readonly ReaderWriterLockSlim m_queuesLock;
+        private readonly ReaderWriterLockSlim m_topicsLock;
         private ProcessList<PublishContext> m_publishQueue;
         private long m_discardedMessages;
         private bool m_disposed;
@@ -480,7 +480,6 @@ namespace GSF.ServiceBus
         /// Initializes a new instance of the <see cref="ServiceBusService"/> class.
         /// </summary>
         public ServiceBusService()
-            : base()
         {
             // Override base class settings.
             Singleton = true;

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,18 +33,17 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
-using GSF.Interop;
 using GSF.IO.Checksums;
+using GSF.Interop;
 using GSF.Parsing;
 using GSF.Reflection;
-using GSF;
 
 namespace GSF.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifiableFrameImage<SourceChannel, FrameType>
     {
         #region [ Members ]

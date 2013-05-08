@@ -165,7 +165,7 @@ namespace GSF.Historian.DataServices
         /// <summary>
         /// Gets or sets the <see cref="SerializableTimeSeriesDataPoint"/>s contained in the <see cref="SerializableTimeSeriesData"/>.
         /// </summary>
-        [XmlArray(), DataMember()]
+        [XmlArray, DataMember]
         public SerializableTimeSeriesDataPoint[] TimeSeriesDataPoints { get; set; }
 
         #endregion

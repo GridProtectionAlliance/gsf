@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  IPhasorDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -32,7 +32,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Phasor coordinate formats enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum CoordinateFormat : byte
     {
         /// <summary>
@@ -63,7 +63,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Phasor types enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum PhasorType : byte
     {
         /// <summary>

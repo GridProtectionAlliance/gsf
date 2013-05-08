@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DigitalValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IDigitalValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DigitalValue : DigitalValueBase
     {
         #region [ Constructors ]

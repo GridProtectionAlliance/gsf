@@ -23,15 +23,15 @@
 //
 //******************************************************************************************************
 
-using GSF.Communication;
 using System;
+using GSF.Communication;
 
 namespace GSF.PhasorProtocols
 {
     /// <summary>
     /// Represents information defined in a PMU Connection Tester connection file.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConnectionSettings
     {
         /// <summary>

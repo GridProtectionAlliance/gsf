@@ -44,18 +44,18 @@ namespace Database
         /// <summary>
         ///  Converts value to string, null objects (or DBNull objects) will return an empty string (""). 
         /// </summary>
-        /// <param name="value">Value of <see cref="Object"/> to convert to string.</param>
-        /// <param name="nonNullValue"><see cref="String"/> to return if <paramref name="value"/> is null.</param>
+        /// <param name="value">Value of <see cref="object"/> to convert to string.</param>
+        /// <param name="nonNullValue"><see cref="string"/> to return if <paramref name="value"/> is null.</param>
         /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, <paramref name="nonNullValue"/> will be returned.</returns>
         public static string NotNull(object value, string nonNullValue = null)
         {
             if (nonNullValue == null)
             {
-                return GSF.Common.ToNonNullString<object>(value);
+                return GSF.Common.ToNonNullString(value);
             }
             else
             {
-                return GSF.Common.ToNonNullString<object>(value, nonNullValue);
+                return GSF.Common.ToNonNullString(value, nonNullValue);
             }
         }
 
@@ -71,7 +71,7 @@ namespace Database
 
         private Schema m_sourceSchema;
         private Table m_currentTable;
-        private ArrayList m_fieldList = new ArrayList();
+        private readonly ArrayList m_fieldList = new ArrayList();
         private string m_whereSql;
         private bool m_includeNulls;
 
@@ -204,7 +204,7 @@ namespace Database
         /// set value to current table column value
         /// </summary>
         /// <param name="FieldName">Set <paramref name="FieldValue"/> to <see cref="SourceSchema"/> table's field value</param>
-        /// <param name="FieldValue">Set <see cref="Object"/> value to <paramref name="FieldName"/> of current table</param>
+        /// <param name="FieldValue">Set <see cref="object"/> value to <paramref name="FieldName"/> of current table</param>
         public void SetField(string FieldName, object FieldValue)
         {
             m_currentTable.Fields[FieldName].Value = FieldValue;

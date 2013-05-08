@@ -30,7 +30,7 @@ namespace GSF.ErrorManagement
     /// <summary>
     /// Contains classes used to simplify and standardize error management for applications.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

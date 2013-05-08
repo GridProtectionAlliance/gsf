@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ChannelCellBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -41,7 +41,7 @@ namespace GSF.PhasorProtocols
     /// For example, a <see cref="DataCellBase"/> (dervied from <see cref="ChannelCellBase"/>) could be defined as a PMU
     /// within a frame of data, a <see cref="DataFrameBase"/>, that contains multiple PMU's coming from a PDC.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public abstract class ChannelCellBase : ChannelBase, IChannelCell
     {
         #region [ Members ]

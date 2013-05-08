@@ -23,13 +23,14 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Timers;
 using DataQualityMonitoring.Services;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace DataQualityMonitoring
 {
@@ -42,13 +43,13 @@ namespace DataQualityMonitoring
         #region [ Members ]
 
         // Fields
-        private Dictionary<Ticks, LinkedList<IMeasurement>> m_badTimestampMeasurements;
+        private readonly Dictionary<Ticks, LinkedList<IMeasurement>> m_badTimestampMeasurements;
         private IActionAdapter m_discardingAdapter;
         private int m_totalBadTimestampMeasurements;
         private Ticks m_timeToPurge;
         private Ticks m_warnInterval;
-        private System.Timers.Timer m_purgeTimer;
-        private System.Timers.Timer m_warningTimer;
+        private Timer m_purgeTimer;
+        private Timer m_warningTimer;
         private TimestampService m_timestampService;
         private bool m_disposed;
 
@@ -64,8 +65,8 @@ namespace DataQualityMonitoring
             m_badTimestampMeasurements = new Dictionary<Ticks, LinkedList<IMeasurement>>();
             m_timeToPurge = Ticks.FromSeconds(1.0);
             m_warnInterval = Ticks.FromSeconds(4.0);
-            m_purgeTimer = new System.Timers.Timer();
-            m_warningTimer = new System.Timers.Timer();
+            m_purgeTimer = new Timer();
+            m_warningTimer = new Timer();
         }
 
         #endregion
@@ -403,13 +404,13 @@ namespace DataQualityMonitoring
         }
 
         // Periodically purge measurements to speed up retrieval of data.
-        private void m_purgeTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_purgeTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             PurgeOldMeasurements();
         }
 
         // Periodically send updates to the console about any measurements with bad timestamps.
-        private void m_warningTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_warningTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             int count = GetBadTimestampMeasurementCount();
 

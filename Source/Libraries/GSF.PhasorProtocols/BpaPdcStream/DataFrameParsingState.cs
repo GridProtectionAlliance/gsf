@@ -30,7 +30,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Represents the BPA PDCstream protocol implementation of the parsing state used by a <see cref="DataFrame"/>.
     /// </summary>
-    public class DataFrameParsingState : GSF.PhasorProtocols.DataFrameParsingState
+    public class DataFrameParsingState : PhasorProtocols.DataFrameParsingState
     {
         #region [ Members ]
 

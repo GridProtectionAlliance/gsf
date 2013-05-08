@@ -34,8 +34,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using GSF.TimeSeries;
 using GSF.Historian.Files;
+using GSF.TimeSeries;
 
 namespace GSF.Historian.Packets
 {
@@ -59,7 +59,7 @@ namespace GSF.Historian.Packets
         #region [ Members ]
 
         // Fields
-        private List<IDataPoint> m_data;
+        private readonly List<IDataPoint> m_data;
 
         #endregion
 
@@ -257,7 +257,7 @@ namespace GSF.Historian.Packets
         /// <returns>A <see cref="byte"/> array for "ACK".</returns>
         protected virtual IEnumerable<byte[]> PreProcess()
         {
-            return new byte[][] { Encoding.ASCII.GetBytes("ACK") };
+            return new[] { Encoding.ASCII.GetBytes("ACK") };
         }
 
         #endregion

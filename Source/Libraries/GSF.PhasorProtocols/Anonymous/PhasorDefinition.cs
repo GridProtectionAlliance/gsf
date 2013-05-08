@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  PhasorDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols.Anonymous
     /// <summary>
     /// Represents a protocol independent implementation of a <see cref="IPhasorDefinition"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class PhasorDefinition : PhasorDefinitionBase
     {
         #region [ Constructors ]

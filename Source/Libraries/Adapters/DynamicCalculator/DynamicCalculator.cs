@@ -23,10 +23,6 @@
 //
 //******************************************************************************************************
 
-using Ciloci.Flee;
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -34,6 +30,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Ciloci.Flee;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace DynamicCalculator
 {
@@ -53,12 +53,12 @@ namespace DynamicCalculator
         private string m_imports;
         private bool m_supportsTemporalProcessing;
 
-        private HashSet<string> m_variableNames;
-        private Dictionary<MeasurementKey, string> m_keyMapping;
-        private SortedDictionary<int, string> m_nonAliasedTokens;
+        private readonly HashSet<string> m_variableNames;
+        private readonly Dictionary<MeasurementKey, string> m_keyMapping;
+        private readonly SortedDictionary<int, string> m_nonAliasedTokens;
 
         private string m_aliasedExpressionText;
-        private ExpressionContext m_expressionContext;
+        private readonly ExpressionContext m_expressionContext;
         private IDynamicExpression m_expression;
 
         #endregion
@@ -250,7 +250,7 @@ namespace DynamicCalculator
         /// </summary>
         /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
-        protected override void PublishFrame(GSF.TimeSeries.IFrame frame, int index)
+        protected override void PublishFrame(IFrame frame, int index)
         {
             ConcurrentDictionary<MeasurementKey, IMeasurement> measurements;
             IMeasurement measurement;
@@ -389,7 +389,7 @@ namespace DynamicCalculator
         // when only a single measurement is to be provided.
         private void OnNewMeasurement(IMeasurement measurement)
         {
-            OnNewMeasurements(new IMeasurement[] { measurement });
+            OnNewMeasurements(new[] { measurement });
         }
 
         #endregion

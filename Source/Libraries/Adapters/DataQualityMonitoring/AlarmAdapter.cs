@@ -23,18 +23,18 @@
 //
 //******************************************************************************************************
 
-using DataQualityMonitoring.Services;
-using GSF;
-using GSF.Collections;
-using GSF.Data;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
+using DataQualityMonitoring.Services;
+using GSF;
+using GSF.Collections;
+using GSF.Data;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace DataQualityMonitoring
 {
@@ -66,8 +66,8 @@ namespace DataQualityMonitoring
         /// </summary>
         public AlarmAdapter()
         {
-            m_measurementQueue = new AsyncQueue<IEnumerable<IMeasurement>>()
-            {
+            m_measurementQueue = new AsyncQueue<IEnumerable<IMeasurement>>
+                {
                 ProcessItemFunction = ProcessMeasurements
             };
 
@@ -244,8 +244,8 @@ namespace DataQualityMonitoring
         {
             object associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
 
-            return new Alarm()
-            {
+            return new Alarm
+                {
                 ID = row.ConvertField<int>("ID"),
                 TagName = row.Field<object>("TagName").ToString(),
                 SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
@@ -290,8 +290,8 @@ namespace DataQualityMonitoring
                 // Create event measurements to be sent into the system
                 foreach (Alarm alarm in raisedAlarms)
                 {
-                    alarmEvent = new Measurement()
-                    {
+                    alarmEvent = new Measurement
+                        {
                         Timestamp = measurement.Timestamp,
                         Value = (int)alarm.State
                     };

@@ -30,7 +30,7 @@ namespace GSF.Drawing
     /// <summary>
     /// Contains extension functions used to simplify managing images.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

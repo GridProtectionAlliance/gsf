@@ -44,7 +44,7 @@ namespace GSF.Configuration
         #region [ Members ]
 
         // Fields
-        private string m_name;
+        private readonly string m_name;
 
         #endregion
 

@@ -23,9 +23,9 @@
 //
 //******************************************************************************************************
 
+using System.Text;
 using GSF.IO.Checksums;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Text;
 
 namespace GSF.Core.Tests.TVA.IO.Checksums
 {

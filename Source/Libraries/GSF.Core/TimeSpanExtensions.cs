@@ -23,7 +23,6 @@
 
 using System;
 
-
 namespace GSF
 {
     /// <summary>

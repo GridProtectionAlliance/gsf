@@ -69,8 +69,6 @@ using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using GSF;
 using GSF.Configuration;
 using GSF.Data;
@@ -79,6 +77,8 @@ using GSF.Historian.Files;
 using GSF.Historian.MetadataProviders;
 using GSF.Historian.Replication;
 using GSF.IO;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace HistorianAdapters
 {
@@ -91,11 +91,11 @@ namespace HistorianAdapters
         #region [ Members ]
 
         // Fields
-        private ArchiveFile m_archive;
+        private readonly ArchiveFile m_archive;
         private DataServices m_dataServices;
         private MetadataProviders m_metadataProviders;
         private ReplicationProviders m_replicationProviders;
-        private object m_queuedMetadataRefreshPending;
+        private readonly object m_queuedMetadataRefreshPending;
         private AutoResetEvent m_metadataRefreshComplete;
         private bool m_autoRefreshMetadata;
         private string m_instanceName;
@@ -113,7 +113,6 @@ namespace HistorianAdapters
         /// Initializes a new instance of the <see cref="LocalOutputAdapter"/> class.
         /// </summary>
         public LocalOutputAdapter()
-            : base()
         {
             m_autoRefreshMetadata = true;
             m_queuedMetadataRefreshPending = new object();

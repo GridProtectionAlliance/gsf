@@ -23,9 +23,9 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.Adapters;
 using System.Collections.Generic;
 using System.ComponentModel;
+using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Transport
 {

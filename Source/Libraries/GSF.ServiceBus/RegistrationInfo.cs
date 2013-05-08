@@ -35,7 +35,7 @@ namespace GSF.ServiceBus
     /// <summary>
     /// Represents information about a registration with the <see cref="ServiceBusService"/> to produce/consume <see cref="Message"/>s.
     /// </summary>
-    [DataContract()]
+    [DataContract]
     public class RegistrationInfo : IDisposable
     {
         #region [ Members ]
@@ -47,37 +47,37 @@ namespace GSF.ServiceBus
         /// <summary>
         /// Gets or sets the type for <see cref="Message"/>s being produced/consumed.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public MessageType MessageType;
 
         /// <summary>
         /// Gets or sets the name for <see cref="Message"/>s being produced/consumed. 
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public string MessageName;
 
         /// <summary>
         /// Gets or sets the total number of <see cref="Message"/>s received.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public long MessagesReceived;
 
         /// <summary>
         /// Gets or sets the total number of <see cref="Message"/>s distributed.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public long MessagesProcessed;
 
         /// <summary>
         /// Gets or sets the list of clients producing the <see cref="Message"/>s.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public List<ClientInfo> Producers;
 
         /// <summary>
         /// Gets or sets the list of clients consuming the <see cref="Message"/>s.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public List<ClientInfo> Consumers;
 
         /// <summary>

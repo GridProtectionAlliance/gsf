@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System.Windows;
+using System.Windows.Input;
 
 namespace WavSubscriptionDemo
 {
@@ -41,9 +42,9 @@ namespace WavSubscriptionDemo
         }
 
         // Handles the window's KeyDown event.
-        private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Escape)
+            if (e.Key == Key.Escape)
                 this.Close();
         }
 

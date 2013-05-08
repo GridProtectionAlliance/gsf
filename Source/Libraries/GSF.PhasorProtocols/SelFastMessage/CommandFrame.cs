@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommandFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.SelFastMessage
 {
@@ -39,10 +38,10 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// </summary>
     /// <remarks>
     /// SEL Fast Message command frames are designed only to be sent to a device, not received from a device. As a result
-    /// this frame does not implement <see cref="ISupportFrameImage{T}"/> for automated frame parsing. This class
+    /// this frame does not implement <see cref="ISupportFrameImage{TTypeIdentifier}"/> for automated frame parsing. This class
     /// exposes a constructor that accepts a binary image in order to manually parse a command frame.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public class CommandFrame : CommandFrameBase
     {
         #region [ Members ]
@@ -67,7 +66,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is not large enough to parse frame.</exception>
         public CommandFrame(byte[] buffer, int startIndex, int length)
-            : base(new CommandCellCollection(0), GSF.PhasorProtocols.DeviceCommand.ReservedBits)
+            : base(new CommandCellCollection(0), PhasorProtocols.DeviceCommand.ReservedBits)
         {
             if (length < 16)
                 throw new ArgumentOutOfRangeException("length");
@@ -100,10 +99,10 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <remarks>
         /// This constructor is used by a consumer to generate an SEL Fast Message command frame.
         /// </remarks>
-        public CommandFrame(GSF.PhasorProtocols.DeviceCommand command, MessagePeriod messagePeriod)
+        public CommandFrame(PhasorProtocols.DeviceCommand command, MessagePeriod messagePeriod)
             : base(new CommandCellCollection(0), command)
         {
-            if (command != GSF.PhasorProtocols.DeviceCommand.EnableRealTimeData && command != GSF.PhasorProtocols.DeviceCommand.DisableRealTimeData)
+            if (command != PhasorProtocols.DeviceCommand.EnableRealTimeData && command != PhasorProtocols.DeviceCommand.DisableRealTimeData)
                 throw new ArgumentException("SEL Fast Message does not support " + command + " device command.", "command");
 
             m_messagePeriod = messagePeriod;
@@ -135,9 +134,9 @@ namespace GSF.PhasorProtocols.SelFastMessage
             {
                 switch (base.Command)
                 {
-                    case GSF.PhasorProtocols.DeviceCommand.EnableRealTimeData:
+                    case PhasorProtocols.DeviceCommand.EnableRealTimeData:
                         return DeviceCommand.EnableUnsolicitedMessages;
-                    case GSF.PhasorProtocols.DeviceCommand.DisableRealTimeData:
+                    case PhasorProtocols.DeviceCommand.DisableRealTimeData:
                         return DeviceCommand.DisableUnsolicitedMessages;
                     default:
                         return DeviceCommand.Undefined;
@@ -148,13 +147,13 @@ namespace GSF.PhasorProtocols.SelFastMessage
                 switch (value)
                 {
                     case DeviceCommand.EnableUnsolicitedMessages:
-                        base.Command = GSF.PhasorProtocols.DeviceCommand.EnableRealTimeData;
+                        base.Command = PhasorProtocols.DeviceCommand.EnableRealTimeData;
                         break;
                     case DeviceCommand.DisableUnsolicitedMessages:
-                        base.Command = GSF.PhasorProtocols.DeviceCommand.DisableRealTimeData;
+                        base.Command = PhasorProtocols.DeviceCommand.DisableRealTimeData;
                         break;
                     default:
-                        base.Command = GSF.PhasorProtocols.DeviceCommand.ReservedBits;
+                        base.Command = PhasorProtocols.DeviceCommand.ReservedBits;
                         break;
                 }
             }

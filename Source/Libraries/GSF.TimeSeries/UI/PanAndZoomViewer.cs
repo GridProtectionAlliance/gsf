@@ -40,7 +40,7 @@ namespace GSF.TimeSeries.UI
         #region [ Members ]
 
         // Fields
-        private double m_defaultZoomFactor;
+        private readonly double m_defaultZoomFactor;
         private FrameworkElement m_source;
         private Point m_screenStartPoint;
         private TranslateTransform m_translateTransform;
@@ -84,11 +84,11 @@ namespace GSF.TimeSeries.UI
             m_transformGroup.Children.Add(m_translateTransform);
             m_source.RenderTransform = m_transformGroup;
             this.Focusable = true;
-            this.KeyDown += new KeyEventHandler(source_KeyDown);
-            this.MouseMove += new MouseEventHandler(control_MouseMove);
-            this.MouseDown += new MouseButtonEventHandler(source_MouseDown);
-            this.MouseUp += new MouseButtonEventHandler(source_MouseUp);
-            this.MouseWheel += new MouseWheelEventHandler(source_MouseWheel);
+            this.KeyDown += source_KeyDown;
+            this.MouseMove += control_MouseMove;
+            this.MouseDown += source_MouseDown;
+            this.MouseUp += source_MouseUp;
+            this.MouseWheel += source_MouseWheel;
         }
 
         private void source_KeyDown(object sender, KeyEventArgs e)

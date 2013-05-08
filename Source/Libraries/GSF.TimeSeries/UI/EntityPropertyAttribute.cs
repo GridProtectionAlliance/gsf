@@ -37,7 +37,7 @@ namespace GSF.TimeSeries.UI
         #region [ Members ]
 
         // Fields
-        private bool m_include;
+        private readonly bool m_include;
 
         #endregion
 

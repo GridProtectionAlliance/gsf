@@ -83,7 +83,7 @@ namespace GSF.IO.Checksums
         /// <summary>
         /// Updates the checksum with a ushort value.
         /// </summary>
-        /// <param name="value">The <see cref="UInt16"/> value to use for the update.</param>
+        /// <param name="value">The <see cref="ushort"/> value to use for the update.</param>
         public void Update(ushort value)
         {
             m_checksum ^= value;

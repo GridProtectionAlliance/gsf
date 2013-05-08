@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents a volume measurement, in cubic meters, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a volume in cubic meters; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a volume in cubic meters; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other volume representations, specifically
     /// liters, teaspoons, tablespoons, cubic inches, fluid ounces, cups, pints, quarts, gallons and cubic feet.
     /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
@@ -101,7 +101,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Volume : IComparable, IFormattable, IConvertible, IComparable<Volume>, IComparable<Double>, IEquatable<Volume>, IEquatable<Double>
     {
         #region [ Members ]
@@ -134,7 +134,7 @@ namespace GSF.Units
         private const double CubicFeetFactor = 0.028316846592D;
 
         // Fields
-        private double m_value; // Volume value stored in cubic meters
+        private readonly double m_value; // Volume value stored in cubic meters
 
         #endregion
 
@@ -831,7 +831,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Volume"/> object as the left hand operand.</param>
         /// <param name="value2">A <see cref="Volume"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Volume value1, Volume value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

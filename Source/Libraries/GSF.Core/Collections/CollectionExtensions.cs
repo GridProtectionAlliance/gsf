@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CollectionExtensions.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -58,6 +58,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.Collections
 {
@@ -124,7 +125,7 @@ namespace GSF.Collections
         /// Returns <c>true</c> if any item in <see cref="BitArray"/> is equal to <paramref name="value"/>.
         /// </summary>
         /// <param name="source">Source <see cref="BitArray"/>.</param>
-        /// <param name="value"><see cref="Boolean"/> value to test for.</param>
+        /// <param name="value"><see cref="bool"/> value to test for.</param>
         /// <returns><c>true</c> if any item in <see cref="BitArray"/> is equal to <paramref name="value"/>.</returns>
         public static bool Any(this BitArray source, bool value)
         {
@@ -135,7 +136,7 @@ namespace GSF.Collections
         /// Returns <c>true</c> if all items in <see cref="BitArray"/> are equal to <paramref name="value"/>.
         /// </summary>
         /// <param name="source">Source <see cref="BitArray"/>.</param>
-        /// <param name="value"><see cref="Boolean"/> value to test for.</param>
+        /// <param name="value"><see cref="bool"/> value to test for.</param>
         /// <returns><c>true</c> if all items in <see cref="BitArray"/> are equal to <paramref name="value"/>.</returns>
         public static bool All(this BitArray source, bool value)
         {
@@ -376,7 +377,7 @@ namespace GSF.Collections
         /// <returns>Returns a generic type.</returns>
         public static TSource Min<TSource>(this IEnumerable<TSource> source, IComparer<TSource> comparer)
         {
-            return source.Min<TSource>(comparer.Compare);
+            return source.Min(comparer.Compare);
         }
 
         /// <summary>Returns the largest item from the enumeration.</summary>
@@ -463,7 +464,7 @@ namespace GSF.Collections
             {
                 if (delimetedString.Length > 0)
                     delimetedString.Append(delimiter);
-                delimetedString.Append(item.ToString());
+                delimetedString.Append(item);
             }
 
             return delimetedString.ToString();
@@ -544,7 +545,7 @@ namespace GSF.Collections
             for (x = 0; x < source.Count; x++)
             {
                 // Calls random function from GSF namespace.
-                y = GSF.Security.Cryptography.Random.Int32Between(0, source.Count - 1);
+                y = Random.Int32Between(0, source.Count - 1);
 
                 if (x != y)
                 {
@@ -568,7 +569,7 @@ namespace GSF.Collections
             if (source.IsReadOnly)
                 throw new ArgumentException("Cannot modify items in a read only list");
 
-            Random random = new Random(seed);
+            System.Random random = new System.Random(seed);
             int x, y, count = source.Count;
             TSource currentItem;
 
@@ -599,7 +600,7 @@ namespace GSF.Collections
             if (source.IsReadOnly)
                 throw new ArgumentException("Cannot modify items in a read only list");
 
-            Random random = new Random(seed);
+            System.Random random = new System.Random(seed);
             List<int> sequence = new List<int>();
             int x, y, count = source.Count;
             TSource currentItem;

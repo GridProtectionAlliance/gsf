@@ -33,7 +33,7 @@ using GSF.Threading;
 namespace GSF.Security
 {
     /// <summary>
-    /// Represents a secured interprocess cache for a <see cref="Dictionary{T1,T2}"/> of serialized user role information.
+    /// Represents a secured interprocess cache for a <see cref="Dictionary{TKey,TValue}"/> of serialized user role information.
     /// </summary>
     public class UserRoleCache : InterprocessCache
     {
@@ -306,8 +306,8 @@ namespace GSF.Security
             string localCacheFileName = FilePath.GetAbsolutePath(DefaultCacheFileName);
 
             // Initialize local user role cache (application may only have read-only access to this cache)
-            localUserRoleCache = new UserRoleCache()
-            {
+            localUserRoleCache = new UserRoleCache
+                {
                 FileName = localCacheFileName,
 #if DNF45
                 ReloadOnChange = true,
@@ -354,8 +354,8 @@ namespace GSF.Security
                     File.Copy(localCacheFileName, userCacheFileName);
 
                 // Initialize primary cryptographic key and initialization vector cache within user folder
-                currentCache = new UserRoleCache()
-                {
+                currentCache = new UserRoleCache
+                    {
                     FileName = userCacheFileName,
 #if DNF45
                     ReloadOnChange = true,

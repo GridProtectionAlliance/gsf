@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -78,13 +78,13 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the index of the range test.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 0)]
+        [XmlAttribute, DataMember(Order = 0)]
         public string Acronym { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="SerializableOutOfRangeMeasurement"/>s contained in the <see cref="SerializableRangeTest"/>.
         /// </summary>
-        [XmlArray(), DataMember(Order = 1)]
+        [XmlArray, DataMember(Order = 1)]
         public SerializableOutOfRangeMeasurement[] OutOfRangeMeasurements { get; set; }
 
         #endregion

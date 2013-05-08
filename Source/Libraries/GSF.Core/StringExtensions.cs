@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  StringExtensions.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -248,7 +248,7 @@ namespace GSF
                 throw new ArgumentOutOfRangeException("segmentSize", "segmentSize must be greater than zero.");
 
             if (string.IsNullOrEmpty(value))
-                return new string[] { "" };
+                return new[] { "" };
 
             int totalSegments = (int)Math.Ceiling(value.Length / (double)segmentSize);
             string[] segments = new string[totalSegments];
@@ -444,10 +444,10 @@ namespace GSF
                 if (elements.Length == 2)
                 {
                     // Get key expression
-                    key = elements[0].ToString().Trim();
+                    key = elements[0].Trim();
 
                     // Get unescaped value expression
-                    unescapedValue = elements[1].ToString().Trim().
+                    unescapedValue = elements[1].Trim().
                         Replace(escapedParameterDelimeter, parameterDelimeter.ToString()).
                         Replace(escapedKeyValueDelimeter, keyValueDelimeter.ToString()).
                         Replace(escapedStartValueDelimeter, startValueDelimeter.ToString()).
@@ -1105,7 +1105,7 @@ namespace GSF
 
             // If the text to be centered contains multiple lines, centers all the lines individually.
             StringBuilder result = new StringBuilder();
-            string[] lines = value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            string[] lines = value.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             string line;
             int lastLineIndex = lines.Length - 1; //(lines.Length != 0 && lines[lines.Length - 1].Trim() == string.Empty ? lines.Length - 2 : lines.Length - 1);
 

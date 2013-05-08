@@ -77,19 +77,19 @@ namespace GSF.Units
     public static class SI2
     {
         // Common unit factor SI names
-        private static string[] s_names = new string[] { "kilo", "mega", "giga", "tera", "peta", "exa" };
+        private static readonly string[] s_names = new[] { "kilo", "mega", "giga", "tera", "peta", "exa" };
 
         // Common unit factor SI symbols
-        private static string[] s_symbols = new string[] { "K", "M", "G", "T", "P", "E", };
+        private static readonly string[] s_symbols = new[] { "K", "M", "G", "T", "P", "E", };
 
         // IEC unit factor SI names
-        private static string[] s_iecNames = new string[] { "kibi", "mebi", "gibi", "tebi", "pebi", "exbi" };
+        private static readonly string[] s_iecNames = new[] { "kibi", "mebi", "gibi", "tebi", "pebi", "exbi" };
 
         // IEC unit factor SI symbols
-        private static string[] s_iecSymbols = new string[] { "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", };
+        private static readonly string[] s_iecSymbols = new[] { "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", };
 
         // Unit factor SI factors
-        private static long[] s_factors = new long[] { Kilo, Mega, Giga, Tera, Peta, Exa };
+        private static readonly long[] s_factors = new[] { Kilo, Mega, Giga, Tera, Peta, Exa };
 
         /// <summary>
         /// 1 exa, binary (E) = 1,152,921,504,606,846,976
@@ -252,7 +252,7 @@ namespace GSF.Units
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
+        /// <returns>A <see cref="string"/> representation of the number of units.</returns>
         public static string ToScaledString(long totalUnits, string unitName)
         {
             return ToScaledString(totalUnits, 3, unitName);
@@ -268,7 +268,7 @@ namespace GSF.Units
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
+        /// <returns>A <see cref="string"/> representation of the number of units.</returns>
         public static string ToScaledString(long totalUnits, string format, string unitName)
         {
             return ToScaledString(totalUnits, format, unitName, s_symbols);

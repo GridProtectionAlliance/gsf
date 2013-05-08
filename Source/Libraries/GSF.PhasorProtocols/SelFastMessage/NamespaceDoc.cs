@@ -30,7 +30,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// <summary>
     /// Contains an implementation of the phasor classes used to parse or generate a stream of data in the SEL Fast Message format used by a variety of SEL devices.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

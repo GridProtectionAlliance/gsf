@@ -23,12 +23,12 @@
 //
 //******************************************************************************************************
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
-    [TestClass()]
+    [TestClass]
     public class EnumExtensionsTest
     {
         private const string TestEnumOneDescription = "Description of One.";
@@ -40,7 +40,7 @@ namespace GSF.Core.Tests
             Two
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void GetDescription_WithDescription()
         {
             // Arrange
@@ -51,7 +51,7 @@ namespace GSF.Core.Tests
             Assert.AreEqual(TestEnumOneDescription, description);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void GetDescription_WithoutDescription()
         {
             // Arrange
@@ -62,7 +62,7 @@ namespace GSF.Core.Tests
             Assert.AreEqual("Two", description);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void GetEnumFromDescription_Match()
         {
             // Arrange
@@ -73,7 +73,7 @@ namespace GSF.Core.Tests
             Assert.AreEqual(TestEnum.One, enumeration);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void GetEnumFromDescription_NoMatch()
         {
             // Arrange
@@ -84,7 +84,7 @@ namespace GSF.Core.Tests
             Assert.AreEqual(null, enumeration);
         }
 
-        [TestMethod(), ExpectedException(typeof(ArgumentException))]
+        [TestMethod, ExpectedException(typeof(ArgumentException))]
         public void GetEnumFromDescription_ThrowException()
         {
             // Arrange

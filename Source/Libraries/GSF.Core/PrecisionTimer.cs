@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  PrecisionTimer.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -127,7 +127,7 @@ namespace GSF
     /// <summary>
     /// Represents an exception that is thrown when a <see cref="PrecisionTimer"/> fails to start.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class TimerStartException : Exception
     {
         /// <summary>
@@ -191,9 +191,9 @@ namespace GSF
                 public readonly long SystemFrequency;
             }
 
-            private Stopwatch m_stopwatch;
+            private readonly Stopwatch m_stopwatch;
             private ImmutableTimeState m_timeState;
-            private long m_synchronizePeriodStopwatchTicks;
+            private readonly long m_synchronizePeriodStopwatchTicks;
             private long m_synchronizePeriodClockTicks;
 
             /// <summary>Creates a new instance of DateTimePrecise.</summary>
@@ -277,7 +277,7 @@ namespace GSF
         private Timer m_timer;              // Basic timer implementation for Mono deployments
 #else
         private int m_timerID;              // Timer identifier.
-        private TimerProc m_timeProc;       // Called by Windows when a timer periodic event occurs.
+        private readonly TimerProc m_timeProc;       // Called by Windows when a timer periodic event occurs.
 #endif
 
         private TimerMode m_mode;           // Timer mode.
@@ -614,7 +614,7 @@ namespace GSF
         #region [ Static ]
 
         // Static Fields
-        private static TimerCapabilities s_capabilities;    // Multimedia timer capabilities.
+        private static readonly TimerCapabilities s_capabilities;    // Multimedia timer capabilities.
         private static PreciseTime s_preciseTime;           // Precise time implementation.
         private static Timer s_synchronizer;                // Lightweight timer used for precise time synchronization.
 

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrequencyDefinitionBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,7 +37,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of a <see cref="IFrequencyValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class FrequencyDefinitionBase : ChannelDefinitionBase, IFrequencyDefinition
     {
         #region [ Members ]

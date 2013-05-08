@@ -29,7 +29,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -37,6 +36,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.Data;
 using DataType = System.ComponentModel.DataAnnotations.DataType;
 
 namespace GSF.TimeSeries.UI.DataModels
@@ -514,8 +514,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     foreach (DataRow row in nodeTable.Rows)
                     {
-                        nodeList.Add(new Node()
-                        {
+                        nodeList.Add(new Node
+                            {
                             ID = database.Guid(row, "ID"),
                             Name = row.Field<string>("Name"),
                             CompanyID = row.ConvertNullableField<int>("CompanyID"),
@@ -572,7 +572,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 DataRow row = nodeTable.Rows[0];
 
-                Node node = new Node()
+                Node node = new Node
                     {
                         ID = database.Guid(row, "ID"),
                         Name = row.Field<string>("Name"),

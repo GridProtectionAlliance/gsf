@@ -23,7 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
 using System;
 using System.Collections;
 using System.ComponentModel;
@@ -32,6 +31,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows.Forms;
 using System.Xml;
+using GSF.IO;
 
 namespace GSF.TimeSeries
 {
@@ -43,7 +43,7 @@ namespace GSF.TimeSeries
     /// installation steps need to occur, so these steps are managed in this one common base class.
     /// </remarks>
     [RunInstaller(true)]
-    public partial class InstallerBase : Installer
+    public class InstallerBase : Installer
     {
         #region [ Properties ]
 

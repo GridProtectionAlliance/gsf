@@ -23,8 +23,9 @@
 //
 //******************************************************************************************************
 
-using NAudioWpfDemo;
 using System.ComponentModel;
+using GSF;
+using NAudioWpfDemo;
 
 namespace WavSubscriptionDemo
 {
@@ -120,7 +121,7 @@ namespace WavSubscriptionDemo
 
         // Handles the audio graph's StatsUpdated event. Updates the properties
         // in this view-model so that they can be displayed to the user.
-        private void AudioGraph_StatsUpdated(object sender, GSF.EventArgs<int, int, float, double> e)
+        private void AudioGraph_StatsUpdated(object sender, EventArgs<int, int, float, double> e)
         {
             double lostSamples = e.Argument4;
 

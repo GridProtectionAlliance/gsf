@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ChannelBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using GSF;
 using GSF.Parsing;
 
 namespace GSF.PhasorProtocols

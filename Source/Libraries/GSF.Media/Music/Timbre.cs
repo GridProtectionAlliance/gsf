@@ -132,8 +132,8 @@ namespace GSF.Media.Music
         /// </remarks>
         public static double BasicNote(double frequency, long sampleIndex, long samplePeriod, int sampleRate)
         {
-            return (Timbre.Piano(frequency, sampleIndex, samplePeriod, sampleRate) +
-                    Timbre.OddHarmonicSeries(frequency, sampleIndex, samplePeriod, sampleRate)) / 2.0D;
+            return (Piano(frequency, sampleIndex, samplePeriod, sampleRate) +
+                    OddHarmonicSeries(frequency, sampleIndex, samplePeriod, sampleRate)) / 2.0D;
         }
 
         /// <summary>

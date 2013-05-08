@@ -1,0 +1,113 @@
+﻿<UserControl x:Class="GSF.TimeSeries.Transport.UI.UserControls.SubscriberRequestUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:vm="clr-namespace:GSF.TimeSeries.Transport.UI.ViewModels"
+             xmlns:uc="clr-namespace:GSF.TimeSeries.Transport.UI.UserControls"
+             xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <vm:SubscriberRequestViewModel x:Key="ViewModel" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" DataContext="{StaticResource ViewModel}">
+        <GroupBox Header="Publisher Info">
+            <Grid HorizontalAlignment="Center">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                
+                <Label Grid.Row="0" Grid.Column="0" Content="Acronym" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=Acronym}" CharacterCasing="Upper" />
+                <Label Grid.Row="0" Grid.Column="2" Content="Name" />
+                <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Mode=TwoWay, Path=Name}" />
+
+                <Label Grid.Row="1" Grid.Column="0" Content="Hostname" />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=Hostname}" />
+                <Label Grid.Row="1" Grid.Column="2" Content="Port" />
+                <TextBox Grid.Row="1" Grid.Column="3" Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=Port}" />
+
+                <Label Grid.Row="2" Grid.Column="0" Content="Security mode" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Margin="5">
+                    <RadioButton GroupName="SecurityMode" Content="TLS" IsChecked="True" Checked="SecurityModeRadioButton_Checked" />
+                    <RadioButton GroupName="SecurityMode" Content="Gateway" Checked="SecurityModeRadioButton_Checked" />
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+        
+        <GroupBox Header="TLS" IsEnabled="{Binding TransportLayerSecuritySelected}">
+            <StackPanel HorizontalAlignment="Center">
+                <Label Content="Generate self-signed local certificate (optional):" FontSize="10" />
+                <uc:SelfSignedCertificateGenerator Margin="20,0,0,0" CertificateFile="{Binding Mode=TwoWay, Path=LocalCertificateFile}" ProcessException="SelfSignedCertificateGenerator_ProcessException" />
+                
+                <Grid Margin="0,20,0,0" HorizontalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="Local certificate" />
+                    <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
+                        <TextBox Width="{StaticResource XXLargeItemSize}" Text="{Binding Mode=TwoWay, Path=LocalCertificateFile}" />
+                        <Button Height="25" Content="Browse..." Command="{Binding LocalBrowseCommand}" />
+                    </StackPanel>
+                    
+                    <Label Grid.Row="1" Grid.Column="0" Content="Remote certificate" />
+                    <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
+                        <TextBox Width="{StaticResource XXLargeItemSize}" Text="{Binding Mode=TwoWay, Path=RemoteCertificateFile}" />
+                        <Button Height="25" Content="Browse..." Command="{Binding RemoteBrowseCommand}" />
+                        <CheckBox Content="Self-signed?" IsChecked="{Binding Mode=TwoWay, Path=RemoteCertificateIsSelfSigned}" />
+                    </StackPanel>
+
+                    <Label Grid.Row="2" Grid.Column="0" Content="Valid Policy Errors" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=ValidPolicyErrors}" />
+                    <Label Grid.Row="2" Grid.Column="2" Content="Valid Chain Flags" />
+                    <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding Mode=TwoWay, Path=ValidChainFlags}" />
+                </Grid>
+            </StackPanel>
+        </GroupBox>
+        
+        <GroupBox Header="Gateway" IsEnabled="{Binding GatewaySecuritySelected}">
+            <Grid HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                
+                <Label Grid.Column="0" Content="Valid IP Addresses" />
+                <TextBox Grid.Column="1" Grid.ColumnSpan="3" Width="{StaticResource XXXLargeItemSize}" Text="{Binding Mode=TwoWay, Path=ValidIPAddresses}" />
+            </Grid>
+        </GroupBox>
+        
+        <Button Content="Create" HorizontalAlignment="Right" Margin="10" Padding="2" Command="{Binding CreateCommand}" />
+    </StackPanel>
+</UserControl>

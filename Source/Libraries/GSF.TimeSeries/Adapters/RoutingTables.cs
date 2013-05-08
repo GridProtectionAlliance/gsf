@@ -47,7 +47,7 @@ namespace GSF.TimeSeries.Adapters
         private class DependencyMeasurement
         {
             public ISet<IAdapter> Dependencies = new HashSet<IAdapter>();
-            public ISet<IAdapter> Notifications = new HashSet<IAdapter>();
+            public readonly ISet<IAdapter> Notifications = new HashSet<IAdapter>();
             public IMeasurement Measurement;
         }
 
@@ -71,13 +71,13 @@ namespace GSF.TimeSeries.Adapters
         private List<IOutputAdapter> m_outputBroadcastRoutes;
         private ReaderWriterLockSlim m_adapterRoutesCacheLock;
         private AutoResetEvent m_calculationComplete;
-        private object m_queuedCalculationPending;
+        private readonly object m_queuedCalculationPending;
 
-        private AsyncQueue<Tuple<IAdapter, object>> m_dependencyOperationQueue;
+        private readonly AsyncQueue<Tuple<IAdapter, object>> m_dependencyOperationQueue;
         private volatile Dictionary<IAdapter, ISet<IAdapter>> m_dependencies;
         private volatile Dictionary<IAdapter, ISet<IAdapter>> m_backwardDependencies;
-        private Dictionary<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>> m_dependencyMeasurementsLookup;
-        private Dictionary<IAdapter, IList<IMeasurement>> m_notifiedMeasurementLookup;
+        private readonly Dictionary<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>> m_dependencyMeasurementsLookup;
+        private readonly Dictionary<IAdapter, IList<IMeasurement>> m_notifiedMeasurementLookup;
         private volatile int m_operationsUntilNextPublish;
         
         private bool m_disposed;
@@ -532,8 +532,8 @@ namespace GSF.TimeSeries.Adapters
                             if (dependencies.Count > 0)
                             {
                                 // Add a queuing operation to the dependency operation queue
-                                dependencyMeasurement = new DependencyMeasurement()
-                                {
+                                dependencyMeasurement = new DependencyMeasurement
+                                    {
                                     Dependencies = dependencies,
                                     Measurement = measurement
                                 };

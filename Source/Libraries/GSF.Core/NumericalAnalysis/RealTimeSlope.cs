@@ -27,10 +27,10 @@
 //
 //******************************************************************************************************
 
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using GSF.Units;
 
 namespace GSF.NumericalAnalysis
 {

@@ -39,9 +39,10 @@ using System;
 using System.Configuration;
 using System.Threading;
 using System.Timers;
+using GSF.Adapters;
 using GSF.Configuration;
 using GSF.Historian.Files;
-using GSF.Adapters;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Historian.MetadataProviders
 {
@@ -82,7 +83,7 @@ namespace GSF.Historian.MetadataProviders
         private int m_refreshTimeout;
         private MetadataFile m_metadata;
         private Thread m_refreshThread;
-        private System.Timers.Timer m_refreshTimer;
+        private Timer m_refreshTimer;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -182,7 +183,7 @@ namespace GSF.Historian.MetadataProviders
                 // Start refresh timer for auto-refresh.
                 if (Enabled && m_refreshInterval > 0)
                 {
-                    m_refreshTimer = new System.Timers.Timer(m_refreshInterval * 60000);
+                    m_refreshTimer = new Timer(m_refreshInterval * 60000);
                     m_refreshTimer.Elapsed += RefreshTimer_Elapsed;
                     m_refreshTimer.Start();
                 }

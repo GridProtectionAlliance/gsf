@@ -36,7 +36,7 @@ namespace GSF.Historian.DataServices
     /// Defines a REST web service for historian metadata.
     /// </summary>
     /// <seealso cref="SerializableMetadata"/>
-    [ServiceContract()]
+    [ServiceContract]
     public interface IMetadataService
     {
         #region [ Methods ]
@@ -45,7 +45,7 @@ namespace GSF.Historian.DataServices
         /// Writes <paramref name="metadata"/> received in <see cref="WebMessageFormat.Xml"/> format to the <see cref="DataService.Archive"/>.
         /// </summary>
         /// <param name="metadata">An <see cref="SerializableMetadata"/> object.</param>
-        [OperationContract(), 
+        [OperationContract, 
         WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Xml, UriTemplate = "/metadata/write/xml")]
         void WriteMetadataAsXml(SerializableMetadata metadata);
 
@@ -53,7 +53,7 @@ namespace GSF.Historian.DataServices
         /// Writes <paramref name="metadata"/> received in <see cref="WebMessageFormat.Json"/> format to the <see cref="DataService.Archive"/>.
         /// </summary>
         /// <param name="metadata">An <see cref="SerializableMetadata"/> object.</param>
-        [OperationContract(), 
+        [OperationContract, 
         WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Json, UriTemplate = "/metadata/write/json")]
         void WriteMetadataAsJson(SerializableMetadata metadata);
 
@@ -61,7 +61,7 @@ namespace GSF.Historian.DataServices
         /// Reads all metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
-        [OperationContract(), 
+        [OperationContract, 
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/metadata/read/xml")]
         SerializableMetadata ReadAllMetadataAsXml();
 
@@ -70,7 +70,7 @@ namespace GSF.Historian.DataServices
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which metadata is to be read.</param>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
-        [OperationContract(), 
+        [OperationContract, 
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/metadata/read/{idList}/xml")]
         SerializableMetadata ReadSelectMetadataAsXml(string idList);
 
@@ -80,7 +80,7 @@ namespace GSF.Historian.DataServices
         /// <param name="fromID">Starting ID in the ID range for which metadata is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which metadata is to be read.</param>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
-        [OperationContract(), 
+        [OperationContract, 
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/metadata/read/{fromID}-{toID}/xml")]
         SerializableMetadata ReadRangeMetadataAsXml(string fromID, string toID);
 
@@ -88,7 +88,7 @@ namespace GSF.Historian.DataServices
         /// Reads all metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Json"/> format.
         /// </summary>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
-        [OperationContract(), 
+        [OperationContract, 
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/metadata/read/json")]
         SerializableMetadata ReadAllMetadataAsJson();
 
@@ -97,7 +97,7 @@ namespace GSF.Historian.DataServices
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which metadata is to be read.</param>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
-        [OperationContract(), 
+        [OperationContract, 
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/metadata/read/{idList}/json")]
         SerializableMetadata ReadSelectMetadataAsJson(string idList);
 
@@ -107,7 +107,7 @@ namespace GSF.Historian.DataServices
         /// <param name="fromID">Starting ID in the ID range for which metadata is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which metadata is to be read.</param>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
-        [OperationContract(), 
+        [OperationContract, 
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/metadata/read/{fromID}-{toID}/json")]
         SerializableMetadata ReadRangeMetadataAsJson(string fromID, string toID);
 

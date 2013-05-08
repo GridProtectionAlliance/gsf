@@ -30,9 +30,9 @@
 //
 //******************************************************************************************************
 
+using System.ServiceModel.Activation;
 using GSF.Security;
 using GSF.ServiceModel;
-using System.ServiceModel.Activation;
 
 namespace GSF.Web.Embedded
 {

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DigitalValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Represents the BPA PDCstream implementation of an <see cref="IDigitalValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DigitalValue : DigitalValueBase
     {
         #region [ Constructors ]

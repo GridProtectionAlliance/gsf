@@ -49,7 +49,6 @@ namespace GSF.Historian.Files
         /// Initializes a new instance of the <see cref="IntercomFile"/> class.
         /// </summary>
         public IntercomFile()
-            : base()
         {
             SettingsCategory = this.GetType().Name;
         }

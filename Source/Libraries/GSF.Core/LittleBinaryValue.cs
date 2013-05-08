@@ -384,7 +384,7 @@ namespace GSF
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="Byte"/>.</returns>
         public static implicit operator LittleBinaryValue(Byte value)
         {
-            return new LittleBinaryValue(TypeCode.Byte, new byte[] { value });
+            return new LittleBinaryValue(TypeCode.Byte, new[] { value });
         }
 
         /// <summary>

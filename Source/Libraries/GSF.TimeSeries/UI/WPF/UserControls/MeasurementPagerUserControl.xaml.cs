@@ -21,24 +21,17 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -68,8 +61,8 @@ namespace GSF.TimeSeries.UI.UserControls
 
         // Fields
         private Measurements m_dataContext;
-        private ISet<Guid> m_selectedMeasurements;
-        private ObservableCollection<DataGridColumn> m_dataGridColumns;
+        private readonly ISet<Guid> m_selectedMeasurements;
+        private readonly ObservableCollection<DataGridColumn> m_dataGridColumns;
         private bool m_overrideDefaultColumns;
 
         private DataGridColumn m_sortColumn;

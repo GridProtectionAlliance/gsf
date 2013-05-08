@@ -28,15 +28,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
+using System.Timers;
 using GSF;
 using GSF.IO;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using Timer = System.Timers.Timer;
 
 namespace EpriExport
 {
@@ -59,11 +62,11 @@ namespace EpriExport
         private int m_measurementsPerInterval;
         private int m_skipRows;
         private bool m_simulateTimestamp;
-        private System.Timers.Timer m_looseTimer;
+        private Timer m_looseTimer;
         private PrecisionInputTimer m_precisionTimer;
-        private System.Timers.Timer m_fileScanner;
+        private Timer m_fileScanner;
         private BlockingCollection<string> m_fileNames;
-        private List<string> m_processedFileList;
+        private readonly List<string> m_processedFileList;
         private long m_processedFiles;
         private bool m_disposed;
 
@@ -165,7 +168,7 @@ namespace EpriExport
             set
             {
                 // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
-                if (value && (object)m_precisionTimer == null && !System.Diagnostics.Debugger.IsAttached)
+                if (value && (object)m_precisionTimer == null && !Debugger.IsAttached)
                     m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), OnProcessException);
                 else if (!value && m_precisionTimer != null)
                     PrecisionInputTimer.Detach(ref m_precisionTimer);
@@ -382,7 +385,7 @@ namespace EpriExport
             UseHighResolutionInputTimer = setting.ParseBoolean();
 
             if (!UseHighResolutionInputTimer)
-                m_looseTimer = new System.Timers.Timer();
+                m_looseTimer = new Timer();
 
             // Load column mappings:
             if (settings.TryGetValue("columnMappings", out setting))
@@ -449,8 +452,8 @@ namespace EpriExport
                 int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", true) == 0).Key;
 
                 // Reserve a column mapping for timestamp value
-                IMeasurement timestampMeasurement = new Measurement()
-                {
+                IMeasurement timestampMeasurement = new Measurement
+                    {
                     TagName = "Timestamp"
                 };
 
@@ -468,7 +471,7 @@ namespace EpriExport
                 m_looseTimer.Elapsed += m_looseTimer_Elapsed;
             }
 
-            m_fileScanner = new System.Timers.Timer();
+            m_fileScanner = new Timer();
             m_fileScanner.Interval = 1000.0D;
             m_fileScanner.AutoReset = true;
             m_fileScanner.Elapsed += m_fileScanner_Elapsed;
@@ -502,7 +505,7 @@ namespace EpriExport
             return string.Format("{0} measurements read from CSV file.", ProcessedMeasurements).CenterText(maxLength);
         }
 
-        private void m_fileScanner_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_fileScanner_Elapsed(object sender, ElapsedEventArgs e)
         {
             List<string> fileNames = new List<string>();
 
@@ -622,7 +625,7 @@ namespace EpriExport
             CloseFile();
         }
 
-        private void m_looseTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_looseTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (!ReadNextRecord(DateTime.UtcNow.Ticks) && Enabled)
             {

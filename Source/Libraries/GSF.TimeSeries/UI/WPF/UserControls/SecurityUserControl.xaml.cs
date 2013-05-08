@@ -21,13 +21,14 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.ViewModels;
 using System;
+using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web.Security;
 using System.Windows;
 using System.Windows.Controls;
+using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -43,7 +44,7 @@ namespace GSF.TimeSeries.UI.UserControls
         private SecurityGroups m_securityGroups;
         private ApplicationRoles m_applicationRoles;
         private string m_strongPasswordRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
-        StringBuilder m_invalidPasswordMessage;
+        readonly StringBuilder m_invalidPasswordMessage;
 
         #endregion
 
@@ -59,12 +60,12 @@ namespace GSF.TimeSeries.UI.UserControls
             m_securityGroups = new SecurityGroups(1, false);
             m_applicationRoles = new ApplicationRoles(1, true);
             RefreshBindings();
-            this.Unloaded += new RoutedEventHandler(SecurityUserControl_Unloaded);
-            m_userAccounts.BeforeSave += new System.ComponentModel.CancelEventHandler(m_userAccounts_BeforeSave);
-            m_userAccounts.Saved += new System.EventHandler(m_userAccounts_Changed);
-            m_userAccounts.Deleted += new System.EventHandler(m_userAccounts_Changed);
-            m_securityGroups.Saved += new System.EventHandler(m_securityGroups_Changed);
-            m_securityGroups.Deleted += new System.EventHandler(m_securityGroups_Changed);
+            this.Unloaded += SecurityUserControl_Unloaded;
+            m_userAccounts.BeforeSave += m_userAccounts_BeforeSave;
+            m_userAccounts.Saved += m_userAccounts_Changed;
+            m_userAccounts.Deleted += m_userAccounts_Changed;
+            m_securityGroups.Saved += m_securityGroups_Changed;
+            m_securityGroups.Deleted += m_securityGroups_Changed;
 
             m_invalidPasswordMessage = new StringBuilder();
             m_invalidPasswordMessage.Append("Password does not meet the following criteria:");
@@ -82,7 +83,7 @@ namespace GSF.TimeSeries.UI.UserControls
 
         #region [ Methods ]
 
-        private void m_userAccounts_BeforeSave(object sender, System.ComponentModel.CancelEventArgs e)
+        private void m_userAccounts_BeforeSave(object sender, CancelEventArgs e)
         {
             m_userAccounts.CurrentItem.UseADAuthentication = (bool)RadioButtonWindows.IsChecked;
             if (m_userAccounts.IsNewRecord)
@@ -143,13 +144,13 @@ namespace GSF.TimeSeries.UI.UserControls
             }
         }
 
-        private void m_securityGroups_Changed(object sender, System.EventArgs e)
+        private void m_securityGroups_Changed(object sender, EventArgs e)
         {
             m_applicationRoles = new ApplicationRoles(1, true);
             RefreshBindings();
         }
 
-        private void m_userAccounts_Changed(object sender, System.EventArgs e)
+        private void m_userAccounts_Changed(object sender, EventArgs e)
         {
             TextBoxPassword.Password = string.Empty;
             m_securityGroups = new SecurityGroups(1, false);

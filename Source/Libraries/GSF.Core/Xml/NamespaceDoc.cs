@@ -30,7 +30,7 @@ namespace GSF.Xml
     /// <summary>
     /// Contains extension functions used to simplify and standardize usage of standard Xml objects.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

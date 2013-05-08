@@ -25,13 +25,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
 
 namespace GSF.TimeSeries.UI.Converters
 {
     /// <summary>
-    /// Represents an <see cref="IValueConverter"/> class, which takes <see cref="Dictionary{T1,T2}"/> collection and returns <see cref="KeyValuePair{T1,T2}"/>    
+    /// Represents an <see cref="IValueConverter"/> class, which takes <see cref="Dictionary{TKey,TValue}"/> collection and returns <see cref="KeyValuePair{T1,T2}"/>    
     /// </summary>
     public class DictionaryToKeyValuePairConverter : IValueConverter
     {
@@ -47,7 +48,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="parameter">The converter parameter of type <see cref="Dictionary{T1,T2}"/> to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
         /// <returns>KeyValuePair{T1,T2} value.</returns>
-        public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (parameter != null)
             {
@@ -125,7 +126,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="parameter">The converter parameter to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
         /// <returns>Integer, to bind to UI object.</returns>
-        public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value != null)
             {

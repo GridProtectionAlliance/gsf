@@ -45,7 +45,7 @@ namespace GSF.Threading
         // Fields
         private Mutex m_semaphoreLock;          // Mutex used to synchronize access to Semaphore
         private Semaphore m_concurrencyLock;    // Semaphore used for reader/writer lock on consumer object
-        private int m_maximumConcurrentLocks;
+        private readonly int m_maximumConcurrentLocks;
         private bool m_disposed;
 
         #endregion

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,7 +35,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Represents the Macrodyne implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DataCell : DataCellBase
     {
         #region [ Members ]
@@ -265,7 +264,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                return (SynchronizationIsValid ? GSF.PhasorProtocols.DataSortingType.ByTimestamp : GSF.PhasorProtocols.DataSortingType.ByArrival);
+                return (SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
             }
             set
             {
@@ -434,38 +433,38 @@ namespace GSF.PhasorProtocols.Macrodyne
             int phasorIndex = 0;
 
             // Phasor 1 (always present)
-            phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+            phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
             PhasorValues.Add(phasorValue);
             index += parsedLength;
 
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor2Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor2Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor2Enabled) == OnlineDataFormatFlags.Phasor2Enabled)
             {
                 // Phasor 2
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
 
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor3Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor3Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor3Enabled) == OnlineDataFormatFlags.Phasor3Enabled)
             {
                 // Phasor 3
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
 
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor4Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor4Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor4Enabled) == OnlineDataFormatFlags.Phasor4Enabled)
             {
                 // Phasor 4
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
 
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor5Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor5Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor5Enabled) == OnlineDataFormatFlags.Phasor5Enabled)
             {
                 // Phasor 5
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
@@ -481,7 +480,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 if (configFrame.ReferenceIncluded)
                 {
                     m_referenceSampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index);
-                    m_referencePhasor = Macrodyne.PhasorValue.CreateNewValue(this, new PhasorDefinition(null, "Reference Phasor", PhasorType.Voltage, null), buffer, index, out parsedLength) as Macrodyne.PhasorValue;
+                    m_referencePhasor = PhasorValue.CreateNewValue(this, new PhasorDefinition(null, "Reference Phasor", PhasorType.Voltage, null), buffer, index, out parsedLength) as PhasorValue;
                     index += 6;
                 }
 
@@ -495,42 +494,42 @@ namespace GSF.PhasorProtocols.Macrodyne
             }
 
             // Parse out next five phasor values (6 - 10)
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor6Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor6Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor6Enabled) == OnlineDataFormatFlags.Phasor6Enabled)
             {
                 // Phasor 6
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
 
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor7Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor7Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor7Enabled) == OnlineDataFormatFlags.Phasor7Enabled)
             {
                 // Phasor 7
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
 
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor8Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor8Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor8Enabled) == OnlineDataFormatFlags.Phasor8Enabled)
             {
                 // Phasor 8
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
 
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor9Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor9Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor9Enabled) == OnlineDataFormatFlags.Phasor9Enabled)
             {
                 // Phasor 9
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
 
-            if ((configFrame.OnlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor10Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor10Enabled)
+            if ((configFrame.OnlineDataFormatFlags & OnlineDataFormatFlags.Phasor10Enabled) == OnlineDataFormatFlags.Phasor10Enabled)
             {
                 // Phasor 10
-                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
@@ -541,7 +540,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 // Technically 30 more possible channel phasors can be defined
                 for (int i = phasorIndex; i < ConfigurationCell.PhasorDefinitions.Count; i++)
                 {
-                    phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
+                    phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[phasorIndex++], buffer, index, out parsedLength);
                     PhasorValues.Add(phasorValue);
                     index += parsedLength;
                 }
@@ -549,7 +548,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 // Parse reference phasor information
                 if (configFrame.ReferenceIncluded)
                 {
-                    m_referencePhasor = Macrodyne.PhasorValue.CreateNewValue(this, new PhasorDefinition(null, "Reference Phasor", PhasorType.Voltage, null), buffer, index, out parsedLength) as Macrodyne.PhasorValue;
+                    m_referencePhasor = PhasorValue.CreateNewValue(this, new PhasorDefinition(null, "Reference Phasor", PhasorType.Voltage, null), buffer, index, out parsedLength) as PhasorValue;
                     index += parsedLength;
                 }
 

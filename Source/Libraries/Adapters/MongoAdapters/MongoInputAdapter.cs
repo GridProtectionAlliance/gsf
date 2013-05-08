@@ -23,14 +23,14 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
-using MongoDB;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Timers;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using MongoDB;
 
 namespace MongoAdapters
 {
@@ -382,7 +382,7 @@ namespace MongoAdapters
                 // Find all measurements with the timestamp of the measurement that was found.
                 wrappers = m_measurementCollection.Find(new
                 {
-                    Timestamp = foundWrapper.Timestamp
+                    foundWrapper.Timestamp
                 });
                 measurements = wrappers.Documents.Select(wrapper => wrapper.GetMeasurement()).ToList();
 

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DictionaryList.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -87,7 +87,7 @@ namespace GSF.Collections
         #region [ Members ]
 
         // Fields
-        private SortedList<TKey, TValue> m_list;
+        private readonly SortedList<TKey, TValue> m_list;
 
         #endregion
 

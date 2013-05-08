@@ -39,9 +39,9 @@ namespace GSF.PQDIF.Logical
         #region [ Members ]
 
         // Fields
-        private Record m_physicalRecord;
-        private DataSourceRecord m_dataSource;
-        private MonitorSettingsRecord m_settings;
+        private readonly Record m_physicalRecord;
+        private readonly DataSourceRecord m_dataSource;
+        private readonly MonitorSettingsRecord m_settings;
 
         #endregion
 

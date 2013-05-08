@@ -55,7 +55,7 @@ namespace GSF.Historian.Packets
         #region [ Members ]
 
         // Fields
-        private List<int> m_requestIDs;
+        private readonly List<int> m_requestIDs;
 
         #endregion
 

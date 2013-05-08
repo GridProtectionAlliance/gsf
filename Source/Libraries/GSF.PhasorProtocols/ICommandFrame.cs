@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ICommandFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 
 namespace GSF.PhasorProtocols
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Phasor enabled device commands enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum DeviceCommand : ushort
     {
         /// <summary>

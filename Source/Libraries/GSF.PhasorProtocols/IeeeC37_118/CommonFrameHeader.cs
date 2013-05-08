@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommonFrameHeader.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -35,7 +35,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Represents the common header for all IEEE C37.118 frames of data.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class CommonFrameHeader : ICommonHeader<FrameType>, ISerializable
     {
         #region [ Members ]
@@ -84,7 +84,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
         public CommonFrameHeader(ConfigurationFrame1 configurationFrame, byte[] buffer, int startIndex)
         {
-            if (buffer[startIndex] != GSF.PhasorProtocols.Common.SyncByte)
+            if (buffer[startIndex] != PhasorProtocols.Common.SyncByte)
                 throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in IEEE C37.118 frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
             // Strip out frame type and version information...
@@ -119,7 +119,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         protected CommonFrameHeader(SerializationInfo info, StreamingContext context)
         {
             // Deserialize common frame header
-            m_frameType = (FrameType)info.GetValue("frameType", typeof(IeeeC37_118.FrameType));
+            m_frameType = (FrameType)info.GetValue("frameType", typeof(FrameType));
             m_version = info.GetByte("version");
             m_frameLength = info.GetUInt16("frameLength");
             m_timebase = info.GetUInt32("timebase");
@@ -276,11 +276,11 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (TimeQualityFlags)(m_timeQualityFlags & ~(uint)IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask);
+                return (TimeQualityFlags)(m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
             }
             set
             {
-                m_timeQualityFlags = (m_timeQualityFlags & (uint)IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
+                m_timeQualityFlags = (m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
             }
         }
 
@@ -291,11 +291,11 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (TimeQualityIndicatorCode)(m_timeQualityFlags & (uint)IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask);
+                return (TimeQualityIndicatorCode)(m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
             }
             set
             {
-                m_timeQualityFlags = (m_timeQualityFlags & ~(uint)IeeeC37_118.TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
+                m_timeQualityFlags = (m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
             }
         }
 
@@ -376,7 +376,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             {
                 byte[] buffer = new byte[FixedLength];
 
-                buffer[0] = GSF.PhasorProtocols.Common.SyncByte;
+                buffer[0] = PhasorProtocols.Common.SyncByte;
                 buffer[1] = (byte)((byte)TypeID | Version);
                 EndianOrder.BigEndian.CopyBytes(FrameLength, buffer, 2);
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, 4);
@@ -424,7 +424,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // Serialize unique common frame header values
-            info.AddValue("frameType", m_frameType, typeof(IeeeC37_118.FrameType));
+            info.AddValue("frameType", m_frameType, typeof(FrameType));
             info.AddValue("version", m_version);
             info.AddValue("frameLength", m_frameLength);
             info.AddValue("timebase", m_timebase);

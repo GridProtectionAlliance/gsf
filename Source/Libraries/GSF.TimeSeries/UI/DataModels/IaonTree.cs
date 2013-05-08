@@ -23,11 +23,11 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -110,13 +110,13 @@ namespace GSF.TimeSeries.UI.DataModels
                 resultSet.Tables[1].TableName = "AdapterData";
 
                 iaonTreeList = new ObservableCollection<IaonTree>(from item in resultSet.Tables["RootNodesTable"].AsEnumerable()
-                                                                  select new IaonTree()
-                                                                  {
+                                                                  select new IaonTree
+                                                                      {
                                                                       m_adapterType = item.Field<string>("AdapterType"),
                                                                       m_adapterList = new ObservableCollection<Adapter>(from obj in resultSet.Tables["AdapterData"].AsEnumerable()
                                                                                                                         where obj.Field<string>("AdapterType") == item.Field<string>("AdapterType")
-                                                                                                                        select new Adapter()
-                                                                                                                        {
+                                                                                                                        select new Adapter
+                                                                                                                            {
                                                                                                                             NodeID = database.Guid(obj, "NodeID"),
                                                                                                                             ID = obj.ConvertField<int>("ID"),
                                                                                                                             AdapterName = obj.Field<string>("AdapterName"),

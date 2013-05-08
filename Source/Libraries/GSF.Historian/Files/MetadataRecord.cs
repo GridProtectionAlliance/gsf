@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  MetadataRecord.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -97,7 +97,7 @@ namespace GSF.Historian.Files
         public const int FixedLength = 2664;
 
         // Fields
-        private int m_historianID;
+        private readonly int m_historianID;
         private string m_remarks;
         private string m_hardwareInfo;
         private string m_emailAddresses;

@@ -30,7 +30,7 @@ namespace GSF.Units
     /// <summary>
     /// Contains classes used to simplify and standardize standard unit and SI conversions.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

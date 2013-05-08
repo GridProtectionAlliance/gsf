@@ -29,6 +29,7 @@
 
 #if RunAsApp
 using System.Windows.Forms;
+
 #else
 using System.ServiceProcess;
 #endif

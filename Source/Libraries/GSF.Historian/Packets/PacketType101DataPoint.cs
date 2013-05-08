@@ -32,8 +32,8 @@
 //******************************************************************************************************
 
 using System;
-using GSF.TimeSeries;
 using GSF.Historian.Files;
+using GSF.TimeSeries;
 
 namespace GSF.Historian.Packets
 {

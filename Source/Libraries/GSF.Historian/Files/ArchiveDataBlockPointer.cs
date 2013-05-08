@@ -55,10 +55,10 @@ namespace GSF.Historian.Files
         public const int FixedLength = 12;
 
         // Fields
-        private int m_index;
+        private readonly int m_index;
         private int m_historianID;
         private TimeTag m_startTime;
-        private ArchiveFile m_parent;
+        private readonly ArchiveFile m_parent;
 
         #endregion
 

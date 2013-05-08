@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ExporterBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -139,14 +139,14 @@ namespace GSF.Historian.Exporters
 
         // Fields
         private string m_name;
-        private ObservableCollection<Export> m_exports;
-        private ObservableCollection<DataListener> m_listeners;
+        private readonly ObservableCollection<Export> m_exports;
+        private readonly ObservableCollection<DataListener> m_listeners;
         private Action<Export> m_exportAddedHandler;
         private Action<Export> m_exportRemovedHandler;
         private Action<Export> m_exportUpdatedHandler;
-        private Timer m_exportTimer;
-        private ProcessQueue<RealTimeData> m_realTimeExportQueue;
-        private ProcessQueue<Export> m_nonRealTimeExportQueue;
+        private readonly Timer m_exportTimer;
+        private readonly ProcessQueue<RealTimeData> m_realTimeExportQueue;
+        private readonly ProcessQueue<Export> m_nonRealTimeExportQueue;
         private bool m_disposed;
 
         #endregion
@@ -592,7 +592,7 @@ namespace GSF.Historian.Exporters
         /// <returns>A <see cref="DataSet"/> object.</returns>
         protected DataSet GetExportDataAsDataset(Export export, string dataTableName)
         {
-            DataSet result = ExporterBase.DatasetTemplate(dataTableName);
+            DataSet result = DatasetTemplate(dataTableName);
             Dictionary<string, IList<IDataPoint>> exportData = GetExportData(export);
 
             // Populate the dataset with time-series data.
@@ -850,7 +850,7 @@ namespace GSF.Historian.Exporters
             dataTable.Columns.Add("Time", typeof(string));
             dataTable.Columns.Add("Value", typeof(float));
             dataTable.Columns.Add("Quality", typeof(int));
-            dataTable.PrimaryKey = new DataColumn[] { dataTable.Columns[0], dataTable.Columns[1], dataTable.Columns[2] };
+            dataTable.PrimaryKey = new[] { dataTable.Columns[0], dataTable.Columns[1], dataTable.Columns[2] };
             // -- Table 2 --
             data.Tables.Add("ExportInformation");
             DataTable infoTable = data.Tables["ExportInformation"];

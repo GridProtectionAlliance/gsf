@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrequencyDefinitionCollection.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -39,7 +39,7 @@ namespace GSF.PhasorProtocols
     /// None of the phasor protocols currently define multiple frequency elements per transmission,
     /// but if a future protocol does this collection can be used.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public class FrequencyDefinitionCollection : ChannelDefinitionCollectionBase<IFrequencyDefinition>
     {
         #region [ Constructors ]
@@ -51,7 +51,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// <paramref name="lastValidIndex"/> is used instead of maximum count so that maximum type values may
         /// be specified as needed. For example, if the protocol specifies a collection with a signed 16-bit
-        /// maximum length you can specify <see cref="Int16.MaxValue"/> (i.e., 32,767) as the last valid index
+        /// maximum length you can specify <see cref="short.MaxValue"/> (i.e., 32,767) as the last valid index
         /// for the collection since total number of items supported would be 32,768.
         /// </remarks>
         public FrequencyDefinitionCollection(int lastValidIndex)

@@ -33,7 +33,7 @@ namespace GSF.TimeSeries.UI.UserControls
     {
         #region [ Members ]
 
-        private BitmapImage m_image;
+        private readonly BitmapImage m_image;
 
         #endregion
 
@@ -49,7 +49,7 @@ namespace GSF.TimeSeries.UI.UserControls
             InitializeComponent();
             m_image = image;
             Title = title + " (Use mouse-wheel to zoom in and out, use mouse left button to drag)";
-            Loaded += new RoutedEventHandler(PanAndZoomViewer_Loaded);
+            Loaded += PanAndZoomViewer_Loaded;
         }
 
         #endregion

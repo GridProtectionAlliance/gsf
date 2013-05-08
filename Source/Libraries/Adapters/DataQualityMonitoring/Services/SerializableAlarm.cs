@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -74,58 +74,58 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the identification number of the alarm.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 0)]
+        [XmlAttribute, DataMember(Order = 0)]
         public int ID { get; set; }
 
         /// <summary>
         /// Gets or sets the tag name of the alarm.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 1)]
+        [XmlAttribute, DataMember(Order = 1)]
         public string TagName { get; set; }
 
         /// <summary>
         /// Gets or sets the severity of the alarm.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 2)]
+        [XmlAttribute, DataMember(Order = 2)]
         public int Severity { get; set; }
 
         /// <summary>
         /// Gets or sets the state of the alarm (raised or cleared).
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 3)]
+        [XmlAttribute, DataMember(Order = 3)]
         public AlarmState State { get; set; }
 
         /// <summary>
         /// Gets or sets the identification number of the
         /// signal whose value is monitored by the alarm.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 4)]
+        [XmlAttribute, DataMember(Order = 4)]
         public string SignalID { get; set; }
 
         /// <summary>
         /// Gets or sets the time at which the alarm was raised.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 5)]
+        [XmlAttribute, DataMember(Order = 5)]
         public string TimeRaised { get; set; }
 
         /// <summary>
         /// Gets or sets the value of the signal
         /// at the time that the alarm was raised.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 6)]
+        [XmlAttribute, DataMember(Order = 6)]
         public double ValueAtTimeRaised { get; set; }
 
         /// <summary>
         /// Gets or sets the description of the alarm.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 7)]
+        [XmlAttribute, DataMember(Order = 7)]
         public string Description { get; set; }
 
         /// <summary>
         /// Gets or sets the operation to be performed
         /// when testing values from the incoming signal.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 8)]
+        [XmlAttribute, DataMember(Order = 8)]
         public int Operation { get; set; }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace DataQualityMonitoring.Services
         /// the signal to determine whether to raise the
         /// alarm.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 9)]
+        [XmlAttribute, DataMember(Order = 9)]
         public double SetPoint { get; set; }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace DataQualityMonitoring.Services
         /// <see cref="SetPoint"/> to use when comparing
         /// against the value of the signal.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 10)]
+        [XmlAttribute, DataMember(Order = 10)]
         public double Tolerance { get; set; }
 
         /// <summary>
@@ -149,13 +149,13 @@ namespace DataQualityMonitoring.Services
         /// signal must be exhibiting alarming behavior
         /// before the alarm is raised.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 11)]
+        [XmlAttribute, DataMember(Order = 11)]
         public double Delay { get; set; }
 
         /// <summary>
         /// Gets or sets the hysteresis used when clearing alarms.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 12)]
+        [XmlAttribute, DataMember(Order = 12)]
         public double Hysteresis { get; set; }
 
         #endregion

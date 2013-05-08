@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Common.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 
 namespace GSF.PhasorProtocols.Ieee1344
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// IEEE 1344 frame types enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum FrameType : ushort
     {
         /// <summary>
@@ -75,7 +74,7 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// IEEE 1344 trigger status enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum TriggerStatus : ushort
     {
         /// <summary>

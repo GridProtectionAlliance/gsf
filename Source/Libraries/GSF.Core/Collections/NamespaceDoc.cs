@@ -30,7 +30,7 @@ namespace GSF.Collections
     /// <summary>
     /// Contains classes and type extension functions related to any fundamental collection including thread based processing queues.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

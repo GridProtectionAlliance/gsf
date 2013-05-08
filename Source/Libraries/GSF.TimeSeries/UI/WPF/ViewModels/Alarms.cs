@@ -25,9 +25,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using GSF.TimeSeries.UI.DataModels;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {
@@ -147,7 +149,7 @@ namespace GSF.TimeSeries.UI.ViewModels
 
             base.Initialize();
 
-            m_nodeLookupList = DataModels.Node.GetLookupList(null);
+            m_nodeLookupList = Node.GetLookupList(null);
             m_operationList = CreateOperationList();
             m_severityList = CreateSeverityList();
         }
@@ -221,7 +223,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Event arguments.</param>
-        protected override void m_currentItem_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        protected override void m_currentItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
@@ -388,18 +390,18 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 case AlarmOperation.Equal:
                 case AlarmOperation.NotEqual:
-                    enabledFlags = new bool[] { true, true, true, false };
+                    enabledFlags = new[] { true, true, true, false };
                     break;
 
                 case AlarmOperation.GreaterOrEqual:
                 case AlarmOperation.LessOrEqual:
                 case AlarmOperation.GreaterThan:
                 case AlarmOperation.LessThan:
-                    enabledFlags = new bool[] { true, false, true, true };
+                    enabledFlags = new[] { true, false, true, true };
                     break;
 
                 case AlarmOperation.Flatline:
-                    enabledFlags = new bool[] { false, false, true, false };
+                    enabledFlags = new[] { false, false, true, false };
                     break;
             }
 

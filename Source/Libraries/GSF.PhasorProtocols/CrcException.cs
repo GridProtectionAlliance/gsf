@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// The exception that is thrown when an object's CRC check fails.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class CrcException : Exception
     {
         #region [ Constructors ]
@@ -42,7 +42,6 @@ namespace GSF.PhasorProtocols
         /// Initializes a new instance of the <see cref="CrcException"/> class.
         /// </summary>
         public CrcException()
-            : base()
         {
         }
 

@@ -36,8 +36,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using GSF.TimeSeries;
 using GSF.Historian.Files;
+using GSF.TimeSeries;
 
 namespace GSF.Historian.Packets
 {
@@ -290,7 +290,7 @@ namespace GSF.Historian.Packets
         /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveDataPoint"/>s.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
         {
-            return new ArchiveDataPoint[] { new ArchiveDataPoint(m_historianID, m_time, m_value, m_quality) };
+            return new[] { new ArchiveDataPoint(m_historianID, m_time, m_value, m_quality) };
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace GSF.Historian.Packets
         /// <returns>A <see cref="byte"/> array for "ACK".</returns>
         protected virtual IEnumerable<byte[]> PreProcess()
         {
-            return new byte[][] { Encoding.ASCII.GetBytes("ACK") };
+            return new[] { Encoding.ASCII.GetBytes("ACK") };
         }
 
         #endregion

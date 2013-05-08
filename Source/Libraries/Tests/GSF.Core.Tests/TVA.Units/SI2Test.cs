@@ -38,10 +38,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace GSF.Core.Tests
 {
     /*
@@ -62,7 +63,7 @@ namespace GSF.Core.Tests
     ///This is a test class for SI2Test and is intended
     ///to contain all SI2Test Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class SI2Test
     {
 
@@ -99,7 +100,7 @@ namespace GSF.Core.Tests
             public bool Find(String value)
             {
                 bool status = false;
-                if (value.ToLower() == value.ToString().ToLower() ||
+                if (value.ToLower() == value.ToLower() ||
                 value.ToLower() == factor.ToString().ToLower() ||
                 value.ToLower() == name.ToLower() ||
                 value.ToLower() == symbol.ToLower() ||
@@ -117,8 +118,9 @@ namespace GSF.Core.Tests
         class oSI2
         {
             #region DECLARATION
-            sSI2 virt_SI2 = new sSI2();
-            List<sSI2> obj_SI2 = new List<sSI2>(22);
+
+            readonly sSI2 virt_SI2 = new sSI2();
+            readonly List<sSI2> obj_SI2 = new List<sSI2>(22);
             #endregion
 
             #region CONSTRUCTOR
@@ -153,7 +155,7 @@ namespace GSF.Core.Tests
                 bool status = false;
                 foreach (bool Exists in IsExists(value))
                 {
-                    if (Exists == true) { status = true; break; }
+                    if (Exists) { status = true; break; }
                 }
                 return status;
             }
@@ -162,7 +164,7 @@ namespace GSF.Core.Tests
                 bool status = false;
                 foreach (bool Exists in IsExists(value))
                 {
-                    if (Exists == true) { status = true; break; }
+                    if (Exists) { status = true; break; }
                 }
                 return status;
             }
@@ -187,7 +189,7 @@ namespace GSF.Core.Tests
             #endregion
 
             #region DISPOSE
-            private bool isDisposed = false;
+            private bool isDisposed;
             ~oSI2()
             {
                 Dispose(false);
@@ -248,14 +250,14 @@ namespace GSF.Core.Tests
         //}
         //
         //Use TestInitialize to run code before running each test
-        [TestInitialize()]
+        [TestInitialize]
         public void MyTestInitialize()
         {
             baseSI2 = new oSI2();
         }
 
         //Use TestCleanup to run code after each test has run
-        [TestCleanup()]
+        [TestCleanup]
         public void MyTestCleanup()
         {
             baseSI2.Dispose();
@@ -275,7 +277,7 @@ namespace GSF.Core.Tests
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledIECStringDecPlacesUnitNameTest()
         {
             long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
@@ -299,7 +301,7 @@ namespace GSF.Core.Tests
         /// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledIECStringFormatUnitNameTest()
         {
             long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
@@ -324,7 +326,7 @@ namespace GSF.Core.Tests
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
         /// <returns>A <see cref="String"/>representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledIECStringUnitNameTest()
         {
             long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
@@ -338,13 +340,13 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for ToScaledString
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledStringTest()
         {
             long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
             string format = string.Empty;
             string unitName = "";
-            string[] symbolNames = new string[] { "kilo", "mega", "giga", "tera", "peta", "exa" };
+            string[] symbolNames = new[] { "kilo", "mega", "giga", "tera", "peta", "exa" };
             string expected = "1 kilo";
             string actual;
             actual = SI2.ToScaledString(totalUnits, format, unitName, symbolNames);
@@ -364,7 +366,7 @@ namespace GSF.Core.Tests
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledStringFormatUnitNameTest()
         {
             long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
@@ -389,7 +391,7 @@ namespace GSF.Core.Tests
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledStringDecPlacesUnitNameTest()
         {
             long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
@@ -414,7 +416,7 @@ namespace GSF.Core.Tests
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledStringUnitNameTest()
         {
             long totalUnits = long.Parse(Math.Pow(2, 10).ToString());
@@ -430,7 +432,7 @@ namespace GSF.Core.Tests
         /// A test for Factors
         /// Gets an array of all the defined binary SI unit factors ordered from least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>).
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void FactorsTest()
         {
 
@@ -443,7 +445,7 @@ namespace GSF.Core.Tests
         /// A test for IECNames
         /// Gets an array of all the defined IEC binary unit factor SI names ordered from least (<see cref="Kibi"/>) to greatest (<see cref="Exbi"/>).
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void IECNamesTest()
         {
             bool expected = true;
@@ -455,7 +457,7 @@ namespace GSF.Core.Tests
         /// A test for IECSymbols
         /// Gets an array of all the defined IEC binary unit factor SI prefix symbols ordered from least (<see cref="Kibi"/>) to greatest (<see cref="Exbi"/>).
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void IECSymbolsTest()
         {
             bool expected = true;
@@ -467,7 +469,7 @@ namespace GSF.Core.Tests
         /// A test for Names
         /// Gets an array of all the defined common binary unit factor SI names ordered from least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>).
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void NamesTest()
         {
 
@@ -480,7 +482,7 @@ namespace GSF.Core.Tests
         /// A test for Symbols
         /// Gets an array of all the defined common binary unit factor SI prefix symbols ordered from least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>).
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void SymbolsTest()
         {
             bool expected = true;

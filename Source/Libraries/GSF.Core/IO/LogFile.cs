@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  LogFile.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -38,8 +38,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -49,6 +47,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using GSF.Collections;
+using GSF.Configuration;
 
 namespace GSF.IO
 {
@@ -167,13 +167,13 @@ namespace GSF.IO
         private bool m_persistSettings;
         private string m_settingsCategory;
         private FileStream m_fileStream;
-        private ManualResetEvent m_operationWaitHandle;
-        private ProcessList<string> m_logEntryQueue;
+        private readonly ManualResetEvent m_operationWaitHandle;
+        private readonly ProcessList<string> m_logEntryQueue;
         private Encoding m_textEncoding;
         private bool m_disposed;
         private bool m_initialized;
         private double m_logFilesDuration;
-        private Dictionary<DateTime, string> m_savedFilesWithTime;
+        private readonly Dictionary<DateTime, string> m_savedFilesWithTime;
 
         #endregion
 
@@ -183,7 +183,6 @@ namespace GSF.IO
         /// Initializes a new instance of the <see cref="LogFile"/> class.
         /// </summary>
         public LogFile()
-            : base()
         {
             m_fileName = DefaultFileName;
             m_fileSize = DefaultFileSize;
@@ -697,7 +696,7 @@ namespace GSF.IO
         /// <returns>A list of lines from the text read from the <see cref="LogFile"/>.</returns>
         public List<string> ReadLines()
         {
-            return new List<string>(ReadText().Split(new string[] { Environment.NewLine }, StringSplitOptions.None));
+            return new List<string>(ReadText().Split(new[] { Environment.NewLine }, StringSplitOptions.None));
         }
 
         /// <summary>
@@ -815,7 +814,7 @@ namespace GSF.IO
             }
         }
 
-        private void LogFile_FileFull(object sender, System.EventArgs e)
+        private void LogFile_FileFull(object sender, EventArgs e)
         {
             // Signals that the "file full operation" is in progress.
             m_operationWaitHandle.Reset();

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommonFrameHeader.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -28,14 +28,13 @@
 using System;
 using System.Runtime.Serialization;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the common header for all SEL Fast Message frames of data.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class CommonFrameHeader : CommonHeaderBase<int>, ISerializable
     {
         #region [ Members ]

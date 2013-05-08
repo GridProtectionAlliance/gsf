@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  RawDataExporter.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -102,7 +102,7 @@ namespace GSF.Historian.Exporters
         #region [ Members ]
 
         // Fields
-        private Dictionary<string, DataSet> m_rawData;
+        private readonly Dictionary<string, DataSet> m_rawData;
 
         #endregion
 
@@ -319,7 +319,7 @@ namespace GSF.Historian.Exporters
                 if (!m_rawData.TryGetValue(export.Name, out rawData))
                 {
                     // Dataset for buffering export data does not exist.
-                    rawData = ExporterBase.DatasetTemplate(null);
+                    rawData = DatasetTemplate(null);
 
                     // Save the dataset.
                     m_rawData.Add(export.Name, rawData);

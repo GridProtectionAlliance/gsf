@@ -29,6 +29,7 @@
 
 using System;
 using System.Drawing;
+using System.Security;
 using System.Windows.Forms;
 
 namespace GSF.ErrorManagement
@@ -119,7 +120,7 @@ namespace GSF.ErrorManagement
             }
         }
 
-        private static void SizeBox(System.Windows.Forms.RichTextBox ctl)
+        private static void SizeBox(RichTextBox ctl)
         {
             Graphics g = null;
             try
@@ -130,7 +131,7 @@ namespace GSF.ErrorManagement
                 g.Dispose();
                 ctl.Height = (int)objSizeF.Height + 5;
             }
-            catch (System.Security.SecurityException)
+            catch (SecurityException)
             {
                 // Do nothing; we can't set control sizes without full trust.
             }

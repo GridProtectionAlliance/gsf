@@ -30,7 +30,7 @@ namespace GSF.Reflection
     /// <summary>
     /// Contains classes and extension functions used to simplify and standardize access to assembly information and attributes in applications.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

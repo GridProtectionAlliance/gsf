@@ -39,11 +39,11 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using GSF.IO;
 
 namespace GSF
 {
@@ -53,7 +53,7 @@ namespace GSF
     public static class TypeExtensions
     {
         // Native data types that represent numbers
-        private static Type[] s_numericTypes = { typeof(SByte), typeof(Byte), typeof(Int16), typeof(UInt16), typeof(Int24), typeof(UInt24), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) };
+        private static readonly Type[] s_numericTypes = { typeof(SByte), typeof(Byte), typeof(Int16), typeof(UInt16), typeof(Int24), typeof(UInt24), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) };
 
         /// <summary>
         /// Determines if the specified type is a native structure that represents a numeric value.

@@ -27,12 +27,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using GSF.Configuration;
 
 namespace GSF.Data
 {
@@ -153,9 +153,9 @@ namespace GSF.Data
         // Fields
         private IDbConnection m_connection;
         private DatabaseType m_databaseType;
-        private string m_connectionString;
-        private Type m_connectionType;
-        private Type m_adapterType;
+        private readonly string m_connectionString;
+        private readonly Type m_connectionType;
+        private readonly Type m_adapterType;
         private bool m_disposed;
 
         #endregion

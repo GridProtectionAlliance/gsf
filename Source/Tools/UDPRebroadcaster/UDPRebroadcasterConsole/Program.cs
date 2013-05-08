@@ -25,6 +25,9 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
+using GSF.Console;
+
 namespace UDPRebroadcasterConsole
 {
     class Program
@@ -34,8 +37,8 @@ namespace UDPRebroadcasterConsole
         static void Main(string[] args)
         {
             // Enable console events.
-            GSF.Console.Events.ConsoleClosing += OnConsoleClosing;
-            GSF.Console.Events.EnableRaisingEvents();
+            Events.ConsoleClosing += OnConsoleClosing;
+            Events.EnableRaisingEvents();
 
             // Start the client component.
             s_serviceClient = new ServiceClient();
@@ -43,7 +46,7 @@ namespace UDPRebroadcasterConsole
             s_serviceClient.Dispose();
         }
 
-        static void OnConsoleClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        static void OnConsoleClosing(object sender, CancelEventArgs e)
         {
             // Dispose the client component.
             s_serviceClient.Dispose();

@@ -56,7 +56,7 @@ namespace GSF.Net.Ftp
         private FtpDirectory m_root;
         private FtpDirectory m_current;
         private FtpDataStream m_dataStream;
-        private bool m_caseInsensitive;
+        private readonly bool m_caseInsensitive;
         private bool m_disposed;
 
         #endregion

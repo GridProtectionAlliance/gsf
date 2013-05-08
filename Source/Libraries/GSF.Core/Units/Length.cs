@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents a length measurement, in meters, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a length in meters; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a length in meters; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other length representations, specifically
     /// inches, feet, yards, miles, US survey feet, US survey miles, light-seconds, and nautical miles.
     /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
@@ -94,7 +94,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Length : IComparable, IFormattable, IConvertible, IComparable<Length>, IComparable<Double>, IEquatable<Length>, IEquatable<Double>
     {
         #region [ Members ]
@@ -117,7 +117,7 @@ namespace GSF.Units
         private const double YardsFactor = 0.9144D;
 
         // Fields
-        private double m_value; // Length value stored in meters
+        private readonly double m_value; // Length value stored in meters
 
         #endregion
 
@@ -769,7 +769,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Length"/> object left hand operand.</param>
         /// <param name="value2">A <see cref="Length"/> object right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Length value1, Length value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

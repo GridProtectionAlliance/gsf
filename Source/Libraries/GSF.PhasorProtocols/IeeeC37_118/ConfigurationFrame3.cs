@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame3.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -27,14 +27,13 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/>, type 3, that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationFrame3 : ConfigurationFrame1
     {
         #region [ Constructors ]

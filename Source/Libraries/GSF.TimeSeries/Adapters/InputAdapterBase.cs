@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  InputAdapterBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -27,6 +27,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -62,7 +64,7 @@ namespace GSF.TimeSeries.Adapters
         // Fields
         private List<string> m_outputSourceIDs;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
-        private System.Timers.Timer m_connectionTimer;
+        private Timer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
 
@@ -75,7 +77,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected InputAdapterBase()
         {
-            m_connectionTimer = new System.Timers.Timer();
+            m_connectionTimer = new Timer();
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
 
             m_connectionTimer.AutoReset = false;
@@ -116,7 +118,7 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Filter measurements to list of specified source IDs
-                AdapterBase.LoadOutputSourceIDs(this);
+                LoadOutputSourceIDs(this);
             }
         }
 
@@ -394,7 +396,7 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        private void m_connectionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_connectionTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             try
             {

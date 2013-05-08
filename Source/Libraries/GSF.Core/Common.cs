@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Common.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -43,13 +43,13 @@
 //
 //******************************************************************************************************
 
-using GSF.Reflection;
 using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web.Hosting;
+using GSF.Reflection;
 
 namespace GSF
 {
@@ -126,7 +126,7 @@ namespace GSF
     /// </summary>
     public static class Common
     {
-        private static Nullable<ApplicationType> s_applicationType;
+        private static ApplicationType? s_applicationType;
 
         /// <summary>Returns one of two strongly-typed objects.</summary>
         /// <returns>One of two objects, depending on the evaluation of given expression.</returns>
@@ -528,7 +528,7 @@ namespace GSF
         /// <returns>Result is the minimum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
         public static T Min<T>(params T[] itemList)
         {
-            return itemList.Min<T>();
+            return itemList.Min();
         }
 
 
@@ -538,7 +538,7 @@ namespace GSF
         /// <returns>Result is the maximum value of type <see cref="Type"/> in the <paramref name="itemList"/>.</returns>
         public static T Max<T>(params T[] itemList)
         {
-            return itemList.Max<T>();
+            return itemList.Max();
         }
 
         #region [ Old Code ]

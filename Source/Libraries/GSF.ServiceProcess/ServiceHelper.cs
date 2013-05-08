@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ServiceHelper.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -168,9 +168,9 @@ namespace GSF.ServiceProcess
                 this.Message = message;
             }
 
-            public Guid Client;
-            public UpdateType Type;
-            public string Message;
+            public readonly Guid Client;
+            public readonly UpdateType Type;
+            public readonly string Message;
         }
 
         // Constants
@@ -332,17 +332,17 @@ namespace GSF.ServiceProcess
         private string m_telnetSessionPassword;
         private ServiceBase m_parentService;
         private ServerBase m_remotingServer;
-        private LogFile m_statusLog;
-        private ScheduleManager m_processScheduler;
-        private ErrorLogger m_errorLogger;
+        private readonly LogFile m_statusLog;
+        private readonly ScheduleManager m_processScheduler;
+        private readonly ErrorLogger m_errorLogger;
         private PerformanceMonitor m_performanceMonitor;
-        private List<ServiceProcess> m_processes;
-        private List<object> m_serviceComponents;
-        private List<ClientInfo> m_remoteClients;
-        private List<ClientRequestInfo> m_clientRequestHistory;
-        private List<ClientRequestHandler> m_clientRequestHandlers;
-        private Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
-        private ProcessQueue<StatusUpdate> m_statusUpdateQueue;
+        private readonly List<ServiceProcess> m_processes;
+        private readonly List<object> m_serviceComponents;
+        private readonly List<ClientInfo> m_remoteClients;
+        private readonly List<ClientRequestInfo> m_clientRequestHistory;
+        private readonly List<ClientRequestHandler> m_clientRequestHandlers;
+        private readonly Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
+        private readonly ProcessQueue<StatusUpdate> m_statusUpdateQueue;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
@@ -360,7 +360,6 @@ namespace GSF.ServiceProcess
         /// Initializes a new instance of the <see cref="ServiceHelper"/> class.
         /// </summary>
         public ServiceHelper()
-            : base()
         {
             m_telnetSessionPassword = "s3cur3";
             m_logStatusUpdates = DefaultLogStatusUpdates;
@@ -1274,7 +1273,7 @@ namespace GSF.ServiceProcess
                 if (client != Guid.Empty)
                 {
                     // Send message directly to specified client.
-                    handles = new WaitHandle[] { m_remotingServer.SendToAsync(client, response) };
+                    handles = new[] { m_remotingServer.SendToAsync(client, response) };
                 }
                 else
                 {
@@ -1936,7 +1935,7 @@ namespace GSF.ServiceProcess
             m_errorLogger.Log(e.Argument);
         }
 
-        private void StatusLog_LogException(object sender, EventArgs<System.Exception> e)
+        private void StatusLog_LogException(object sender, EventArgs<Exception> e)
         {
             // We'll let the connected clients know that we encountered an exception while logging the status update.
             m_logStatusUpdates = false;
@@ -1988,7 +1987,7 @@ namespace GSF.ServiceProcess
             {
                 // First message from a remote client should be its info.
                 ClientInfo client = null;
-                Serialization.TryDeserialize<ClientInfo>(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out client);
+                Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out client);
                 try
                 {
                     if (client != null)
@@ -2039,7 +2038,7 @@ namespace GSF.ServiceProcess
             {
                 // All subsequest messages from a remote client would be requests.
                 ClientRequest request = null;
-                Serialization.TryDeserialize<ClientRequest>(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out request);
+                Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out request);
                 if (request != null)
                 {
                     try
@@ -2102,12 +2101,12 @@ namespace GSF.ServiceProcess
             }
         }
 
-        private void RemoteCommandProcess_ErrorDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
+        private void RemoteCommandProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             UpdateStatus(m_remoteCommandClientID, UpdateType.Alarm, e.Data + "\r\n");
         }
 
-        private void RemoteCommandProcess_OutputDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
+        private void RemoteCommandProcess_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             UpdateStatus(m_remoteCommandClientID, UpdateType.Information, e.Data + "\r\n");
         }
@@ -3085,7 +3084,7 @@ namespace GSF.ServiceProcess
                             {
                                 // Prepare the arguments.
                                 string[] splitArgs = processArgs.Split(',');
-                                Array.ForEach<string>(splitArgs, (string arg) => arg.Trim());
+                                Array.ForEach(splitArgs, (string arg) => arg.Trim());
 
                                 // Start the service process.
                                 processToStart.Start(splitArgs);
@@ -3532,10 +3531,10 @@ namespace GSF.ServiceProcess
                     serviceName = AppDomain.CurrentDomain.FriendlyName;
 
                 versionInfo.AppendFormat("{0} Service Version:\r\n\r\n", serviceName);
-                versionInfo.AppendFormat("  App Domain: {0}, running on .NET {1}\r\n", AppDomain.CurrentDomain.FriendlyName, Environment.Version.ToString());
+                versionInfo.AppendFormat("  App Domain: {0}, running on .NET {1}\r\n", AppDomain.CurrentDomain.FriendlyName, Environment.Version);
                 versionInfo.AppendFormat("   Code Base: {0}\r\n", serviceAssembly.CodeBase);
                 versionInfo.AppendFormat("  Build Date: {0}\r\n", serviceAssembly.BuildDate.ToString());
-                versionInfo.AppendFormat("     Version: {0}", serviceAssembly.Version.ToString());
+                versionInfo.AppendFormat("     Version: {0}", serviceAssembly.Version);
 
                 string message = versionInfo.ToString();
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, message + "\r\n\r\n");
@@ -3676,7 +3675,7 @@ namespace GSF.ServiceProcess
                 else if (m_remoteCommandProcess != null)
                 {
                     // User has entered commands that must be redirected to the established command session.
-                    string input = requestinfo.Request.Command + " " + requestinfo.Request.Arguments.ToString();
+                    string input = requestinfo.Request.Command + " " + requestinfo.Request.Arguments;
                     m_remoteCommandProcess.StandardInput.WriteLine(input);
                 }
                 else

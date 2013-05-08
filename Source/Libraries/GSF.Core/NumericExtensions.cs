@@ -41,7 +41,7 @@ namespace GSF
         /// <returns>A non-zero value.</returns>
         public static T NotZero<T>(this T source) where T : struct, IEquatable<T>
         {
-            return NotZero<T>(source, (T)Convert.ChangeType(-1, typeof(T)));
+            return NotZero(source, (T)Convert.ChangeType(-1, typeof(T)));
         }
 
         /// <summary>Ensures parameter passed to function is not zero.</summary>

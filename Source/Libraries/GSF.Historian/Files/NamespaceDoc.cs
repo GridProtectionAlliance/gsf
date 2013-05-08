@@ -32,7 +32,7 @@ namespace GSF.Historian.Files
     /// <summary>
     /// Contains classes used for manipulating archive files.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

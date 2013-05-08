@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Frame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -49,7 +49,7 @@ namespace GSF.TimeSeries
         private Ticks m_publishedTimestamp;                                         // Time, represented as 100-nanosecond ticks, of frame published (post process)
         private bool m_published;                                                   // Determines if this frame of data has been published
         private int m_sortedMeasurements;                                           // Total measurements sorted into this frame
-        private ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements;  // Concurrent dictionary of measurements published by this frame
+        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements;  // Concurrent dictionary of measurements published by this frame
         private IMeasurement m_lastSortedMeasurement;                               // Last measurement sorted into this frame
 
         #endregion
@@ -257,11 +257,11 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>.
+        /// Determines whether the specified <see cref="object"/> is equal to the current <see cref="Frame"/>.
         /// </summary>
-        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <param name="obj">The <see cref="object"/> to compare with the current <see cref="Frame"/>.</param>
         /// <returns>
-        /// true if the specified <see cref="Object"/> is equal to the current <see cref="Frame"/>;
+        /// true if the specified <see cref="object"/> is equal to the current <see cref="Frame"/>;
         /// otherwise, false.
         /// </returns>
         public override bool Equals(object obj)
@@ -289,9 +289,9 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Compares the <see cref="Frame"/> with the specified <see cref="Object"/>.
+        /// Compares the <see cref="Frame"/> with the specified <see cref="object"/>.
         /// </summary>
-        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Frame"/>.</param>
+        /// <param name="obj">The <see cref="object"/> to compare with the current <see cref="Frame"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IFrame"/>.</exception>
         /// <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>

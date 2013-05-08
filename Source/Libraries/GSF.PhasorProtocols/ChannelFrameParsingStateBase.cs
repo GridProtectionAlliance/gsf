@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ChannelFrameParsingStateBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -41,7 +41,7 @@ namespace GSF.PhasorProtocols
 
         // Fields
         private int m_cellCount;
-        private CreateNewCellFunction<T> m_createNewCellFunction;
+        private readonly CreateNewCellFunction<T> m_createNewCellFunction;
 
         #endregion
 

@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using DNP3.Interface;
-using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
+using DNP3.Interface;
+using GSF.TimeSeries;
 
 namespace Dnp3Adapters
 {
@@ -46,27 +46,27 @@ namespace Dnp3Adapters
 
         public IMeasurement LookupMaybeNull(Binary meas, UInt32 index)
         {
-            return LookupMaybeNull<Binary>(meas, index, binaryMap, ConvertBinary);
+            return LookupMaybeNull(meas, index, binaryMap, ConvertBinary);
         }
 
         public IMeasurement LookupMaybeNull(Analog meas, UInt32 index)
         {
-            return LookupMaybeNull<Analog>(meas, index, analogMap, ConvertAnalog);
+            return LookupMaybeNull(meas, index, analogMap, ConvertAnalog);
         }
 
         public IMeasurement LookupMaybeNull(Counter meas, UInt32 index)
         {
-            return LookupMaybeNull<Counter>(meas, index, counterMap, ConvertCounter);
+            return LookupMaybeNull(meas, index, counterMap, ConvertCounter);
         }
 
         public IMeasurement LookupMaybeNull(ControlStatus meas, UInt32 index)
         {
-            return LookupMaybeNull<ControlStatus>(meas, index, controlStatusMap, ConvertControlStatus);
+            return LookupMaybeNull(meas, index, controlStatusMap, ConvertControlStatus);
         }
 
         public IMeasurement LookupMaybeNull(SetpointStatus meas, UInt32 index)
         {
-            return LookupMaybeNull<SetpointStatus>(meas, index, setpointStatusMap, ConvertSetpointStatus);
+            return LookupMaybeNull(meas, index, setpointStatusMap, ConvertSetpointStatus);
         }
 
         private Measurement ConvertBinary(Binary meas, uint id, String source)
@@ -121,10 +121,10 @@ namespace Dnp3Adapters
             else return null;
         }
 
-        private Dictionary<UInt32, Mapping> binaryMap = new Dictionary<uint, Mapping>();
-        private Dictionary<UInt32, Mapping> analogMap = new Dictionary<uint, Mapping>();
-        private Dictionary<UInt32, Mapping> counterMap = new Dictionary<uint, Mapping>();
-        private Dictionary<UInt32, Mapping> controlStatusMap = new Dictionary<uint, Mapping>();
-        private Dictionary<UInt32, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<UInt32, Mapping> binaryMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<UInt32, Mapping> analogMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<UInt32, Mapping> counterMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<UInt32, Mapping> controlStatusMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<UInt32, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();
     }
 }

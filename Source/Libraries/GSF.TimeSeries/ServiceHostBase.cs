@@ -43,6 +43,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Xml;
 using GSF.Communication;
 using GSF.Configuration;
@@ -53,6 +54,7 @@ using GSF.ServiceProcess;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
 using Microsoft.Win32;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries
 {
@@ -119,7 +121,7 @@ namespace GSF.TimeSeries
         private bool m_uniqueAdapterIDs;
         private bool m_allowRemoteRestart;
         private bool m_preferCachedConfiguration;
-        private System.Timers.Timer m_gcCollectTimer;
+        private Timer m_gcCollectTimer;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
         private AutoResetEvent m_configurationCacheComplete;
@@ -369,7 +371,7 @@ namespace GSF.TimeSeries
             m_dataProviderString = systemSettings["DataProviderString"].Value;
             m_cachedXmlConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
             m_cachedBinaryConfigurationFile = FilePath.AddPathSuffix(cachePath) + FilePath.GetFileNameWithoutExtension(m_cachedXmlConfigurationFile) + ".bin";
-            m_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs<int>(DefaultConfigurationBackups);
+            m_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs(DefaultConfigurationBackups);
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
@@ -379,8 +381,8 @@ namespace GSF.TimeSeries
             // Setup default thread pool size
             try
             {
-                ThreadPool.SetMinThreads(systemSettings["MinThreadPoolWorkerThreads"].ValueAs<int>(DefaultMinThreadPoolSize), systemSettings["MinThreadPoolIOPortThreads"].ValueAs<int>(DefaultMinThreadPoolSize));
-                ThreadPool.SetMaxThreads(systemSettings["MaxThreadPoolWorkerThreads"].ValueAs<int>(DefaultMaxThreadPoolSize), systemSettings["MaxThreadPoolIOPortThreads"].ValueAs<int>(DefaultMaxThreadPoolSize));
+                ThreadPool.SetMinThreads(systemSettings["MinThreadPoolWorkerThreads"].ValueAs(DefaultMinThreadPoolSize), systemSettings["MinThreadPoolIOPortThreads"].ValueAs(DefaultMinThreadPoolSize));
+                ThreadPool.SetMaxThreads(systemSettings["MaxThreadPoolWorkerThreads"].ValueAs(DefaultMaxThreadPoolSize), systemSettings["MaxThreadPoolIOPortThreads"].ValueAs(DefaultMaxThreadPoolSize));
             }
             catch (Exception ex)
             {
@@ -389,11 +391,11 @@ namespace GSF.TimeSeries
             }
 
             // Define a generation zero garbage collection timer
-            int gcCollectInterval = systemSettings["GCCollectInterval"].ValueAs<int>(DefaultGCCollectInterval);
+            int gcCollectInterval = systemSettings["GCCollectInterval"].ValueAs(DefaultGCCollectInterval);
 
             if (gcCollectInterval > 0)
             {
-                m_gcCollectTimer = new System.Timers.Timer();
+                m_gcCollectTimer = new Timer();
                 m_gcCollectTimer.Elapsed += m_gcCollectTimer_Elapsed;
                 m_gcCollectTimer.Interval = gcCollectInterval;
                 m_gcCollectTimer.Enabled = true;
@@ -484,14 +486,14 @@ namespace GSF.TimeSeries
 
             // Create health exporter
             m_healthExporter = new MultipleDestinationExporter("HealthExporter", Timeout.Infinite);
-            m_healthExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Health.txt"), false) });
+            m_healthExporter.Initialize(new[] { new ExportDestination(FilePath.GetAbsolutePath("Health.txt"), false) });
             m_healthExporter.StatusMessage += m_iaonSession.StatusMessageHandler;
             m_healthExporter.ProcessException += m_iaonSession.ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_healthExporter);
 
             // Create status exporter
             m_statusExporter = new MultipleDestinationExporter("StatusExporter", Timeout.Infinite);
-            m_statusExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Status.txt"), false) });
+            m_statusExporter.Initialize(new[] { new ExportDestination(FilePath.GetAbsolutePath("Status.txt"), false) });
             m_statusExporter.StatusMessage += m_iaonSession.StatusMessageHandler;
             m_statusExporter.ProcessException += m_iaonSession.ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
@@ -617,7 +619,7 @@ namespace GSF.TimeSeries
 
         // Generation zero garbage collection handler
         [SuppressMessage("Microsoft.Reliability", "CA2002")]
-        private void m_gcCollectTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_gcCollectTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             // The time-series framework can allocate hundreds of thousands of measurements per second, non-stop, as a result the typical
             // wait for breathing room style algorithms for timing garbage collections are not practical. A simple forced generation zero
@@ -782,7 +784,7 @@ namespace GSF.TimeSeries
                         {
                             // Load configuration entity data filtered by node ID
                             operationStartTime = PrecisionTimer.UtcNow.Ticks;
-                            source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"].ToString(), m_nodeIDQueryString));
+                            source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], m_nodeIDQueryString));
                             operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Update table name as defined in configuration entity
@@ -1026,7 +1028,7 @@ namespace GSF.TimeSeries
                             if (maxValue != null)
                             {
                                 string param = (adapterType.Name == "OracleDataAdapter") ? ":updatedOn" : "@updatedOn";
-                                string query = string.Format("SELECT * FROM {0} WHERE NodeID = {1} AND UpdatedOn > {2}", entityRow["SourceName"].ToString(), m_nodeIDQueryString, param);
+                                string query = string.Format("SELECT * FROM {0} WHERE NodeID = {1} AND UpdatedOn > {2}", entityRow["SourceName"], m_nodeIDQueryString, param);
                                 source = connection.RetrieveData(adapterType, query, DataExtensions.DefaultTimeoutDuration, maxValue);
                             }
                         }
@@ -1035,7 +1037,7 @@ namespace GSF.TimeSeries
                     if ((object)source == null)
                     {
                         // Load configuration entity data filtered by node ID
-                        source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"].ToString(), m_nodeIDQueryString));
+                        source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], m_nodeIDQueryString));
 
                         // Clone data source
                         destination = source.Clone();

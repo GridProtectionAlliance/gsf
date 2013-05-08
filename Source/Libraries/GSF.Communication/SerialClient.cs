@@ -123,7 +123,7 @@ namespace GSF.Communication
         public const string DefaultConnectionString = "Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False";
 
         // Fields
-        private TransportProvider<SerialPort> m_serialClient;
+        private readonly TransportProvider<SerialPort> m_serialClient;
         private Dictionary<string, string> m_connectData;
         private int m_receivedBytesThreshold;
         private ManualResetEvent m_connectionHandle;

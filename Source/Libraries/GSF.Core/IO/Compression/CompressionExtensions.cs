@@ -71,8 +71,8 @@ namespace GSF.IO.Compression
         /// <summary>
         /// Compress a byte array using standard compression method.
         /// </summary>
-        /// <param name="source">The <see cref="Byte"/> array to compress.</param>
-        /// <returns>A compressed version of the source <see cref="Byte"/> array.</returns>
+        /// <param name="source">The <see cref="byte"/> array to compress.</param>
+        /// <returns>A compressed version of the source <see cref="byte"/> array.</returns>
         public static byte[] Compress(this byte[] source)
         {
             return source.Compress(CompressionStrength.Standard);
@@ -81,9 +81,9 @@ namespace GSF.IO.Compression
         /// <summary>
         /// Compress a byte array using specified compression method.
         /// </summary>
-        /// <param name="source">The <see cref="Byte"/> array to compress.</param>
+        /// <param name="source">The <see cref="byte"/> array to compress.</param>
         /// <param name="strength">The specified <see cref="CompressionStrength"/>.</param>
-        /// <returns>A compressed version of the source <see cref="Byte"/> array.</returns>
+        /// <returns>A compressed version of the source <see cref="byte"/> array.</returns>
         public static byte[] Compress(this byte[] source, CompressionStrength strength)
         {
             return source.Compress(0, source.Length, strength, 0);
@@ -92,11 +92,11 @@ namespace GSF.IO.Compression
         /// <summary>
         /// Compress a byte array using specified compression method.
         /// </summary>
-        /// <param name="source">The <see cref="Byte"/> array to compress.</param>
+        /// <param name="source">The <see cref="byte"/> array to compress.</param>
         /// <param name="length">The number of bytes to read into the byte array for compression.</param>
-        /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
+        /// <param name="startIndex">An <see cref="int"/> representing the start index of the byte array.</param>
         /// <param name="strength">The specified <see cref="CompressionStrength"/>.</param>
-        /// <returns>A compressed version of the source <see cref="Byte"/> array.</returns>
+        /// <returns>A compressed version of the source <see cref="byte"/> array.</returns>
         public static byte[] Compress(this byte[] source, int startIndex, int length, CompressionStrength strength)
         {
             return source.Compress(startIndex, length, strength, 0);

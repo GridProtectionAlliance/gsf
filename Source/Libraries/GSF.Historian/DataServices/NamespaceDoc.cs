@@ -32,7 +32,7 @@ namespace GSF.Historian.DataServices
     /// <summary>
     /// Contains classes that define the fundamental data web services for a historian.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

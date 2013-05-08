@@ -29,7 +29,7 @@ using System.Windows.Data;
 namespace GSF.TimeSeries.UI.Binding
 {
     /// <summary>
-    /// Represents a custom <see cref="Binding"/> class.
+    /// Represents a custom <see cref="System.Windows.Data.Binding"/> class.
     /// </summary>
     public class GridButtonCommand : System.Windows.Data.Binding
     {

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Common.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 
 namespace GSF.PhasorProtocols.SelFastMessage
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// <summary>
     /// SEL Fast Message PMDATA setting frame size enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum FrameSize : byte
     {
         /// <summary>
@@ -55,7 +54,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// <summary>
     /// SEL Fast Message status word flags enumeration.
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum StatusFlags : ushort
     {
         /// <summary>
@@ -131,7 +130,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// <summary>
     /// SEL Fast Message frame rate enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum MessagePeriod : ushort
     {
         /// <summary>
@@ -216,7 +215,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// <summary>
     /// SEL Fast Message device commands enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum DeviceCommand : byte
     {
         /// <summary>

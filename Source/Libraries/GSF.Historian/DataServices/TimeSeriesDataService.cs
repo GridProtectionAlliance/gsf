@@ -57,7 +57,6 @@ namespace GSF.Historian.DataServices
         /// Initializes a new instance of the <see cref="TimeSeriesDataService"/> class.
         /// </summary>
         public TimeSeriesDataService()
-            : base()
         {
             Endpoints = "http.rest://localhost:6152/historian";
         }
@@ -130,8 +129,8 @@ namespace GSF.Historian.DataServices
         /// Reads historic time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which historic time-series data is to be read.</param>
-        /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <param name="endTime">End time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="startTime">Start time in <see cref="string"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="endTime">End time in <see cref="string"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
         public SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsXml(string idList, string startTime, string endTime)
         {
@@ -143,8 +142,8 @@ namespace GSF.Historian.DataServices
         /// </summary>
         /// <param name="fromID">Starting ID in the ID range for which historic time-series data is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which historic time-series data is to be read.</param>
-        /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <param name="endTime">End time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="startTime">Start time in <see cref="string"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="endTime">End time in <see cref="string"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
         public SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsXml(string fromID, string toID, string startTime, string endTime)
         {
@@ -155,8 +154,8 @@ namespace GSF.Historian.DataServices
         /// Reads historic time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which historic time-series data is to be read.</param>
-        /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <param name="endTime">End time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="startTime">Start time in <see cref="string"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="endTime">End time in <see cref="string"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
         public SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsJson(string idList, string startTime, string endTime)
         {
@@ -168,8 +167,8 @@ namespace GSF.Historian.DataServices
         /// </summary>
         /// <param name="fromID">Starting ID in the ID range for which historic time-series data is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which historic time-series data is to be read.</param>
-        /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <param name="endTime">End time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="startTime">Start time in <see cref="string"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="endTime">End time in <see cref="string"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
         public SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsJson(string fromID, string toID, string startTime, string endTime)
         {

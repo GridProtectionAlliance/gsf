@@ -25,14 +25,14 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using System.Threading;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace TestingAdapters
 {

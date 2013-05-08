@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.CompilerServices;
+using System.Timers;
 
 namespace GSF.Net.Ftp
 {
@@ -93,10 +94,10 @@ namespace GSF.Net.Ftp
         private string m_username;
         private string m_password;
         private string m_watchDirectory;
-        private System.Timers.Timer m_watchTimer;
-        private System.Timers.Timer m_restartTimer;
-        private List<FtpFile> m_currentFiles;
-        private List<FtpFile> m_newFiles;
+        private Timer m_watchTimer;
+        private Timer m_restartTimer;
+        private readonly List<FtpFile> m_currentFiles;
+        private readonly List<FtpFile> m_newFiles;
         private bool m_enabled;
         private bool m_notifyOnComplete;
         private bool m_disposed;
@@ -109,7 +110,6 @@ namespace GSF.Net.Ftp
         /// Constructs a new FTP file watcher using the default settings.
         /// </summary>
         public FtpFileWatcher()
-            : base()
         {
             m_enabled = true;
             m_notifyOnComplete = true;
@@ -121,14 +121,14 @@ namespace GSF.Net.Ftp
             m_session.ResponseReceived += OnResponseReceived;
 
             // Define a timer to watch for new files
-            m_watchTimer = new System.Timers.Timer();
+            m_watchTimer = new Timer();
             m_watchTimer.Elapsed += WatchTimer_Elapsed;
             m_watchTimer.AutoReset = false;
             m_watchTimer.Interval = 5000;
             m_watchTimer.Enabled = false;
 
             // Define a timer for FTP connection in case of availability failures
-            m_restartTimer = new System.Timers.Timer();
+            m_restartTimer = new Timer();
             m_restartTimer.Elapsed += RestartTimer_Elapsed;
             m_restartTimer.AutoReset = false;
             m_restartTimer.Interval = 10000;
@@ -513,7 +513,7 @@ namespace GSF.Net.Ftp
 
         // This method is synchronized in case user sets watch interval too tight...
         [MethodImpl(MethodImplOptions.Synchronized)]
-        private void WatchTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void WatchTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             // We attempt to access the FTP Session and refresh the current directory, if this fails
             // we are going to restart the connect cycle
@@ -630,7 +630,7 @@ namespace GSF.Net.Ftp
             m_restartTimer.Enabled = true;
         }
 
-        private void RestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void RestartTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             // Attempt to close the FTP Session if it is open...
             CloseSession();

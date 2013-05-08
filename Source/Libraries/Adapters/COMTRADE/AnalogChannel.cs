@@ -373,7 +373,7 @@ namespace Comtrade
             {
                 m_nominalFrequency = value;
 
-                if (m_signalKind == GSF.PhasorProtocols.SignalKind.Frequency)
+                if (m_signalKind == SignalKind.Frequency)
                     m_adder = (double)m_nominalFrequency;
             }
         }
@@ -402,7 +402,7 @@ namespace Comtrade
                         m_adder = 0.0;
                         break;
                     case SignalKind.Magnitude:
-                        if (m_phasorType == GSF.PhasorProtocols.PhasorType.Current)
+                        if (m_phasorType == PhasorType.Current)
                             m_multipler = 0.4;
                         else
                             m_multipler = 0.04;
@@ -640,16 +640,16 @@ namespace Comtrade
         #region [ Static ]
 
         // Static Fields
-        private static List<char> s_validPhaseDesignations;
-        private static List<SignalKind> s_validAnalogSignalKinds;
+        private static readonly List<char> s_validPhaseDesignations;
+        private static readonly List<SignalKind> s_validAnalogSignalKinds;
 
         // Static Constructor
         static AnalogChannel()
         {
-            s_validPhaseDesignations = new List<char>(new char[] { 'A', 'B', 'C', 'R', 'S', 'T', '1', '2', '3', 'P', '+', 'N', '-', 'Z', '0' });
+            s_validPhaseDesignations = new List<char>(new[] { 'A', 'B', 'C', 'R', 'S', 'T', '1', '2', '3', 'P', '+', 'N', '-', 'Z', '0' });
             s_validPhaseDesignations.Sort();
 
-            s_validAnalogSignalKinds = new List<SignalKind>(new SignalKind[] { SignalKind.Analog, SignalKind.Angle, SignalKind.Calculation, SignalKind.DfDt, SignalKind.Frequency, SignalKind.Magnitude, SignalKind.Statistic });
+            s_validAnalogSignalKinds = new List<SignalKind>(new[] { SignalKind.Analog, SignalKind.Angle, SignalKind.Calculation, SignalKind.DfDt, SignalKind.Frequency, SignalKind.Magnitude, SignalKind.Statistic });
             s_validAnalogSignalKinds.Sort();
         }
 

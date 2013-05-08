@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  MeasurementKey.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -23,18 +23,18 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using GSF.Data;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
     /// Represents a primary key for a measurement.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public struct MeasurementKey : IEquatable<MeasurementKey>, IComparable<MeasurementKey>, IComparable
     {
         #region [ Members ]

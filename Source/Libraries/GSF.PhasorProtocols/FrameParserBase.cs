@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrameParserBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -32,14 +32,10 @@
 //
 //******************************************************************************************************
 
-using GSF;
+using System;
+using System.Text;
 using GSF.Collections;
 using GSF.Parsing;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 
 namespace GSF.PhasorProtocols
 {
@@ -48,7 +44,7 @@ namespace GSF.PhasorProtocols
     /// </summary>
     /// <remarks>
     /// Frame parsers are implemented as a write-only streams so that data can come from any source.<br/>
-    /// See <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier, TFrameIdentifier, TCommonFrameHeader}"/> for more detail.
+    /// See <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> for more detail.
     /// Note that using the multi-source frame image parser base allows buffers to come in from different channels and still be
     /// parsed correctly.
     /// </remarks>
@@ -342,8 +338,8 @@ namespace GSF.PhasorProtocols
             {
                 if ((object)m_frameImageQueue == null)
                 {
-                    m_frameImageQueue = new AsyncQueue<EventArgs<FundamentalFrameType, byte[], int, int>>()
-                    {
+                    m_frameImageQueue = new AsyncQueue<EventArgs<FundamentalFrameType, byte[], int, int>>
+                        {
                         ProcessItemFunction = frameImage => ReceivedFrameBufferImage(this, frameImage)
                     };
 

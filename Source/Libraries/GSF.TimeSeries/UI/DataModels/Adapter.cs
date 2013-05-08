@@ -31,7 +31,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -39,6 +38,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -431,8 +431,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     foreach (DataRow row in adapterTable.Rows)
                     {
-                        adapterList.Add(new Adapter()
-                        {
+                        adapterList.Add(new Adapter
+                            {
                             NodeID = database.Guid(row, "NodeID"),
                             ID = row.ConvertField<int>("ID"),
                             AdapterName = row.Field<string>("AdapterName"),
@@ -578,7 +578,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 string query = database.ParameterizedQueryString("DELETE FROM " + tableName + " WHERE ID = {0}", "adapterID");
                 database.Connection.ExecuteNonQuery(query, DefaultTimeout, adapterID);
 
-                GSF.TimeSeries.UI.CommonFunctions.SendCommandToService("ReloadConfig");
+                CommonFunctions.SendCommandToService("ReloadConfig");
 
                 return "Adapter deleted successfully";
             }

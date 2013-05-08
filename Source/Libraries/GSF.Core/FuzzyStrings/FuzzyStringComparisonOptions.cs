@@ -26,7 +26,7 @@ using System;
 namespace GSF.FuzzyStrings
 {
     [Flags]
-    public enum FuzzyStringComparisonOptions : int
+    public enum FuzzyStringComparisonOptions
     {
         UseHammingDistance = (int)Bits.Bit00,
         UseJaccardDistance = (int)Bits.Bit01,

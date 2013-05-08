@@ -39,8 +39,8 @@ namespace GSF.Net.Security
         #region [ Members ]
 
         // Fields
-        private Dictionary<X509Certificate, CertificatePolicy> m_trustedCertificates;
-        private CertificatePolicy m_defaultCertificatePolicy;
+        private readonly Dictionary<X509Certificate, CertificatePolicy> m_trustedCertificates;
+        private readonly CertificatePolicy m_defaultCertificatePolicy;
         private string m_reasonForFailure;
 
         #endregion

@@ -149,7 +149,6 @@ namespace GSF.Net.Ftp
         /// </summary>
         /// <param name="caseInsensitive">Set to true to not be case sensitive with FTP file and directory names.</param>
         public FtpClient(bool caseInsensitive)
-            : base()
         {
             m_caseInsensitive = caseInsensitive;
             m_waitLockTimeOut = 10;

@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents a power measurement, in watts, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a power in watts; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a power in watts; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other power representations, specifically
     /// horsepower, metric horsepower, boiler horsepower, BTU per second, calorie per second, and liter-atmosphere
     /// per second. Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor,
@@ -95,7 +95,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Power : IComparable, IFormattable, IConvertible, IComparable<Power>, IComparable<Double>, IEquatable<Power>, IEquatable<Double>
     {
         #region [ Members ]
@@ -114,7 +114,7 @@ namespace GSF.Units
         private const double LitersAtmospherePerSecondFactor = 101.325D;
 
         // Fields
-        private double m_value; // Power value stored in watts
+        private readonly double m_value; // Power value stored in watts
 
         #endregion
 
@@ -748,7 +748,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Power"/> left hand operand.</param>
         /// <param name="value2">A <see cref="Power"/> right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result of the operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Power value1, Power value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

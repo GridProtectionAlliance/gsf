@@ -30,7 +30,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// Contains classes used to create client connections to FTP servers for uploading and downloading files.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

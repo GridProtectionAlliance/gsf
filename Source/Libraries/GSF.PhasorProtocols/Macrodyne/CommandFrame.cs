@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommandFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -28,7 +28,6 @@
 using System;
 using System.Runtime.Serialization;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Macrodyne
 {
@@ -37,9 +36,9 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// </summary>
     /// <remarks>
     /// Macrodyne command frames are designed only to be sent to a device, not received from a device. As a result
-    /// this frame does not implement <see cref="ISupportFrameImage{T}"/> for automated frame parsing.
+    /// this frame does not implement <see cref="ISupportFrameImage{TTypeIdentifier}"/> for automated frame parsing.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public class CommandFrame : CommandFrameBase
     {
         #region [ Constructors ]
@@ -51,10 +50,10 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <remarks>
         /// This constructor is used by a consumer to generate an Macrodyne command frame.
         /// </remarks>
-        public CommandFrame(GSF.PhasorProtocols.DeviceCommand command)
+        public CommandFrame(PhasorProtocols.DeviceCommand command)
             : base(new CommandCellCollection(0), command)
         {
-            if (command != GSF.PhasorProtocols.DeviceCommand.EnableRealTimeData && command != GSF.PhasorProtocols.DeviceCommand.DisableRealTimeData && command != GSF.PhasorProtocols.DeviceCommand.SendConfigurationFrame1 && command != GSF.PhasorProtocols.DeviceCommand.SendConfigurationFrame2 && command != GSF.PhasorProtocols.DeviceCommand.SendHeaderFrame)
+            if (command != PhasorProtocols.DeviceCommand.EnableRealTimeData && command != PhasorProtocols.DeviceCommand.DisableRealTimeData && command != PhasorProtocols.DeviceCommand.SendConfigurationFrame1 && command != PhasorProtocols.DeviceCommand.SendConfigurationFrame2 && command != PhasorProtocols.DeviceCommand.SendHeaderFrame)
                 throw new ArgumentException("Macrodyne does not support " + command + " device command.", "command");
         }
 
@@ -82,14 +81,14 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 switch (base.Command)
                 {
-                    case GSF.PhasorProtocols.DeviceCommand.EnableRealTimeData:
+                    case PhasorProtocols.DeviceCommand.EnableRealTimeData:
                         return DeviceCommand.StartOnlineData;
-                    case GSF.PhasorProtocols.DeviceCommand.DisableRealTimeData:
+                    case PhasorProtocols.DeviceCommand.DisableRealTimeData:
                         return DeviceCommand.StopOnlineData;
-                    case GSF.PhasorProtocols.DeviceCommand.SendConfigurationFrame1:
-                    case GSF.PhasorProtocols.DeviceCommand.SendConfigurationFrame2:
+                    case PhasorProtocols.DeviceCommand.SendConfigurationFrame1:
+                    case PhasorProtocols.DeviceCommand.SendConfigurationFrame2:
                         return DeviceCommand.RequestOnlineDataFormat;
-                    case GSF.PhasorProtocols.DeviceCommand.SendHeaderFrame:
+                    case PhasorProtocols.DeviceCommand.SendHeaderFrame:
                         return DeviceCommand.RequestUnitIDBufferValue;
                     default:
                         return DeviceCommand.Undefined;
@@ -100,19 +99,19 @@ namespace GSF.PhasorProtocols.Macrodyne
                 switch (value)
                 {
                     case DeviceCommand.StartOnlineData:
-                        base.Command = GSF.PhasorProtocols.DeviceCommand.EnableRealTimeData;
+                        base.Command = PhasorProtocols.DeviceCommand.EnableRealTimeData;
                         break;
                     case DeviceCommand.StopOnlineData:
-                        base.Command = GSF.PhasorProtocols.DeviceCommand.DisableRealTimeData;
+                        base.Command = PhasorProtocols.DeviceCommand.DisableRealTimeData;
                         break;
                     case DeviceCommand.RequestOnlineDataFormat:
-                        base.Command = GSF.PhasorProtocols.DeviceCommand.SendConfigurationFrame2;
+                        base.Command = PhasorProtocols.DeviceCommand.SendConfigurationFrame2;
                         break;
                     case DeviceCommand.RequestUnitIDBufferValue:
-                        base.Command = GSF.PhasorProtocols.DeviceCommand.SendHeaderFrame;
+                        base.Command = PhasorProtocols.DeviceCommand.SendHeaderFrame;
                         break;
                     default:
-                        base.Command = GSF.PhasorProtocols.DeviceCommand.ReservedBits;
+                        base.Command = PhasorProtocols.DeviceCommand.ReservedBits;
                         break;
                 }
             }

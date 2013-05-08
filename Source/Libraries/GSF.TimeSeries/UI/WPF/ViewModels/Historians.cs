@@ -23,13 +23,12 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.Commands;
-using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using GSF.TimeSeries.UI.Commands;
+using GSF.TimeSeries.UI.DataModels;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {

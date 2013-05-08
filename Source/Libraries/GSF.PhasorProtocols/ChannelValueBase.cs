@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ChannelValueBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -40,7 +40,7 @@ namespace GSF.PhasorProtocols
     /// Represents the common implementation of the protocol independent representation of any kind of data value.
     /// </summary>
     /// <typeparam name="T">Generic type.</typeparam>
-    [Serializable()]
+    [Serializable]
     public abstract class ChannelValueBase<T> : ChannelBase, IChannelValue<T> where T : IChannelDefinition
     {
         #region [ Members ]
@@ -202,7 +202,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
         /// </remarks>
-        /// <returns>A <see cref="Double"/> representing the composite value.</returns>
+        /// <returns>A <see cref="double"/> representing the composite value.</returns>
         public abstract double GetCompositeValue(int index);
 
         /// <summary>

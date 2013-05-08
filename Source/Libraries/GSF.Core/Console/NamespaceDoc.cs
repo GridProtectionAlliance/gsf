@@ -30,7 +30,7 @@ namespace GSF.Console
     /// <summary>
     /// Contains classes used for parsing command line parameters and managing console applications.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

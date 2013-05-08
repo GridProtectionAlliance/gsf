@@ -36,14 +36,15 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Configuration;
-using GSF.Net.Smtp;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web.Security;
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.Net.Smtp;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.Security
 {
@@ -68,11 +69,11 @@ namespace GSF.Security
         #region [ Static ]
 
         // Static Fields
-        private static string s_providerType;
-        private static ICollection<string> s_excludedResources;
-        private static IDictionary<string, string> s_includedResources;
-        private static string s_notificationSmtpServer;
-        private static string s_notificationSenderEmail;
+        private static readonly string s_providerType;
+        private static readonly ICollection<string> s_excludedResources;
+        private static readonly IDictionary<string, string> s_includedResources;
+        private static readonly string s_notificationSmtpServer;
+        private static readonly string s_notificationSenderEmail;
 
         // Static Constructor
         static SecurityProviderUtility()
@@ -221,29 +222,29 @@ namespace GSF.Security
             // Digits - 48 to 57
 
             int cursor = 0;
-            int lower = Cryptography.Random.Int32Between(1, length / 2);
-            int upper = Cryptography.Random.Int32Between(1, (length - lower) / 2);
-            int special = Cryptography.Random.Int32Between(1, (length - (lower + upper)) / 2);
+            int lower = Random.Int32Between(1, length / 2);
+            int upper = Random.Int32Between(1, (length - lower) / 2);
+            int special = Random.Int32Between(1, (length - (lower + upper)) / 2);
             int digits = length - (lower + upper + special);
             char[] password = new char[length];
             for (int i = 0; i < lower; i++)
             {
-                password[cursor] = (char)Cryptography.Random.Int32Between(97, 122);
+                password[cursor] = (char)Random.Int32Between(97, 122);
                 cursor++;
             }
             for (int i = 0; i < upper; i++)
             {
-                password[cursor] = (char)Cryptography.Random.Int32Between(65, 90);
+                password[cursor] = (char)Random.Int32Between(65, 90);
                 cursor++;
             }
             for (int i = 0; i < special; i++)
             {
-                password[cursor] = (char)Cryptography.Random.Int32Between(33, 47);
+                password[cursor] = (char)Random.Int32Between(33, 47);
                 cursor++;
             }
             for (int i = 0; i < digits; i++)
             {
-                password[cursor] = (char)Cryptography.Random.Int32Between(48, 57);
+                password[cursor] = (char)Random.Int32Between(48, 57);
                 cursor++;
             }
 

@@ -30,7 +30,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Contains fundamental classes and interfaces used by all phasor protocol parsing and generating code.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

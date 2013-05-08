@@ -24,7 +24,9 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Reflection;
+using System.Web.Hosting;
 
 namespace GSF.Web.Hosting
 {
@@ -48,7 +50,7 @@ namespace GSF.Web.Hosting
 	/// </para>
 	/// </remarks>
 	/// <seealso cref="GSF.Web.Hosting.EmbeddedResourcePathProvider" />
-	public class EmbeddedResourceVirtualFile : System.Web.Hosting.VirtualFile
+	public class EmbeddedResourceVirtualFile : VirtualFile
 	{
 		
 		#region EmbeddedResourceVirtualFile Variables
@@ -61,7 +63,7 @@ namespace GSF.Web.Hosting
 		/// property.
 		/// </summary>
 		/// <seealso cref="GSF.Web.Hosting.EmbeddedResourceVirtualFile" />
-        private Assembly _containingAssembly;
+        private readonly Assembly _containingAssembly;
 
 		/// <summary>
 		/// Internal storage for the
@@ -69,7 +71,7 @@ namespace GSF.Web.Hosting
 		/// property.
 		/// </summary>
 		/// <seealso cref="GSF.Web.Hosting.EmbeddedResourceVirtualFile" />
-        private string _resourcePath;
+        private readonly string _resourcePath;
 
 		#endregion
 
@@ -162,7 +164,7 @@ namespace GSF.Web.Hosting
 		/// <returns>A read-only stream to the virtual file.</returns>
 		/// <seealso cref="GSF.Web.Hosting.EmbeddedResourceVirtualFile" />
 		/// <seealso cref="System.Web.Hosting.VirtualFile.Open" />
-		public override System.IO.Stream Open()
+		public override Stream Open()
 		{
 			return this.ContainingAssembly.GetManifestResourceStream(this.ResourcePath);
 		}

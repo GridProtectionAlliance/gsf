@@ -23,11 +23,11 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -62,7 +62,7 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the <see cref="SerializableAlarm"/>s contained in the <see cref="SerializableAlarmCollection"/>.
         /// </summary>
-        [XmlArray(), DataMember()]
+        [XmlArray, DataMember]
         public SerializableAlarm[] Alarms { get; set; }
 
         #endregion

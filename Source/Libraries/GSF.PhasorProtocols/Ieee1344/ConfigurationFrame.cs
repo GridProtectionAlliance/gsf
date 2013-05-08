@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,14 +31,13 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifiableFrameImage<SourceChannel, FrameType>
     {
         #region [ Members ]

@@ -29,7 +29,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -39,6 +38,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using GSF.Reflection;
 
 namespace GSF.Windows.Forms
 {
@@ -142,7 +142,7 @@ namespace GSF.Windows.Forms
             {
                 using (Image img = PictureBoxLogo.Image)
                 {
-                    PictureBoxLogo.Image = new System.Drawing.Bitmap(logoStream);
+                    PictureBoxLogo.Image = new Bitmap(logoStream);
                 }
             }
         }

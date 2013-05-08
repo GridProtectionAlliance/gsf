@@ -31,7 +31,7 @@ namespace ConfigEditor
 	[TypeConverter(typeof(ExpandableObjectConverter))]
 	public class BindableProperties : Component, ICustomTypeDescriptor
 	{
-		PropertyDescriptorCollection m_propertyCollection;
+	    readonly PropertyDescriptorCollection m_propertyCollection;
 
 		public BindableProperties()
 		{
@@ -39,7 +39,7 @@ namespace ConfigEditor
 		}
 
 		public void AddProperty(string propName, object propValue, string propDesc,
-			string propCat, System.Type propType, bool isReadOnly, bool isExpandable)
+			string propCat, Type propType, bool isReadOnly, bool isExpandable)
 		{
 			DynamicProperty p = new DynamicProperty(propName, propValue, propDesc, propCat,
 				propType, isReadOnly, isExpandable);
@@ -135,10 +135,10 @@ namespace ConfigEditor
 	{
 		private string m_propName;
 		private object m_propValue;
-		private string m_propDescription;
-		private string m_propCategory;
-		private Type m_propType;
-		private bool m_isReadOnly;
+		private readonly string m_propDescription;
+		private readonly string m_propCategory;
+		private readonly Type m_propType;
+		private readonly bool m_isReadOnly;
 		private bool m_isExpandable;
 
 		public DynamicProperty(string pName, object pValue, string pDesc, string pCat, Type pType, bool readOnly, bool expandable)
@@ -153,7 +153,7 @@ namespace ConfigEditor
 			m_isExpandable = expandable;
 		}
 
-		public override System.Type ComponentType
+		public override Type ComponentType
 		{
 			get
 			{
@@ -177,7 +177,7 @@ namespace ConfigEditor
 			}
 		}
 
-		public override System.Type PropertyType
+		public override Type PropertyType
 		{
 			get
 			{

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationCellBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -34,7 +34,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the protocol independent common implementation of all configuration elements for cells in a <see cref="IConfigurationFrame"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class ConfigurationCellBase : ChannelCellBase, IConfigurationCell
     {
         #region [ Members ]
@@ -42,10 +42,10 @@ namespace GSF.PhasorProtocols
         // Fields
         private string m_stationName;
         private string m_idLabel;
-        private PhasorDefinitionCollection m_phasorDefinitions;
+        private readonly PhasorDefinitionCollection m_phasorDefinitions;
         private IFrequencyDefinition m_frequencyDefinition;
-        private AnalogDefinitionCollection m_analogDefinitions;
-        private DigitalDefinitionCollection m_digitalDefinitions;
+        private readonly AnalogDefinitionCollection m_analogDefinitions;
+        private readonly DigitalDefinitionCollection m_digitalDefinitions;
         private LineFrequency m_nominalFrequency;
         private AngleFormat m_angleFormat = AngleFormat.Radians;
         private ushort m_revisionCount;

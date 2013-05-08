@@ -23,13 +23,13 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
 using System.ComponentModel;
+using GSF.TimeSeries;
 
 namespace TsfManager
 {
     [RunInstaller(true)]
-    public partial class ApplicationInstall : InstallerBase
+    public class ApplicationInstall : InstallerBase
     {
     }
 }

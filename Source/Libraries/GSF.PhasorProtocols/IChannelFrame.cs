@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  IChannelFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -30,7 +30,6 @@
 using System;
 using System.Runtime.Serialization;
 using GSF.TimeSeries;
-using GSF;
 
 namespace GSF.PhasorProtocols
 {
@@ -39,7 +38,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Fundamental frame types enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum FundamentalFrameType
     {
         /// <summary>

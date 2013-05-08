@@ -23,11 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
-using GSF.Reflection;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.UI.Commands;
-using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,6 +31,11 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
+using GSF.IO;
+using GSF.Reflection;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.UI.Commands;
+using GSF.TimeSeries.UI.DataModels;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {
@@ -47,10 +47,10 @@ namespace GSF.TimeSeries.UI.ViewModels
         #region [ Members ]
 
         // Fields
-        private Dictionary<Guid, string> m_nodeLookupList;
+        private readonly Dictionary<Guid, string> m_nodeLookupList;
         private Dictionary<Type, string> m_adapterTypeList;
         private List<AdapterConnectionStringParameter> m_parameterList;
-        private AdapterType m_adapterType;
+        private readonly AdapterType m_adapterType;
         private string m_searchDirectory;
         private AdapterConnectionStringParameter m_selectedParameter;
         private RelayCommand m_initializeCommand;
@@ -275,7 +275,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                     ItemsKeys = Adapter.LoadIDs(null, m_adapterType, SortMember, SortDirection);
 
                 pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
-                ItemsSource = DataModels.Adapter.Load(null, m_adapterType, pageKeys);
+                ItemsSource = Adapter.Load(null, m_adapterType, pageKeys);
                 CurrentItem.Type = m_adapterType;
             }
             catch (Exception ex)
@@ -640,8 +640,8 @@ namespace GSF.TimeSeries.UI.ViewModels
             if (parameter == null)
             {
                 // Create a brand new parameter to be returned.
-                parameter = new AdapterConnectionStringParameter()
-                {
+                parameter = new AdapterConnectionStringParameter
+                    {
                     Info = info,
                     Name = info.Name,
                     Description = description,
@@ -678,8 +678,8 @@ namespace GSF.TimeSeries.UI.ViewModels
 
             if (parameter == null)
             {
-                parameter = new AdapterConnectionStringParameter()
-                {
+                parameter = new AdapterConnectionStringParameter
+                    {
                     Name = name,
                     DefaultValue = string.Empty,
                     IsRequired = false

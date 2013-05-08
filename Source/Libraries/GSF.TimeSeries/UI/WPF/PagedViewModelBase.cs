@@ -28,8 +28,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
-using GSF.TimeSeries.UI.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -41,6 +39,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using GSF.Data;
+using GSF.TimeSeries.UI.Commands;
 
 namespace GSF.TimeSeries.UI
 {
@@ -99,9 +99,9 @@ namespace GSF.TimeSeries.UI
         private bool m_propertyChanged;
         private bool m_autoSave;
         private bool m_hideMessages;
-        private DispatcherTimer m_timer;
-        private TextBlock m_statusTextBlock;
-        private TsfPopup m_statusPopup;
+        private readonly DispatcherTimer m_timer;
+        private readonly TextBlock m_statusTextBlock;
+        private readonly TsfPopup m_statusPopup;
         private string m_sortMember;
         private string m_sortDirection;
 
@@ -126,7 +126,7 @@ namespace GSF.TimeSeries.UI
 
             m_timer = new DispatcherTimer();
             m_timer.Interval = TimeSpan.FromSeconds(5);
-            m_timer.Tick += new EventHandler(m_timer_Tick);
+            m_timer.Tick += m_timer_Tick;
 
             m_statusTextBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockResult");
             m_statusPopup = (TsfPopup)Application.Current.MainWindow.FindName("PopupStatus");
@@ -299,7 +299,7 @@ namespace GSF.TimeSeries.UI
             set
             {
                 if (m_currentPage != null)
-                    m_currentPage.CollectionChanged -= new NotifyCollectionChangedEventHandler(m_currentPage_CollectionChanged);
+                    m_currentPage.CollectionChanged -= m_currentPage_CollectionChanged;
 
                 m_currentPage = value;
 
@@ -307,7 +307,7 @@ namespace GSF.TimeSeries.UI
 
                 if (m_currentPage != null)
                 {
-                    m_currentPage.CollectionChanged += new NotifyCollectionChangedEventHandler(m_currentPage_CollectionChanged);
+                    m_currentPage.CollectionChanged += m_currentPage_CollectionChanged;
 
                     if (m_currentPage.Count > 0)
                     {

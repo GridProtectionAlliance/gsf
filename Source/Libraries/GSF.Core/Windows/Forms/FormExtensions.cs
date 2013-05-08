@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FormExtensions.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,8 +37,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
+using System;
 using System.Windows.Forms;
+using GSF.Configuration;
 
 namespace GSF.Windows.Forms
 {
@@ -50,8 +51,8 @@ namespace GSF.Windows.Forms
             #region [ Members ]
 
             // Fields
-            private int m_paramA;
-            private int m_paramB;
+            private readonly int m_paramA;
+            private readonly int m_paramB;
 
             #endregion
 
@@ -71,8 +72,8 @@ namespace GSF.Windows.Forms
                             string[] elements = setting.Split(',');
                             if (elements.Length == 2)
                             {
-                                m_paramA = System.Convert.ToInt32(elements[0].Split('=')[1]);
-                                m_paramB = System.Convert.ToInt32(elements[1].Split('=')[1]);
+                                m_paramA = Convert.ToInt32(elements[0].Split('=')[1]);
+                                m_paramB = Convert.ToInt32(elements[1].Split('=')[1]);
                             }
                         }
                     }

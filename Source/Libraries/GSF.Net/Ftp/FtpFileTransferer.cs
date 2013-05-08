@@ -43,9 +43,9 @@
 
 #endregion
 
-using GSF.IO;
 using System.IO;
 using System.Threading;
+using GSF.IO;
 
 namespace GSF.Net.Ftp
 {
@@ -78,16 +78,16 @@ namespace GSF.Net.Ftp
         private delegate void StreamCopyDelegate(Stream remote, Stream local);
 
         // Fields
-        private StreamCopyDelegate m_streamCopyRoutine;
-        private FileCommandDelegate m_ftpFileCommandRoutine;
+        private readonly StreamCopyDelegate m_streamCopyRoutine;
+        private readonly FileCommandDelegate m_ftpFileCommandRoutine;
         private FtpDirectory m_transferStarter;
-        private FtpSessionConnected m_session;
-        private string m_localFile;
-        private string m_remoteFile;
-        private long m_totalBytes;
+        private readonly FtpSessionConnected m_session;
+        private readonly string m_localFile;
+        private readonly string m_remoteFile;
+        private readonly long m_totalBytes;
         private long m_totalBytesTransfered;
         private int m_transferedPercentage;
-        private TransferDirection m_transferDirection;
+        private readonly TransferDirection m_transferDirection;
         private FtpAsyncResult m_transferResult;
 
         #endregion

@@ -30,7 +30,7 @@ namespace GSF.Validation
     /// <summary>
     /// Contains classes that facilitate the validation of data.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

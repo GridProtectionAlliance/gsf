@@ -38,11 +38,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
@@ -51,7 +51,7 @@ namespace GSF.Core.Tests
     ///This is a test class for TemperatureTest and is intended
     ///to contain all TemperatureTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class TemperatureTest
     {
 
@@ -106,7 +106,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Subtraction
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_SubtractionTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -120,7 +120,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Multiply
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_MultiplyTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -134,7 +134,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Modulus
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ModulusTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -148,7 +148,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanOrEqualTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -162,7 +162,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -176,7 +176,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Inequality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_InequalityTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -190,7 +190,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitTemperatureTest()
         {
             double value = 10F;
@@ -203,7 +203,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitDoubleTest()
         {
             Temperature value = new Temperature(10F);
@@ -216,7 +216,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanOrEqualTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -230,7 +230,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -244,7 +244,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Exponent
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ExponentTest()
         {
             Temperature value1 = new Temperature(2F);
@@ -258,7 +258,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Equality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_EqualityTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -272,7 +272,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Division
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_DivisionTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -286,7 +286,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Addition
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_AdditionTest()
         {
             Temperature value1 = new Temperature(10F);
@@ -320,7 +320,7 @@ namespace GSF.Core.Tests
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseStyleProviderResultTest()
         {
             double value = 10F;
@@ -349,7 +349,7 @@ namespace GSF.Core.Tests
         /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseResultTest()
         {
             double value = 10F;
@@ -366,7 +366,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for ToTemperature
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToTemperatureTest()
         {
@@ -384,7 +384,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatTest()
         {
             double value = 10F;
@@ -404,7 +404,7 @@ namespace GSF.Core.Tests
         /// The string representation of the value of this instance, consisting of a minus sign if
         /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringTest()
         {
             double value = 10F;
@@ -426,7 +426,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringProviderTest()
         {
             double value = 10F;
@@ -450,7 +450,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format and provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatProviderTest()
         {
             double value = 10F;
@@ -468,7 +468,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Temperature"/> value in Rømer.
         /// </summary>
         /// <returns>Value of <see cref="Temperature"/> in Rømer.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToRømerTest()
         {
             double value = 10F;
@@ -483,7 +483,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Temperature"/> value in Réaumur.
         /// </summary>
         /// <returns>Value of <see cref="Temperature"/> in Réaumur.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToRéaumurTest()
         {
             double value = 10F;
@@ -499,7 +499,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Temperature"/> value in Rankine.
         /// </summary>
         /// <returns>Value of <see cref="Temperature"/> in Rankine.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToRankineTest()
         {
             double value = 10F;
@@ -515,7 +515,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Temperature"/> value in Newton.
         /// </summary>
         /// <returns>Value of <see cref="Temperature"/> in Newton.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToNewtonTest()
         {
             double value = 10F;
@@ -531,7 +531,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Temperature"/> value in Fahrenheit.
         /// </summary>
         /// <returns>Value of <see cref="Temperature"/> in Fahrenheit.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToFahrenheitTest()
         {
             double value = 10F;
@@ -547,7 +547,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Temperature"/> value in Delisle.
         /// </summary>
         /// <returns>Value of <see cref="Temperature"/> in Delisle.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToDelisleTest()
         {
             Temperature target = new Temperature(10F);
@@ -562,7 +562,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Temperature"/> value in Celsius.
         /// </summary>
         /// <returns>Value of <see cref="Temperature"/> in Celsius.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToCelsiusTest()
         {
             Temperature target = new Temperature(10F);
@@ -575,7 +575,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt64Test()
         {
@@ -590,7 +590,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt32Test()
         {
@@ -606,7 +606,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt16Test()
         {
@@ -621,7 +621,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToType
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToTypeTest()
         {
@@ -637,7 +637,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSingle
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSingleTest()
         {
@@ -653,7 +653,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSByteTest()
         {
@@ -668,7 +668,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt64Test()
         {
@@ -683,7 +683,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt32Test()
         {
@@ -698,7 +698,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt16Test()
         {
@@ -713,7 +713,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDouble
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDoubleTest()
         {
@@ -728,7 +728,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDecimal
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDecimalTest()
         {
@@ -743,7 +743,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDateTime
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDateTimeTest()
         {
@@ -753,7 +753,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToChar
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToCharTest()
         {
@@ -763,7 +763,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToByteTest()
         {
@@ -779,7 +779,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToBoolean
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToBooleanTest()
         {
@@ -811,7 +811,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleTest()
         {
             double value = 10F;
@@ -846,7 +846,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleProviderTest()
         {
             double value = 10F;
@@ -875,7 +875,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseProviderTest()
         {
             double value = 10F;
@@ -900,7 +900,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Temperature.MinValue"/> or greater than <see cref="Temperature.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStringTest()
         {
             double value = 10F;
@@ -916,7 +916,7 @@ namespace GSF.Core.Tests
         /// Returns the <see cref="TypeCode"/> for value type <see cref="Double"/>.
         /// </summary>
         /// <returns>The enumerated constant, <see cref="TypeCode.Double"/>.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetTypeCodeTest()
         {
             Temperature target = new Temperature();
@@ -934,7 +934,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetHashCodeTest()
         {
             Temperature target = new Temperature(10F);
@@ -950,7 +950,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Celsius.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Celsius.</returns>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void FromTemperatureTest()
         {
@@ -965,7 +965,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Rømer.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rømer.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromRømerTest()
         {
             double value = 10F;
@@ -981,7 +981,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Rømer.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rømer.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromRéaumurTest()
         {
             double value = 10F;
@@ -997,7 +997,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Rankine.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Rankine.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromRankineTest()
         {
             double value = 10F;
@@ -1013,7 +1013,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Newton.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Newton.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromNewtonTest()
         {
             double value = 10F;
@@ -1029,7 +1029,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Fahrenheit.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Fahrenheit.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromFahrenheitTest()
         {
             double value = 10F;
@@ -1045,7 +1045,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Delisle.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Delisle.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromDelisleTest()
         {
             double value = 10F;
@@ -1061,7 +1061,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Temperature"/> value in Celsius.</param>
         /// <returns>New <see cref="Temperature"/> object from the specified <paramref name="value"/> in Celsius.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromCelsiusTest()
         {
             double value = 10F;
@@ -1080,7 +1080,7 @@ namespace GSF.Core.Tests
         /// True if obj is an instance of <see cref="Double"/> or <see cref="Temperature"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsTest()
         {
             double value = 10F;
@@ -1100,7 +1100,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsTemperatureTest()
         {
             double value = 10F;
@@ -1120,7 +1120,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsDoubleTest()
         {
             double value = 10F;
@@ -1143,7 +1143,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToDoubleTest()
         {
 
@@ -1166,7 +1166,7 @@ namespace GSF.Core.Tests
         /// if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Temperature"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToObjectTest()
         {
             Temperature target = new Temperature(10F);
@@ -1188,7 +1188,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToTemperatureTest()
         {
             Temperature target = new Temperature(10F);
@@ -1204,7 +1204,7 @@ namespace GSF.Core.Tests
         /// Creates a new <see cref="Temperature"/>.
         /// </summary>
         /// <param name="value">New temperature value in kelvin.</param>
-        [TestMethod()]
+        [TestMethod]
         public void TemperatureConstructorTest()
         {
             List<Double> values = new List<Double>();

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCellParsingState.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,11 +37,11 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private IConfigurationCell m_configurationCell;
-        private CreateNewValueFunction<IPhasorDefinition, IPhasorValue> m_createNewPhasorValue;
-        private CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> m_createNewFrequencyValue;
-        private CreateNewValueFunction<IAnalogDefinition, IAnalogValue> m_createNewAnalogValue;
-        private CreateNewValueFunction<IDigitalDefinition, IDigitalValue> m_createNewDigitalValue;
+        private readonly IConfigurationCell m_configurationCell;
+        private readonly CreateNewValueFunction<IPhasorDefinition, IPhasorValue> m_createNewPhasorValue;
+        private readonly CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> m_createNewFrequencyValue;
+        private readonly CreateNewValueFunction<IAnalogDefinition, IAnalogValue> m_createNewAnalogValue;
+        private readonly CreateNewValueFunction<IDigitalDefinition, IDigitalValue> m_createNewDigitalValue;
 
         #endregion
 

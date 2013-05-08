@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Interop;
 using System;
 using System.Collections.Generic;
 using System.Configuration.Install;
@@ -33,6 +32,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using System.Threading;
+using GSF.Interop;
 
 namespace GSF.ServiceProcess
 {
@@ -81,14 +81,14 @@ namespace GSF.ServiceProcess
         private const int SERVICE_CONFIG_FAILURE_ACTIONS_FLAG = 0x4;
 
         // Fields
-        private List<WindowsApi.SC_ACTION> m_failureActions;    // Service failure actions
+        private readonly List<WindowsApi.SC_ACTION> m_failureActions;    // Service failure actions
         private int m_failResetPeriod = Timeout.Infinite;       // Service fail count reset time
         private string m_failRebootMessage = "";			    // Service reboot message
         private string m_failRunCommand = "";				    // Service fail run command
         private bool m_executeActionsOnNonCrashErrors = true;   // Windows 2008 check box to restart on exit with error
-        private bool m_startOnInstall = false;
+        private bool m_startOnInstall;
         private int m_startTimeout = 15000;
-        private string m_logMessagePrefix;
+        private readonly string m_logMessagePrefix;
 
         #endregion
 
@@ -97,14 +97,14 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Creates a new <see cref="ServiceInstallerEx"/>.
         /// </summary>
-        public ServiceInstallerEx() : base()
+        public ServiceInstallerEx()
         {
             // Initialize the failure actions and register for the Committed event
             m_failureActions = new List<WindowsApi.SC_ACTION>();
 
             // Register the event handlers for post install operations
-            base.Committed += new InstallEventHandler(UpdateServiceConfig);
-            base.Committed += new InstallEventHandler(StartIfNeeded);
+            base.Committed += UpdateServiceConfig;
+            base.Committed += StartIfNeeded;
 
             // Set the log message prefix
             m_logMessagePrefix = base.ServiceName + " - ServiceInstallerEx: ";
@@ -210,7 +210,7 @@ namespace GSF.ServiceProcess
         /// <param name="delay">The time to wait before performing the specified <paramref name="recoverAction"/>, in milliseconds.</param>
         public void DefineRecoverAction(RecoverAction recoverAction, int delay)
         {
-            m_failureActions.Add(new WindowsApi.SC_ACTION() { Type = (WindowsApi.SC_ACTION_TYPE)(uint)recoverAction, Delay = delay });
+            m_failureActions.Add(new WindowsApi.SC_ACTION { Type = (WindowsApi.SC_ACTION_TYPE)(uint)recoverAction, Delay = delay });
         }
 
         // The worker method to set all the extension properties for the service

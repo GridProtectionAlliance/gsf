@@ -30,12 +30,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Security.Cryptography;
 using System;
 using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
+using GSF.Security.Cryptography;
 
 namespace GSF.Threading
 {
@@ -72,7 +72,7 @@ namespace GSF.Threading
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">Argument <paramref name="name"/> cannot be empty, null or white space.</exception>
-        [MethodImplAttribute(MethodImplOptions.Synchronized)]
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public static Mutex GetNamedMutex(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -195,7 +195,7 @@ namespace GSF.Threading
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">Argument <paramref name="name"/> cannot be empty, null or white space.</exception>
-        [MethodImplAttribute(MethodImplOptions.Synchronized)]
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public static Semaphore GetNamedSemaphore(string name, int maximumCount = 10, int initialCount = -1)
         {
             if (string.IsNullOrWhiteSpace(name))

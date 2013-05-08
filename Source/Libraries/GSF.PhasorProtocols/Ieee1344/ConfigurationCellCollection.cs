@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationCellCollection.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,8 +33,8 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// Represents a IEEE 1344 implementation of a collection of <see cref="IConfigurationCell"/> objects.
     /// </summary>
-    [Serializable()]
-    public class ConfigurationCellCollection : GSF.PhasorProtocols.ConfigurationCellCollection
+    [Serializable]
+    public class ConfigurationCellCollection : PhasorProtocols.ConfigurationCellCollection
     {
         #region [ Constructors ]
 

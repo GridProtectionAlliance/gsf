@@ -46,13 +46,13 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
 using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
+using GSF.IO;
 
 namespace GSF.Adapters
 {
@@ -61,25 +61,25 @@ namespace GSF.Adapters
     /// </summary>
     /// <seealso cref="IAdapter"/>
     /// <seealso cref="AdapterLoader{T}"/>
-    [Serializable(), DataContract(Namespace = "")]
+    [Serializable, DataContract(Namespace = "")]
     public class Adapter : MarshalByRefObject, IAdapter
     {
         #region [ Members ]
 
         // Fields
-        [NonSerialized()]
+        [NonSerialized]
         private DateTime m_created;
-        [NonSerialized()]
+        [NonSerialized]
         private string m_hostFile;
-        [NonSerialized()]
+        [NonSerialized]
         private bool m_persistSettings;
-        [NonSerialized()]
+        [NonSerialized]
         private string m_settingsCategory;
-        [NonSerialized()]
+        [NonSerialized]
         private bool m_enabled;
-        [NonSerialized()]
+        [NonSerialized]
         private bool m_disposed;
-        [NonSerialized()]
+        [NonSerialized]
         private bool m_initialized;
 
         // Events
@@ -158,7 +158,7 @@ namespace GSF.Adapters
         /// <remarks>
         /// This can be used to update the <see cref="Adapter"/> when changes are made to the file where it is housed.
         /// </remarks>
-        [XmlIgnore(), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [XmlIgnore, Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual string HostFile
         {
             get
@@ -174,7 +174,7 @@ namespace GSF.Adapters
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="Adapter"/> is currently enabled.
         /// </summary>
-        [XmlIgnore()]
+        [XmlIgnore]
         public virtual bool Enabled
         {
             get
@@ -190,7 +190,7 @@ namespace GSF.Adapters
         /// <summary>
         /// Gets or sets a boolean value that indicates whether <see cref="Adapter"/> settings are to be saved to the config file.
         /// </summary>
-        [XmlIgnore()]
+        [XmlIgnore]
         public virtual bool PersistSettings
         {
             get
@@ -207,7 +207,7 @@ namespace GSF.Adapters
         /// Gets or sets the category under which <see cref="Adapter"/> settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [XmlIgnore()]
+        [XmlIgnore]
         public virtual string SettingsCategory
         {
             get

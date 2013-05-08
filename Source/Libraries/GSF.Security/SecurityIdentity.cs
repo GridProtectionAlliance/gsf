@@ -38,7 +38,7 @@ namespace GSF.Security
         #region [ Members ]
 
         // Fields
-        private ISecurityProvider m_provider;
+        private readonly ISecurityProvider m_provider;
 
         #endregion
 

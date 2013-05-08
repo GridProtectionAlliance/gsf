@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  MultipleDestinationExporter.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -36,7 +36,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -47,6 +46,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using GSF.Configuration;
 
 namespace GSF.IO
 {
@@ -308,7 +308,7 @@ namespace GSF.IO
         private Encoding m_textEncoding;
         private List<ExportDestination> m_exportDestinations;
         private bool m_exportInProgress;
-        private object m_exportInProgressLock;
+        private readonly object m_exportInProgressLock;
         private int m_maximumRetryAttempts;
         private int m_retryDelayInterval;
         private bool m_enabled;
@@ -343,7 +343,6 @@ namespace GSF.IO
         /// <param name="settingsCategory">The config file settings category under which the export destinations are defined.</param>
         /// <param name="exportTimeout">The total allowed time in milliseconds for each export to execute.</param>
         public MultipleDestinationExporter(string settingsCategory, int exportTimeout)
-            : base()
         {
             m_exportTimeout = exportTimeout;
             m_settingsCategory = settingsCategory;
@@ -772,7 +771,7 @@ namespace GSF.IO
         public void Initialize()
         {
             // We provide a simple default set of export destinations since no others are specified.
-            Initialize(new ExportDestination[] { new ExportDestination("C:\\filename.txt", false, "domain", "username", "password") });
+            Initialize(new[] { new ExportDestination("C:\\filename.txt", false, "domain", "username", "password") });
         }
 
         /// <summary>
@@ -993,8 +992,8 @@ namespace GSF.IO
 
                         for (int i = 0; i < exportStates.Length; i++)
                         {
-                            exportStates[i] = new ExportState()
-                            {
+                            exportStates[i] = new ExportState
+                                {
                                 SourceFileName = filename,
                                 DestinationFileName = destinations[i].DestinationFile
                             };

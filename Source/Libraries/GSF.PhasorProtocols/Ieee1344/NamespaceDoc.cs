@@ -30,7 +30,7 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// Contains an implementation of the phasor classes used to parse or generate a stream of data in the IEEE 1344-1995 standard format.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

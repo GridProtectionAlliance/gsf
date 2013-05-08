@@ -63,9 +63,11 @@ using System.Configuration;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using System.Xml.Serialization;
 using GSF.Configuration;
 using GSF.Parsing;
+using Timer = System.Timers.Timer;
 
 namespace GSF.IO
 {
@@ -342,9 +344,9 @@ namespace GSF.IO
         private List<T> m_fileRecords;
         private byte[] m_recordBuffer;
         private FileStream m_fileData;
-        private ManualResetEvent m_loadWaitHandle;
-        private ManualResetEvent m_saveWaitHandle;
-        private System.Timers.Timer m_autoSaveTimer;
+        private readonly ManualResetEvent m_loadWaitHandle;
+        private readonly ManualResetEvent m_saveWaitHandle;
+        private readonly Timer m_autoSaveTimer;
         private FileSystemWatcher m_fileWatcher;
         private bool m_disposed;
         private bool m_initialized;
@@ -369,7 +371,7 @@ namespace GSF.IO
             m_loadWaitHandle = new ManualResetEvent(true);
             m_saveWaitHandle = new ManualResetEvent(true);
 
-            m_autoSaveTimer = new System.Timers.Timer();
+            m_autoSaveTimer = new Timer();
             m_autoSaveTimer.Elapsed += m_autoSaveTimer_Elapsed;
         }
 
@@ -504,7 +506,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the file settings are to be saved to the config file.
         /// </summary>
-        [XmlIgnore()]
+        [XmlIgnore]
         public bool PersistSettings
         {
             get
@@ -522,7 +524,7 @@ namespace GSF.IO
         /// <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [XmlIgnore()]
+        [XmlIgnore]
         public string SettingsCategory
         {
             get
@@ -545,7 +547,7 @@ namespace GSF.IO
         /// Setting <see cref="Enabled"/> to true will open the file if it is closed, setting
         /// to false will close the file if it is open.
         /// </remarks>
-        [XmlIgnore()]
+        [XmlIgnore]
         public bool Enabled
         {
             get
@@ -1328,7 +1330,7 @@ namespace GSF.IO
             return newRecord;
         }
 
-        private void m_autoSaveTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_autoSaveTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             try
             {
@@ -1341,7 +1343,7 @@ namespace GSF.IO
             }
         }
 
-        private void m_fileWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
+        private void m_fileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
             try
             {

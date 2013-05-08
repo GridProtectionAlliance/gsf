@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FacileActionAdapterBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -79,7 +79,7 @@ namespace GSF.TimeSeries.Adapters
         private bool m_respectOutputDemands;
         private int m_framesPerSecond;                              // Defined frames per second, if defined
         private bool m_trackLatestMeasurements;                     // Determines whether or not to track latest measurements
-        private ImmediateMeasurements m_latestMeasurements;         // Absolute latest received measurement values
+        private readonly ImmediateMeasurements m_latestMeasurements;         // Absolute latest received measurement values
         private bool m_useLocalClockAsRealTime;                     // Determines whether or not to use local system clock as "real-time"
         private long m_realTimeTicks;                               // Timstamp of real-time or the most recently received measurement
 
@@ -149,7 +149,7 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Filter measurements to list of specified source IDs
-                AdapterBase.LoadInputSourceIDs(this);
+                LoadInputSourceIDs(this);
             }
         }
 
@@ -225,7 +225,7 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Filter measurements to list of specified source IDs
-                AdapterBase.LoadOutputSourceIDs(this);
+                LoadOutputSourceIDs(this);
             }
         }
 
@@ -514,7 +514,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="measurement">Measurement to queue for processing.</param>
         public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
         {
-            QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
+            QueueMeasurementsForProcessing(new[] { measurement });
         }
 
         /// <summary>

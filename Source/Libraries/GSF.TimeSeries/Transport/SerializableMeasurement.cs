@@ -52,7 +52,7 @@ namespace GSF.TimeSeries.Transport
         public const int FixedLength = 64;
 
         // Fields
-        private Encoding m_encoding;
+        private readonly Encoding m_encoding;
 
         #endregion
 

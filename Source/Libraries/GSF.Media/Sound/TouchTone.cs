@@ -224,8 +224,8 @@ namespace GSF.Media.Sound
         #region [ Static ]
 
         // Static Fields
-        private static double[] s_lowTouchTones;
-        private static double[] s_highTouchTones;
+        private static readonly double[] s_lowTouchTones;
+        private static readonly double[] s_highTouchTones;
 
         // Static Constructor
         static TouchTone()
@@ -269,7 +269,7 @@ namespace GSF.Media.Sound
                     // Interpret commas as long pauses
                     touchTones.Add(longPause);
                 }
-                else if (TouchTone.TryParse(key, out touchTone))
+                else if (TryParse(key, out touchTone))
                 {
                     if (touchTones.Count > 0)
                         touchTones.Add(pause);

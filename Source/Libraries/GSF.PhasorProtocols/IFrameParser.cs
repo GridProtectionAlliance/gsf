@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  IFrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -26,7 +26,6 @@
 //******************************************************************************************************
 
 using System;
-using GSF;
 using GSF.Parsing;
 
 namespace GSF.PhasorProtocols
@@ -36,7 +35,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Source channel, i.e., data or command.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum SourceChannel
     {
         /// <summary>

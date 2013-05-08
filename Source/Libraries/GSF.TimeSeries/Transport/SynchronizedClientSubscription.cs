@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Timers;
 using GSF.Parsing;
 using GSF.TimeSeries.Adapters;
 
@@ -58,10 +59,10 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
         // Fields
-        private SignalIndexCache m_signalIndexCache;
+        private readonly SignalIndexCache m_signalIndexCache;
         private DataPublisher m_parent;
-        private Guid m_clientID;
-        private Guid m_subscriberID;
+        private readonly Guid m_clientID;
+        private readonly Guid m_subscriberID;
         private string m_hostName;
         private string m_requestedInputFilter;
         private volatile byte m_compressionStrength;
@@ -70,11 +71,11 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
 
-        private List<byte[]> m_bufferBlockCache;
-        private object m_bufferBlockCacheLock;
+        private readonly List<byte[]> m_bufferBlockCache;
+        private readonly object m_bufferBlockCacheLock;
         private uint m_bufferBlockSequenceNumber;
         private uint m_expectedBufferBlockConfirmationNumber;
-        private System.Timers.Timer m_bufferBlockRetransmissionTimer;
+        private Timer m_bufferBlockRetransmissionTimer;
         private double m_bufferBlockRetransmissionTimeout;
 
         private bool m_disposed;
@@ -97,8 +98,8 @@ namespace GSF.TimeSeries.Transport
             m_parent = parent;
             m_clientID = clientID;
             m_subscriberID = subscriberID;
-            m_signalIndexCache = new SignalIndexCache()
-            {
+            m_signalIndexCache = new SignalIndexCache
+                {
                 SubscriberID = subscriberID
             };
 
@@ -373,7 +374,7 @@ namespace GSF.TimeSeries.Transport
             else
                 m_bufferBlockRetransmissionTimeout = 5.0D;
 
-            m_bufferBlockRetransmissionTimer = new System.Timers.Timer();
+            m_bufferBlockRetransmissionTimer = new Timer();
             m_bufferBlockRetransmissionTimer.AutoReset = false;
             m_bufferBlockRetransmissionTimer.Interval = m_bufferBlockRetransmissionTimeout * 1000.0D;
             m_bufferBlockRetransmissionTimer.Elapsed += BufferBlockRetransmissionTimer_Elapsed;
@@ -633,7 +634,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received
-        private void BufferBlockRetransmissionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs elapsedEventArgs)
+        private void BufferBlockRetransmissionTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
             lock (m_bufferBlockCacheLock)
             {

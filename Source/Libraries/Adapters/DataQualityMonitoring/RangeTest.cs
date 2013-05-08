@@ -23,14 +23,14 @@
 //
 //******************************************************************************************************
 
-using DataQualityMonitoring.Services;
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Timers;
+using DataQualityMonitoring.Services;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace DataQualityMonitoring
 {
@@ -95,14 +95,14 @@ namespace DataQualityMonitoring
         public const double DEFAULT_IPHA_HIGH_RANGE = 180.0;
 
         // Fields
-        private Dictionary<MeasurementKey, LinkedList<IMeasurement>> m_outOfRangeMeasurements;
+        private readonly Dictionary<MeasurementKey, LinkedList<IMeasurement>> m_outOfRangeMeasurements;
         private string m_signalType;
         private double m_lowRange;
         private double m_highRange;
         private Ticks m_timeToPurge;
         private Ticks m_warnInterval;
-        private System.Timers.Timer m_warningTimer;
-        private System.Timers.Timer m_purgeTimer;
+        private readonly Timer m_warningTimer;
+        private readonly Timer m_purgeTimer;
 
         #endregion
 
@@ -116,8 +116,8 @@ namespace DataQualityMonitoring
             m_outOfRangeMeasurements = new Dictionary<MeasurementKey, LinkedList<IMeasurement>>();
             m_timeToPurge = Ticks.FromSeconds(1.0);
             m_warnInterval = Ticks.FromSeconds(4.0);
-            m_warningTimer = new System.Timers.Timer();
-            m_purgeTimer = new System.Timers.Timer();
+            m_warningTimer = new Timer();
+            m_purgeTimer = new Timer();
         }
 
         #endregion
@@ -308,7 +308,7 @@ namespace DataQualityMonitoring
         /// concentration will fall behind. A small amount of this time is required by the <see cref="ConcentratorBase"/> for processing overhead, so actual total time
         /// available for user function process will always be slightly less than <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c> seconds.
         /// </remarks>
-        protected override void PublishFrame(GSF.TimeSeries.IFrame frame, int index)
+        protected override void PublishFrame(IFrame frame, int index)
         {
             IMeasurement measurement = null;
 
@@ -527,7 +527,7 @@ namespace DataQualityMonitoring
         #region [ Static ]
 
         // Static Fields
-        private static OutOfRangeService s_service;
+        private static readonly OutOfRangeService s_service;
         private static RangeTest s_exceptionProcessor;
 
         // Static Constructor

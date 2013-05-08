@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  AnalogDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Runtime.Serialization;
 
@@ -34,7 +33,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Represents the IEEE C37.118 implementation of an <see cref="IAnalogDefinition"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class AnalogDefinition : AnalogDefinitionBase
     {
         #region [ Members ]

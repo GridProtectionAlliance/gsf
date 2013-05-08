@@ -79,7 +79,7 @@ namespace GSF.Historian.Files
         private float m_lowWarning;
         private float m_highWarning;
         private int m_displayDigits;
-        private List<int> m_inputPointers;
+        private readonly List<int> m_inputPointers;
         private string m_engineeringUnits;
         private string m_equation;
         private float m_compressionLimit;

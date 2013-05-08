@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.Commands;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.Xml.Serialization;
+using GSF.TimeSeries.UI.Commands;
 
 namespace GSF.TimeSeries.UI
 {
@@ -154,8 +154,8 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
-                return new MenuCommand()
-                {
+                return new MenuCommand
+                    {
                     Roles = this.Roles,
                     UserControlAssembly = this.UserControlAssembly,
                     UserControlPath = this.UserControlPath,

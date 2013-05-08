@@ -23,9 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.ComponentModel;
 using System.Data;
@@ -33,6 +30,9 @@ using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace MySqlAdapters
 {
@@ -123,7 +123,7 @@ namespace MySqlAdapters
             {
                 string key = pair.ToLower().Split('=')[0].Trim();
 
-                if (s_validKeys.Contains<string>(key))
+                if (s_validKeys.Contains(key))
                 {
                     builder.Append(pair);
                     builder.Append(';');
@@ -255,7 +255,7 @@ namespace MySqlAdapters
             return null;
         }
 
-        private void m_connection_StateChange(object sender, System.Data.StateChangeEventArgs e)
+        private void m_connection_StateChange(object sender, StateChangeEventArgs e)
         {
             if (e.CurrentState == ConnectionState.Closed && Enabled)
             {
@@ -272,7 +272,7 @@ namespace MySqlAdapters
         // Static Fields
 
         // Collection of keys that can be used in a MySQL connection string.
-        private static string[] s_validKeys = 
+        private static readonly string[] s_validKeys = 
         {
             "server", "port", "protocol",
             "database", "uid", "user", "pwd", "password",

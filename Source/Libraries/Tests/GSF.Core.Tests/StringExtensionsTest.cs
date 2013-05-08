@@ -27,10 +27,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
-    [TestClass()]
+    [TestClass]
     public class StringExtensionsTest
     {
-        private string strTestMethod = string.Empty;
+        private readonly string strTestMethod = string.Empty;
         private string testvalue = "test";
         private string testResult = " ";
         char c = 'a';
@@ -40,7 +40,7 @@ namespace GSF.Core.Tests
         //Func<char, bool> characterTestFunction;
 
         // This test method validated given String represent a boolean value.
-        [TestMethod()]
+        [TestMethod]
         public void ParseBoolean_Valid()
         {
                 ////Act
@@ -50,7 +50,7 @@ namespace GSF.Core.Tests
         }
 
         // This method will validate given string parameter is not an empty or null string
-        [TestMethod()]
+        [TestMethod]
         public void NotEmptyWithParameter_Valid()
         {
                 ////Act
@@ -60,7 +60,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method Ensures parameter is not an empty or null string
-        [TestMethod()]
+        [TestMethod]
         public void NotEmpty_Valid()
         {
                 ////Act
@@ -70,7 +70,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method Removes all white space from a string
-        [TestMethod()]
+        [TestMethod]
         public void RemoveWhiteSpace_Valid()
         {
                 ////Act
@@ -80,7 +80,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method Removes all white space from a string with input character
-        [TestMethod()]
+        [TestMethod]
         public void ReplaceWhiteSpacewithparameter_Valid()
         {
                 ////Act
@@ -90,7 +90,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Removes all control characters from a string.
-        [TestMethod()]
+        [TestMethod]
         public void RemoveControlCharacters_Valid()
         {
                 ////Act
@@ -100,7 +100,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Replace all control characters from a string.
-        [TestMethod()]
+        [TestMethod]
         public void ReplaceControlCharacters_Valid()
         {
                 ////Act
@@ -110,7 +110,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Replace all control characters from a string with input parameter as char.
-        [TestMethod()]
+        [TestMethod]
         public void ReplaceControlCharacterswithparameter_Valid()
         {
                 ////Act
@@ -120,7 +120,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Removes all carriage returns and line feeds from a string
-        [TestMethod()]
+        [TestMethod]
         public void RemoveCrLfs_Valid()
         {
                 ////Act
@@ -130,7 +130,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Removes all carriage returns and line feeds from a string.
-        [TestMethod()]
+        [TestMethod]
         public void RemoveCrLfswithparameter_Valid()
         {
                 ////Act
@@ -140,7 +140,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Removes duplicate character strings (adjoining replication) in a string.
-        [TestMethod()]
+        [TestMethod]
         public void RemoveDuplicates_Valid()
         {
                 ////Act
@@ -150,7 +150,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Removes the terminator ('\0') from a null terminated string.
-        [TestMethod()]
+        [TestMethod]
         public void RemoveNull_Valid()
         {
                 ////Act
@@ -160,7 +160,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Replaces all repeating white space with specified spacing character.
-        [TestMethod()]
+        [TestMethod]
         public void RemoveDuplicateWhiteSpace_Valid()
         {
                 ////Act
@@ -170,7 +170,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Replaces all repeating white space with specified spacing character.
-        [TestMethod()]
+        [TestMethod]
         public void RemoveDuplicateWhiteSpacewithparameter_Valid()
         {
                 ////Act
@@ -180,7 +180,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Counts the total number of the occurances of a character in the given string.
-        [TestMethod()]
+        [TestMethod]
         public void CharCount_Valid()
         {
                 ////Act
@@ -190,7 +190,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Tests to see if a string is contains only digits based on Char.IsDigit function.
-        [TestMethod()]
+        [TestMethod]
         public void IsAllDigits_Valid()
         {
                 ////Act
@@ -200,7 +200,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Tests to see if a string contains only numbers based on Char.IsNumber function.
-        [TestMethod()]
+        [TestMethod]
         public void IsAllNumbers_Valid()
         {
                 ////Act
@@ -210,7 +210,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Tests to see if a string's letters are all upper case.
-        [TestMethod()]
+        [TestMethod]
         public void IsAllUpper_Valid()
         {
                 ////Act
@@ -220,7 +220,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Tests to see if a string's letters are all lower case.
-        [TestMethod()]
+        [TestMethod]
         public void IsAllLower_Valid()
         {
                 ////Act
@@ -230,7 +230,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Tests to see if a string contains only letters.
-        [TestMethod()]
+        [TestMethod]
         public void IsAllLetters_Valid()
         {
                 ////Act
@@ -240,7 +240,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Tests to see if a string contains only letters.
-        [TestMethod()]
+        [TestMethod]
         public void IsAllLetterswithparameter_Valid()
         {
                 ////Act
@@ -250,7 +250,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Tests to see if a string contains only letters or digits.
-        [TestMethod()]
+        [TestMethod]
         public void IsAllLettersOrDigits_Valid()
         {
                 ////Act
@@ -260,7 +260,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Tests to see if a string contains only letters or digits.
-        [TestMethod()]
+        [TestMethod]
         public void IsAllLettersOrDigitswithparameter_Valid()
         {
                 ////Act
@@ -270,7 +270,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Encodes a string into a base-64 string.
-        [TestMethod()]
+        [TestMethod]
         public void Base64Encode_Valid()
         {
                 ////Act
@@ -280,7 +280,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Decodes a given base-64 encoded string encoded with
-        [TestMethod()]
+        [TestMethod]
         public void Base64Decode_Valid()
         {
                 ////Act
@@ -290,7 +290,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Converts the provided string into title case (upper case first letter of each word).
-        [TestMethod()]
+        [TestMethod]
         public void ToTitleCase_Valid()
         {
                 ////Act
@@ -300,7 +300,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Truncates the provided string from the left if it is longer that specified length.
-        [TestMethod()]
+        [TestMethod]
         public void TruncateLeft_Valid()
         {
                 ////Act
@@ -310,7 +310,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Truncates the provided string from the right if it is longer that specified length.
-        [TestMethod()]
+        [TestMethod]
         public void TruncateRight_Valid()
         {
                 ////Act
@@ -320,7 +320,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Centers text within the specified maximum length, biased to the left.
-        [TestMethod()]
+        [TestMethod]
         public void CenterText_Valid()
         {
                 ////Act
@@ -330,7 +330,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Centers text within the specified maximum length, biased to the left.
-        [TestMethod()]
+        [TestMethod]
         public void CenterTextWithParameter_Valid()
         {
                 ////Act
@@ -340,7 +340,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Performs a case insensitive string replacement.
-        [TestMethod()]
+        [TestMethod]
         public void ReplaceCaseInsensitive_Valid()
         {
                 ////Act
@@ -350,7 +350,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Ensures a string starts with a specific string.
-        [TestMethod()]
+        [TestMethod]
         public void EnsureStart_Valid()
         {
                 ////Act
@@ -360,7 +360,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Ensures a string starts with a specific string.
-        [TestMethod()]
+        [TestMethod]
         public void EnsureStart1_Valid()
         {
                 ////Act
@@ -370,7 +370,7 @@ namespace GSF.Core.Tests
         }
 
         /// This test method will Ensures a string starts with a specific string.
-        [TestMethod()]
+        [TestMethod]
         public void EnsureStart2_Valid()
         {
                 ////Act
@@ -380,7 +380,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Ensures a string ends with a specific character.
-        [TestMethod()]
+        [TestMethod]
         public void EnsureEnd_Valid()
         {
                 ////Act
@@ -390,7 +390,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Ensures a string ends with a specific character.
-        [TestMethod()]
+        [TestMethod]
         public void EnsureEnd1_Valid()
         {
                 ////Act
@@ -400,7 +400,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Ensures a string ends with a specific string with Input parameter.
-        [TestMethod()]
+        [TestMethod]
         public void EnsureEnd2_Valid()
         {
                 ////Act
@@ -410,7 +410,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Reverses the order of the characters in a string.
-        [TestMethod()]
+        [TestMethod]
         public void Reverse_Valid()
         {
                 ////Act
@@ -420,7 +420,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Searches a string for a repeated instance of the specified.
-        [TestMethod()]
+        [TestMethod]
         public void IndexOfRepeatedChar_Valid()
         {
                 ////Act
@@ -430,7 +430,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Searches a string for a repeated instance of the specified.
-        [TestMethod()]
+        [TestMethod]
         public void IndexOfRepeatedChar2_Valid()
         {
                 ////Act
@@ -440,7 +440,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Searches a string for a repeated instance of the specified.
-        [TestMethod()]
+        [TestMethod]
         public void IndexOfRepeatedChar3_Valid()
         {
                 ////Act
@@ -450,7 +450,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Returns the index of the last repeated index of the first group of repeated characters that begin with the.
-        [TestMethod()]
+        [TestMethod]
         public void IndexOfRepeatedChar4_Valid()
         {
                 ////Act
@@ -460,7 +460,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Places an ellipsis in the middle of a string as it is trimmed to length specified.
-        [TestMethod()]
+        [TestMethod]
         public void TrimWithEllipsisMiddle_Valid()
         {
                 ////Act
@@ -470,7 +470,7 @@ namespace GSF.Core.Tests
         }
 
         // This test method will Places an ellipsis at the end of a string as it is trimmed to length specified.
-        [TestMethod()]
+        [TestMethod]
         public void TrimWithEllipsisEnd_Valid()
         {
                 ////Act

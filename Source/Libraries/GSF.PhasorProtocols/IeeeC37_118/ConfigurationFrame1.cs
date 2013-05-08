@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame1.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,14 +31,13 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/>, type 1, that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationFrame1 : ConfigurationFrameBase, ISupportSourceIdentifiableFrameImage<SourceChannel, FrameType>
     {
         #region [ Members ]
@@ -117,7 +116,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return IeeeC37_118.DraftRevision.Draft7;
+                return DraftRevision.Draft7;
             }
         }
 
@@ -383,7 +382,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 

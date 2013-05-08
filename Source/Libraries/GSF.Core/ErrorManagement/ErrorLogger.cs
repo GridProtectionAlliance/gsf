@@ -61,13 +61,6 @@
 
 #endregion
 
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Identity;
-using GSF.IO;
-using GSF.Net.Smtp;
-using GSF.Reflection;
-using GSF.Windows.Forms;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -79,8 +72,16 @@ using System.Drawing.Imaging;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Web;
 using System.Windows.Forms;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Identity;
+using GSF.Net.Smtp;
+using GSF.Reflection;
+using GSF.Windows.Forms;
 
 namespace GSF.ErrorManagement
 {
@@ -258,14 +259,14 @@ namespace GSF.ErrorManagement
         private bool m_enabled;
         private bool m_handleUnhandledException;
         private bool m_exitOnUnhandledException;
-        private LogFile m_errorLog;
+        private readonly LogFile m_errorLog;
         private Exception m_lastException;
         private ApplicationType m_appType;
         private Func<string> m_errorTextMethod;
         private Func<string> m_scopeTextMethod;
         private Func<string> m_actionTextMethod;
         private Func<string> m_moreInfoTextMethod;
-        private List<Action<Exception>> m_loggers;
+        private readonly List<Action<Exception>> m_loggers;
         private bool m_logToFileOK;
         private bool m_logToEmailOK;
         private bool m_logToEventLogOK;
@@ -283,7 +284,6 @@ namespace GSF.ErrorManagement
         /// Initializes a new instance of the <see cref="ErrorLogger"/> class.
         /// </summary>
         public ErrorLogger()
-            : base()
         {
             m_logToUI = DefaultLogToUI;
             m_logToFile = DefaultLogToFile;
@@ -1377,7 +1377,7 @@ namespace GSF.ErrorManagement
             {
                 m_logToDatabaseOK = false;
 
-                ErrorLogger.LogErrorToDatabase(exception.Source.ToNonNullNorEmptyString("No Source"),
+                LogErrorToDatabase(exception.Source.ToNonNullNorEmptyString("No Source"),
                             exception.Message.ToNonNullNorEmptyString("No Message"),
                             GetExceptionInfo(exception, true),
                             exception.GetType().FullName);
@@ -1629,13 +1629,13 @@ namespace GSF.ErrorManagement
             return FilePath.GetAbsolutePath(ApplicationName + ".ErrorState.png");
         }
 
-        private void ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        private void ThreadException(object sender, ThreadExceptionEventArgs e)
         {
             m_suppressInteractiveLogging = false;
             Log(new Exception("ThreadException", e.Exception), m_exitOnUnhandledException);
         }
 
-        private void UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
+        private void UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             // Almost always (starting .NET 2.0) when the AppDomain.UnhandledException event is raised, .NET CLR 
             // will terminate the application after all the handlers for the event have been processed. So, if 
@@ -1759,7 +1759,7 @@ namespace GSF.ErrorManagement
                 case ApplicationType.WindowsGui:
                     info.AppendFormat("Machine Name:          {0}", Environment.MachineName);
                     info.AppendLine();
-                    info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
+                    info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0]);
                     info.AppendLine();
                     info.AppendFormat("Machine OS:            {0}", Environment.OSVersion.VersionString);
                     info.AppendLine();
@@ -1780,7 +1780,7 @@ namespace GSF.ErrorManagement
 
                     info.AppendFormat("Server Name:           {0}", Environment.MachineName);
                     info.AppendLine();
-                    info.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
+                    info.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0]);
                     info.AppendLine();
                     info.AppendFormat("Server OS:             {0}", Environment.OSVersion.VersionString);
                     info.AppendLine();
@@ -1806,7 +1806,7 @@ namespace GSF.ErrorManagement
                     info.AppendLine();
                     info.AppendFormat("HTTP Referer:          {0}", HttpContext.Current.Request.ServerVariables["HTTP_REFERER"]);
                     info.AppendLine();
-                    info.AppendFormat("Web Page URL:          {0}", HttpContext.Current.Request.Url.ToString());
+                    info.AppendFormat("Web Page URL:          {0}", HttpContext.Current.Request.Url);
                     info.AppendLine();
                     break;
             }
@@ -1844,11 +1844,11 @@ namespace GSF.ErrorManagement
             info.AppendLine();
             info.AppendFormat("Assembly Full Name:    {0}", parentAssemblyInfo.FullName);
             info.AppendLine();
-            info.AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version.ToString());
+            info.AppendFormat("Assembly Version:      {0}", parentAssemblyInfo.Version);
             info.AppendLine();
             info.AppendFormat("Assembly Build Date:   {0}", parentAssemblyInfo.BuildDate.ToString());
             info.AppendLine();
-            info.AppendFormat(".Net Runtime Version:  {0}", Environment.Version.ToString());
+            info.AppendFormat(".Net Runtime Version:  {0}", Environment.Version);
             info.AppendLine();
 
             return info.ToString();

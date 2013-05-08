@@ -30,10 +30,11 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Units;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.Core.Tests
 {
-    [TestClass()]
+    [TestClass]
     public class DataSetSerializationTest
     {
         [TestMethod]
@@ -62,28 +63,28 @@ namespace GSF.Core.Tests
             {
                 DataRow row = table.NewRow();
 
-                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
-                    row[0] = new string((char)Security.Cryptography.Random.Int16Between(32, 128), Security.Cryptography.Random.Int16Between(5, 30));
+                if (Random.Boolean || Random.Boolean)
+                    row[0] = new string((char)Random.Int16Between(32, 128), Random.Int16Between(5, 30));
                 else
                     row[0] = DBNull.Value;
 
-                row[1] = Security.Cryptography.Random.Int32;
-                row[2] = Security.Cryptography.Random.Boolean;
+                row[1] = Random.Int32;
+                row[2] = Random.Boolean;
 
-                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
+                if (Random.Boolean || Random.Boolean)
                     row[3] = Guid.NewGuid();
                 else
                     row[3] = DBNull.Value;
 
                 row[4] = PrecisionTimer.UtcNow;
-                row[5] = new TimeSpan(Security.Cryptography.Random.Int64Between(Ticks.PerSecond, Ticks.PerHour));
+                row[5] = new TimeSpan(Random.Int64Between(Ticks.PerSecond, Ticks.PerHour));
 
                 byte[] bytes = null;
 
-                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
+                if (Random.Boolean || Random.Boolean)
                 {
-                    bytes = new byte[Security.Cryptography.Random.Int16Between(0, 1000)];
-                    Security.Cryptography.Random.GetBytes(bytes);
+                    bytes = new byte[Random.Int16Between(0, 1000)];
+                    Random.GetBytes(bytes);
                 }
 
                 row[6] = bytes;
@@ -98,20 +99,20 @@ namespace GSF.Core.Tests
             table.Columns.Add("col2", typeof(byte));
             table.Columns.Add("col3", typeof(char));
 
-            for (int i = 0; i < Security.Cryptography.Random.Int32Between(100, 500); i++)
+            for (int i = 0; i < Random.Int32Between(100, 500); i++)
             {
                 DataRow row = table.NewRow();
 
-                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
-                    row[0] = Security.Cryptography.Random.UInt64;
+                if (Random.Boolean || Random.Boolean)
+                    row[0] = Random.UInt64;
                 else
                     row[0] = DBNull.Value;
 
-                row[1] = Security.Cryptography.Random.Number;
-                row[2] = Security.Cryptography.Random.Byte;
+                row[1] = Random.Number;
+                row[2] = Random.Byte;
 
-                if (Security.Cryptography.Random.Boolean || Security.Cryptography.Random.Boolean)
-                    row[3] = (char)Security.Cryptography.Random.Int16Between(32, 1024);
+                if (Random.Boolean || Random.Boolean)
+                    row[3] = (char)Random.Int16Between(32, 1024);
                 else
                     row[3] = DBNull.Value;
 

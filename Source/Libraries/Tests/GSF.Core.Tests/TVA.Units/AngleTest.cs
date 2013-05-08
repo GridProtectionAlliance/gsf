@@ -38,11 +38,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
@@ -50,7 +50,7 @@ namespace GSF.Core.Tests
     ///This is a test class for AngleTest and is intended
     ///to contain all AngleTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class AngleTest
     {
         private TestContext testContextInstance;
@@ -104,7 +104,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for Angle Constructor
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void AngleConstructorTest()
         {
             //Test Values Collection
@@ -135,7 +135,7 @@ namespace GSF.Core.Tests
         /// Returns greater than zero if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Angle"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToTest()
         {
             double value_target = 10F;
@@ -162,7 +162,7 @@ namespace GSF.Core.Tests
         /// True if obj is an instance of <see cref="Double"/> or <see cref="Angle"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsTest()
         {
             object angle = 10F;
@@ -177,7 +177,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Angle"/> value in angular mil.</param>
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in angular mil.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromAngularMilTest()
         {
             Angle target = Angle.FromAngularMil(10F);
@@ -191,7 +191,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Angle"/> value in arcminutes.</param>
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcminutes.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromArcMinutesTest()
         {
             Angle target = Angle.FromArcMinutes(10F);
@@ -205,7 +205,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Angle"/> value in arcseconds.</param>
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in arcseconds.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromArcSecondsTest()
         {
             Angle target = Angle.FromArcSeconds(1000F);
@@ -219,7 +219,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Angle"/> value in degrees.</param>
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in degrees.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromDegreesTest()
         {
             Angle target = Angle.FromDegrees(10F);
@@ -233,7 +233,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Angle"/> value in grads.</param>
         /// <returns>New <see cref="Angle"/> object from the specified <paramref name="value"/> in grads.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromGradsTest()
         {
             Angle target = Angle.FromGrads(10F);
@@ -248,7 +248,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetHashCodeTest()
         {
             double value = 10;
@@ -262,7 +262,7 @@ namespace GSF.Core.Tests
         /// Returns the <see cref="TypeCode"/> for value type <see cref="Double"/>.
         /// </summary>
         /// <returns>The enumerated constant, <see cref="TypeCode.Double"/>.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetTypeCodeTest()
         {
             double value = 10F;
@@ -291,7 +291,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleTest()
         {
             double value = 10F;
@@ -316,7 +316,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Angle.MinValue"/> or greater than <see cref="Angle.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStringTest()
         {
             double value = 10F;
@@ -330,7 +330,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToBoolean
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToBooleanTest()
         {
@@ -347,7 +347,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToByte
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToByteTest()
         {
@@ -364,7 +364,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToChar
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToCharTest()
         {
@@ -384,7 +384,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToDateTime
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDateTimeTest()
         {
@@ -403,7 +403,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToDecimal
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDecimalTest()
         {
@@ -419,7 +419,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToDouble
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDoubleTest()
         {
@@ -435,7 +435,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToInt16
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt16Test()
         {
@@ -452,7 +452,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToInt32
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt32Test()
         {
@@ -469,7 +469,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToInt64
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt64Test()
         {
@@ -486,7 +486,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToSByte
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSByteTest()
         {
@@ -503,7 +503,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToSingle
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSingleTest()
         {
@@ -520,7 +520,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToType
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToTypeTest()
         {
@@ -536,7 +536,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToUInt16
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt16Test()
         {
@@ -553,7 +553,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToUInt32
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt32Test()
         {
@@ -570,7 +570,7 @@ namespace GSF.Core.Tests
         /// A test for System.IConvertible.ToUInt64
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt64Test()
         {
@@ -586,7 +586,7 @@ namespace GSF.Core.Tests
         /// <summary>
         /// A test for ToAngularMil
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToAngularMilTest()
         {
             double value = 10F;
@@ -600,7 +600,7 @@ namespace GSF.Core.Tests
         /// <summary>
         /// A test for ToArcMinutes
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToArcMinutesTest()
         {
             double value = 10F;
@@ -614,7 +614,7 @@ namespace GSF.Core.Tests
         /// <summary>
         /// A test for ToArcSeconds
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToArcSecondsTest()
         {
             double value = 10F;
@@ -630,7 +630,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Angle"/> value in degrees.
         /// </summary>
         /// <returns>Value of <see cref="Angle"/> in degrees.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToDegreesTest()
         {
             double value = 10F;
@@ -645,7 +645,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Angle"/> value in grads.
         /// </summary>
         /// <returns>Value of <see cref="Angle"/>in grads.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToGradsTest()
         {
             double value = 10F;
@@ -667,7 +667,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format and provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringTest()
         {
             double value = 10F;
@@ -702,7 +702,7 @@ namespace GSF.Core.Tests
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseStyleProviderTest()
         {
             double value = 10F;
@@ -731,7 +731,7 @@ namespace GSF.Core.Tests
         /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseResultTest()
         {
             double value = 10F;
@@ -747,7 +747,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Addition
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_AdditionTest()
         {
             Angle value1 = new Angle(10F);
@@ -761,7 +761,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Division
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_DivisionTest()
         {
 
@@ -776,7 +776,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Equality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_EqualityTest()
         {
             Angle value1 = new Angle(10F);
@@ -791,7 +791,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Exponent
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ExponentTest()
         {
             Angle value1 = new Angle(2F);
@@ -804,7 +804,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanTest()
         {
             Angle value1 = new Angle(10F);
@@ -817,7 +817,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanOrEqualTest()
         {
             Angle value1 = new Angle(10F);
@@ -831,7 +831,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitAngleTest()
         {
             Angle expected = new Angle(10F);
@@ -842,7 +842,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitDoubleTest()
         {
             Angle value = new Angle(10F);
@@ -854,7 +854,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Inequality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_InequalityTest()
         {
             Angle value1 = new Angle(10F);
@@ -868,7 +868,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanTest()
         {
             Angle value1 = new Angle(10F);
@@ -882,7 +882,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanOrEqualTest()
         {
             Angle value1 = new Angle(10F);
@@ -896,7 +896,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Modulus
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ModulusTest()
         {
             Angle value1 = new Angle(10F);
@@ -910,7 +910,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Multiply
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_MultiplyTest()
         {
             Angle value1 = new Angle(10F);
@@ -923,7 +923,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Subtraction
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_SubtractionTest()
         {
             Angle target1 = new Angle(10F);

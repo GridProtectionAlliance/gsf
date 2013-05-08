@@ -51,7 +51,7 @@ namespace GSF.Historian.MetadataProviders
         #region [ Members ]
 
         // Fields
-        private MetadataFile m_metadata;
+        private readonly MetadataFile m_metadata;
 
         #endregion
 

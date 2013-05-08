@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.Serialization;
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols.Anonymous
     /// <summary>
     /// Represents a protocol independent implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationCell : ConfigurationCellBase, IDisposable
     {
         #region [ Members ]

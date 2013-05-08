@@ -39,7 +39,7 @@ namespace GSF.Security.Cryptography
     /// </summary>
     public static class Random
     {
-        private static RNGCryptoServiceProvider s_randomNumberGenerator = new RNGCryptoServiceProvider();
+        private static readonly RNGCryptoServiceProvider s_randomNumberGenerator = new RNGCryptoServiceProvider();
 
         /// <summary>
         /// Generates a cryptographically strong double-precision floating-point random number between zero and one.

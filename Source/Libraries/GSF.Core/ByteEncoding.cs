@@ -223,7 +223,7 @@ namespace GSF
         public class BinaryEncoding : ByteEncoding
         {
             private string[] m_byteImages;
-            private bool m_reverse;
+            private readonly bool m_reverse;
 
             // This class is meant for internal instantiation only.
             internal BinaryEncoding(Endianness targetEndianness)

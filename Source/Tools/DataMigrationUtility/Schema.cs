@@ -29,8 +29,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
-// James Ritchie Carroll - 2003
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -39,6 +37,8 @@ using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
 using System.Text;
+using GSF.Data;
+    // James Ritchie Carroll - 2003
 
 namespace Database
 {
@@ -74,7 +74,7 @@ namespace Database
     /// <summary>
     /// Specifies the type of object in database
     /// </summary>
-    [Flags()]
+    [Flags]
     public enum TableType
     {
         /// <summary>
@@ -152,9 +152,9 @@ namespace Database
         #region [ Members ]
 
         //Fields
-        private Fields m_parentField;
-        private string m_fieldName;
-        private OleDbType m_DataType;
+        private readonly Fields m_parentField;
+        private readonly string m_fieldName;
+        private readonly OleDbType m_DataType;
 
         //internal int intOrdinal;
         //internal bool flgAllowsNulls;
@@ -977,7 +977,7 @@ namespace Database
     {
         #region [ Members ]
 
-        private ForeignKeyFields m_Parent;
+        private readonly ForeignKeyFields m_Parent;
 
         private Field m_primaryKey;
         private Field m_foreignKey;
@@ -1112,11 +1112,11 @@ namespace Database
     {
         #region [ Members ]
 
-        private Field m_parent;
+        private readonly Field m_parent;
         // Used for field name lookups
-        private Dictionary<string, ForeignKeyField> m_fields;
+        private readonly Dictionary<string, ForeignKeyField> m_fields;
         // Used for field index lookups
-        private List<ForeignKeyField> m_fieldList;
+        private readonly List<ForeignKeyField> m_fieldList;
 
         #endregion
 
@@ -1273,11 +1273,11 @@ namespace Database
     {
         #region [ Members ]
 
-        private Table m_parent;
+        private readonly Table m_parent;
         // Used for field name lookups
-        private Dictionary<string, Field> m_fields;
+        private readonly Dictionary<string, Field> m_fields;
         // Used for field index lookups
-        private List<Field> m_fieldList;
+        private readonly List<Field> m_fieldList;
 
         #endregion
 
@@ -1434,13 +1434,13 @@ namespace Database
     {
         #region [ Members ]
 
-        private Tables m_parent;
-        private string m_catalog;
-        private string m_schema;
-        private string m_name;
-        private TableType m_tableType;
-        private string m_description;
-        private int m_rows;
+        private readonly Tables m_parent;
+        private readonly string m_catalog;
+        private readonly string m_schema;
+        private readonly string m_name;
+        private readonly TableType m_tableType;
+        private readonly string m_description;
+        private readonly int m_rows;
 
         private Fields m_fields;
         // This is the name that will be used during table mapping when using a data handler
@@ -2005,11 +2005,11 @@ namespace Database
         #region [ Memebers ]
 
         //Fields
-        private Schema m_parent;
+        private readonly Schema m_parent;
         // Used for table name lookups
-        private Dictionary<string, Table> m_tables;
+        private readonly Dictionary<string, Table> m_tables;
         // Used for table index lookups
-        private List<Table> m_tableList;
+        private readonly List<Table> m_tableList;
 
         #endregion
 

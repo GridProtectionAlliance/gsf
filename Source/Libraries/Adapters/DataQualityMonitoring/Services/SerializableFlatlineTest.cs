@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -69,7 +69,7 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the <see cref="SerializableFlatlinedMeasurement"/>s contained in the <see cref="SerializableFlatlineTest"/>.
         /// </summary>
-        [XmlArray(), DataMember()]
+        [XmlArray, DataMember]
         public SerializableFlatlinedMeasurement[] FlatlinedMeasurements { get; set; }
 
         #endregion

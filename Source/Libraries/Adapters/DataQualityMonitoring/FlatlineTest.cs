@@ -26,11 +26,6 @@
 //
 //******************************************************************************************************
 
-using DataQualityMonitoring.Services;
-using GSF;
-using GSF.Net.Smtp;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -38,6 +33,11 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Timers;
+using DataQualityMonitoring.Services;
+using GSF;
+using GSF.Net.Smtp;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace DataQualityMonitoring
 {
@@ -56,9 +56,9 @@ namespace DataQualityMonitoring
         private string m_adminEmailAddress;
         private string m_smtpServer;
 
-        private Dictionary<MeasurementKey, IMeasurement> m_lastChange;
-        private Dictionary<MeasurementKey, Ticks> m_lastNotified;
-        private System.Timers.Timer m_warningTimer;
+        private readonly Dictionary<MeasurementKey, IMeasurement> m_lastChange;
+        private readonly Dictionary<MeasurementKey, Ticks> m_lastNotified;
+        private readonly Timer m_warningTimer;
         private FlatlineService m_flatlineService;
 
         private bool m_disposed;
@@ -79,7 +79,7 @@ namespace DataQualityMonitoring
 
             m_lastChange = new Dictionary<MeasurementKey, IMeasurement>();
             m_lastNotified = new Dictionary<MeasurementKey, Ticks>();
-            m_warningTimer = new System.Timers.Timer();
+            m_warningTimer = new Timer();
         }
 
         #endregion
@@ -341,8 +341,8 @@ namespace DataQualityMonitoring
 
                         if (signalID != "")
                         {
-                            m_lastChange.Add(key, new Measurement()
-                            {
+                            m_lastChange.Add(key, new Measurement
+                                {
                                 ID = new Guid(signalID), Key = key, Value = double.NaN, Timestamp = timestamp
                             });
                         }
@@ -352,8 +352,8 @@ namespace DataQualityMonitoring
                 // If the signal ID could not be found, add the measurement without it
                 if (!m_lastChange.ContainsKey(key))
                 {
-                    m_lastChange.Add(key, new Measurement()
-                    {
+                    m_lastChange.Add(key, new Measurement
+                        {
                         Key = key, Value = double.NaN, Timestamp = timestamp
                     });
                 }

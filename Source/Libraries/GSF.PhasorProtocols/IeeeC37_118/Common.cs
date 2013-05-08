@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Common.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 
 namespace GSF.PhasorProtocols.IeeeC37_118
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// IEEE C37.118 frame types enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum FrameType : ushort
     {
         /// <summary>
@@ -75,7 +74,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Protocol draft revision numbers enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum DraftRevision : byte
     {
         /// <summary>
@@ -95,7 +94,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Data format flags enumeration.
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum FormatFlags : ushort
     {
         /// <summary>
@@ -127,7 +126,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Time quality flags enumeration.
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum TimeQualityFlags : uint
     {
         /// <summary>
@@ -159,7 +158,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Time quality indicator code enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum TimeQualityIndicatorCode : uint
     {
         /// <summary>
@@ -219,7 +218,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Status flags enumeration.
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum StatusFlags : ushort
     {
         /// <summary>
@@ -267,7 +266,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Unlocked time enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum UnlockedTime : byte
     {
         /// <summary>
@@ -291,7 +290,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Trigger reason enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum TriggerReason : byte
     {
         /// <summary>

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCellBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.TimeSeries;
-using GSF;
 
 namespace GSF.PhasorProtocols
 {
@@ -48,7 +47,7 @@ namespace GSF.PhasorProtocols
     /// conversion accuracy back to an unsigned 32-bit integer up to the 24th bit, so any bits used beyond Bit23 will be lossy.
     /// </para>
     /// </remarks>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum CommonStatusFlags : uint
     {
         /// <summary>
@@ -86,7 +85,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the protocol independent common implementation of all elements for cells in a <see cref="IDataFrame"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class DataCellBase : ChannelCellBase, IDataCell
     {
         #region [ Members ]
@@ -95,10 +94,10 @@ namespace GSF.PhasorProtocols
         private IConfigurationCell m_configurationCell;
         private ushort m_statusFlags;
         private bool m_statusAssigned;
-        private PhasorValueCollection m_phasorValues;
+        private readonly PhasorValueCollection m_phasorValues;
         private IFrequencyValue m_frequencyValue;
-        private AnalogValueCollection m_analogValues;
-        private DigitalValueCollection m_digitalValues;
+        private readonly AnalogValueCollection m_analogValues;
+        private readonly DigitalValueCollection m_digitalValues;
 
         // IMeasurement implementation fields
         private MeasurementKey m_key;
@@ -136,7 +135,7 @@ namespace GSF.PhasorProtocols
             m_digitalValues = new DigitalValueCollection(maximumDigitals);
 
             // Initialize IMeasurement members
-            m_key = GSF.PhasorProtocols.Common.UndefinedKey;
+            m_key = Common.UndefinedKey;
             m_stateFlags = MeasurementStateFlags.Normal;
             m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
             m_timestamp = -1;
@@ -290,19 +289,19 @@ namespace GSF.PhasorProtocols
 
                 // Add hi-word protocol independent common flags
                 if (!DataIsValid)
-                    commonFlags |= (uint)GSF.PhasorProtocols.CommonStatusFlags.DataIsValid;
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DataIsValid;
 
                 if (!SynchronizationIsValid)
-                    commonFlags |= (uint)GSF.PhasorProtocols.CommonStatusFlags.SynchronizationIsValid;
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.SynchronizationIsValid;
 
-                if (DataSortingType != GSF.PhasorProtocols.DataSortingType.ByTimestamp)
-                    commonFlags |= (uint)GSF.PhasorProtocols.CommonStatusFlags.DataSortingType;
+                if (DataSortingType != DataSortingType.ByTimestamp)
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DataSortingType;
 
                 if (DeviceError)
-                    commonFlags |= (uint)GSF.PhasorProtocols.CommonStatusFlags.DeviceError;
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DeviceError;
 
                 if (m_isDiscarded)
-                    commonFlags |= (uint)GSF.PhasorProtocols.CommonStatusFlags.DataDiscarded;
+                    commonFlags |= (uint)PhasorProtocols.CommonStatusFlags.DataDiscarded;
 
                 return commonFlags;
             }
@@ -313,11 +312,11 @@ namespace GSF.PhasorProtocols
                     StatusFlags = 0;
 
                 // Derive common states via common status flags
-                DataIsValid = (value & (uint)GSF.PhasorProtocols.CommonStatusFlags.DataIsValid) == 0;
-                SynchronizationIsValid = (value & (uint)GSF.PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) == 0;
-                DataSortingType = ((value & (uint)GSF.PhasorProtocols.CommonStatusFlags.DataSortingType) == 0) ? GSF.PhasorProtocols.DataSortingType.ByTimestamp : GSF.PhasorProtocols.DataSortingType.ByArrival;
-                DeviceError = ((value & (uint)GSF.PhasorProtocols.CommonStatusFlags.DeviceError) > 0);
-                m_isDiscarded = ((value & (uint)GSF.PhasorProtocols.CommonStatusFlags.DataDiscarded) > 0);
+                DataIsValid = (value & (uint)PhasorProtocols.CommonStatusFlags.DataIsValid) == 0;
+                SynchronizationIsValid = (value & (uint)PhasorProtocols.CommonStatusFlags.SynchronizationIsValid) == 0;
+                DataSortingType = ((value & (uint)PhasorProtocols.CommonStatusFlags.DataSortingType) == 0) ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
+                DeviceError = ((value & (uint)PhasorProtocols.CommonStatusFlags.DeviceError) > 0);
+                m_isDiscarded = ((value & (uint)PhasorProtocols.CommonStatusFlags.DataDiscarded) > 0);
             }
         }
 

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ChannelValueCollectionBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -40,7 +40,7 @@ namespace GSF.PhasorProtocols
     /// </summary>
     /// <typeparam name="TDefinition">Specific <see cref="IChannelDefinition"/> type that the <see cref="IChannelValue{TDefinition}"/> references.</typeparam>
     /// <typeparam name="TValue">Specific <see cref="IChannelValue{TDefinition}"/> type that the <see cref="ChannelValueCollectionBase{TDefinition,TValue}"/> contains.</typeparam>
-    [Serializable()]
+    [Serializable]
     public abstract class ChannelValueCollectionBase<TDefinition, TValue> : ChannelCollectionBase<TValue>
         where TDefinition : IChannelDefinition
         where TValue : IChannelValue<TDefinition>
@@ -62,7 +62,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// <paramref name="lastValidIndex"/> is used instead of maximum count so that maximum type values may
         /// be specified as needed. For example, if the protocol specifies a collection with a signed 16-bit
-        /// maximum length you can specify <see cref="Int16.MaxValue"/> (i.e., 32,767) as the last valid index
+        /// maximum length you can specify <see cref="short.MaxValue"/> (i.e., 32,767) as the last valid index
         /// for the collection since total number of items supported would be 32,768.
         /// </remarks>
         protected ChannelValueCollectionBase(int lastValidIndex)

@@ -27,10 +27,10 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.ComponentModel;
 using System.ServiceProcess;
+using GSF;
 
 namespace UDPRebroadcaster
 {
@@ -39,7 +39,6 @@ namespace UDPRebroadcaster
         #region [ Constructors ]
 
         public ServiceHost()
-            : base()
         {
             InitializeComponent();
 

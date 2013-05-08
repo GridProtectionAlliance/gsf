@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  HeaderFrameBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -38,7 +38,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the protocol independent common implementation of any <see cref="IHeaderFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class HeaderFrameBase : ChannelFrameBase<IHeaderCell>, IHeaderFrame
     {
         #region [ Constructors ]

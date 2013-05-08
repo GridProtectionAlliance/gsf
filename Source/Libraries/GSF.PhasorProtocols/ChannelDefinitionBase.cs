@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ChannelDefinitionBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -27,7 +27,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -38,7 +37,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of any kind of <see cref="IChannel"/> data.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class ChannelDefinitionBase : ChannelBase, IChannelDefinition
     {
         #region [ Members ]

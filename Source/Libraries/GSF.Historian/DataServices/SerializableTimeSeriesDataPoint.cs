@@ -110,25 +110,25 @@ namespace GSF.Historian.DataServices
         /// <summary>
         /// Gets or sets the <see cref="IDataPoint.HistorianID"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 0)]
+        [XmlAttribute, DataMember(Order = 0)]
         public int HistorianID { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="String"/> representation of <see cref="IDataPoint.Time"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 1)]
+        [XmlAttribute, DataMember(Order = 1)]
         public string Time { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IDataPoint.Value"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 2)]
+        [XmlAttribute, DataMember(Order = 2)]
         public float Value { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IDataPoint.Quality"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 3)]
+        [XmlAttribute, DataMember(Order = 3)]
         public Quality Quality { get; set; }
 
         #endregion

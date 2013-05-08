@@ -41,7 +41,7 @@ namespace GSF.PQDIF.Logical
         #region [ Members ]
 
         // Fields
-        private Record m_physicalRecord;
+        private readonly Record m_physicalRecord;
 
         #endregion
 

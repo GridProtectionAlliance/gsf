@@ -46,6 +46,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using GSF;
 using GSF.Communication;
 using GSF.Parsing;
@@ -55,6 +56,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
+using Timer = System.Timers.Timer;
 
 namespace PhasorProtocolAdapters
 {
@@ -154,11 +156,11 @@ namespace PhasorProtocolAdapters
         private IServer m_publishChannel;
         private IConfigurationFrame m_configurationFrame;
         private ConfigurationFrame m_baseConfigurationFrame;
-        private ConcurrentDictionary<MeasurementKey, SignalReference[]> m_signalReferences;
-        private ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
-        private ConcurrentDictionary<Guid, string> m_connectionIDCache;
-        private System.Timers.Timer m_commandChannelRestartTimer;
-        private object m_reinitializationLock;
+        private readonly ConcurrentDictionary<MeasurementKey, SignalReference[]> m_signalReferences;
+        private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
+        private readonly ConcurrentDictionary<Guid, string> m_connectionIDCache;
+        private Timer m_commandChannelRestartTimer;
+        private readonly object m_reinitializationLock;
         private long m_activeConnections;
         private LineFrequency m_nominalFrequency;
         private DataFormat m_dataFormat;
@@ -222,7 +224,7 @@ namespace PhasorProtocolAdapters
             base.TimeResolution = Ticks.PerMillisecond;
 
             // Setup a timer for restarting the command channel if it fails
-            m_commandChannelRestartTimer = new System.Timers.Timer(2000.0D);
+            m_commandChannelRestartTimer = new Timer(2000.0D);
             m_commandChannelRestartTimer.AutoReset = false;
             m_commandChannelRestartTimer.Enabled = false;
             m_commandChannelRestartTimer.Elapsed += m_commandChannelRestartTimer_Elapsed;
@@ -1426,7 +1428,7 @@ namespace PhasorProtocolAdapters
                 {
                     // Return label with appended phase suffix
                     phaseSuffix.Append(type == PhasorType.Voltage ? 'V' : 'I');
-                    return phasorLabel.TruncateRight(12) + phaseSuffix.ToString();
+                    return phasorLabel.TruncateRight(12) + phaseSuffix;
                 }
             }
 
@@ -1454,7 +1456,7 @@ namespace PhasorProtocolAdapters
         /// <param name="measurement">Measurement to queue for processing.</param>
         public override void QueueMeasurementForProcessing(IMeasurement measurement)
         {
-            QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
+            QueueMeasurementsForProcessing(new[] { measurement });
         }
 
         /// <summary>
@@ -2091,7 +2093,7 @@ namespace PhasorProtocolAdapters
                 OnStatusMessage("Command channel stopped.");
         }
 
-        private void m_commandChannelRestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_commandChannelRestartTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (m_commandChannel != null)
             {

@@ -32,7 +32,7 @@ namespace GSF.Historian.Notifiers
     /// <summary>
     /// Contains classes and interfaces that allow standard and custom historian notifications about critical system events.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

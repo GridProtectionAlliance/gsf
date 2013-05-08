@@ -40,13 +40,15 @@
 //
 //******************************************************************************************************
 
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using System.Timers;
+using GSF.Units;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Diagnostics
 {
@@ -96,8 +98,8 @@ namespace GSF.Diagnostics
 
         // Fields
         private string m_processName;
-        private List<PerformanceCounter> m_counters;
-        private System.Timers.Timer m_samplingTimer;
+        private readonly List<PerformanceCounter> m_counters;
+        private readonly Timer m_samplingTimer;
         private bool m_disposed;
 
         #endregion
@@ -197,7 +199,7 @@ namespace GSF.Diagnostics
                 SampleCounters();
             }
 
-            m_samplingTimer = new System.Timers.Timer(samplingInterval);
+            m_samplingTimer = new Timer(samplingInterval);
             m_samplingTimer.Elapsed += m_samplingTimer_Elapsed;
             m_samplingTimer.Start();
         }
@@ -736,7 +738,7 @@ namespace GSF.Diagnostics
             }
         }
 
-        private void m_samplingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_samplingTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             SampleCounters();
         }

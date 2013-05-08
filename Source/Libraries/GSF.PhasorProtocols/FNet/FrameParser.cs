@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -28,7 +28,6 @@
 using System;
 using System.Text;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.FNet
 {
@@ -90,7 +89,7 @@ namespace GSF.PhasorProtocols.FNet
         public FrameParser(ushort frameRate, LineFrequency nominalFrequency, Ticks timeOffset, string stationName)
         {
             // Initialize protocol synchronization bytes for this frame parser
-            base.ProtocolSyncBytes = new byte[] { Common.StartByte };
+            base.ProtocolSyncBytes = new[] { Common.StartByte };
 
             m_frameRate = frameRate;
             m_nominalFrequency = nominalFrequency;
@@ -243,7 +242,7 @@ namespace GSF.PhasorProtocols.FNet
             }
             set
             {
-                FNet.ConnectionParameters parameters = value as FNet.ConnectionParameters;
+                ConnectionParameters parameters = value as ConnectionParameters;
 
                 if (parameters != null)
                 {
@@ -268,7 +267,7 @@ namespace GSF.PhasorProtocols.FNet
         public override void Start()
         {
             // We narrow down parsing types to just those needed...
-            base.Start(new Type[] { typeof(DataFrame) });
+            base.Start(new[] { typeof(DataFrame) });
         }
 
         /// <summary>
@@ -303,7 +302,7 @@ namespace GSF.PhasorProtocols.FNet
                 scanLength = length;
 
             // See if there is enough data in the buffer to parse the common frame header by scanning for the F-NET termination byte
-            if (scanLength > 0 && Array.IndexOf<byte>(buffer, Common.EndByte, offset, scanLength) >= 0)
+            if (scanLength > 0 && Array.IndexOf(buffer, Common.EndByte, offset, scanLength) >= 0)
             {
                 // Pre-parse F-NET data row...
                 CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset, length);

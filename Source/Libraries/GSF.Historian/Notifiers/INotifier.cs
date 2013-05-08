@@ -30,7 +30,6 @@
 //******************************************************************************************************
 
 using System;
-using GSF.Configuration;
 using GSF.Adapters;
 
 namespace GSF.Historian.Notifiers
@@ -40,7 +39,7 @@ namespace GSF.Historian.Notifiers
     /// <summary>
     /// Indicates the type of notification being sent using a <see cref="INotifier">Notifier</see>.
     /// </summary>
-    [Flags()]
+    [Flags]
     public enum NotificationTypes
     {
         /// <summary>

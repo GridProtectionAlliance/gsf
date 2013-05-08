@@ -30,7 +30,7 @@ namespace GSF.Media.Sound
     /// <summary>
     /// Contains classes used to create dual tone multi-frequency sounds and standard touch tones.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

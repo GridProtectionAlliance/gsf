@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommonFrameHeader.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -34,7 +34,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// <summary>
     /// Represents the common header for all IEC 61850-90-5 frames of data.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class CommonFrameHeader : ICommonHeader<FrameType>, ISerializable
     {
         #region [ Members ]
@@ -86,13 +86,13 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         private byte m_version;
         private ushort m_frameLength;
         private ushort m_dataLength;
-        private ushort m_headerLength;
+        private readonly ushort m_headerLength;
         private uint m_spduLength;
         private ushort m_asduLength;
         private int m_asduCount;
         private uint m_configurationRevision;
-        private bool m_simulatedData;
-        private ushort m_applicationID;
+        private readonly bool m_simulatedData;
+        private readonly ushort m_applicationID;
         private ushort m_payloadSize;
         private ushort m_idCode;
         private string m_msvID;
@@ -101,8 +101,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         private ConfigurationFrame m_configurationFrame;
         private SignatureAlgorithm m_signatureAlgorithm;
         private SecurityAlgorithm m_securityAlgorithm;
-        private byte[] m_sourceHash;
-        private byte[] m_calculatedHash;
+        private readonly byte[] m_sourceHash;
+        private readonly byte[] m_calculatedHash;
         private Ticks m_timestamp;
         private uint m_timebase;
         private uint m_timeQualityFlags;
@@ -139,8 +139,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             m_asduCount = asduCount;
             m_configurationRevision = configurationRevision;
 
-            m_securityAlgorithm = Iec61850_90_5.SecurityAlgorithm.None;
-            m_signatureAlgorithm = Iec61850_90_5.SignatureAlgorithm.None;
+            m_securityAlgorithm = SecurityAlgorithm.None;
+            m_signatureAlgorithm = SignatureAlgorithm.None;
         }
 
         /// <summary>
@@ -383,7 +383,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         protected CommonFrameHeader(SerializationInfo info, StreamingContext context)
         {
             // Deserialize common frame header
-            m_frameType = (FrameType)info.GetValue("frameType", typeof(Iec61850_90_5.FrameType));
+            m_frameType = (FrameType)info.GetValue("frameType", typeof(FrameType));
             m_version = info.GetByte("version");
             m_frameLength = info.GetUInt16("frameLength");
             m_timebase = info.GetUInt32("timebase");
@@ -394,8 +394,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 m_headerLength = info.GetUInt16("headerLength");
                 m_dataLength = info.GetUInt16("dataLength");
                 m_packetNumber = info.GetUInt32("packetNumber");
-                m_signatureAlgorithm = (SignatureAlgorithm)info.GetValue("signatureAlgorithm", typeof(Iec61850_90_5.SignatureAlgorithm));
-                m_securityAlgorithm = (SecurityAlgorithm)info.GetValue("securityAlgorithm", typeof(Iec61850_90_5.SecurityAlgorithm));
+                m_signatureAlgorithm = (SignatureAlgorithm)info.GetValue("signatureAlgorithm", typeof(SignatureAlgorithm));
+                m_securityAlgorithm = (SecurityAlgorithm)info.GetValue("securityAlgorithm", typeof(SecurityAlgorithm));
                 m_asduCount = info.GetInt32("adsuCount");
                 m_simulatedData = info.GetBoolean("simulatedData");
                 m_applicationID = info.GetUInt16("applicationID");
@@ -689,11 +689,11 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return (TimeQualityFlags)(m_timeQualityFlags & ~(uint)Iec61850_90_5.TimeQualityFlags.TimeQualityIndicatorCodeMask);
+                return (TimeQualityFlags)(m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
             }
             set
             {
-                m_timeQualityFlags = (m_timeQualityFlags & (uint)Iec61850_90_5.TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
+                m_timeQualityFlags = (m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
             }
         }
 
@@ -704,11 +704,11 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return (TimeQualityIndicatorCode)(m_timeQualityFlags & (uint)Iec61850_90_5.TimeQualityFlags.TimeQualityIndicatorCodeMask);
+                return (TimeQualityIndicatorCode)(m_timeQualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
             }
             set
             {
-                m_timeQualityFlags = (m_timeQualityFlags & ~(uint)Iec61850_90_5.TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
+                m_timeQualityFlags = (m_timeQualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask) | (uint)value;
             }
         }
 
@@ -1105,7 +1105,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // Serialize unique common frame header values
-            info.AddValue("frameType", m_frameType, typeof(Iec61850_90_5.FrameType));
+            info.AddValue("frameType", m_frameType, typeof(FrameType));
             info.AddValue("version", m_version);
             info.AddValue("frameLength", m_frameLength);
             info.AddValue("timebase", m_timebase);
@@ -1116,8 +1116,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 info.AddValue("headerLength", m_headerLength);
                 info.AddValue("dataLength", m_dataLength);
                 info.AddValue("packetNumber", m_packetNumber);
-                info.AddValue("signatureAlgorithm", m_signatureAlgorithm, typeof(Iec61850_90_5.SignatureAlgorithm));
-                info.AddValue("securityAlgorithm", m_securityAlgorithm, typeof(Iec61850_90_5.SecurityAlgorithm));
+                info.AddValue("signatureAlgorithm", m_signatureAlgorithm, typeof(SignatureAlgorithm));
+                info.AddValue("securityAlgorithm", m_securityAlgorithm, typeof(SecurityAlgorithm));
                 info.AddValue("adsuCount", m_asduCount);
                 info.AddValue("simulatedData", m_simulatedData);
                 info.AddValue("applicationID", m_applicationID);

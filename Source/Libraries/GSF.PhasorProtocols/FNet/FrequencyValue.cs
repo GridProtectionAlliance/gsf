@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrequencyValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols.FNet
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IFrequencyValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FrequencyValue : FrequencyValueBase
     {
         #region [ Constructors ]

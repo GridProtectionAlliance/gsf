@@ -31,8 +31,8 @@ namespace ProtocolTester
 {
     public class Concentrator : ConcentratorBase
     {
-        private StreamWriter m_exportFile;
-        private bool m_writeLogs;
+        private readonly StreamWriter m_exportFile;
+        private readonly bool m_writeLogs;
 
         public Concentrator(bool writeLogs, string exportFileName)
         {

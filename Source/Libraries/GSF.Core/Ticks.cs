@@ -61,12 +61,12 @@
 
 #endregion
 
-using GSF.Units;
 using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
+using GSF.Units;
 
 namespace GSF
 {
@@ -115,7 +115,7 @@ namespace GSF
     /// from a <see cref="DateTime"/>, a <see cref="TimeSpan"/>, an <see cref="NtpTimeTag"/> and a <see cref="UnixTimeTag"/>.
     /// </para>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Ticks : IComparable, IFormattable, IConvertible, IComparable<Ticks>, IComparable<Int64>, IComparable<DateTime>, IComparable<TimeSpan>, IEquatable<Ticks>, IEquatable<Int64>, IEquatable<DateTime>, IEquatable<TimeSpan>
     {
         #region [ Members ]
@@ -142,31 +142,31 @@ namespace GSF
         // Constants
 
         // Standard time names used by ToString method
-        private static string[] s_timeNames = new string[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 60 Seconds", "0 Seconds" };
+        private static readonly string[] s_timeNames = new[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 60 Seconds", "0 Seconds" };
 
         // Standard time names, without seconds, used by ToString method
-        private static string[] s_timeNamesNoSeconds = new string[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 1 Minute", "0 Minutes" };
+        private static readonly string[] s_timeNamesNoSeconds = new[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 1 Minute", "0 Minutes" };
 
         /// <summary>Number of 100-nanosecond ticks in one second.</summary>
         public const long PerSecond = 10000000L;
 
         /// <summary>Number of 100-nanosecond ticks in one millisecond.</summary>
-        public const long PerMillisecond = (long)(Ticks.PerSecond * SI.Milli);
+        public const long PerMillisecond = (long)(PerSecond * SI.Milli);
 
         /// <summary>Number of 100-nanosecond ticks in one microsecond.</summary>
-        public const long PerMicrosecond = (long)(Ticks.PerSecond * SI.Micro);
+        public const long PerMicrosecond = (long)(PerSecond * SI.Micro);
 
         /// <summary>Number of 100-nanosecond ticks in one minute.</summary>
-        public const long PerMinute = 60L * Ticks.PerSecond;
+        public const long PerMinute = 60L * PerSecond;
 
         /// <summary>Number of 100-nanosecond ticks in one hour.</summary>
-        public const long PerHour = 60L * Ticks.PerMinute;
+        public const long PerHour = 60L * PerMinute;
 
         /// <summary>Number of 100-nanosecond ticks in one day.</summary>
-        public const long PerDay = 24L * Ticks.PerHour;
+        public const long PerDay = 24L * PerHour;
 
         // Fields
-        private long m_value; // Time value stored in ticks
+        private readonly long m_value; // Time value stored in ticks
 
         #endregion
 
@@ -213,7 +213,7 @@ namespace GSF
         /// </remarks>
         public double ToSeconds()
         {
-            return m_value / (double)Ticks.PerSecond;
+            return m_value / (double)PerSecond;
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace GSF
         /// </remarks>
         public double ToMilliseconds()
         {
-            return m_value / (double)Ticks.PerMillisecond;
+            return m_value / (double)PerMillisecond;
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace GSF
         /// </remarks>
         public double ToMicroseconds()
         {
-            return m_value / (double)Ticks.PerMicrosecond;
+            return m_value / (double)PerMicrosecond;
         }
 
         /// <summary>
@@ -349,7 +349,7 @@ namespace GSF
             if (leadTime <= 0)
                 throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
-            double distance = (currentTime.m_value - m_value) / (double)Ticks.PerSecond;
+            double distance = (currentTime.m_value - m_value) / (double)PerSecond;
 
             return (distance >= -leadTime && distance <= lagTime);
         }
@@ -392,7 +392,7 @@ namespace GSF
         /// </returns>
         public Ticks DistanceBeyondSecond()
         {
-            return m_value - (m_value - m_value % Ticks.PerSecond);
+            return m_value - (m_value - m_value % PerSecond);
         }
 
         /// <summary>
@@ -425,13 +425,13 @@ namespace GSF
             switch (interval)
             {
                 case BaselineTimeInterval.Second:
-                    return m_value - m_value % Ticks.PerSecond;
+                    return m_value - m_value % PerSecond;
                 case BaselineTimeInterval.Minute:
-                    return m_value - m_value % Ticks.PerMinute;
+                    return m_value - m_value % PerMinute;
                 case BaselineTimeInterval.Hour:
-                    return m_value - m_value % Ticks.PerHour;
+                    return m_value - m_value % PerHour;
                 case BaselineTimeInterval.Day:
-                    return m_value - m_value % Ticks.PerDay;
+                    return m_value - m_value % PerDay;
                 case BaselineTimeInterval.Month:
                     DateTime toMonth = new DateTime(m_value);
                     return new DateTime(toMonth.Year, toMonth.Month, 1, 0, 0, 0, 0).Ticks;
@@ -1268,7 +1268,7 @@ namespace GSF
         /// <param name="value1">Left hand <see cref="Ticks"/> operand.</param>
         /// <param name="value2">Right hand <see cref="Ticks"/> operand.</param>
         /// <returns><see cref="double"/> value representing the result.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Ticks value1, Ticks value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);
@@ -1301,7 +1301,7 @@ namespace GSF
         /// </remarks>
         public static double ToSeconds(Ticks value)
         {
-            return value / (double)Ticks.PerSecond;
+            return value / (double)PerSecond;
         }
 
         /// <summary>
@@ -1315,7 +1315,7 @@ namespace GSF
         /// </remarks>
         public static double ToMilliseconds(Ticks value)
         {
-            return value / (double)Ticks.PerMillisecond;
+            return value / (double)PerMillisecond;
         }
 
         /// <summary>
@@ -1329,7 +1329,7 @@ namespace GSF
         /// </remarks>
         public static double ToMicroseconds(Ticks value)
         {
-            return value / (double)Ticks.PerMicrosecond;
+            return value / (double)PerMicrosecond;
         }
 
         /// <summary>
@@ -1339,7 +1339,7 @@ namespace GSF
         /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in seconds.</returns>
         public static Ticks FromSeconds(double value)
         {
-            return new Ticks((long)(value * Ticks.PerSecond));
+            return new Ticks((long)(value * PerSecond));
         }
 
         /// <summary>
@@ -1349,7 +1349,7 @@ namespace GSF
         /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in milliseconds.</returns>
         public static Ticks FromMilliseconds(double value)
         {
-            return new Ticks((long)(value * Ticks.PerMillisecond));
+            return new Ticks((long)(value * PerMillisecond));
         }
 
         /// <summary>
@@ -1359,7 +1359,7 @@ namespace GSF
         /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in microseconds.</returns>
         public static Ticks FromMicroseconds(double value)
         {
-            return new Ticks((long)(value * Ticks.PerMicrosecond));
+            return new Ticks((long)(value * PerMicrosecond));
         }
 
         /// <summary>

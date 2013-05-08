@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  AnalogValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,7 +31,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of an <see cref="IAnalogValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class AnalogValue : AnalogValueBase
     {
         #region [ Constructors ]

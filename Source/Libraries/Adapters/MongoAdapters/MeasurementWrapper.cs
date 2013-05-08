@@ -23,8 +23,8 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
 using System;
+using GSF.TimeSeries;
 
 namespace MongoAdapters
 {
@@ -149,8 +149,8 @@ namespace MongoAdapters
         {
             Guid signalID = Guid.Parse(this.SignalID);
 
-            IMeasurement measurement = new Measurement()
-            {
+            IMeasurement measurement = new Measurement
+                {
                 Adder = this.Adder,
                 ID = signalID,
                 Key = new MeasurementKey(signalID, unchecked((uint)this.ID), this.Source),

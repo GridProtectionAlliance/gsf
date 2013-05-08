@@ -26,7 +26,6 @@
 //******************************************************************************************************
 
 using System;
-using GSF.Configuration;
 using GSF.Adapters;
 
 namespace GSF.Historian.Replication

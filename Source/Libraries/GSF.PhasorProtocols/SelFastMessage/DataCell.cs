@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,7 +35,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// <summary>
     /// Represents the SEL Fast Message implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DataCell : DataCellBase
     {
         #region [ Constructors ]
@@ -152,14 +151,14 @@ namespace GSF.PhasorProtocols.SelFastMessage
         {
             get
             {
-                return (StatusFlags & SelFastMessage.StatusFlags.PMDOK) > 0;
+                return (StatusFlags & StatusFlags.PMDOK) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | SelFastMessage.StatusFlags.PMDOK;
+                    StatusFlags = StatusFlags | StatusFlags.PMDOK;
                 else
-                    StatusFlags = StatusFlags & ~SelFastMessage.StatusFlags.PMDOK;
+                    StatusFlags = StatusFlags & ~StatusFlags.PMDOK;
             }
         }
 
@@ -170,14 +169,14 @@ namespace GSF.PhasorProtocols.SelFastMessage
         {
             get
             {
-                return (StatusFlags & SelFastMessage.StatusFlags.TSOK) > 0;
+                return (StatusFlags & StatusFlags.TSOK) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | SelFastMessage.StatusFlags.TSOK;
+                    StatusFlags = StatusFlags | StatusFlags.TSOK;
                 else
-                    StatusFlags = StatusFlags & ~SelFastMessage.StatusFlags.TSOK;
+                    StatusFlags = StatusFlags & ~StatusFlags.TSOK;
             }
         }
 
@@ -188,7 +187,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         {
             get
             {
-                return (SynchronizationIsValid ? GSF.PhasorProtocols.DataSortingType.ByTimestamp : GSF.PhasorProtocols.DataSortingType.ByArrival);
+                return (SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
             }
             set
             {
@@ -282,7 +281,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             // Parse out phasor values
             for (x = 0; x < configCell.PhasorDefinitions.Count; x++)
             {
-                phasorValue = SelFastMessage.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[x], buffer, index, out parsedLength);
+                phasorValue = PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[x], buffer, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }

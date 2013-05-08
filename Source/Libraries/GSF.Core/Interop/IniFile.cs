@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  IniFile.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -191,7 +191,7 @@ namespace GSF.Interop
         /// Gets an array of keys from the specified section in the INI file.
         /// </summary>
         /// <param name="section">Section to retrieve keys from.</param>
-        /// <returns>Array of <see cref="String"/> keys from the specified section of the INI file.</returns>
+        /// <returns>Array of <see cref="string"/> keys from the specified section of the INI file.</returns>
         public string[] GetSectionKeys(string section)
         {
             List<string> keys = new List<string>();
@@ -226,7 +226,7 @@ namespace GSF.Interop
         /// <summary>
         /// Gets an array of that section names that exist in the INI file.
         /// </summary>
-        /// <returns>Array of <see cref="String"/> section names from the INI file.</returns>
+        /// <returns>Array of <see cref="string"/> section names from the INI file.</returns>
         public string[] GetSectionNames()
         {
             List<string> sections = new List<string>();

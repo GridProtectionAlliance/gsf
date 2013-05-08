@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  PhasorDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -23,7 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Runtime.Serialization;
 
@@ -32,7 +31,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IPhasorDefinition"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class PhasorDefinition : PhasorDefinitionBase
     {
         #region [ Members ]

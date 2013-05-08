@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrequencyDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,13 +33,13 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Represents the Macrodyne implementation of a <see cref="IFrequencyDefinition"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FrequencyDefinition : FrequencyDefinitionBase
     {
         #region [ Members ]
 
         // Fields
-        private int m_dummy;
+        private readonly int m_dummy;
         private double m_frequencyOffset;
 
         #endregion

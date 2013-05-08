@@ -25,32 +25,31 @@
 //
 //******************************************************************************************************
 
-using GSF.Searching;
-using GSF.TimeSeries.UI.Commands;
-using GSF.TimeSeries.UI.DataModels;
-using GSF.TimeSeries.UI.UserControls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
+using GSF.Searching;
+using GSF.TimeSeries.UI.Commands;
+using GSF.TimeSeries.UI.DataModels;
+using GSF.TimeSeries.UI.UserControls;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {
     /// <summary>
     /// Class to hold bindable <see cref="GSF.TimeSeries.UI.DataModels.Measurement"/> collection.
     /// </summary>
-    public class Measurements : PagedViewModelBase<GSF.TimeSeries.UI.DataModels.Measurement, Guid>
+    public class Measurements : PagedViewModelBase<DataModels.Measurement, Guid>
     {
         #region [ Members ]
 
-        private Dictionary<int, string> m_historianLookupList;
-        private Dictionary<int, string> m_signalTypeLookupList;
-        private int m_deviceID;
+        private readonly Dictionary<int, string> m_historianLookupList;
+        private readonly Dictionary<int, string> m_signalTypeLookupList;
+        private readonly int m_deviceID;
         private IList<Guid> m_allKeys;
         private RelayCommand m_searchCommand;
         private RelayCommand m_advancedFindCommand;
@@ -64,7 +63,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         private ICollection<AdvancedSearchCategory> m_searchCategories;
         private bool m_advancedFindIsOpen;
 
-        private AsyncSearcher<DataModels.Measurement> m_searcher;
+        private readonly AsyncSearcher<DataModels.Measurement> m_searcher;
         private string m_pendingSearch;
         private bool m_searching;
         private bool m_cancelSearch;

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DigitalDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -23,7 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IDigitalDefinition"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DigitalDefinition : DigitalDefinitionBase
     {
         #region [ Members ]
@@ -294,7 +293,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// <para>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label.</para>
         /// <para>Note that the draft 6 implementation of the protocol supports one label for all 16-bits, however draft 7 (i.e., version 1) supports a label for each of the 16 bits.</para>
         /// </remarks>
-        /// <returns>A <see cref="String"/> value of the label corresponding to the parameter.</returns>
+        /// <returns>A <see cref="string"/> value of the label corresponding to the parameter.</returns>
         public string GetLabel(int index)
         {
             if (index < 0 || index >= LabelCount)
@@ -414,7 +413,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 

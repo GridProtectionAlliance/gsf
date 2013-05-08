@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  RemoteInputAdapter.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -35,11 +35,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using GSF;
 using GSF.Communication;
 using GSF.Historian;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace HistorianAdapters
 {
@@ -52,7 +52,7 @@ namespace HistorianAdapters
         #region [ Members ]
 
         // Fields
-        private DataListener m_historianDataListener;
+        private readonly DataListener m_historianDataListener;
         private bool m_disposed;
 
         #endregion
@@ -63,7 +63,6 @@ namespace HistorianAdapters
         /// Initializes a new instance of the <see cref="RemoteInputAdapter"/> class.
         /// </summary>
         public RemoteInputAdapter()
-            : base()
         {
             m_historianDataListener = new DataListener();
         }
@@ -295,8 +294,8 @@ namespace HistorianAdapters
                 List<IMeasurement> measurements = new List<IMeasurement>();
                 foreach (IDataPoint dataPoint in e.Argument)
                 {
-                    measurements.Add(new Measurement()
-                    {
+                    measurements.Add(new Measurement
+                        {
                         Key = new MeasurementKey(Guid.Empty, (uint)dataPoint.HistorianID, m_historianDataListener.ID),
                         Value = dataPoint.Value,
                         Timestamp = dataPoint.Time

@@ -23,8 +23,8 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.Converters;
 using System.Windows.Data;
+using GSF.TimeSeries.UI.Converters;
 
 namespace GSF.TimeSeries.UI.Binding
 {

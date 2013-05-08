@@ -27,13 +27,14 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Security;
 using System;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using GSF.Configuration;
+using GSF.Security;
 
 namespace GSF.Windows
 {
@@ -295,9 +296,9 @@ namespace GSF.Windows
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            if (e.ChangedButton == MouseButton.Left)
                 this.DragMove();
         }
 

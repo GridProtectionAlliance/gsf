@@ -48,7 +48,7 @@ namespace GSF.ServiceModel.Activation
 
         // Fields
         private string m_protocol;
-        private string m_address;
+        private readonly string m_address;
         private bool m_publishMetadata;
         private bool m_disableSecurity;
 

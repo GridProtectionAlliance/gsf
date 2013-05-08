@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationCellCollection.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,8 +31,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// <summary>
     /// Represents a IEC 61850-90-5 implementation of a collection of <see cref="IConfigurationCell"/> objects.
     /// </summary>
-    [Serializable()]
-    public class ConfigurationCellCollection : GSF.PhasorProtocols.ConfigurationCellCollection
+    [Serializable]
+    public class ConfigurationCellCollection : PhasorProtocols.ConfigurationCellCollection
     {
         #region [ Constructors ]
 

@@ -40,7 +40,7 @@ namespace GSF.Configuration
         #region [ Members ]
 
         // Fields
-        private bool m_serialize;
+        private readonly bool m_serialize;
 
         #endregion
 

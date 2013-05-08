@@ -61,8 +61,8 @@
 
 #endregion
 
-using GSF.Media.Music;
 using System;
+using GSF.Media.Music;
 
 namespace GSF.Media.Sound
 {
@@ -145,9 +145,9 @@ namespace GSF.Media.Sound
         /// <summary>
         /// Constructs a new <see cref="DTMF"/> using specified parameters.
         /// </summary>
-        /// <param name="lowFrequency">A <see cref="Double"/> low frequency value.</param>
-        /// <param name="highFrequency">A <see cref="Double"/> high frequency value.</param>
-        /// <param name="duration">A <see cref="Double"/> duration value.</param>
+        /// <param name="lowFrequency">A <see cref="double"/> low frequency value.</param>
+        /// <param name="highFrequency">A <see cref="double"/> high frequency value.</param>
+        /// <param name="duration">A <see cref="double"/> duration value.</param>
         public DTMF(double lowFrequency, double highFrequency, double duration)
         {
             LowFrequency = lowFrequency;
@@ -175,7 +175,7 @@ namespace GSF.Media.Sound
         {
             get
             {
-                return new DTMF[] { new DTMF(1400.0D, 2450.0D, 0.1D), new DTMF(2060.0D, 2600.0D, 0.1D) };
+                return new[] { new DTMF(1400.0D, 2450.0D, 0.1D), new DTMF(2060.0D, 2600.0D, 0.1D) };
             }
         }
 
@@ -184,7 +184,7 @@ namespace GSF.Media.Sound
         {
             get
             {
-                return new DTMF[] { new DTMF(480.0D, 620.0D, 0.5D), new DTMF(0.0D, 0.0D, 0.5D) };
+                return new[] { new DTMF(480.0D, 620.0D, 0.5D), new DTMF(0.0D, 0.0D, 0.5D) };
             }
         }
 
@@ -224,7 +224,7 @@ namespace GSF.Media.Sound
         /// <param name="volume">Volume of generated dual-tones as a percentage (0 to 1).</param>
         public static void Generate(WaveFile destination, DTMF tone, double volume)
         {
-            Generate(destination, new DTMF[] { tone }, volume, 1);
+            Generate(destination, new[] { tone }, volume, 1);
         }
 
         /// <summary>
@@ -236,7 +236,7 @@ namespace GSF.Media.Sound
         /// <param name="repeatCount">Number of times to repeat the tone.</param>
         public static void Generate(WaveFile destination, DTMF tone, double volume, int repeatCount)
         {
-            Generate(destination, new DTMF[] { tone }, volume, repeatCount);
+            Generate(destination, new[] { tone }, volume, repeatCount);
         }
 
         /// <summary>
@@ -276,7 +276,7 @@ namespace GSF.Media.Sound
                     for (long y = 0; y < tone.Duration * destination.SampleRate; y++)
                     {
                         // Compute frequencies of DTMF at given time and add to wave file
-                        destination.AddSample(DTMF.ComputeFrequencies(tone, y, destination.SampleRate) * amplitude);
+                        destination.AddSample(ComputeFrequencies(tone, y, destination.SampleRate) * amplitude);
                     }
                 }
             }

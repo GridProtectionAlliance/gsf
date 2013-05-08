@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Common.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 
 namespace GSF.PhasorProtocols.Macrodyne
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne protocol versions enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum ProtocolVersion
     {
         /// <summary>
@@ -51,7 +50,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne frame types enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum FrameType : byte
     {
         /// <summary>
@@ -74,7 +73,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne clock status flags enumeration (from byte 1 in time string).
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum ClockStatusFlags : byte
     {
         /// <summary>
@@ -120,7 +119,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne status flags enumeration (from Status 1 byte).
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum StatusFlags : byte
     {
         /// <summary>
@@ -164,7 +163,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne trigger reason enumeration (from Status 2 byte, bits 0-2).
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum TriggerReason : byte
     {
         /// <summary>
@@ -204,7 +203,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne GPS status enumeration (from Status 2 byte, bits 3-4).
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum GpsStatus : byte
     {
         /// <summary>
@@ -228,7 +227,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne ON-LINE data format flags enumeration (from <see cref="DeviceCommand.RequestOnlineDataFormat"/> 2 byte response).
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum OnlineDataFormatFlags : ushort
     {
         // Response byte 2 comes first (via status word interpretation)
@@ -309,7 +308,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne operational limit reached flags enumeration (from <see cref="DeviceCommand.RequestOperationalLimitFlags"/> first byte of 3 byte response).
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum OperationalLimitFlags : ushort
     {
         /// <summary>
@@ -353,28 +352,28 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne data input commands enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum DataInputCommand : byte
     {
         /// <summary>
         /// Send reference phasor.
         /// </summary>
-        /// <remarks>Command must be followed by phasor and xor checksum <see cref="Byte"/>.</remarks>
+        /// <remarks>Command must be followed by phasor and xor checksum <see cref="byte"/>.</remarks>
         SendReferencePhasor = 0xA0,
         /// <summary>
         /// Send word data.
         /// </summary>
-        /// <remarks>Command must be followed by big-endian <see cref="UInt16"/> and xor checksum <see cref="Byte"/></remarks>
+        /// <remarks>Command must be followed by big-endian <see cref="ushort"/> and xor checksum <see cref="byte"/></remarks>
         SendWordData = 0xA2,
         /// <summary>
         /// Send unit ID data.
         /// </summary>
-        /// <remarks>Command must be followed by 8 ASCII bytes of data and xor checksum <see cref="Byte"/></remarks>
+        /// <remarks>Command must be followed by 8 ASCII bytes of data and xor checksum <see cref="byte"/></remarks>
         SendUnitIDData = 0xA4,
         /// <summary>
         /// Send byte data.
         /// </summary>
-        /// <remarks>Command must be followed by <see cref="Byte"/> data and xor checksum <see cref="Byte"/>.</remarks>
+        /// <remarks>Command must be followed by <see cref="byte"/> data and xor checksum <see cref="byte"/>.</remarks>
         SendByteData = 0xA6
     }
 
@@ -384,7 +383,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <remarks>
     /// These commands should be transmitted in big-endian to make sure high word and low word are in the expected order.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public enum DeviceCommand : ushort
     {
         #region [ Set Commands ]
@@ -858,7 +857,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Macrodyne device ports enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum DevicePort
     {
         /// <summary>

@@ -40,7 +40,7 @@ namespace GSF.Configuration
         #region [ Members ]
 
         // Fields
-        private bool m_encrypt;
+        private readonly bool m_encrypt;
         private string m_privateKey;
 
         #endregion

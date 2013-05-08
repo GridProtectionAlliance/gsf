@@ -61,8 +61,8 @@
 
 #endregion
 
-using GSF.Parsing;
 using System;
+using GSF.Parsing;
 
 namespace GSF.Media
 {

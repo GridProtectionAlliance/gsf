@@ -1,4 +1,4 @@
-//*******************************************************************************************************
+﻿//*******************************************************************************************************
 //  ClientBase.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
@@ -444,7 +444,7 @@ namespace GSF.Communication
         private string m_settingsCategory;
         private Encoding m_textEncoding;
         private ClientState m_currentState;
-        private TransportProtocol m_transportProtocol;
+        private readonly TransportProtocol m_transportProtocol;
         private Ticks m_connectTime;
         private Ticks m_disconnectTime;
         private ManualResetEvent m_connectHandle;
@@ -460,7 +460,6 @@ namespace GSF.Communication
         /// Initializes a new instance of the client.
         /// </summary>
         protected ClientBase()
-            : base()
         {
             m_textEncoding = Encoding.ASCII;
             m_currentState = ClientState.Disconnected;

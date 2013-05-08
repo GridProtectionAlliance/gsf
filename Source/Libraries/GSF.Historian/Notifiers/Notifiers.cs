@@ -51,10 +51,10 @@ namespace GSF.Historian.Notifiers
                 this.NotificationType = notificationType;
             }
 
-            public string Subject;
-            public string Message;
-            public string Details;
-            public NotificationTypes NotificationType;
+            public readonly string Subject;
+            public readonly string Message;
+            public readonly string Details;
+            public readonly NotificationTypes NotificationType;
         }
 
         #endregion

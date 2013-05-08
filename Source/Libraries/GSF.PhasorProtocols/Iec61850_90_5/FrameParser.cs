@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -26,7 +26,6 @@
 using System;
 using System.Text;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Iec61850_90_5
 {
@@ -196,7 +195,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             }
             set
             {
-                Iec61850_90_5.ConnectionParameters parameters = value as Iec61850_90_5.ConnectionParameters;
+                ConnectionParameters parameters = value as ConnectionParameters;
 
                 if (parameters != null)
                 {
@@ -235,7 +234,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             m_unexpectedCommandFrames = 0;
 
             //// We narrow down parsing types to just those needed...
-            base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame) });
+            base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame) });
         }
 
         /// <summary>

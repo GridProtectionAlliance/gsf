@@ -335,7 +335,7 @@ namespace GSF.Security
             bool result;
 
             // For consistency with WindowIdentity principal, user groups are loaded into Roles collection
-            if (result = RefreshData(UserData.Roles, LdapSecurityProvider.ProviderID))
+            if (result = RefreshData(UserData.Roles, ProviderID))
             {
                 string[] parts;
 

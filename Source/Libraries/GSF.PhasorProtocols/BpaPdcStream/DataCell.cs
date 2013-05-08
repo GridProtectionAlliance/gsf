@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,14 +31,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using GSF;
 
 namespace GSF.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DataCell : DataCellBase
     {
         #region [ Members ]
@@ -65,10 +64,10 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             // Define new parsing state which defines constructors for key data values
             State = new DataCellParsingState(
                 configurationCell,
-                BpaPdcStream.PhasorValue.CreateNewValue,
+                PhasorValue.CreateNewValue,
                 BpaPdcStream.FrequencyValue.CreateNewValue,
-                BpaPdcStream.AnalogValue.CreateNewValue,
-                BpaPdcStream.DigitalValue.CreateNewValue);
+                AnalogValue.CreateNewValue,
+                DigitalValue.CreateNewValue);
         }
 
         /// <summary>
@@ -320,11 +319,11 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return (((m_channelFlags & ChannelFlags.DataSortedByArrival) > 0) ? GSF.PhasorProtocols.DataSortingType.ByArrival : GSF.PhasorProtocols.DataSortingType.ByTimestamp);
+                return (((m_channelFlags & ChannelFlags.DataSortedByArrival) > 0) ? DataSortingType.ByArrival : DataSortingType.ByTimestamp);
             }
             set
             {
-                if (value == GSF.PhasorProtocols.DataSortingType.ByArrival)
+                if (value == DataSortingType.ByArrival)
                     m_channelFlags = m_channelFlags | ChannelFlags.DataSortedByArrival;
                 else
                     m_channelFlags = m_channelFlags & ~ChannelFlags.DataSortedByArrival;

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,14 +37,13 @@ using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
 using GSF.IO.Checksums;
-using GSF;
 
 namespace GSF.PhasorProtocols.Anonymous
 {
     /// <summary>
     /// Represents a protocol independent implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationFrame : ConfigurationFrameBase
     {
         #region [ Constructors ]
@@ -159,7 +158,7 @@ namespace GSF.PhasorProtocols.Anonymous
                     systemSettings.Add("ConfigurationBackups", DefaultConfigurationBackups, "Defines the total number of older backup configurations to maintain.");
 
                     // Retrieve configuration backups value as defined in the config file
-                    s_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs<int>(DefaultConfigurationBackups);
+                    s_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs(DefaultConfigurationBackups);
                 }
 
                 return s_configurationBackups;

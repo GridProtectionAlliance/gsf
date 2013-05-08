@@ -23,9 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,6 +32,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Timers;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace MySqlAdapters
 {
@@ -197,7 +197,7 @@ namespace MySqlAdapters
             {
                 string key = pair.ToLower().Split('=')[0].Trim();
 
-                if (s_validKeys.Contains<string>(key))
+                if (s_validKeys.Contains(key))
                 {
                     builder.Append(pair);
                     builder.Append(';');
@@ -353,8 +353,8 @@ namespace MySqlAdapters
                 while (reader.Read())
                 {
                     Ticks timeStamp = m_fakeTimestamps ? new Ticks(DateTime.UtcNow) : new Ticks(reader.GetInt64(timestampColumn));
-                    measurements.Add(new Measurement()
-                    {
+                    measurements.Add(new Measurement
+                        {
                         ID = reader.GetGuid(idColumn),
                         Value = reader.GetDouble(valueColumn),
                         Timestamp = timeStamp
@@ -365,7 +365,7 @@ namespace MySqlAdapters
             m_startingMeasurement += m_measurementsPerInput;
         }
 
-        private void m_connection_StateChange(object sender, System.Data.StateChangeEventArgs e)
+        private void m_connection_StateChange(object sender, StateChangeEventArgs e)
         {
             if (e.CurrentState == ConnectionState.Closed && Enabled)
             {
@@ -382,10 +382,10 @@ namespace MySqlAdapters
         // Static Fields
 
         // Collection of column names used in database queries.
-        private static string[] s_measurementColumns = { "SignalID", "Timestamp", "Value" };
+        private static readonly string[] s_measurementColumns = { "SignalID", "Timestamp", "Value" };
 
         // Collection of keys that can be used in a MySQL connection string.
-        private static string[] s_validKeys = 
+        private static readonly string[] s_validKeys = 
         {
             "server", "port", "protocol",
             "database", "uid", "user", "pwd", "password",

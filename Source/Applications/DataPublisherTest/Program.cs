@@ -29,14 +29,15 @@ using System.Threading;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace DataPublisherTest
 {
     class Program
     {
-        static DataPublisher publisher = new DataPublisher();
+        static readonly DataPublisher publisher = new DataPublisher();
         static Ticks lastDisplayTime;
-        static object displayLock = new object();
+        static readonly object displayLock = new object();
 
         private const int MeasurementCount = 200;
 
@@ -112,10 +113,10 @@ namespace DataPublisherTest
 
                 for (int i = 1; i <= MeasurementCount; i++)
                 {
-                    measurement = new Measurement()
-                    {
+                    measurement = new Measurement
+                        {
                         Key = new MeasurementKey(Guid.Empty, (uint)i, "DEVARCHIVE"),
-                        Value = GSF.Security.Cryptography.Random.Between(-65535.0D, 65536.0D),
+                        Value = Random.Between(-65535.0D, 65536.0D),
                         Timestamp = DateTime.UtcNow.Ticks
                     };
 

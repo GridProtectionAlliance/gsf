@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
@@ -46,7 +47,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="parameter">The converter parameter to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
         /// <returns>One of the visibility enummeration</returns>
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value == null || string.IsNullOrEmpty(value.ToString()) || value.ToString() == "*" || CommonFunctions.CurrentPrincipal.IsInRole(value.ToString()))
                 return Visibility.Visible;
@@ -62,7 +63,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="parameter">The converter parameter to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
         /// <returns>String, for UI use.</returns>
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

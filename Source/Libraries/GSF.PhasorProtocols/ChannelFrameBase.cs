@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ChannelFrameBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -29,9 +29,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using GSF.TimeSeries;
 using GSF.Parsing;
-using GSF;
+using GSF.TimeSeries;
 
 namespace GSF.PhasorProtocols
 {
@@ -50,14 +49,14 @@ namespace GSF.PhasorProtocols
     /// </para>
     /// </remarks>
     /// <typeparam name="T">Specific <see cref="IChannelCell"/> type that the <see cref="ChannelFrameBase{T}"/> contains.</typeparam>
-    [Serializable()]
+    [Serializable]
     public abstract class ChannelFrameBase<T> : ChannelBase, IChannelFrame<T> where T : IChannelCell
     {
         #region [ Members ]
 
         // Fields
         private ushort m_idCode;                                                    // Numeric identifier of this frame of data (e.g., ID code of the PDC)
-        private IChannelCellCollection<T> m_cells;                                  // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
+        private readonly IChannelCellCollection<T> m_cells;                                  // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
         private Ticks m_timestamp;                                                  // Time, represented as 100-nanosecond ticks, of this frame of data
         private Ticks m_receivedTimestamp;                                          // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
         private Ticks m_publishedTimestamp;                                         // Time, represented as 100-nanosecond ticks, of frame published (post process)
@@ -65,7 +64,7 @@ namespace GSF.PhasorProtocols
         private SourceChannel m_source;
         private bool m_published;                                                   // Determines if this frame of data has been published (IFrame.Published)
         private int m_sortedMeasurements;                                           // Total measurements published into this frame        (IFrame.SortedMeasurements)
-        private ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements;  // Collection of measurements published by this frame  (IFrame.Measurements)
+        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements;  // Collection of measurements published by this frame  (IFrame.Measurements)
         private IMeasurement m_lastSortedMeasurement;                               // Last measurement sorted into this frame             (IFrame.LastSortedMeasurement)
 
         #endregion

@@ -200,7 +200,7 @@ namespace GSF
     /// <typeparam name="T">Type of object to pool.</typeparam>
     public class ReusableObjectPool<T> where T : class, new()
     {
-        private ConcurrentQueue<T> m_objectPool = new ConcurrentQueue<T>();
+        private readonly ConcurrentQueue<T> m_objectPool = new ConcurrentQueue<T>();
 
         /// <summary>
         /// Gets an object from the pool, or creates a new one if no pool items are available.
@@ -330,7 +330,7 @@ namespace GSF
     /// </remarks>
     public class ReusableObjectPool
     {
-        private static ConcurrentDictionary<Type, ConcurrentQueue<object>> s_objectPools = new ConcurrentDictionary<Type, ConcurrentQueue<object>>();
+        private static readonly ConcurrentDictionary<Type, ConcurrentQueue<object>> s_objectPools = new ConcurrentDictionary<Type, ConcurrentQueue<object>>();
 
         /// <summary>
         /// Gets an object from the pool, or creates a new one if no pool items are available.

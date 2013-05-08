@@ -43,7 +43,7 @@ namespace GSF.PhasorProtocols
     /// further defines an explicit type for a signal (e.g., a voltage or current angle).
     /// </para>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public enum SignalKind
     {
         /// <summary>
@@ -149,13 +149,13 @@ namespace GSF.PhasorProtocols
                 // is an indexed signal type (e.g., CORDOVA-PA2)
                 if (signalType.Length > 2)
                 {
-                    Kind = SignalReference.ParseSignalKind(signalType.Substring(0, 2));
+                    Kind = ParseSignalKind(signalType.Substring(0, 2));
 
                     if (Kind != SignalKind.Unknown)
                         Index = int.Parse(signalType.Substring(2));
                 }
                 else
-                    Kind = SignalReference.ParseSignalKind(signalType);
+                    Kind = ParseSignalKind(signalType);
             }
             else
             {
@@ -175,7 +175,7 @@ namespace GSF.PhasorProtocols
         /// <returns>A <see cref="string"/> that represents the current <see cref="SignalReference"/>.</returns>
         public override string ToString()
         {
-            return SignalReference.ToString(Acronym, Kind, Index);
+            return ToString(Acronym, Kind, Index);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace GSF.PhasorProtocols
         /// <returns>A 32-bit signed integer hash code.</returns>
         public override int GetHashCode()
         {
-            return SignalReference.ToString(Acronym, Kind, Index).GetHashCode();
+            return ToString(Acronym, Kind, Index).GetHashCode();
         }
 
         /// <summary>

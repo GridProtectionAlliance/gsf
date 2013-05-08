@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents a time measurement, in seconds, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a time in seconds; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a time in seconds; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other time representations, specifically
     /// minutes, hours, days, weeks, atomic units of time, Planck time and ke. Metric conversions are handled
     /// simply by applying the needed <see cref="SI"/> conversion factor, for example:
@@ -105,7 +105,7 @@ namespace GSF.Units
     /// into a textual representation of years, days, hours, minutes and seconds.
     /// </para>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Time : IComparable, IFormattable, IConvertible, IComparable<Time>, IComparable<TimeSpan>, IComparable<Double>, IEquatable<Time>, IEquatable<TimeSpan>, IEquatable<Double>
     {
         #region [ Members ]
@@ -133,7 +133,7 @@ namespace GSF.Units
         public const int SecondsPerWeek = 7 * SecondsPerDay;
 
         // Fields
-        private double m_value; // Time value stored in seconds
+        private readonly double m_value; // Time value stored in seconds
 
         #endregion
 
@@ -901,7 +901,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Time"/> object as the left hand operand.</param>
         /// <param name="value2">A <see cref="Time"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result of the operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Time value1, Time value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

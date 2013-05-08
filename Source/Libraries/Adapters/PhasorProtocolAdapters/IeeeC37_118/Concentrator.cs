@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Concentrator.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -36,9 +36,15 @@ using System.Threading;
 using GSF;
 using GSF.Communication;
 using GSF.PhasorProtocols;
+using GSF.PhasorProtocols.Anonymous;
 using GSF.PhasorProtocols.IeeeC37_118;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using AnalogDefinition = GSF.PhasorProtocols.IeeeC37_118.AnalogDefinition;
+using ConfigurationCell = GSF.PhasorProtocols.IeeeC37_118.ConfigurationCell;
+using DigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
+using FrequencyDefinition = GSF.PhasorProtocols.IeeeC37_118.FrequencyDefinition;
+using PhasorDefinition = GSF.PhasorProtocols.IeeeC37_118.PhasorDefinition;
 
 namespace PhasorProtocolAdapters.IeeeC37_118
 {
@@ -142,10 +148,10 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// </summary>
         /// <param name="baseConfigurationFrame">Protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
         /// <returns>A new IEEE C37.118 specific <see cref="IConfigurationFrame"/>.</returns>
-        protected override IConfigurationFrame CreateNewConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame)
+        protected override IConfigurationFrame CreateNewConfigurationFrame(ConfigurationFrame baseConfigurationFrame)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
-            ConfigurationFrame2 configurationFrame = Concentrator.CreateConfigurationFrame(baseConfigurationFrame, m_timeBase, base.NominalFrequency);
+            ConfigurationFrame2 configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, m_timeBase, base.NominalFrequency);
 
             bool configurationChanged = false;
 
@@ -180,7 +186,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         protected override IFrame CreateNewFrame(Ticks timestamp)
         {
             // We create a new IEEE C37.118 data frame based on current configuration frame
-            DataFrame dataFrame = Concentrator.CreateDataFrame(timestamp, m_configurationFrame);
+            DataFrame dataFrame = CreateDataFrame(timestamp, m_configurationFrame);
             bool configurationChanged = false;
 
             if (m_configurationChanged)
@@ -294,7 +300,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// <param name="timeBase">Timebase to use for fraction second resolution.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> to use for the new <see cref="ConfigurationFrame2"/></param>.
         /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame2"/>.</returns>
-        public static ConfigurationFrame2 CreateConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
+        public static ConfigurationFrame2 CreateConfigurationFrame(ConfigurationFrame baseConfigurationFrame, uint timeBase, LineFrequency nominalFrequency)
         {
             ConfigurationCell newCell;
             uint maskValue;
@@ -334,14 +340,14 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 foreach (IDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
                 {
                     // Attempt to derive user defined mask value if available
-                    GSF.PhasorProtocols.Anonymous.DigitalDefinition anonymousDigitalDefinition = digitalDefinition as GSF.PhasorProtocols.Anonymous.DigitalDefinition;
+                    DigitalDefinition anonymousDigitalDefinition = digitalDefinition as DigitalDefinition;
 
                     if (anonymousDigitalDefinition != null)
                         maskValue = anonymousDigitalDefinition.MaskValue;
                     else
                         maskValue = 0U;
 
-                    newCell.DigitalDefinitions.Add(new DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
+                    newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IeeeC37_118.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
 
                 // Add new PMU configuration (cell) to protocol specific configuration frame

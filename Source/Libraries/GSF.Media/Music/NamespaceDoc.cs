@@ -31,7 +31,7 @@ namespace GSF.Media.Music
     /// <remarks>
     /// This namespace is excluded from the official documentation TOC.
     /// </remarks>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

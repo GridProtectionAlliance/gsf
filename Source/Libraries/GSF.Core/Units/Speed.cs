@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents a speed measurement, in meters per second, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a speed in meters per second; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a speed in meters per second; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other speed representations, specifically
     /// miles per hour, kilometers per hour, feet per minute, inches per second, knots and mach.
     /// <example>
@@ -86,7 +86,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Speed : IComparable, IFormattable, IConvertible, IComparable<Speed>, IComparable<Double>, IEquatable<Speed>, IEquatable<Double>
     {
         #region [ Members ]
@@ -105,7 +105,7 @@ namespace GSF.Units
         private const double MachFactor = 331.0D;
 
         // Fields
-        private double m_value; // Speed value stored in meters per second
+        private readonly double m_value; // Speed value stored in meters per second
 
         #endregion
 
@@ -739,7 +739,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Speed"/> object as the left hand operand.</param>
         /// <param name="value2">A <see cref="Speed"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Speed value1, Speed value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

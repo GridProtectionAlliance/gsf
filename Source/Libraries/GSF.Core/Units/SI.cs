@@ -74,13 +74,13 @@ namespace GSF.Units
     public static class SI
     {
         // Unit factor SI names
-        private static string[] s_names = new string[] { "yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli", "centi", "deci", "deca", "hecto", "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta" };
+        private static readonly string[] s_names = new[] { "yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli", "centi", "deci", "deca", "hecto", "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta" };
 
         // Unit factor SI symbols
-        private static string[] s_symbols = new string[] { "y", "z", "a", "f", "p", "n", "µ", "m", "c", "d", "da", "h", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+        private static readonly string[] s_symbols = new[] { "y", "z", "a", "f", "p", "n", "µ", "m", "c", "d", "da", "h", "k", "M", "G", "T", "P", "E", "Z", "Y" };
         
         // Unit factor SI factors
-        private static double[] s_factors = new double[] { Yocto, Zepto, Atto, Femto, Pico, Nano, Micro, Milli, Centi, Deci, Deca, Hecto, Kilo, Mega, Giga, Tera, Peta, Exa, Zetta, Yotta };
+        private static readonly double[] s_factors = new[] { Yocto, Zepto, Atto, Femto, Pico, Nano, Micro, Milli, Centi, Deci, Deca, Hecto, Kilo, Mega, Giga, Tera, Peta, Exa, Zetta, Yotta };
 
         /// <summary>
         /// SI prefix Y, 10^24
@@ -224,7 +224,7 @@ namespace GSF.Units
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
+        /// <returns>A <see cref="string"/> representation of the number of units.</returns>
         public static string ToScaledString(double totalUnits, string unitName)
         {
             return ToScaledString(totalUnits, 3, unitName);
@@ -239,7 +239,7 @@ namespace GSF.Units
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
+        /// <returns>A <see cref="string"/> representation of the number of units.</returns>
         public static string ToScaledString(double totalUnits, string format, string unitName)
         {
             return ToScaledString(totalUnits, format, unitName, s_symbols);

@@ -32,9 +32,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Parsing;
 using System;
 using System.Collections.Generic;
+using GSF.Parsing;
 
 namespace GSF.Interop
 {
@@ -55,8 +55,8 @@ namespace GSF.Interop
         {
             public const int BinaryLength = 8;
 
-            public int Length;
-            public int LowerBound;
+            public readonly int Length;
+            public readonly int LowerBound;
 
             public DimensionDescriptor(int length, int lowerBound)
             {
@@ -66,7 +66,7 @@ namespace GSF.Interop
         }
 
         // Fields
-        private List<DimensionDescriptor> m_arrayDimensionDescriptors;
+        private readonly List<DimensionDescriptor> m_arrayDimensionDescriptors;
 
         #endregion
 
@@ -157,7 +157,7 @@ namespace GSF.Interop
         /// <returns>A <see cref="VBArrayDescriptor"/> object.</returns>
         public static VBArrayDescriptor ZeroBasedOneDimensionalArray(int arrayLength)
         {
-            return new VBArrayDescriptor(new int[] { arrayLength }, new int[] { 0 });
+            return new VBArrayDescriptor(new[] { arrayLength }, new[] { 0 });
         }
 
         /// <summary>
@@ -167,7 +167,7 @@ namespace GSF.Interop
         /// <returns>A <see cref="VBArrayDescriptor"/> object.</returns>
         public static VBArrayDescriptor OneBasedOneDimensionalArray(int arrayLength)
         {
-            return new VBArrayDescriptor(new int[] { arrayLength }, new int[] { 1 });
+            return new VBArrayDescriptor(new[] { arrayLength }, new[] { 1 });
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace GSF.Interop
         /// <returns>A <see cref="VBArrayDescriptor"/> object.</returns>
         public static VBArrayDescriptor ZeroBasedTwoDimensionalArray(int dimensionOneLength, int dimensionTwoLength)
         {
-            return new VBArrayDescriptor(new int[] { dimensionOneLength, dimensionTwoLength }, new int[] { 0, 0 });
+            return new VBArrayDescriptor(new[] { dimensionOneLength, dimensionTwoLength }, new[] { 0, 0 });
         }
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace GSF.Interop
         /// <returns>A <see cref="VBArrayDescriptor"/> object.</returns>
         public static VBArrayDescriptor OneBasedTwoDimensionalArray(int dimensionOneLength, int dimensionTwoLength)
         {
-            return new VBArrayDescriptor(new int[] { dimensionOneLength, dimensionTwoLength }, new int[] { 1, 1 });
+            return new VBArrayDescriptor(new[] { dimensionOneLength, dimensionTwoLength }, new[] { 1, 1 });
         }
 
         #endregion

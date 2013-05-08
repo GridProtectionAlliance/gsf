@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ProcessQueue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -67,7 +67,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Units;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -76,6 +75,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
+using GSF.Units;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Collections
 {
@@ -159,8 +161,8 @@ namespace GSF.Collections
         {
             private ProcessQueue<T> m_parent;
             private Task m_task;
-            private T m_item;
-            private T[] m_items;
+            private readonly T m_item;
+            private readonly T[] m_items;
             private bool m_disposed;
 
             private TemporalTask(ProcessQueue<T> parent, T item)
@@ -388,8 +390,8 @@ namespace GSF.Collections
         private Thread m_realTimeProcessThread;
 #endif
 
-        private System.Timers.Timer m_processTimer;
-        private object m_processLock;
+        private Timer m_processTimer;
+        private readonly object m_processLock;
 
         #endregion
 
@@ -458,7 +460,7 @@ namespace GSF.Collections
             else
             {
                 // Instantiates process queue for intervaled item processing
-                m_processTimer = new System.Timers.Timer();
+                m_processTimer = new Timer();
                 m_processTimer.Elapsed += ProcessTimerThreadProc;
                 m_processTimer.Interval = processInterval;
                 m_processTimer.AutoReset = true;
@@ -1667,7 +1669,7 @@ namespace GSF.Collections
         /// </summary>
         /// <param name="sender">The sender object of the item.</param>
         /// <param name="e">Arguments for the elapsed event.</param>
-        private void ProcessTimerThreadProc(object sender, System.Timers.ElapsedEventArgs e)
+        private void ProcessTimerThreadProc(object sender, ElapsedEventArgs e)
         {
             // The system timer creates an intervaled processing loop such that if an existing item processing
             // call hasn't completed before next interval, multiple processing calls will be spawned thereby

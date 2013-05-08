@@ -39,6 +39,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Windows;
 
 namespace NAudioWpfDemo
 {
@@ -65,7 +66,7 @@ namespace NAudioWpfDemo
             
             if (count >= NotificationCount && NotificationCount > 0)
             {
-                if (MaximumCalculated != null && WavSubscriptionDemo.App.Current != null)
+                if (MaximumCalculated != null && Application.Current != null)
                 {
                     //WavSubscriptionDemo.App.Current.Dispatcher.Invoke(new Action<object, MaxSampleEventArgs>(MaximumCalculated), this, new MaxSampleEventArgs(minValue, maxValue));
                     MaximumCalculated(this, new MaxSampleEventArgs(minValue, maxValue));

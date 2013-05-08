@@ -121,12 +121,12 @@ namespace GSF.TimeSeries.Adapters
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
-        private ConcurrentDictionary<object, string> m_derivedNameCache;
+        private readonly ConcurrentDictionary<object, string> m_derivedNameCache;
         private MeasurementKey[] m_inputMeasurementKeysRestriction;
         private bool m_useMeasurementRouting;
-        private int m_measurementWarningThreshold;
-        private int m_measurementDumpingThreshold;
-        private int m_defaultSampleSizeWarningThreshold;
+        private readonly int m_measurementWarningThreshold;
+        private readonly int m_measurementDumpingThreshold;
+        private readonly int m_defaultSampleSizeWarningThreshold;
         private string m_name;
         private bool m_disposed;
 
@@ -148,7 +148,7 @@ namespace GSF.TimeSeries.Adapters
             systemSettings.Add("UseMeasurementRouting", DefaultUseMeasurementRouting, "Set to true to use optimized adapter measurement routing.");
 
             m_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
-            m_useMeasurementRouting = systemSettings["UseMeasurementRouting"].ValueAsBoolean(IaonSession.DefaultUseMeasurementRouting);
+            m_useMeasurementRouting = systemSettings["UseMeasurementRouting"].ValueAsBoolean(DefaultUseMeasurementRouting);
 
             // Initialize threshold settings
             CategorizedSettingsElementCollection thresholdSettings = configFile.Settings["thresholdSettings"];

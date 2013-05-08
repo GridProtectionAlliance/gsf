@@ -85,8 +85,8 @@ namespace GSF.Validation
         #region [ Members ]
 
         // Fields
-        private Func<string, object> m_lookup;
-        private Dictionary<string, IValidator> m_validations;
+        private readonly Func<string, object> m_lookup;
+        private readonly Dictionary<string, IValidator> m_validations;
 
         #endregion
 

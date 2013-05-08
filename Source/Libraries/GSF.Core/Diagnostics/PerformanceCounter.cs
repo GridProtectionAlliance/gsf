@@ -97,7 +97,7 @@ namespace GSF.Diagnostics
         private float m_valueDivisor;
         private int m_samplingWindow;
         private System.Diagnostics.PerformanceCounter m_counter;
-        private List<float> m_samples;
+        private readonly List<float> m_samples;
         private float m_lifetimeMaximum;
         private decimal m_lifetimeTotal;
         private long m_lifetimeSampleCount;

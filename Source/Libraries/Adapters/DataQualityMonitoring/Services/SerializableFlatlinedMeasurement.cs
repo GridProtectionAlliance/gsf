@@ -27,10 +27,10 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -47,7 +47,6 @@ namespace DataQualityMonitoring.Services
         /// Initializes a new instance of the <see cref="SerializableFlatlinedMeasurement"/> class.
         /// </summary>
         public SerializableFlatlinedMeasurement()
-            : base()
         {
         }
 
@@ -69,7 +68,7 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the amount of time in seconds since the <see cref="IMeasurement"/> last changed its value.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 6)]
+        [XmlAttribute, DataMember(Order = 6)]
         public double TimeSinceLastChange { get; set; }
 
         #endregion

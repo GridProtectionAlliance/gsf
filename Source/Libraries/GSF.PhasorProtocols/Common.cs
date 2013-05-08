@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Common.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,9 +33,8 @@ using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
-using GSF;
-using GSF.TimeSeries;
 using GSF.Parsing;
+using GSF.TimeSeries;
 
 namespace GSF.PhasorProtocols
 {

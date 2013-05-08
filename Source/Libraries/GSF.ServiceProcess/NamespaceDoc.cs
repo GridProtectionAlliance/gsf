@@ -30,7 +30,7 @@ namespace GSF.ServiceProcess
     /// <summary>
     /// Contains classes used to simplify and standardize development and operation of Windows services that are remotely manageable.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

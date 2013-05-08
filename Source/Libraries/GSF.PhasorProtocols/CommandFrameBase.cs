@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommandFrameBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,14 +31,13 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols
 {
     /// <summary>
     /// Represents the protocol independent common implementation of any <see cref="ICommandFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class CommandFrameBase : ChannelFrameBase<ICommandCell>, ICommandFrame
     {
         #region [ Members ]

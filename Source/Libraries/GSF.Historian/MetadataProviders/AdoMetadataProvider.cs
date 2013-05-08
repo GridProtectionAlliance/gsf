@@ -62,7 +62,6 @@ namespace GSF.Historian.MetadataProviders
         /// Initializes a new instance of the <see cref="AdoMetadataProvider"/> class.
         /// </summary>
         public AdoMetadataProvider()
-            : base()
         {
             m_connectionString = string.Empty;
             m_dataProviderString = string.Empty;

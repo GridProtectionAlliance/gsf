@@ -25,11 +25,11 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
 using System;
 using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Input;
+using GSF.IO;
 
 namespace GSF.TimeSeries.UI.Commands
 {

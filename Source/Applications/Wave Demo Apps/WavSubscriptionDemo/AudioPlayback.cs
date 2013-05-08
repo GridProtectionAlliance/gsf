@@ -37,10 +37,6 @@
 
 #endregion
 
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Transport;
-using NAudio.Wave;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -48,6 +44,12 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Timers;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Transport;
+using NAudio.Wave;
+using Timer = System.Timers.Timer;
 
 namespace NAudioWpfDemo
 {
@@ -75,7 +77,7 @@ namespace NAudioWpfDemo
         public const string URI_SEPARATOR = "?";
 
         private DataSubscriber m_dataSubscriber;
-        private System.Timers.Timer m_timeoutTimer;
+        private Timer m_timeoutTimer;
         private DataSet m_metadata;
 
         private ConcurrentQueue<IMeasurement> m_buffer;
@@ -87,7 +89,7 @@ namespace NAudioWpfDemo
         private int m_sampleRate;
         private int m_numChannels;
 
-        private System.Timers.Timer m_statTimer;
+        private Timer m_statTimer;
         private long m_startTime;
         private long m_measurementCount;
         private long m_lastStatCalcTime;
@@ -221,7 +223,7 @@ namespace NAudioWpfDemo
         public void DisconnectFromStreamSource()
         {
             DataSubscriber subscriber;
-            System.Timers.Timer timeoutTimer;
+            Timer timeoutTimer;
             DataSet metadata;
 
             Stop();
@@ -280,7 +282,7 @@ namespace NAudioWpfDemo
                     IEnumerable<DataRow> measurementRows = measurementTable.Rows.Cast<DataRow>()
                         .Where(row => row["DeviceName"].ToNonNullString() == songName)
                         .Where(row => row["SignalAcronym"].ToNonNullString() != "STAT")
-                        .Where(row => row["Enabled"].ToNonNullString().ParseBoolean() == true)
+                        .Where(row => row["Enabled"].ToNonNullString().ParseBoolean())
                         .OrderBy(row => row["ID"].ToNonNullString());
 
                     m_numChannels = 0;
@@ -337,7 +339,7 @@ namespace NAudioWpfDemo
         {
             PrecisionTimer dumpTimer = m_dumpTimer;
             IWavePlayer player = m_wavePlayer;
-            System.Timers.Timer statTimer = m_statTimer;
+            Timer statTimer = m_statTimer;
 
             m_dumpTimer = null;
             m_wavePlayer = null;
@@ -432,13 +434,13 @@ namespace NAudioWpfDemo
         }
 
         // Handles the subscriber's StatusMessage event.
-        private void DataSubscriber_StatusMessage(object sender, GSF.EventArgs<string> e)
+        private void DataSubscriber_StatusMessage(object sender, EventArgs<string> e)
         {
             Console.WriteLine(e.Argument);
         }
 
         // Handles the subscriber's ProcessException event.
-        private void DataSubscriber_ProcessException(object sender, GSF.EventArgs<Exception> e)
+        private void DataSubscriber_ProcessException(object sender, EventArgs<Exception> e)
         {
             Console.Error.WriteLine(e.Argument.Message);
         }
@@ -507,7 +509,7 @@ namespace NAudioWpfDemo
         }
 
         // Handles the subscriber's NewMeasurements event.
-        private void DataSubscriber_NewMeasurements(object sender, GSF.EventArgs<ICollection<GSF.TimeSeries.IMeasurement>> e)
+        private void DataSubscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             // Gather statistics.
             Interlocked.Add(ref m_measurementCount, e.Argument.Count);
@@ -541,9 +543,9 @@ namespace NAudioWpfDemo
 
         // Create the timeout timer. Timers created through this method
         // should be released by the ReleaseTimeoutTimer method.
-        private System.Timers.Timer CreateTimeoutTimer()
+        private Timer CreateTimeoutTimer()
         {
-            System.Timers.Timer timeoutTimer = new System.Timers.Timer();
+            Timer timeoutTimer = new Timer();
 
             timeoutTimer.AutoReset = false;
             timeoutTimer.Interval = 10000.0;
@@ -554,7 +556,7 @@ namespace NAudioWpfDemo
 
         // Detaches from events, stops, and disposes of the timeout timer. Timers created
         // through the CreateTimeoutTimer method should be released through this method.
-        private void ReleaseTimeoutTimer(System.Timers.Timer timeoutTimer)
+        private void ReleaseTimeoutTimer(Timer timeoutTimer)
         {
             if (timeoutTimer != null)
             {
@@ -591,9 +593,9 @@ namespace NAudioWpfDemo
 
         // Creates the stat timer. Timers created through this method
         // should be released through the ReleaseStatTimer method.
-        private System.Timers.Timer CreateStatTimer()
+        private Timer CreateStatTimer()
         {
-            System.Timers.Timer statTimer = new System.Timers.Timer();
+            Timer statTimer = new Timer();
 
             statTimer.AutoReset = true;
             statTimer.Interval = 1000.0;
@@ -612,7 +614,7 @@ namespace NAudioWpfDemo
         // Also resets the statistics that were gathered since the creation
         // of the stat timer. Timers created through the CreateStatTimer
         // method should be released through this method.
-        private void ReleaseStatTimer(System.Timers.Timer statTimer)
+        private void ReleaseStatTimer(Timer statTimer)
         {
             if (statTimer != null)
             {
@@ -632,7 +634,7 @@ namespace NAudioWpfDemo
         }
 
         // Handles the timeout timer's Elapsed event.
-        private void TimeoutTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void TimeoutTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             DisconnectFromStreamSource();
             OnStateChanged(PlaybackState.TimedOut);
@@ -724,7 +726,7 @@ namespace NAudioWpfDemo
 
         // Handles the stat timer's Elapsed event. Calculates the statistics since the last
         // time this was called and sends update notifications to the user interface.
-        private void StatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void StatTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (m_lastStatCalcTime != 0)
             {

@@ -30,7 +30,7 @@ namespace GSF.Data
     /// <summary>
     /// Contains extension functions used to simplify and standardize database access.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

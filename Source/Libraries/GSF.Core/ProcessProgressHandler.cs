@@ -51,7 +51,7 @@ namespace GSF
 
         // Fields
         private Action<ProcessProgress<TUnit>> m_progressHandler;
-        private ProcessProgress<TUnit> m_progressInstance;
+        private readonly ProcessProgress<TUnit> m_progressInstance;
 
         #endregion
 

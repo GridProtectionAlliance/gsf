@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommonFrameHeader.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -28,14 +28,13 @@
 using System;
 using System.Runtime.Serialization;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents the common header for all Macrodyne frames of data.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class CommonFrameHeader : CommonHeaderBase<FrameType>, ISerializable
     {
         #region [ Members ]
@@ -50,7 +49,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         // Fields
         private ProtocolVersion m_protocolVersion;
         private StatusFlags m_statusFlags;
-        private ConfigurationFrame m_configurationFrame;
+        private readonly ConfigurationFrame m_configurationFrame;
 
         #endregion
 
@@ -251,7 +250,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 switch (TypeID)
                 {
                     case Macrodyne.FrameType.DataFrame:
-                        buffer[0] = GSF.PhasorProtocols.Common.SyncByte;
+                        buffer[0] = PhasorProtocols.Common.SyncByte;
                         buffer[1] = (byte)m_statusFlags;
                         break;
                     case Macrodyne.FrameType.ConfigurationFrame:

@@ -72,7 +72,7 @@ namespace GSF
     /// are reckoned from 6h 28m 16s UTC on 7 February 2036. This gives the <see cref="NtpTimeTag"/>
     /// class a functioning range of 1968-01-20 03:14:08 to 2104-02-26 09:42:23.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public class NtpTimeTag : TimeTagBase
     {
         #region [ Constructors ]
@@ -153,12 +153,12 @@ namespace GSF
 
         // NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this date to
         // get offset in ticks for later conversion.
-        private static long NtpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
+        private static readonly long NtpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
 
         // According to RFC-2030, NTP dates can also be measured as the number of seconds since 2/7/2036
         // at 6h 28m 16s UTC if MSB is set, so we also calculate this date to get offset in ticks for
         // later conversion as well.
-        private static long NtpDateOffsetTicksAlt = (new DateTime(2036, 2, 7, 6, 28, 16)).Ticks;
+        private static readonly long NtpDateOffsetTicksAlt = (new DateTime(2036, 2, 7, 6, 28, 16)).Ticks;
 
         // Static Methods
 

@@ -72,10 +72,10 @@ namespace GSF.Historian.Files
         private const int InactivityPeriod = 300;
 
         // Fields
-        private int m_index;
-        private int m_historianID;
-        private ArchiveFile m_parent;
-        private byte[] m_readBuffer;
+        private readonly int m_index;
+        private readonly int m_historianID;
+        private readonly ArchiveFile m_parent;
+        private readonly byte[] m_readBuffer;
         private long m_writeCursor;
         private DateTime m_lastActivityTime;
 

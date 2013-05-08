@@ -68,11 +68,11 @@ namespace HistorianPlaybackUtility
         // Nested Types
         private class Metadata
         {
-            public MetadataRecord MetadataRecord;
-            public string Instance;
-            public int PointID;
-            public string PointName;
-            public string PointDescription;
+            public readonly MetadataRecord MetadataRecord;
+            public readonly string Instance;
+            public readonly int PointID;
+            public readonly string PointName;
+            public readonly string PointDescription;
 
             public Metadata(MetadataRecord metadata)
             {
@@ -97,8 +97,8 @@ namespace HistorianPlaybackUtility
         private long m_transmitStarts;
         private long m_transmitCompletes;
         private long m_transmitExceptions;
-        private List<Thread> m_activeThreads;
-        private ArchiveReader m_archiveReader;
+        private readonly List<Thread> m_activeThreads;
+        private readonly ArchiveReader m_archiveReader;
         private IClient m_transmitClient;
         private string m_lastSelectedArchiveLocation;
 
@@ -233,8 +233,8 @@ namespace HistorianPlaybackUtility
                         m_transmitClient.SendDataException -= m_transmitClient_SendDataException;
                         m_transmitClient.Dispose();
 
-                        this.BeginInvoke((ThreadStart)delegate()
-                        {
+                        this.BeginInvoke((ThreadStart)delegate
+                            {
                             StopProcessing.Visible = false;
                             StartProcessing.Visible = true;
                             SplitContainerTop.Enabled = true;
@@ -361,8 +361,8 @@ namespace HistorianPlaybackUtility
                         m_transmitClient.SendDataException -= m_transmitClient_SendDataException;
                         m_transmitClient.Dispose();
 
-                        this.BeginInvoke((ThreadStart)delegate()
-                        {
+                        this.BeginInvoke((ThreadStart)delegate
+                            {
                             StopProcessing.Visible = false;
                             StartProcessing.Visible = true;
                             SplitContainerTop.Enabled = true;
@@ -376,8 +376,8 @@ namespace HistorianPlaybackUtility
         {
             if (this.InvokeRequired)
             {
-                this.Invoke((ThreadStart)delegate()
-                {
+                this.Invoke((ThreadStart)delegate
+                    {
                     StringBuilder outputText = new StringBuilder();
 
                     outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
@@ -773,7 +773,7 @@ namespace HistorianPlaybackUtility
             ShowUpdateMessage(e.Argument.Message);
         }
 
-        private void m_archiveReader_DataReadException(object sender, GSF.EventArgs<Exception> e)
+        private void m_archiveReader_DataReadException(object sender, EventArgs<Exception> e)
         {
             ShowUpdateMessage("Exception encountered during data read: " + e.Argument.Message);
         }

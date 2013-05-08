@@ -53,8 +53,8 @@ namespace GSF.TimeSeries
         // Fields
         private bool m_innerLoopActive;
         private bool m_telnetActive;
-        private ConsoleColor m_originalBgColor;
-        private ConsoleColor m_originalFgColor;
+        private readonly ConsoleColor m_originalBgColor;
+        private readonly ConsoleColor m_originalFgColor;
         private readonly ManualResetEvent m_authenticationWaitHandle;
 
         #endregion

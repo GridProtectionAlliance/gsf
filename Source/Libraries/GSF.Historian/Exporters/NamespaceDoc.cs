@@ -32,7 +32,7 @@ namespace GSF.Historian.Exporters
     /// <summary>
     /// Contains classes used for automating data exports in a variety of formats.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

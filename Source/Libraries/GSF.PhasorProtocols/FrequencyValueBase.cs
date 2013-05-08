@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrequencyValueBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -55,7 +55,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent representation of a frequency and dF/dt value.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class FrequencyValueBase : ChannelValueBase<IFrequencyDefinition>, IFrequencyValue
     {
         #region [ Members ]
@@ -222,7 +222,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+                if (DataFormat == DataFormat.FixedInteger)
                     return 4;
                 else
                     return 8;
@@ -254,7 +254,7 @@ namespace GSF.PhasorProtocols
                 // image were likely parsed previously from a binary image with the same constraints.
                 unchecked
                 {
-                    if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+                    if (DataFormat == DataFormat.FixedInteger)
                     {
                         EndianOrder.BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
                         EndianOrder.BigEndian.CopyBytes((short)UnscaledDfDt, buffer, 2);
@@ -299,7 +299,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
         /// </remarks>
-        /// <returns>A <see cref="Double"/> representing the composite value.</returns>
+        /// <returns>A <see cref="double"/> representing the composite value.</returns>
         public override double GetCompositeValue(int index)
         {
             switch (index)
@@ -330,7 +330,7 @@ namespace GSF.PhasorProtocols
             // Length is validated at a frame level well in advance so that low level parsing routines do not have
             // to re-validate that enough length is available to parse needed information as an optimization...
 
-            if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+            if (DataFormat == DataFormat.FixedInteger)
             {
                 UnscaledFrequency = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
                 UnscaledDfDt = EndianOrder.BigEndian.ToInt16(buffer, startIndex + 2);

@@ -91,17 +91,18 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Timers;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
 using GSF.Parsing;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Historian.Files
 {
@@ -489,21 +490,21 @@ namespace GSF.Historian.Files
         private FileStream m_fileStream;
         private List<ArchiveDataBlock> m_dataBlocks;
         private List<Info> m_historicArchiveFiles;
-        private Dictionary<int, double> m_delayedAlarmProcessing;
+        private readonly Dictionary<int, double> m_delayedAlarmProcessing;
         private volatile bool m_rolloverInProgress;
         private long m_activeFileReaders;
         // Threading
         private Thread m_rolloverPreparationThread;
         private Thread m_buildHistoricFileListThread;
-        private ManualResetEvent m_rolloverWaitHandle;
+        private readonly ManualResetEvent m_rolloverWaitHandle;
         // Components
         private StateFile m_stateFile;
         private IntercomFile m_intercomFile;
         private MetadataFile m_metadataFile;
-        private System.Timers.Timer m_conserveMemoryTimer;
-        private ProcessQueue<IDataPoint> m_currentDataQueue;
-        private ProcessQueue<IDataPoint> m_historicDataQueue;
-        private ProcessQueue<IDataPoint> m_outOfSequenceDataQueue;
+        private readonly Timer m_conserveMemoryTimer;
+        private readonly ProcessQueue<IDataPoint> m_currentDataQueue;
+        private readonly ProcessQueue<IDataPoint> m_historicDataQueue;
+        private readonly ProcessQueue<IDataPoint> m_outOfSequenceDataQueue;
         private FileSystemWatcher m_currentLocationFileWatcher;
         private FileSystemWatcher m_offloadLocationFileWatcher;
 
@@ -515,7 +516,6 @@ namespace GSF.Historian.Files
         /// Initializes a new instance of the <see cref="ArchiveFile"/> class.
         /// </summary>
         public ArchiveFile()
-            : base()
         {
             m_fileName = DefaultFileName;
             m_fileType = DefaultFileType;
@@ -541,7 +541,7 @@ namespace GSF.Historian.Files
             m_rolloverPreparationThread = new Thread(PrepareForRollover);
             m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
 
-            m_conserveMemoryTimer = new System.Timers.Timer();
+            m_conserveMemoryTimer = new Timer();
             m_conserveMemoryTimer.Elapsed += ConserveMemoryTimer_Elapsed;
 
             m_currentDataQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(WriteToCurrentArchiveFile);
@@ -1916,7 +1916,7 @@ namespace GSF.Historian.Files
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime)
         {
-            return ReadData(new int[] { historianID }, startTime, endTime);
+            return ReadData(new[] { historianID }, startTime, endTime);
         }
 
         /// <summary>
@@ -3321,12 +3321,12 @@ namespace GSF.Historian.Files
 
         #region [ Event Handlers ]
 
-        private void MetadataFile_FileModified(object sender, System.EventArgs e)
+        private void MetadataFile_FileModified(object sender, EventArgs e)
         {
             SyncStateFile(null);
         }
 
-        private void ConserveMemoryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void ConserveMemoryTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             lock (m_dataBlocks)
             {

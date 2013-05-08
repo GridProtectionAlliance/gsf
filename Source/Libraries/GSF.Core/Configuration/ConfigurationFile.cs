@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFile.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -58,8 +58,6 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
-using GSF.Xml;
 using System;
 using System.Collections.Concurrent;
 using System.Configuration;
@@ -70,6 +68,8 @@ using System.Threading;
 using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Xml;
+using GSF.IO;
+using GSF.Xml;
 
 namespace GSF.Configuration
 {
@@ -179,8 +179,8 @@ namespace GSF.Configuration
 
         internal class UserConfigurationFile
         {
-            private string m_fileName;
-            private XmlDocument m_settings;
+            private readonly string m_fileName;
+            private readonly XmlDocument m_settings;
             private bool m_settingsModified;
 
             private const string RootNode = "settings";
@@ -270,8 +270,8 @@ namespace GSF.Configuration
         private CultureInfo m_culture;
         private System.Configuration.Configuration m_configuration;
         private UserConfigurationFile m_userConfiguration;
-        private object m_queuedConfigurationSavePending;
-        private AutoResetEvent m_configurationSaveComplete;
+        private readonly object m_queuedConfigurationSavePending;
+        private readonly AutoResetEvent m_configurationSaveComplete;
 
         #endregion
 
@@ -578,7 +578,7 @@ namespace GSF.Configuration
         #region [ Static ]
 
         // Static Fields
-        private static ConcurrentDictionary<string, ConfigurationFile> s_configFiles;
+        private static readonly ConcurrentDictionary<string, ConfigurationFile> s_configFiles;
 
         // Static Constructor
 

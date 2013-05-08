@@ -33,7 +33,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -41,6 +40,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -431,8 +431,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     foreach (DataRow row in historianTable.Rows)
                     {
-                        historianList.Add(new Historian()
-                        {
+                        historianList.Add(new Historian
+                            {
                             NodeID = database.Guid(row, "NodeID"),
                             ID = row.ConvertField<int>("ID"),
                             Acronym = row.Field<string>("Acronym"),
@@ -573,7 +573,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Historian WHERE ID = {0}", "historianID"), DefaultTimeout, historianID);
 
-                GSF.TimeSeries.UI.CommonFunctions.SendCommandToService("ReloadConfig");
+                CommonFunctions.SendCommandToService("ReloadConfig");
 
                 return "Historian deleted successfully";
             }
@@ -604,8 +604,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 DataRow row = historianTable.Rows[0];
 
-                Historian historian = new Historian()
-                {
+                Historian historian = new Historian
+                    {
                     NodeID = database.Guid(row, "NodeID"),
                     ID = row.ConvertField<int>("ID"),
                     Acronym = row.Field<string>("Acronym"),

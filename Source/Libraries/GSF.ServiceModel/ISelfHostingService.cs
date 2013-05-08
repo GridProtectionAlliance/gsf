@@ -34,18 +34,18 @@
 //
 //******************************************************************************************************
 
-using GSF.Adapters;
-using GSF.Configuration;
 using System;
 using System.IdentityModel.Policy;
 using System.ServiceModel;
+using GSF.Adapters;
+using GSF.Configuration;
 
 namespace GSF.ServiceModel
 {
     /// <summary>
     /// Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
-    [ServiceContract()]
+    [ServiceContract]
     public interface ISelfHostingService : IAdapter, ISupportLifecycle, IPersistSettings
     {
         #region [ Members ]

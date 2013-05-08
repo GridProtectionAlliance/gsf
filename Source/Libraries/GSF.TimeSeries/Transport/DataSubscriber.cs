@@ -34,9 +34,11 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Security;
+using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using System.Xml;
 using GSF.Collections;
 using GSF.Communication;
@@ -47,6 +49,10 @@ using GSF.Reflection;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
+using Random = GSF.Security.Cryptography.Random;
+using TcpClient = GSF.Communication.TcpClient;
+using Timer = System.Timers.Timer;
+using UdpClient = GSF.Communication.UdpClient;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -181,7 +187,7 @@ namespace GSF.TimeSeries.Transport
         private IClient m_commandChannel;
         private UdpClient m_dataChannel;
         private LocalConcentrator m_localConcentrator;
-        private System.Timers.Timer m_dataStreamMonitor;
+        private Timer m_dataStreamMonitor;
         private long m_commandChannelConnectionAttempts;
         private long m_dataChannelConnectionAttempts;
         private volatile SignalIndexCache m_remoteSignalIndexCache;
@@ -198,7 +204,7 @@ namespace GSF.TimeSeries.Transport
         private long m_lastMissingCacheWarning;
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
-        private List<ServerCommand> m_requests;
+        private readonly List<ServerCommand> m_requests;
         private SecurityMode m_securityMode;
         private bool m_synchronizedSubscription;
         private bool m_useMillisecondResolution;
@@ -215,7 +221,7 @@ namespace GSF.TimeSeries.Transport
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
 
-        private List<BufferBlockMeasurement> m_bufferBlockCache;
+        private readonly List<BufferBlockMeasurement> m_bufferBlockCache;
         private object m_bufferBlockCacheLock;
         private uint m_expectedBufferBlockSequenceNumber;
 
@@ -357,7 +363,7 @@ namespace GSF.TimeSeries.Transport
                     if ((object)m_dataStreamMonitor == null)
                     {
                         // Create data stream monitoring timer
-                        m_dataStreamMonitor = new System.Timers.Timer();
+                        m_dataStreamMonitor = new Timer();
                         m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
                         m_dataStreamMonitor.AutoReset = true;
                         m_dataStreamMonitor.Enabled = false;
@@ -563,7 +569,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets reference to <see cref="TcpClient"/> command channel, attaching and/or detaching to events as needed.
+        /// Gets or sets reference to <see cref="Communication.TcpClient"/> command channel, attaching and/or detaching to events as needed.
         /// </summary>
         protected IClient CommandChannel
         {
@@ -910,7 +916,7 @@ namespace GSF.TimeSeries.Transport
                     byte[] bytes;
 
                     // Generate some random prefix data to make sure auth key transmission is always unique
-                    GSF.Security.Cryptography.Random.GetBytes(salt);
+                    Random.GetBytes(salt);
 
                     // Get encoded bytes of authentication key
                     bytes = salt.Combine(m_encoding.GetBytes(authenticationID));
@@ -1023,8 +1029,8 @@ namespace GSF.TimeSeries.Transport
                     localConcentrator.UsePrecisionTimer = false;
 
                     // Parse time constraints, if defined
-                    DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? AdapterBase.ParseTimeTag(info.StartTime) : DateTime.MinValue;
-                    DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? AdapterBase.ParseTimeTag(info.StopTime) : DateTime.MaxValue;
+                    DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? ParseTimeTag(info.StartTime) : DateTime.MinValue;
+                    DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? ParseTimeTag(info.StopTime) : DateTime.MaxValue;
 
                     // When processing historical data, timestamps should not be evaluated for reasonability
                     if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
@@ -1295,8 +1301,8 @@ namespace GSF.TimeSeries.Transport
             m_localConcentrator.UsePrecisionTimer = false;
 
             // Parse time constraints, if defined
-            DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(startTime) ? AdapterBase.ParseTimeTag(startTime) : DateTime.MinValue;
-            DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(stopTime) ? AdapterBase.ParseTimeTag(stopTime) : DateTime.MaxValue;
+            DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(startTime) ? ParseTimeTag(startTime) : DateTime.MinValue;
+            DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(stopTime) ? ParseTimeTag(stopTime) : DateTime.MaxValue;
 
             // When processing historical data, timestamps should not be evaluated for reasonability
             if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
@@ -2019,7 +2025,7 @@ namespace GSF.TimeSeries.Transport
                             responseIndex += 4;
 
                             // Deserialize new base time offsets
-                            m_baseTimeOffsets = new long[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 8) };
+                            m_baseTimeOffsets = new[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 8) };
                             break;
                         case ServerResponse.UpdateCipherKeys:
                             // Get active cipher index
@@ -2206,7 +2212,7 @@ namespace GSF.TimeSeries.Transport
                                         "VALUES ({0}, {1}, {2}, {3}, {4}, 0, 1, {5})", "nodeID", "parentID", "acronym", "name", "protocolID", "originalSource");
 
                                     connection.ExecuteNonQuery(insertSql, database.Guid(m_nodeID), parentID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID,
-                                        m_internal == true ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
+                                        m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
 
                                     // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
                                     // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
@@ -2424,7 +2430,7 @@ namespace GSF.TimeSeries.Transport
             }
             else
             {
-                deserializedCache = Serialization.Deserialize<SignalIndexCache>(buffer, GSF.SerializationFormat.Binary);
+                deserializedCache = Serialization.Deserialize<SignalIndexCache>(buffer, SerializationFormat.Binary);
             }
 
             return deserializedCache;
@@ -2486,7 +2492,7 @@ namespace GSF.TimeSeries.Transport
             }
             else
             {
-                deserializedMetadata = Serialization.Deserialize<DataSet>(buffer, GSF.SerializationFormat.Binary);
+                deserializedMetadata = Serialization.Deserialize<DataSet>(buffer, SerializationFormat.Binary);
             }
 
             return deserializedMetadata;
@@ -2538,7 +2544,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Socket exception handler
-        private bool HandleSocketException(System.Net.Sockets.SocketException ex)
+        private bool HandleSocketException(SocketException ex)
         {
             if ((object)ex != null)
             {
@@ -2723,7 +2729,7 @@ namespace GSF.TimeSeries.Transport
             OnProcessException(e.Argument);
         }
 
-        private void m_dataStreamMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_dataStreamMonitor_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (m_monitoredBytesReceived == 0)
             {
@@ -2827,7 +2833,7 @@ namespace GSF.TimeSeries.Transport
         {
             Exception ex = e.Argument;
 
-            if (!HandleSocketException(ex as System.Net.Sockets.SocketException) && !(ex is ObjectDisposedException))
+            if (!HandleSocketException(ex as SocketException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while sending command channel data to publisher connection: " + ex.Message, ex));
         }
 
@@ -2863,7 +2869,7 @@ namespace GSF.TimeSeries.Transport
         {
             Exception ex = e.Argument;
 
-            if (!HandleSocketException(ex as System.Net.Sockets.SocketException) && !(ex is ObjectDisposedException))
+            if (!HandleSocketException(ex as SocketException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving command channel data from publisher connection: " + ex.Message, ex));
         }
 
@@ -2919,7 +2925,7 @@ namespace GSF.TimeSeries.Transport
         {
             Exception ex = e.Argument;
 
-            if (!HandleSocketException(ex as System.Net.Sockets.SocketException) && !(ex is ObjectDisposedException))
+            if (!HandleSocketException(ex as SocketException) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving UDP data from publisher connection: " + ex.Message, ex));
         }
 

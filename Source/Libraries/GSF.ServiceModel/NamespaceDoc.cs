@@ -30,7 +30,7 @@ namespace GSF.ServiceModel
     /// <summary>
     /// Contains classes and interfaces that provide the basic infrastructure for writting web services.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

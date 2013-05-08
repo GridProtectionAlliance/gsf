@@ -369,7 +369,7 @@ namespace PhasorProtocolAdapters
         #region [ Static ]
 
         // Static Fields
-        private static StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
+        private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
 
         // Static Methods
 

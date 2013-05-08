@@ -23,11 +23,11 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Data;
 using System;
 using System.Data;
 using System.Linq;
+using GSF.Configuration;
+using GSF.Data;
 
 namespace GSF.TimeSeries
 {

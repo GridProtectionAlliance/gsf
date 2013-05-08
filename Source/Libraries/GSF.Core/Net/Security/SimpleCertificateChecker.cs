@@ -38,7 +38,7 @@ namespace GSF.Net.Security
         #region [ Members ]
 
         // Fields
-        private List<X509Certificate> m_trustedCertificates;
+        private readonly List<X509Certificate> m_trustedCertificates;
         private SslPolicyErrors m_validPolicyErrors;
         private X509ChainStatusFlags m_validChainFlags;
         private string m_reasonForFailure;

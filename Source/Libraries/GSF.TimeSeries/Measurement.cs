@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Measurement.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,18 +25,18 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using GSF.Collections;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
     /// Implementation of a basic measurement.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class Measurement : IMeasurement
     {
         #region [ Members ]
@@ -337,7 +337,7 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="String"/> that represents the current <see cref="Measurement"/>.</returns>
         public override string ToString()
         {
-            return Measurement.ToString(this);
+            return ToString(this);
         }
 
         /// <summary>
@@ -489,8 +489,8 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Represents an undefined measurement.
         /// </summary>
-        public static readonly Measurement Undefined = new Measurement()
-        {
+        public static readonly Measurement Undefined = new Measurement
+            {
             Key = MeasurementKey.Undefined
         };
 
@@ -501,8 +501,8 @@ namespace GSF.TimeSeries
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone)
         {
-            return new Measurement()
-            {
+            return new Measurement
+                {
                 ID = measurementToClone.ID,
                 Key = measurementToClone.Key,
                 Value = measurementToClone.Value,
@@ -522,8 +522,8 @@ namespace GSF.TimeSeries
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
         {
-            return new Measurement()
-            {
+            return new Measurement
+                {
                 ID = measurementToClone.ID,
                 Key = measurementToClone.Key,
                 Value = measurementToClone.Value,
@@ -544,8 +544,8 @@ namespace GSF.TimeSeries
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
         {
-            return new Measurement()
-            {
+            return new Measurement
+                {
                 ID = measurementToClone.ID,
                 Key = measurementToClone.Key,
                 Value = value,

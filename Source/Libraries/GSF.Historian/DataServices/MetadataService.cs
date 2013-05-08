@@ -56,7 +56,6 @@ namespace GSF.Historian.DataServices
         /// Initializes a new instance of the <see cref="MetadataService"/> class.
         /// </summary>
         public MetadataService()
-            :base()
         {
             Endpoints = "http.rest://localhost:6151/historian";
         }

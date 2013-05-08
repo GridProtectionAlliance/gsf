@@ -39,7 +39,7 @@ namespace GSF.TimeSeries.Statistics
         #region [ Members ]
 
         // Fields
-        private Dictionary<object, Dictionary<string, StatisticValueState>> m_statisticValueStates;
+        private readonly Dictionary<object, Dictionary<string, StatisticValueState>> m_statisticValueStates;
 
         #endregion
 

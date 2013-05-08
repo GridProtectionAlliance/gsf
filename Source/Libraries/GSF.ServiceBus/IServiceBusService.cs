@@ -31,9 +31,9 @@
 //
 //******************************************************************************************************
 
-using GSF.ServiceModel;
 using System.Collections.Generic;
 using System.ServiceModel;
+using GSF.ServiceModel;
 
 namespace GSF.ServiceBus
 {
@@ -49,21 +49,21 @@ namespace GSF.ServiceBus
         /// Registers with the <see cref="ServiceBusService"/> to produce or consume <see cref="Message"/>s.
         /// </summary>
         /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
-        [OperationContract()]
+        [OperationContract]
         void Register(RegistrationRequest request);
 
         /// <summary>
         /// Unregisters a previous registration with the <see cref="ServiceBusService"/> to produce or consume <see cref="Message"/>s
         /// </summary>
         /// <param name="request">The <see cref="RegistrationRequest"/> used when registering.</param>
-        [OperationContract()]
+        [OperationContract]
         void Unregister(RegistrationRequest request);
 
         /// <summary>
         /// Sends the <paramref name="message"/> to the <see cref="ServiceBusService"/> for distribution amongst its registered consumers.
         /// </summary>
         /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
-        [OperationContract()]
+        [OperationContract]
         void Publish(Message message);
 
         /// <summary>
@@ -71,28 +71,28 @@ namespace GSF.ServiceBus
         /// </summary>
         /// <param name="topic">The topic <see cref="RegistrationRequest"/> used when registering.</param>
         /// <returns>The latest <see cref="Message"/> distributed to the <paramref name="topic"/> subscribers.</returns>
-        [OperationContract()]
+        [OperationContract]
         Message GetLatestMessage(RegistrationRequest topic);
 
         /// <summary>
         /// Gets a list of all clients connected to the <see cref="ServiceBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="ClientInfo"/> objects.</returns>
-        [OperationContract()]
+        [OperationContract]
         ICollection<ClientInfo> GetClients();
 
         /// <summary>
         /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="ServiceBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract()]
+        [OperationContract]
         ICollection<RegistrationInfo> GetQueues();
 
         /// <summary>
         /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="ServiceBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract()]
+        [OperationContract]
         ICollection<RegistrationInfo> GetTopics();
 
         #endregion

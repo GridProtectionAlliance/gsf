@@ -30,7 +30,7 @@ namespace GSF.PhasorProtocols.Anonymous
     /// <summary>
     /// Contains a generic implementation of phasor classes used to represent phasor data that isn’t associated with any particular protocol.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

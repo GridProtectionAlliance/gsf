@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -38,7 +38,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IDataFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<SourceChannel, FrameType>
     {
         #region [ Members ]
@@ -73,8 +73,8 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         // Fields
         private CommonFrameHeader m_frameHeader;
         private string m_msvID;
-        private int m_asduCount;
-        private byte[][] m_asduImages;
+        private readonly int m_asduCount;
+        private readonly byte[][] m_asduImages;
         private byte[] m_binaryImage;
         private ushort m_sampleCount;
         private uint m_configurationRevision;
@@ -1085,10 +1085,10 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 // Update local parsing state with new configuration info
                 Cells[i].State = new DataCellParsingState(
                     configCell,
-                    Iec61850_90_5.PhasorValue.CreateNewValue,
-                    Iec61850_90_5.FrequencyValue.CreateNewValue,
-                    Iec61850_90_5.AnalogValue.CreateNewValue,
-                    Iec61850_90_5.DigitalValue.CreateNewValue);
+                    PhasorValue.CreateNewValue,
+                    FrequencyValue.CreateNewValue,
+                    AnalogValue.CreateNewValue,
+                    DigitalValue.CreateNewValue);
             }
 
             // Publish the configuration frame to the rest of the system

@@ -31,6 +31,7 @@ using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Iec61850_90_5;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using DigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
 
 namespace PhasorProtocolAdapters.Iec61850_90_5
 {
@@ -169,7 +170,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         protected override IConfigurationFrame CreateNewConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame)
         {
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
-            ConfigurationFrame configurationFrame = Concentrator.CreateConfigurationFrame(baseConfigurationFrame, m_timeBase, base.NominalFrequency);
+            ConfigurationFrame configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, m_timeBase, base.NominalFrequency);
 
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
             bool configurationChanged = m_configurationFrame != null;
@@ -202,7 +203,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         protected override IFrame CreateNewFrame(Ticks timestamp)
         {
             // We create a new IEEE C37.118 data frame based on current configuration frame
-            DataFrame dataFrame = Concentrator.CreateDataFrame(timestamp, m_configurationFrame, m_msvid, m_asduCount, m_asduImages, m_configurationRevision);
+            DataFrame dataFrame = CreateDataFrame(timestamp, m_configurationFrame, m_msvid, m_asduCount, m_asduImages, m_configurationRevision);
             bool configurationChanged = false;
 
             if (m_configurationChanged)
@@ -351,14 +352,14 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                 foreach (IDigitalDefinition digitalDefinition in baseCell.DigitalDefinitions)
                 {
                     // Attempt to derive user defined mask value if available
-                    GSF.PhasorProtocols.Anonymous.DigitalDefinition anonymousDigitalDefinition = digitalDefinition as GSF.PhasorProtocols.Anonymous.DigitalDefinition;
+                    DigitalDefinition anonymousDigitalDefinition = digitalDefinition as DigitalDefinition;
 
                     if (anonymousDigitalDefinition != null)
                         maskValue = anonymousDigitalDefinition.MaskValue;
                     else
                         maskValue = 0U;
 
-                    newCell.DigitalDefinitions.Add(new DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
+                    newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.Iec61850_90_5.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
 
                 // Add new PMU configuration (cell) to protocol specific configuration frame

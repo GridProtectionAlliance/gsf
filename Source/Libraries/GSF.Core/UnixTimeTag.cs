@@ -67,7 +67,7 @@ namespace GSF
     /// <summary>
     /// Represents a standard Unix timetag.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class UnixTimeTag : TimeTagBase
     {
         #region [ Constructors ]
@@ -121,7 +121,7 @@ namespace GSF
 
         // Unix dates are measured as the number of seconds since 1/1/1970, so this class calculates this
         // date to get the offset in ticks for later conversion.
-        private static long UnixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
+        private static readonly long UnixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
 
         #endregion        
     }

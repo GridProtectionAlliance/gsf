@@ -32,8 +32,10 @@
 using System;
 using System.Configuration;
 using System.Threading;
-using GSF.Configuration;
+using System.Timers;
 using GSF.Adapters;
+using GSF.Configuration;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Historian.Replication
 {
@@ -71,7 +73,7 @@ namespace GSF.Historian.Replication
         private string m_replicaLocation;
         private int m_replicationInterval;
         private Thread m_replicationThread;
-        private System.Timers.Timer m_replicationTimer;
+        private Timer m_replicationTimer;
         private bool m_initialized;
         private bool m_disposed;
 
@@ -161,7 +163,7 @@ namespace GSF.Historian.Replication
                 // Start timer for periodic replication.
                 if (Enabled && m_replicationInterval > 0)
                 {
-                    m_replicationTimer = new System.Timers.Timer(m_replicationInterval * 60000);
+                    m_replicationTimer = new Timer(m_replicationInterval * 60000);
                     m_replicationTimer.Elapsed += ReplicationTimer_Elapsed;
                     m_replicationTimer.Start();
                 }
@@ -322,7 +324,7 @@ namespace GSF.Historian.Replication
             }
         }
 
-        private void ReplicationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void ReplicationTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             Replicate();
         }

@@ -25,7 +25,6 @@
 
 using System;
 using System.Text;
-using GSF;
 
 namespace GSF.PQDIF.Physical
 {

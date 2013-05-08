@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using GSF.Parsing;
 
 namespace GSF.Communication.Radius
 {
@@ -81,7 +81,7 @@ namespace GSF.Communication.Radius
         private string m_nextTokenModeMessage;
         private bool m_disposed;
         private byte[] m_responseBytes;
-        private UdpClient m_udpClient;
+        private readonly UdpClient m_udpClient;
 
         #endregion
 
@@ -158,7 +158,7 @@ namespace GSF.Communication.Radius
         {
             get
             {
-                return System.Convert.ToInt32(m_udpClient.ConnectionString.ParseKeyValuePairs()["remoteport"]);
+                return Convert.ToInt32(m_udpClient.ConnectionString.ParseKeyValuePairs()["remoteport"]);
             }
             set
             {

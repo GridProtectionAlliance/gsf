@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,7 +31,6 @@ using System.Text;
 using System.Threading;
 using GSF.IO;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Macrodyne
 {
@@ -79,7 +78,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         private string m_deviceLabel;
         private bool m_refreshConfigurationFileOnChange;
         private FileSystemWatcher m_configurationFileWatcher;
-        private object m_syncLock;
+        private readonly object m_syncLock;
         private bool m_disposed;
 
         #endregion
@@ -233,7 +232,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             }
             set
             {
-                Macrodyne.ConnectionParameters parameters = value as Macrodyne.ConnectionParameters;
+                ConnectionParameters parameters = value as ConnectionParameters;
 
                 if (parameters != null)
                 {
@@ -287,7 +286,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         public override void Start()
         {
             // We narrow down parsing types to just those needed...
-            base.Start(new Type[] { typeof(DataFrame), typeof(HeaderFrame), typeof(ConfigurationFrame) });
+            base.Start(new[] { typeof(DataFrame), typeof(HeaderFrame), typeof(ConfigurationFrame) });
 
             // Make sure we mark stream an initialized even though base class doesn't think we use sync-bytes
             StreamInitialized = false;

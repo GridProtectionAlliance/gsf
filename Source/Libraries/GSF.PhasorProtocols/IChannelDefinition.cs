@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  IChannelDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,7 +37,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Data transmission formats enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum DataFormat : byte
     {
         /// <summary>

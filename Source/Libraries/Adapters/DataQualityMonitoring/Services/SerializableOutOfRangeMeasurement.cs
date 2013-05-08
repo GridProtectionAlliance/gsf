@@ -23,9 +23,9 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -42,7 +42,6 @@ namespace DataQualityMonitoring.Services
         /// Initializes a new instance of the <see cref="SerializableOutOfRangeMeasurement"/> class.
         /// </summary>
         public SerializableOutOfRangeMeasurement()
-            : base()
         {
         }
 
@@ -66,13 +65,13 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the lower boundary of the <see cref="IMeasurement"/>'s value.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 6)]
+        [XmlAttribute, DataMember(Order = 6)]
         public double LowRange { get; set; }
 
         /// <summary>
         /// Gets or sets the upper boundary of the <see cref="IMeasurement"/>'s value.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 7)]
+        [XmlAttribute, DataMember(Order = 7)]
         public double HighRange { get; set; }
 
         #endregion

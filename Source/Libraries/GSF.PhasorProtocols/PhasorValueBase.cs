@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  PhasorValueBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -54,7 +54,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent representation of a phasor value.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class PhasorValueBase : ChannelValueBase<IPhasorDefinition>, IPhasorValue
     {
         #region [ Members ]
@@ -284,7 +284,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+                if (DataFormat == DataFormat.FixedInteger)
                     return 4;
                 else
                     return 8;
@@ -316,9 +316,9 @@ namespace GSF.PhasorProtocols
                 // image were likely parsed previously from a binary image with the same constraints.
                 unchecked
                 {
-                    if (CoordinateFormat == GSF.PhasorProtocols.CoordinateFormat.Rectangular)
+                    if (CoordinateFormat == CoordinateFormat.Rectangular)
                     {
-                        if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+                        if (DataFormat == DataFormat.FixedInteger)
                         {
                             EndianOrder.BigEndian.CopyBytes((short)UnscaledReal, buffer, 0);
                             EndianOrder.BigEndian.CopyBytes((short)UnscaledImaginary, buffer, 2);
@@ -331,11 +331,11 @@ namespace GSF.PhasorProtocols
                     }
                     else
                     {
-                        if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+                        if (DataFormat == DataFormat.FixedInteger)
                         {
                             EndianOrder.BigEndian.CopyBytes((ushort)(m_phasor.Magnitude / Definition.ConversionFactor), buffer, 0);
 
-                            if (AngleFormat == GSF.PhasorProtocols.AngleFormat.Radians)
+                            if (AngleFormat == AngleFormat.Radians)
                                 EndianOrder.BigEndian.CopyBytes((short)(m_phasor.Angle * 10000.0D), buffer, 2);
                             else
                                 EndianOrder.BigEndian.CopyBytes((short)(m_phasor.Angle.ToDegrees() * 10000.0D), buffer, 2);
@@ -344,7 +344,7 @@ namespace GSF.PhasorProtocols
                         {
                             EndianOrder.BigEndian.CopyBytes((float)m_phasor.Magnitude, buffer, 0);
 
-                            if (AngleFormat == GSF.PhasorProtocols.AngleFormat.Radians)
+                            if (AngleFormat == AngleFormat.Radians)
                                 EndianOrder.BigEndian.CopyBytes((float)m_phasor.Angle, buffer, 4);
                             else
                                 EndianOrder.BigEndian.CopyBytes((float)m_phasor.Angle.ToDegrees(), buffer, 4);
@@ -388,7 +388,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
         /// </remarks>
-        /// <returns>A <see cref="Double"/> representing the composite value.</returns>
+        /// <returns>A <see cref="double"/> representing the composite value.</returns>
         public override double GetCompositeValue(int index)
         {
             switch (index)
@@ -415,7 +415,7 @@ namespace GSF.PhasorProtocols
             switch (index)
             {
                 case (int)CompositePhasorValue.Angle:
-                    return PhasorValueBase.AverageAngleValueFilter;
+                    return AverageAngleValueFilter;
                 case (int)CompositePhasorValue.Magnitude:
                     return Measurement.AverageValueFilter;
                 default:
@@ -440,9 +440,9 @@ namespace GSF.PhasorProtocols
             // Length is validated at a frame level well in advance so that low level parsing routines do not have
             // to re-validate that enough length is available to parse needed information as an optimization...
 
-            if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+            if (DataFormat == DataFormat.FixedInteger)
             {
-                if (CoordinateFormat == GSF.PhasorProtocols.CoordinateFormat.Rectangular)
+                if (CoordinateFormat == CoordinateFormat.Rectangular)
                 {
                     // Parse from fixed-integer, rectangular
                     UnscaledReal = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
@@ -453,7 +453,7 @@ namespace GSF.PhasorProtocols
                     // Parse from fixed-integer, polar
                     m_phasor.Magnitude = EndianOrder.BigEndian.ToUInt16(buffer, startIndex) * Definition.ConversionFactor;
 
-                    if (AngleFormat == GSF.PhasorProtocols.AngleFormat.Radians)
+                    if (AngleFormat == AngleFormat.Radians)
                         m_phasor.Angle = EndianOrder.BigEndian.ToInt16(buffer, startIndex + 2) / 10000.0D;
                     else
                         m_phasor.Angle = Angle.FromDegrees(EndianOrder.BigEndian.ToInt16(buffer, startIndex + 2) / 10000.0D);
@@ -463,7 +463,7 @@ namespace GSF.PhasorProtocols
             }
             else
             {
-                if (CoordinateFormat == GSF.PhasorProtocols.CoordinateFormat.Rectangular)
+                if (CoordinateFormat == CoordinateFormat.Rectangular)
                 {
                     // Parse from single-precision floating-point, rectangular
                     m_phasor.Real = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
@@ -474,7 +474,7 @@ namespace GSF.PhasorProtocols
                     // Parse from single-precision floating-point, polar
                     m_phasor.Magnitude = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
 
-                    if (AngleFormat == GSF.PhasorProtocols.AngleFormat.Radians)
+                    if (AngleFormat == AngleFormat.Radians)
                         m_phasor.Angle = EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4);
                     else
                         m_phasor.Angle = Angle.FromDegrees(EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4));

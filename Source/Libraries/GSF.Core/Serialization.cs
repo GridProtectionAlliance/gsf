@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Serialization.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -39,7 +39,6 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
 using System;
 using System.IO;
 using System.Reflection;
@@ -48,29 +47,30 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel;
 using System.Xml.Serialization;
+using GSF.IO;
 
 namespace GSF
 {
     #region [ Enumerations ]
 
     /// <summary>
-    /// Indicates the format of <see cref="Object"/> serialization or deserialization.
+    /// Indicates the format of <see cref="object"/> serialization or deserialization.
     /// </summary>
     public enum SerializationFormat
     {
         /// <summary>
-        /// <see cref="Object"/> is serialized or deserialized using <see cref="DataContractSerializer"/> to XML (eXtensible Markup Language) format.
+        /// <see cref="object"/> is serialized or deserialized using <see cref="DataContractSerializer"/> to XML (eXtensible Markup Language) format.
         /// </summary>
         /// <remarks>
-        /// <see cref="Object"/> can be serialized or deserialized using <see cref="XmlSerializer"/> by adding the <see cref="XmlSerializerFormatAttribute"/> to the <see cref="Object"/>.
+        /// <see cref="object"/> can be serialized or deserialized using <see cref="XmlSerializer"/> by adding the <see cref="XmlSerializerFormatAttribute"/> to the <see cref="object"/>.
         /// </remarks>
         Xml,
         /// <summary>
-        /// <see cref="Object"/> is serialized or deserialized using <see cref="DataContractJsonSerializer"/> to JSON (JavaScript Object Notation) format.
+        /// <see cref="object"/> is serialized or deserialized using <see cref="DataContractJsonSerializer"/> to JSON (JavaScript Object Notation) format.
         /// </summary>
         Json,
         /// <summary>
-        /// <see cref="Object"/> is serialized or deserialized using <see cref="BinaryFormatter"/> to binary format.
+        /// <see cref="object"/> is serialized or deserialized using <see cref="BinaryFormatter"/> to binary format.
         /// </summary>
         Binary
     }
@@ -422,7 +422,7 @@ namespace GSF
             {
                 stream = new MemoryStream(serializedObject);
 
-                return Serialization.Deserialize<T>(stream, serializationFormat);
+                return Deserialize<T>(stream, serializationFormat);
             }
             finally
             {

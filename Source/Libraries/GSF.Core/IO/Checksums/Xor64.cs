@@ -83,7 +83,7 @@ namespace GSF.IO.Checksums
         /// <summary>
         /// Updates the checksum with a ulong value.
         /// </summary>
-        /// <param name="value">The <see cref="UInt64"/> value to use for the update.</param>
+        /// <param name="value">The <see cref="ulong"/> value to use for the update.</param>
         public void Update(ulong value)
         {
             m_checksum ^= value;

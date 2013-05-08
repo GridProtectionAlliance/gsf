@@ -23,14 +23,15 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
-using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Net;
+using System.Timers;
 using System.Xml.Linq;
+using GSF.Data;
+using GSF.TimeSeries.UI.DataModels;
 
 namespace GSF.TimeSeries.UI
 {
@@ -59,9 +60,9 @@ namespace GSF.TimeSeries.UI
         private int m_refreshInterval;
         private string m_url;
 
-        private object m_alarmLock;
+        private readonly object m_alarmLock;
         private List<RaisedAlarm> m_alarmList;
-        private System.Timers.Timer m_refreshTimer;
+        private Timer m_refreshTimer;
         private object m_currentNodeID;
 
         private bool m_disposed;
@@ -83,7 +84,7 @@ namespace GSF.TimeSeries.UI
 
             m_alarmLock = new object();
             m_alarmList = new List<RaisedAlarm>();
-            m_refreshTimer = new System.Timers.Timer(m_refreshInterval * 1000);
+            m_refreshTimer = new Timer(m_refreshInterval * 1000);
             m_refreshTimer.Elapsed += RefreshTimer_Elapsed;
 
             if (singleton)
@@ -202,7 +203,7 @@ namespace GSF.TimeSeries.UI
         }
 
         // Processing for the Elapsed event of the refresh timer.
-        private void RefreshTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void RefreshTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             RefreshAlarms();
         }
@@ -244,8 +245,8 @@ namespace GSF.TimeSeries.UI
 
                     foreach (XElement element in root.Element("Alarms").Elements("Alarm"))
                     {
-                        newAlarmList.Add(new RaisedAlarm()
-                        {
+                        newAlarmList.Add(new RaisedAlarm
+                            {
                             ID = int.Parse(element.Element("ID").Value),
                             Severity = int.Parse(element.Element("Severity").Value),
                             TimeRaised = element.Element("TimeRaised").Value,

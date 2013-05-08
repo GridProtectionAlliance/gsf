@@ -23,12 +23,14 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
+using System.Timers;
+using GSF.IO;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Historian.Files
 {
@@ -96,7 +98,7 @@ namespace GSF.Historian.Files
 
         // Fields
         private ArchiveFile m_archiveFile;
-        private System.Timers.Timer m_rolloverWatcher;
+        private Timer m_rolloverWatcher;
         private readonly object m_watcherLock;
         private bool m_disposed;
 
@@ -110,7 +112,7 @@ namespace GSF.Historian.Files
         public ArchiveReader()
         {
             m_watcherLock = new object();
-            m_rolloverWatcher = new System.Timers.Timer();
+            m_rolloverWatcher = new Timer();
             m_rolloverWatcher.Interval = 1000;
             m_rolloverWatcher.Elapsed += m_rolloverWatcher_Elapsed;
         }
@@ -378,7 +380,7 @@ namespace GSF.Historian.Files
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime)
         {
-            return ReadData(new int[] { historianID }, startTime, endTime);
+            return ReadData(new[] { historianID }, startTime, endTime);
         }
 
         /// <summary>
@@ -468,7 +470,7 @@ namespace GSF.Historian.Files
         }
 
         // Monitors for roll-over notifications
-        private void m_rolloverWatcher_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_rolloverWatcher_Elapsed(object sender, ElapsedEventArgs e)
         {
             // Don't start another rollover activity if one is already in progress...
             if (Monitor.TryEnter(m_watcherLock))

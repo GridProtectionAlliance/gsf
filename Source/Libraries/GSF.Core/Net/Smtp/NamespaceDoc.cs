@@ -30,7 +30,7 @@ namespace GSF.Net.Smtp
     /// <summary>
     /// Contains classes used to simplify and standardize operations related to sending e-mail messages.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

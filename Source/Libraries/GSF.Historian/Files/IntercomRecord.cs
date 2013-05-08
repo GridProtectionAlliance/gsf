@@ -70,7 +70,7 @@ namespace GSF.Historian.Files
         private bool m_rolloverInProgress;
         private TimeTag m_latestDataTime;
         private int m_latestDataID;
-        private List<TimeTag> m_sourceLatestDataTime;
+        private readonly List<TimeTag> m_sourceLatestDataTime;
 
         #endregion
 

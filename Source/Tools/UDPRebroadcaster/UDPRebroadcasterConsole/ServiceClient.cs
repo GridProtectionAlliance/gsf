@@ -29,13 +29,13 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.ComponentModel;
+using System.Text;
 using GSF;
 using GSF.Console;
 using GSF.Reflection;
 using GSF.ServiceProcess;
-using System;
-using System.ComponentModel;
-using System.Text;
 
 namespace UDPRebroadcasterConsole
 {
@@ -45,15 +45,14 @@ namespace UDPRebroadcasterConsole
 
         // Fields
         private bool m_telnetActive;
-        private ConsoleColor m_originalBgColor;
-        private ConsoleColor m_originalFgColor;
+        private readonly ConsoleColor m_originalBgColor;
+        private readonly ConsoleColor m_originalFgColor;
 
         #endregion
 
         #region [ Constructors ]
 
         public ServiceClient()
-            : base()
         {
             InitializeComponent();
 

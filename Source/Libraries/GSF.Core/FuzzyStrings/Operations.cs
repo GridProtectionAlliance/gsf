@@ -26,7 +26,7 @@ using System.Linq;
 
 namespace GSF.FuzzyStrings
 {
-    public static partial class Operations
+    public static class Operations
     {
         public static string Capitalize(this string source)
         {
@@ -51,7 +51,7 @@ namespace GSF.FuzzyStrings
 
             for (int i = 0; i < source.Count(); i++)
             {
-                returnString += source.ElementAt<string>(i);
+                returnString += source.ElementAt(i);
             }
             return returnString;
         }

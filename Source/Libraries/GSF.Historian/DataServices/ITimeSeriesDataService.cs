@@ -36,7 +36,7 @@ namespace GSF.Historian.DataServices
     /// Defines a REST web service for time-series data.
     /// </summary>
     /// <seealso cref="SerializableTimeSeriesData"/>
-    [ServiceContract()]
+    [ServiceContract]
     public interface ITimeSeriesDataService
     {
         #region [ Methods ]
@@ -45,7 +45,7 @@ namespace GSF.Historian.DataServices
         /// Writes <paramref name="data"/> received in <see cref="WebMessageFormat.Xml"/> format to the <see cref="DataService.Archive"/>.
         /// </summary>
         /// <param name="data">An <see cref="SerializableTimeSeriesData"/> object.</param>
-        [OperationContract(),
+        [OperationContract,
         WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/write/xml")]
         void WriteTimeSeriesDataAsXml(SerializableTimeSeriesData data);
 
@@ -53,7 +53,7 @@ namespace GSF.Historian.DataServices
         /// Writes <paramref name="data"/> received in <see cref="WebMessageFormat.Json"/> format to the <see cref="DataService.Archive"/>.
         /// </summary>
         /// <param name="data">An <see cref="SerializableTimeSeriesData"/> object.</param>
-        [OperationContract(),
+        [OperationContract,
         WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/write/json")]
         void WriteTimeSeriesDataAsJson(SerializableTimeSeriesData data);
 
@@ -62,7 +62,7 @@ namespace GSF.Historian.DataServices
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which current time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/read/current/{idList}/xml")]
         SerializableTimeSeriesData ReadSelectCurrentTimeSeriesDataAsXml(string idList);
 
@@ -72,7 +72,7 @@ namespace GSF.Historian.DataServices
         /// <param name="fromID">Starting ID in the ID range for which current time-series data is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which current time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/read/current/{fromID}-{toID}/xml")]
         SerializableTimeSeriesData ReadRangeCurrentTimeSeriesDataAsXml(string fromID, string toID);
 
@@ -81,7 +81,7 @@ namespace GSF.Historian.DataServices
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which current time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/current/{idList}/json")]
         SerializableTimeSeriesData ReadSelectCurrentTimeSeriesDataAsJson(string idList);
 
@@ -91,7 +91,7 @@ namespace GSF.Historian.DataServices
         /// <param name="fromID">Starting ID in the ID range for which current time-series data is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which current time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/current/{fromID}-{toID}/json")]
         SerializableTimeSeriesData ReadRangeCurrentTimeSeriesDataAsJson(string fromID, string toID);
 
@@ -102,7 +102,7 @@ namespace GSF.Historian.DataServices
         /// <param name="startTime">Start time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <param name="endTime">End time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/read/historic/{idList}/{startTime}/{endTime}/xml")]
         SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsXml(string idList, string startTime, string endTime);
 
@@ -114,7 +114,7 @@ namespace GSF.Historian.DataServices
         /// <param name="startTime">Start time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <param name="endTime">End time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/read/historic/{fromID}-{toID}/{startTime}/{endTime}/xml")]
         SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsXml(string fromID, string toID, string startTime, string endTime);
 
@@ -125,7 +125,7 @@ namespace GSF.Historian.DataServices
         /// <param name="startTime">Start time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <param name="endTime">End time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/historic/{idList}/{startTime}/{endTime}/json")]
         SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsJson(string idList, string startTime, string endTime);
 
@@ -137,7 +137,7 @@ namespace GSF.Historian.DataServices
         /// <param name="startTime">Start time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <param name="endTime">End time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/historic/{fromID}-{toID}/{startTime}/{endTime}/json")]
         SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsJson(string fromID, string toID, string startTime, string endTime);
 
@@ -146,7 +146,7 @@ namespace GSF.Historian.DataServices
         /// </summary>
         /// <param name="data">JSON serialized post request.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebInvoke(Method = "POST", ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/historic/json")]
         SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsJsonPost(SerializableReadRequestData data);
 

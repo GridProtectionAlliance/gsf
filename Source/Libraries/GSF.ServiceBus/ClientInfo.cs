@@ -34,7 +34,7 @@ namespace GSF.ServiceBus
     /// <summary>
     /// Represents information about a client connected to the <see cref="ServiceBusService"/> to produce/consume <see cref="Message"/>s.
     /// </summary>
-    [DataContract()]
+    [DataContract]
     public class ClientInfo
     {
         #region [ Members ]
@@ -44,25 +44,25 @@ namespace GSF.ServiceBus
         /// <summary>
         /// Gets or sets the session identifier of the client.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public string SessionId;
 
         /// <summary>
         /// Gets or sets the UTC <see cref="DateTime"/> when the client connected to the <see cref="ServiceBusService"/>.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public DateTime ConnectedAt;
 
         /// <summary>
         /// Gets or sets the total number of <see cref="Message"/>s produced by the client.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public long MessagesProduced;
 
         /// <summary>
         /// Gets or sets the total number of <see cref="Message"/>s consumed by the client.
         /// </summary>
-        [DataMember()]
+        [DataMember]
         public long MessagesConsumed;
 
         /// <summary>

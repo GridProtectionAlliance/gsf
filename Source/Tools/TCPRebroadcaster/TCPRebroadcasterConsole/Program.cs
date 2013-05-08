@@ -23,6 +23,9 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
+using GSF.Console;
+
 namespace TCPRebroadcasterConsole
 {
     class Program
@@ -32,8 +35,8 @@ namespace TCPRebroadcasterConsole
         static void Main(string[] args)
         {
             // Enable console events.
-            GSF.Console.Events.ConsoleClosing += OnConsoleClosing;
-            GSF.Console.Events.EnableRaisingEvents();
+            Events.ConsoleClosing += OnConsoleClosing;
+            Events.EnableRaisingEvents();
 
             // Start the client component.
             m_serviceClient = new ServiceClient();
@@ -41,7 +44,7 @@ namespace TCPRebroadcasterConsole
             m_serviceClient.Dispose();
         }
 
-        static void OnConsoleClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        static void OnConsoleClosing(object sender, CancelEventArgs e)
         {
             // Dispose the client component.
             m_serviceClient.Dispose();

@@ -30,7 +30,7 @@ namespace GSF.Web
     /// <summary>
     /// Contains classes and extension functions related to .NET web enabled platforms such as ASP.NET and WCF.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

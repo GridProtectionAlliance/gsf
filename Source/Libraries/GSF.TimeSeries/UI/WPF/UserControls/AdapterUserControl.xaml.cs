@@ -21,13 +21,18 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
+using GSF.TimeSeries.UI.DataModels;
+using DataGrid = System.Windows.Controls.DataGrid;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MessageBox = System.Windows.MessageBox;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -38,7 +43,7 @@ namespace GSF.TimeSeries.UI.UserControls
     {
         #region [ Members ]
 
-        private ViewModels.Adapters m_dataContext;
+        private readonly ViewModels.Adapters m_dataContext;
         private DataGridColumn m_sortColumn;
         private string m_sortMemberPath;
         private ListSortDirection m_sortDirection;
@@ -54,7 +59,7 @@ namespace GSF.TimeSeries.UI.UserControls
         {
             InitializeComponent();
             m_dataContext = new ViewModels.Adapters(7, adapterType);
-            m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
+            m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
             this.DataContext = m_dataContext;
         }
 
@@ -87,11 +92,11 @@ namespace GSF.TimeSeries.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         private void Browse_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Forms.FolderBrowserDialog browser = new System.Windows.Forms.FolderBrowserDialog();
+            FolderBrowserDialog browser = new FolderBrowserDialog();
 
             browser.SelectedPath = SearchDirectoryTextBox.Text;
 
-            if (browser.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (browser.ShowDialog() == DialogResult.OK)
                 SearchDirectoryTextBox.Text = browser.SelectedPath;
         }
 
@@ -102,7 +107,7 @@ namespace GSF.TimeSeries.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         private void Default_Click(object sender, RoutedEventArgs e)
         {
-            GSF.TimeSeries.UI.ViewModels.Adapters dataContext = this.DataContext as GSF.TimeSeries.UI.ViewModels.Adapters;
+            ViewModels.Adapters dataContext = this.DataContext as ViewModels.Adapters;
 
             if (dataContext != null && dataContext.SelectedParameter != null)
             {

@@ -41,7 +41,7 @@ namespace GSF
     /// Used to track total progress of an identified operation.
     /// </remarks>
     /// <typeparam name="TUnit">Unit of progress used (long, double, int, etc.)</typeparam>
-    [Serializable()]
+    [Serializable]
     public class ProcessProgress<TUnit> where TUnit : struct
     {
         #region [ Members ]

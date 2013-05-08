@@ -51,7 +51,7 @@ namespace GSF.ServiceBus
     /// <summary>
     /// Represents a message that can be used to exchange information between processes using <see cref="ServiceBusService"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class Message
     {
         #region [ Members ]

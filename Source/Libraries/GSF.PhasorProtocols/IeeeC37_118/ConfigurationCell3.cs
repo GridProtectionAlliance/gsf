@@ -30,7 +30,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationCell3
     {
         #region [ Members ]

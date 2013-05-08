@@ -72,7 +72,7 @@ namespace GSF.Historian.Files
         public const int FixedLength = 72;
 
         // Fields
-        private int m_historianID;
+        private readonly int m_historianID;
         private StateRecordDataPoint m_archivedData;
         private StateRecordDataPoint m_previousData;
         private StateRecordDataPoint m_currentData;

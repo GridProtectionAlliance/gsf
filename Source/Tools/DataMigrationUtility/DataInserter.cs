@@ -29,9 +29,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
-using GSF.Reflection;
-// James Ritchie Carroll - 2003
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -41,6 +38,10 @@ using System.Data.OleDb;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using GSF.Data;
+using GSF.IO;
+using GSF.Reflection;
+    // James Ritchie Carroll - 2003
 
 namespace Database
 {
@@ -59,17 +60,17 @@ namespace Database
         #region [ Members ]
 
         //Fields
-        private bool m_attemptBulkInsert = false;
-        private bool m_forceBulkInsert = false;
+        private bool m_attemptBulkInsert;
+        private bool m_forceBulkInsert;
         private string m_bulkInsertSettings = "FIELDTERMINATOR = '\\t', ROWTERMINATOR = '\\n', CODEPAGE = 'OEM', FIRE_TRIGGERS, KEEPNULLS";
         private Encoding m_bulkInsertEncoding = Encoding.ASCII;
         // Mehul GetApplicationPath()
         private string m_bulkInsertFilePath = AssemblyInfo.ExecutingAssembly.Location;
         private string m_delimeterReplacement = " - ";
-        private bool m_clearDestinationTables = false;
-        private bool m_attemptTruncateTable = false;
-        private bool m_preservePrimaryKeyValue = false;
-        private bool m_forceTruncateTable = false;
+        private bool m_clearDestinationTables;
+        private bool m_attemptTruncateTable;
+        private bool m_preservePrimaryKeyValue;
+        private bool m_forceTruncateTable;
 
         //Delegates
         public event TableClearedEventHandler TableCleared;
@@ -87,7 +88,6 @@ namespace Database
         #region [ Constructors ]
 
         public DataInserter()
-            : base()
         {
 
         }
@@ -892,7 +892,7 @@ namespace Database
                         else
                         {
                             // Add where criteria to Sql count statement
-                            CountSql.Append(WhereSql.ToString());
+                            CountSql.Append(WhereSql);
 
                             // Make sure record doesn't already exist
                             try
@@ -906,7 +906,7 @@ namespace Database
                                 if (int.Parse(Common.NotNull(oCMD.ExecuteScalar(), "0")) > 0)
                                 {
                                     // Add where criteria to Sql update statement
-                                    UpdateSql.Append(WhereSql.ToString());
+                                    UpdateSql.Append(WhereSql);
 
                                     try
                                     {
@@ -960,7 +960,7 @@ namespace Database
                 string BulkInsertSql = "BULK INSERT " + ToTable.FullName + " FROM '" + BulkInsertFile + "'" + (m_bulkInsertSettings.Length > 0 ? " WITH (" + m_bulkInsertSettings + ")" : "");
                 double dblStartTime = 0;
                 double dblStopTime = 0;
-                DateTime dtTodayMidNight = new System.DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0);
+                DateTime dtTodayMidNight = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0);
                 //DateTime dtYestMidnight = new System.DateTime(2006, 9, 12, 0, 0, 0);
 
                 // Close bulk insert file stream
@@ -975,7 +975,7 @@ namespace Database
                 try
                 {
                     // Give system a few seconds to close bulk insert file (might have been real big)
-                    GSF.IO.FilePath.WaitForReadLock(BulkInsertFile, 15);
+                    FilePath.WaitForReadLock(BulkInsertFile, 15);
 
                     TimeSpan diffResult = DateTime.Now - dtTodayMidNight;
                     dblStartTime = diffResult.TotalSeconds; //VB.DateAndTime.Timer;
@@ -999,7 +999,7 @@ namespace Database
 
                 try
                 {
-                    GSF.IO.FilePath.WaitForWriteLock(BulkInsertFile, 15);
+                    FilePath.WaitForWriteLock(BulkInsertFile, 15);
                     File.Delete(BulkInsertFile);
                 }
                 catch (Exception ex)
@@ -1072,7 +1072,7 @@ namespace Database
                         // We don't want to circle back on ourselves
                         for (x = 0; x <= FieldStack.Count - 1; x++)
                         {
-                            if (object.ReferenceEquals(fldLookup.ReferencedBy, FieldStack[x]))
+                            if (ReferenceEquals(fldLookup.ReferencedBy, FieldStack[x]))
                             {
                                 flgInStack = true;
                                 break;

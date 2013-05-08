@@ -25,9 +25,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Reflection;
 using System;
 using System.Windows.Forms;
+using GSF.Reflection;
 
 namespace UDPRebroadcaster
 {

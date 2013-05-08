@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrequencyDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -35,7 +34,7 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IFrequencyDefinition"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FrequencyDefinition : FrequencyDefinitionBase
     {
         #region [ Members ]

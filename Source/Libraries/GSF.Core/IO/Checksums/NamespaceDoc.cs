@@ -30,7 +30,7 @@ namespace GSF.IO.Checksums
     /// <summary>
     /// Contains classes and extension functions used to calculate standard checksums and CRC’s.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

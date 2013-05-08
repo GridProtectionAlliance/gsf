@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConnectionParametersBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -40,7 +40,7 @@ namespace GSF.PhasorProtocols
     /// <para>This class is inherited by subsequent classes to provide protocol specific connection parameters that may be needed to make a connection.</para>
     /// <para>Derived implementations of this class are designed to be exposed by a "PropertyGrid" so a UI can request protocol specific connection parameters.</para>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public abstract class ConnectionParametersBase : IConnectionParameters
     {
         /// <summary>

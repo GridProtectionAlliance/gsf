@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.ServiceModel;
 using System.IdentityModel.Policy;
 using System.ServiceModel;
 using System.Text.RegularExpressions;
+using GSF.ServiceModel;
 
 namespace GSF.ServiceBus
 {

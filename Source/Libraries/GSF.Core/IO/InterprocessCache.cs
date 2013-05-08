@@ -25,12 +25,14 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Threading;
 using System;
 using System.Collections;
 using System.IO;
 using System.Threading;
+using System.Timers;
+using GSF.Collections;
+using GSF.Threading;
+using Timer = System.Timers.Timer;
 
 namespace GSF.IO
 {
@@ -68,10 +70,10 @@ namespace GSF.IO
         private ManualResetEventSlim m_loadIsReady;         // Wait handle used so that system will wait for file data load
         private ManualResetEventSlim m_saveIsReady;         // Wait handle used so that system will wait for file data save
         private FileSystemWatcher m_fileWatcher;            // Optional file watcher used to reload changes
-        private int m_maximumConcurrentLocks;               // Maximum concurrent reader locks allowed
+        private readonly int m_maximumConcurrentLocks;               // Maximum concurrent reader locks allowed
         private int m_maximumRetryAttempts;                 // Maximum retry attempts allowed for loading file
-        private BitArray m_retryQueue;                      // Retry event queue
-        private System.Timers.Timer m_retryTimer;           // File I/O retry timer
+        private readonly BitArray m_retryQueue;                      // Retry event queue
+        private Timer m_retryTimer;           // File I/O retry timer
         private long m_lastRetryTime;                       // Time of last retry attempt
         private int m_retryCount;                           // Total number of retries attempted so far
         private bool m_disposed;                            // Class disposed flag
@@ -104,7 +106,7 @@ namespace GSF.IO
             m_fileData = new byte[0];
 
             // Setup retry timer
-            m_retryTimer = new System.Timers.Timer();
+            m_retryTimer = new Timer();
             m_retryTimer.Elapsed += m_retryTimer_Elapsed;
             m_retryTimer.AutoReset = false;
             m_retryTimer.Interval = DefaultRetryDelayInterval;
@@ -649,7 +651,7 @@ namespace GSF.IO
         /// <summary>
         /// Retries specified serialize or deserialize event in case of file I/O failures.
         /// </summary>
-        private void m_retryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_retryTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (!m_disposed)
             {

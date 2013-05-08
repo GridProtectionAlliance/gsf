@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DigitalValueBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,14 +33,13 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.TimeSeries;
-using GSF;
 
 namespace GSF.PhasorProtocols
 {
     /// <summary>
     /// Represents the common implementation of the protocol independent representation of a digital value.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class DigitalValueBase : ChannelValueBase<IDigitalDefinition>, IDigitalValue
     {
         #region [ Members ]
@@ -187,7 +186,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
         /// </remarks>
-        /// <returns>A <see cref="Double"/> representing the composite value.</returns>
+        /// <returns>A <see cref="double"/> representing the composite value.</returns>
         public override double GetCompositeValue(int index)
         {
             if (index == 0)

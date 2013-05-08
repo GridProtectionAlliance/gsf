@@ -1,8 +1,8 @@
-﻿using GSF.Web.Hosting;
-using System;
+﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Web.UI;
+using GSF.Web.Hosting;
 
 // Assembly identity attributes.
 [assembly: AssemblyVersion("2.0.45.0")]

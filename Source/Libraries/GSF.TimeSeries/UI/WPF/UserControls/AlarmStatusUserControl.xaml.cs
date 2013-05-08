@@ -21,12 +21,12 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.ViewModels;
 using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -38,7 +38,7 @@ namespace GSF.TimeSeries.UI.UserControls
         #region [ Members ]
 
         // Fields
-        private RaisedAlarms m_dataContext;
+        private readonly RaisedAlarms m_dataContext;
         private AlarmMonitor m_monitor;
         private DataGridColumn m_sortColumn;
         private string m_sortMemberPath;
@@ -55,7 +55,7 @@ namespace GSF.TimeSeries.UI.UserControls
         {
             InitializeComponent();
             m_dataContext = new RaisedAlarms(20, false);
-            m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
+            m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
             this.DataContext = m_dataContext;
         }
 
@@ -142,13 +142,13 @@ namespace GSF.TimeSeries.UI.UserControls
         }
 
         // Opens the popup for entering settings.
-        private void ButtonDisplaySettings_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void ButtonDisplaySettings_Click(object sender, RoutedEventArgs e)
         {
             PopupSettings.IsOpen = true;
         }
 
         // Saves changes to settings made in the popup.
-        private void ButtonSave_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
             int refreshInterval;
 
@@ -166,11 +166,11 @@ namespace GSF.TimeSeries.UI.UserControls
         }
 
         // Restores original setting based on what is stored in the isolated storage manager.
-        private void ButtonRestore_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void ButtonRestore_Click(object sender, RoutedEventArgs e)
         {
             int refreshInterval;
 
-            int.TryParse(GSF.TimeSeries.UI.IsolatedStorageManager.ReadFromIsolatedStorage("AlarmStatusRefreshInterval").ToString(), out refreshInterval);
+            int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("AlarmStatusRefreshInterval").ToString(), out refreshInterval);
             TextBlockAlarmRefreshInterval.Text = refreshInterval.ToString();
             TextBoxRefreshInterval.Text = refreshInterval.ToString();
             m_dataContext.Monitor.RefreshInterval = refreshInterval;
@@ -178,7 +178,7 @@ namespace GSF.TimeSeries.UI.UserControls
         }
 
         // Closes the popup for entering settings.
-        private void ButtonCancel_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
         {
             PopupSettings.IsOpen = false;
         }

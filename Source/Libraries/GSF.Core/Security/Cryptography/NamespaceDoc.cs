@@ -31,7 +31,7 @@ namespace GSF.Security.Cryptography
     /// Contains classes and extension functions used to simplify and standardize usage of basic cryptography using a combination 
     /// of standard and proprietary encryption algorithms to produce decent obfuscations of strings, buffers and streams of data.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

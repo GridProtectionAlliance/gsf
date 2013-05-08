@@ -39,8 +39,8 @@ namespace GSF.Threading
     /// </summary>
     public static class ManagedThreads
     {
-        private static LinkedList<ManagedThread> s_queuedThreads;
-        private static LinkedList<ManagedThread> s_activeThreads;
+        private static readonly LinkedList<ManagedThread> s_queuedThreads;
+        private static readonly LinkedList<ManagedThread> s_activeThreads;
 
         static ManagedThreads()
         {
@@ -125,7 +125,7 @@ namespace GSF.Threading
         {
             get
             {
-                System.Text.StringBuilder status = new StringBuilder();
+                StringBuilder status = new StringBuilder();
                 ManagedThread[] items = QueuedThreads;
                 int index = 0;
 

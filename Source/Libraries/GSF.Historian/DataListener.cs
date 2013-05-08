@@ -229,19 +229,19 @@ namespace GSF.Historian
         private string m_settingsCategory;
         private long m_totalBytesReceived;
         private long m_totalPacketsReceived;
-        private List<IDataPoint> m_data;
-        private ConcurrentDictionary<IClient, Guid> m_clientIDs;
+        private readonly List<IDataPoint> m_data;
+        private readonly ConcurrentDictionary<IClient, Guid> m_clientIDs;
         private bool m_listenerStopping;
         private Thread m_startupThread;
-        private AutoResetEvent m_initializeWaitHandle;
+        private readonly AutoResetEvent m_initializeWaitHandle;
         private bool m_disposed;
         private bool m_initialized;
         // WithEvents
-        private PacketParser m_parser;
-        private TcpClient m_tcpClient;
-        private UdpClient m_udpClient;
-        private TcpServer m_tcpServer;
-        private TcpClient m_dataInitClient;
+        private readonly PacketParser m_parser;
+        private readonly TcpClient m_tcpClient;
+        private readonly UdpClient m_udpClient;
+        private readonly TcpServer m_tcpServer;
+        private readonly TcpClient m_dataInitClient;
 
         #endregion
 
@@ -251,7 +251,6 @@ namespace GSF.Historian
         /// Initializes a new instance of the <see cref="DataListener"/> class.
         /// </summary>
         public DataListener()
-            : base()
         {
             m_id = DefaultID;
             m_server = DefaultServer;

@@ -58,7 +58,7 @@ namespace GSF.Historian.Packets
         private Func<IEnumerable<byte[]>> m_processHandler;
         private Func<IEnumerable<byte[]>> m_preProcessHandler;
         private ICommonHeader<short> m_commonHeader;
-        private short m_typeID;
+        private readonly short m_typeID;
         private Guid m_source;
 
         #endregion

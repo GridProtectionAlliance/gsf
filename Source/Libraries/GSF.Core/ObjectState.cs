@@ -37,7 +37,7 @@ namespace GSF
     /// A serializable class that can be used to track the current and previous state of an object.
     /// </summary>
     /// <typeparam name="TState">Type of the state to track.</typeparam>
-    [Serializable()]
+    [Serializable]
     public class ObjectState<TState>
     {
         #region [ Members ]

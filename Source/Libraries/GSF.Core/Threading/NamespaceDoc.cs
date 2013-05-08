@@ -31,7 +31,7 @@ namespace GSF.Threading
     /// Contains classes used to define managed threads that can be used for debugging threads by providing 
     /// automatic tracking, total thread runtime and the ability to run threads in alternate execution contexts.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

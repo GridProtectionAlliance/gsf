@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataFrameBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -27,7 +27,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Runtime.Serialization;
 
@@ -36,7 +35,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the protocol independent common implementation of any <see cref="IDataFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class DataFrameBase : ChannelFrameBase<IDataCell>, IDataFrame
     {
         #region [ Members ]

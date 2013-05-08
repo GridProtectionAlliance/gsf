@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ServerBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -71,7 +71,7 @@ namespace GSF.Communication
     /// Base class for a server involved in server-client communication.
     /// </summary>
     [ToolboxBitmap(typeof(ServerBase))]
-    public abstract partial class ServerBase : Component, IServer, ISupportInitialize, IPersistSettings
+    public abstract class ServerBase : Component, IServer, ISupportInitialize, IPersistSettings
     {
         #region [ Members ]
 
@@ -240,9 +240,9 @@ namespace GSF.Communication
         private string m_settingsCategory;
         private Encoding m_textEncoding;
         private ServerState m_currentState;
-        private TransportProtocol m_transportProtocol;
-        private Guid m_serverID;
-        private ConcurrentDictionary<Guid, int> m_clientIDs;
+        private readonly TransportProtocol m_transportProtocol;
+        private readonly Guid m_serverID;
+        private readonly ConcurrentDictionary<Guid, int> m_clientIDs;
         private Ticks m_stopTime;
         private Ticks m_startTime;
         private bool m_initialized;
@@ -256,7 +256,6 @@ namespace GSF.Communication
         /// Initializes a new instance of the server.
         /// </summary>
         protected ServerBase()
-            : base()
         {
             m_serverID = Guid.NewGuid();
             m_clientIDs = new ConcurrentDictionary<Guid, int>();

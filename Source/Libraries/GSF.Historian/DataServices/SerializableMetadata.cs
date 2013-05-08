@@ -212,7 +212,7 @@ namespace GSF.Historian.DataServices
         /// <summary>
         /// Gets or sets the <see cref="SerializableMetadataRecord"/>s contained in the <see cref="SerializableMetadata"/>.
         /// </summary>
-        [XmlArray(), DataMember()]
+        [XmlArray, DataMember]
         public SerializableMetadataRecord[] MetadataRecords { get; set; }
 
         #endregion

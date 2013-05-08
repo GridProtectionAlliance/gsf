@@ -23,12 +23,12 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
 using System;
 using System.Data;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring
 {
@@ -49,7 +49,7 @@ namespace DataQualityMonitoring
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
-        IMeasurement m_sourceMeasurement;
+        readonly IMeasurement m_sourceMeasurement;
 
         #endregion
 
@@ -89,7 +89,7 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets or sets the <see cref="IMeasurement.Key"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 0)]
+        [XmlAttribute, DataMember(Order = 0)]
         public string Key
         {
             get;
@@ -99,7 +99,7 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets or sets the <see cref="ITimeSeriesValue.ID"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 1)]
+        [XmlAttribute, DataMember(Order = 1)]
         public string SignalID
         {
             get;
@@ -109,7 +109,7 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets or sets the <see cref="IMeasurement.AdjustedValue"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 2)]
+        [XmlAttribute, DataMember(Order = 2)]
         public double Value
         {
             get;
@@ -119,7 +119,7 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets or sets the <see cref="ITimeSeriesValue.Timestamp"/> in <see cref="DateTime"/> string format.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 3)]
+        [XmlAttribute, DataMember(Order = 3)]
         public string Timestamp
         {
             get;
@@ -129,7 +129,7 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets or sets the signal type of the <see cref="IMeasurement"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 4)]
+        [XmlAttribute, DataMember(Order = 4)]
         public string SignalType
         {
             get;
@@ -139,7 +139,7 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Gets or sets the device of the <see cref="IMeasurement"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 5)]
+        [XmlAttribute, DataMember(Order = 5)]
         public string Device
         {
             get;

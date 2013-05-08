@@ -266,7 +266,7 @@ namespace PowerCalculations.EventDetection
             m_currentAngle = InputMeasurementKeys[index];
 
             // Make sure only these phasor measurements are used as input
-            InputMeasurementKeys = new MeasurementKey[] { m_voltageMagnitude, m_voltageAngle, m_currentMagnitude, m_currentAngle };
+            InputMeasurementKeys = new[] { m_voltageMagnitude, m_voltageAngle, m_currentMagnitude, m_currentAngle };
 
             // Validate output measurements
             if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)

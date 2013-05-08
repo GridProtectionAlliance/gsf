@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using System.ComponentModel;
 
 namespace TestingAdapters
 {
@@ -75,8 +75,8 @@ namespace TestingAdapters
             // we expose I/O demands for an undefined measurement. Leaving values assigning to null would mean
             // that this adapter desires a full "broadcast" of all data - and hence routing demands from all.
             // User can override if desired using standard connection string parameters for I/O measurements.
-            InputMeasurementKeys = new MeasurementKey[] { MeasurementKey.Undefined };
-            OutputMeasurements = new Measurement[] { Measurement.Undefined };
+            InputMeasurementKeys = new[] { MeasurementKey.Undefined };
+            OutputMeasurements = new[] { Measurement.Undefined };
 
             base.Initialize();
         }

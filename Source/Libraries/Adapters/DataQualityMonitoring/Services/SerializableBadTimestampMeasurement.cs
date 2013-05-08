@@ -23,11 +23,11 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -44,7 +44,6 @@ namespace DataQualityMonitoring.Services
         /// Initializes a new instance of the <see cref="SerializableBadTimestampMeasurement"/> class.
         /// </summary>
         public SerializableBadTimestampMeasurement()
-            : base()
         {
         }
 
@@ -66,7 +65,7 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the arrival time of the <see cref="IMeasurement"/>.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 6)]
+        [XmlAttribute, DataMember(Order = 6)]
         public string TimeOfArrival { get; set; }
 
         #endregion

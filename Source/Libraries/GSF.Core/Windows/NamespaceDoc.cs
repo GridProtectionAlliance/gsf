@@ -30,7 +30,7 @@ namespace GSF.Windows
     /// <summary>
     /// Contains classes and extension functions related to .NET Windows-based platforms such as Windows Forms and WPF.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

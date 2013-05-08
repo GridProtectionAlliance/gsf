@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Mail.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -351,7 +351,7 @@ namespace GSF.Net.Smtp
             emailMessage.IsBodyHtml = m_isBodyHtml;
 
             // Add the specified To recipients for the mail message.
-            foreach (string toRecipient in m_toRecipients.Split(new char[] { ';', ',' }))
+            foreach (string toRecipient in m_toRecipients.Split(new[] { ';', ',' }))
             {
                 emailMessage.To.Add(toRecipient.Trim());
             }
@@ -359,7 +359,7 @@ namespace GSF.Net.Smtp
             if (!string.IsNullOrEmpty(m_ccRecipients))
             {
                 // Add the specified CC recipients for the mail message.
-                foreach (string ccRecipient in m_ccRecipients.Split(new char[] { ';', ',' }))
+                foreach (string ccRecipient in m_ccRecipients.Split(new[] { ';', ',' }))
                 {
                     emailMessage.CC.Add(ccRecipient.Trim());
                 }
@@ -368,7 +368,7 @@ namespace GSF.Net.Smtp
             if (!string.IsNullOrEmpty(m_bccRecipients))
             {
                 // Add the specified BCC recipients for the mail message.
-                foreach (string bccRecipient in m_bccRecipients.Split(new char[] { ';', ',' }))
+                foreach (string bccRecipient in m_bccRecipients.Split(new[] { ';', ',' }))
                 {
                     emailMessage.Bcc.Add(bccRecipient.Trim());
                 }
@@ -377,7 +377,7 @@ namespace GSF.Net.Smtp
             if (!string.IsNullOrEmpty(m_attachments))
             {
                 // Attach the specified files to the mail message.
-                foreach (string attachment in m_attachments.Split(new char[] { ';', ',' }))
+                foreach (string attachment in m_attachments.Split(new[] { ';', ',' }))
                 {
                     // Create the file attachment for the mail message.
                     Attachment data = new Attachment(attachment.Trim(), MediaTypeNames.Application.Octet);

@@ -30,7 +30,7 @@ namespace GSF.NumericalAnalysis
     /// <summary>
     /// Contains classes and extension functions used to calculate common numerical operations such as curve fits and standard deviations.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

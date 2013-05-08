@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  AnalogDefinitionBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -36,7 +36,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of an <see cref="IAnalogValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class AnalogDefinitionBase : ChannelDefinitionBase, IAnalogDefinition
     {
         #region [ Members ]
@@ -137,7 +137,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 

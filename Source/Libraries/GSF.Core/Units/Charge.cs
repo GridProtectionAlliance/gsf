@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents an electric charge measurement, in coulombs (i.e., ampere-seconds), as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a charge in coulombs; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a charge in coulombs; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other charge representations, specifically
     /// ampere-hours, abcoulomb (a.k.a., an electromagnetic unit), statcoulomb (a.k.a., electrostatic unit or franklin), atomic unit of charge
     /// and faraday. Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
@@ -87,7 +87,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Charge : IComparable, IFormattable, IConvertible, IComparable<Charge>, IComparable<Double>, IEquatable<Charge>, IEquatable<Double>
     {
         #region [ Members ]
@@ -104,7 +104,7 @@ namespace GSF.Units
         private const double FaradayFactor = 96485.3383D;
 
         // Fields
-        private double m_value; // Charge value stored in coulombs
+        private readonly double m_value; // Charge value stored in coulombs
 
         #endregion
 
@@ -729,7 +729,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Charge"/> object as the left hand operand.</param>
         /// <param name="value2">A <see cref="Charge"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> as the result.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Charge value1, Charge value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

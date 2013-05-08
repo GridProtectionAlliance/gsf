@@ -23,12 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.IO;
-using GSF.Parsing;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Transport;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -38,6 +32,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using GSF;
+using GSF.IO;
+using GSF.Parsing;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Transport;
+using SerializationFormat = GSF.SerializationFormat;
 
 namespace AdoAdapters
 {
@@ -50,7 +51,7 @@ namespace AdoAdapters
         #region [ Members ]
 
         // Fields
-        private Dictionary<string, string> m_fieldNames;
+        private readonly Dictionary<string, string> m_fieldNames;
         private string m_dbTableName;
         private string m_dbConnectionString;
         private string m_dataProviderString;
@@ -410,7 +411,7 @@ namespace AdoAdapters
                                 throw new EndOfStreamException();
 
                             // Deserialize the signal index cache
-                            signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer, GSF.SerializationFormat.Binary);
+                            signalIndexCache = Serialization.Deserialize<SignalIndexCache>(buffer, SerializationFormat.Binary);
 
                             // Read the size of each compact measurement from the file
                             if (data.Read(buffer, 0, 4) != 4)
@@ -580,10 +581,10 @@ namespace AdoAdapters
                                             }
                                             else if (valueType == typeof(string))
                                             {
-                                                MethodInfo parseMethod = propertyType.GetMethod("Parse", new Type[] { typeof(string) });
+                                                MethodInfo parseMethod = propertyType.GetMethod("Parse", new[] { typeof(string) });
 
                                                 if (parseMethod != null && parseMethod.IsStatic)
-                                                    property.SetValue(measurement, parseMethod.Invoke(null, new object[] { value }), null);
+                                                    property.SetValue(measurement, parseMethod.Invoke(null, new[] { value }), null);
                                             }
                                             else
                                             {
@@ -619,7 +620,7 @@ namespace AdoAdapters
 
                         using (FileStream data = File.OpenWrite(m_cacheFileName))
                         {
-                            byte[] signalIndexCacheImage = Serialization.Serialize(signalIndexCache, GSF.SerializationFormat.Binary);
+                            byte[] signalIndexCacheImage = Serialization.Serialize(signalIndexCache, SerializationFormat.Binary);
                             int compactMeasurementSize = (new CompactMeasurement(signalIndexCache)).BinaryLength;
 
                             // Write the signal index cache image size to the file

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommonFrameHeader.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -32,14 +32,13 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Represents the common header for all IEEE 1344 frames of data.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class CommonFrameHeader : ICommonHeader<FrameType>, ISerializable
     {
         #region [ Members ]
@@ -416,10 +415,10 @@ namespace GSF.PhasorProtocols.Ieee1344
         /// <summary>
         /// Validates the CRC-CCITT for the specified IEEE 1344 buffer.
         /// </summary>
-        /// <returns>A <see cref="Boolean"/> indicating whether the checksum is valid.</returns>
-        /// <param name="buffer">A <see cref="Byte"/> array buffer.</param>
-        /// <param name="length">An <see cref="Int32"/> value as the number of bytes to read for the checksum.</param>
-        /// <param name="startIndex">An <see cref="Int32"/> value as the start index into being reading the value at.</param>
+        /// <returns>A <see cref="bool"/> indicating whether the checksum is valid.</returns>
+        /// <param name="buffer">A <see cref="byte"/> array buffer.</param>
+        /// <param name="length">An <see cref="int"/> value as the number of bytes to read for the checksum.</param>
+        /// <param name="startIndex">An <see cref="int"/> value as the start index into being reading the value at.</param>
         public static bool ChecksumIsValid(byte[] buffer, int startIndex, int length)
         {
             int sumLength = length - 2;

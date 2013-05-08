@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FileClient.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -40,8 +40,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
+using System.Timers;
 using GSF.Configuration;
 using GSF.IO;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Communication
 {
@@ -209,9 +211,9 @@ namespace GSF.Communication
         private FileMode m_fileOpenMode;
         private FileShare m_fileShareMode;
         private FileAccess m_fileAccessMode;
-        private TransportProvider<FileStream> m_fileClient;
+        private readonly TransportProvider<FileStream> m_fileClient;
         private Dictionary<string, string> m_connectData;
-        private System.Timers.Timer m_receiveDataTimer;
+        private readonly Timer m_receiveDataTimer;
         private ManualResetEvent m_connectionHandle;
 #if ThreadTracking
         private ManagedThread m_connectionThread;
@@ -247,7 +249,7 @@ namespace GSF.Communication
             m_fileShareMode = DefaultFileShareMode;
             m_fileAccessMode = DefaultFileAccessMode;
             m_fileClient = new TransportProvider<FileStream>();
-            m_receiveDataTimer = new System.Timers.Timer();
+            m_receiveDataTimer = new Timer();
             m_receiveDataTimer.Elapsed += m_receiveDataTimer_Elapsed;
         }
 
@@ -776,7 +778,7 @@ namespace GSF.Communication
             }
         }
 
-        private void m_receiveDataTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_receiveDataTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             ReadData();
         }

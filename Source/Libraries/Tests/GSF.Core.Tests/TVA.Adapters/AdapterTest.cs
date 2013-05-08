@@ -38,9 +38,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
+using System;
 using GSF.Adapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 
 namespace GSF.Core.Tests
 {    
@@ -49,11 +49,11 @@ namespace GSF.Core.Tests
     ///This is a test class for AdapterTest and is intended
     ///to contain all AdapterTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class AdapterTest : IDisposable
     {
         #region DISPOSE
-        private bool isDisposed = false;
+        private bool isDisposed;
         ~AdapterTest()
         {
             Dispose(false);
@@ -113,14 +113,14 @@ namespace GSF.Core.Tests
         //}
         //
         //Use TestInitialize to run code before running each test
-        [TestInitialize()]
+        [TestInitialize]
         public void MyTestInitialize()
         {
             target = new Adapter();
         }
         
         //Use TestCleanup to run code after each test has run
-        [TestCleanup()]
+        [TestCleanup]
         public void MyTestCleanup()
         {
             target.Dispose();
@@ -132,7 +132,7 @@ namespace GSF.Core.Tests
         /// A test for Adapter Constructor
         /// Initializes a new instance of the <see cref="Adapter"/>.
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void AdapterConstructorTest()
         {  
             Assert.IsInstanceOfType(target, typeof(Adapter));
@@ -142,7 +142,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for Dispose
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void DisposeTest()
         {     
@@ -156,7 +156,7 @@ namespace GSF.Core.Tests
         /// A test for Initialize
         /// Initializes the <see cref="Adapter"/>.
         /// </summary> 
-        [TestMethod()]
+        [TestMethod]
         public void InitializeTest()
         { 
             try
@@ -169,7 +169,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for LoadSettings
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void LoadSettingsTest()
         {
             try
@@ -182,7 +182,7 @@ namespace GSF.Core.Tests
         /// A test for OnDisposed
         /// Raises the <see cref="Disposed"/> event.
         /// </summary>       
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void OnDisposedTest()
         {        
@@ -195,7 +195,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for OnExecutionException
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void OnExecutionExceptionTest()
         {
@@ -210,7 +210,7 @@ namespace GSF.Core.Tests
         /// <param name="updateType"><see cref="UpdateType"/> to send to <see cref="StatusUpdate"/> event.</param>
         /// <param name="updateMessage">Update message to send to <see cref="StatusUpdate"/> event.</param>
         /// <param name="args">Arguments to be used when formatting the <paramref name="updateMessage"/>.</param>       
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void OnStatusUpdateTest()
         {
@@ -224,7 +224,7 @@ namespace GSF.Core.Tests
         /// Saves <see cref="Adapter"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>        
-        [TestMethod()]
+        [TestMethod]
         public void SaveSettingsTest()
         {
             target.PersistSettings = true;
@@ -238,7 +238,7 @@ namespace GSF.Core.Tests
         /// A test for Domain
         /// Gets the <see cref="AppDomain"/> in which the <see cref="Adapter"/> is executing.
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void DomainTest()
         {
             AppDomain actual;
@@ -250,7 +250,7 @@ namespace GSF.Core.Tests
         /// A test for Enabled
         /// Gets or sets a boolean value that indicates whether the <see cref="Adapter"/> is currently enabled.
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void EnabledTest()
         {       
             bool expected = false;
@@ -267,7 +267,7 @@ namespace GSF.Core.Tests
         /// <remarks>
         /// This can be used to update the <see cref="Adapter"/> when changes are made to the file where it is housed.
         /// </remarks> 
-        [TestMethod()]
+        [TestMethod]
         public void HostFileTest()
         {           
             string expected = "Host File"; 
@@ -289,7 +289,7 @@ namespace GSF.Core.Tests
         /// This method always returns <c><see cref="Double.NaN"/></c> under Mono deployments.
         /// </para>
         /// </remarks> 
-        [TestMethod()]
+        [TestMethod]
         public void MemoryUsageTest()
         {          
             double actual;
@@ -304,7 +304,7 @@ namespace GSF.Core.Tests
         /// A test for Name
         /// Gets the unique identifier of the <see cref="Adapter"/>.
         /// </summary> 
-        [TestMethod()]
+        [TestMethod]
         public void NameTest()
         {           
             string actual;
@@ -316,7 +316,7 @@ namespace GSF.Core.Tests
         /// A test for PersistSettings
         /// Gets or sets a boolean value that indicates whether <see cref="Adapter"/> settings are to be saved to the config file.
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void PersistSettingsTest()
         {       
             bool expected = false;  
@@ -333,7 +333,7 @@ namespace GSF.Core.Tests
         /// <remarks>
         /// This method always returns <c><see cref="Double.NaN"/></c> under Mono deployments.
         /// </remarks> 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessorUsageTest()
         {
             double actual;
@@ -348,7 +348,7 @@ namespace GSF.Core.Tests
         /// Saves <see cref="Adapter"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception> 
-        [TestMethod()]
+        [TestMethod]
         public void SettingsCategoryTest()
         {
            
@@ -363,7 +363,7 @@ namespace GSF.Core.Tests
         /// A test for Status
         /// Gets the descriptive status of the <see cref="Adapter"/>.
         /// </summary> 
-        [TestMethod()]
+        [TestMethod]
         public void StatusTest()
         {          
             string actual;
@@ -378,7 +378,7 @@ namespace GSF.Core.Tests
         /// <remarks>
         /// This can be used for looking up the <see cref="TypeName"/> of the <see cref="Adapter"/> when deserializing it using <see cref="XmlSerializer"/>.
         /// </remarks> 
-        [TestMethod()]
+        [TestMethod]
         public void TypeNameTest()
         {
             string expected = "TVA.Adapters.Adapter, TVA.Core"; 

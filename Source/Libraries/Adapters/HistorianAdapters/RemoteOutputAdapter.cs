@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  RemoteOutputAdapter.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -40,12 +40,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using System.Threading;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using GSF;
 using GSF.Communication;
 using GSF.Historian.Packets;
 using GSF.Parsing;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace HistorianAdapters
 {
@@ -74,9 +74,9 @@ namespace HistorianAdapters
         private bool m_outputIsForArchive;
         private bool m_throttleTransmission;
         private int m_samplesPerTransmission;
-        private TcpClient m_historianPublisher;
+        private readonly TcpClient m_historianPublisher;
         private byte[] m_publisherBuffer;
-        private ManualResetEvent m_publisherWaitHandle;
+        private readonly ManualResetEvent m_publisherWaitHandle;
         private Action<IMeasurement[], int, int> m_publisherDelegate;
         private bool m_publisherDisconnecting;
         private long m_measurementsPublished;
@@ -90,7 +90,6 @@ namespace HistorianAdapters
         /// Initializes a new instance of the <see cref="RemoteOutputAdapter"/> class.
         /// </summary>
         public RemoteOutputAdapter()
-            : base()
         {
             m_historianPublisher = new TcpClient();
             m_publisherWaitHandle = new ManualResetEvent(false);

@@ -175,7 +175,7 @@ namespace GSF.IO.Compression
             if (value == null)
                 throw new ArgumentNullException("value cannot be null", "value");
 
-            bufferLength = Word.AlignDoubleWord(value.BinaryLength);
+            bufferLength = value.BinaryLength.AlignDoubleWord();
             buffer = new byte[bufferLength];
 
             fixed (byte* start = buffer)

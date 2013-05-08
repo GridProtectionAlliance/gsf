@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommandCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -36,7 +36,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the protocol independent common implementation of an element of extended data for cells in a <see cref="ICommandFrame"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class CommandCell : ChannelCellBase, ICommandCell
     {
         #region [ Members ]
@@ -52,7 +52,7 @@ namespace GSF.PhasorProtocols
         /// Creates a new <see cref="CommandCell"/> from specified parameters.
         /// </summary>
         /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="CommandCell"/>.</param>
-        /// <param name="extendedDataByte">Extended data <see cref="Byte"/> that represents this <see cref="CommandCell"/>.</param>
+        /// <param name="extendedDataByte">Extended data <see cref="byte"/> that represents this <see cref="CommandCell"/>.</param>
         public CommandCell(ICommandFrame parent, byte extendedDataByte)
             : base(parent, 0)
         {
@@ -91,7 +91,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets extended data <see cref="Byte"/> that represents this <see cref="CommandCell"/>.
+        /// Gets or sets extended data <see cref="byte"/> that represents this <see cref="CommandCell"/>.
         /// </summary>
         public virtual byte ExtendedDataByte
         {
@@ -123,7 +123,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                return new byte[] { m_extendedDataByte };
+                return new[] { m_extendedDataByte };
             }
         }
 

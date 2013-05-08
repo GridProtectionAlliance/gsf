@@ -29,12 +29,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -284,8 +284,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in applicationRoleTable.Rows)
                 {
-                    applicationRoleList.Add(new ApplicationRole()
-                    {
+                    applicationRoleList.Add(new ApplicationRole
+                        {
                         ID = database.Guid(row, "ID"),  //Guid.Parse(row.Field<object>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),

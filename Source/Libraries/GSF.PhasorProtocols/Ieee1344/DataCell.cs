@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,7 +35,7 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DataCell : DataCellBase
     {
         #region [ Constructors ]
@@ -52,10 +51,10 @@ namespace GSF.PhasorProtocols.Ieee1344
             // Define new parsing state which defines constructors for key data values
             State = new DataCellParsingState(
                 configurationCell,
-                Ieee1344.PhasorValue.CreateNewValue,
+                PhasorValue.CreateNewValue,
                 Ieee1344.FrequencyValue.CreateNewValue,
                 null, // IEEE 1344 doesn't define analogs
-                Ieee1344.DigitalValue.CreateNewValue);
+                DigitalValue.CreateNewValue);
         }
 
         /// <summary>
@@ -186,7 +185,7 @@ namespace GSF.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (SynchronizationIsValid ? GSF.PhasorProtocols.DataSortingType.ByTimestamp : GSF.PhasorProtocols.DataSortingType.ByArrival);
+                return (SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
             }
             set
             {

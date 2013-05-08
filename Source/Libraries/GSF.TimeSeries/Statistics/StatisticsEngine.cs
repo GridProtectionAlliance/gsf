@@ -23,11 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Diagnostics;
-using GSF.IO;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -37,6 +32,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Timers;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.Diagnostics;
+using GSF.IO;
+using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Statistics
 {
@@ -73,10 +74,10 @@ namespace GSF.TimeSeries.Statistics
 
 
         // Fields
-        private object m_statisticsLock;
-        private List<Statistic> m_statistics;
-        private System.Timers.Timer m_statisticCalculationTimer;
-        private PerformanceMonitor m_performanceMonitor;
+        private readonly object m_statisticsLock;
+        private readonly List<Statistic> m_statistics;
+        private Timer m_statisticCalculationTimer;
+        private readonly PerformanceMonitor m_performanceMonitor;
         private int m_lastStatisticCalculationCount;
         private bool m_disposed;
 
@@ -91,7 +92,7 @@ namespace GSF.TimeSeries.Statistics
         {
             m_statisticsLock = new object();
             m_statistics = new List<Statistic>();
-            m_statisticCalculationTimer = new System.Timers.Timer();
+            m_statisticCalculationTimer = new Timer();
             m_performanceMonitor = new PerformanceMonitor();
         }
 
@@ -346,7 +347,7 @@ namespace GSF.TimeSeries.Statistics
             }
         }
 
-        private void StatisticCalculationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void StatisticCalculationTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             try
             {
@@ -451,8 +452,8 @@ namespace GSF.TimeSeries.Statistics
                 if ((object)statistic != null)
                 {
                     // Calculate the current value of the statistic measurement
-                    return new Measurement()
-                    {
+                    return new Measurement
+                        {
                         ID = signalID,
                         Key = MeasurementKey.Parse(measurement["ID"].ToString(), signalID),
                         TagName = measurement["PointTag"].ToNonNullString(),
@@ -510,7 +511,7 @@ namespace GSF.TimeSeries.Statistics
         #region [ Static ]
 
         // Static Fields
-        private static List<StatisticSource> s_statisticSources;
+        private static readonly List<StatisticSource> s_statisticSources;
         private static int? s_statSignalTypeID;
         private static int? s_statHistorianID;
 
@@ -549,8 +550,8 @@ namespace GSF.TimeSeries.Statistics
             StatisticSource sourceInfo;
             IAdapter adapter;
 
-            sourceInfo = new StatisticSource()
-            {
+            sourceInfo = new StatisticSource
+                {
                 Source = source,
                 SourceName = sourceName,
                 SourceCategory = sourceCategory,

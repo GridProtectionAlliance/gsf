@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  MultiProtocolFrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -71,18 +71,27 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Timers;
 using GSF.Communication;
 using GSF.IO;
 using GSF.Parsing;
+using GSF.PhasorProtocols.IeeeC37_118;
+using GSF.PhasorProtocols.Macrodyne;
+using GSF.PhasorProtocols.SelFastMessage;
 using GSF.TimeSeries;
 using GSF.Units;
+using CommandFrame = GSF.PhasorProtocols.IeeeC37_118.CommandFrame;
+using ConnectionParameters = GSF.PhasorProtocols.BpaPdcStream.ConnectionParameters;
+using FrameParser = GSF.PhasorProtocols.IeeeC37_118.FrameParser;
 using TcpClient = GSF.Communication.TcpClient;
+using Timer = System.Timers.Timer;
 using UdpClient = GSF.Communication.UdpClient;
 
 // Ignore warnings about unused events that are required by IClient
@@ -947,7 +956,7 @@ namespace GSF.PhasorProtocols
             public WaitHandle[] MulticastAsync(byte[] data, int offset, int length)
             {
                 if ((object)m_tcpServer != null)
-                    return new WaitHandle[] { m_tcpServer.SendToAsync(m_clientID, data, offset, length) };
+                    return new[] { m_tcpServer.SendToAsync(m_clientID, data, offset, length) };
 
                 return new WaitHandle[0];
             }
@@ -2077,7 +2086,7 @@ namespace GSF.PhasorProtocols
         private IPAddress m_receiveFromAddress;
         private IPAddress m_multicastServerAddress;
         private PrecisionInputTimer m_inputTimer;
-        private System.Timers.Timer m_rateCalcTimer;
+        private Timer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
         private long m_dataStreamStartTime;
         private bool m_keepCommandChannelOpen;
@@ -2131,7 +2140,7 @@ namespace GSF.PhasorProtocols
             m_allowedParsingExceptions = DefaultAllowedParsingExceptions;
             m_parsingExceptionWindow = DefaultParsingExceptionWindow;
             m_keepCommandChannelOpen = true;
-            m_rateCalcTimer = new System.Timers.Timer();
+            m_rateCalcTimer = new Timer();
             m_streamStopDataHandle = new ManualResetEventSlim(false);
 
             m_phasorProtocol = PhasorProtocol.IeeeC37_118V1;
@@ -2178,19 +2187,19 @@ namespace GSF.PhasorProtocols
                 // Setup protocol specific connection parameters, for those protocols that have them...
                 switch (value)
                 {
-                    case GSF.PhasorProtocols.PhasorProtocol.BpaPdcStream:
-                        m_connectionParameters = new BpaPdcStream.ConnectionParameters();
+                    case PhasorProtocol.BpaPdcStream:
+                        m_connectionParameters = new ConnectionParameters();
                         break;
-                    case GSF.PhasorProtocols.PhasorProtocol.FNet:
+                    case PhasorProtocol.FNet:
                         m_connectionParameters = new FNet.ConnectionParameters();
                         break;
-                    case GSF.PhasorProtocols.PhasorProtocol.SelFastMessage:
+                    case PhasorProtocol.SelFastMessage:
                         m_connectionParameters = new SelFastMessage.ConnectionParameters();
                         break;
-                    case GSF.PhasorProtocols.PhasorProtocol.Iec61850_90_5:
+                    case PhasorProtocol.Iec61850_90_5:
                         m_connectionParameters = new Iec61850_90_5.ConnectionParameters();
                         break;
-                    case GSF.PhasorProtocols.PhasorProtocol.Macrodyne:
+                    case PhasorProtocol.Macrodyne:
                         m_connectionParameters = new Macrodyne.ConnectionParameters();
                         break;
                     default:
@@ -2454,7 +2463,7 @@ namespace GSF.PhasorProtocols
             set
             {
                 // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
-                if (value && (object)m_inputTimer == null && !System.Diagnostics.Debugger.IsAttached)
+                if (value && (object)m_inputTimer == null && !Debugger.IsAttached)
                     m_inputTimer = AttachToInputTimer(m_definedFrameRate);
                 else if (!value && (object)m_inputTimer != null)
                     DetachFromInputTimer(ref m_inputTimer);
@@ -2579,10 +2588,10 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                return (m_phasorProtocol == GSF.PhasorProtocols.PhasorProtocol.IeeeC37_118V2 ||
-                        m_phasorProtocol == GSF.PhasorProtocols.PhasorProtocol.IeeeC37_118V1 ||
-                        m_phasorProtocol == GSF.PhasorProtocols.PhasorProtocol.IeeeC37_118D6 ||
-                        m_phasorProtocol == GSF.PhasorProtocols.PhasorProtocol.Ieee1344);
+                return (m_phasorProtocol == PhasorProtocol.IeeeC37_118V2 ||
+                        m_phasorProtocol == PhasorProtocol.IeeeC37_118V1 ||
+                        m_phasorProtocol == PhasorProtocol.IeeeC37_118D6 ||
+                        m_phasorProtocol == PhasorProtocol.Ieee1344);
             }
         }
 
@@ -3095,7 +3104,7 @@ namespace GSF.PhasorProtocols
                 m_rateCalcTimer.Enabled = true;
                 m_enabled = true;
             }
-            catch (System.Net.Sockets.SocketException ex)
+            catch (SocketException ex)
             {
                 Stop();
 
@@ -3125,10 +3134,10 @@ namespace GSF.PhasorProtocols
             {
                 case PhasorProtocol.IeeeC37_118V2:
                 case PhasorProtocol.IeeeC37_118V1:
-                    m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7);
+                    m_frameParser = new FrameParser(DraftRevision.Draft7);
                     break;
                 case PhasorProtocol.IeeeC37_118D6:
-                    m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6);
+                    m_frameParser = new FrameParser(DraftRevision.Draft6);
                     break;
                 case PhasorProtocol.Ieee1344:
                     m_frameParser = new Ieee1344.FrameParser();
@@ -3162,7 +3171,7 @@ namespace GSF.PhasorProtocols
                     m_frameParser = new BpaPdcStream.FrameParser();
 
                     // Check for BPA PDCstream protocol specific parameters in connection string
-                    BpaPdcStream.ConnectionParameters bpaPdcParameters = m_connectionParameters as BpaPdcStream.ConnectionParameters;
+                    ConnectionParameters bpaPdcParameters = m_connectionParameters as ConnectionParameters;
 
                     if ((object)bpaPdcParameters != null)
                     {
@@ -3212,7 +3221,7 @@ namespace GSF.PhasorProtocols
                     if ((object)selParameters != null)
                     {
                         if (settings.TryGetValue("messagePeriod", out setting))
-                            selParameters.MessagePeriod = (SelFastMessage.MessagePeriod)Enum.Parse(typeof(SelFastMessage.MessagePeriod), setting, true);
+                            selParameters.MessagePeriod = (MessagePeriod)Enum.Parse(typeof(MessagePeriod), setting, true);
                     }
                     break;
                 case PhasorProtocol.Macrodyne:
@@ -3223,7 +3232,7 @@ namespace GSF.PhasorProtocols
 
                     if ((object)macrodyneParameters != null)
                     {
-                        Macrodyne.ProtocolVersion protocolVersion;
+                        ProtocolVersion protocolVersion;
 
                         if (settings.TryGetValue("protocolVersion", out setting) && Enum.TryParse(setting, true, out protocolVersion))
                             macrodyneParameters.ProtocolVersion = protocolVersion;
@@ -3231,13 +3240,13 @@ namespace GSF.PhasorProtocols
                         // INI file name setting is required for 1690G protocol
                         if (settings.TryGetValue("iniFileName", out setting))
                             macrodyneParameters.ConfigurationFileName = FilePath.GetAbsolutePath(setting);
-                        else if (macrodyneParameters.ProtocolVersion == Macrodyne.ProtocolVersion.G && string.IsNullOrWhiteSpace(macrodyneParameters.ConfigurationFileName))
+                        else if (macrodyneParameters.ProtocolVersion == ProtocolVersion.G && string.IsNullOrWhiteSpace(macrodyneParameters.ConfigurationFileName))
                             throw new ArgumentException("Macrodyne INI filename setting (e.g., \"iniFileName=DEVICE_PDC.ini\") was not found. This setting is required for 1690G devices - frame parser initialization terminated.");
 
                         // Device label setting is required for 1690G protocol
                         if (settings.TryGetValue("deviceLabel", out setting))
                             macrodyneParameters.DeviceLabel = setting;
-                        else if (macrodyneParameters.ProtocolVersion == Macrodyne.ProtocolVersion.G && string.IsNullOrWhiteSpace(macrodyneParameters.DeviceLabel))
+                        else if (macrodyneParameters.ProtocolVersion == ProtocolVersion.G && string.IsNullOrWhiteSpace(macrodyneParameters.DeviceLabel))
                             throw new ArgumentException("Macrodyne device label setting (e.g., \"deviceLabel=DEVICE1\") was not found. This setting is required for 1690G devices - frame parser initialization terminated.");
 
                         if (settings.TryGetValue("refreshConfigFileOnChange", out setting))
@@ -3600,20 +3609,20 @@ namespace GSF.PhasorProtocols
                     // Only the IEEE, SEL Fast Message and Macrodyne protocols support commands
                     switch (m_phasorProtocol)
                     {
-                        case GSF.PhasorProtocols.PhasorProtocol.IeeeC37_118V2:
-                        case GSF.PhasorProtocols.PhasorProtocol.IeeeC37_118V1:
-                        case GSF.PhasorProtocols.PhasorProtocol.IeeeC37_118D6:
-                            commandFrame = new IeeeC37_118.CommandFrame(m_deviceID, command, 1);
+                        case PhasorProtocol.IeeeC37_118V2:
+                        case PhasorProtocol.IeeeC37_118V1:
+                        case PhasorProtocol.IeeeC37_118D6:
+                            commandFrame = new CommandFrame(m_deviceID, command, 1);
                             break;
-                        case GSF.PhasorProtocols.PhasorProtocol.Ieee1344:
+                        case PhasorProtocol.Ieee1344:
                             commandFrame = new Ieee1344.CommandFrame(m_deviceID, command);
                             break;
-                        case GSF.PhasorProtocols.PhasorProtocol.Iec61850_90_5:
+                        case PhasorProtocol.Iec61850_90_5:
                             commandFrame = new Iec61850_90_5.CommandFrame(m_deviceID, command, 1);
                             break;
-                        case GSF.PhasorProtocols.PhasorProtocol.SelFastMessage:
+                        case PhasorProtocol.SelFastMessage:
                             // Get defined message period
-                            SelFastMessage.MessagePeriod messagePeriod = SelFastMessage.MessagePeriod.DefaultRate;
+                            MessagePeriod messagePeriod = MessagePeriod.DefaultRate;
                             SelFastMessage.ConnectionParameters connectionParameters = m_connectionParameters as SelFastMessage.ConnectionParameters;
 
                             if ((object)connectionParameters != null)
@@ -3621,7 +3630,7 @@ namespace GSF.PhasorProtocols
 
                             commandFrame = new SelFastMessage.CommandFrame(command, messagePeriod);
                             break;
-                        case GSF.PhasorProtocols.PhasorProtocol.Macrodyne:
+                        case PhasorProtocol.Macrodyne:
                             commandFrame = new Macrodyne.CommandFrame(command);
                             break;
                         default:
@@ -3856,7 +3865,7 @@ namespace GSF.PhasorProtocols
                         Macrodyne.ConnectionParameters parameters = m_connectionParameters as Macrodyne.ConnectionParameters;
 
                         if ((object)parameters != null)
-                            sendCommand = (parameters.ProtocolVersion != Macrodyne.ProtocolVersion.G);
+                            sendCommand = (parameters.ProtocolVersion != ProtocolVersion.G);
 
                         if (sendCommand)
                             SendDeviceCommand(DeviceCommand.SendHeaderFrame);
@@ -3918,7 +3927,7 @@ namespace GSF.PhasorProtocols
         }
 
         // Calculate frame and data rates
-        private void m_rateCalcTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_rateCalcTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             double time = Ticks.ToSeconds(DateTime.Now.Ticks - m_dataStreamStartTime);
 

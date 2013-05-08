@@ -23,13 +23,13 @@
 //
 //******************************************************************************************************
 
-using GSF.IO.Compression;
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using GSF.IO.Compression;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
@@ -39,10 +39,6 @@ namespace GSF.Core.Tests
     [TestClass]
     public class PatternCompressorTest
     {
-        public PatternCompressorTest()
-        {
-        }
-
         private TestContext testContextInstance;
 
         /// <summary>
@@ -167,8 +163,8 @@ namespace GSF.Core.Tests
             MemoryStream buffer = new MemoryStream();
             Random rnd = new Random();
 
-            PatternCompressor compressor = new PatternCompressor()
-            {
+            PatternCompressor compressor = new PatternCompressor
+                {
                 CompressedBuffer = new byte[4 * TotalTestSampleSize],
                 CompressionStrength = compressionStrength
             };
@@ -222,8 +218,8 @@ namespace GSF.Core.Tests
 
             bool match = true;
 
-            PatternCompressor compressor = new PatternCompressor()
-            {
+            PatternCompressor compressor = new PatternCompressor
+                {
                 CompressedBuffer = new byte[4 * TotalTestSampleSize],
                 CompressionStrength = 31
             };
@@ -271,8 +267,8 @@ namespace GSF.Core.Tests
 
             bool match = true;
 
-            PatternCompressor compressor = new PatternCompressor()
-            {
+            PatternCompressor compressor = new PatternCompressor
+                {
                 CompressedBuffer = new byte[4 * TotalTestSampleSize],
                 CompressionStrength = 31
             };

@@ -23,12 +23,12 @@
 //
 //******************************************************************************************************
 
-using GSF.ErrorManagement;
-using GSF.Reflection;
-using GSF.TimeSeries.UI;
 using System;
 using System.Security.Principal;
 using System.Windows;
+using GSF.ErrorManagement;
+using GSF.Reflection;
+using GSF.TimeSeries.UI;
 
 namespace TsfManager
 {
@@ -41,9 +41,9 @@ namespace TsfManager
 
         // Fields
         private Guid m_nodeID;
-        private ErrorLogger m_errorLogger;
-        private Func<string> m_defaultErrorText;
-        private string m_title;
+        private readonly ErrorLogger m_errorLogger;
+        private readonly Func<string> m_defaultErrorText;
+        private readonly string m_title;
 
         #endregion
 

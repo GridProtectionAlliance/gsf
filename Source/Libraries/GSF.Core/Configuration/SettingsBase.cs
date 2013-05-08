@@ -38,14 +38,14 @@
 //
 //******************************************************************************************************
 
-using GSF.Reflection;
-using GSF.Security.Cryptography;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
 
 namespace GSF.Configuration
 {

@@ -32,7 +32,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF;
+using GSF.Parsing;
 using GSF.PhasorProtocols;
+using GSF.TimeSeries;
 
 namespace PhasorProtocolAdapters
 {
@@ -42,7 +44,7 @@ namespace PhasorProtocolAdapters
     /// <remarks>
     /// This class is used by <see cref="CommonPhasorServices"/> to return an error state when configuration could not be retrieved.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationErrorFrame : IConfigurationFrame
     {
         #region [ Constructors ]
@@ -193,7 +195,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        int GSF.Parsing.ISupportBinaryImage.BinaryLength
+        int ISupportBinaryImage.BinaryLength
         {
             get
             {
@@ -201,17 +203,17 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        int GSF.Parsing.ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
+        int ISupportBinaryImage.ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
             return 0;
         }
 
-        int GSF.Parsing.ISupportBinaryImage.GenerateBinaryImage(byte[] buffer, int startIndex)
+        int ISupportBinaryImage.GenerateBinaryImage(byte[] buffer, int startIndex)
         {
             return 0;
         }
 
-        GSF.TimeSeries.IMeasurement GSF.TimeSeries.IFrame.LastSortedMeasurement
+        IMeasurement IFrame.LastSortedMeasurement
         {
             get
             {
@@ -223,7 +225,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        ConcurrentDictionary<GSF.TimeSeries.MeasurementKey, GSF.TimeSeries.IMeasurement> GSF.TimeSeries.IFrame.Measurements
+        ConcurrentDictionary<MeasurementKey, IMeasurement> IFrame.Measurements
         {
             get
             {
@@ -231,7 +233,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        bool GSF.TimeSeries.IFrame.Published
+        bool IFrame.Published
         {
             get
             {
@@ -243,7 +245,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        int GSF.TimeSeries.IFrame.SortedMeasurements
+        int IFrame.SortedMeasurements
         {
             get
             {
@@ -255,7 +257,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        Ticks GSF.TimeSeries.IFrame.Timestamp
+        Ticks IFrame.Timestamp
         {
             get
             {
@@ -267,7 +269,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        Ticks GSF.TimeSeries.IFrame.ReceivedTimestamp
+        Ticks IFrame.ReceivedTimestamp
         {
             get
             {
@@ -279,7 +281,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        Ticks GSF.TimeSeries.IFrame.PublishedTimestamp
+        Ticks IFrame.PublishedTimestamp
         {
             get
             {
@@ -291,12 +293,12 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        bool IEquatable<GSF.TimeSeries.IFrame>.Equals(GSF.TimeSeries.IFrame other)
+        bool IEquatable<IFrame>.Equals(IFrame other)
         {
             return false;
         }
 
-        int IComparable<GSF.TimeSeries.IFrame>.CompareTo(GSF.TimeSeries.IFrame other)
+        int IComparable<IFrame>.CompareTo(IFrame other)
         {
             return 1;
         }

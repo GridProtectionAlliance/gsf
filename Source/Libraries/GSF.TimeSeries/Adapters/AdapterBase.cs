@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  AdapterBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -802,12 +802,12 @@ namespace GSF.TimeSeries.Adapters
             string setting;
 
             if (settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, setting);
             else
                 InputMeasurementKeys = new MeasurementKey[0];
 
             if (settings.TryGetValue("outputMeasurements", out setting))
-                OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, setting);
+                OutputMeasurements = ParseOutputMeasurements(DataSource, setting);
 
             if (settings.TryGetValue("measurementReportingInterval", out setting))
                 MeasurementReportingInterval = int.Parse(setting);
@@ -1375,8 +1375,8 @@ namespace GSF.TimeSeries.Adapters
                             foreach (MeasurementKey key in sourceIDKeys)
                             {
                                 // Create a new measurement for the provided field level information
-                                Measurement measurement = new Measurement()
-                                {
+                                Measurement measurement = new Measurement
+                                    {
                                     Key = key
                                 };
 
@@ -1610,8 +1610,8 @@ namespace GSF.TimeSeries.Adapters
                     {
                         id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
-                        measurement = new Measurement()
-                        {
+                        measurement = new Measurement
+                            {
                             ID = id,
                             Key = MeasurementKey.Parse(row["ID"].ToString(), id),
                             TagName = row["PointTag"].ToNonNullString(),
@@ -1691,8 +1691,8 @@ namespace GSF.TimeSeries.Adapters
                             }
 
                             // Create a new measurement for the provided field level information
-                            measurement = new Measurement()
-                            {
+                            measurement = new Measurement
+                                {
                                 ID = key.SignalID,
                                 Key = key,
                                 Adder = adder,

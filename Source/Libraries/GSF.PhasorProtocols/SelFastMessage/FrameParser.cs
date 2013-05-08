@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -28,7 +28,6 @@
 using System;
 using System.Text;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.SelFastMessage
 {
@@ -83,7 +82,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         public FrameParser(MessagePeriod messagePeriod)
         {
             // Initialize protocol synchronization bytes for this frame parser
-            base.ProtocolSyncBytes = new byte[] { Common.HeaderByte1, Common.HeaderByte2 };
+            base.ProtocolSyncBytes = new[] { Common.HeaderByte1, Common.HeaderByte2 };
 
             m_messagePeriod = messagePeriod;
         }
@@ -166,7 +165,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             }
             set
             {
-                SelFastMessage.ConnectionParameters parameters = value as SelFastMessage.ConnectionParameters;
+                ConnectionParameters parameters = value as ConnectionParameters;
 
                 if (parameters != null)
                 {
@@ -188,7 +187,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         public override void Start()
         {
             // We narrow down parsing types to just those needed...
-            base.Start(new Type[] { typeof(DataFrame) });
+            base.Start(new[] { typeof(DataFrame) });
         }
 
         /// <summary>

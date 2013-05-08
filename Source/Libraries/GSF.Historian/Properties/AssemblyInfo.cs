@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.Permissions;
 
 // Assembly identity attributes.
 [assembly: AssemblyVersion("2.0.45.0")]

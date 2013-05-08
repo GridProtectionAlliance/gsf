@@ -28,7 +28,6 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,8 +35,9 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
-using GSF.TimeSeries.UI.Modal;
 using GSF.TimeSeries.UI.Commands;
+using GSF.TimeSeries.UI.DataModels;
+using GSF.TimeSeries.UI.Modal;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {
@@ -143,7 +143,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                     ItemsKeys = ErrorLog.LoadKeys(null, SortMember, SortDirection);
 
                 pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
-                ItemsSource = DataModels.ErrorLog.Load(null, pageKeys);
+                ItemsSource = ErrorLog.Load(null, pageKeys);
             }
             catch (Exception ex)
             {

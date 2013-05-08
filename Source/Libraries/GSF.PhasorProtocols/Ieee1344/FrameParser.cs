@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -27,7 +27,6 @@
 
 using System;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Ieee1344
 {
@@ -131,7 +130,7 @@ namespace GSF.PhasorProtocols.Ieee1344
         public override void Start()
         {
             // We narrow down parsing types to just those needed...
-            base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame), typeof(HeaderFrame) });
+            base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame), typeof(HeaderFrame) });
         }
 
         /// <summary>

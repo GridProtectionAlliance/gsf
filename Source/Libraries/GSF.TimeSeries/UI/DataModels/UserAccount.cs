@@ -31,13 +31,13 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -343,8 +343,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in userAccountTable.Rows)
                 {
-                    userAccountList.Add(new UserAccount()
-                    {
+                    userAccountList.Add(new UserAccount
+                        {
                         ID = database.Guid(row, "ID"),
                         Name = row.Field<string>("Name"),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
@@ -363,7 +363,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     });
                 }
 
-                userAccountList.Insert(0, new UserAccount() { ID = Guid.Empty, ChangePasswordOn = DateTime.Now.AddDays(90) });
+                userAccountList.Insert(0, new UserAccount { ID = Guid.Empty, ChangePasswordOn = DateTime.Now.AddDays(90) });
 
                 return userAccountList;
             }

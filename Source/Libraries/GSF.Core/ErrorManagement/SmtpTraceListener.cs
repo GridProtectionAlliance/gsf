@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  SmtpTraceListener.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,11 +33,11 @@
 //
 //******************************************************************************************************
 
-using GSF.Net.Smtp;
 using System;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
+using GSF.Net.Smtp;
 
 namespace GSF.ErrorManagement
 {
@@ -65,9 +65,9 @@ namespace GSF.ErrorManagement
         #region [ Members ]
 
         // Fields
-        private string m_sender;
-        private string m_recipient;
-        private string m_smtpServer;
+        private readonly string m_sender;
+        private readonly string m_recipient;
+        private readonly string m_smtpServer;
 
         #endregion
 
@@ -117,7 +117,7 @@ namespace GSF.ErrorManagement
             messageBuilder.Append("This trace message was sent from the machine ");
             messageBuilder.Append(Dns.GetHostName());
             messageBuilder.Append(" (");
-            messageBuilder.Append(Dns.GetHostEntry(Dns.GetHostName()).AddressList[0].ToString());
+            messageBuilder.Append(Dns.GetHostEntry(Dns.GetHostName()).AddressList[0]);
             messageBuilder.Append(") at ");
             messageBuilder.Append(DateTime.Now);
 

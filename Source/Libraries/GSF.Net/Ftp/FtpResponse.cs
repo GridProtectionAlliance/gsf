@@ -121,8 +121,8 @@ namespace GSF.Net.Ftp
         public const int TransferAborted = 426;
 
         // Fields
-        private Queue m_responses;
-        private int m_code;
+        private readonly Queue m_responses;
+        private readonly int m_code;
 
         #endregion
 
@@ -202,7 +202,7 @@ namespace GSF.Net.Ftp
             int i = stream.ReadByte();
             if (i >= 0)
             {
-                char c = Encoding.ASCII.GetChars(new byte[] { (byte)i })[0];
+                char c = Encoding.ASCII.GetChars(new[] { (byte)i })[0];
                 toAppend.Append(c);
                 return c;
             }

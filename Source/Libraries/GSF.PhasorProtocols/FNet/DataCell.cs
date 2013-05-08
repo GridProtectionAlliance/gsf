@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,7 +37,7 @@ namespace GSF.PhasorProtocols.FNet
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DataCell : DataCellBase
     {
         #region [ Members ]
@@ -149,7 +149,7 @@ namespace GSF.PhasorProtocols.FNet
         {
             get
             {
-                return (SynchronizationIsValid ? GSF.PhasorProtocols.DataSortingType.ByTimestamp : GSF.PhasorProtocols.DataSortingType.ByArrival);
+                return (SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
             }
             set
             {

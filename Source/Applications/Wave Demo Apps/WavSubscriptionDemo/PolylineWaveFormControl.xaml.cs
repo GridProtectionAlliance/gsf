@@ -52,12 +52,12 @@ namespace NAudioWpfDemo
     /// </summary>
     public partial class PolylineWaveFormControl : UserControl, IWaveFormRenderer
     {
-        DispatcherTimer renderTimer;
+        readonly DispatcherTimer renderTimer;
         ConcurrentQueue<float> maxValues;
         ConcurrentQueue<float> minValues;
 
-        Polyline topLine = new Polyline();
-        Polyline bottomLine = new Polyline();
+        readonly Polyline topLine = new Polyline();
+        readonly Polyline bottomLine = new Polyline();
 
         int renderPosition;
         double yTranslate = 40;
@@ -97,7 +97,7 @@ namespace NAudioWpfDemo
         {
             base.OnPropertyChanged(e);
 
-            if (e.Property == UserControl.ForegroundProperty)
+            if (e.Property == ForegroundProperty)
             {
                 topLine.Stroke = e.NewValue as Brush;
                 bottomLine.Stroke = e.NewValue as Brush;
@@ -116,7 +116,7 @@ namespace NAudioWpfDemo
 
         void RenderTimer_Tick(object sender, EventArgs e)
         {
-            if (Visibility != System.Windows.Visibility.Visible)
+            if (Visibility != Visibility.Visible)
             {
                 renderTimer.Stop();
             }
@@ -159,7 +159,7 @@ namespace NAudioWpfDemo
 
         public void AddValue(float maxValue, float minValue)
         {
-            if (Visibility == System.Windows.Visibility.Visible)
+            if (Visibility == Visibility.Visible)
             {
                 maxValues.Enqueue(maxValue);
                 minValues.Enqueue(minValue);

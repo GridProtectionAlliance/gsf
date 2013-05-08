@@ -30,7 +30,7 @@ namespace GSF.ServiceBus
     /// <summary>
     /// Contains WCF web services that facilitate secure inter-process messaging.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

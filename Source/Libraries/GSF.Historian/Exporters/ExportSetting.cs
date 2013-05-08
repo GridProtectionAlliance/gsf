@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ExportSetting.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,7 +37,7 @@ namespace GSF.Historian.Exporters
     /// A class that can be used to add custom settings to an <see cref="Export"/>.
     /// </summary>
     /// <seealso cref="Export"/>
-    [Serializable()]
+    [Serializable]
     public class ExportSetting
     {
         #region [ Members ]

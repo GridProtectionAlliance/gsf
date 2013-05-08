@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,6 @@ using System.Security.Permissions;
 using System.Text;
 using GSF.IO;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.BpaPdcStream
 {
@@ -73,7 +72,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         private bool m_parseWordCountFromByte;
         private FileSystemWatcher m_configurationFileWatcher;
         private bool m_usePhasorDataFileFormat;
-        private object m_syncLock;
+        private readonly object m_syncLock;
         private bool m_disposed;
 
         #endregion
@@ -86,7 +85,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         public FrameParser()
         {
             // Initialize protocol synchronization bytes for this frame parser
-            base.ProtocolSyncBytes = new byte[] { GSF.PhasorProtocols.Common.SyncByte };
+            base.ProtocolSyncBytes = new[] { PhasorProtocols.Common.SyncByte };
             m_syncLock = new object();
         }
 
@@ -252,7 +251,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             }
             set
             {
-                BpaPdcStream.ConnectionParameters parameters = value as BpaPdcStream.ConnectionParameters;
+                ConnectionParameters parameters = value as ConnectionParameters;
 
                 if (parameters != null)
                 {
@@ -306,7 +305,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         public override void Start()
         {
             // We narrow down parsing types to just those needed...
-            base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame) });
+            base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame) });
         }
 
         /// <summary>

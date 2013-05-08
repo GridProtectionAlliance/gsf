@@ -79,7 +79,7 @@ namespace GSF.Media
         public const string RiffTypeID = "LIST";
 
         // Fields
-        private Dictionary<string, string> m_infoStrings;
+        private readonly Dictionary<string, string> m_infoStrings;
 
         #endregion
 

@@ -32,7 +32,7 @@ namespace GSF.Historian.MetadataProviders
     /// <summary>
     /// Contains classes that allow the historian to collect its required point metadata definitions from a variety of sources.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

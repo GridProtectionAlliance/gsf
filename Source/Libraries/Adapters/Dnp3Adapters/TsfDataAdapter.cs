@@ -23,9 +23,9 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
 using DNP3.Interface;
 using GSF.TimeSeries;
-using System.Collections.Generic;
 
 namespace Dnp3Adapters
 {
@@ -37,8 +37,8 @@ namespace Dnp3Adapters
         public delegate void OnNewMeasurements(ICollection<IMeasurement> measurements);
         public event OnNewMeasurements NewMeasurements;
 
-        private MeasurementLookup m_lookup;
-        private List<IMeasurement> m_Measurements = new List<IMeasurement>();
+        private readonly MeasurementLookup m_lookup;
+        private readonly List<IMeasurement> m_Measurements = new List<IMeasurement>();
 
         public TsfDataObserver(MeasurementLookup lookup)
         {

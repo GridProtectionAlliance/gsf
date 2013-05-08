@@ -90,8 +90,8 @@ namespace GSF.NumericalAnalysis
 
             CurveFit.LeastSquares(z, x, y, out d, out a, out b);
 
-            return new SineWave()
-            {
+            return new SineWave
+                {
                 Amplitude = Math.Sqrt(a * a + b * b),
                 Frequency = frequency,
                 Phase = Math.Atan2(b, a),

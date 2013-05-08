@@ -32,12 +32,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
+using GSF.Collections;
 
 namespace GSF.Parsing
 {
@@ -120,8 +120,8 @@ namespace GSF.Parsing
         protected FrameImageParserBase()
         {
             m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
-            m_outputQueue = new AsyncQueue<EventArgs<TOutputType>>()
-            {
+            m_outputQueue = new AsyncQueue<EventArgs<TOutputType>>
+                {
                 ProcessItemFunction = PublishParsedOutput
             };
 

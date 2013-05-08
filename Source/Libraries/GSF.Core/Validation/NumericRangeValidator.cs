@@ -33,8 +33,8 @@ namespace GSF.Validation
         #region [ Members ]
 
         // Fields
-        private decimal m_rangeMinimum;
-        private decimal m_rangeMaximum;
+        private readonly decimal m_rangeMinimum;
+        private readonly decimal m_rangeMaximum;
 
         #endregion
 

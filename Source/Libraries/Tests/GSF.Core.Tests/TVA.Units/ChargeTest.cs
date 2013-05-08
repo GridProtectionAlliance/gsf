@@ -38,11 +38,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
@@ -51,7 +51,7 @@ namespace GSF.Core.Tests
     ///This is a test class for ChargeTest and is intended
     ///to contain all ChargeTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class ChargeTest
     {
 
@@ -106,7 +106,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for Charge Constructor
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ChargeConstructorTest()
         {
             List<Double> values = new List<Double>();
@@ -127,16 +127,16 @@ namespace GSF.Core.Tests
 
         /// <summary>
         /// A test for CompareTo
-        /// Compares this instance to a specified <see cref="Double"/> and returns an indication of their
+        /// Compares this instance to a specified <see cref="double"/> and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">A <see cref="Double"/> to compare.</param>
+        /// <param name="value">A <see cref="double"/> to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToDoubleEqualTest()
         {
             //equal
@@ -150,16 +150,16 @@ namespace GSF.Core.Tests
 
         /// <summary>
         /// A test for CompareTo
-        /// Compares this instance to a specified <see cref="Double"/> and returns an indication of their
+        /// Compares this instance to a specified <see cref="double"/> and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">A <see cref="Double"/> to compare.</param>
+        /// <param name="value">A <see cref="double"/> to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToDoubleLessTest()
         {
             Charge target = new Charge(10F);
@@ -172,16 +172,16 @@ namespace GSF.Core.Tests
 
         /// <summary>
         /// A test for CompareTo
-        /// Compares this instance to a specified <see cref="Double"/> and returns an indication of their
+        /// Compares this instance to a specified <see cref="double"/> and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">A <see cref="Double"/> to compare.</param>
+        /// <param name="value">A <see cref="double"/> to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToDoubleGreaterTest()
         {
             Charge target = new Charge(10F);
@@ -203,7 +203,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToChargeEqualTest()
         {
             Charge target = new Charge(10F);
@@ -225,7 +225,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToChargeLessTest()
         {
             Charge target = new Charge(10F);
@@ -247,7 +247,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToChargeGreaterTest()
         {
             Charge target = new Charge(10F);
@@ -269,7 +269,7 @@ namespace GSF.Core.Tests
         /// if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Charge"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToObjectEqualTest()
         {
             Charge target = new Charge(10F);
@@ -291,7 +291,7 @@ namespace GSF.Core.Tests
         /// if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Charge"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToObjectLessTest()
         {
             Charge target = new Charge(10F);
@@ -314,7 +314,7 @@ namespace GSF.Core.Tests
         /// if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Charge"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToObjectGreaterTest()
         {
             Charge target = new Charge(10F);
@@ -334,7 +334,7 @@ namespace GSF.Core.Tests
         /// True if obj is an instance of <see cref="Double"/> or <see cref="Charge"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsObjectTest()
         {
             Charge target = new Charge(10F);
@@ -352,7 +352,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsChargeTest()
         {
             Charge target = new Charge(10F);
@@ -372,7 +372,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsDoubleTest()
         {
             Charge target = new Charge(10F);
@@ -390,7 +390,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in abcoulombs.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in abcoulombs.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromAbcoulombsTest()
         {
             double value = 10F;
@@ -406,7 +406,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in ampere-hours.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in ampere-hours.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromAmpereHoursTest()
         {
             double value = 10F;
@@ -422,7 +422,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in atomic units of charge.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in atomic units of charge.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromAtomicUnitsOfChargeTest()
         {
             double value = 10F;
@@ -438,7 +438,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in faraday.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in faraday.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromFaradayTest()
         {
             double value = 10F;
@@ -454,7 +454,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Charge"/> value in statcoulombs.</param>
         /// <returns>New <see cref="Charge"/> object from the specified <paramref name="value"/> in statcoulombs.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromStatcoulombsTest()
         {
             double value = 10F;
@@ -471,7 +471,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetHashCodeTest()
         {
             Charge target = new Charge(10F);
@@ -486,7 +486,7 @@ namespace GSF.Core.Tests
         /// Returns the <see cref="TypeCode"/> for value type <see cref="Double"/>.
         /// </summary>
         /// <returns>The enumerated constant, <see cref="TypeCode.Double"/>.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetTypeCodeTest()
         {
             Charge target = new Charge(10F);
@@ -516,7 +516,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Charge.MinValue"/> or greater than <see cref="Charge.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleTest()
         {
             double value = 10F;
@@ -551,7 +551,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Charge.MinValue"/> or greater than <see cref="Charge.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleProviderTest()
         {
             double value = 10F;
@@ -580,7 +580,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Charge.MinValue"/> or greater than <see cref="Charge.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseProviderTest()
         {
             double value = 10F;
@@ -605,7 +605,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Charge.MinValue"/> or greater than <see cref="Charge.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStringTest()
         {
             double value = 10F;
@@ -620,7 +620,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToBoolean
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToBooleanTest()
         {
@@ -635,7 +635,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToByteTest()
         {
@@ -651,7 +651,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToChar
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToCharTest()
         {
@@ -669,7 +669,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDateTime
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDateTimeTest()
         {/*
@@ -686,7 +686,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToDecimal
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDecimalTest()
         {
@@ -701,7 +701,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToDouble
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDoubleTest()
         {
@@ -716,7 +716,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt16Test()
         {
@@ -731,7 +731,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt32Test()
         {
@@ -746,7 +746,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt64Test()
         {
@@ -761,7 +761,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToSByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSByteTest()
         {
@@ -776,7 +776,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToSingle
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSingleTest()
         {
@@ -791,7 +791,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToType
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToTypeTest()
         {
@@ -807,7 +807,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToUInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt16Test()
         {
@@ -822,7 +822,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToUInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt32Test()
         {
@@ -837,7 +837,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for System.IConvertible.ToUInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt64Test()
         {
@@ -852,7 +852,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for ToAbcoulombs
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToAbcoulombsTest()
         {
             Charge target = new Charge(10F);
@@ -865,7 +865,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for ToAmpereHours
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToAmpereHoursTest()
         {
             Charge target = new Charge(10F);
@@ -878,7 +878,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for ToAtomicUnitsOfCharge
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToAtomicUnitsOfChargeTest()
         {
             Charge target = new Charge(1F);
@@ -891,7 +891,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for ToFaraday
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToFaradayTest()
         {
             Charge target = new Charge(10F);
@@ -904,7 +904,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for ToStatcoulombs
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToStatcoulombsTest()
         {
             Charge target = new Charge(10F);
@@ -926,7 +926,7 @@ Assert.AreEqual(expected, actual);
         /// <returns>
         /// The string representation of the value of this instance as specified by format and provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatProviderTest()
         {
             double value = 10;
@@ -947,7 +947,7 @@ Assert.AreEqual(expected, actual);
         /// The string representation of the value of this instance, consisting of a minus sign if
         /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringTest()
         {
             double value = 10F;
@@ -969,7 +969,7 @@ Assert.AreEqual(expected, actual);
         /// <returns>
         /// The string representation of the value of this instance as specified by provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringProviderTest()
         {
             double value = 10F;
@@ -990,7 +990,7 @@ Assert.AreEqual(expected, actual);
         /// <returns>
         /// The string representation of the value of this instance as specified by format.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatTest()
         {
             double value = 10F;
@@ -1015,7 +1015,7 @@ Assert.AreEqual(expected, actual);
         /// This paracoulomb is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseTest()
         {
             string s = "10";
@@ -1051,7 +1051,7 @@ Assert.AreEqual(expected, actual);
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseStyleProviderTest()
         {
             string s = "10";
@@ -1069,7 +1069,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Addition
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_AdditionTest()
         {
             Charge value1 = new Charge(10F);
@@ -1083,7 +1083,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Division
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_DivisionTest()
         {
             Charge value1 = new Charge(10F);
@@ -1097,7 +1097,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Equality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_EqualityTest()
         {
             Charge value1 = new Charge(10F);
@@ -1111,7 +1111,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Exponent
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ExponentTest()
         {
             Charge value1 = new Charge(2F);
@@ -1125,7 +1125,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_GreaterThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanTest()
         {
             Charge value1 = new Charge(11F);
@@ -1139,7 +1139,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_GreaterThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanOrEqualTest()
         {
             Charge value1 = new Charge(10);
@@ -1153,7 +1153,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitTest()
         {
             double value = 10F;
@@ -1166,7 +1166,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitTest1()
         {
             Charge value = new Charge(10);
@@ -1179,7 +1179,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Inequality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_InequalityTest()
         {
             Charge value1 = new Charge(10F);
@@ -1193,7 +1193,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_LessThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanTest()
         {
             Charge value1 = new Charge(10F);
@@ -1207,7 +1207,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_LessThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanOrEqualTest()
         {
             Charge value1 = new Charge(10F);
@@ -1221,7 +1221,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Modulus
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ModulusTest()
         {
             Charge value1 = new Charge(10F);
@@ -1235,7 +1235,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Multiply
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_MultiplyTest()
         {
             Charge value1 = new Charge(10F);
@@ -1249,7 +1249,7 @@ Assert.AreEqual(expected, actual);
         /// <summary>
         ///A test for op_Subtraction
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_SubtractionTest()
         {
             Charge value1 = new Charge(10F);

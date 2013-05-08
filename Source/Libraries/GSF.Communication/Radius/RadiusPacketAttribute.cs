@@ -25,9 +25,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Parsing;
 using System;
 using System.Net;
+using GSF.Parsing;
 
 namespace GSF.Communication.Radius
 {

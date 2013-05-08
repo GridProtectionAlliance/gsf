@@ -30,7 +30,7 @@ namespace GSF.IO.Compression
     /// <summary>
     /// Contains classes and extension functions used to simplify and standardize using compression in applications.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

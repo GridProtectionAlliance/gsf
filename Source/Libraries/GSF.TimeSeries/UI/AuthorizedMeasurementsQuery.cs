@@ -23,15 +23,15 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Console;
-using GSF.Data;
-using GSF.ServiceProcess;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading;
+using GSF.Collections;
+using GSF.Console;
+using GSF.Data;
+using GSF.ServiceProcess;
 
 namespace GSF.TimeSeries.UI
 {
@@ -69,10 +69,10 @@ namespace GSF.TimeSeries.UI
 
         // Fields
         private WindowsServiceClient m_serviceClient;
-        private List<Guid> m_authorizedSignalIDs;
+        private readonly List<Guid> m_authorizedSignalIDs;
         private AutoResetEvent m_requestComplete;
         private AutoResetEvent m_responseComplete;
-        private object m_queuedQueryPending;
+        private readonly object m_queuedQueryPending;
         private int m_requests;
         private int m_responses;
         private int m_responseTimeout;

@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.Communication;
-using GSF.ServiceProcess;
 using System;
 using System.Collections.Generic;
+using GSF.Communication;
+using GSF.ServiceProcess;
 
 namespace GSF.TimeSeries.UI
 {
@@ -41,7 +41,7 @@ namespace GSF.TimeSeries.UI
         private TcpClient m_remotingClient;
         private ClientHelper m_clientHelper;
         private string m_cachedStatus;
-        private int m_statusBufferSize;
+        private readonly int m_statusBufferSize;
         private bool m_disposed;
 
         #endregion

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ScheduleManager.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -49,7 +49,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -57,6 +56,9 @@ using System.Configuration;
 using System.Drawing;
 using System.Text;
 using System.Threading;
+using System.Timers;
+using GSF.Configuration;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Scheduling
 {
@@ -168,8 +170,8 @@ namespace GSF.Scheduling
         // Fields
         private bool m_persistSettings;
         private string m_settingsCategory;
-        private List<Schedule> m_schedules;
-        private System.Timers.Timer m_timer;
+        private readonly List<Schedule> m_schedules;
+        private Timer m_timer;
 #if ThreadTracking
         private ManagedThread m_startTimerThread;
 #else
@@ -186,7 +188,6 @@ namespace GSF.Scheduling
         /// Initializes a new instance of the <see cref="ScheduleManager"/> class.
         /// </summary>
         public ScheduleManager()
-            : base()
         {
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
@@ -493,7 +494,7 @@ namespace GSF.Scheduling
                 Initialize();
 
                 // Initialize timer that checks schedules.
-                m_timer = new System.Timers.Timer(TimerInterval);
+                m_timer = new Timer(TimerInterval);
                 m_timer.Elapsed += m_timer_Elapsed;
 
                 // Spawn new thread to start timer at top of the minute.
@@ -758,7 +759,7 @@ namespace GSF.Scheduling
             m_startTimerThread = null;
         }
 
-        private void m_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             CheckAllSchedules();
         }

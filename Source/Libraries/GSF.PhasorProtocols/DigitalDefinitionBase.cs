@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DigitalDefinitionBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -36,7 +36,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of a <see cref="IDigitalValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class DigitalDefinitionBase : ChannelDefinitionBase, IDigitalDefinition
     {
         #region [ Constructors ]
@@ -87,7 +87,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                return GSF.PhasorProtocols.DataFormat.FixedInteger;
+                return DataFormat.FixedInteger;
             }
         }
 

@@ -38,11 +38,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
@@ -51,7 +51,7 @@ namespace GSF.Core.Tests
     ///This is a test class for TimeTest and is intended
     ///to contain all TimeTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class TimeTest
     {
 
@@ -108,7 +108,7 @@ namespace GSF.Core.Tests
         /// Creates a new <see cref="Time"/>.
         /// </summary>
         /// <param name="value">New time value in seconds.</param>
-        [TestMethod()]
+        [TestMethod]
         public void TimeConstructorTest()
         {
             List<Double> values = new List<Double>();
@@ -130,7 +130,7 @@ namespace GSF.Core.Tests
         /// Creates a new <see cref="Time"/>.
         /// </summary>
         /// <param name="value">New time value as a <see cref="TimeSpan"/>.</param>
-        [TestMethod()]
+        [TestMethod]
         public void TimeSpanConstructorTest()
         {
 
@@ -159,7 +159,7 @@ namespace GSF.Core.Tests
         /// if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Time"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToTest()
         {
             Time target = new Time(10F);
@@ -181,7 +181,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToDoubleTest()
         {
             Time target = new Time(10F);
@@ -203,7 +203,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToTimeSpanTest()
         {
             Time target = new Time(10F);
@@ -225,7 +225,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToTimeTest()
         {
             Time target = new Time(10F);
@@ -244,7 +244,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsDoubleTest()
         {
             Time target = new Time(10F);
@@ -263,7 +263,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsTimeSpanTest()
         {
             Time target = new Time(10F);
@@ -282,7 +282,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsTest()
         {
             Time target = new Time(10F);
@@ -302,7 +302,7 @@ namespace GSF.Core.Tests
         /// True if obj is an instance of <see cref="Double"/> or <see cref="Time"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsObjectTest()
         {
             Time target = new Time(10F);
@@ -319,7 +319,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Time"/> value in atomic units of time.</param>
         /// <returns>New <see cref="Time"/> object from the specified <paramref name="value"/> in atomic units of time.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromAtomicUnitsOfTimeTest()
         {
             double value = 10F;
@@ -335,7 +335,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Time"/> value in days.</param>
         /// <returns>New <see cref="Time"/> object from the specified <paramref name="value"/> in days.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromDaysTest()
         {
             double value = 10F;
@@ -351,7 +351,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Time"/> value in hours.</param>
         /// <returns>New <see cref="Time"/> object from the specified <paramref name="value"/> in hours.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromHoursTest()
         {
             double value = 1F;
@@ -368,7 +368,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Time"/> value in ke.</param>
         /// <returns>New <see cref="Time"/> object from the specified <paramref name="value"/> in ke.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromKeTest()
         {
             double value = 10F;
@@ -383,7 +383,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Time"/> value in minutes.</param>
         /// <returns>New <see cref="Time"/> object from the specified <paramref name="value"/> in minutes.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromMinutesTest()
         {
             double value = 10F;
@@ -399,7 +399,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Time"/> value in Planck time.</param>
         /// <returns>New <see cref="Time"/> object from the specified <paramref name="value"/> in Planck time.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromPlanckTimeTest()
         {
             double value = 10F;
@@ -415,7 +415,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Time"/> value in weeks.</param>
         /// <returns>New <see cref="Time"/> object from the specified <paramref name="value"/> in weeks.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromWeeksTest()
         {
             double value = 10F;
@@ -432,7 +432,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetHashCodeTest()
         {
             Time target = new Time(10);
@@ -447,7 +447,7 @@ namespace GSF.Core.Tests
         /// Returns the <see cref="TypeCode"/> for value type <see cref="Double"/>.
         /// </summary>
         /// <returns>The enumerated constant, <see cref="TypeCode.Double"/>.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetTypeCodeTest()
         {
             Time target = new Time(10F);
@@ -478,7 +478,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Time.MinValue"/> or greater than <see cref="Time.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleTest()
         {
             double value = 10F;
@@ -503,7 +503,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Time.MinValue"/> or greater than <see cref="Time.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseTimeTest()
         {
             double value = 10F;
@@ -530,7 +530,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Time.MinValue"/> or greater than <see cref="Time.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseProviderTest()
         {
             double value = 10F;
@@ -565,7 +565,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Time.MinValue"/> or greater than <see cref="Time.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseTest()
         {
             double value = 10F;
@@ -590,7 +590,7 @@ namespace GSF.Core.Tests
         /// <exception cref="ArgumentOutOfRangeException">
         /// Month is less than 1 or greater than 12. -or- year is less than 1 or greater than 9999.
         /// </exception>
-        [TestMethod()]
+        [TestMethod]
         public void SecondsPerMonthTest()
         {
             int year = 2012;
@@ -612,7 +612,7 @@ namespace GSF.Core.Tests
         /// <exception cref="ArgumentOutOfRangeException">
         /// Year is less than 1 or greater than 9999.
         /// </exception>
-        [TestMethod()]
+        [TestMethod]
         public void SecondsPerYearTest()
         {
             int year = 1;
@@ -625,7 +625,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToBoolean
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToBooleanTest()
         {
@@ -640,7 +640,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToByteTest()
         {
@@ -655,7 +655,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToChar
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToCharTest()
         {
@@ -665,7 +665,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDateTime
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDateTimeTest()
         {
@@ -676,7 +676,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDecimal
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDecimalTest()
         {
@@ -691,7 +691,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDouble
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDoubleTest()
         {
@@ -706,7 +706,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt16Test()
         {
@@ -721,7 +721,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt32Test()
         {
@@ -736,7 +736,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt64Test()
         {
@@ -751,7 +751,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSByteTest()
         {
@@ -766,7 +766,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSingle
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSingleTest()
         {
@@ -781,7 +781,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToType
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToTypeTest()
         {
@@ -798,7 +798,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt16Test()
         {
@@ -813,7 +813,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt32Test()
         {
@@ -828,7 +828,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt64Test()
         {
@@ -845,7 +845,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Time"/> value in atomic units of time.
         /// </summary>
         /// <returns>Value of <see cref="Time"/> in atomic units of time.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToAtomicUnitsOfTimeTest()
         {
             Time target = new Time(10F);
@@ -858,7 +858,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for ToDays
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToDaysTest()
         {
             Time target = new Time(10F);
@@ -871,7 +871,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for ToHours
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void ToHoursTest()
         {
             Time target = new Time(10F);
@@ -886,7 +886,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Time"/> value in ke, the traditional Chinese unit of decimal time.
         /// </summary>
         /// <returns>Value of <see cref="Time"/> in ke.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToKeTest()
         {
             Time target = new Time(10F);
@@ -901,7 +901,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Time"/> value in minutes.
         /// </summary>
         /// <returns>Value of <see cref="Time"/> in minutes.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToMinutesTest()
         {
             Time target = new Time(10F);
@@ -916,7 +916,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Time"/> value in Planck time.
         /// </summary>
         /// <returns>Value of <see cref="Time"/> in Planck time.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToPlanckTimeTest()
         {
             Time target = new Time(10F);
@@ -943,7 +943,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format and provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatProviderTest()
         {
             double value = 10F;
@@ -970,7 +970,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatTest()
         {
             double value = 10F;
@@ -1002,7 +1002,7 @@ namespace GSF.Core.Tests
         /// The string representation of the value of this instance, consisting of the number of
         /// years, days, hours, minutes and seconds represented by this value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringSecondPrecisionTimeNamesTest()
         {
             Time target = new Time(10F);
@@ -1030,7 +1030,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringProviderTest()
         {
             double value = 10F;
@@ -1053,7 +1053,7 @@ namespace GSF.Core.Tests
         /// The string representation of the value of this instance, consisting of the number of
         /// years, days, hours, minutes and seconds represented by this value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringSecondPrecisionTest()
         {
             double value = 10F;
@@ -1079,7 +1079,7 @@ namespace GSF.Core.Tests
         /// The string representation of the value of this instance, consisting of the number of
         /// years, days, hours, minutes and seconds represented by this value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringTest()
         {
             double value = 10F;
@@ -1095,7 +1095,7 @@ namespace GSF.Core.Tests
         /// Converts the <see cref="Time"/> value, in seconds, to 100-nanosecond tick intervals.
         /// </summary>
         /// <returns>A <see cref="Ticks"/> object.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToTicksTest()
         {
             Time target = new Time(10F);
@@ -1110,7 +1110,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Time"/> value in weeks.
         /// </summary>
         /// <returns>Value of <see cref="Time"/> in weeks.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToWeeksTest()
         {
             Time target = new Time(1000000F);
@@ -1133,7 +1133,7 @@ namespace GSF.Core.Tests
         /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseTest()
         {
             double value = 10F;
@@ -1160,7 +1160,7 @@ namespace GSF.Core.Tests
         /// This parameter is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseStyleProviderResultTest()
         {
             double value = 10F;
@@ -1179,7 +1179,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Addition
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_AdditionTest()
         {
             Time value1 = new Time(10F);
@@ -1193,7 +1193,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Division
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_DivisionTest()
         {
             Time value1 = new Time(10F);
@@ -1207,7 +1207,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Equality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_EqualityTest()
         {
             Time value1 = new Time(10F);
@@ -1221,7 +1221,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Exponent
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ExponentTest()
         {
             Time value1 = new Time(2F);
@@ -1235,7 +1235,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanTest()
         {
             Time value1 = new Time(10F);
@@ -1249,7 +1249,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanOrEqualTest()
         {
             Time value1 = new Time(10F);
@@ -1263,7 +1263,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitTimeSpanTest()
         {
             Time value = new Time(10F);
@@ -1276,7 +1276,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitDoubleTest()
         {
             Time value = new Time(10F);
@@ -1289,7 +1289,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitTest2()
         {
             TimeSpan value = new TimeSpan(0, 0, 10);
@@ -1302,7 +1302,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitTest3()
         {
             double value = 10F;
@@ -1315,7 +1315,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Inequality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_InequalityTest()
         {
             Time value1 = new Time(10F);
@@ -1329,7 +1329,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanTest()
         {
             Time value1 = new Time(10F);
@@ -1343,7 +1343,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanOrEqualTest()
         {
             Time value1 = new Time(10F);
@@ -1357,7 +1357,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Modulus
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ModulusTest()
         {
             Time value1 = new Time(10F);
@@ -1371,7 +1371,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Multiply
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_MultiplyTest()
         {
             Time value1 = new Time(10F);
@@ -1385,7 +1385,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Subtraction
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_SubtractionTest()
         {
             Time value1 = new Time(10F);

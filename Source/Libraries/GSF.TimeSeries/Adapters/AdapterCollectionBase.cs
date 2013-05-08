@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -34,8 +33,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using GSF.IO;
 using GSF.Units;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -114,7 +115,7 @@ namespace GSF.TimeSeries.Adapters
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
         private int m_processingInterval;
-        private System.Timers.Timer m_monitorTimer;
+        private Timer m_monitorTimer;
         private bool m_monitorTimerEnabled;
         private bool m_enabled;
         private bool m_disposed;
@@ -126,7 +127,6 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Constructs a new instance of the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        /// <param name="waitHandles">Wait handle dictionary.</param>
         protected AdapterCollectionBase()
         {
             m_name = this.GetType().Name;
@@ -137,7 +137,7 @@ namespace GSF.TimeSeries.Adapters
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
             m_autoStart = true;
 
-            m_monitorTimer = new System.Timers.Timer();
+            m_monitorTimer = new Timer();
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
 
             // We monitor total number of processed measurements every minute
@@ -291,7 +291,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets the default adapter time that represents the maximum time system will wait during <see cref="Start"/> for initialization.
         /// </summary>
         /// <remarks>
-        /// Set to <see cref="Timeout.Infinite"/> to wait indefinitely.
+        /// Set to <see cref="System.Threading.Timeout.Infinite"/> to wait indefinitely.
         /// </remarks>
         public virtual int InitializationTimeout
         {
@@ -1007,7 +1007,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns><c>true</c> if adapter with the specified <paramref name="id"/> was found; otherwise <c>false</c>.</returns>
         public virtual bool TryGetAdapterByID(uint id, out T adapter)
         {
-            return TryGetAdapter<uint>(id, (item, value) => item.ID == value, out adapter);
+            return TryGetAdapter(id, (item, value) => item.ID == value, out adapter);
         }
 
         /// <summary>
@@ -1018,7 +1018,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns><c>true</c> if adapter with the specified <paramref name="name"/> was found; otherwise <c>false</c>.</returns>
         public virtual bool TryGetAdapterByName(string name, out T adapter)
         {
-            return TryGetAdapter<string>(name, (item, value) => string.Compare(item.Name, value, true) == 0, out adapter);
+            return TryGetAdapter(name, (item, value) => string.Compare(item.Name, value, true) == 0, out adapter);
         }
 
         /// <summary>
@@ -1680,7 +1680,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // We monitor the total number of measurements destined for archival here...
-        private void m_monitorTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_monitorTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             StringBuilder status = new StringBuilder();
             Ticks currentTime, totalProcessTime;

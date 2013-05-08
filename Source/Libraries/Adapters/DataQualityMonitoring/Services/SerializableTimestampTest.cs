@@ -23,11 +23,11 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using GSF;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -51,7 +51,7 @@ namespace DataQualityMonitoring.Services
         /// Initializes a new instance of the <see cref="SerializableTimestampTest"/>.
         /// </summary>
         /// <param name="badTimestampMeasurements">
-        /// A dictionary where the values are <see cref="LinkedList{IMeasurement}"/>s containing measurements and the keys are the arrival
+        /// A dictionary where the values are <see cref="LinkedList{T}"/>s containing measurements and the keys are the arrival
         /// times of the measurements. The measurements are to be stored in this <see cref="SerializableTimestampTest"/>.
         /// </param>
         public SerializableTimestampTest(Dictionary<Ticks, LinkedList<IMeasurement>> badTimestampMeasurements)
@@ -76,7 +76,7 @@ namespace DataQualityMonitoring.Services
         /// <summary>
         /// Gets or sets the <see cref="SerializableBadTimestampMeasurement"/>s contained in the <see cref="SerializableTimestampTest"/>.
         /// </summary>
-        [XmlArray(), DataMember()]
+        [XmlArray, DataMember]
         public SerializableBadTimestampMeasurement[] BadTimestampMeasurements { get; set; }
 
         #endregion

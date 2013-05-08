@@ -23,16 +23,18 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Text;
 using Automatak.Archivist.Client;
 using Automatak.Archivist.Client.Impl;
 using Automatak.Archivist.Protocol;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using Measurement = Automatak.Archivist.Protocol.Measurement;
+using Type = Automatak.Archivist.Protocol.Type;
 
 namespace ArchivistAdapters
 {
@@ -48,7 +50,7 @@ namespace ArchivistAdapters
         // Fields
         private string m_host;
         private ushort m_port;
-        private int m_measurementCount;
+        private readonly int m_measurementCount;
         private IArchivistClient m_client;
 
         #endregion
@@ -203,7 +205,7 @@ namespace ArchivistAdapters
                     var meas = Convert(measurements);
                     var result = m_client.Insert(meas).Await().Get(); // TODO - error handling here
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     OnProcessException(ex);
                 }
@@ -236,7 +238,7 @@ namespace ArchivistAdapters
 
         private static MeasurementWithId Convert(IMeasurement m)
         {
-            var builder = Automatak.Archivist.Protocol.Measurement.CreateBuilder();            
+            var builder = Measurement.CreateBuilder();            
             builder.SetTime(m.Timestamp);
             builder.SetType(Type.FLOAT64);
             builder.SetDoubleValue(m.Value);            

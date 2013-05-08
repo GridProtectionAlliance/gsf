@@ -214,9 +214,9 @@ namespace GSF
         private delegate byte[] CoerceByteOrderFunction(byte[] buffer);
 
         // Fields
-        private Endianness m_targetEndianness;
-        private CopyBufferFunction m_copyBuffer;
-        private CoerceByteOrderFunction m_coerceByteOrder;
+        private readonly Endianness m_targetEndianness;
+        private readonly CopyBufferFunction m_copyBuffer;
+        private readonly CoerceByteOrderFunction m_coerceByteOrder;
 
         #endregion
 

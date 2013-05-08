@@ -70,9 +70,9 @@ namespace GSF.Net.Ftp
         public const int Abort = 2;
 
         // Fields
-        private BitArray m_result;
-        private string m_message;
-        private int m_ftpResponse;
+        private readonly BitArray m_result;
+        private readonly string m_message;
+        private readonly int m_ftpResponse;
 
         #endregion
 

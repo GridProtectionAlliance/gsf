@@ -32,31 +32,31 @@
 //
 //******************************************************************************************************
 
-using GSF.Security;
-using GSF.ServiceModel;
 using System.ServiceModel;
 using System.ServiceModel.Web;
+using GSF.Security;
+using GSF.ServiceModel;
 
 namespace GSF.Web.Embedded
 {
     /// <summary>
     /// Embedded WCF service contract used for securing external facing WCF services.
     /// </summary>
-    [ServiceContract(), XmlSerializerFormat()]
+    [ServiceContract, XmlSerializerFormat]
     public interface ISecurityService : ISelfHostingService
     {
         /// <summary>
         /// Returns information about the current user. 
         /// </summary>
         /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/getuserdata")]
+        [OperationContract, WebGet(UriTemplate = "/getuserdata")]
         UserData GetUserData();
 
         /// <summary>
         /// Refreshes and returns information about the current user. 
         /// </summary>
         /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/refreshuserdata")]
+        [OperationContract, WebGet(UriTemplate = "/refreshuserdata")]
         UserData RefreshUserData();
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace GSF.Web.Embedded
         /// <param name="username">Username of the user.</param>
         /// <param name="password">Password of the user.</param>
         /// <returns>An <see cref="UserData"/> object of the user.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/authenticate?username={username}&password={password}")]
+        [OperationContract, WebGet(UriTemplate = "/authenticate?username={username}&password={password}")]
         UserData Authenticate(string username, string password);
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace GSF.Web.Embedded
         /// </summary>
         /// <param name="securityAnswer">Answer to user's security question.</param>
         /// <returns>true if password is reset, otherwise false.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/resetpassword?securityanswer={securityAnswer}")]
+        [OperationContract, WebGet(UriTemplate = "/resetpassword?securityanswer={securityAnswer}")]
         bool ResetPassword(string securityAnswer);
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace GSF.Web.Embedded
         /// <param name="oldPassword">User's current password.</param>
         /// <param name="newPassword">User's new password.</param>
         /// <returns>true if the password is changed, otherwise false.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/changepassword?oldpassword={oldPassword}&newpassword={newPassword}")]
+        [OperationContract, WebGet(UriTemplate = "/changepassword?oldpassword={oldPassword}&newpassword={newPassword}")]
         bool ChangePassword(string oldPassword, string newPassword);
     }
 }

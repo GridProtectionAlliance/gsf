@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  RebroadcastExporter.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -136,7 +136,7 @@ namespace GSF.Historian.Exporters
         }
 
         // Fields
-        private Dictionary<string, ExportContext> m_contexts;
+        private readonly Dictionary<string, ExportContext> m_contexts;
 
         #endregion
 

@@ -31,6 +31,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,13 +40,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml;
-using Microsoft.Win32;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
-using System.Globalization;
+using Microsoft.Win32;
 
 namespace HistorianView
 {
@@ -74,7 +74,7 @@ namespace HistorianView
             public event PropertyChangedEventHandler PropertyChanged;
 
             // Fields
-            private MetadataRecord m_metadata;
+            private readonly MetadataRecord m_metadata;
             private bool m_export;
 
             #endregion
@@ -259,13 +259,13 @@ namespace HistorianView
 
         private string m_currentSessionPath;
         private ICollection<ArchiveReader> m_archiveReaders;
-        private List<MetadataWrapper> m_metadata;
+        private readonly List<MetadataWrapper> m_metadata;
         private DateTime m_startTime;
         private DateTime m_endTime;
         private string[] m_tokens;
 
-        private ICollection<MenuItem> m_contextMenuItems;
-        private ICollection<string> m_visibleColumns;
+        private readonly ICollection<MenuItem> m_contextMenuItems;
+        private readonly ICollection<string> m_visibleColumns;
         private ChartWindow m_chartWindow;
 
         #endregion
@@ -420,7 +420,7 @@ namespace HistorianView
 
         private void OpenArchive(string fileName)
         {
-            OpenArchives(new string[] { fileName });
+            OpenArchives(new[] { fileName });
         }
 
         private void OpenArchives(string[] fileNames)
@@ -1249,7 +1249,7 @@ namespace HistorianView
         }
 
         // Hides the child window rather than closing it so it can be shown again later.
-        private void ChildWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void ChildWindow_Closing(object sender, CancelEventArgs e)
         {
             Window child = sender as Window;
 
@@ -1267,7 +1267,7 @@ namespace HistorianView
         }
 
         // Clears the archives and closes child windows.
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             string lastArchiveLocations = "";
 

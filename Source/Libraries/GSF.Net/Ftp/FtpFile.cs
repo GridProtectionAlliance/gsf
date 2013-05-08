@@ -57,8 +57,8 @@ namespace GSF.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private FtpDirectory m_parent;
-        private string m_name;
+        private readonly FtpDirectory m_parent;
+        private readonly string m_name;
         private long m_size;
         private string m_permission;
         private DateTime m_timestamp;
@@ -299,7 +299,7 @@ namespace GSF.Net.Ftp
         /// <returns>An <see cref="Int32"/> that represents the result of the comparison. 1 - object is greater than, 0 - object is equal to, -1 - object is less than.</returns>
         public int CompareTo(object obj)
         {
-            if (object.Equals(obj, null))
+            if (Equals(obj, null))
             {
                 return 1;
             }
@@ -325,8 +325,8 @@ namespace GSF.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result of the comparison.</returns>
         public static bool operator ==(FtpFile value1, FtpFile value2)
         {
-            if (object.Equals(value1, null))
-                return object.Equals(value2, null);
+            if (Equals(value1, null))
+                return Equals(value2, null);
             else
                 return (value1.CompareTo(value2) == 0);
         }
@@ -350,8 +350,8 @@ namespace GSF.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result of the comparison.</returns>
         public static bool operator <(FtpFile value1, FtpFile value2)
         {
-            if (object.Equals(value1, null))
-                return object.Equals(value2, null);
+            if (Equals(value1, null))
+                return Equals(value2, null);
             else
                 return (value1.CompareTo(value2) < 0);
         }
@@ -375,8 +375,8 @@ namespace GSF.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result of the comparison.</returns>
         public static bool operator <=(FtpFile value1, FtpFile value2)
         {
-            if (object.Equals(value1, null))
-                return object.Equals(value2, null);
+            if (Equals(value1, null))
+                return Equals(value2, null);
             else
                 return (value1.CompareTo(value2) <= 0);
         }

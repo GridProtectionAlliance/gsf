@@ -244,8 +244,8 @@ namespace GSF.PQDIF.Physical
         // Reads the header of a record from the PQDIF file.
         private RecordHeader ReadRecordHeader()
         {
-            return new RecordHeader()
-            {
+            return new RecordHeader
+                {
                 RecordSignature = new Guid(m_fileReader.ReadBytes(16)),
                 RecordTypeTag = new Guid(m_fileReader.ReadBytes(16)),
                 HeaderSize = m_fileReader.ReadInt32(),
@@ -269,8 +269,8 @@ namespace GSF.PQDIF.Physical
             Decompress(ref buffer);
             bufferStream = new MemoryStream(buffer);
 
-            return new RecordBody()
-            {
+            return new RecordBody
+                {
                 Collection = ReadCollection(new BinaryReader(bufferStream))
             };
         }
@@ -324,8 +324,8 @@ namespace GSF.PQDIF.Physical
         // Reads a collection element from the PQDIF file.
         private CollectionElement ReadCollection(BinaryReader recordBodyReader)
         {
-            CollectionElement collection = new CollectionElement()
-            {
+            CollectionElement collection = new CollectionElement
+                {
                 Size = recordBodyReader.ReadInt32()
             };
 
@@ -338,8 +338,8 @@ namespace GSF.PQDIF.Physical
         // Reads a vector element from the PQDIF file.
         private VectorElement ReadVector(BinaryReader recordBodyReader, PhysicalType typeOfValue)
         {
-            VectorElement element = new VectorElement()
-            {
+            VectorElement element = new VectorElement
+                {
                 Size = recordBodyReader.ReadInt32(),
                 TypeOfValue = typeOfValue
             };
@@ -354,8 +354,8 @@ namespace GSF.PQDIF.Physical
         // Reads a scalar element from the PQDIF file.
         private ScalarElement ReadScalar(BinaryReader recordBodyReader, PhysicalType typeOfValue)
         {
-            ScalarElement element = new ScalarElement()
-            {
+            ScalarElement element = new ScalarElement
+                {
                 TypeOfValue = typeOfValue
             };
 

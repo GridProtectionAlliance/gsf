@@ -38,11 +38,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
@@ -51,7 +51,7 @@ namespace GSF.Core.Tests
     ///This is a test class for VoltageTest and is intended
     ///to contain all VoltageTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class VoltageTest
     {
 
@@ -106,7 +106,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for Voltage Constructor
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void VoltageConstructorTest()
         {
             List<Double> values = new List<Double>();
@@ -135,7 +135,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToVoltageTest()
         {
             Voltage target = new Voltage(10F);
@@ -148,16 +148,16 @@ namespace GSF.Core.Tests
 
         /// <summary>
         /// A test for CompareTo
-        /// Compares this instance to a specified <see cref="Double"/> and returns an indication of their
+        /// Compares this instance to a specified <see cref="double"/> and returns an indication of their
         /// relative values.
         /// </summary>
-        /// <param name="value">A <see cref="Double"/> to compare.</param>
+        /// <param name="value">A <see cref="double"/> to compare.</param>
         /// <returns>
         /// A signed number indicating the relative values of this instance and value. Returns less than zero
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToDoubleTest()
         {
             Voltage target = new Voltage(10F);
@@ -179,7 +179,7 @@ namespace GSF.Core.Tests
         /// if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Voltage"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToObjectTest()
         {
             Voltage target = new Voltage(10F);
@@ -198,7 +198,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsDoubleTest()
         {
             Voltage target = new Voltage(10F);
@@ -217,7 +217,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsVoltageTest()
         {
             Voltage target = new Voltage(10F);
@@ -237,7 +237,7 @@ namespace GSF.Core.Tests
         /// True if obj is an instance of <see cref="Double"/> or <see cref="Voltage"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsObjectTest()
         {
             Voltage target = new Voltage(10F);
@@ -254,7 +254,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Voltage"/> value in abvolts.</param>
         /// <returns>New <see cref="Voltage"/> object from the specified <paramref name="value"/> in abvolts.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromAbvoltsTest()
         {
             double value = 10F;
@@ -270,7 +270,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Voltage"/> value in statvolts.</param>
         /// <returns>New <see cref="Voltage"/> object from the specified <paramref name="value"/> in statvolts.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromStatvoltsTest()
         {
             double value = 10F;
@@ -287,7 +287,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetHashCodeTest()
         {
             Voltage target = new Voltage(10F);
@@ -302,7 +302,7 @@ namespace GSF.Core.Tests
         /// Returns the <see cref="TypeCode"/> for value type <see cref="Double"/>.
         /// </summary>
         /// <returns>The enumerated constant, <see cref="TypeCode.Double"/>.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetTypeCodeTest()
         {
             Voltage target = new Voltage(10F);
@@ -333,7 +333,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Voltage.MinValue"/> or greater than <see cref="Voltage.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleTest()
         {
             double value = 10F;
@@ -361,7 +361,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Voltage.MinValue"/> or greater than <see cref="Voltage.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseProviderTest()
         {
             double value = 10F;
@@ -396,7 +396,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Voltage.MinValue"/> or greater than <see cref="Voltage.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleProviderTest()
         {
             double value = 10F;
@@ -422,7 +422,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Voltage.MinValue"/> or greater than <see cref="Voltage.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseTest()
         {
             double value = 10F;
@@ -436,7 +436,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToBoolean
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToBooleanTest()
         {
@@ -451,7 +451,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToByteTest()
         {
@@ -466,7 +466,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToChar
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToCharTest()
         {
@@ -476,7 +476,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDateTime
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDateTimeTest()
         {
@@ -486,7 +486,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDecimal
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDecimalTest()
         {
@@ -501,7 +501,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDouble
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDoubleTest()
         {
@@ -516,7 +516,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt16Test()
         {
@@ -531,7 +531,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt32Test()
         {
@@ -546,7 +546,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt64Test()
         {
@@ -561,7 +561,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSByteTest()
         {
@@ -576,7 +576,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSingle
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSingleTest()
         {
@@ -591,7 +591,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToType
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToTypeTest()
         {
@@ -607,7 +607,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt16Test()
         {
@@ -622,7 +622,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt32Test()
         {
@@ -637,7 +637,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt64Test()
         {
@@ -654,7 +654,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Voltage"/> value in abvolts.
         /// </summary>
         /// <returns>Value of <see cref="Voltage"/> in abvolts.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToAbvoltsTest()
         {
             Voltage target = new Voltage(10F);
@@ -669,7 +669,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Voltage"/> value in statvolts.
         /// </summary>
         /// <returns>Value of <see cref="Voltage"/> in statvolts.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStatvoltsTest()
         {
             Voltage target = new Voltage(10F);
@@ -687,7 +687,7 @@ namespace GSF.Core.Tests
         /// The string representation of the value of this instance, consisting of a minus sign if
         /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringTest()
         {
             double value = 10F;
@@ -709,7 +709,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringProviderTest()
         {
             double value = 10F;
@@ -733,7 +733,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format and provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatProviderTest()
         {
             double value = 10F;
@@ -755,7 +755,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatTest()
         {
             double value = 10F;
@@ -790,7 +790,7 @@ namespace GSF.Core.Tests
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseStyleProviderResultTest()
         {
             double value = 10F;
@@ -819,7 +819,7 @@ namespace GSF.Core.Tests
         /// This paravolt is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseTest()
         {
             double value = 10F;
@@ -836,7 +836,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Addition
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_AdditionTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -850,7 +850,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Division
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_DivisionTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -864,7 +864,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Equality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_EqualityTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -878,7 +878,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Exponent
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ExponentTest()
         {
             Voltage value1 = new Voltage(2F);
@@ -892,7 +892,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -906,7 +906,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanOrEqualTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -920,7 +920,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitTest()
         {
             Voltage value = new Voltage(10F);
@@ -933,7 +933,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitTest1()
         {
             double value = 10F;
@@ -946,7 +946,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Inequality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_InequalityTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -960,7 +960,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -974,7 +974,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanOrEqualTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -988,7 +988,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Modulus
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ModulusTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -1002,7 +1002,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Multiply
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_MultiplyTest()
         {
             Voltage value1 = new Voltage(10F);
@@ -1016,7 +1016,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Subtraction
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_SubtractionTest()
         {
             Voltage value1 = new Voltage(10F);

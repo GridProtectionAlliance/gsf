@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  AnalogValueBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -39,7 +39,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent representation of an analog value.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class AnalogValueBase : ChannelValueBase<IAnalogDefinition>, IAnalogValue
     {
         #region [ Members ]
@@ -162,7 +162,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+                if (DataFormat == DataFormat.FixedInteger)
                     return 2;
                 else
                     return 4;
@@ -194,7 +194,7 @@ namespace GSF.PhasorProtocols
                 // image were likely parsed previously from a binary image with the same constraints.
                 unchecked
                 {
-                    if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+                    if (DataFormat == DataFormat.FixedInteger)
                         EndianOrder.BigEndian.CopyBytes((short)m_value, buffer, 0);
                     else
                         EndianOrder.BigEndian.CopyBytes((float)m_value, buffer, 0);
@@ -230,7 +230,7 @@ namespace GSF.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
         /// </remarks>
-        /// <returns>A composite value as <see cref="Double"/>.</returns>
+        /// <returns>A composite value as <see cref="double"/>.</returns>
         public override double GetCompositeValue(int index)
         {
             if (index == 0)
@@ -256,7 +256,7 @@ namespace GSF.PhasorProtocols
             // Length is validated at a frame level well in advance so that low level parsing routines do not have
             // to re-validate that enough length is available to parse needed information as an optimization...
 
-            if (DataFormat == GSF.PhasorProtocols.DataFormat.FixedInteger)
+            if (DataFormat == DataFormat.FixedInteger)
             {
                 m_value = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
                 m_valueAssigned = true;

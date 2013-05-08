@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.ViewModels;
 using System.Windows.Controls;
+using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
 {

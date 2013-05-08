@@ -30,7 +30,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Contains an implementation of the phasor classes used to parse or generate a stream of data in the Macrodyne PMU device format.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

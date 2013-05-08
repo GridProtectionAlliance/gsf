@@ -39,9 +39,9 @@ namespace GSF.PQDIF.Logical
         #region [ Members ]
 
         // Fields
-        private CollectionElement m_physicalStructure;
-        private ChannelInstance m_channel;
-        private SeriesDefinition m_definition;
+        private readonly CollectionElement m_physicalStructure;
+        private readonly ChannelInstance m_channel;
+        private readonly SeriesDefinition m_definition;
 
         #endregion
 

@@ -55,7 +55,7 @@ namespace GSF.Searching
 
         // Fields
         private string m_searchText;
-        private ICollection<string> m_searchCategories;
+        private readonly ICollection<string> m_searchCategories;
         private bool m_ignoreCase;
         private bool m_useWildcards;
         private bool m_useRegex;

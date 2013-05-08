@@ -61,7 +61,7 @@ namespace Comtrade
             if (parts.Length == 4)
             {
                 double.TryParse(parts[parts.Length - 1], out milliseconds);
-                parts = new string[] { parts[0], parts[1], parts[2] };
+                parts = new[] { parts[0], parts[1], parts[2] };
             }
 
             double.TryParse(parts[parts.Length - 1], out seconds);
@@ -73,7 +73,7 @@ namespace Comtrade
             lineImage = string.Join(":", parts).RemoveWhiteSpace();
 
             DateTime result;
-            DateTime.TryParseExact(lineImage, new string[] {"dd/MM/yyyy,HH:mm:ss.ffffff", "MM/dd/yyyy,HH:mm:ss.ffffff"}, CultureInfo.InvariantCulture, DateTimeStyles.None, out result);
+            DateTime.TryParseExact(lineImage, new[] {"dd/MM/yyyy,HH:mm:ss.ffffff", "MM/dd/yyyy,HH:mm:ss.ffffff"}, CultureInfo.InvariantCulture, DateTimeStyles.None, out result);
 
             Value = result.Ticks;
         }

@@ -23,8 +23,8 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.DataModels;
 using System;
+using GSF.TimeSeries.UI.DataModels;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {

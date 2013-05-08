@@ -30,7 +30,7 @@ namespace GSF.Interop
     /// <summary>
     /// Contains classes used to handle interoperability with older legacy applications.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

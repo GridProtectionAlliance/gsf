@@ -133,7 +133,6 @@ namespace Hadoop.Replication
         /// Initializes a new instance of the <see cref="HadoopReplicationProvider"/> class.
         /// </summary>
         public HadoopReplicationProvider()
-            : base()
         {
             m_bytesPerCrc32 = DefaultBytesPerCrc32;
             m_hdfsBlockSize = DefaultHdfsBlockSize;

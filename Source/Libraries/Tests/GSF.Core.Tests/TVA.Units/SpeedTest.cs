@@ -38,11 +38,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
@@ -51,7 +51,7 @@ namespace GSF.Core.Tests
     ///This is a test class for SpeedTest and is intended
     ///to contain all SpeedTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class SpeedTest
     {
 
@@ -108,7 +108,7 @@ namespace GSF.Core.Tests
         /// Creates a new <see cref="Speed"/>.
         /// </summary>
         /// <param name="value">New speed value in meters per second.</param>
-        [TestMethod()]
+        [TestMethod]
         public void SpeedConstructorTest()
         {
 
@@ -137,7 +137,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToSpeenTest()
         {
             Speed target = new Speed(10F);
@@ -159,7 +159,7 @@ namespace GSF.Core.Tests
         /// if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Speed"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToObjectTest()
         {
             Speed target = new Speed(10F);
@@ -181,7 +181,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToDoubleTest()
         {
             Speed target = new Speed(10F);
@@ -200,7 +200,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsDoubleTest()
         {
             Speed target = new Speed(10F);
@@ -220,7 +220,7 @@ namespace GSF.Core.Tests
         /// True if obj is an instance of <see cref="Double"/> or <see cref="Speed"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsObjectTest()
         {
             Speed target = new Speed(10F);
@@ -239,7 +239,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsSpeedTest()
         {
             Speed target = new Speed(10F);
@@ -256,7 +256,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in feet per minute.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in feet per minute.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromFeetPerMinuteTest()
         {
             double value = 10F;
@@ -272,7 +272,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in inches per second.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in inches per second.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromInchesPerSecondTest()
         {
             double value = 10F;
@@ -288,7 +288,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in kilometers per hour.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in kilometers per hour.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromKilometersPerHourTest()
         {
             double value = 10F;
@@ -304,7 +304,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in knots.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in knots.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromKnotsTest()
         {
             double value = 10F;
@@ -320,7 +320,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in mach.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in mach.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromMachTest()
         {
             double value = 10F;
@@ -336,7 +336,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Speed"/> value in miles per hour.</param>
         /// <returns>New <see cref="Speed"/> object from the specified <paramref name="value"/> in miles per hour.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromMilesPerHourTest()
         {
             double value = 10F;
@@ -353,7 +353,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetHashCodeTest()
         {
             Speed target = new Speed(10F);
@@ -368,7 +368,7 @@ namespace GSF.Core.Tests
         /// Returns the <see cref="TypeCode"/> for value type <see cref="Double"/>.
         /// </summary>
         /// <returns>The enumerated constant, <see cref="TypeCode.Double"/>.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetTypeCodeTest()
         {
             Speed target = new Speed(10F);
@@ -399,7 +399,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Speed.MinValue"/> or greater than <see cref="Speed.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleTest()
         {
             double value = 10F;
@@ -434,7 +434,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Speed.MinValue"/> or greater than <see cref="Speed.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleProviderTest()
         {
             double value = 10F;
@@ -463,7 +463,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Speed.MinValue"/> or greater than <see cref="Speed.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseProviderTest()
         {
             double value = 10F;
@@ -488,7 +488,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Speed.MinValue"/> or greater than <see cref="Speed.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStringTest()
         {
             double value = 10F;
@@ -502,7 +502,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToBoolean
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToBooleanTest()
         {
@@ -517,7 +517,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToByteTest()
         {
@@ -532,7 +532,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToChar
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToCharTest()
         {
@@ -542,7 +542,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDateTime
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDateTimeTest()
         {
@@ -552,7 +552,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDecimal
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDecimalTest()
         {
@@ -567,7 +567,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDouble
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDoubleTest()
         {
@@ -582,7 +582,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt16Test()
         {
@@ -597,7 +597,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt32Test()
         {
@@ -612,7 +612,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt64Test()
         {
@@ -627,7 +627,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSByteTest()
         {
@@ -642,7 +642,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSingle
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSingleTest()
         {
@@ -657,7 +657,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToType
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToTypeTest()
         {
@@ -673,7 +673,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt16Test()
         {
@@ -688,7 +688,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt32Test()
         {
@@ -703,7 +703,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt64Test()
         {
@@ -720,7 +720,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Speed"/> value in feet per minute.
         /// </summary>
         /// <returns>Value of <see cref="Speed"/> in feet per minute.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToFeetPerMinuteTest()
         {
             Speed target = new Speed(10F);
@@ -735,7 +735,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Speed"/> value in inches per second.
         /// </summary>
         /// <returns>Value of <see cref="Speed"/> in inches per second.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToInchesPerSecondTest()
         {
             Speed target = new Speed(10F);
@@ -750,7 +750,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Speed"/> value in kilometers per hour.
         /// </summary>
         /// <returns>Value of <see cref="Speed"/> in kilometers per hour.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToKilometersPerHourTest()
         {
             Speed target = new Speed(10F);
@@ -765,7 +765,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Speed"/> value in knots (International).
         /// </summary>
         /// <returns>Value of <see cref="Speed"/> in knots.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToKnotsTest()
         {
             Speed target = new Speed(10F);
@@ -780,7 +780,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Speed"/> value in mach.
         /// </summary>
         /// <returns>Value of <see cref="Speed"/> in mach.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToMachTest()
         {
             Speed target = new Speed(10F);
@@ -795,7 +795,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Speed"/> value in miles per hour.
         /// </summary>
         /// <returns>Value of <see cref="Speed"/> in miles per hour.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToMilesPerHourTest()
         {
             Speed target = new Speed(10F);
@@ -816,7 +816,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringProviderTest()
         {
             double value = 10F;
@@ -840,7 +840,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format and provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatProviderTest()
         {
             double value = 10F;
@@ -862,7 +862,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatTest()
         {
             double value = 10F;
@@ -883,7 +883,7 @@ namespace GSF.Core.Tests
         /// The string representation of the value of this instance, consisting of a minus sign if
         /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringTest()
         {
             double value = 10F;
@@ -918,7 +918,7 @@ namespace GSF.Core.Tests
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseStyleProviderResultTest()
         {
             double value = 10F;
@@ -947,7 +947,7 @@ namespace GSF.Core.Tests
         /// This parameter per second is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseResultTest()
         {
             double value = 10F;
@@ -964,7 +964,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Addition
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_AdditionTest()
         {
             Speed value1 = new Speed(10F);
@@ -978,7 +978,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Division
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_DivisionTest()
         {
             Speed value1 = new Speed(10F);
@@ -992,7 +992,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Equality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_EqualityTest()
         {
             Speed value1 = new Speed(10F);
@@ -1006,7 +1006,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Exponent
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ExponentTest()
         {
             Speed value1 = new Speed(2F);
@@ -1020,7 +1020,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanTest()
         {
             Speed value1 = new Speed(10F);
@@ -1034,7 +1034,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanOrEqualTest()
         {
             Speed value1 = new Speed(10F);
@@ -1048,7 +1048,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitSpeedTest()
         {
             double value = 10F;
@@ -1061,7 +1061,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitDoubleTest()
         {
             Speed value = new Speed(10F);
@@ -1074,7 +1074,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Inequality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_InequalityTest()
         {
             Speed value1 = new Speed(10F);
@@ -1088,7 +1088,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanTest()
         {
             Speed value1 = new Speed(10F);
@@ -1102,7 +1102,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanOrEqualTest()
         {
             Speed value1 = new Speed(10F);
@@ -1116,7 +1116,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Modulus
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ModulusTest()
         {
             Speed value1 = new Speed(10F);
@@ -1130,7 +1130,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Multiply
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_MultiplyTest()
         {
             Speed value1 = new Speed(10F);
@@ -1144,7 +1144,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Subtraction
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_SubtractionTest()
         {
             Speed value1 = new Speed(10F);

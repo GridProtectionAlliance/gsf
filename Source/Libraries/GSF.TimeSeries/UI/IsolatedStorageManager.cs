@@ -35,7 +35,7 @@ namespace GSF.TimeSeries.UI
     /// </summary>
     public static class IsolatedStorageManager
     {
-        private static IsolatedStorageFile s_userStoreForAssembly = IsolatedStorageFile.GetUserStoreForAssembly();
+        private static readonly IsolatedStorageFile s_userStoreForAssembly = IsolatedStorageFile.GetUserStoreForAssembly();
 
         /// <summary>
         /// Writes collection values by converting collection to semi-colon seperated string to IsolatedStorage.
@@ -48,7 +48,7 @@ namespace GSF.TimeSeries.UI
             {
                 StringBuilder sb = new StringBuilder();
                 foreach (object value in valueList)
-                    sb.Append(value.ToString() + ";");
+                    sb.Append(value + ";");
 
                 writer.Write(sb.ToString());
             }

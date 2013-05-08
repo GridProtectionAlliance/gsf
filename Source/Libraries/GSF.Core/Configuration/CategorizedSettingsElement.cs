@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CategorizedSettingsElement.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -52,11 +52,11 @@
 //
 //******************************************************************************************************
 
-using GSF.Security.Cryptography;
 using System;
 using System.Configuration;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using GSF.Security.Cryptography;
 
 namespace GSF.Configuration
 {
@@ -131,7 +131,6 @@ namespace GSF.Configuration
         /// Required by the configuration API and is for internal use only.
         /// </summary>
         internal CategorizedSettingsElement(CategorizedSettingsElementCollection category, string name)
-            : base()
         {
             m_category = category;
             this.Name = name;
@@ -368,7 +367,7 @@ namespace GSF.Configuration
         /// </remarks>
         public T ValueAs<T>()
         {
-            return this.ValueAs<T>(default(T));
+            return this.ValueAs(default(T));
         }
 
         /// <summary>

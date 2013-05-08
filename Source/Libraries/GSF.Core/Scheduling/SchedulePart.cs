@@ -105,8 +105,8 @@ namespace GSF.Scheduling
         #region [ Members ]
 
         // Fields
-        private string m_valueText;
-        private DateTimePart m_dateTimePart;
+        private readonly string m_valueText;
+        private readonly DateTimePart m_dateTimePart;
         private SchedulePartTextSyntax m_valueTextSyntax;
         private List<int> m_values;
 

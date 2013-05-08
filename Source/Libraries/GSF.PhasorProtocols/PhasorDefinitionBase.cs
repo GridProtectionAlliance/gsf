@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  PhasorDefinitionBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -32,7 +32,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of a <see cref="IPhasorValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class PhasorDefinitionBase : ChannelDefinitionBase, IPhasorDefinition
     {
         #region [ Members ]
@@ -185,7 +185,7 @@ namespace GSF.PhasorProtocols
         /// <returns>String respresentation of this <see cref="PhasorDefinitionBase"/>.</returns>
         public override string ToString()
         {
-            return (PhasorType == GSF.PhasorProtocols.PhasorType.Current ? "I: " : "V: ") + Label;
+            return (PhasorType == PhasorType.Current ? "I: " : "V: ") + Label;
         }
 
         /// <summary>

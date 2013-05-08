@@ -25,9 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Data;
-using GSF.Reflection;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -36,7 +33,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
-using System.Threading;
+using GSF.Collections;
+using GSF.Data;
+using GSF.Reflection;
 
 namespace GSF.TimeSeries.UI
 {
@@ -62,7 +61,7 @@ namespace GSF.TimeSeries.UI
         public event PropertyChangedEventHandler PropertyChanged;
 
         // Fields
-        private ConcurrentDictionary<string, string> m_propertyErrors;
+        private readonly ConcurrentDictionary<string, string> m_propertyErrors;
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireEntityPropertyAttribute;
         private bool m_lastIsValidState;
@@ -251,7 +250,7 @@ namespace GSF.TimeSeries.UI
         /// Validates current instance properties using Data Annotations.
         /// </summary>
         /// <param name="propertyName">This instance property to validate.</param>
-        /// <returns>Relevant error string on validation failure or <see cref="String.Empty"/> on validation success.</returns>
+        /// <returns>Relevant error string on validation failure or <see cref="string.Empty"/> on validation success.</returns>
         protected virtual void ValidateProperty(string propertyName)
         {
             if (string.IsNullOrEmpty(propertyName))

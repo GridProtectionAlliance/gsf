@@ -61,10 +61,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Configuration;
-using GSF.IO;
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -76,6 +72,10 @@ using System.Text;
 using System.Threading;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.IO;
+using GSF.Units;
 
 namespace GSF.Adapters
 {
@@ -391,10 +391,10 @@ namespace GSF.Adapters
         private double m_allowableAdapterProcessorUsage;
         private bool m_persistSettings;
         private string m_settingsCategory;
-        private ObservableCollection<T> m_adapters;
+        private readonly ObservableCollection<T> m_adapters;
         private FileSystemWatcher m_adapterWatcher;
-        private ProcessQueue<object> m_operationQueue;
-        private Dictionary<Type, bool> m_enabledStates;
+        private readonly ProcessQueue<object> m_operationQueue;
+        private readonly Dictionary<Type, bool> m_enabledStates;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;

@@ -96,7 +96,7 @@ namespace GSF.IO.Checksums
         /// <summary>
         /// Updates the checksum with the byte value.
         /// </summary>
-        /// <param name="value">The <see cref="Byte"/> value to use for the update.</param>
+        /// <param name="value">The <see cref="byte"/> value to use for the update.</param>
         public void Update(byte value)
         {
             m_a += value;

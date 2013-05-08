@@ -30,7 +30,7 @@ namespace GSF.Parsing
     /// <summary>
     /// Contains classes used to simplify, standardize and automate any kind of stream based parsing operation.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

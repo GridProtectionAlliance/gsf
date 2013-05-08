@@ -35,7 +35,6 @@ using System;
 using System.IO;
 using System.Net;
 using GSF.Configuration;
-using GSF.ServiceModel;
 
 namespace GSF.Historian.MetadataProviders
 {   
@@ -59,7 +58,6 @@ namespace GSF.Historian.MetadataProviders
         /// Initializes a new instance of the <see cref="RestWebServiceMetadataProvider"/> class.
         /// </summary>
         public RestWebServiceMetadataProvider()
-            : base()
         {
             m_serviceUri = string.Empty;
             m_serviceDataFormat = SerializationFormat.Xml;

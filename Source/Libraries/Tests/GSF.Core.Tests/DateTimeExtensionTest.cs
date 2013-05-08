@@ -23,12 +23,12 @@
 //
 //******************************************************************************************************
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
-    [TestClass()]
+    [TestClass]
     public class DateTimeExtensionTest
     {
         private double lagTime = 2, leadTime = 2;
@@ -138,7 +138,7 @@ namespace GSF.Core.Tests
             //// Act
             TestStr = testTime1.AbbreviatedMonthName();
             //// Assert
-            Assert.AreEqual(DateTime.Now.AbbreviatedMonthName().ToString(), TestStr);
+            Assert.AreEqual(DateTime.Now.AbbreviatedMonthName(), TestStr);
         }
 
         // This method Gets the abbreviated month name for month of the timestamp, by comparing it to the system clock time
@@ -149,7 +149,7 @@ namespace GSF.Core.Tests
             //// Act
             TestStr = testTime2.AbbreviatedMonthName();
             //// Assert
-            Assert.AreEqual(DateTime.Now.AbbreviatedMonthName().ToString(), TestStr);
+            Assert.AreEqual(DateTime.Now.AbbreviatedMonthName(), TestStr);
         }
 
         // This method Gets the full month name for month of the timestamp, by comparing it to the system clock time
@@ -160,7 +160,7 @@ namespace GSF.Core.Tests
             //// Act
             TestStr = testTime1.MonthName();
             //// Assert
-            Assert.AreEqual(DateTime.Now.MonthName().ToString(), TestStr);
+            Assert.AreEqual(DateTime.Now.MonthName(), TestStr);
         }
 
         // This method Gets the full month name for month of the timestamp, by comparing it to the system clock time
@@ -171,7 +171,7 @@ namespace GSF.Core.Tests
             //// Act
             TestStr = testTime2.MonthName();
             //// Assert
-            Assert.AreEqual(DateTime.Now.MonthName().ToString(), TestStr);
+            Assert.AreEqual(DateTime.Now.MonthName(), TestStr);
         }
 
         // This method Gets the abbreviated weekday name for weekday of the timestamp, by comparing it to the system clock time
@@ -182,7 +182,7 @@ namespace GSF.Core.Tests
             //// Act
             TestStr = testTime1.AbbreviatedWeekdayName();
             //// Assert
-            Assert.AreEqual(DateTime.Now.AbbreviatedWeekdayName().ToString(), TestStr);
+            Assert.AreEqual(DateTime.Now.AbbreviatedWeekdayName(), TestStr);
         }
 
         // This method Gets the abbreviated weekday name for weekday of the timestamp, by comparing it to the system clock time
@@ -193,7 +193,7 @@ namespace GSF.Core.Tests
             //// Act
             TestStr = testTime2.AbbreviatedWeekdayName();
             //// Assert
-            Assert.AreEqual(DateTime.Now.AbbreviatedWeekdayName().ToString(), TestStr);
+            Assert.AreEqual(DateTime.Now.AbbreviatedWeekdayName(), TestStr);
         }
 
         // This method Gets the shortest weekday name for weekday of the timestamp, by comparing it to the system clock time
@@ -204,7 +204,7 @@ namespace GSF.Core.Tests
             //// Act
             TestStr = testTime1.ShortWeekdayName();
             //// Assert
-            Assert.AreEqual(DateTime.Now.ShortWeekdayName().ToString(), TestStr);
+            Assert.AreEqual(DateTime.Now.ShortWeekdayName(), TestStr);
         }
 
         // This method Gets the shortest weekday name for weekday of the timestamp, by comparing it to the system clock time
@@ -215,7 +215,7 @@ namespace GSF.Core.Tests
             //// Act
             TestStr = testTime2.ShortWeekdayName();
             //// Assert
-            Assert.AreEqual(DateTime.Now.ShortWeekdayName().ToString(), TestStr);
+            Assert.AreEqual(DateTime.Now.ShortWeekdayName(), TestStr);
 
         }
 

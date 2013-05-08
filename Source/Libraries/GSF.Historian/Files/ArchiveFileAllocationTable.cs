@@ -82,7 +82,7 @@ namespace GSF.Historian.Files
             public const int FixedLength = 32;
 
             // Fields
-            private ArchiveFileAllocationTable m_parent;
+            private readonly ArchiveFileAllocationTable m_parent;
 
             #endregion
 
@@ -190,7 +190,7 @@ namespace GSF.Historian.Files
             #region [ Members ]
 
             // Fields
-            private ArchiveFileAllocationTable m_parent;
+            private readonly ArchiveFileAllocationTable m_parent;
 
             #endregion
 
@@ -301,10 +301,10 @@ namespace GSF.Historian.Files
         private int m_dataPointsArchived;
         private int m_dataBlockSize;
         private int m_dataBlockCount;
-        private List<ArchiveDataBlockPointer> m_dataBlockPointers;
-        private ArchiveFile m_parent;
-        private FixedTableRegion m_fixedTableRegion;
-        private VariableTableRegion m_variableTableRegion;
+        private readonly List<ArchiveDataBlockPointer> m_dataBlockPointers;
+        private readonly ArchiveFile m_parent;
+        private readonly FixedTableRegion m_fixedTableRegion;
+        private readonly VariableTableRegion m_variableTableRegion;
 
         #endregion
 

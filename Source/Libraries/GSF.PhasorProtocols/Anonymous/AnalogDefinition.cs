@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  AnalogDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols.Anonymous
     /// <summary>
     /// Represents a protocol independent implementation of an <see cref="IAnalogDefinition"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class AnalogDefinition : AnalogDefinitionBase
 	{
         #region [ Constructors ]

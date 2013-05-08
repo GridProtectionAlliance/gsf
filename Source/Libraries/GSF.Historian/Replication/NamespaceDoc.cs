@@ -32,7 +32,7 @@ namespace GSF.Historian.Replication
     /// <summary>
     /// Contains classes and interfaces that allow for the replication of the time-series data archive.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

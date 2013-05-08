@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  BinaryImageBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -34,7 +34,7 @@ namespace GSF.Parsing
     /// <summary>
     /// Defines a base class that represents binary images for parsing or generation in terms of a header, body and footer.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class BinaryImageBase : ISupportBinaryImage
     {
         #region [ Properties ]

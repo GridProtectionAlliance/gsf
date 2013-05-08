@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,6 +32,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.Data;
 using DataType = System.ComponentModel.DataAnnotations.DataType;
 
 namespace GSF.TimeSeries.UI.DataModels
@@ -292,8 +292,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     foreach (DataRow row in vendorDeviceTable.Rows)
                     {
-                        vendorDeviceList.Add(new VendorDevice()
-                        {
+                        vendorDeviceList.Add(new VendorDevice
+                            {
                             ID = row.ConvertField<int>("ID"),
                             VendorID = row.ConvertField<int>("VendorID"),
                             Name = row.Field<string>("Name"),

@@ -31,7 +31,9 @@ using System;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Threading;
+using System.Timers;
 using System.Web;
+using Timer = System.Timers.Timer;
 
 namespace GSF.Security
 {
@@ -49,7 +51,7 @@ namespace GSF.Security
         /// </summary>
         private class CacheContext
         {
-            private ISecurityProvider m_provider;
+            private readonly ISecurityProvider m_provider;
             private DateTime m_lastAccessed;
 
             /// <summary>
@@ -98,15 +100,15 @@ namespace GSF.Security
 
         // Static Fields
         private static bool s_threadPolicySet;
-        private static IDictionary<string, CacheContext> s_cache;
-        private static System.Timers.Timer s_cacheMonitorTimer;
+        private static readonly IDictionary<string, CacheContext> s_cache;
+        private static readonly Timer s_cacheMonitorTimer;
 
         // Static Constructor
         static SecurityProviderCache()
         {
             // Initialize static variables.
             s_cache = new Dictionary<string, CacheContext>(StringComparer.CurrentCultureIgnoreCase);
-            s_cacheMonitorTimer = new System.Timers.Timer(60000);
+            s_cacheMonitorTimer = new Timer(60000);
             s_cacheMonitorTimer.Elapsed += CacheMonitorTimer_Elapsed;
             s_cacheMonitorTimer.Start();
         }
@@ -245,7 +247,7 @@ namespace GSF.Security
             return provider;
         }
 
-        private static void CacheMonitorTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private static void CacheMonitorTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             lock (s_cache)
             {

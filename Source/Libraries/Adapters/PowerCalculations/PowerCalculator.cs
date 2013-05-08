@@ -205,7 +205,7 @@ namespace PowerCalculations
                 throw new InvalidOperationException("No current magnitude input measurement was defined - one current magnitude input measurement is required for the power calculator.");
 
             // Make sure only these four phasor measurements are used as input (any others will be ignored)
-            InputMeasurementKeys = new MeasurementKey[] { m_voltageAngle, m_voltageMagnitude, m_currentAngle, m_currentMagnitude };
+            InputMeasurementKeys = new[] { m_voltageAngle, m_voltageMagnitude, m_currentAngle, m_currentMagnitude };
 
             // Validate output measurements
             if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)

@@ -32,7 +32,7 @@ namespace DataQualityMonitoring.Services
     /// <summary>
     /// Defines a REST web service for out-of-range measurements.
     /// </summary>
-    [ServiceContract()]
+    [ServiceContract]
     public interface IOutOfRangeService
     {
 
@@ -51,7 +51,7 @@ namespace DataQualityMonitoring.Services
         /// Reads all out-of-range measurements from the <see cref="Tests"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableRangeTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/outofrangemeasurements/read/xml")]
         SerializableRangeTestCollection ReadAllOutOfRangeMeasurementsAsXml();
 
@@ -59,7 +59,7 @@ namespace DataQualityMonitoring.Services
         /// Reads all out-of-range measurements from the <see cref="Tests"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableRangeTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/outofrangemeasurements/read/json")]
         SerializableRangeTestCollection ReadAllOutOfRangeMeasurementsAsJson();
 
@@ -68,7 +68,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="signalType">The signal type of the desired out-of-range measurements.</param>
         /// <returns>A <see cref="SerializableRangeTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/outofrangemeasurements/read/signaltype:{signalType}/xml")]
         SerializableRangeTestCollection ReadOutOfRangeMeasurementsWithSignalTypeAsXml(string signalType);
 
@@ -77,7 +77,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="signalType">The signal type of the desired out-of-range measurements.</param>
         /// <returns>A <see cref="SerializableRangeTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/outofrangemeasurements/read/signaltype:{signalType}/json")]
         SerializableRangeTestCollection ReadOutOfRangeMeasurementsWithSignalTypeAsJson(string signalType);
 
@@ -86,7 +86,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="device">The name of the device to check for out-of-range measurements.</param>
         /// <returns>A <see cref="SerializableRangeTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/outofrangemeasurements/read/device:{device}/xml")]
         SerializableRangeTestCollection ReadOutOfRangeMeasurementsFromDeviceAsXml(string device);
 
@@ -95,7 +95,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="device">The name of the device to check for out-of-range measurements.</param>
         /// <returns>A <see cref="SerializableRangeTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/outofrangemeasurements/read/device:{device}/json")]
         SerializableRangeTestCollection ReadOutOfRangeMeasurementsFromDeviceAsJson(string device);
 
@@ -104,7 +104,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="test">The name of the <see cref="RangeTest"/> to check for out-of-range measurements.</param>
         /// <returns>A <see cref="SerializableRangeTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/outofrangemeasurements/read/test:{test}/xml")]
         SerializableRangeTestCollection ReadOutOfRangeMeasurementsFromTestAsXml(string test);
 
@@ -113,7 +113,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="test">The name of the <see cref="RangeTest"/> to check for out-of-range measurements.</param>
         /// <returns>A <see cref="SerializableRangeTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/outofrangemeasurements/read/test:{test}/json")]
         SerializableRangeTestCollection ReadOutOfRangeMeasurementsFromTestAsJson(string test);
 

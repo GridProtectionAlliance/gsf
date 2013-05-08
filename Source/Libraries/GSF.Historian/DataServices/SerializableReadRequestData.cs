@@ -36,13 +36,6 @@ namespace GSF.Historian.DataServices
     {
         #region [ Constructors ]
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializableReadRequestData"/> class.
-        /// </summary>
-        public SerializableReadRequestData()
-        {
-        }
-
         #endregion
 
         #region [ Properties ]
@@ -50,19 +43,19 @@ namespace GSF.Historian.DataServices
         /// <summary>
         /// XML array of integer historian ID's.
         /// </summary>
-        [XmlArray(), DataMember(Order = 0)]
+        [XmlArray, DataMember(Order = 0)]
         public int[] idArray { get; set; }
 
         /// <summary>
         /// Start time.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 1)]
+        [XmlAttribute, DataMember(Order = 1)]
         public string startTime { get; set; }
 
         /// <summary>
         /// End time.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 2)]
+        [XmlAttribute, DataMember(Order = 2)]
         public string endTime { get; set; }
 
         #endregion

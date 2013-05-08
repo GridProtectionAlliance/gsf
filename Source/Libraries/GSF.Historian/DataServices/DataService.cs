@@ -64,7 +64,6 @@ namespace GSF.Historian.DataServices
         /// Initializes a new instance of historian data web service.
         /// </summary>
         protected DataService()
-            : base()
         {
             Singleton = true;
             PublishMetadata = true;

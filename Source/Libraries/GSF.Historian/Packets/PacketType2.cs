@@ -410,7 +410,7 @@ namespace GSF.Historian.Packets
         {
             DateTime timestamp = new DateTime(m_year, m_month, m_day, m_hour + m_gmtOffset, m_minute, m_second, m_millisecond, DateTimeKind.Utc);
 
-            return new ArchiveDataPoint[] { new ArchiveDataPoint(m_historianID, new TimeTag(timestamp), m_value, m_quality) };
+            return new[] { new ArchiveDataPoint(m_historianID, new TimeTag(timestamp), m_value, m_quality) };
         }
 
         /// <summary>
@@ -436,7 +436,7 @@ namespace GSF.Historian.Packets
         /// <returns>A <see cref="byte"/> array for "ACK".</returns>
         protected virtual IEnumerable<byte[]> PreProcess()
         {
-            return new byte[][] { Encoding.ASCII.GetBytes("ACK") };
+            return new[] { Encoding.ASCII.GetBytes("ACK") };
         }
 
         #endregion

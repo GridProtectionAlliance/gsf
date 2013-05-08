@@ -42,8 +42,8 @@ namespace GSF.PQDIF.Logical
         #region [ Members ]
 
         // Fields
-        private CollectionElement m_physicalStructure;
-        private ObservationRecord m_observationRecord;
+        private readonly CollectionElement m_physicalStructure;
+        private readonly ObservationRecord m_observationRecord;
 
         #endregion
 

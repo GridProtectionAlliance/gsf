@@ -33,7 +33,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -41,6 +40,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -91,7 +91,6 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Creates a new instance of the <see cref="Measurement"/> class.
         /// </summary>
         public Measurement()
-            : base()
         {
         }
 
@@ -830,8 +829,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in possibleMeasurementTable.Rows)
                 {
-                    possibleMeasurements.Add(new Measurement()
-                    {
+                    possibleMeasurements.Add(new Measurement
+                        {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
                         PointID = row.ConvertField<int>("PointID"),
@@ -894,8 +893,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in possibleMeasurementTable.Rows)
                 {
-                    possibleMeasurements.Add(new Measurement()
-                    {
+                    possibleMeasurements.Add(new Measurement
+                        {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
                         PointID = row.ConvertField<int>("PointID"),
@@ -1006,8 +1005,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in measurementTable.Rows)
                 {
-                    measurementList.Add(new Measurement()
-                    {
+                    measurementList.Add(new Measurement
+                        {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
                         PointID = row.ConvertField<int>("PointID"),
@@ -1144,8 +1143,8 @@ namespace GSF.TimeSeries.UI.DataModels
                     return null;
 
                 DataRow row = measurementTable.Rows[0];
-                Measurement measurement = new Measurement()
-                {
+                Measurement measurement = new Measurement
+                    {
                     SignalID = database.Guid(row, "SignalID"),
                     HistorianID = row.ConvertNullableField<int>("HistorianID"),
                     PointID = row.ConvertField<int>("PointID"),
@@ -1198,8 +1197,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
                 foreach (DataRow row in measurementTable.Rows)
                 {
-                    measurementList.Add(new Measurement()
-                    {
+                    measurementList.Add(new Measurement
+                        {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
                         PointID = row.ConvertField<int>("PointID"),
@@ -1260,8 +1259,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 {
                     if (row.Field<string>("SignalAcronym") != "STAT")
                     {
-                        measurementList.Add(new Measurement()
-                        {
+                        measurementList.Add(new Measurement
+                            {
                             SignalID = database.Guid(row, "SignalID"),
                             HistorianID = row.ConvertNullableField<int>("HistorianID"),
                             PointID = row.ConvertField<int>("PointID"),
@@ -1333,8 +1332,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 {
                     if (row.Field<string>("SignalAcronym") == "STAT") // Just one more filter.
                     {
-                        measurementList.Add(new Measurement()
-                        {
+                        measurementList.Add(new Measurement
+                            {
                             SignalID = database.Guid(row, "SignalID"),
                             HistorianID = row.ConvertNullableField<int>("HistorianID"),
                             PointID = row.ConvertField<int>("PointID"),
@@ -1410,8 +1409,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                         if (continueProcess)
                         {
-                            measurementList.Add(new Measurement()
-                            {
+                            measurementList.Add(new Measurement
+                                {
                                 SignalID = database.Guid(row, "SignalID"),
                                 HistorianID = row.ConvertNullableField<int>("HistorianID"),
                                 PointID = row.ConvertField<int>("PointID"),

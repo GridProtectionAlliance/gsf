@@ -41,7 +41,7 @@ namespace GSF.PQDIF.Physical
 
         // Fields
         private int m_size;
-        private IList<Element> m_elements;
+        private readonly IList<Element> m_elements;
 
         #endregion
 
@@ -158,7 +158,7 @@ namespace GSF.PQDIF.Physical
 
             foreach (Element element in m_elements)
             {
-                lines = element.ToString().Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+                lines = element.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
                 foreach (string line in lines)
                 {

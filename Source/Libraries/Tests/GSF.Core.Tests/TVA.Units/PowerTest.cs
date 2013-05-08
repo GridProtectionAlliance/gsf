@@ -38,11 +38,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace GSF.Core.Tests
 {
 
@@ -50,7 +51,7 @@ namespace GSF.Core.Tests
     ///This is a test class for PowerTest and is intended
     ///to contain all PowerTest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class PowerTest
     {
 
@@ -105,7 +106,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for Power Constructor
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void PowerConstructorTest()
         {
 
@@ -135,7 +136,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToPowerTest()
         {
             Power target = new Power(10F);
@@ -157,7 +158,7 @@ namespace GSF.Core.Tests
         /// if this instance is greater than value.
         /// </returns>
         /// <exception cref="ArgumentException">value is not a <see cref="Double"/> or <see cref="Power"/>.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToObjectTest()
         {
             Power target = new Power(10F);
@@ -178,7 +179,7 @@ namespace GSF.Core.Tests
         /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
         /// if this instance is greater than value.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void CompareToDoubleTest()
         {
             Power target = new Power(10F);
@@ -197,7 +198,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsDoubleTest()
         {
             Power target = new Power(10F);
@@ -217,7 +218,7 @@ namespace GSF.Core.Tests
         /// True if obj is an instance of <see cref="Double"/> or <see cref="Power"/> and equals the value of this instance;
         /// otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsObjectTest()
         {
             Power target = new Power(10F);
@@ -236,7 +237,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// True if obj has the same value as this instance; otherwise, False.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void EqualsPowerTest()
         {
             Power target = new Power(10F);
@@ -253,7 +254,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in BTU per second.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in BTU per second.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromBTUPerSecondTest()
         {
             double value = 10F;
@@ -269,7 +270,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in boiler horsepower.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in boiler horsepower.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromBoilerHorsepowerTest()
         {
             double value = 10F;
@@ -285,7 +286,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in calories per second.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in calories per second.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromCaloriesPerSecondTest()
         {
             double value = 10F;
@@ -301,7 +302,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in mechanical horsepower.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in mechanical horsepower.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromHorsepowerTest()
         {
             double value = 10F;
@@ -317,7 +318,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in liters-atmosphere per second.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in liters-atmosphere per second.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromLitersAtmospherePerSecondTest()
         {
             double value = 10F;
@@ -333,7 +334,7 @@ namespace GSF.Core.Tests
         /// </summary>
         /// <param name="value">New <see cref="Power"/> value in metric horsepower.</param>
         /// <returns>New <see cref="Power"/> object from the specified <paramref name="value"/> in metric horsepower.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void FromMetricHorsepowerTest()
         {
             double value = 10F;
@@ -350,7 +351,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// A 32-bit signed integer hash code.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetHashCodeTest()
         {
             Power target = new Power(10F);
@@ -365,7 +366,7 @@ namespace GSF.Core.Tests
         /// Returns the <see cref="TypeCode"/> for value type <see cref="Double"/>.
         /// </summary>
         /// <returns>The enumerated constant, <see cref="TypeCode.Double"/>.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void GetTypeCodeTest()
         {
             Power target = new Power(10F);
@@ -396,7 +397,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Power.MinValue"/> or greater than <see cref="Power.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleTest()
         {
             double value = 10F;
@@ -431,7 +432,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Power.MinValue"/> or greater than <see cref="Power.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in a format compliant with style.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStyleProviderTest()
         {
             double value = 10F;
@@ -460,7 +461,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Power.MinValue"/> or greater than <see cref="Power.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseProviderTest()
         {
             double value = 10F;
@@ -485,7 +486,7 @@ namespace GSF.Core.Tests
         /// s represents a number less than <see cref="Power.MinValue"/> or greater than <see cref="Power.MaxValue"/>.
         /// </exception>
         /// <exception cref="FormatException">s is not in the correct format.</exception>
-        [TestMethod()]
+        [TestMethod]
         public void ParseStringTest()
         {
             double value = 10F;
@@ -499,7 +500,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToBoolean
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToBooleanTest()
         {
@@ -514,7 +515,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToByteTest()
         {
@@ -529,7 +530,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToChar
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToCharTest()
         {
@@ -547,7 +548,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDateTime
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDateTimeTest()
         {
@@ -565,7 +566,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDecimal
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDecimalTest()
         {
@@ -580,7 +581,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToDouble
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToDoubleTest()
         {
@@ -595,7 +596,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt16Test()
         {
@@ -610,7 +611,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt32Test()
         {
@@ -625,7 +626,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToInt64Test()
         {
@@ -640,7 +641,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSByte
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSByteTest()
         {
@@ -655,7 +656,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToSingle
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToSingleTest()
         {
@@ -670,7 +671,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToType
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToTypeTest()
         {
@@ -686,7 +687,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt16
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt16Test()
         {
@@ -701,7 +702,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt32
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt32Test()
         {
@@ -716,7 +717,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for System.IConvertible.ToUInt64
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         [DeploymentItem("TVA.Core.dll")]
         public void ToUInt64Test()
         {
@@ -733,7 +734,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Power"/> value in BTU (International Table) per second.
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in BTU per second.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToBTUPerSecondTest()
         {
             Power target = new Power(10F);
@@ -748,7 +749,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Power"/> value in boiler horsepower.
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in boiler horsepower.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToBoilerHorsepowerTest()
         {
             Power target = new Power(10F);
@@ -763,7 +764,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Power"/> value in calories (International Table) per second.
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in calories per second.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToCaloriesPerSecondTest()
         {
             Power target = new Power(10F);
@@ -778,7 +779,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Power"/> value in mechanical horsepower (Imperial).
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in mechanical horsepower.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToHorsepowerTest()
         {
             Power target = new Power(10F);
@@ -793,7 +794,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Power"/> value in liters-atmosphere per second.
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in liters-atmosphere per second.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToLitersAtmospherePerSecondTest()
         {
             Power target = new Power(10F);
@@ -808,7 +809,7 @@ namespace GSF.Core.Tests
         /// Gets the <see cref="Power"/> value in metric horsepower.
         /// </summary>
         /// <returns>Value of <see cref="Power"/> in metric horsepower.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToMetricHorsepowerTest()
         {
             Power target = new Power(10F);
@@ -829,7 +830,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringProviderTest()
         {
             double value = 10F;
@@ -849,7 +850,7 @@ namespace GSF.Core.Tests
         /// The string representation of the value of this instance, consisting of a minus sign if
         /// the value is negative, and a sequence of digits ranging from 0 to 9 with no leading zeroes.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringTest()
         {
             double value = 10F;
@@ -872,7 +873,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format and provider.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatProviderTest()
         {
             double value = 10F;
@@ -894,7 +895,7 @@ namespace GSF.Core.Tests
         /// <returns>
         /// The string representation of the value of this instance as specified by format.
         /// </returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToStringFormatTest()
         {
             double value = 10F;
@@ -929,7 +930,7 @@ namespace GSF.Core.Tests
         /// style is not a System.Globalization.NumberStyles value. -or- style is not a combination of
         /// System.Globalization.NumberStyles.AllowHexSpecifier and System.Globalization.NumberStyles.HexNumber values.
         /// </exception>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseStyleProviderTest()
         {
             double value = 10F;
@@ -958,7 +959,7 @@ namespace GSF.Core.Tests
         /// This parawatt is passed uninitialized.
         /// </param>
         /// <returns>true if s was converted successfully; otherwise, false.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void TryParseResultTest()
         {
             double value = 10F;
@@ -975,7 +976,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Addition
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_AdditionTest()
         {
             Power value1 = new Power(10F);
@@ -989,7 +990,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Division
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_DivisionTest()
         {
             Power value1 = new Power(10F);
@@ -1003,7 +1004,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Equality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_EqualityTest()
         {
             Power value1 = new Power(10F);
@@ -1017,7 +1018,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Exponent
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ExponentTest()
         {
             Power value1 = new Power(2F);
@@ -1031,7 +1032,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanTest()
         {
             Power value1 = new Power(10F);
@@ -1045,7 +1046,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_GreaterThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_GreaterThanOrEqualTest()
         {
             Power value1 = new Power(10F);
@@ -1059,7 +1060,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitDoubleTest()
         {
             double value = 10F;
@@ -1072,7 +1073,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Implicit
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ImplicitPowerTest()
         {
             Power value = new Power(10F);
@@ -1085,7 +1086,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Inequality
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_InequalityTest()
         {
             Power value1 = new Power(10F);
@@ -1099,7 +1100,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThan
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanTest()
         {
             Power value1 = new Power(10F);
@@ -1113,7 +1114,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_LessThanOrEqual
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_LessThanOrEqualTest()
         {
             Power value1 = new Power(10F);
@@ -1127,7 +1128,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Modulus
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_ModulusTest()
         {
             Power value1 = new Power(10F);
@@ -1141,7 +1142,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Multiply
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_MultiplyTest()
         {
             Power value1 = new Power(10F);
@@ -1155,7 +1156,7 @@ namespace GSF.Core.Tests
         /// <summary>
         ///A test for op_Subtraction
         ///</summary>
-        [TestMethod()]
+        [TestMethod]
         public void op_SubtractionTest()
         {
             Power value1 = new Power(10F);

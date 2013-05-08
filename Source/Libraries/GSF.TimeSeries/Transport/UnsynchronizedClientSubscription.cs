@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Timers;
 using GSF.Collections;
 using GSF.Parsing;
 using GSF.TimeSeries.Adapters;
@@ -75,16 +76,16 @@ namespace GSF.TimeSeries.Transport
         private bool m_useMillisecondResolution;
         private volatile long[] m_baseTimeOffsets;
         private volatile int m_timeIndex;
-        private System.Timers.Timer m_baseTimeRotationTimer;
+        private Timer m_baseTimeRotationTimer;
         private volatile bool m_initializedBaseTimeOffsets;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
 
-        private List<byte[]> m_bufferBlockCache;
-        private object m_bufferBlockCacheLock;
+        private readonly List<byte[]> m_bufferBlockCache;
+        private readonly object m_bufferBlockCacheLock;
         private uint m_bufferBlockSequenceNumber;
         private uint m_expectedBufferBlockConfirmationNumber;
-        private System.Timers.Timer m_bufferBlockRetransmissionTimer;
+        private Timer m_bufferBlockRetransmissionTimer;
         private double m_bufferBlockRetransmissionTimeout;
 
         private bool m_disposed;
@@ -108,13 +109,13 @@ namespace GSF.TimeSeries.Transport
             m_clientID = clientID;
             m_subscriberID = subscriberID;
 
-            m_signalIndexCache = new SignalIndexCache()
-            {
+            m_signalIndexCache = new SignalIndexCache
+                {
                 SubscriberID = subscriberID
             };
 
-            m_processQueue = new AsyncQueue<IEnumerable<IMeasurement>>()
-            {
+            m_processQueue = new AsyncQueue<IEnumerable<IMeasurement>>
+                {
                 ProcessItemFunction = ProcessMeasurements
             };
 
@@ -308,7 +309,7 @@ namespace GSF.TimeSeries.Transport
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
                         if ((object)DataSource != null && (object)m_signalIndexCache != null)
-                            value = AdapterBase.ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
+                            value = ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
                     }
 
                     base.InputMeasurementKeys = value;
@@ -431,13 +432,13 @@ namespace GSF.TimeSeries.Transport
 
             if (m_parent.UseBaseTimeOffsets && m_includeTime)
             {
-                m_baseTimeRotationTimer = new System.Timers.Timer();
+                m_baseTimeRotationTimer = new Timer();
                 m_baseTimeRotationTimer.Interval = m_useMillisecondResolution ? 60000 : 420000;
                 m_baseTimeRotationTimer.AutoReset = true;
                 m_baseTimeRotationTimer.Elapsed += BaseTimeRotationTimer_Elapsed;
             }
 
-            m_bufferBlockRetransmissionTimer = new System.Timers.Timer();
+            m_bufferBlockRetransmissionTimer = new Timer();
             m_bufferBlockRetransmissionTimer.AutoReset = false;
             m_bufferBlockRetransmissionTimer.Interval = m_bufferBlockRetransmissionTimeout * 1000.0D;
             m_bufferBlockRetransmissionTimer.Elapsed += BufferBlockRetransmissionTimer_Elapsed;
@@ -552,8 +553,8 @@ namespace GSF.TimeSeries.Transport
                     // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
                     foreach (TemporalMeasurement measurement in LatestMeasurements)
                     {
-                        newMeasurement = new Measurement()
-                        {
+                        newMeasurement = new Measurement
+                            {
                             ID = measurement.ID,
                             Key = measurement.Key,
                             Value = measurement.GetValue(RealTime),
@@ -789,7 +790,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received
-        private void BufferBlockRetransmissionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs elapsedEventArgs)
+        private void BufferBlockRetransmissionTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
             lock (m_bufferBlockCacheLock)
             {
@@ -865,7 +866,7 @@ namespace GSF.TimeSeries.Transport
                 ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
         }
 
-        private void BaseTimeRotationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void BaseTimeRotationTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             RotateBaseTimes();
         }

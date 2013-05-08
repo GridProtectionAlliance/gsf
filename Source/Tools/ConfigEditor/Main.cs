@@ -23,7 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Security.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,6 +32,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
+using GSF.Security.Cryptography;
 
 namespace ConfigEditor
 {
@@ -219,20 +219,20 @@ namespace ConfigEditor
 								//string selectedValue = string.Empty;
 
 								if (attribValue.Value.ToLower() == "true" || attribValue.Value.ToLower() == "false")
-									propType = typeof(System.Boolean);
+									propType = typeof(Boolean);
 								else
-                                    propType = typeof(System.String);
+                                    propType = typeof(String);
 
                                 //If value is encrypted, then decrypt before loading it into property grid.
                                 string attribValueString;
                                 if (attribEncrypted != null && attribEncrypted.Value.ToLower() == "true" && !string.IsNullOrEmpty(attribValue.Value))
-                                    attribValueString = Cipher.Decrypt(attribValue.Value, DefaultCryptoKey, CryptoStrength);
+                                    attribValueString = attribValue.Value.Decrypt(DefaultCryptoKey, CryptoStrength);
                                 else
-                                    attribValueString = attribValue.Value.ToString();
+                                    attribValueString = attribValue.Value;
 
 								//Now add the property													
-								properties.AddProperty(atrribKey.Value.ToString(), attribValueString,
-										attribDescription.Value.ToString(), sectionList[y].Name, propType, false, false);
+								properties.AddProperty(atrribKey.Value, attribValueString,
+										attribDescription.Value, sectionList[y].Name, propType, false, false);
 
 							}
 						}
@@ -350,7 +350,7 @@ namespace ConfigEditor
 
                     //If encrypted=true, then encrypt the value before saving into configuration file.
                     if (nodes[i].Attributes["encrypted"] != null && nodes[i].Attributes["encrypted"].Value.ToLower() == "true" && !string.IsNullOrEmpty(property.GetValue(null).ToString()))
-                        nodes[i].Attributes["value"].Value = Cipher.Encrypt(property.GetValue(null).ToString(), DefaultCryptoKey, CryptoStrength);
+                        nodes[i].Attributes["value"].Value = property.GetValue(null).ToString().Encrypt(DefaultCryptoKey, CryptoStrength);
                     else
                         nodes[i].Attributes["value"].Value = property.GetValue(null).ToString();
 

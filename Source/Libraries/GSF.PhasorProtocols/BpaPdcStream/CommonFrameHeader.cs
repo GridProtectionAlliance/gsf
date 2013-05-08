@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommonFrameHeader.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -32,14 +32,13 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the common header for all BPA PDCstream frames of data.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class CommonFrameHeader : ICommonHeader<FrameType>, ISerializable
     {
         #region [ Members ]
@@ -60,7 +59,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         private byte m_packetNumber;
         private ushort m_wordCount;
         private uint m_rowFlags;
-        private Ticks m_roughTimestamp;
+        private readonly Ticks m_roughTimestamp;
         private bool m_usePhasorDataFileFormat;
         private FileType m_fileType;
         private FileVersion m_fileVersion;
@@ -111,7 +110,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             if (m_usePhasorDataFileFormat)
             {
                 // Handle phasor file format data protocol steps
-                if (buffer[startIndex] == GSF.PhasorProtocols.Common.SyncByte && buffer[startIndex + 1] == Common.PhasorFileFormatFlag)
+                if (buffer[startIndex] == PhasorProtocols.Common.SyncByte && buffer[startIndex + 1] == Common.PhasorFileFormatFlag)
                 {
                     // Bail out and leave frame length zero if there's not enough buffer to parse complete fixed portion of header
                     if (length >= DstHeaderFixedLength)
@@ -206,7 +205,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             else
             {
                 // Handle streaming data protocol steps
-                if (buffer[startIndex] != GSF.PhasorProtocols.Common.SyncByte)
+                if (buffer[startIndex] != PhasorProtocols.Common.SyncByte)
                     throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in BPA PDCstream frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
                 // Get packet number
@@ -712,7 +711,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
                 {
                     byte[] buffer = new byte[FixedLength];
 
-                    buffer[0] = GSF.PhasorProtocols.Common.SyncByte;
+                    buffer[0] = PhasorProtocols.Common.SyncByte;
                     buffer[1] = m_packetNumber;
                     EndianOrder.BigEndian.CopyBytes(m_wordCount, buffer, 2);
 

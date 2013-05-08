@@ -121,7 +121,7 @@ namespace EpriExport
             }
             set
             {
-                m_comments = value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)[0];
+                m_comments = value.Split(new[] { Environment.NewLine }, StringSplitOptions.None)[0];
             }
         }
 
@@ -138,7 +138,7 @@ namespace EpriExport
             }
             set
             {
-                m_modelIdentifier = value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None)[0];
+                m_modelIdentifier = value.Split(new[] { Environment.NewLine }, StringSplitOptions.None)[0];
             }
         }
 
@@ -224,7 +224,7 @@ namespace EpriExport
             m_referenceAngleKey = MeasurementKey.Parse(setting);
 
             // Make sure reference angle is first angle of input measurement keys collection
-            InputMeasurementKeys = (new MeasurementKey[] { m_referenceAngleKey }).Concat(InputMeasurementKeys).ToArray();
+            InputMeasurementKeys = (new[] { m_referenceAngleKey }).Concat(InputMeasurementKeys).ToArray();
 
             // Make sure sure reference angle key is actually an angle measurement
             SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];

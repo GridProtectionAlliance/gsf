@@ -30,7 +30,7 @@ namespace GSF.Configuration
     /// <summary>
     /// Contains classes, base classes and attributes related to simplifying access to configuration files including creating a categorized settings section.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

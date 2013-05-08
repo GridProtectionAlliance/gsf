@@ -77,7 +77,7 @@ namespace GSF.IO.Checksums
         /// <summary>
         /// Updates the checksum with the integer value.
         /// </summary>
-        /// <param name="value">The <see cref="Byte"/> value to use for the update.</param>
+        /// <param name="value">The <see cref="byte"/> value to use for the update.</param>
         public void Update(int value)
         {
             crc ^= CrcSeed;
@@ -188,7 +188,7 @@ namespace GSF.IO.Checksums
         // Static Methods
         internal static uint ComputeCrc32(uint oldCrc, byte value)
         {
-            return (uint)(Crc32.CrcTable[(oldCrc ^ value) & 0xFF] ^ (oldCrc >> 8));
+            return (uint)(CrcTable[(oldCrc ^ value) & 0xFF] ^ (oldCrc >> 8));
         }
 
         #endregion

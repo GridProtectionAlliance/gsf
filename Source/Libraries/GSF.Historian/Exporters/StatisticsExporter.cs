@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  StatisticsExporter.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -226,7 +226,7 @@ namespace GSF.Historian.Exporters
             Statistics stats = GetStatistics(export);
 
             // Get the dataset template we'll be outputting.
-            DataSet output = ExporterBase.DatasetTemplate("Statistics");
+            DataSet output = DatasetTemplate("Statistics");
 
             // Modify the dataset template for statistical values.
             DataTable data = output.Tables[0];
@@ -295,7 +295,7 @@ namespace GSF.Historian.Exporters
                                 for (int i = 0; i < records.Length - 1; i++)
                                 {
                                     // Calculate slope for the data using standard slope formula.
-                                    slope = Math.Abs((((float)records[i]["Value"]) - (float)records[i + 1]["Value"]) / (Ticks.ToSeconds((Convert.ToDateTime(records[i]["TimeTag"])).Ticks) - Ticks.ToSeconds((System.Convert.ToDateTime(records[i + 1]["TimeTag"])).Ticks)));
+                                    slope = Math.Abs((((float)records[i]["Value"]) - (float)records[i + 1]["Value"]) / (Ticks.ToSeconds((Convert.ToDateTime(records[i]["TimeTag"])).Ticks) - Ticks.ToSeconds((Convert.ToDateTime(records[i + 1]["TimeTag"])).Ticks)));
                                     if (slope > slopeThreshold)
                                     {
                                         // Data for the point has slope that exceeds the specified slope threshold.

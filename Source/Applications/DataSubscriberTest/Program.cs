@@ -26,23 +26,25 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Timers;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace DataSubscriberTest
 {
     class Program
     {
-        static SynchronizedSubscriptionInfo remotelySynchronizedInfo = new SynchronizedSubscriptionInfo(true, 30);
-        static SynchronizedSubscriptionInfo locallySynchronizedInfo = new SynchronizedSubscriptionInfo(false, 30);
-        static UnsynchronizedSubscriptionInfo unsynchronizedInfo = new UnsynchronizedSubscriptionInfo(false);
-        static UnsynchronizedSubscriptionInfo throttledInfo = new UnsynchronizedSubscriptionInfo(true);
+        static readonly SynchronizedSubscriptionInfo remotelySynchronizedInfo = new SynchronizedSubscriptionInfo(true, 30);
+        static readonly SynchronizedSubscriptionInfo locallySynchronizedInfo = new SynchronizedSubscriptionInfo(false, 30);
+        static readonly UnsynchronizedSubscriptionInfo unsynchronizedInfo = new UnsynchronizedSubscriptionInfo(false);
+        static readonly UnsynchronizedSubscriptionInfo throttledInfo = new UnsynchronizedSubscriptionInfo(true);
 
-        static DataSubscriber subscriber = new DataSubscriber();
-        static long dataCount = 0;
-        static System.Timers.Timer timer = new System.Timers.Timer(10000);
-        static object displayLock = new object();
+        static readonly DataSubscriber subscriber = new DataSubscriber();
+        static long dataCount;
+        static readonly Timer timer = new Timer(10000);
+        static readonly object displayLock = new object();
 
         private const int MeasurementCount = 200;
 
@@ -86,7 +88,7 @@ namespace DataSubscriberTest
             // Start subscriber connection cycle
             subscriber.Start();
 
-            timer.Elapsed += new System.Timers.ElapsedEventHandler(timer_Elapsed);
+            timer.Elapsed += timer_Elapsed;
             timer.Start();
 
             Console.ReadLine();
@@ -103,13 +105,13 @@ namespace DataSubscriberTest
             timer.Stop();
         }
 
-        static void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        static void timer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (subscriber.IsConnected)
             {
-                if (GSF.Security.Cryptography.Random.Boolean)
+                if (Random.Boolean)
                 {
-                    if (GSF.Security.Cryptography.Random.Boolean)
+                    if (Random.Boolean)
                     {
                         lock (displayLock)
                         {
@@ -128,7 +130,7 @@ namespace DataSubscriberTest
                 }
                 else
                 {
-                    if (GSF.Security.Cryptography.Random.Boolean)
+                    if (Random.Boolean)
                     {
                         lock (displayLock)
                         {
@@ -191,7 +193,7 @@ namespace DataSubscriberTest
             }
         }
 
-        static void subscriber_ProcessException(object sender, GSF.EventArgs<Exception> e)
+        static void subscriber_ProcessException(object sender, EventArgs<Exception> e)
         {
             lock (displayLock)
             {
@@ -201,7 +203,7 @@ namespace DataSubscriberTest
             }
         }
 
-        static void subscriber_StatusMessage(object sender, GSF.EventArgs<string> e)
+        static void subscriber_StatusMessage(object sender, EventArgs<string> e)
         {
             lock (displayLock)
             {

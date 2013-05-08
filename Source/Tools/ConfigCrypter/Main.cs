@@ -235,10 +235,10 @@
 */
 #endregion
 
-using GSF.Reflection;
-using GSF.Security.Cryptography;
 using System;
 using System.Windows.Forms;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
 
 namespace ConfigCrypter
 {
@@ -349,21 +349,21 @@ namespace ConfigCrypter
         {
             try
             {
-                if (true == RadioButtonEncrypt.Checked)
+                if (RadioButtonEncrypt.Checked)
                 {
                     // Encrypt the specified text and display the result.
                     if (!string.IsNullOrEmpty(TextBoxKey.Text))
-                        TextBoxOutput.Text = Cipher.Encrypt(TextBoxInput.Text, TextBoxKey.Text, CryptoStrength);
+                        TextBoxOutput.Text = TextBoxInput.Text.Encrypt(TextBoxKey.Text, CryptoStrength);
                     else
-                        TextBoxOutput.Text = Cipher.Encrypt(TextBoxInput.Text, DefaultCryptoKey, CryptoStrength);
+                        TextBoxOutput.Text = TextBoxInput.Text.Encrypt(DefaultCryptoKey, CryptoStrength);
                 }
-                else if (true == RadioButtonDecrypt.Checked)
+                else if (RadioButtonDecrypt.Checked)
                 {
                     // Decrypt the specified text and display the result.
                     if (!string.IsNullOrEmpty(TextBoxKey.Text))
-                        TextBoxOutput.Text = Cipher.Decrypt(TextBoxInput.Text, TextBoxKey.Text, CryptoStrength);
+                        TextBoxOutput.Text = TextBoxInput.Text.Decrypt(TextBoxKey.Text, CryptoStrength);
                     else
-                        TextBoxOutput.Text = Cipher.Decrypt(TextBoxInput.Text, DefaultCryptoKey, CryptoStrength);
+                        TextBoxOutput.Text = TextBoxInput.Text.Decrypt(DefaultCryptoKey, CryptoStrength);
                 }
             }
             catch (Exception ex)

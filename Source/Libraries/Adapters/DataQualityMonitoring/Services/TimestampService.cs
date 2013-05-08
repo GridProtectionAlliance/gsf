@@ -25,12 +25,12 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.ServiceModel;
-using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;
+using GSF;
+using GSF.ServiceModel;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -54,7 +54,6 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="test">The test to be used by this <see cref="TimestampService"/>.</param>
         public TimestampService(TimestampTest test)
-            :base()
         {
             m_test = test;
             PublishMetadata = true;

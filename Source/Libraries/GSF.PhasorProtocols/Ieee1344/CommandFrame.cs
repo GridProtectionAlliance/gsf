@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  CommandFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,7 +31,6 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.Ieee1344
 {
@@ -40,10 +39,10 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// </summary>
     /// <remarks>
     /// IEEE 1344 command frames are designed only to be sent to a device, not received from a device. As a result
-    /// this frame does not implement <see cref="ISupportFrameImage{T}"/> for automated frame parsing. This class
+    /// this frame does not implement <see cref="ISupportFrameImage{TTypeIdentifier}"/> for automated frame parsing. This class
     /// exposes a constructor that accepts a binary image in order to manually parse a command frame.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public class CommandFrame : CommandFrameBase
     {
         #region [ Members ]

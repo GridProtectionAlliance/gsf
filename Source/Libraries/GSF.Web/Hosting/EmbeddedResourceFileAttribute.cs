@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Text.RegularExpressions;
 
 namespace GSF.Web.Hosting
 {
@@ -62,7 +63,7 @@ namespace GSF.Web.Hosting
         /// property.
         /// </summary>
         /// <seealso cref="GSF.Web.Hosting.EmbeddedResourceFileAttribute" />
-        private string m_resourceNamespace;
+        private readonly string m_resourceNamespace;
 
         /// <summary>
         /// Internal storage for the
@@ -70,7 +71,7 @@ namespace GSF.Web.Hosting
         /// property.
         /// </summary>
         /// <seealso cref="GSF.Web.Hosting.EmbeddedResourceFileAttribute" />
-        private string m_resourcePath;
+        private readonly string m_resourcePath;
 
         #endregion
 
@@ -207,7 +208,7 @@ namespace GSF.Web.Hosting
         /// </summary>
         /// <seealso cref="GSF.Web.Hosting.EmbeddedResourceFileAttribute" />
         /// <seealso cref="GSF.Web.Hosting.EmbeddedResourceFileAttribute.RemoveMalformedEndChars" />
-        private static System.Text.RegularExpressions.Regex MalformedEndCharExpression = new System.Text.RegularExpressions.Regex("^[. ]*(.*?)[. ]*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+        private static readonly Regex MalformedEndCharExpression = new Regex("^[. ]*(.*?)[. ]*$", RegexOptions.Compiled);
 
         #endregion
 	}

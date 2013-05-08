@@ -30,7 +30,7 @@ namespace GSF.Identity
     /// <summary>
     /// Contains classes used to simplify and standardize access to information about a domain user retrieved from Active Directory.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

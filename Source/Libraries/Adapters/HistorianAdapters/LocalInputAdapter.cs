@@ -30,12 +30,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using GSF;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using Timer = System.Timers.Timer;
 
 namespace HistorianAdapters
 {
@@ -51,7 +53,7 @@ namespace HistorianAdapters
         private const long DefaultPublicationInterval = 333333;
 
         // Fields
-        private System.Timers.Timer m_readTimer;
+        private Timer m_readTimer;
         private string m_archiveLocation;
         private ArchiveFile m_archiveFile;
         private IEnumerator<IDataPoint> m_dataReader;
@@ -72,7 +74,7 @@ namespace HistorianAdapters
         public LocalInputAdapter()
         {
             // Setup a read timer
-            m_readTimer = new System.Timers.Timer();
+            m_readTimer = new Timer();
             m_readTimer.Elapsed += m_readTimer_Elapsed;
         }
 
@@ -338,7 +340,7 @@ namespace HistorianAdapters
                 m_autoRepeat = setting.ParseBoolean();
 
             // Define output measurements this input adapter can support based on the instance name
-            OutputSourceIDs = new string[] { m_instanceName };
+            OutputSourceIDs = new[] { m_instanceName };
 
             // Validate path name by assignment
             ArchiveLocation = m_archiveLocation;
@@ -491,7 +493,7 @@ namespace HistorianAdapters
         }
 
         // Process next data read
-        private void m_readTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_readTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             List<IMeasurement> measurements = new List<IMeasurement>();
 
@@ -516,8 +518,8 @@ namespace HistorianAdapters
                         key = new MeasurementKey(Guid.Empty, unchecked((uint)currentPoint.HistorianID), m_instanceName);
 
                         // Add current measurement to the collection for publication
-                        measurements.Add(new Measurement()
-                        {
+                        measurements.Add(new Measurement
+                            {
                             ID = key.SignalID,
                             Key = key,
                             Timestamp = m_simulateTimestamp ? PrecisionTimer.UtcNow.Ticks : timestamp,

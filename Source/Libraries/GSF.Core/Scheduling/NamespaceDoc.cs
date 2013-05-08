@@ -30,7 +30,7 @@ namespace GSF.Scheduling
     /// <summary>
     /// Contains classes used to schedule operations using standard UNIX crontab syntax.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Export.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -88,7 +88,7 @@ namespace GSF.Historian.Exporters
     /// </summary>
     /// <seealso cref="ExportRecord"/>
     /// <seealso cref="ExportSetting"/>
-    [Serializable()]
+    [Serializable]
     public class Export
     {
         #region [ Members ]
@@ -98,16 +98,16 @@ namespace GSF.Historian.Exporters
         private ExportType m_type;
         private double m_interval;
         private string m_exporter;
-        [NonSerialized()]
+        [NonSerialized]
         private ExportProcessResult m_lastProcessResult;
-        [NonSerialized()]
+        [NonSerialized]
         private Exception m_lastProcessError;
-        [NonSerialized()]
+        [NonSerialized]
         private Time m_lastProcessTime;
-        [NonSerialized()]
+        [NonSerialized]
         private DateTime m_lastProcessTimestamp;
-        private List<ExportSetting> m_settings;
-        private List<ExportRecord> m_records;
+        private readonly List<ExportSetting> m_settings;
+        private readonly List<ExportRecord> m_records;
 
         #endregion
 
@@ -201,7 +201,7 @@ namespace GSF.Historian.Exporters
         /// <summary>
         /// Gets or sets the <see cref="ExportProcessResult"/> of the <see cref="Export"/> when it was last processed.
         /// </summary>
-        [XmlIgnore()]
+        [XmlIgnore]
         public ExportProcessResult LastProcessResult
         {
             get
@@ -217,7 +217,7 @@ namespace GSF.Historian.Exporters
         /// <summary>
         /// Gets or sets any <see cref="Exception"/> encountered when the <see cref="Export"/> was last processed.
         /// </summary>
-        [XmlIgnore()]
+        [XmlIgnore]
         public Exception LastProcessError
         {
             get
@@ -236,7 +236,7 @@ namespace GSF.Historian.Exporters
         /// <remarks>
         /// <see cref="LastProcessTime"/> will be zero if the <see cref="Export.Type"/> is <see cref="ExportType.RealTime"/>.
         /// </remarks>
-        [XmlIgnore()]
+        [XmlIgnore]
         public Time LastProcessTime
         {
             get
@@ -255,7 +255,7 @@ namespace GSF.Historian.Exporters
         /// <remarks>
         /// <see cref="LastProcessTimestamp"/> will be <see cref="DateTime.MinValue"/> if the <see cref="Export.Type"/> is <see cref="ExportType.RealTime"/>.
         /// </remarks>
-        [XmlIgnore()]
+        [XmlIgnore]
         public DateTime LastProcessTimestamp
         {
             get

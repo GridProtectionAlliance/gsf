@@ -34,6 +34,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Timers;
 using GSF;
 using GSF.Communication;
 using GSF.IO;
@@ -184,11 +185,11 @@ namespace PhasorProtocolAdapters
         private ConcurrentDictionary<string, IMeasurement> m_definedMeasurements;
         private ConcurrentDictionary<ushort, ConfigurationCell> m_definedDevices;
         private ConcurrentDictionary<string, ConfigurationCell> m_labelDefinedDevices;
-        private ConcurrentDictionary<string, long> m_undefinedDevices;
-        private ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
+        private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
+        private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
         private DataSubscriber m_primaryDataSource;
         private MissingDataMonitor m_missingDataMonitor;
-        private System.Timers.Timer m_dataStreamMonitor;
+        private Timer m_dataStreamMonitor;
         private bool m_allowUseOfCachedConfiguration;
         private bool m_cachedConfigLoadAttempted;
         private TimeZoneInfo m_timezone;
@@ -243,7 +244,7 @@ namespace PhasorProtocolAdapters
             m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
 
             // Create data stream monitoring timer
-            m_dataStreamMonitor = new System.Timers.Timer();
+            m_dataStreamMonitor = new Timer();
             m_dataStreamMonitor.Elapsed += m_dataStreamMonitor_Elapsed;
             m_dataStreamMonitor.AutoReset = true;
             m_dataStreamMonitor.Enabled = false;
@@ -1355,8 +1356,8 @@ namespace PhasorProtocolAdapters
                         signalID = new Guid(row["SignalID"].ToNonNullString(Guid.NewGuid().ToString()));
 
                         // Create a measurement with a reference associated with this adapter
-                        definedMeasurement = new Measurement()
-                        {
+                        definedMeasurement = new Measurement
+                            {
                             ID = signalID,
                             Key = MeasurementKey.Parse(row["ID"].ToString(), signalID),
                             TagName = signalReference,
@@ -2025,8 +2026,8 @@ namespace PhasorProtocolAdapters
             {
                 if ((object)m_missingDataMonitor == null)
                 {
-                    m_missingDataMonitor = new MissingDataMonitor()
-                    {
+                    m_missingDataMonitor = new MissingDataMonitor
+                        {
                         LagTime = m_lagTime,
                         LeadTime = m_leadTime,
                         FramesPerSecond = m_frameParser.DefinedFrameRate,
@@ -2142,7 +2143,7 @@ namespace PhasorProtocolAdapters
             SendCommand(DeviceCommand.SendConfigurationFrame2);
         }
 
-        private void m_dataStreamMonitor_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_dataStreamMonitor_Elapsed(object sender, ElapsedEventArgs e)
         {
             if (m_bytesReceived == 0 && (m_frameParser.DeviceSupportsCommands || m_frameParser.ConnectionIsMulticast || m_frameParser.ConnectionIsListener))
             {

@@ -29,11 +29,12 @@
 //
 //******************************************************************************************************
 
-using GSF.ServiceModel;
-using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;
+using GSF;
+using GSF.ServiceModel;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -58,7 +59,6 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="test">The test to be used by this <see cref="FlatlineService"/>.</param>
         public FlatlineService(FlatlineTest test)
-            : base()
         {
             m_test = test;
             PublishMetadata = true;
@@ -173,7 +173,7 @@ namespace DataQualityMonitoring.Services
         }
 
         // Exceptions from flatlined measurements get forwarded to the ServiceProcessException event.
-        private void serializableMeasurement_ProcessException(object sender, GSF.EventArgs<Exception> e)
+        private void serializableMeasurement_ProcessException(object sender, EventArgs<Exception> e)
         {
             OnServiceProcessException(e.Argument);
         }

@@ -47,7 +47,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -59,6 +58,7 @@ using System.Net.Sockets;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using GSF.Configuration;
 
 namespace GSF.Communication
 {
@@ -204,13 +204,13 @@ namespace GSF.Communication
         private int m_maxSendQueueSize;
         private Socket m_tcpServer;
         private SocketAsyncEventArgs m_acceptArgs;
-        private ConcurrentDictionary<Guid, TcpClientInfo> m_clientInfoLookup;
+        private readonly ConcurrentDictionary<Guid, TcpClientInfo> m_clientInfoLookup;
         private Dictionary<string, string> m_configData;
 
-        private EventHandler<SocketAsyncEventArgs> m_acceptHandler;
-        private EventHandler<SocketAsyncEventArgs> m_sendHandler;
-        private EventHandler<SocketAsyncEventArgs> m_receivePayloadAwareHandler;
-        private EventHandler<SocketAsyncEventArgs> m_receivePayloadUnawareHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_acceptHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_sendHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_receivePayloadAwareHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_receivePayloadUnawareHandler;
 
         #endregion
 
@@ -847,8 +847,8 @@ namespace GSF.Communication
                 else
                 {
                     // We can proceed further with receiving data from the client.
-                    clientInfo = new TcpClientInfo()
-                    {
+                    clientInfo = new TcpClientInfo
+                        {
                         Client = client,
                         SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
                         SendLock = new SpinLock(),

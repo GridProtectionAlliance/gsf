@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Arguments.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -91,16 +91,16 @@ namespace GSF.Console
     /// }
     /// </code>
     /// </example>
-    [Serializable()]
+    [Serializable]
     public class Arguments : IEnumerable, IEnumerable<KeyValuePair<string, string>>
     {
         #region [ Members ]
 
         // Fields
-        private string m_commandLine;
-        private string m_orderedArgID;
-        private int m_orderedArgCount;
-        private Dictionary<string, string> m_arguments;
+        private readonly string m_commandLine;
+        private readonly string m_orderedArgID;
+        private readonly int m_orderedArgCount;
+        private readonly Dictionary<string, string> m_arguments;
 
         #endregion
 

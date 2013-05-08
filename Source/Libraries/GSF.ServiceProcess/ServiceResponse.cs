@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ServiceResponse.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -40,7 +40,7 @@ namespace GSF.ServiceProcess
     /// <seealso cref="ServiceHelper"/>
     /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ClientRequest"/>
-    [Serializable()]
+    [Serializable]
     public class ServiceResponse
     {
         #region [ Members ]
@@ -48,7 +48,7 @@ namespace GSF.ServiceProcess
         // Fields
         private string m_type;
         private string m_message;
-        private List<object> m_attachments;
+        private readonly List<object> m_attachments;
 
         #endregion
 

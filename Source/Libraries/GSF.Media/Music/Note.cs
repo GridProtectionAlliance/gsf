@@ -739,7 +739,7 @@ namespace GSF.Media.Music
         {
             get
             {
-                return (NoteValue)Note.NamedValueIndex(m_value);
+                return (NoteValue)NamedValueIndex(m_value);
             }
             set
             {
@@ -752,7 +752,7 @@ namespace GSF.Media.Music
         {
             get
             {
-                return (NoteValueBritish)Note.NamedValueIndex(m_value);
+                return (NoteValueBritish)NamedValueIndex(m_value);
             }
             set
             {
@@ -1108,7 +1108,7 @@ namespace GSF.Media.Music
         #region [ Static ]
 
         // Static Fields
-        static private int s_lastNamedValueIndex;
+        static private readonly int s_lastNamedValueIndex;
 
         // Static Constructor
         static Note()

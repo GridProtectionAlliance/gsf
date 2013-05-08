@@ -23,9 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.IO;
-using GSF.Net.Security;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -37,6 +34,9 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using GSF.Configuration;
+using GSF.IO;
+using GSF.Net.Security;
 
 namespace GSF.Communication
 {
@@ -125,7 +125,7 @@ namespace GSF.Communication
         public const string DefaultConfigurationString = "Port=8888";
 
         // Fields
-        private SimpleCertificateChecker m_defaultCertificateChecker;
+        private readonly SimpleCertificateChecker m_defaultCertificateChecker;
         private ICertificateChecker m_certificateChecker;
         private RemoteCertificateValidationCallback m_remoteCertificateValidationCallback;
         private LocalCertificateSelectionCallback m_localCertificateSelectionCallback;
@@ -143,10 +143,10 @@ namespace GSF.Communication
         private int m_maxSendQueueSize;
         private Socket m_tlsServer;
         private SocketAsyncEventArgs m_acceptArgs;
-        private ConcurrentDictionary<Guid, TlsClientInfo> m_clientInfoLookup;
+        private readonly ConcurrentDictionary<Guid, TlsClientInfo> m_clientInfoLookup;
         private Dictionary<string, string> m_configData;
 
-        private EventHandler<SocketAsyncEventArgs> m_acceptHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_acceptHandler;
 
         #endregion
 
@@ -812,8 +812,8 @@ namespace GSF.Communication
                 remoteEndPoint = m_acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
                 netStream = new NetworkStream(m_acceptArgs.AcceptSocket);
 
-                client.Provider = new TlsSocket()
-                {
+                client.Provider = new TlsSocket
+                    {
                     Socket = m_acceptArgs.AcceptSocket,
                     SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback)
                 };
@@ -873,8 +873,8 @@ namespace GSF.Communication
                 else
                 {
                     // We can proceed further with receiving data from the client.
-                    m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo()
-                    {
+                    m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo
+                        {
                         Client = client,
                         SendLock = new SpinLock(),
                         SendQueue = new ConcurrentQueue<TlsServerPayload>()

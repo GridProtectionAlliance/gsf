@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -35,7 +35,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// <summary>
     /// Represents the SEL Fast Message implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationCell : ConfigurationCellBase
     {
         #region [ Constructors ]

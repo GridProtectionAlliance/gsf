@@ -30,7 +30,7 @@ namespace GSF.Communication.Radius
     /// <summary>
     /// Contains classes for RADIUS (Remote Authentication Dial In User Service) based server and client communication.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

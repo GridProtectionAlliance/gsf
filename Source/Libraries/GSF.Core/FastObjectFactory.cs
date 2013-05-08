@@ -41,7 +41,7 @@ namespace GSF
     public static class FastObjectFactory<T> where T : class, new()
     {
         // Static object creation delegate specific to type T - one instance will be created per type by the compiler
-        private static Func<T> s_createObjectFunction;
+        private static readonly Func<T> s_createObjectFunction;
 
         static FastObjectFactory()
         {
@@ -76,7 +76,7 @@ namespace GSF
     public static class FastObjectFactory
     {
         // We cache object creation functions by type so they are only created once
-        private static ConcurrentDictionary<Type, Delegate> s_createObjectFunctions = new ConcurrentDictionary<Type, Delegate>();
+        private static readonly ConcurrentDictionary<Type, Delegate> s_createObjectFunctions = new ConcurrentDictionary<Type, Delegate>();
 
         /// <summary>
         /// Gets delegate that creates new instance of the <paramref name="type"/>.

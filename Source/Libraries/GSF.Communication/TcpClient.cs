@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  TcpClient.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -185,7 +185,7 @@ namespace GSF.Communication
 
         // Fields
         private SpinLock m_sendLock;
-        private ConcurrentQueue<TcpClientPayload> m_sendQueue;
+        private readonly ConcurrentQueue<TcpClientPayload> m_sendQueue;
         private int m_sending;
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
@@ -194,7 +194,7 @@ namespace GSF.Communication
         private bool m_allowDualStackSocket;
         private int m_maxSendQueueSize;
         private int m_connectionAttempts;
-        private TransportProvider<Socket> m_tcpClient;
+        private readonly TransportProvider<Socket> m_tcpClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
         private NetworkCredential m_networkCredential;
@@ -202,10 +202,10 @@ namespace GSF.Communication
         private SocketAsyncEventArgs m_connectArgs;
         private SocketAsyncEventArgs m_receiveArgs;
         private SocketAsyncEventArgs m_sendArgs;
-        private EventHandler<SocketAsyncEventArgs> m_connectHandler;
-        private EventHandler<SocketAsyncEventArgs> m_sendHandler;
-        private EventHandler<SocketAsyncEventArgs> m_receivePayloadAwareHandler;
-        private EventHandler<SocketAsyncEventArgs> m_receivePayloadUnawareHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_connectHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_sendHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_receivePayloadAwareHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_receivePayloadUnawareHandler;
 
         private bool m_disposed;
 

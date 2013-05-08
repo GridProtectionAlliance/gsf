@@ -300,7 +300,7 @@ namespace GSF.TimeSeries.UI
         public static object CurrentNodeID(this AdoDataConnection database)
         {
             if (s_currentNodeID == null)
-                return database.Guid(System.Guid.Empty);
+                return database.Guid(Guid.Empty);
 
             return database.Guid(s_currentNodeID);
         }
@@ -499,7 +499,7 @@ namespace GSF.TimeSeries.UI
             }
             else
             {
-                if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != GSF.Communication.ClientState.Connected)
+                if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
                 {
                     if (s_windowsServiceClient != null)
                         DisconnectWindowsServiceClient();
@@ -612,7 +612,7 @@ namespace GSF.TimeSeries.UI
                 // Make sure requests are serialized
                 lock (s_windowsServiceClient)
                 {
-                    if (s_windowsServiceClient.Helper.RemotingClient.CurrentState == GSF.Communication.ClientState.Connected)
+                    if (s_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                         s_windowsServiceClient.Helper.SendRequest(command);
                     else
                         throw new ApplicationException("Application is currently disconnected from service.");
@@ -823,8 +823,8 @@ namespace GSF.TimeSeries.UI
         {
             UIElement frame = null;
             UIElement groupBox = null;
-            GSF.TimeSeries.UI.CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(System.Windows.Controls.Frame), ref frame);
-            GSF.TimeSeries.UI.CommonFunctions.GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+            GetFirstChild(Application.Current.MainWindow, typeof(Frame), ref frame);
+            GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
 
             if (frame != null)
             {
@@ -837,7 +837,7 @@ namespace GSF.TimeSeries.UI
                 txt.Padding = new Thickness(5.0);
                 txt.Inlines.Add(run);
 
-                ((System.Windows.Controls.Frame)frame).Navigate(userControl, txt);
+                ((Frame)frame).Navigate(userControl, txt);
 
                 if (groupBox != null)
                     ((GroupBox)groupBox).Header = txt;

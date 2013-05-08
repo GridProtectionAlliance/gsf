@@ -63,7 +63,7 @@ namespace GSF.PhasorProtocols.FNet
             if (buffer[startIndex] != Common.StartByte)
                 throw new InvalidOperationException("Bad data stream, expected start byte 0x01 as first byte in F-NET frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
-            int endIndex = -1, stopIndex = Array.IndexOf<byte>(buffer, Common.EndByte, startIndex, length);
+            int endIndex = -1, stopIndex = Array.IndexOf(buffer, Common.EndByte, startIndex, length);
 
             if (stopIndex < 0)
                 throw new InvalidOperationException("Bad data stream, did not find stop byte 0x00 in F-NET frame");

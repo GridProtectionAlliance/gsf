@@ -58,7 +58,6 @@ namespace GSF.Historian.MetadataProviders
         /// Initializes a new instance of the <see cref="OleDbMetadataProvider"/> class.
         /// </summary>
         public OleDbMetadataProvider()
-            : base()
         {
             m_connectionString = string.Empty;
             m_selectString = string.Empty;

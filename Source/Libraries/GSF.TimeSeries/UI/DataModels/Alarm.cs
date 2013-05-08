@@ -23,7 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -31,6 +30,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -574,8 +574,8 @@ namespace GSF.TimeSeries.UI.DataModels
                     {
                         associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
 
-                        alarmList.Add(new Alarm()
-                        {
+                        alarmList.Add(new Alarm
+                            {
                             NodeID = database.Guid(row, "NodeID"),
                             ID = row.ConvertField<int>("ID"),
                             TagName = row.Field<string>("TagName"),
@@ -624,8 +624,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 DataRow row = alarmTable.Rows[0];
                 object associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
-                Alarm alarm = new Alarm()
-                {
+                Alarm alarm = new Alarm
+                    {
                     NodeID = database.Guid(row, "NodeID"),
                     ID = row.ConvertField<int>("ID"),
                     TagName = row.Field<string>("TagName"),
@@ -718,7 +718,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         alarm.Tolerance.ToNotNull(), alarm.Delay.ToNotNull(), alarm.Hysteresis.ToNotNull(), alarm.LoadOrder, database.Bool(alarm.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
                         CommonFunctions.CurrentUser, database.UtcNow());
 
-                    createdAlarm = Alarm.GetAlarm(database, string.Format("WHERE TagName = '{0}'", alarm.TagName));
+                    createdAlarm = GetAlarm(database, string.Format("WHERE TagName = '{0}'", alarm.TagName));
                 }
                 else
                 {
@@ -801,7 +801,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, signalId);
                 }
 
-                GSF.TimeSeries.UI.CommonFunctions.SendCommandToService("ReloadConfig");
+                CommonFunctions.SendCommandToService("ReloadConfig");
 
                 return "Alarm deleted successfully";
             }
@@ -826,8 +826,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 historian = Historian.GetHistorian(database, string.Format("WHERE Acronym = 'STAT' AND NodeID = '{0}'", nodeID));
                 signalTypeId = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym = 'ALRM'", DefaultTimeout));
 
-                alarmMeasurement = new Measurement()
-                {
+                alarmMeasurement = new Measurement
+                    {
                     HistorianID = historian.ID,
                     PointTag = alarm.TagName,
                     SignalTypeID = signalTypeId,

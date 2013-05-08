@@ -326,7 +326,7 @@ namespace GSF.Media.Music
         private TimbreFunction m_timbre;
         private DampingFunction m_damping;
         private Tempo m_tempo;
-        private List<Note> m_noteQueue;
+        private readonly List<Note> m_noteQueue;
         private double m_dynamic;
         private double m_interNoteDelay;
         private long m_currentSample;

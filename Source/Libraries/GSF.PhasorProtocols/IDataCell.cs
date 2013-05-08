@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  IDataCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -35,7 +35,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Data sorting types enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum DataSortingType
     {
         /// <summary>

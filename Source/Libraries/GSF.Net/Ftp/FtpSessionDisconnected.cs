@@ -53,7 +53,7 @@ namespace GSF.Net.Ftp
         private FtpClient m_host;
         private string m_server;
         private int m_port;
-        private bool m_caseInsensitive;
+        private readonly bool m_caseInsensitive;
         private bool m_disposed;
 
         #endregion

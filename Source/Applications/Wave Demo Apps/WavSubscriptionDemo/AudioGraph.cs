@@ -37,10 +37,10 @@
 
 #endregion
 
-using GSF;
-using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using GSF;
+using NAudio.Wave;
 
 namespace NAudioWpfDemo
 {
@@ -50,7 +50,7 @@ namespace NAudioWpfDemo
     public class AudioGraph : IDisposable
     {
         private AudioPlayback playback;
-        private SampleAggregator aggregator;
+        private readonly SampleAggregator aggregator;
 
         public event EventHandler<MaxSampleEventArgs> MaximumCalculated
         {

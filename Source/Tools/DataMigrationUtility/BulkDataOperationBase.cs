@@ -353,7 +353,7 @@ namespace Database
         /// <summary>
         /// List of exclude tables
         /// </summary>
-        private List<string> m_excludedTables = new List<string>();
+        private readonly List<string> m_excludedTables = new List<string>();
 
         // Events
         public event EventHandler<TableProgressEventHandler<string, bool, int, int>> TableProgress;

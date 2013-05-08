@@ -72,7 +72,7 @@ namespace GSF.Media.Music
         #region [ Members ]
 
         // Fields
-        private List<Note[]> m_notes;
+        private readonly List<Note[]> m_notes;
 
         #endregion
 

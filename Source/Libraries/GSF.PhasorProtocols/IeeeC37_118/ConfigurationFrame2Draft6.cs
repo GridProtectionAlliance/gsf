@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame2Draft6.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -30,14 +30,13 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 draft 6 implementation of a <see cref="IConfigurationFrame"/>, type 2, that can be sent or received.
     /// </summary>
-    [Serializable(), SuppressMessage("Microsoft.Maintainability", "CA1501")]
+    [Serializable, SuppressMessage("Microsoft.Maintainability", "CA1501")]
     public class ConfigurationFrame2Draft6 : ConfigurationFrame2
     {
         #region [ Constructors ]
@@ -89,7 +88,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return IeeeC37_118.DraftRevision.Draft6;
+                return DraftRevision.Draft6;
             }
         }
 

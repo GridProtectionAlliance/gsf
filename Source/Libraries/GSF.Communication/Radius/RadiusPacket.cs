@@ -25,11 +25,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using GSF.Parsing;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.Communication.Radius
 {
@@ -122,7 +123,7 @@ namespace GSF.Communication.Radius
         private PacketType m_type;
         private byte m_identifier;
         private byte[] m_authenticator;
-        private List<RadiusPacketAttribute> m_attributes;
+        private readonly List<RadiusPacketAttribute> m_attributes;
 
         #endregion
 
@@ -133,7 +134,7 @@ namespace GSF.Communication.Radius
         /// </summary>
         public RadiusPacket()
         {
-            m_identifier = (byte)(GSF.Security.Cryptography.Random.Between(0, 255));
+            m_identifier = (byte)(Random.Between(0, 255));
             m_authenticator = new byte[16];
             m_attributes = new List<RadiusPacketAttribute>();
         }
@@ -373,7 +374,7 @@ namespace GSF.Communication.Radius
             // we prepend a randomly generated "salt" text to ensure the uniqueness of the output value.
             byte[] randomBuffer = new byte[16];
             byte[] secretBuffer = Encoding.GetBytes(sharedSecret);
-            GSF.Security.Cryptography.Random.GetBytes(randomBuffer);
+            Random.GetBytes(randomBuffer);
 
             return new MD5CryptoServiceProvider().ComputeHash(randomBuffer.Combine(secretBuffer));
         }

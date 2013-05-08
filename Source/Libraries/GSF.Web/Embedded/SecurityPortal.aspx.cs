@@ -37,15 +37,14 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Security;
-using GSF.Web.UI;
 using System;
 using System.Security;
 using System.Text;
 using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
+using GSF.Configuration;
+using GSF.Security;
+using GSF.Web.UI;
 
 namespace GSF.Web.Embedded
 {
@@ -73,7 +72,7 @@ namespace GSF.Web.Embedded
     /// ]]>
     /// </code>
     /// </example>
-    public partial class SecurityPortal : System.Web.UI.Page
+    public partial class SecurityPortal : Page
     {
         #region [ Members ]
 
@@ -311,7 +310,7 @@ namespace GSF.Web.Embedded
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Login failed due to an unexpected error.", true);
-                System.Diagnostics.Trace.WriteLine(string.Format("Login error: \r\n  {0}", ex.ToString()));
+                System.Diagnostics.Trace.WriteLine(string.Format("Login error: \r\n  {0}", ex));
             }
             finally
             {
@@ -355,7 +354,7 @@ namespace GSF.Web.Embedded
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Update failed due to an unexpected error.", true);
-                System.Diagnostics.Trace.WriteLine(string.Format("Update information error: \r\n  {0}", ex.ToString()));
+                System.Diagnostics.Trace.WriteLine(string.Format("Update information error: \r\n  {0}", ex));
             }
             finally
             {
@@ -416,7 +415,7 @@ namespace GSF.Web.Embedded
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Password change failed due to an unexpected error.", true);
-                System.Diagnostics.Trace.WriteLine(string.Format("Password change error: \r\n  {0}", ex.ToString()));
+                System.Diagnostics.Trace.WriteLine(string.Format("Password change error: \r\n  {0}", ex));
             }
             finally
             {
@@ -467,7 +466,7 @@ namespace GSF.Web.Embedded
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Password reset failed due to an unexpected error.", true);
-                System.Diagnostics.Trace.WriteLine(string.Format("Password reset error: \r\n  {0}", ex.ToString()));
+                System.Diagnostics.Trace.WriteLine(string.Format("Password reset error: \r\n  {0}", ex));
             }
             finally
             {
@@ -517,7 +516,7 @@ namespace GSF.Web.Embedded
             {
                 // Show ambiguous message for other errors.
                 ShowMessage("Password reset failed due to an unexpected error.", true);
-                System.Diagnostics.Trace.WriteLine(string.Format("Password reset error: \r\n  {0}", ex.ToString()));
+                System.Diagnostics.Trace.WriteLine(string.Format("Password reset error: \r\n  {0}", ex));
             }
             finally
             {

@@ -184,12 +184,12 @@ namespace GSF.Security
         private SecureString m_securePassword;
         private string m_authenticationFailureReason;
         private string m_settingsCategory;
-        private UserData m_userData;
+        private readonly UserData m_userData;
         private bool m_persistSettings;
-        private bool m_canRefreshData;
-        private bool m_canUpdateData;
-        private bool m_canResetPassword;
-        private bool m_canChangePassword;
+        private readonly bool m_canRefreshData;
+        private readonly bool m_canUpdateData;
+        private readonly bool m_canResetPassword;
+        private readonly bool m_canChangePassword;
         private bool m_enabled;
         private bool m_initialized;
         private bool m_disposed;

@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents an energy measurement, in joules (i.e., watt-seconds), as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing an energy in joules; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing an energy in joules; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other energy representations, specifically
     /// watt-hours, BTU, Celsius heat unit, liter-atmosphere, calorie, horsepower-hour, barrel of oil and ton of coal.
     /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
@@ -101,7 +101,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Energy : IComparable, IFormattable, IConvertible, IComparable<Energy>, IComparable<Double>, IEquatable<Energy>, IEquatable<Double>
     {
         #region [ Members ]
@@ -124,7 +124,7 @@ namespace GSF.Units
         private const double TonsOfCoalFactor = 29.3076E+9D;
 
         // Fields
-        private double m_value; // Energy value stored in joules
+        private readonly double m_value; // Energy value stored in joules
 
         #endregion
 
@@ -786,7 +786,7 @@ namespace GSF.Units
         /// <param name="value1">An <see cref="Energy"/> object as the left hand operand.</param>
         /// <param name="value2">An <see cref="Energy"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result of the operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Energy value1, Energy value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -34,7 +34,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DataCell : DataCellBase
     {
         #region [ Constructors ]
@@ -50,10 +50,10 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             // Define new parsing state which defines constructors for key data values
             State = new DataCellParsingState(
                 configurationCell,
-                IeeeC37_118.PhasorValue.CreateNewValue,
+                PhasorValue.CreateNewValue,
                 IeeeC37_118.FrequencyValue.CreateNewValue,
-                IeeeC37_118.AnalogValue.CreateNewValue,
-                IeeeC37_118.DigitalValue.CreateNewValue);
+                AnalogValue.CreateNewValue,
+                DigitalValue.CreateNewValue);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             set
             {
                 base.StatusFlags = (ushort)((base.StatusFlags & ~(ushort)StatusFlags.UnlockedTimeMask) | (ushort)value);
-                SynchronizationIsValid = (value == IeeeC37_118.UnlockedTime.SyncLocked);
+                SynchronizationIsValid = (value == UnlockedTime.SyncLocked);
             }
         }
 
@@ -179,7 +179,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             set
             {
                 base.StatusFlags = (ushort)((base.StatusFlags & ~(short)StatusFlags.TriggerReasonMask) | (ushort)value);
-                DeviceTriggerDetected = (value != IeeeC37_118.TriggerReason.Manual);
+                DeviceTriggerDetected = (value != TriggerReason.Manual);
             }
         }
 
@@ -190,14 +190,14 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (StatusFlags & IeeeC37_118.StatusFlags.DataIsValid) == 0;
+                return (StatusFlags & StatusFlags.DataIsValid) == 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DataIsValid;
+                    StatusFlags = StatusFlags & ~StatusFlags.DataIsValid;
                 else
-                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DataIsValid;
+                    StatusFlags = StatusFlags | StatusFlags.DataIsValid;
             }
         }
 
@@ -208,14 +208,14 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (StatusFlags & IeeeC37_118.StatusFlags.DeviceSynchronizationError) == 0;
+                return (StatusFlags & StatusFlags.DeviceSynchronizationError) == 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DeviceSynchronizationError;
+                    StatusFlags = StatusFlags & ~StatusFlags.DeviceSynchronizationError;
                 else
-                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DeviceSynchronizationError;
+                    StatusFlags = StatusFlags | StatusFlags.DeviceSynchronizationError;
             }
         }
 
@@ -226,14 +226,14 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (((StatusFlags & IeeeC37_118.StatusFlags.DataSortingType) == 0) ? GSF.PhasorProtocols.DataSortingType.ByTimestamp : GSF.PhasorProtocols.DataSortingType.ByArrival);
+                return (((StatusFlags & StatusFlags.DataSortingType) == 0) ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
             }
             set
             {
-                if (value == GSF.PhasorProtocols.DataSortingType.ByTimestamp)
-                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DataSortingType;
+                if (value == DataSortingType.ByTimestamp)
+                    StatusFlags = StatusFlags & ~StatusFlags.DataSortingType;
                 else
-                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DataSortingType;
+                    StatusFlags = StatusFlags | StatusFlags.DataSortingType;
             }
         }
 
@@ -244,14 +244,14 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (StatusFlags & IeeeC37_118.StatusFlags.DeviceError) > 0;
+                return (StatusFlags & StatusFlags.DeviceError) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DeviceError;
+                    StatusFlags = StatusFlags | StatusFlags.DeviceError;
                 else
-                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DeviceError;
+                    StatusFlags = StatusFlags & ~StatusFlags.DeviceError;
             }
         }
 
@@ -262,14 +262,14 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (StatusFlags & IeeeC37_118.StatusFlags.DeviceTriggerDetected) > 0;
+                return (StatusFlags & StatusFlags.DeviceTriggerDetected) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.DeviceTriggerDetected;
+                    StatusFlags = StatusFlags | StatusFlags.DeviceTriggerDetected;
                 else
-                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.DeviceTriggerDetected;
+                    StatusFlags = StatusFlags & ~StatusFlags.DeviceTriggerDetected;
             }
         }
 
@@ -280,14 +280,14 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return (StatusFlags & IeeeC37_118.StatusFlags.ConfigurationChanged) > 0;
+                return (StatusFlags & StatusFlags.ConfigurationChanged) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | IeeeC37_118.StatusFlags.ConfigurationChanged;
+                    StatusFlags = StatusFlags | StatusFlags.ConfigurationChanged;
                 else
-                    StatusFlags = StatusFlags & ~IeeeC37_118.StatusFlags.ConfigurationChanged;
+                    StatusFlags = StatusFlags & ~StatusFlags.ConfigurationChanged;
             }
         }
 

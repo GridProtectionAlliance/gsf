@@ -47,11 +47,11 @@ namespace GSF.Historian.Files
             #region [ Members ]
 
             // Fields
-            private List<ArchiveDataBlock> m_dataBlocks;
-            private TimeTag m_startTime;
-            private TimeTag m_endTime;
-            private int m_historianID;
-            private EventHandler<EventArgs<Exception>> m_dataReadExceptionHandler;
+            private readonly List<ArchiveDataBlock> m_dataBlocks;
+            private readonly TimeTag m_startTime;
+            private readonly TimeTag m_endTime;
+            private readonly int m_historianID;
+            private readonly EventHandler<EventArgs<Exception>> m_dataReadExceptionHandler;
 
             #endregion
 

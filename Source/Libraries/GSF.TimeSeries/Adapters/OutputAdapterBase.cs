@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  OutputAdapterBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -29,7 +29,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using GSF.Collections;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -65,8 +67,8 @@ namespace GSF.TimeSeries.Adapters
         private ProcessQueue<IMeasurement> m_measurementQueue;
         private List<string> m_inputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
-        private System.Timers.Timer m_connectionTimer;
-        private System.Timers.Timer m_monitorTimer;
+        private Timer m_connectionTimer;
+        private Timer m_monitorTimer;
         private bool m_disposed;
 
         #endregion
@@ -81,14 +83,14 @@ namespace GSF.TimeSeries.Adapters
             m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
             m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
 
-            m_connectionTimer = new System.Timers.Timer();
+            m_connectionTimer = new Timer();
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
 
             m_connectionTimer.AutoReset = false;
             m_connectionTimer.Interval = 2000;
             m_connectionTimer.Enabled = false;
 
-            m_monitorTimer = new System.Timers.Timer();
+            m_monitorTimer = new Timer();
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
 
             // We monitor total number of unarchived measurements every 5 seconds - this is a useful statistic to monitor, if
@@ -193,7 +195,7 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Filter measurements to list of specified source IDs
-                AdapterBase.LoadInputSourceIDs(this);
+                LoadInputSourceIDs(this);
             }
         }
 
@@ -467,7 +469,7 @@ namespace GSF.TimeSeries.Adapters
             string setting;
 
             if (Settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, setting);
             else
                 InputMeasurementKeys = null;
 
@@ -574,7 +576,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="measurement">Measurement to queue for processing.</param>
         public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
         {
-            QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
+            QueueMeasurementsForProcessing(new[] { measurement });
         }
 
         /// <summary>
@@ -717,7 +719,7 @@ namespace GSF.TimeSeries.Adapters
             base.OnProcessException(ex);
         }
 
-        private void m_connectionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_connectionTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             try
             {
@@ -748,7 +750,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // All we do here is expose the total number of unarchived measurements in the queue
-        private void m_monitorTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_monitorTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             OnUnprocessedMeasurements(m_measurementQueue.Count);
         }

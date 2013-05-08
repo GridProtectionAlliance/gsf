@@ -53,7 +53,7 @@ namespace PhasorProtocolAdapters
     /// enumeration which defines an abstract type for a signal (e.g., simply phase or angle).
     /// </para>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public enum SignalType
     {
         /// <summary>

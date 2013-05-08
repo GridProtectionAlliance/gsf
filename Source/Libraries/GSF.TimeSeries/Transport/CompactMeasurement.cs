@@ -178,11 +178,11 @@ namespace GSF.TimeSeries.Transport
         public const int FixedLength = 7;
 
         // Members
-        private SignalIndexCache m_signalIndexCache;
-        private bool m_includeTime;
-        private long[] m_baseTimeOffsets;
+        private readonly SignalIndexCache m_signalIndexCache;
+        private readonly bool m_includeTime;
+        private readonly long[] m_baseTimeOffsets;
         private int m_timeIndex;
-        private bool m_useMillisecondResolution;
+        private readonly bool m_useMillisecondResolution;
         private bool m_usingBaseTimeOffset;
 
         #endregion
@@ -206,7 +206,7 @@ namespace GSF.TimeSeries.Transport
             if (baseTimeOffsets == null)
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
-                m_baseTimeOffsets = new long[] { baseTimeOffsets[0], baseTimeOffsets[1] };
+                m_baseTimeOffsets = new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
 
             m_timeIndex = timeIndex;
             m_useMillisecondResolution = useMillisecondResolution;
@@ -238,7 +238,7 @@ namespace GSF.TimeSeries.Transport
             if (baseTimeOffsets == null)
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
-                m_baseTimeOffsets = new long[] { baseTimeOffsets[0], baseTimeOffsets[1] };
+                m_baseTimeOffsets = new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
 
             m_timeIndex = timeIndex;
             m_useMillisecondResolution = useMillisecondResolution;

@@ -90,7 +90,7 @@ namespace GSF
     /// unsigned integer.
     /// </para>
     /// </remarks>
-    [Serializable(), CLSCompliant(false)]
+    [Serializable, CLSCompliant(false)]
     public struct UInt24 : IComparable, IFormattable, IConvertible, IComparable<UInt24>, IComparable<UInt32>, IEquatable<UInt24>, IEquatable<UInt32>
     {
         #region [ Members ]
@@ -103,7 +103,7 @@ namespace GSF
         public const uint BitMask = 0xff000000;
 
         // Fields
-        private uint m_value; // We internally store the UInt24 value in a 4-byte unsigned integer for convenience
+        private readonly uint m_value; // We internally store the UInt24 value in a 4-byte unsigned integer for convenience
 
         #endregion
 
@@ -137,7 +137,7 @@ namespace GSF
         /// <exception cref="ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent a <see cref="UInt24"/>.</exception>
         public UInt24(byte[] value, int startIndex)
         {
-            m_value = UInt24.GetValue(value, startIndex).m_value;
+            m_value = GetValue(value, startIndex).m_value;
         }
 
         #endregion
@@ -153,7 +153,7 @@ namespace GSF
         public byte[] GetBytes()
         {
             // Return serialized 3-byte representation of UInt24
-            return UInt24.GetBytes(this);
+            return GetBytes(this);
         }
 
         /// <summary>
@@ -1397,7 +1397,7 @@ namespace GSF
         /// <param name="value1"><see cref="UInt24"/> left hand operand.</param>
         /// <param name="value2"><see cref="UInt24"/> right hand operand.</param>
         /// <returns><see cref="double"/> value as result of operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(UInt24 value1, UInt24 value2)
         {
             return Math.Pow((double)value1, (double)value2);
@@ -1409,7 +1409,7 @@ namespace GSF
         /// <param name="value1"><see cref="UInt32"/> left hand operand.</param>
         /// <param name="value2"><see cref="UInt24"/> right hand operand.</param>
         /// <returns><see cref="double"/> value as result of operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(int value1, UInt24 value2)
         {
             return Math.Pow((double)value1, (double)value2);
@@ -1421,7 +1421,7 @@ namespace GSF
         /// <param name="value1"><see cref="UInt24"/> left hand operand.</param>
         /// <param name="value2"><see cref="UInt32"/> right hand operand.</param>
         /// <returns><see cref="double"/> value as result of operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(UInt24 value1, int value2)
         {
             return Math.Pow((double)value1, (double)value2);

@@ -86,10 +86,10 @@ namespace GSF.Net.Ftp
         public event Action<FtpExceptionBase> DirectoryScanException;
 
         // Fields
-        private FtpSessionConnected m_session;
+        private readonly FtpSessionConnected m_session;
         private FtpDirectory m_parent;
-        private string m_name;
-        private string m_fullPath;
+        private readonly string m_name;
+        private readonly string m_fullPath;
         private Dictionary<string, FtpDirectory> m_subDirectories;
         private Dictionary<string, FtpFile> m_files;
         private bool m_caseInsensitive;
@@ -764,7 +764,7 @@ namespace GSF.Net.Ftp
         /// <returns>An <see cref="Int32"/> value representing the result. 1 - obj is greater than, 0 - obj is equal to, -1 - obj is less than.</returns>
         public int CompareTo(object obj)
         {
-            if (object.Equals(obj, null))
+            if (Equals(obj, null))
             {
                 return 1;
             }
@@ -790,8 +790,8 @@ namespace GSF.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator ==(FtpDirectory value1, FtpDirectory value2)
         {
-            if (object.Equals(value1, null))
-                return object.Equals(value2, null);
+            if (Equals(value1, null))
+                return Equals(value2, null);
             else
                 return (value1.CompareTo(value2) == 0);
         }
@@ -815,8 +815,8 @@ namespace GSF.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator <(FtpDirectory value1, FtpDirectory value2)
         {
-            if (object.Equals(value1, null))
-                return object.Equals(value2, null);
+            if (Equals(value1, null))
+                return Equals(value2, null);
             else
                 return (value1.CompareTo(value2) < 0);
         }
@@ -840,8 +840,8 @@ namespace GSF.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator <=(FtpDirectory value1, FtpDirectory value2)
         {
-            if (object.Equals(value1, null))
-                return object.Equals(value2, null);
+            if (Equals(value1, null))
+                return Equals(value2, null);
             else
                 return (value1.CompareTo(value2) <= 0);
         }
@@ -862,11 +862,11 @@ namespace GSF.Net.Ftp
         #region [ Static ]
 
         // Static Fields
-        private static Regex s_unixListLineStyle1 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\w+\\s+\\w+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d{4})\\s+(?<name>.+)");
-        private static Regex s_unixListLineStyle2 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\d+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d{4})\\s+(?<name>.+)");
-        private static Regex s_unixListLineStyle3 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\d+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+)\\s+(?<name>.+)");
-        private static Regex s_dosListLineStyle1 = new Regex("(?<timestamp>\\d{2}\\-\\d{2}\\-\\d{2}\\s+\\d{2}:\\d{2}[Aa|Pp][mM])\\s+(?<dir>\\<\\w+\\>){0,1}(?<size>\\d+){0,1}\\s+(?<name>.+)"); // IIS FTP Service
-        private static Regex s_dosListLineStyle2 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\w+\\s+\\w+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+)\\s+(?<name>.+)"); // IIS FTP Service in Unix Mode
+        private static readonly Regex s_unixListLineStyle1 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\w+\\s+\\w+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d{4})\\s+(?<name>.+)");
+        private static readonly Regex s_unixListLineStyle2 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\d+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d{4})\\s+(?<name>.+)");
+        private static readonly Regex s_unixListLineStyle3 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\d+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+)\\s+(?<name>.+)");
+        private static readonly Regex s_dosListLineStyle1 = new Regex("(?<timestamp>\\d{2}\\-\\d{2}\\-\\d{2}\\s+\\d{2}:\\d{2}[Aa|Pp][mM])\\s+(?<dir>\\<\\w+\\>){0,1}(?<size>\\d+){0,1}\\s+(?<name>.+)"); // IIS FTP Service
+        private static readonly Regex s_dosListLineStyle2 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\w+\\s+\\w+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+)\\s+(?<name>.+)"); // IIS FTP Service in Unix Mode
 
         #endregion
     }

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  AnalogValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Represents the BPA PDCstream implementation of an <see cref="IAnalogValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class AnalogValue : AnalogValueBase
     {
         #region [ Constructors ]

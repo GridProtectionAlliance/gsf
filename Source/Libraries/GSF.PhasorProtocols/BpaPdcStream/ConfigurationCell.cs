@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -27,7 +27,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,7 +39,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationCell : ConfigurationCellBase
     {
         #region [ Members ]
@@ -68,10 +67,10 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         {
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
-                BpaPdcStream.PhasorDefinition.CreateNewDefinition,
+                PhasorDefinition.CreateNewDefinition,
                 BpaPdcStream.FrequencyDefinition.CreateNewDefinition,
-                BpaPdcStream.AnalogDefinition.CreateNewDefinition,
-                BpaPdcStream.DigitalDefinition.CreateNewDefinition);
+                AnalogDefinition.CreateNewDefinition,
+                DigitalDefinition.CreateNewDefinition);
         }
 
         /// <summary>

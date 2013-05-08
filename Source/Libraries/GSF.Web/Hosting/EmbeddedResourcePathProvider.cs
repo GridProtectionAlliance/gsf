@@ -23,13 +23,16 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.IO;
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Configuration;
 using System.Reflection;
+using System.Web;
 using System.Web.Caching;
 using System.Web.Hosting;
+using GSF.Configuration;
+using GSF.IO;
 
 namespace GSF.Web.Hosting
 {
@@ -182,7 +185,7 @@ namespace GSF.Web.Hosting
 		/// property.
 		/// </summary>
 		/// <seealso cref="GSF.Web.Hosting.EmbeddedResourcePathProvider" />
-		private VirtualFileBaseCollection _files = new VirtualFileBaseCollection();
+		private readonly VirtualFileBaseCollection _files = new VirtualFileBaseCollection();
 
 		#endregion
 
@@ -215,7 +218,7 @@ namespace GSF.Web.Hosting
 		{
 			get
 			{
-				string toParse = System.Configuration.ConfigurationManager.AppSettings[ConfigKeyAllowOverrides];
+				string toParse = ConfigurationManager.AppSettings[ConfigKeyAllowOverrides];
 				if (String.IsNullOrEmpty(toParse))
 				{
 					return false;
@@ -250,13 +253,7 @@ namespace GSF.Web.Hosting
 
 		#region Constructors
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="GSF.Web.Hosting.EmbeddedResourcePathProvider" /> class.
-		/// </summary>
-		/// <seealso cref="GSF.Web.Hosting.EmbeddedResourcePathProvider" />
-		public EmbeddedResourcePathProvider() : base() { }
-
-		#endregion
+	    #endregion
 
 		#region Overrides
 
@@ -291,7 +288,7 @@ namespace GSF.Web.Hosting
 			{
 				throw new ArgumentOutOfRangeException("virtualPath");
 			}
-			string absolutePath = System.Web.VirtualPathUtility.ToAbsolute(virtualPath);
+			string absolutePath = VirtualPathUtility.ToAbsolute(virtualPath);
 			if (this.Files.Contains(absolutePath))
 			{
 				return true;
@@ -324,7 +321,7 @@ namespace GSF.Web.Hosting
 			{
 				throw new ArgumentOutOfRangeException("virtualPath");
 			}
-			string absolutePath = System.Web.VirtualPathUtility.ToAbsolute(virtualPath);
+			string absolutePath = VirtualPathUtility.ToAbsolute(virtualPath);
 
 			// Lazy initialize the return value so we can return null if needed
 			AggregateCacheDependency retVal = null;
@@ -399,7 +396,7 @@ namespace GSF.Web.Hosting
 				throw new ArgumentOutOfRangeException("virtualPath");
 			}
 
-			string absolutePath = System.Web.VirtualPathUtility.ToAbsolute(virtualPath);
+			string absolutePath = VirtualPathUtility.ToAbsolute(virtualPath);
 			if (this.FileHandledByBaseProvider(absolutePath))
 			{
 				return base.GetFile(absolutePath);
@@ -554,7 +551,7 @@ namespace GSF.Web.Hosting
 			string resourceFilePath = newResourcePath.Substring(0, extSeparator).Replace(".", "/") + newResourcePath.Substring(extSeparator, newResourcePath.Length - extSeparator);
 
 			// Map the path into the web app and return
-			string retVal = System.Web.VirtualPathUtility.Combine("~/", resourceFilePath);
+			string retVal = VirtualPathUtility.Combine("~/", resourceFilePath);
 			return retVal;
 		}
 
@@ -674,7 +671,7 @@ namespace GSF.Web.Hosting
 			}
 
 			// Get the complete set of embedded resource names in the assembly; bail early if there aren't any.
-			System.Collections.Generic.List<String> assemblyResourceNames = new System.Collections.Generic.List<string>(assembly.GetManifestResourceNames());
+			List<String> assemblyResourceNames = new List<string>(assembly.GetManifestResourceNames());
 			if (assemblyResourceNames.Count == 0)
 			{
 				return;
@@ -692,7 +689,7 @@ namespace GSF.Web.Hosting
 				string mappedPath;
 				try
 				{
-					mappedPath = System.Web.VirtualPathUtility.ToAbsolute(MapResourceToWebApplication(attrib.ResourceNamespace, attrib.ResourcePath));
+					mappedPath = VirtualPathUtility.ToAbsolute(MapResourceToWebApplication(attrib.ResourceNamespace, attrib.ResourcePath));
 				}
 				catch (ArgumentNullException)
 				{

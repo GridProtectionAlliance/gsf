@@ -36,8 +36,8 @@
 using System;
 using System.Configuration;
 using System.Threading;
-using GSF.Configuration;
 using GSF.Adapters;
+using GSF.Configuration;
 
 namespace GSF.Historian.Notifiers
 {

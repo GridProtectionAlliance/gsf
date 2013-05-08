@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents an angle, in radians, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing an angle in radians; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing an angle in radians; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other angle representations, specifically
     /// degrees, grads (a.k.a., grade, gradian and gon), arcminutes (a.k.a., minute of arc and MOA),
     /// arcseconds (a.k.a., second of arc) and angular mil (a.k.a. mil).
@@ -87,7 +87,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Angle : IComparable, IFormattable, IConvertible, IComparable<Angle>, IComparable<Double>, IEquatable<Angle>, IEquatable<Double>
     {
         #region [ Members ]
@@ -104,7 +104,7 @@ namespace GSF.Units
         private const double AngularMilFactor = 2.0D * Math.PI / 6400.0D;
 
         // Fields
-        private double m_value; // Angle value stored in radians
+        private readonly double m_value; // Angle value stored in radians
 
         #endregion
 
@@ -729,7 +729,7 @@ namespace GSF.Units
         /// <param name="value1">An <see cref="Angle"/> as the left hand operand.</param>
         /// <param name="value2">An <see cref="Angle"/> as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> as the result.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Angle value1, Angle value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

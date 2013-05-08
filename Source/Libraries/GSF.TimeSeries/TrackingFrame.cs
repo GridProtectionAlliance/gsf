@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  TrackingFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -23,9 +23,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using GSF.Threading;
 
 namespace GSF.TimeSeries
 {
@@ -37,11 +37,11 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private IFrame m_sourceFrame;
-        private long m_timestamp;
-        private DownsamplingMethod m_downsamplingMethod;
-        private ConcurrentDictionary<MeasurementKey, List<IMeasurement>> m_measurements;
-        private ReaderWriterSpinLock m_frameLock;
+        private readonly IFrame m_sourceFrame;
+        private readonly long m_timestamp;
+        private readonly DownsamplingMethod m_downsamplingMethod;
+        private readonly ConcurrentDictionary<MeasurementKey, List<IMeasurement>> m_measurements;
+        private readonly ReaderWriterSpinLock m_frameLock;
         private long m_derivedMeasurements;
 
         #endregion

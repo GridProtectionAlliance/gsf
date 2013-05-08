@@ -41,7 +41,7 @@ namespace GSF.Security
         #region [ Members ]
 
         // Fields
-        private SecurityIdentity m_identity;
+        private readonly SecurityIdentity m_identity;
 
         #endregion
 

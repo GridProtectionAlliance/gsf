@@ -30,7 +30,7 @@ namespace GSF.Windows.Forms
     /// <summary>
     /// Contains classes, extension functions and forms used to simplify and standardize usage of basic Windows forms.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

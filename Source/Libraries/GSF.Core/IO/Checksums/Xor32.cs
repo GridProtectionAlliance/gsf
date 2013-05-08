@@ -83,7 +83,7 @@ namespace GSF.IO.Checksums
         /// <summary>
         /// Updates the checksum with a uint value.
         /// </summary>
-        /// <param name="value">The <see cref="UInt32"/> value to use for the update.</param>
+        /// <param name="value">The <see cref="uint"/> value to use for the update.</param>
         public void Update(uint value)
         {
             m_checksum ^= value;

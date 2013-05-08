@@ -25,9 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,6 +32,9 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace AdoAdapters
 {
@@ -48,8 +48,8 @@ namespace AdoAdapters
         #region [ Members ]
 
         // Fields
-        private Dictionary<string, string> m_fieldNames;
-        private List<string> m_fieldList;
+        private readonly Dictionary<string, string> m_fieldNames;
+        private readonly List<string> m_fieldList;
         private string m_dbTableName;
         private string m_dbConnectionString;
         private string m_dataProviderString;

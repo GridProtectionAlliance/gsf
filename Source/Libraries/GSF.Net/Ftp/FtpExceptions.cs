@@ -50,10 +50,10 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// FTP exception base class.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public abstract class FtpExceptionBase : Exception
     {
-        private FtpResponse m_ftpResponse = null;
+        private readonly FtpResponse m_ftpResponse;
 
         internal FtpExceptionBase(string message)
             : base(message)
@@ -100,7 +100,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// Invalid FTP response exception.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FtpInvalidResponseException : FtpExceptionBase
     {
         internal FtpInvalidResponseException(string message, FtpResponse ftpResponse)
@@ -112,7 +112,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// FTP authentication exception.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FtpAuthenticationException : FtpExceptionBase
     {
         internal FtpAuthenticationException(string message, FtpResponse ftpResponse)
@@ -124,7 +124,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// FTP file not found exception.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FtpFileNotFoundException : FtpExceptionBase
     {
         internal FtpFileNotFoundException(string remoteFile)
@@ -136,7 +136,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// FTP server down exception.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FtpServerDownException : FtpExceptionBase
     {
         internal FtpServerDownException(FtpResponse ftpResponse)
@@ -153,7 +153,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// FTP command exception.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FtpCommandException : FtpExceptionBase
     {
 
@@ -166,7 +166,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// FTP data transfer exception.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FtpDataTransferException : FtpExceptionBase
     {
         internal FtpDataTransferException()
@@ -183,7 +183,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// FTP user abort exception.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FtpUserAbortException : FtpExceptionBase
     {
         internal FtpUserAbortException()
@@ -195,7 +195,7 @@ namespace GSF.Net.Ftp
     /// <summary>
     /// FTP resume not supported exception.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class FtpResumeNotSupportedException : FtpExceptionBase
     {
         internal FtpResumeNotSupportedException(FtpResponse ftpResponse)

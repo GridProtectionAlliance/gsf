@@ -32,6 +32,7 @@ using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
+using SerializationFormat = GSF.SerializationFormat;
 
 namespace ConfigurationCacher
 {
@@ -88,7 +89,7 @@ namespace ConfigurationCacher
             s_dataProviderString = systemSettings["DataProviderString"].Value;
             s_cachedXmlConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
             s_cachedBinaryConfigurationFile = FilePath.AddPathSuffix(cachePath) + FilePath.GetFileNameWithoutExtension(s_cachedXmlConfigurationFile) + ".bin";
-            s_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs<int>(5);
+            s_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs(5);
 
             configuration = GetConfigurationDataSet();
             ExecuteConfigurationCache(configuration);
@@ -216,7 +217,7 @@ namespace ConfigurationCacher
                         {
                             // Load configuration entity data filtered by node ID
                             operationStartTime = PrecisionTimer.UtcNow.Ticks;
-                            source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"].ToString(), nodeIDQueryString));
+                            source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], nodeIDQueryString));
                             operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Update table name as defined in configuration entity
@@ -317,7 +318,7 @@ namespace ConfigurationCacher
                     {
                         DisplayStatusMessage("Loading binary based configuration from \"{0}\".", UpdateType.Information, s_connectionString);
 
-                        configuration = Serialization.Deserialize<DataSet>(File.OpenRead(s_connectionString), GSF.SerializationFormat.Binary);
+                        configuration = Serialization.Deserialize<DataSet>(File.OpenRead(s_connectionString), SerializationFormat.Binary);
 
                         DisplayStatusMessage("Binary based configuration successfully loaded.", UpdateType.Information);
                     }

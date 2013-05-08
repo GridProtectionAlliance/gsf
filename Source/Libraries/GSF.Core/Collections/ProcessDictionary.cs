@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ProcessDictionary.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -74,7 +74,7 @@ namespace GSF.Collections
         /// <para>Used when creating a <see cref="ProcessDictionary{TKey,TValue}"/> to process one item at a time.</para>
         /// <para>Asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> will process individual items on multiple threads</para>
         /// </remarks>
-        public new delegate void ProcessItemFunctionSignature(TKey key, TValue value);
+        public delegate void ProcessItemFunctionSignature(TKey key, TValue value);
 
         /// <summary>
         /// Function signature that determines if a key and value can be currently processed.
@@ -93,7 +93,7 @@ namespace GSF.Collections
         /// for processing must evaluate as "CanProcessItem = True" before any items are processed.
         /// </para>
         /// </remarks>
-        public new delegate bool CanProcessItemFunctionSignature(TKey key, TValue value);
+        public delegate bool CanProcessItemFunctionSignature(TKey key, TValue value);
 
         // Fields
         private ProcessItemFunctionSignature m_processItemFunction;
@@ -110,10 +110,10 @@ namespace GSF.Collections
         /// <param name="processItemFunction">A delegate <see cref="ProcessItemFunctionSignature"/> that defines a function signature to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
         /// <param name="processInterval">A <see cref="double"/> which represents the process interval.</param>
-        /// <param name="maximumThreads">An <see cref="Int32"/> that represents the max number of threads to use.</param>
-        /// <param name="processTimeout">An <see cref="Int32"/> that represents the amount of time before a process times out.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after a timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after an exception.</param>
+        /// <param name="maximumThreads">An <see cref="int"/> that represents the max number of threads to use.</param>
+        /// <param name="processTimeout">An <see cref="int"/> that represents the amount of time before a process times out.</param>
+        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether the process should requeue the item after a timeout.</param>
+        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether the process should requeue the item after an exception.</param>
         protected ProcessDictionary(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : base(null, null, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
@@ -133,10 +133,10 @@ namespace GSF.Collections
         /// <param name="processItemsFunction">A delegate ProcessItemsFunctionSignature that defines a function signature to process multiple items at once.</param>
         /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
         /// <param name="processInterval">A <see cref="double"/> which represents the process interval.</param>
-        /// <param name="maximumThreads">An <see cref="Int32"/> that represents the max number of threads to use.</param>
-        /// <param name="processTimeout">An <see cref="Int32"/> that represents the amount of time before a process times out.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after a timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether the process should requeue the item after an exception.</param>
+        /// <param name="maximumThreads">An <see cref="int"/> that represents the max number of threads to use.</param>
+        /// <param name="processTimeout">An <see cref="int"/> that represents the amount of time before a process times out.</param>
+        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether the process should requeue the item after a timeout.</param>
+        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether the process should requeue the item after an exception.</param>
         protected ProcessDictionary(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : base(null, processItemsFunction, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
@@ -610,7 +610,7 @@ namespace GSF.Collections
         /// </summary>
         /// <param name="comparison">The comparison to use when comparing elements.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override void Sort(System.Comparison<KeyValuePair<TKey, TValue>> comparison)
+        public override void Sort(Comparison<KeyValuePair<TKey, TValue>> comparison)
         {
             // This list is already sorted.
         }

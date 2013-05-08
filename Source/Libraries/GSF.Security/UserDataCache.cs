@@ -46,7 +46,7 @@ using GSF.Threading;
 namespace GSF.Security
 {
     /// <summary>
-    /// Represents a secured interprocess cache for a <see cref="Dictionary{T1,T2}"/> of serialized <see cref="UserData"/>.
+    /// Represents a secured interprocess cache for a <see cref="Dictionary{TKey,TValue}"/> of serialized <see cref="UserData"/>.
     /// </summary>
     public class UserDataCache : InterprocessCache
     {
@@ -59,7 +59,7 @@ namespace GSF.Security
 
         // Fields
         private Dictionary<string, UserData> m_userDataTable;   // Internal dictionary of serialized user data
-        private object m_userDataTableLock;                     // Lock object
+        private readonly object m_userDataTableLock;                     // Lock object
         private int m_providerID;                               // Unique provider ID used to distinguish cached user data that may be different based on provider
 
         #endregion

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataFrameParsingState.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,7 +37,7 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private IConfigurationFrame m_configurationFrame;
+        private readonly IConfigurationFrame m_configurationFrame;
 
         #endregion
 

@@ -30,7 +30,7 @@ namespace GSF
     /// <summary>
     /// The exception that is thrown when an object fails to initialize properly.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class InitializationException : Exception
     {
         #region [ Constructors ]
@@ -39,7 +39,6 @@ namespace GSF
         /// Initializes a new instance of the <see cref="InitializationException"/> class.
         /// </summary>
         public InitializationException()
-            : base()
         {
         }
 

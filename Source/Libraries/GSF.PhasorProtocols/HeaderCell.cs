@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  HeaderCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,7 +37,7 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents the protocol independent common implementation of an element of header data for cells in a <see cref="IHeaderFrame"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class HeaderCell : ChannelCellBase, IHeaderCell
     {
         #region [ Members ]
@@ -53,7 +53,7 @@ namespace GSF.PhasorProtocols
         /// Creates a new <see cref="HeaderCell"/> from specified parameters.
         /// </summary>
         /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="HeaderCell"/>.</param>
-        /// <param name="character">ASCII character as a <see cref="Byte"/> that represents this <see cref="HeaderCell"/>.</param>
+        /// <param name="character">ASCII character as a <see cref="byte"/> that represents this <see cref="HeaderCell"/>.</param>
         public HeaderCell(IHeaderFrame parent, byte character)
             : base(parent, 0)
         {
@@ -92,7 +92,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets ASCII character as a <see cref="Byte"/> that represents this <see cref="HeaderCell"/>.
+        /// Gets or sets ASCII character as a <see cref="byte"/> that represents this <see cref="HeaderCell"/>.
         /// </summary>
         public virtual byte Character
         {
@@ -124,7 +124,7 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                return new byte[] { m_character };
+                return new[] { m_character };
             }
         }
 
@@ -137,7 +137,7 @@ namespace GSF.PhasorProtocols
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Character", Encoding.ASCII.GetString(new byte[] { Character }));
+                baseAttributes.Add("Character", Encoding.ASCII.GetString(new[] { Character }));
 
                 return baseAttributes;
             }

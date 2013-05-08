@@ -76,12 +76,12 @@ namespace GSF.Media
         #region [ Members ]
 
         // Fields
-        private WaveFormatChunk m_format;
+        private readonly WaveFormatChunk m_format;
         private Stream m_waveStream;
-        private int m_blockSize;
-        private int m_sampleSize;
-        private int m_channels;
-        private TypeCode m_sampleType;
+        private readonly int m_blockSize;
+        private readonly int m_sampleSize;
+        private readonly int m_channels;
+        private readonly TypeCode m_sampleType;
 
         #endregion
 

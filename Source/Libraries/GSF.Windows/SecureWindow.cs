@@ -30,12 +30,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Security;
 using System;
 using System.ComponentModel;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows;
+using GSF.Security;
 
 namespace GSF.Windows
 {
@@ -219,7 +219,7 @@ namespace GSF.Windows
                 return;
 
             // Setup thread principal to current windows principal.
-            if (!(Thread.CurrentPrincipal is WindowsPrincipal) && !(Thread.CurrentPrincipal is GSF.Security.SecurityPrincipal))
+            if (!(Thread.CurrentPrincipal is WindowsPrincipal) && !(Thread.CurrentPrincipal is SecurityPrincipal))
                 Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
             // Setup the security provider for role-based security, if needed

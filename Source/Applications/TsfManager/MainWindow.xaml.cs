@@ -23,14 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
-using GSF.Reflection;
-using GSF.Security;
-using GSF.TimeSeries.UI;
-using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -38,7 +34,12 @@ using System.Windows.Media;
 using System.Windows.Navigation;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Linq;
+using GSF.Communication;
+using GSF.IO;
+using GSF.Reflection;
+using GSF.Security;
+using GSF.TimeSeries.UI;
+using GSF.TimeSeries.UI.DataModels;
 
 namespace TsfManager
 {
@@ -52,7 +53,7 @@ namespace TsfManager
         // Fields
         private ObservableCollection<MenuDataItem> m_menuDataItems;
         private WindowsServiceClient m_windowsServiceClient;
-        private LinkedList<TextBlock> m_navigationList;
+        private readonly LinkedList<TextBlock> m_navigationList;
         private LinkedListNode<TextBlock> m_currentNode;
         private AlarmMonitor m_alarmMonitor;
         private bool m_navigationProcessed;
@@ -80,8 +81,8 @@ namespace TsfManager
         public MainWindow()
         {
             InitializeComponent();
-            this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
-            this.Unloaded += new RoutedEventHandler(MainWindow_Unloaded);
+            this.Loaded += MainWindow_Loaded;
+            this.Unloaded += MainWindow_Unloaded;
             Title = ((App)Application.Current).Title;
             TextBoxTitle.Text = AssemblyInfo.EntryAssembly.Title;
 
@@ -97,7 +98,7 @@ namespace TsfManager
 
             m_navigationProcessed = false;
             m_navigationList = new LinkedList<TextBlock>();
-            FrameContent.Navigated += new NavigatedEventHandler(FrameContent_Navigated);
+            FrameContent.Navigated += FrameContent_Navigated;
         }
 
         #endregion
@@ -174,7 +175,7 @@ namespace TsfManager
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Event argument.</param>
-        private void ComboboxNode_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void ComboboxNode_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (!string.IsNullOrEmpty(ComboboxNode.SelectionBoxItem.ToString()))
                 ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectionBoxItem).Key;
@@ -206,18 +207,18 @@ namespace TsfManager
                 m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
                 m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
 
-                if (m_windowsServiceClient.Helper.RemotingClient.CurrentState == GSF.Communication.ClientState.Connected)
+                if (m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                 {
-                    EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate()
-                    {
+                    EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
+                        {
                         EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
                         ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
                     });
                 }
                 else
                 {
-                    EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate()
-                    {
+                    EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
+                        {
                         EllipseConnectionState.Fill = Application.Current.Resources["RedRadialGradientBrush"] as RadialGradientBrush;
                         ToolTipService.SetToolTip(EllipseConnectionState, "Disconnected from the service");
                     });
@@ -227,7 +228,7 @@ namespace TsfManager
 
         private void RemotingClient_ConnectionTerminated(object sender, EventArgs e)
         {
-            EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate()
+            EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
                 {
                     EllipseConnectionState.Fill = Application.Current.Resources["RedRadialGradientBrush"] as RadialGradientBrush;
                     ToolTipService.SetToolTip(EllipseConnectionState, "Disconnected from the service");
@@ -236,7 +237,7 @@ namespace TsfManager
 
         private void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
         {
-            EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate()
+            EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
                 {
                     EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
                     ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");

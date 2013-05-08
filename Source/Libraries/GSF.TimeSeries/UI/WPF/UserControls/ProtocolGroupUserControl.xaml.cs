@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.ViewModels;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
 {

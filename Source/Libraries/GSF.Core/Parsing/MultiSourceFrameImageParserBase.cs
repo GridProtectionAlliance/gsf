@@ -33,13 +33,13 @@
 
 #pragma warning disable 0809
 
-using GSF.Collections;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using System.Threading;
+using GSF.Collections;
 
 namespace GSF.Parsing
 {

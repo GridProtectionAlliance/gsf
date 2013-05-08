@@ -21,12 +21,12 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.ViewModels;
 using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -37,7 +37,7 @@ namespace GSF.TimeSeries.UI.UserControls
     {
         #region [ Members ]
 
-        private Nodes m_dataContext;
+        private readonly Nodes m_dataContext;
         private DataGridColumn m_sortColumn;
         private string m_sortMemberPath;
         private ListSortDirection m_sortDirection;
@@ -53,7 +53,7 @@ namespace GSF.TimeSeries.UI.UserControls
         {
             InitializeComponent();
             m_dataContext = new Nodes(16);
-            m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
+            m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
             this.DataContext = m_dataContext;
         }
 

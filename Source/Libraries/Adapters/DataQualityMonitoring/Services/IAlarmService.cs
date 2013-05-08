@@ -31,7 +31,7 @@ namespace DataQualityMonitoring.Services
     /// <summary>
     /// Defines a REST web service for alarms.
     /// </summary>
-    [ServiceContract()]
+    [ServiceContract]
     public interface IAlarmService
     {
         #region [ Properties ]
@@ -49,7 +49,7 @@ namespace DataQualityMonitoring.Services
         /// Reads all raised alarms from the <see cref="AlarmAdapter"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableAlarmCollection"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/raisedalarms/all/xml")]
         SerializableAlarmCollection ReadAllRaisedAlarmsAsXml();
 
@@ -57,7 +57,7 @@ namespace DataQualityMonitoring.Services
         /// Reads all raised alarms from the <see cref="AlarmAdapter"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableAlarmCollection"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/raisedalarms/all/json")]
         SerializableAlarmCollection ReadAllRaisedAlarmsAsJson();
 
@@ -65,7 +65,7 @@ namespace DataQualityMonitoring.Services
         /// Reads the raised alarms with the highest severity for each signal from the <see cref="AlarmAdapter"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableAlarmCollection"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/raisedalarms/severe/xml")]
         SerializableAlarmCollection ReadHighestSeverityAlarmsAsXml();
 
@@ -73,7 +73,7 @@ namespace DataQualityMonitoring.Services
         /// Reads the raised alarms with the highest severity for each signal from the <see cref="AlarmAdapter"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableAlarmCollection"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/raisedalarms/severe/json")]
         SerializableAlarmCollection ReadHighestSeverityAlarmsAsJson();
 

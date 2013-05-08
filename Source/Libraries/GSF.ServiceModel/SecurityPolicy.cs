@@ -33,7 +33,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Security;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Claims;
@@ -42,6 +41,7 @@ using System.Security;
 using System.Security.Principal;
 using System.ServiceModel;
 using System.Threading;
+using GSF.Security;
 
 namespace GSF.ServiceModel
 {
@@ -237,7 +237,7 @@ namespace GSF.ServiceModel
                 IList<IIdentity> identities = property as List<IIdentity>;
 
                 if ((object)identities == null)
-                    throw new SecurityException(string.Format("Null Dereterence Exception: '{0}'", Thread.CurrentPrincipal.Identity.ToString()));
+                    throw new SecurityException(string.Format("Null Dereterence Exception: '{0}'", Thread.CurrentPrincipal.Identity));
 
                 foreach (IIdentity identity in identities)
                 {

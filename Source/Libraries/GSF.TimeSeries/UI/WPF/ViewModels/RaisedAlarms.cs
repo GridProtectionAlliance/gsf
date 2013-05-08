@@ -23,7 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.DataModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,6 +31,7 @@ using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using GSF.TimeSeries.UI.DataModels;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {
@@ -41,7 +41,7 @@ namespace GSF.TimeSeries.UI.ViewModels
 
         // Fields
         private AlarmMonitor m_monitor;
-        private Dispatcher m_dispatcher;
+        private readonly Dispatcher m_dispatcher;
         private string m_currentSortMemberPath;
         private ListSortDirection m_currentSortDirection;
 
@@ -192,7 +192,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         // Handles the alarm monitor's RefreshedAlarms event.
         private void Monitor_RefreshedAlarms(object sender, EventArgs e)
         {
-            m_dispatcher.Invoke(new Action(UpdateList));
+            m_dispatcher.Invoke(UpdateList);
         }
 
         // Updates the list of alarms displayed to the user.

@@ -23,12 +23,12 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
-using MongoDB;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using MongoDB;
 
 namespace MongoAdapters
 {

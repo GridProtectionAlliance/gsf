@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using GSF.Windows;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using GSF.Windows;
 
 namespace GSF.TimeSeries.UI
 {
@@ -69,7 +69,7 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public ResizableWindow()
         {
-            this.SizeChanged += new System.Windows.SizeChangedEventHandler(ResizableWindow_SizeChanged);
+            this.SizeChanged += ResizableWindow_SizeChanged;
         }
 
         #endregion

@@ -285,7 +285,7 @@ namespace Comtrade
 
             // Make sure reference angle is part of input measurement keys collection
             if (!InputMeasurementKeys.Contains(m_referenceAngleKey))
-                InputMeasurementKeys = InputMeasurementKeys.Concat(new MeasurementKey[] { m_referenceAngleKey }).ToArray();
+                InputMeasurementKeys = InputMeasurementKeys.Concat(new[] { m_referenceAngleKey }).ToArray();
 
             // Make sure sure reference angle key is actually an angle measurement
             SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
@@ -321,7 +321,7 @@ namespace Comtrade
 
             // Define a default export location - user can override and add multiple locations in config later...
             m_dataExporter = new MultipleDestinationExporter(ConfigurationSection, m_exportInterval * 1000);
-            m_dataExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath(ConfigurationSection + ".txt"), false, "", "", "") });
+            m_dataExporter.Initialize(new[] { new ExportDestination(FilePath.GetAbsolutePath(ConfigurationSection + ".txt"), false, "", "", "") });
 
 
             // Create new measurement tag name dictionary
@@ -364,7 +364,7 @@ namespace Comtrade
         /// <param name="measurement">Measurement to queue for processing.</param>
         public override void QueueMeasurementForProcessing(IMeasurement measurement)
         {
-            QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
+            QueueMeasurementsForProcessing(new[] { measurement });
         }
 
         /// <summary>
@@ -527,10 +527,10 @@ namespace Comtrade
                                 if (filteredRows.Length > 0)
                                 {
                                     //Get COMTRADE Channel id (STATION:CHANNELNAME)
-                                    fileData.Append(m_stationName + ":" + filteredRows[0]["DeviceID"].ToString());
+                                    fileData.Append(m_stationName + ":" + filteredRows[0]["DeviceID"]);
                                     fileData.Append(",");
                                     //Get phase value from filter row
-                                    fileData.Append(filteredRows[0]["Phase"].ToString());
+                                    fileData.Append(filteredRows[0]["Phase"]);
                                     //Magnitude for polar components
                                     if (signalType == SignalType.VPHA || signalType == SignalType.IPHA)
                                         fileData.Append("a");

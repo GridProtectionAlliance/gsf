@@ -32,9 +32,9 @@
 //******************************************************************************************************
 
 using System;
-using GSF.TimeSeries;
 using GSF.Historian.Files;
 using GSF.Parsing;
+using GSF.TimeSeries;
 
 namespace GSF.Historian
 {

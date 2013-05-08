@@ -31,7 +31,7 @@ namespace DataQualityMonitoring.Services
     /// <summary>
     /// Defines a REST web service for flatlined measurements.
     /// </summary>
-    [ServiceContract()]
+    [ServiceContract]
     public interface IFlatlineService
     {
 
@@ -50,7 +50,7 @@ namespace DataQualityMonitoring.Services
         /// Reads all flatlined measurements from the <see cref="Test"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableFlatlineTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/flatlinedmeasurements/read/xml")]
         SerializableFlatlineTest ReadAllFlatlinedMeasurementsAsXml();
 
@@ -58,7 +58,7 @@ namespace DataQualityMonitoring.Services
         /// Reads all flatlined measurements from the <see cref="Test"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableFlatlineTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/flatlinedmeasurements/read/json")]
         SerializableFlatlineTest ReadAllFlatlinedMeasurementsAsJson();
 
@@ -67,7 +67,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="device">The name of the device to check for flatlined measurements.</param>
         /// <returns>A <see cref="SerializableFlatlineTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/flatlinedmeasurements/read/{device}/xml")]
         SerializableFlatlineTest ReadFlatlinedMeasurementsFromDeviceAsXml(string device);
 
@@ -76,7 +76,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="device">The name of the device to check for flatlined measurements.</param>
         /// <returns>A <see cref="SerializableFlatlineTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/flatlinedmeasurements/read/{device}/json")]
         SerializableFlatlineTest ReadFlatlinedMeasurementsFromDeviceAsJson(string device);
 

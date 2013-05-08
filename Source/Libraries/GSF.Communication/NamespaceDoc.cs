@@ -30,7 +30,7 @@ namespace GSF.Communication
     /// <summary>
     /// Contains high-level classes and components related to any data communications including sockets, serial and file based transports used to simplify and standardize data access.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

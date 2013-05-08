@@ -29,12 +29,12 @@
 //
 //******************************************************************************************************
 
-using GSF.Security;
 using System;
 using System.Security;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
+using GSF.Security;
 
 namespace GSF.Windows.Forms
 {

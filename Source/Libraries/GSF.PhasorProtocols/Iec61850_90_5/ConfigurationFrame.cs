@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -36,7 +36,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifiableFrameImage<SourceChannel, FrameType>
     {
         #region [ Members ]
@@ -116,7 +116,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return Iec61850_90_5.DraftRevision.Draft7;
+                return DraftRevision.Draft7;
             }
         }
 
@@ -395,7 +395,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 

@@ -86,7 +86,7 @@ namespace UpdateWAVMetaData
                 {
                     WaveFile sourceWave = null;
                     string fileName = FilePath.GetFileName(sourceFileName);
-                    char[] invalidChars = new char[] { '\'', '[', ']', '(', ')', ',', '-', '.' };
+                    char[] invalidChars = new[] { '\'', '[', ']', '(', ')', ',', '-', '.' };
 
                     Console.WriteLine("Loading metadata for \"{0}\"...\r\n", fileName);
                     sourceWave = WaveFile.Load(sourceFileName, false);

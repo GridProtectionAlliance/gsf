@@ -32,7 +32,7 @@ namespace GSF.Historian
     /// <summary>
     /// Contains fundamental classes used by all historian code.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

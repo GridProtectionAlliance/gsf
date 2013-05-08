@@ -25,9 +25,9 @@
 //
 //******************************************************************************************************
 
-using Microsoft.Win32;
 using System;
 using System.ComponentModel;
+using Microsoft.Win32;
 
 namespace GSF.Configuration
 {

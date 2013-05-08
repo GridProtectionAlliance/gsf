@@ -23,14 +23,15 @@
 //
 //******************************************************************************************************
 
-using DNP3.Adapter;
-using DNP3.Interface;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Xml.Serialization;
+using DNP3.Adapter;
+using DNP3.Interface;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace Dnp3Adapters
 {
@@ -43,7 +44,7 @@ namespace Dnp3Adapters
         /// <summary>
         /// DNP3 manager shared across all of the DNP3 input adapters
         /// </summary>
-        private static StackManager m_Manager = new StackManager();
+        private static readonly StackManager m_Manager = new StackManager();
 
         /// <summary>
         /// The filename for the communication configuration file
@@ -157,7 +158,7 @@ namespace Dnp3Adapters
 
         private T ReadConfig<T>(string path)
         {
-            var ser = new System.Xml.Serialization.XmlSerializer(typeof(T));
+            var ser = new XmlSerializer(typeof(T));
             var stream = new StreamReader(path);
             try
             {
@@ -187,8 +188,8 @@ namespace Dnp3Adapters
             this.m_portName = tcp.address + ":" + tcp.port;
             m_Manager.AddTCPClient(m_portName, tcp.level, tcp.retryMs, tcp.address, tcp.port);            
             var adapter = new TsfDataObserver(new MeasurementLookup(this.m_MeasMap));
-            adapter.NewMeasurements += new TsfDataObserver.OnNewMeasurements(adapter_NewMeasurements);
-            adapter.NewMeasurements += new TsfDataObserver.OnNewMeasurements(this.OnNewMeasurements);           
+            adapter.NewMeasurements += adapter_NewMeasurements;
+            adapter.NewMeasurements += this.OnNewMeasurements;           
             var acceptor = m_Manager.AddMaster(m_portName, this.Name, FilterLevel.LEV_WARNING, adapter, m_MasterConfig.master);
             this.m_active = true;
         }

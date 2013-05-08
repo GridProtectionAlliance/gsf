@@ -53,7 +53,6 @@ namespace GSF.Historian.Files
         /// Initializes a new instance of the <see cref="MetadataFile"/> class.
         /// </summary>
         public MetadataFile()
-            : base()
         {
             SettingsCategory = this.GetType().Name;
         }

@@ -27,11 +27,11 @@
 //
 //******************************************************************************************************
 
-using GSF.Reflection;
 using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
+using GSF.Reflection;
 
 namespace GSF
 {

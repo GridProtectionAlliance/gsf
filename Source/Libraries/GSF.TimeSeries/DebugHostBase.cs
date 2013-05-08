@@ -23,11 +23,11 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
-using GSF.Reflection;
 using System;
 using System.Diagnostics;
 using System.Windows.Forms;
+using GSF.IO;
+using GSF.Reflection;
 
 namespace GSF.TimeSeries
 {

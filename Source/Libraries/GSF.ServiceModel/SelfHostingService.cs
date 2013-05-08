@@ -57,12 +57,10 @@
 //
 //******************************************************************************************************
 
-using GSF.Adapters;
-using GSF.Configuration;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Policy;
 using System.IO;
+using System.IdentityModel.Policy;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -72,6 +70,9 @@ using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Text;
 using System.Text.RegularExpressions;
+using GSF.Adapters;
+using GSF.Configuration;
+using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.ServiceModel
 {
@@ -224,7 +225,6 @@ namespace GSF.ServiceModel
         /// Initializes a new instance of the web service.
         /// </summary>
         protected SelfHostingService()
-            : base()
         {
             Type type = this.GetType();
             m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.Split(',')[1].Trim();
@@ -482,7 +482,7 @@ namespace GSF.ServiceModel
         /// <returns>An <see cref="Int32"/> value.</returns>
         protected virtual int GetUnusedPort()
         {
-            int randomPort = GSF.Security.Cryptography.Random.Int32Between(1024, 65535);
+            int randomPort = Random.Int32Between(1024, 65535);
             IPEndPoint[] tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             while (true)
             {
@@ -560,7 +560,7 @@ namespace GSF.ServiceModel
 
                     serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
                     List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
-                    policies.Add((IAuthorizationPolicy)Activator.CreateInstance(System.Type.GetType(m_securityPolicy)));
+                    policies.Add((IAuthorizationPolicy)Activator.CreateInstance(Type.GetType(m_securityPolicy)));
                     serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
                 }
 
@@ -577,7 +577,7 @@ namespace GSF.ServiceModel
                     serviceBinding = Service.CreateServiceBinding(ref serviceAddress, !string.IsNullOrEmpty(m_securityPolicy));
                     if (serviceBinding != null)
                     {
-                        serviceEndpoint = m_serviceHost.AddServiceEndpoint(System.Type.GetType(m_contract), serviceBinding, serviceAddress);
+                        serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_contract), serviceBinding, serviceAddress);
 
                         if (serviceBinding is WebHttpBinding)
                         {

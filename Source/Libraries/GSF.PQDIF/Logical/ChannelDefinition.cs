@@ -329,8 +329,8 @@ namespace GSF.PQDIF.Logical
         #region [ Members ]
 
         // Fields
-        private CollectionElement m_physicalStructure;
-        private DataSourceRecord m_dataSource;
+        private readonly CollectionElement m_physicalStructure;
+        private readonly DataSourceRecord m_dataSource;
 
         #endregion
 

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -36,14 +36,14 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// <summary>
     /// Represents the SEL Fast Message implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationFrame : ConfigurationFrameBase
     {
         #region [ Members ]
 
         // Fields
-        private FrameSize m_frameSize;
-        private MessagePeriod m_messagePeriod;
+        private readonly FrameSize m_frameSize;
+        private readonly MessagePeriod m_messagePeriod;
         private uint m_idCode;
 
         #endregion
@@ -57,7 +57,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// This constructor is used by a consumer to generate a SEL Fast Message configuration frame.
         /// </remarks>
         /// <param name="frameSize">A <see cref="FrameSize"/> object.</param>
-        /// <param name="idCode">An <see cref="UInt32"/> as the id code.</param>
+        /// <param name="idCode">An <see cref="uint"/> as the id code.</param>
         /// <param name="messagePeriod">A <see cref="MessagePeriod"/> object.</param>
         public ConfigurationFrame(FrameSize frameSize, MessagePeriod messagePeriod, uint idCode)
             : base(0, new ConfigurationCellCollection(), 0, 0)

@@ -36,7 +36,7 @@ namespace GSF.PQDIF.Logical
         #region [ Members ]
 
         // Fields
-        private PhysicalParser m_physicalParser;
+        private readonly PhysicalParser m_physicalParser;
         private ContainerRecord m_containerRecord;
         private DataSourceRecord m_currentDataSourceRecord;
         private MonitorSettingsRecord m_currentMonitorSettingsRecord;

@@ -23,18 +23,20 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Reflection;
-using GSF.Windows.Forms;
-using NAudioWpfDemo;
 using System;
+using System.ComponentModel;
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using GSF;
+using GSF.Reflection;
+using GSF.Windows.Forms;
+using NAudioWpfDemo;
 
 namespace WavSubscriptionDemo
 {
@@ -43,7 +45,7 @@ namespace WavSubscriptionDemo
     /// </summary>
     public partial class MainWindow : Window
     {
-        ControlPanelViewModel m_viewModel;
+        readonly ControlPanelViewModel m_viewModel;
 
         /// <summary>
         /// Creates the main window for the Wave Subscription Demo.
@@ -51,12 +53,12 @@ namespace WavSubscriptionDemo
         public MainWindow()
         {
             InitializeComponent();
-            this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
-            this.Closing += new System.ComponentModel.CancelEventHandler(MainWindow_Closing);
+            this.Loaded += MainWindow_Loaded;
+            this.Closing += MainWindow_Closing;
             m_viewModel = new ControlPanelViewModel(this.WaveForm);
             this.ControlPanel.DataContext = m_viewModel;
             this.Stat.DataContext = new StatViewModel(m_viewModel.AudioGraph);
-            m_viewModel.AudioGraph.PlaybackStateChanged += new EventHandler<GSF.EventArgs<PlaybackState, string>>(AudioGraph_PlaybackStateChanged);
+            m_viewModel.AudioGraph.PlaybackStateChanged += AudioGraph_PlaybackStateChanged;
         }
 
         // Gets the header name of the selected visualization.
@@ -122,7 +124,7 @@ namespace WavSubscriptionDemo
         }
 
         // Handles the main window's Closing event. Stores application settings from this run.
-        private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void MainWindow_Closing(object sender, CancelEventArgs e)
         {
             Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
 
@@ -144,11 +146,11 @@ namespace WavSubscriptionDemo
 
         // Handles the audio graph's PlaybackStateChanged event. Updates the
         // user interface to reflect what's going on in the playback.
-        private void AudioGraph_PlaybackStateChanged(object sender, GSF.EventArgs<PlaybackState, string> e)
+        private void AudioGraph_PlaybackStateChanged(object sender, EventArgs<PlaybackState, string> e)
         {
             if (Dispatcher.Thread != Thread.CurrentThread)
             {
-                Dispatcher.Invoke(new Action<object, GSF.EventArgs<PlaybackState, string>>(AudioGraph_PlaybackStateChanged), sender, e);
+                Dispatcher.Invoke(new Action<object, EventArgs<PlaybackState, string>>(AudioGraph_PlaybackStateChanged), sender, e);
             }
             else
             {
@@ -165,17 +167,17 @@ namespace WavSubscriptionDemo
                 {
                     case PlaybackState.Connected:
                     case PlaybackState.Playing:
-                        this.ControlPanel.DisabledButtons.Visibility = System.Windows.Visibility.Collapsed;
+                        this.ControlPanel.DisabledButtons.Visibility = Visibility.Collapsed;
                         break;
                     case PlaybackState.Connecting:
                     case PlaybackState.Buffering:
                         Cursor = Cursors.Wait;
                         this.ControlPanel.IsEnabled = false;
-                        this.ControlPanel.DisabledButtons.Visibility = System.Windows.Visibility.Visible;
+                        this.ControlPanel.DisabledButtons.Visibility = Visibility.Visible;
                         defaultMessage = e.Argument1 + "...";
                         break;
                     case PlaybackState.Disconnected:
-                        this.ControlPanel.DisabledButtons.Visibility = System.Windows.Visibility.Visible;
+                        this.ControlPanel.DisabledButtons.Visibility = Visibility.Visible;
                         break;
                     case PlaybackState.TimedOut:
                         this.PlaybackStateLabel.Foreground = Brushes.Red;
@@ -206,7 +208,7 @@ namespace WavSubscriptionDemo
         // Handles the "Help > Online Help" menu item's Click event.
         private void OnlineHelpMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start("http://openpg.codeplex.com/wikipage?title=Wave%20Subscription");
+            Process.Start("http://openpg.codeplex.com/wikipage?title=Wave%20Subscription");
         }
 
         // Handles the "Help > About" menu item's Click event.

@@ -28,6 +28,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using GSF.Communication;
 using GSF.ServiceProcess;
 
 namespace GSF.TimeSeries.UI.UserControls
@@ -56,10 +57,10 @@ namespace GSF.TimeSeries.UI.UserControls
         public MonitoringUserControl()
         {
             InitializeComponent();
-            this.Loaded += new RoutedEventHandler(MonitoringUserControl_Loaded);
-            this.Unloaded += new RoutedEventHandler(MonitoringUserControl_Unloaded);
-            this.KeyUp += new System.Windows.Input.KeyEventHandler(MonitoringUserControl_KeyUp);
-            PopupSettings.Closed += new EventHandler(PopupSettings_Closed);
+            this.Loaded += MonitoringUserControl_Loaded;
+            this.Unloaded += MonitoringUserControl_Unloaded;
+            this.KeyUp += MonitoringUserControl_KeyUp;
+            PopupSettings.Closed += PopupSettings_Closed;
         }
 
         private void PopupSettings_Closed(object sender, EventArgs e)
@@ -71,7 +72,7 @@ namespace GSF.TimeSeries.UI.UserControls
 
         #region [ Methods ]
 
-        private void MonitoringUserControl_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        private void MonitoringUserControl_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape && PopupSettings.IsOpen)
                 PopupSettings.IsOpen = false;
@@ -116,7 +117,7 @@ namespace GSF.TimeSeries.UI.UserControls
             {
                 m_serviceClient = CommonFunctions.GetWindowsServiceClient();
                 if (m_serviceClient != null && m_serviceClient.Helper != null &&
-                   m_serviceClient.Helper.RemotingClient != null && m_serviceClient.Helper.RemotingClient.CurrentState == GSF.Communication.ClientState.Connected)
+                   m_serviceClient.Helper.RemotingClient != null && m_serviceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                 {
                     TextBlockServiceStatus.Dispatcher.BeginInvoke(new DisplayHelper(RefreshStatusText), new object[] { UpdateType.Information, m_serviceClient.CachedStatus });
                     m_serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
@@ -233,7 +234,7 @@ namespace GSF.TimeSeries.UI.UserControls
         private void ButtonSendServiceRequest_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(TextBoxServiceRequest.Text) &&
-                m_serviceClient != null && m_serviceClient.Helper.RemotingClient.CurrentState == GSF.Communication.ClientState.Connected)
+                m_serviceClient != null && m_serviceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
             {
                 CommonFunctions.SendCommandToService(TextBoxServiceRequest.Text);
                 TextBoxServiceRequest.Focus();

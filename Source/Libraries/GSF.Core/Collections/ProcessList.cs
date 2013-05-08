@@ -124,8 +124,8 @@ namespace GSF.Collections
         /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
         /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessList(ProcessItemFunctionSignature processItemFunction, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, IEnumerable<T> processQueue, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
             : base(processItemFunction, processItemsFunction, canProcessItemFunction, processQueue, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
@@ -1281,7 +1281,7 @@ namespace GSF.Collections
                     // sort implementation exists for any future derived process queue possibly based on a non List(Of T)
                     // queue and will at least ensure that the function will perform as expected.
                     T[] items = ToArray();
-                    Array.Sort<T>(items, index, count, comparer);
+                    Array.Sort(items, index, count, comparer);
                     InternalList.Clear();
                     AddRange(items);
                 }
@@ -1316,7 +1316,7 @@ namespace GSF.Collections
                     // queue and will at least ensure that the function will perform as expected. Maybe some clever
                     // programmer will come behind me and add some "Linq-y" expression that will magically do this...
                     T[] items = ToArray();
-                    Array.Sort<T>(items, comparison);
+                    Array.Sort(items, comparison);
                     InternalList.Clear();
                     AddRange(items);
                 }

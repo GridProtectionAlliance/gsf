@@ -38,10 +38,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 */
 #endregion
 
-using GSF.Units;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using GSF.Units;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
 {
@@ -75,7 +75,7 @@ namespace GSF.Core.Tests
     ///This is a test class for SITest and is intended
     ///to contain all SITest Unit Tests
     ///</summary>
-    [TestClass()]
+    [TestClass]
     public class SITest
     {
         // virtual structure for SI unit
@@ -109,7 +109,7 @@ namespace GSF.Core.Tests
                 if (value.ToLower() == prefix.ToLower() ||
                 value.ToLower() == symbol.ToLower() ||
                 value.ToLower() == factor.ToString().ToLower() ||
-                value.ToLower() == value.ToString().ToLower())
+                value.ToLower() == value.ToLower())
                 {
                     status = true;
                 }
@@ -122,8 +122,9 @@ namespace GSF.Core.Tests
         class oSI
         {
             #region DECLARATION
-            sSI virt_SI = new sSI();
-            List<sSI> obj_SI = new List<sSI>(22);
+
+            readonly sSI virt_SI = new sSI();
+            readonly List<sSI> obj_SI = new List<sSI>(22);
             #endregion
 
             #region CONSTRUCTOR
@@ -169,7 +170,7 @@ namespace GSF.Core.Tests
                 bool status = false;
                 foreach (bool Exists in IsExists(value))
                 {
-                    if (Exists == true) { status = true; break; }
+                    if (Exists) { status = true; break; }
                 }
                 return status;
             }
@@ -178,7 +179,7 @@ namespace GSF.Core.Tests
                 bool status = false;
                 foreach (bool Exists in IsExists(value))
                 {
-                    if (Exists == true) { status = true; break; }
+                    if (Exists) { status = true; break; }
                 }
                 return status;
             }
@@ -203,7 +204,7 @@ namespace GSF.Core.Tests
             #endregion
 
             #region DISPOSE
-            private bool isDisposed = false;
+            private bool isDisposed;
             ~oSI()
             {
                 Dispose(false);
@@ -264,14 +265,14 @@ namespace GSF.Core.Tests
         //}
         //
         //Use TestInitialize to run code before running each test
-        [TestInitialize()]
+        [TestInitialize]
         public void MyTestInitialize()
         {
             baseSI = new oSI();
         }
 
         //Use TestCleanup to run code after each test has run
-        [TestCleanup()]
+        [TestCleanup]
         public void MyTestCleanup()
         {
             baseSI.Dispose();
@@ -290,7 +291,7 @@ namespace GSF.Core.Tests
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledStringTest()
         {
             double totalUnits = 10F;
@@ -317,7 +318,7 @@ namespace GSF.Core.Tests
         /// arrays for examples.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledStringFormatUnitSymbolTest()
         {
             double totalUnits = 1F;
@@ -341,7 +342,7 @@ namespace GSF.Core.Tests
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledStringUnitTest()
         {
             double totalUnits = 1F;
@@ -364,7 +365,7 @@ namespace GSF.Core.Tests
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        [TestMethod()]
+        [TestMethod]
         public void ToScaledStringFormatUnitNameTest()
         {
 
@@ -382,7 +383,7 @@ namespace GSF.Core.Tests
         /// A test for Factors
         /// Gets an array of all the defined SI unit factors ordered from least (<see cref="Yocto"/>) to greatest (<see cref="Yotta"/>).
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void FactorsTest()
         {
             bool expected = true;
@@ -394,7 +395,7 @@ namespace GSF.Core.Tests
         /// A test for Names
         /// Gets an array of all the defined unit factor SI names ordered from least (<see cref="Yocto"/>) to greatest (<see cref="Yotta"/>).
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void NamesTest()
         {
             bool expected = true;
@@ -406,7 +407,7 @@ namespace GSF.Core.Tests
         /// A test for Symbols
         /// Gets an array of all the defined unit factor SI prefix symbols ordered from least (<see cref="Yocto"/>) to greatest (<see cref="Yotta"/>).
         /// </summary>
-        [TestMethod()]
+        [TestMethod]
         public void SymbolsTest()
         {
             bool expected = true;

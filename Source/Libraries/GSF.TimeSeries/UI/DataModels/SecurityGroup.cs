@@ -31,13 +31,13 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -239,8 +239,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in securityGroupTable.Rows)
                 {
-                    securityGroupList.Add(new SecurityGroup()
-                    {
+                    securityGroupList.Add(new SecurityGroup
+                        {
                         ID = database.Guid(row, "ID"),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
@@ -253,7 +253,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     });
                 }
 
-                securityGroupList.Insert(0, new SecurityGroup() { ID = Guid.Empty });
+                securityGroupList.Insert(0, new SecurityGroup { ID = Guid.Empty });
 
                 return securityGroupList;
             }

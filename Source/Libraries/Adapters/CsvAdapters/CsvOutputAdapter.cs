@@ -23,13 +23,14 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace CsvAdapters
 {
@@ -179,7 +180,7 @@ namespace CsvAdapters
                     builder.Append((long)measurement.Timestamp);
                     builder.Append(',');
                     builder.Append(measurement.AdjustedValue);
-                    builder.Append(System.Environment.NewLine);
+                    builder.Append(Environment.NewLine);
                 }
 
                 m_outStream.Write(builder.ToString());

@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents an electric current measurement, in amperes, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a current in amperes; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a current in amperes; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other current representations, specifically
     /// abampere (a.k.a., an electromagnetic unit) and statampere (a.k.a., esu per second). Metric conversions are handled
     /// simply by applying the needed <see cref="SI"/> conversion factor, for example:
@@ -87,7 +87,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Current : IComparable, IFormattable, IConvertible, IComparable<Current>, IComparable<Double>, IEquatable<Current>, IEquatable<Double>
     {
         #region [ Members ]
@@ -98,7 +98,7 @@ namespace GSF.Units
         private const double StatamperesFactor = 3.335641e-10D;
 
         // Fields
-        private double m_value; // Current value stored in amperes
+        private readonly double m_value; // Current value stored in amperes
 
         #endregion
 
@@ -696,7 +696,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Current"/> object as the left hand operand.</param>
         /// <param name="value2">A <see cref="Current"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result of the operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Current value1, Current value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

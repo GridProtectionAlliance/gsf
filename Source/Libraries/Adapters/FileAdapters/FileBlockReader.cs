@@ -592,7 +592,7 @@ namespace FileAdapters
         /// </summary>
         private void OnNewMeasurement(IMeasurement measurement)
         {
-            OnNewMeasurements(new IMeasurement[] { measurement });
+            OnNewMeasurements(new[] { measurement });
             m_bufferBlocksSent++;
         }
 

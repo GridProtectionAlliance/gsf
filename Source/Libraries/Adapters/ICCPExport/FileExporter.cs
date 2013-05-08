@@ -291,7 +291,7 @@ namespace ICCPExport
 
                 // Make sure reference angle is part of input measurement keys collection
                 if (!InputMeasurementKeys.Contains(m_referenceAngleKey))
-                    InputMeasurementKeys = InputMeasurementKeys.Concat(new MeasurementKey[] { m_referenceAngleKey }).ToArray();
+                    InputMeasurementKeys = InputMeasurementKeys.Concat(new[] { m_referenceAngleKey }).ToArray();
 
                 // Make sure sure reference angle key is actually an angle measurement
                 SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
@@ -319,7 +319,7 @@ namespace ICCPExport
             m_dataExporter = new MultipleDestinationExporter(ConfigurationSection, m_exportInterval);
             m_dataExporter.StatusMessage += m_dataExporter_StatusMessage;
             m_dataExporter.ProcessException += m_dataExporter_ProcessException;
-            m_dataExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath(ConfigurationSection + ".txt"), false, "", "", "") });
+            m_dataExporter.Initialize(new[] { new ExportDestination(FilePath.GetAbsolutePath(ConfigurationSection + ".txt"), false, "", "", "") });
 
             // Create new measurement tag name dictionary
             m_measurementTags = new ConcurrentDictionary<MeasurementKey, string>();

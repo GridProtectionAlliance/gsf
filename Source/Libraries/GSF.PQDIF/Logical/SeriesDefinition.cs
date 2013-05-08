@@ -26,7 +26,6 @@
 using System;
 using System.Text;
 using GSF.PQDIF.Physical;
-using GSF;
 
 namespace GSF.PQDIF.Logical
 {
@@ -265,8 +264,8 @@ namespace GSF.PQDIF.Logical
         #region [ Members ]
 
         // Fields
-        private CollectionElement m_physicalStructure;
-        private ChannelDefinition m_channelDefinition;
+        private readonly CollectionElement m_physicalStructure;
+        private readonly ChannelDefinition m_channelDefinition;
 
         #endregion
 

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ClientHelper.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -171,7 +171,6 @@ namespace GSF.ServiceProcess
         /// Initializes a new instance of the <see cref="ClientHelper"/> class.
         /// </summary>
         public ClientHelper()
-            : base()
         {
             m_username = DefaultUsername;
             m_password = DefaultPassword;
@@ -619,12 +618,12 @@ namespace GSF.ServiceProcess
             OnReceivedServiceUpdate(type, string.Format(message, args));
         }
 
-        private void RemotingClient_ConnectionAttempt(object sender, System.EventArgs e)
+        private void RemotingClient_ConnectionAttempt(object sender, EventArgs e)
         {
             UpdateStatus(UpdateType.Information, "Connecting to {0}...\r\n\r\n", m_remotingClient.ServerUri);
         }
 
-        private void RemotingClient_ConnectionEstablished(object sender, System.EventArgs e)
+        private void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
         {
             // Upon establishing connection with the service's communication client, we'll send our information to the
             // service so the service can keep track of all the client that are connected to its communication server.
@@ -655,7 +654,7 @@ namespace GSF.ServiceProcess
                 remotingClient.NetworkCredential = null;
         }
 
-        private void RemotingClient_ConnectionTerminated(object sender, System.EventArgs e)
+        private void RemotingClient_ConnectionTerminated(object sender, EventArgs e)
         {
             StringBuilder status = new StringBuilder();
             status.AppendFormat("Disconnected from {0}:", m_remotingClient.ServerUri);
@@ -667,8 +666,7 @@ namespace GSF.ServiceProcess
 
             // Attempt reconnection on a seperate thread.
             if (m_attemptReconnection)
-                new Thread((ThreadStart)delegate()
-                {
+                new Thread((ThreadStart)delegate {
                     Connect();
                 }).Start();
         }
@@ -676,7 +674,7 @@ namespace GSF.ServiceProcess
         private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
             ServiceResponse response = null;
-            Serialization.TryDeserialize<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2), SerializationFormat.Binary, out response);
+            Serialization.TryDeserialize(e.Argument1.BlockCopy(0, e.Argument2), SerializationFormat.Binary, out response);
             if (response != null)
             {
                 switch (response.Type)

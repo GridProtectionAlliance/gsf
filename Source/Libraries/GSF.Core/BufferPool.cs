@@ -50,7 +50,7 @@ namespace GSF
         // Note that the buffer manager will create an queue buffers as needed during run-time, the default maximum
         // pool size and default maximum buffer sizes are set to int max. Even if an application should max the pool
         // size, the buffer manager will still sucessfully provide and manage buffers - they simply won't be cached.
-        private static BufferManager s_bufferManager = BufferManager.CreateBufferManager(int.MaxValue, int.MaxValue);
+        private static readonly BufferManager s_bufferManager = BufferManager.CreateBufferManager(int.MaxValue, int.MaxValue);
 
         /// <summary>
         /// Gets a buffer of at least the specified size from the pool.

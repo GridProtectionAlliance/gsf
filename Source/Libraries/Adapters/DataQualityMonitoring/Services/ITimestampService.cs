@@ -31,7 +31,7 @@ namespace DataQualityMonitoring.Services
     /// <summary>
     /// Defines a REST web service for measurements with bad timestamps.
     /// </summary>
-    [ServiceContract()]
+    [ServiceContract]
     public interface ITimestampService
     {
 
@@ -50,7 +50,7 @@ namespace DataQualityMonitoring.Services
         /// Reads all measurements with bad timestamps from the <see cref="Test"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableTimestampTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/badtimestampmeasurements/read/xml")]
         SerializableTimestampTest ReadAllBadTimestampMeasurementsAsXml();
 
@@ -58,7 +58,7 @@ namespace DataQualityMonitoring.Services
         /// Reads all measurements with bad timestamps from the <see cref="Test"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <returns>A <see cref="SerializableTimestampTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/badtimestampmeasurements/read/json")]
         SerializableTimestampTest ReadAllBadTimestampMeasurementsAsJson();
 
@@ -67,7 +67,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="device">The name of the device to check for flatlined measurements.</param>
         /// <returns>A <see cref="SerializableTimestampTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/badtimestampmeasurements/read/{device}/xml")]
         SerializableTimestampTest ReadBadTimestampMeasurementsFromDeviceAsXml(string device);
 
@@ -76,7 +76,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="device">The name of the device to check for flatlined measurements.</param>
         /// <returns>A <see cref="SerializableTimestampTest"/> object.</returns>
-        [OperationContract(),
+        [OperationContract,
         WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/badtimestampmeasurements/read/{device}/json")]
         SerializableTimestampTest ReadBadTimestampMeasurementsFromDeviceAsJson(string device);
 

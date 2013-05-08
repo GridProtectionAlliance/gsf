@@ -37,12 +37,13 @@
 
 #endregion
 
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
+using GSF;
+using Microsoft.Win32;
 
 namespace NAudioWpfDemo
 {
@@ -54,16 +55,16 @@ namespace NAudioWpfDemo
         bool isPlaying;
 
         int captureSeconds;
-        AudioGraph audioGraph;
-        IWaveFormRenderer waveFormRenderer;
+        readonly AudioGraph audioGraph;
+        readonly IWaveFormRenderer waveFormRenderer;
 
         public ControlPanelViewModel(IWaveFormRenderer waveFormRenderer)
         {
             this.waveFormRenderer = waveFormRenderer;
             this.audioGraph = new AudioGraph();
-            audioGraph.MaximumCalculated += new EventHandler<MaxSampleEventArgs>(audioGraph_MaximumCalculated);
-            audioGraph.GotSongList += new EventHandler<GSF.EventArgs<List<string>>>(audioGraph_GotSongList);
-            audioGraph.PlaybackStateChanged += new EventHandler<GSF.EventArgs<PlaybackState, string>>(audioGraph_PlaybackStateChanged);
+            audioGraph.MaximumCalculated += audioGraph_MaximumCalculated;
+            audioGraph.GotSongList += audioGraph_GotSongList;
+            audioGraph.PlaybackStateChanged += audioGraph_PlaybackStateChanged;
             this.captureSeconds = 10;
             this.NotificationsPerSecond = 100;
             this.ConnectionUri = "localhost:6170?udp=9500";
@@ -185,12 +186,12 @@ namespace NAudioWpfDemo
             CommandManager.InvalidateRequerySuggested();
         }
 
-        void audioGraph_GotSongList(object sender, GSF.EventArgs<List<string>> e)
+        void audioGraph_GotSongList(object sender, EventArgs<List<string>> e)
         {
             SongList = e.Argument;
         }
 
-        void audioGraph_PlaybackStateChanged(object sender, GSF.EventArgs<PlaybackState, string> e)
+        void audioGraph_PlaybackStateChanged(object sender, EventArgs<PlaybackState, string> e)
         {
             isPlaying = (e.Argument1 == PlaybackState.Playing);
 
@@ -200,7 +201,7 @@ namespace NAudioWpfDemo
                 case PlaybackState.TimedOut:
                 case PlaybackState.Stopped:
                 case PlaybackState.Disposed:
-                    WavSubscriptionDemo.App.Current.Dispatcher.Invoke(new Action(waveFormRenderer.Reset));
+                    Application.Current.Dispatcher.Invoke(waveFormRenderer.Reset);
                     break;
             }
         }

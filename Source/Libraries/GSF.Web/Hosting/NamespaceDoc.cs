@@ -30,7 +30,7 @@ namespace GSF.Web.Hosting
     /// <summary>
     /// Contains classes that make-up the framework for serving content embedded in .NET assemblies over the web.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

@@ -30,7 +30,7 @@ namespace GSF
     /// <summary>
     /// Contains fundamental classes that define commonly-used value and reference data types, interfaces, and basic type extension functions.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

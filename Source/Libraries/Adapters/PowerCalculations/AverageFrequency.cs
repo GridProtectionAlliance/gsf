@@ -53,7 +53,7 @@ namespace PowerCalculations
         private double m_averageFrequency;
         private double m_maximumFrequency;
         private double m_minimumFrequency;
-        private ConcurrentDictionary<Guid, int> m_lastValues = new ConcurrentDictionary<Guid, int>();
+        private readonly ConcurrentDictionary<Guid, int> m_lastValues = new ConcurrentDictionary<Guid, int>();
 
         // Important: Make sure output definition defines points in the following order
         private enum Output

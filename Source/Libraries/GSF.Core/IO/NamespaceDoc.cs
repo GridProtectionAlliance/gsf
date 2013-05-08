@@ -30,7 +30,7 @@ namespace GSF.IO
     /// <summary>
     /// Contains classes and extension functions used to simplify and standardize operations related to files and streams.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

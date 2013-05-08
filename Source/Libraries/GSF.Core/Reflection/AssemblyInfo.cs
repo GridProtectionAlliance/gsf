@@ -41,7 +41,6 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -52,6 +51,7 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
+using GSF.IO;
 
 namespace GSF.Reflection
 {
@@ -61,7 +61,7 @@ namespace GSF.Reflection
         #region [ Members ]
 
         // Fields
-        private Assembly m_assemblyInstance;
+        private readonly Assembly m_assemblyInstance;
 
         #endregion
 
@@ -282,10 +282,10 @@ namespace GSF.Reflection
                 if ((object)attribute == null)
                     return string.Empty;
                 else
-                    return attribute.ConstructorArguments[0].Value.ToString() + "." +
-                           attribute.ConstructorArguments[1].Value.ToString() + "." +
-                           attribute.ConstructorArguments[2].Value.ToString() + "." +
-                           attribute.ConstructorArguments[3].Value.ToString();
+                    return attribute.ConstructorArguments[0].Value + "." +
+                           attribute.ConstructorArguments[1].Value + "." +
+                           attribute.ConstructorArguments[2].Value + "." +
+                           attribute.ConstructorArguments[3].Value;
             }
         }
 
@@ -330,8 +330,8 @@ namespace GSF.Reflection
                 if ((object)attribute == null)
                     return string.Empty;
                 else
-                    return attribute.ConstructorArguments[0].Value.ToString() + "." +
-                           attribute.ConstructorArguments[1].Value.ToString();
+                    return attribute.ConstructorArguments[0].Value + "." +
+                           attribute.ConstructorArguments[1].Value;
             }
         }
 
@@ -626,7 +626,7 @@ namespace GSF.Reflection
                     if (string.Compare(FilePath.GetFileNameWithoutExtension(name), EntryAssembly.RootNamespace + "." + shortName, true) == 0)
                     {
                         // If so, loads embedded resource assembly into a binary buffer.
-                        System.IO.Stream resourceStream = Assembly.GetEntryAssembly().GetManifestResourceStream(name);
+                        Stream resourceStream = Assembly.GetEntryAssembly().GetManifestResourceStream(name);
                         byte[] buffer = new byte[resourceStream.Length];
                         resourceStream.Read(buffer, 0, (int)resourceStream.Length);
                         resourceStream.Close();

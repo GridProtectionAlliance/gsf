@@ -26,11 +26,11 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.UI.ViewModels;
 using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Controls;
+using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -41,7 +41,7 @@ namespace GSF.TimeSeries.UI.UserControls
     {
         #region [ Members ]
 
-        private ErrorLogViewModel m_dataContext;
+        private readonly ErrorLogViewModel m_dataContext;
         private DataGridColumn m_sortColumn;
         private string m_sortMemberPath;
         private ListSortDirection m_sortDirection;
@@ -58,7 +58,7 @@ namespace GSF.TimeSeries.UI.UserControls
         {
             InitializeComponent();
             m_dataContext = new ErrorLogViewModel(18);
-            m_dataContext.PropertyChanged += new PropertyChangedEventHandler(ViewModel_PropertyChanged);
+            m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
             this.DataContext = m_dataContext;
 
             m_sortColumn = DataGridList.Columns.Single(column => (string)column.Header == "Sl No.");

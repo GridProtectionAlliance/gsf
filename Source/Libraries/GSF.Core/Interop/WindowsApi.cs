@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  WindowsApi.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -290,7 +290,7 @@ namespace GSF.Interop
         /// <summary>
         /// Win32 ProcessAccessTypes enumeration.
         /// </summary>
-        [Flags()]
+        [Flags]
         public enum ProcessAccessTypes : uint
         {
             /// <summary

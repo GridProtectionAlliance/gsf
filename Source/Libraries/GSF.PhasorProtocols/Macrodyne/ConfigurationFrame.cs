@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationFrame.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,9 +33,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
-using GSF;
-using GSF.Interop;
 using GSF.IO.Checksums;
+using GSF.Interop;
 using GSF.Parsing;
 using GSF.Reflection;
 
@@ -44,7 +43,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Represents the Macrodyne implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifiableFrameImage<SourceChannel, FrameType>
     {
         #region [ Members ]
@@ -73,7 +72,7 @@ namespace GSF.PhasorProtocols.Macrodyne
 
         // Fields
         private CommonFrameHeader m_frameHeader;
-        private IniFile m_iniFile;
+        private readonly IniFile m_iniFile;
         private ConfigurationCellCollection m_configurationFileCells;
         private OnlineDataFormatFlags m_onlineDataFormatFlags;
         private PhasorDefinition m_defaultPhasorV;
@@ -319,31 +318,31 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 int count = 1;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor2Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor2Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor2Enabled) == OnlineDataFormatFlags.Phasor2Enabled)
                     count++;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor3Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor3Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor3Enabled) == OnlineDataFormatFlags.Phasor3Enabled)
                     count++;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor4Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor4Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor4Enabled) == OnlineDataFormatFlags.Phasor4Enabled)
                     count++;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor5Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor5Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor5Enabled) == OnlineDataFormatFlags.Phasor5Enabled)
                     count++;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor6Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor6Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor6Enabled) == OnlineDataFormatFlags.Phasor6Enabled)
                     count++;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor7Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor7Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor7Enabled) == OnlineDataFormatFlags.Phasor7Enabled)
                     count++;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor8Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor8Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor8Enabled) == OnlineDataFormatFlags.Phasor8Enabled)
                     count++;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor9Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor9Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor9Enabled) == OnlineDataFormatFlags.Phasor9Enabled)
                     count++;
 
-                if ((m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Phasor10Enabled) == Macrodyne.OnlineDataFormatFlags.Phasor10Enabled)
+                if ((m_onlineDataFormatFlags & OnlineDataFormatFlags.Phasor10Enabled) == OnlineDataFormatFlags.Phasor10Enabled)
                     count++;
 
                 return count;
@@ -357,7 +356,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Status2ByteEnabled) == Macrodyne.OnlineDataFormatFlags.Status2ByteEnabled;
+                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.Status2ByteEnabled) == OnlineDataFormatFlags.Status2ByteEnabled;
             }
         }
 
@@ -368,14 +367,14 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.TimestampEnabled) == Macrodyne.OnlineDataFormatFlags.TimestampEnabled;
+                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.TimestampEnabled) == OnlineDataFormatFlags.TimestampEnabled;
             }
             internal set
             {
                 if (value)
-                    m_onlineDataFormatFlags |= Macrodyne.OnlineDataFormatFlags.TimestampEnabled;
+                    m_onlineDataFormatFlags |= OnlineDataFormatFlags.TimestampEnabled;
                 else
-                    m_onlineDataFormatFlags = m_onlineDataFormatFlags & ~Macrodyne.OnlineDataFormatFlags.TimestampEnabled;
+                    m_onlineDataFormatFlags = m_onlineDataFormatFlags & ~OnlineDataFormatFlags.TimestampEnabled;
             }
         }
 
@@ -386,7 +385,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.ReferenceEnabled) == Macrodyne.OnlineDataFormatFlags.ReferenceEnabled;
+                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.ReferenceEnabled) == OnlineDataFormatFlags.ReferenceEnabled;
             }
         }
 
@@ -397,7 +396,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Digital1Enabled) == Macrodyne.OnlineDataFormatFlags.Digital1Enabled;
+                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.Digital1Enabled) == OnlineDataFormatFlags.Digital1Enabled;
             }
         }
 
@@ -408,7 +407,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         {
             get
             {
-                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Digital2Enabled) == Macrodyne.OnlineDataFormatFlags.Digital2Enabled;
+                return (m_onlineDataFormatFlags & OnlineDataFormatFlags.Digital2Enabled) == OnlineDataFormatFlags.Digital2Enabled;
             }
         }
 

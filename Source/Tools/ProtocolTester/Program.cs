@@ -28,11 +28,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using GSF.TimeSeries;
 using GSF;
 using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
+using GSF.TimeSeries;
 
 namespace ProtocolTester
 {
@@ -49,7 +49,7 @@ namespace ProtocolTester
         private static ConcurrentDictionary<string, IMeasurement> m_definedMeasurements;
         private static ConcurrentDictionary<ushort, ConfigurationCell> m_definedDevices;
         private static StreamWriter m_exportFile;
-        private static uint measurementID = 0;
+        private static uint measurementID;
         private static long frameCount;
 
         public static void Main(string[] args)
@@ -281,8 +281,8 @@ namespace ProtocolTester
             IMeasurement definedMeasurement = m_definedMeasurements.GetOrAdd(signalReference, signal =>
             {
                 Guid id = Guid.NewGuid();
-                return new Measurement()
-                {
+                return new Measurement
+                    {
                     Key = new MeasurementKey(id, ++measurementID, signal),
                     ID = id
                 };

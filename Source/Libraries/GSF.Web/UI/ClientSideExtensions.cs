@@ -38,7 +38,7 @@ namespace GSF.Web.UI
     /// <summary>
     /// Specifies the buttons to be displayed in a message box.
     /// </summary>
-    [Flags()]
+    [Flags]
     public enum MsgBoxStyle
     {
         /// <summary>

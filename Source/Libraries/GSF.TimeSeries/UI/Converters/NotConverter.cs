@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Globalization;
 using System.Windows.Data;
 
 namespace GSF.TimeSeries.UI.Converters
@@ -44,7 +45,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="parameter">The converter parameter to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
         /// <returns>Boolean value for UI use.</returns>
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return InvertBoolean(value);
         }
@@ -57,7 +58,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="parameter">The converter parameter to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
         /// <returns>Boolean value for UI use.</returns>
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return InvertBoolean(value);
         }

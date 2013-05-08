@@ -43,8 +43,8 @@ namespace GSF
     public static class CharExtensions
     {
         // so that this only happens one time
-        private static char[] wordSeperators = { '\"', '/', '\\', '<', '>', '=', '{', '}', '(', ')', '[', ']', '@', '*' };
-        private static char[] numericValues = { '-', '+', ',', '.' };
+        private static readonly char[] wordSeperators = { '\"', '/', '\\', '<', '>', '=', '{', '}', '(', ')', '[', ']', '@', '*' };
+        private static readonly char[] numericValues = { '-', '+', ',', '.' };
 
         /// <summary>
         /// Encodes the specified Unicode character in proper Regular Expression format.

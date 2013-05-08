@@ -25,13 +25,13 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Communication;
-using GSF.Configuration;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ServiceProcess;
+using GSF;
+using GSF.Communication;
+using GSF.Configuration;
 
 namespace TCPRebroadcaster
 {
@@ -48,7 +48,6 @@ namespace TCPRebroadcaster
         #region [ Constructors ]
 
         public ServiceHost()
-            : base()
         {
             InitializeComponent();
 

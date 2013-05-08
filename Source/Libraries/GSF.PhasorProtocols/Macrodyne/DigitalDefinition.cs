@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DigitalDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Represents the Macrodyne implementation of an <see cref="IDigitalDefinition"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DigitalDefinition : DigitalDefinitionBase
     {
         #region [ Constructors ]

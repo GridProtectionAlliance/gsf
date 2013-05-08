@@ -23,12 +23,12 @@
 //
 //******************************************************************************************************
 
-using GSF.ServiceModel;
-using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using GSF.ServiceModel;
+using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -52,7 +52,6 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="adapter">The adapter whose alarms are served by this service.</param>
         public AlarmService(AlarmAdapter adapter)
-            : base()
         {
             AlarmAdapter = adapter;
 

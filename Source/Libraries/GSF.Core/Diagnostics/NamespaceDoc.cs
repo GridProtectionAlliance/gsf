@@ -30,7 +30,7 @@ namespace GSF.Diagnostics
     /// <summary>
     /// Contains classes used to simplify and standardize performance monitoring for applications.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

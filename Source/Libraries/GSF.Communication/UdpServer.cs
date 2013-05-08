@@ -234,7 +234,7 @@ namespace GSF.Communication
         // Fields
         private TransportProvider<Socket> m_udpServer;
         private SocketAsyncEventArgs m_receiveArgs;
-        private ConcurrentDictionary<Guid, UdpClientInfo> m_clientInfoLookup;
+        private readonly ConcurrentDictionary<Guid, UdpClientInfo> m_clientInfoLookup;
         private ClientIdentificationMode m_clientIdentificationMode;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
@@ -243,8 +243,8 @@ namespace GSF.Communication
         private int m_maxSendQueueSize;
         private Dictionary<string, string> m_configData;
 
-        private EventHandler<SocketAsyncEventArgs> m_sendHandler;
-        private EventHandler<SocketAsyncEventArgs> m_receiveHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_sendHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_receiveHandler;
 
         #endregion
 
@@ -562,7 +562,7 @@ namespace GSF.Communication
                 m_udpServer.Provider.ReceiveBufferSize = ReceiveBufferSize;
 
                 // Disable SocketError.ConnectionReset exception from being thrown when the endpoint is not listening
-                m_udpServer.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+                m_udpServer.Provider.IOControl(SIO_UDP_CONNRESET, new[] { Convert.ToByte(false) }, null);
 
                 // Notify that the server has been started successfully
                 OnServerStarted();
@@ -873,8 +873,8 @@ namespace GSF.Communication
             }
 
             // Create client info object
-            udpClientInfo = new UdpClientInfo()
-            {
+            udpClientInfo = new UdpClientInfo
+                {
                 Client = udpClient,
                 SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
                 SendLock = new SpinLock(),

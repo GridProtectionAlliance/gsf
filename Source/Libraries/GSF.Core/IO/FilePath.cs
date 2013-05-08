@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FilePath.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -51,9 +51,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Identity;
-using GSF.Interop;
-using GSF.Reflection;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -61,6 +58,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web.Hosting;
+using GSF.Identity;
+using GSF.Interop;
+using GSF.Reflection;
 
 namespace GSF.IO
 {
@@ -76,14 +76,14 @@ namespace GSF.IO
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         private struct NETRESOURCE
         {
-            public int dwScope;
+            public readonly int dwScope;
             public int dwType;
-            public int dwDisplayType;
-            public int dwUsage;
-            public string lpLocalName;
+            public readonly int dwDisplayType;
+            public readonly int dwUsage;
+            public readonly string lpLocalName;
             public string lpRemoteName;
-            public string lpComment;
-            public string lpProvider;
+            public readonly string lpComment;
+            public readonly string lpProvider;
         }
 
         // Constants
@@ -100,7 +100,7 @@ namespace GSF.IO
 
         // Fields
 
-        private static string s_fileNameCharPattern;
+        private static readonly string s_fileNameCharPattern;
 
         #endregion
 

@@ -23,6 +23,8 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -46,7 +48,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="parameter">The converter parameter to use in the conversion.</param>
         /// <param name="culture">The culture to use in the conversion.</param>
         /// <returns>Brush object.</returns>
-        public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string input = string.Empty;
             if (value != null)
@@ -83,7 +85,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="culture">The culture to use in the conversion.</param>
         /// <returns>string value.</returns>
         /// <remarks>This method is not implemented.</remarks>
-        public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             return null;
         }

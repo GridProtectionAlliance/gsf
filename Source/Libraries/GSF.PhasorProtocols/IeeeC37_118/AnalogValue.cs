@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  AnalogValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
     /// <summary>
     /// Represents the IEEE C37.118 implementation of an <see cref="IAnalogValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class AnalogValue : AnalogValueBase
     {
         #region [ Constructors ]

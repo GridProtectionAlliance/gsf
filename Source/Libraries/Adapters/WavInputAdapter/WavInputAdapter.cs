@@ -26,16 +26,16 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Media;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using GSF;
+using GSF.Media;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
 namespace WavInputAdapter
 {

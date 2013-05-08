@@ -29,10 +29,10 @@
 //
 //******************************************************************************************************
 
-using GSF.Units;
 using System;
 using System.Text;
 using System.Threading;
+using GSF.Units;
 
 namespace GSF.ServiceProcess
 {

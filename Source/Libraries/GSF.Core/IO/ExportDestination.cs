@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ExportDestination.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -31,7 +31,6 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.IO;
@@ -203,9 +202,9 @@ namespace GSF.IO
         #region [ Methods ]
 
         /// <summary>
-        /// Returns a <see cref="String"/> that represents the current <see cref="ExportDestination"/>.
+        /// Returns a <see cref="string"/> that represents the current <see cref="ExportDestination"/>.
         /// </summary>
-        /// <returns>A <see cref="String"/> that represents the current <see cref="ExportDestination"/>.</returns>
+        /// <returns>A <see cref="string"/> that represents the current <see cref="ExportDestination"/>.</returns>
         public override string ToString()
         {
             return m_destinationFile;

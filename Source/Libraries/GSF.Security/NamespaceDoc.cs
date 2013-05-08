@@ -30,7 +30,7 @@ namespace GSF.Security
     /// <summary>
     /// Contains fundamental classes that define the security framework for role-based security.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

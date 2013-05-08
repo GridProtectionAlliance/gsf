@@ -30,7 +30,7 @@ namespace GSF.Adapters
     /// <summary>
     /// Contains classes that facilitate the development of adapter-driven architecture.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

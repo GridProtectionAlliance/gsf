@@ -32,7 +32,7 @@ namespace GSF.Historian.Packets
     /// <summary>
     /// Contains classes that define packet definitions used for transmission of data points and metadata.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

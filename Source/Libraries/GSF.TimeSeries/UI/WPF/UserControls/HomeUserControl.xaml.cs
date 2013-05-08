@@ -21,12 +21,12 @@
 //
 //******************************************************************************************************
 
-using GSF.IO;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Xml;
 using System.Xml.Serialization;
+using GSF.IO;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -38,7 +38,7 @@ namespace GSF.TimeSeries.UI.UserControls
         #region [ Members ]
 
         // Fields
-        private ObservableCollection<MenuDataItem> m_menuDataItems;
+        private readonly ObservableCollection<MenuDataItem> m_menuDataItems;
 
         #endregion
 

@@ -27,13 +27,13 @@
 //
 //******************************************************************************************************
 
-using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using GSF.Data;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -226,8 +226,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     foreach (DataRow row in ErrorLogTable.Rows)
                     {
-                        ErrorLogList.Add(new ErrorLog()
-                        {
+                        ErrorLogList.Add(new ErrorLog
+                            {
                             ID = row.ConvertField<int>("ID"),
                             Source = row.Field<String>("Source"),
                             Type = row.Field<String>("Type"),

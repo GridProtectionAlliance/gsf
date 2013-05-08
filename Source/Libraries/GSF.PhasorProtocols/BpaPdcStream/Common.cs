@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  Common.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -27,7 +27,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 
 namespace GSF.PhasorProtocols.BpaPdcStream
@@ -37,7 +36,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Stream type enueration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum StreamType : byte
     {
         /// <summary>
@@ -53,7 +52,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// File type enueration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum FileType : byte
     {
         /// <summary>
@@ -73,7 +72,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Stream revision number enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum RevisionNumber : byte
     {
         /// <summary>
@@ -93,7 +92,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// 
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum FileVersion : byte
     {
         /// <summary>
@@ -109,7 +108,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Channel flags enumeration.
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum ChannelFlags : byte
     {
         /// <summary>
@@ -153,7 +152,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Reserved flags enumeration.
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum ReservedFlags : byte
     {
         /// <summary>
@@ -177,7 +176,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Format flags enumeration.
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum FormatFlags : byte
     {
         /// <summary>
@@ -209,7 +208,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// Frame type enumeration.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public enum FrameType : byte
     {
         /// <summary>
@@ -225,7 +224,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
     /// <summary>
     /// PMU status flags enumeration.
     /// </summary>
-    [Flags(), Serializable()]
+    [Flags, Serializable]
     public enum PMUStatusFlags : byte
     {
         /// <summary>

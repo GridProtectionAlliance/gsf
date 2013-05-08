@@ -249,11 +249,11 @@ namespace GSF.Communication
 
         private int m_sending;
         private SpinLock m_sendLock;
-        private ConcurrentQueue<UdpClientPayload> m_sendQueue;
+        private readonly ConcurrentQueue<UdpClientPayload> m_sendQueue;
         private SocketAsyncEventArgs m_sendArgs;
         private SocketAsyncEventArgs m_receiveArgs;
-        private EventHandler<SocketAsyncEventArgs> m_sendHandler;
-        private EventHandler<SocketAsyncEventArgs> m_receiveHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_sendHandler;
+        private readonly EventHandler<SocketAsyncEventArgs> m_receiveHandler;
         private bool m_receivePacketInfo;
 
         private bool m_disposed;
@@ -719,7 +719,7 @@ namespace GSF.Communication
 
                     // Disable SocketError.ConnectionReset exception from being thrown when the endpoint is not listening.
                     m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp, m_ipStack, m_allowDualStackSocket);
-                    m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+                    m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new[] { Convert.ToByte(false) }, null);
                     m_udpClient.Provider.ReceiveBufferSize = ReceiveBufferSize;
 
                     // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.

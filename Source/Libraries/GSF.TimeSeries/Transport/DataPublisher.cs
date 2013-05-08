@@ -49,6 +49,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Timers;
 using System.Xml;
 using GSF.Communication;
 using GSF.Configuration;
@@ -58,6 +59,7 @@ using GSF.Net.Security;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -270,7 +272,7 @@ namespace GSF.TimeSeries.Transport
     /// <summary>
     /// <see cref="DataPublisher"/> data packet flags.
     /// </summary>
-    [Flags()]
+    [Flags]
     public enum DataPacketFlags : byte
     {
         /// <summary>
@@ -323,7 +325,7 @@ namespace GSF.TimeSeries.Transport
     /// <remarks>
     /// Operational modes only apply to fundamental protocol control.
     /// </remarks>
-    [Flags()]
+    [Flags]
     public enum OperationalModes : uint
     {
         /// <summary>
@@ -572,12 +574,12 @@ namespace GSF.TimeSeries.Transport
         private CertificatePolicyChecker m_certificateChecker;
         private Dictionary<X509Certificate, DataRow> m_subscriberIdentities;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
-        private ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
-        private ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
-        private Dictionary<Guid, Dictionary<int, string>> m_clientNotifications;
-        private object m_clientNotificationsLock;
-        private System.Timers.Timer m_commandChannelRestartTimer;
-        private System.Timers.Timer m_cipherKeyRotationTimer;
+        private readonly ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
+        private readonly ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
+        private readonly Dictionary<Guid, Dictionary<int, string>> m_clientNotifications;
+        private readonly object m_clientNotificationsLock;
+        private Timer m_commandChannelRestartTimer;
+        private Timer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
         private string m_metadataTables;
         private string m_dependencies;
@@ -632,20 +634,20 @@ namespace GSF.TimeSeries.Transport
             m_useBaseTimeOffsets = DefaultUseBaseTimeOffsets;
             m_metadataTables = DefaultMetadataTables;
 
-            m_routingTables = new RoutingTables()
-            {
+            m_routingTables = new RoutingTables
+                {
                 ActionAdapters = this
             };
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 
             // Setup a timer for restarting the command channel if it fails
-            m_commandChannelRestartTimer = new System.Timers.Timer(2000.0D);
+            m_commandChannelRestartTimer = new Timer(2000.0D);
             m_commandChannelRestartTimer.AutoReset = false;
             m_commandChannelRestartTimer.Enabled = false;
             m_commandChannelRestartTimer.Elapsed += m_commandChannelRestartTimer_Elapsed;
 
             // Setup a timer for rotating cipher keys
-            m_cipherKeyRotationTimer = new System.Timers.Timer(DefaultCipherKeyRotationPeriod);
+            m_cipherKeyRotationTimer = new Timer(DefaultCipherKeyRotationPeriod);
             m_cipherKeyRotationTimer.AutoReset = true;
             m_cipherKeyRotationTimer.Enabled = false;
             m_cipherKeyRotationTimer.Elapsed += m_cipherKeyRotationTimer_Elapsed;
@@ -2277,7 +2279,7 @@ namespace GSF.TimeSeries.Transport
             IActionAdapter adapter;
 
             // Lookup adapter by its client ID
-            if (TryGetAdapter<Guid>(clientID, GetClientSubscription, out adapter))
+            if (TryGetAdapter(clientID, GetClientSubscription, out adapter))
             {
                 subscription = (IClientSubscription)adapter;
                 return true;
@@ -2356,7 +2358,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Cipher key rotation timer handler
-        private void m_cipherKeyRotationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_cipherKeyRotationTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if ((object)m_clientConnections != null)
             {
@@ -2369,7 +2371,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Command channel restart timer handler
-        private void m_commandChannelRestartTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_commandChannelRestartTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             if ((object)m_commandChannel != null)
             {
@@ -3019,7 +3021,7 @@ namespace GSF.TimeSeries.Transport
                 if (!useCommonSerializationFormat)
                 {
                     // Use standard .NET BinaryFormatter
-                    serializedSignalIndexCache = Serialization.Serialize(signalIndexCache, GSF.SerializationFormat.Binary);
+                    serializedSignalIndexCache = Serialization.Serialize(signalIndexCache, SerializationFormat.Binary);
                 }
                 else
                 {
@@ -3076,7 +3078,7 @@ namespace GSF.TimeSeries.Transport
 
                 if (!useCommonSerializationFormat)
                 {
-                    serializedMetadata = Serialization.Serialize(metadata, GSF.SerializationFormat.Binary);
+                    serializedMetadata = Serialization.Serialize(metadata, SerializationFormat.Binary);
                 }
                 else
                 {
@@ -3204,7 +3206,7 @@ namespace GSF.TimeSeries.Transport
                     index++;
 
                     // Attempt to parse solicited server command
-                    bool validServerCommand = Enum.TryParse<ServerCommand>(commandByte.ToString(), out command);
+                    bool validServerCommand = Enum.TryParse(commandByte.ToString(), out command);
 
                     // Look up this client connection
                     if (!m_clientConnections.TryGetValue(clientID, out connection))

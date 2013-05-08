@@ -68,7 +68,7 @@ namespace GSF
     /// <summary>
     /// Represents bits in a signed or unsigned integer value.
     /// </summary>
-    [Flags(), CLSCompliant(false)]
+    [Flags, CLSCompliant(false)]
     public enum Bits : ulong
     {
         /// <summary>No bits set (0x0000000000000000)</summary>

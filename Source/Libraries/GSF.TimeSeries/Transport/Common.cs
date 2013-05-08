@@ -23,8 +23,8 @@
 //
 //******************************************************************************************************
 
-using Microsoft.Win32;
 using System.Security.Cryptography;
+using Microsoft.Win32;
 
 namespace GSF.TimeSeries.Transport
 {

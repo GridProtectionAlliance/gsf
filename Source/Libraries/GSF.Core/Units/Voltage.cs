@@ -72,8 +72,8 @@ namespace GSF.Units
 {
     /// <summary>Represents an electromotive force (i.e., voltage) measurement, in volts, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="Double"/> representing a voltage in volts; it is implictly
-    /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
+    /// This class behaves just like a <see cref="double"/> representing a voltage in volts; it is implictly
+    /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other voltage representations, specifically
     /// abvolt and statvolt. Metric conversions are handled simply by applying the needed <see cref="SI"/>
     /// conversion factor, for example:
@@ -87,7 +87,7 @@ namespace GSF.Units
     /// </code>
     /// </example>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Voltage : IComparable, IFormattable, IConvertible, IComparable<Voltage>, IComparable<Double>, IEquatable<Voltage>, IEquatable<Double>
     {
         #region [ Members ]
@@ -98,7 +98,7 @@ namespace GSF.Units
         private const double StatvoltsFactor = 299.792458D;
 
         // Fields
-        private double m_value; // Voltage value stored in volts
+        private readonly double m_value; // Voltage value stored in volts
 
         #endregion
 
@@ -696,7 +696,7 @@ namespace GSF.Units
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
         /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Voltage value1, Voltage value2)
         {
             return Math.Pow((double)value1.m_value, (double)value2.m_value);

@@ -59,10 +59,10 @@
 
 #endregion
 
-using GSF.Parsing;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using GSF.Parsing;
 
 namespace GSF.Media
 {
@@ -82,7 +82,7 @@ namespace GSF.Media
 
         // Fields
         private WaveFormatChunk m_waveFormat;
-        private List<LittleBinaryValue[]> m_sampleBlocks;
+        private readonly List<LittleBinaryValue[]> m_sampleBlocks;
         private int m_chunkSize;
 
         #endregion

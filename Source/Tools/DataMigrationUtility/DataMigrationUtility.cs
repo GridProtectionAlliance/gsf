@@ -27,15 +27,16 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Data.OleDb;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
 using Database;
 using GSF;
 using GSF.Reflection;
 using GSF.Windows.Forms;
-using System;
-using System.Data.OleDb;
-using System.Linq;
-using System.Threading;
-using System.Windows.Forms;
 
 namespace DataMigrationUtility
 {
@@ -125,7 +126,7 @@ namespace DataMigrationUtility
                 MessageBox.Show(this, "IMPORTANT: Always backup database before any mass database update and remember to select the proper data source to use for referential integrity BEFORE you begin your data operation!", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         }
 
-        private void DataMigrationUtility_Closed(System.Object eventSender, System.EventArgs eventArgs)
+        private void DataMigrationUtility_Closed(Object eventSender, EventArgs eventArgs)
         {
             this.Hide();
             Application.DoEvents();
@@ -149,7 +150,7 @@ namespace DataMigrationUtility
             {
                 // Don't want any possible failures during this event to prevent shudown :)
             }
-            System.Environment.Exit(0);
+            Environment.Exit(0);
 
 
         }
@@ -274,7 +275,7 @@ namespace DataMigrationUtility
 
         private void ExampleConnectionStringLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            System.Diagnostics.Process.Start("http://www.connectionstrings.com/");
+            Process.Start("http://www.connectionstrings.com/");
         }
 
         private void DataInserter_OverallProgress(object sender, OverallProgressEventHandler<int, int> e)
@@ -320,7 +321,7 @@ namespace DataMigrationUtility
             {
                 if (e.Executed)
                 {
-                    System.Threading.Thread.Sleep(250);
+                    Thread.Sleep(250);
                     UpdateProgress("Processing " + e.TableName + "... ( " + e.CurrentTable.ToString() + " / " + e.TotalTables.ToString() + " )");
                 }
                 else
@@ -341,7 +342,7 @@ namespace DataMigrationUtility
             AddMessage("Bulk insert of " + TotalRows + " rows into table " + TableName + " completed in " + Ticks.FromSeconds(TotalSeconds).ToElapsedTimeString().ToLower());
         }
 
-        private void DataHandler_BulkInsertException(string TableName, string SQL, System.Exception ex)
+        private void DataHandler_BulkInsertException(string TableName, string SQL, Exception ex)
         {
             m_exceptionsEncountered = true;
             AddMessage("Exception occurred during bulk insert into table " + TableName + ": " + ex.Message);

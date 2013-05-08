@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  IHeaderCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,8 +25,6 @@
 //
 //******************************************************************************************************
 
-using System;
-
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -40,7 +38,7 @@ namespace GSF.PhasorProtocols
         new IHeaderFrame Parent { get; set; }
 
         /// <summary>
-        /// Gets or sets ASCII character as a <see cref="Byte"/> that represents this <see cref="IHeaderCell"/>.
+        /// Gets or sets ASCII character as a <see cref="byte"/> that represents this <see cref="IHeaderCell"/>.
         /// </summary>
         byte Character { get; set; }
     }

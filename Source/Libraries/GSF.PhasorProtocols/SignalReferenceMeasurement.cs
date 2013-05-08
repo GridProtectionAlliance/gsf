@@ -27,7 +27,6 @@
 
 using System;
 using GSF.TimeSeries;
-using GSF;
 
 namespace GSF.PhasorProtocols
 {
@@ -39,8 +38,8 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private IMeasurement m_measurement;
-        private SignalReference m_signalReference;
+        private readonly IMeasurement m_measurement;
+        private readonly SignalReference m_signalReference;
 
         #endregion
 

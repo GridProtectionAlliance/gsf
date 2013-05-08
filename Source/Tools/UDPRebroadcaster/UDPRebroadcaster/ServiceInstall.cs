@@ -28,7 +28,6 @@
 using System.ComponentModel;
 using System.Configuration.Install;
 
-
 namespace UDPRebroadcaster
 {
     [RunInstaller(true)]

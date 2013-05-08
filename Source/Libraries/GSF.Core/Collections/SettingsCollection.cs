@@ -23,9 +23,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Validation;
 using System;
 using System.Collections.Generic;
+using GSF.Validation;
 
 namespace GSF.Collections
 {

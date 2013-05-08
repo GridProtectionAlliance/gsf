@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  FrameParser.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -28,7 +28,6 @@
 using System;
 using System.Text;
 using GSF.Parsing;
-using GSF;
 
 namespace GSF.PhasorProtocols.IeeeC37_118
 {
@@ -104,7 +103,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         public FrameParser(DraftRevision draftRevision)
         {
             // Initialize protocol synchronization bytes for this frame parser
-            base.ProtocolSyncBytes = new byte[] { GSF.PhasorProtocols.Common.SyncByte };
+            base.ProtocolSyncBytes = new[] { PhasorProtocols.Common.SyncByte };
 
             m_draftRevision = draftRevision;
         }
@@ -212,13 +211,13 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             switch (m_draftRevision)
             {
                 case DraftRevision.Draft6:
-                    base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame1Draft6), typeof(ConfigurationFrame2Draft6), typeof(HeaderFrame) });
+                    base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame1Draft6), typeof(ConfigurationFrame2Draft6), typeof(HeaderFrame) });
                     break;
                 case DraftRevision.Draft7:
-                    base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(ConfigurationFrame2), typeof(HeaderFrame) });
+                    base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(ConfigurationFrame2), typeof(HeaderFrame) });
                     break;
                 case DraftRevision.Draft8:
-                    base.Start(new Type[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(ConfigurationFrame2), typeof(ConfigurationFrame3), typeof(HeaderFrame) });
+                    base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(ConfigurationFrame2), typeof(ConfigurationFrame3), typeof(HeaderFrame) });
                     break;
                 default:
                     break;

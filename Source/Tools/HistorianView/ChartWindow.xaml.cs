@@ -71,7 +71,7 @@ namespace HistorianView
 
         private class DataPointWrapper
         {
-            private IDataPoint m_point;
+            private readonly IDataPoint m_point;
 
             public DataPointWrapper(IDataPoint point)
             {
@@ -110,8 +110,8 @@ namespace HistorianView
         private ICollection<ArchiveReader> m_archiveReaders;
         private ICollection<MetadataRecord> m_visiblePoints;
         private int m_chartResolution;
-        private LinkedList<ChartBoundary> m_backwardHistory;
-        private LinkedList<ChartBoundary> m_forwardHistory;
+        private readonly LinkedList<ChartBoundary> m_backwardHistory;
+        private readonly LinkedList<ChartBoundary> m_forwardHistory;
         private List<Color> m_lineColors;
         private Rectangle m_selectionArea;
         private Point m_mousePressedPosition;
@@ -258,8 +258,8 @@ namespace HistorianView
 
                         // Change how data points are displayed.
                         series.DataPointStyle = new Style(typeof(LineDataPoint));
-                        series.DataPointStyle.Setters.Add(new Setter(LineDataPoint.BackgroundProperty, new SolidColorBrush(m_lineColors[colorIndex])));
-                        series.DataPointStyle.Setters.Add(new Setter(LineDataPoint.TemplateProperty, new ControlTemplate()));
+                        series.DataPointStyle.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(m_lineColors[colorIndex])));
+                        series.DataPointStyle.Setters.Add(new Setter(TemplateProperty, new ControlTemplate()));
                         colorIndex++;
 
                         // Set the title of the series as it will appear in the legend.
@@ -459,8 +459,8 @@ namespace HistorianView
         // Gets the current bounds of the chart's axes.
         private ChartBoundary GetCurrentChartBoundary()
         {
-            return new ChartBoundary()
-            {
+            return new ChartBoundary
+                {
                 Left = m_xAxis.Minimum ?? m_xAxis.ActualMinimum,
                 Right = m_xAxis.Maximum ?? m_xAxis.ActualMaximum,
                 Top = m_yAxis.Maximum ?? m_yAxis.ActualMaximum,

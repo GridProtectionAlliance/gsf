@@ -23,8 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Communication;
-using GSF.Security.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,6 +30,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Timers;
+using GSF.Communication;
+using GSF.Security.Cryptography;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -50,10 +51,10 @@ namespace GSF.TimeSeries.Transport
 
         // Fields
         private DataPublisher m_parent;
-        private Guid m_clientID;
+        private readonly Guid m_clientID;
         private Guid m_subscriberID;
-        private string m_connectionID;
-        private string m_hostName;
+        private readonly string m_connectionID;
+        private readonly string m_hostName;
         private string m_subscriberAcronym;
         private string m_subscriberName;
         private string m_sharedSecret;
@@ -69,8 +70,8 @@ namespace GSF.TimeSeries.Transport
         private bool m_connectionEstablished;
         private bool m_isSubscribed;
         private Ticks m_lastCipherKeyUpdateTime;
-        private System.Timers.Timer m_pingTimer;
-        private System.Timers.Timer m_reconnectTimer;
+        private Timer m_pingTimer;
+        private Timer m_reconnectTimer;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
         private bool m_disposed;
@@ -95,14 +96,14 @@ namespace GSF.TimeSeries.Transport
             m_cipherIndex = 0;
 
             // Setup ping timer
-            m_pingTimer = new System.Timers.Timer();
+            m_pingTimer = new Timer();
             m_pingTimer.Interval = 5000.0D;
             m_pingTimer.AutoReset = true;
             m_pingTimer.Elapsed += m_pingTimer_Elapsed;
             m_pingTimer.Start();
 
             // Setup reconnect timer
-            m_reconnectTimer = new System.Timers.Timer();
+            m_reconnectTimer = new Timer();
             m_reconnectTimer.Interval = 1000.0D;
             m_reconnectTimer.AutoReset = false;
             m_reconnectTimer.Elapsed += m_reconnectTimer_Elapsed;
@@ -159,7 +160,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             if (m_ipAddress == null)
-                m_ipAddress = System.Net.IPAddress.None;
+                m_ipAddress = IPAddress.None;
         }
 
         /// <summary>
@@ -493,7 +494,7 @@ namespace GSF.TimeSeries.Transport
             {
                 m_operationalModes = value;
 
-                switch ((OperationalEncoding)(value & Transport.OperationalModes.EncodingMask))
+                switch ((OperationalEncoding)(value & OperationalModes.EncodingMask))
                 {
                     case OperationalEncoding.Unicode:
                         m_encoding = Encoding.Unicode;
@@ -748,7 +749,7 @@ namespace GSF.TimeSeries.Transport
             return null;
         }
 
-        private void m_pingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_pingTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             // Send a no-op keep-alive ping to make sure the client is still connected
             m_parent.SendClientResponse(m_clientID, ServerResponse.NoOP, ServerCommand.Subscribe);
@@ -780,7 +781,7 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        private void m_reconnectTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void m_reconnectTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             try
             {

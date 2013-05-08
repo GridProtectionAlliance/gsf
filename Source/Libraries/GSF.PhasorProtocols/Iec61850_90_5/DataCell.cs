@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  DataCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -32,7 +32,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class DataCell : DataCellBase
     {
         #region [ Constructors ]
@@ -48,10 +48,10 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             // Define new parsing state which defines constructors for key data values
             State = new DataCellParsingState(
                 configurationCell,
-                Iec61850_90_5.PhasorValue.CreateNewValue,
+                PhasorValue.CreateNewValue,
                 Iec61850_90_5.FrequencyValue.CreateNewValue,
-                Iec61850_90_5.AnalogValue.CreateNewValue,
-                Iec61850_90_5.DigitalValue.CreateNewValue);
+                AnalogValue.CreateNewValue,
+                DigitalValue.CreateNewValue);
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             set
             {
                 base.StatusFlags = (ushort)((base.StatusFlags & ~(ushort)StatusFlags.UnlockedTimeMask) | (ushort)value);
-                SynchronizationIsValid = (value == Iec61850_90_5.UnlockedTime.SyncLocked);
+                SynchronizationIsValid = (value == UnlockedTime.SyncLocked);
             }
         }
 
@@ -177,7 +177,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             set
             {
                 base.StatusFlags = (ushort)((base.StatusFlags & ~(short)StatusFlags.TriggerReasonMask) | (ushort)value);
-                DeviceTriggerDetected = (value != Iec61850_90_5.TriggerReason.Manual);
+                DeviceTriggerDetected = (value != TriggerReason.Manual);
             }
         }
 
@@ -189,14 +189,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             get
             {
                 // TODO: Should data be considered invalid when signature check fails? On my test device this would always be invalid since SHA is not being calculated...
-                return (StatusFlags & Iec61850_90_5.StatusFlags.DataIsValid) == 0;
+                return (StatusFlags & StatusFlags.DataIsValid) == 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags & ~Iec61850_90_5.StatusFlags.DataIsValid;
+                    StatusFlags = StatusFlags & ~StatusFlags.DataIsValid;
                 else
-                    StatusFlags = StatusFlags | Iec61850_90_5.StatusFlags.DataIsValid;
+                    StatusFlags = StatusFlags | StatusFlags.DataIsValid;
             }
         }
 
@@ -208,14 +208,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             get
             {
                 // TODO: Not sure which synchronization flag should take priority here - so using both for now...
-                return (StatusFlags & Iec61850_90_5.StatusFlags.DeviceSynchronizationError) == 0 && Parent.SampleSynchronization > 0;
+                return (StatusFlags & StatusFlags.DeviceSynchronizationError) == 0 && Parent.SampleSynchronization > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags & ~Iec61850_90_5.StatusFlags.DeviceSynchronizationError;
+                    StatusFlags = StatusFlags & ~StatusFlags.DeviceSynchronizationError;
                 else
-                    StatusFlags = StatusFlags | Iec61850_90_5.StatusFlags.DeviceSynchronizationError;
+                    StatusFlags = StatusFlags | StatusFlags.DeviceSynchronizationError;
             }
         }
 
@@ -226,14 +226,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return (((StatusFlags & Iec61850_90_5.StatusFlags.DataSortingType) == 0) ? GSF.PhasorProtocols.DataSortingType.ByTimestamp : GSF.PhasorProtocols.DataSortingType.ByArrival);
+                return (((StatusFlags & StatusFlags.DataSortingType) == 0) ? DataSortingType.ByTimestamp : DataSortingType.ByArrival);
             }
             set
             {
-                if (value == GSF.PhasorProtocols.DataSortingType.ByTimestamp)
-                    StatusFlags = StatusFlags & ~Iec61850_90_5.StatusFlags.DataSortingType;
+                if (value == DataSortingType.ByTimestamp)
+                    StatusFlags = StatusFlags & ~StatusFlags.DataSortingType;
                 else
-                    StatusFlags = StatusFlags | Iec61850_90_5.StatusFlags.DataSortingType;
+                    StatusFlags = StatusFlags | StatusFlags.DataSortingType;
             }
         }
 
@@ -244,14 +244,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return (StatusFlags & Iec61850_90_5.StatusFlags.DeviceError) > 0;
+                return (StatusFlags & StatusFlags.DeviceError) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | Iec61850_90_5.StatusFlags.DeviceError;
+                    StatusFlags = StatusFlags | StatusFlags.DeviceError;
                 else
-                    StatusFlags = StatusFlags & ~Iec61850_90_5.StatusFlags.DeviceError;
+                    StatusFlags = StatusFlags & ~StatusFlags.DeviceError;
             }
         }
 
@@ -262,14 +262,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return (StatusFlags & Iec61850_90_5.StatusFlags.DeviceTriggerDetected) > 0;
+                return (StatusFlags & StatusFlags.DeviceTriggerDetected) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | Iec61850_90_5.StatusFlags.DeviceTriggerDetected;
+                    StatusFlags = StatusFlags | StatusFlags.DeviceTriggerDetected;
                 else
-                    StatusFlags = StatusFlags & ~Iec61850_90_5.StatusFlags.DeviceTriggerDetected;
+                    StatusFlags = StatusFlags & ~StatusFlags.DeviceTriggerDetected;
             }
         }
 
@@ -280,14 +280,14 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return (StatusFlags & Iec61850_90_5.StatusFlags.ConfigurationChanged) > 0;
+                return (StatusFlags & StatusFlags.ConfigurationChanged) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = StatusFlags | Iec61850_90_5.StatusFlags.ConfigurationChanged;
+                    StatusFlags = StatusFlags | StatusFlags.ConfigurationChanged;
                 else
-                    StatusFlags = StatusFlags & ~Iec61850_90_5.StatusFlags.ConfigurationChanged;
+                    StatusFlags = StatusFlags & ~StatusFlags.ConfigurationChanged;
             }
         }
 

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ICommandCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,8 +25,6 @@
 //
 //******************************************************************************************************
 
-using System;
-
 namespace GSF.PhasorProtocols
 {
     /// <summary>
@@ -40,7 +38,7 @@ namespace GSF.PhasorProtocols
         new ICommandFrame Parent { get; set; }
 
         /// <summary>
-        /// Gets or sets extended data <see cref="Byte"/> that represents this <see cref="ICommandCell"/>.
+        /// Gets or sets extended data <see cref="byte"/> that represents this <see cref="ICommandCell"/>.
         /// </summary>
         byte ExtendedDataByte { get; set; }
     }

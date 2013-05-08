@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  UserInfo.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -98,10 +98,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Interop;
-using GSF.IO;
-using Microsoft.Win32;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -113,6 +109,10 @@ using System.Management;
 using System.Reflection;
 using System.Security.Principal;
 using System.Threading;
+using GSF.Configuration;
+using GSF.IO;
+using GSF.Interop;
+using Microsoft.Win32;
 
 namespace GSF.Identity
 {
@@ -203,8 +203,8 @@ namespace GSF.Identity
 
         // Fields
         private string m_domain;
-        private string m_username;
-        private string m_ldapPath;
+        private readonly string m_username;
+        private readonly string m_ldapPath;
         private DirectoryEntry m_userEntry;
         private bool m_domainAvailable;
         private int m_userAccountControl;
@@ -756,7 +756,7 @@ namespace GSF.Identity
                     else
                     {
                         // Get active directory groups
-                        m_userEntry.RefreshCache(new string[] { "TokenGroups" });
+                        m_userEntry.RefreshCache(new[] { "TokenGroups" });
 
                         foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
                         {
@@ -1311,7 +1311,7 @@ namespace GSF.Identity
                 !string.IsNullOrEmpty(m_privilegedPassword))
             {
                 // Privileged domain account is specified
-                return UserInfo.ImpersonateUser(m_privilegedDomain, m_privilegedUserName, m_privilegedPassword);
+                return ImpersonateUser(m_privilegedDomain, m_privilegedUserName, m_privilegedPassword);
             }
 #endif
 
@@ -1405,12 +1405,12 @@ namespace GSF.Identity
                 int lastSplit = displayName.LastIndexOf(' ');
 
                 if (lastSplit >= 0)
-                    return new string[] { displayName.Substring(0, lastSplit), displayName.Substring(lastSplit + 1) };
+                    return new[] { displayName.Substring(0, lastSplit), displayName.Substring(lastSplit + 1) };
                 else
-                    return new string[] { displayName, "" };
+                    return new[] { displayName, "" };
             }
             else
-                return new string[] { "", "" };
+                return new[] { "", "" };
         }
 
         #endregion

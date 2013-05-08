@@ -28,7 +28,7 @@ namespace GSF.PhasorProtocols.Macrodyne
     /// <summary>
     /// Represents the Macrodyne implementation of the parsing state used by a <see cref="ConfigurationFrame"/>.
     /// </summary>
-    public class ConfigurationFrameParsingState : GSF.PhasorProtocols.ConfigurationFrameParsingState
+    public class ConfigurationFrameParsingState : PhasorProtocols.ConfigurationFrameParsingState
     {
         #region [ Members ]
 

@@ -37,11 +37,11 @@
 //
 //******************************************************************************************************
 
-using GSF.Identity;
-using GSF.Reflection;
 using System;
 using System.Security.Principal;
 using System.Web.Hosting;
+using GSF.Identity;
+using GSF.Reflection;
 
 namespace GSF.ServiceProcess
 {
@@ -53,18 +53,18 @@ namespace GSF.ServiceProcess
     /// </remarks>
     /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ServiceHelper"/>
-    [Serializable()]
+    [Serializable]
     public class ClientInfo
     {
         #region [ Members ]
 
         // Fields
         private Guid m_clientID;
-        private ApplicationType m_clientType;
-        private string m_clientName;
+        private readonly ApplicationType m_clientType;
+        private readonly string m_clientName;
         private IPrincipal m_clientUser;
-        private string m_clientUserCredentials;
-        private string m_machineName;
+        private readonly string m_clientUserCredentials;
+        private readonly string m_machineName;
         private DateTime m_connectedAt;
 
         #endregion

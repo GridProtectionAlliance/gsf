@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConnectionParameters.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -37,7 +37,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
     /// As a result the <see cref="CategoryAttribute"/> and <see cref="DescriptionAttribute"/> elements should be defined for
     /// each of the exposed properties.
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public class ConnectionParameters : ConnectionParametersBase
     {
         #region [ Members ]

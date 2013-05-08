@@ -31,9 +31,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Units;
 using System;
 using System.Threading;
+using GSF.Units;
 
 namespace GSF.Threading
 {
@@ -85,15 +85,15 @@ namespace GSF.Threading
 
         // Fields
         private Thread m_thread;
-        private ThreadType m_type;
+        private readonly ThreadType m_type;
         private ThreadStatus m_status;
         private string m_name;
         private Ticks m_startTime;
         private Ticks m_stopTime;
-        private ContextCallback m_ctxCallback;
-        private ThreadStart m_tsCallback;
-        private ParameterizedThreadStart m_ptsCallback;
-        private ExecutionContext m_ctx;
+        private readonly ContextCallback m_ctxCallback;
+        private readonly ThreadStart m_tsCallback;
+        private readonly ParameterizedThreadStart m_ptsCallback;
+        private readonly ExecutionContext m_ctx;
         private object m_state;
         private object m_tag;
 

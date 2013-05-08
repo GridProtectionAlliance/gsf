@@ -54,10 +54,10 @@ namespace GSF.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private FtpControlChannel m_ctrl;
-        private FtpSessionConnected m_session;
+        private readonly FtpControlChannel m_ctrl;
+        private readonly FtpSessionConnected m_session;
         private TcpClient m_tcpClient;
-        private Stream m_stream;
+        private readonly Stream m_stream;
         private bool m_userAbort;
 
         #endregion

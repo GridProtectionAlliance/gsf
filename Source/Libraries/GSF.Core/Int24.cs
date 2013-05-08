@@ -92,7 +92,7 @@ namespace GSF
     /// signed integer.
     /// </para>
     /// </remarks>
-    [Serializable()]
+    [Serializable]
     public struct Int24 : IComparable, IFormattable, IConvertible, IComparable<Int24>, IComparable<Int32>, IEquatable<Int24>, IEquatable<Int32>
     {
         #region [ Members ]
@@ -105,7 +105,7 @@ namespace GSF
         public const int BitMask = -16777216;
 
         // Fields
-        private int m_value; // We internally store the Int24 value in a 4-byte integer for convenience
+        private readonly int m_value; // We internally store the Int24 value in a 4-byte integer for convenience
 
         #endregion
 
@@ -139,7 +139,7 @@ namespace GSF
         /// <exception cref="ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent a <see cref="UInt24"/>.</exception>
         public Int24(byte[] value, int startIndex)
         {
-            m_value = Int24.GetValue(value, startIndex).m_value;
+            m_value = GetValue(value, startIndex).m_value;
         }
 
         #endregion
@@ -155,7 +155,7 @@ namespace GSF
         public byte[] GetBytes()
         {
             // Return serialized 3-byte representation of Int24
-            return Int24.GetBytes(this);
+            return GetBytes(this);
         }
 
         /// <summary>
@@ -1379,7 +1379,7 @@ namespace GSF
         /// <param name="value1">Left hand operand.</param>
         /// <param name="value2">Right hand operand.</param>
         /// <returns>Double that is the result of the operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Int24 value1, Int24 value2)
         {
             return Math.Pow((double)value1, (double)value2);
@@ -1391,7 +1391,7 @@ namespace GSF
         /// <param name="value1">Left hand operand.</param>
         /// <param name="value2">Right hand operand.</param>
         /// <returns>Double that is the result of the operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(int value1, Int24 value2)
         {
             return Math.Pow((double)value1, (double)value2);
@@ -1403,7 +1403,7 @@ namespace GSF
         /// <param name="value1">Left hand operand.</param>
         /// <param name="value2">Right hand operand.</param>
         /// <returns>Double that is the result of the operation.</returns>
-        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
+        [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Int24 value1, int value2)
         {
             return Math.Pow((double)value1, (double)value2);
@@ -1495,7 +1495,7 @@ namespace GSF
 
         private static void ValidateNumericRange(int value)
         {
-            if (value > (Int24.MaxValue32 + 1) || value < Int24.MinValue32)
+            if (value > (MaxValue32 + 1) || value < MinValue32)
                 throw new OverflowException(string.Format("Value of {0} will not fit in a 24-bit signed integer", value));
         }
 

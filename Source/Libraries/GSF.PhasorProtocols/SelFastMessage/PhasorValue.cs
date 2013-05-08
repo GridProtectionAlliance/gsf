@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  PhasorValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -28,14 +28,13 @@
 using System;
 using System.Runtime.Serialization;
 using GSF.Units;
-using GSF;
 
 namespace GSF.PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the SEL Fast Message implementation of a <see cref="IPhasorValue"/>.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class PhasorValue : PhasorValueBase
     {
         #region [ Constructors ]

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  BinaryImageParserBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -29,11 +29,11 @@
 //
 //******************************************************************************************************
 
-using GSF.Units;
 using System;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using GSF.Units;
 
 namespace GSF.Parsing
 {
@@ -409,7 +409,7 @@ namespace GSF.Parsing
         /// <param name="origin">A <see cref="SeekOrigin"/>.</param>
         /// <returns>Returns a <see cref="Int64"/> value indicating the point that was seeked to.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override long Seek(long offset, System.IO.SeekOrigin origin)
+        public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotImplementedException("WriteOnly stream has no position");
         }

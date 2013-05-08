@@ -33,8 +33,8 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
+using GSF.Configuration;
 
 namespace GSF.Adapters
 {

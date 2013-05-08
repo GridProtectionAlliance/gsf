@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConcentratorBase.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -34,7 +34,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using GSF.Units;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries
 {
@@ -117,9 +119,9 @@ namespace GSF.TimeSeries
 
             // Fields
             private PrecisionTimer m_timer;
-            private int m_framesPerSecond;
-            private int m_processingInterval;
-            private int[] m_framePeriods;
+            private readonly int m_framesPerSecond;
+            private readonly int m_processingInterval;
+            private readonly int[] m_framePeriods;
             private int m_frameIndex;
             private int m_lastFramePeriod;
             private int m_referenceCount;
@@ -409,7 +411,7 @@ namespace GSF.TimeSeries
         private AutoResetEvent m_publicationWaitHandle;     // Interframe publication wait handle
         private bool m_usePrecisionTimer;                   // Flag that enables use of precision timer (over just simple thread sleep)
         private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
-        private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
+        private Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
         private int m_framesPerSecond;                      // Frames per second
         private double m_ticksPerFrame;                     // Ticks per frame
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
@@ -487,7 +489,7 @@ namespace GSF.TimeSeries
             // This timer monitors the total number of unpublished samples every 5 seconds. This is a useful statistic
             // to monitor: if total number of unpublished samples exceed lag time, measurement concentration could
             // be falling behind.
-            m_monitorTimer = new System.Timers.Timer();
+            m_monitorTimer = new Timer();
             m_monitorTimer.Interval = 5000;
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Elapsed += MonitorUnpublishedSamples;
@@ -2269,7 +2271,7 @@ namespace GSF.TimeSeries
         }
 
         // Exposes the number of unpublished seconds of data in the queue (note that first second of data will always be "publishing").
-        private void MonitorUnpublishedSamples(object sender, System.Timers.ElapsedEventArgs e)
+        private void MonitorUnpublishedSamples(object sender, ElapsedEventArgs e)
         {
             int secondsOfData = (m_frameQueue.Count / m_framesPerSecond) - 1;
 
@@ -2341,7 +2343,7 @@ namespace GSF.TimeSeries
         #region [ Static ]
 
         // Static Fields
-        private static Dictionary<Tuple<int, int>, FrameRateTimer> s_frameRateTimers;
+        private static readonly Dictionary<Tuple<int, int>, FrameRateTimer> s_frameRateTimers;
 
         // Static Constructor
         static ConcentratorBase()

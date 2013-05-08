@@ -47,6 +47,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace GSF.Net.Ftp
@@ -82,9 +83,9 @@ namespace GSF.Net.Ftp
         #region [ Members ]
 
         // Fields
-        private FtpClient m_sessionHost;
+        private readonly FtpClient m_sessionHost;
         private FtpSessionConnected m_session;
-        private System.Net.Sockets.TcpClient m_connection;
+        private TcpClient m_connection;
         private string m_server;
         private int m_port;
         private TransferMode m_currentTransferMode;
@@ -244,7 +245,7 @@ namespace GSF.Net.Ftp
             if ((object)m_connection == null)
                 return;
             
-            byte[] buff = System.Text.Encoding.Default.GetBytes(cmd + Environment.NewLine);
+            byte[] buff = Encoding.Default.GetBytes(cmd + Environment.NewLine);
             NetworkStream stream = m_connection.GetStream();
             m_sessionHost.OnCommandSent(cmd);
             stream.Write(buff, 0, buff.Length);
@@ -384,7 +385,7 @@ namespace GSF.Net.Ftp
                 if (m_lastResponse.Code != FtpResponse.DataChannelOpenedTransferStart && m_lastResponse.Code != FtpResponse.FileOkBeginOpenDataChannel)
                     throw new FtpCommandException(errorMsgListing, m_lastResponse);
 
-                StreamReader lineReader = new StreamReader(dataStream, System.Text.Encoding.Default);
+                StreamReader lineReader = new StreamReader(dataStream, Encoding.Default);
                 string line = lineReader.ReadLine();
 
                 while ((object)line != null)
@@ -402,11 +403,11 @@ namespace GSF.Net.Ftp
             }
             catch (IOException ie)
             {
-                throw new System.Exception(errorMsgListing, ie);
+                throw new Exception(errorMsgListing, ie);
             }
             catch (SocketException se)
             {
-                throw new System.Exception(errorMsgListing, se);
+                throw new Exception(errorMsgListing, se);
             }
         }
 
@@ -432,11 +433,11 @@ namespace GSF.Net.Ftp
             }
             catch (IOException ie)
             {
-                throw new System.Exception("Failed to open passive port (" + port + ") data connection due to IO exception: " + ie.Message + ".", ie);
+                throw new Exception("Failed to open passive port (" + port + ") data connection due to IO exception: " + ie.Message + ".", ie);
             }
             catch (SocketException se)
             {
-                throw new System.Exception("Failed to open passive port (" + port + ") data connection due to socket exception: " + se.Message + ".", se);
+                throw new Exception("Failed to open passive port (" + port + ") data connection due to socket exception: " + se.Message + ".", se);
             }
         }
 
@@ -460,8 +461,8 @@ namespace GSF.Net.Ftp
         #region [ Static ]
 
         // Static Fields
-        private static Regex s_regularExpression = new Regex("(\\()(.*)(\\))");
-        private static Regex s_pwdExpression = new Regex("(\")(.*)(\")");
+        private static readonly Regex s_regularExpression = new Regex("(\\()(.*)(\\))");
+        private static readonly Regex s_pwdExpression = new Regex("(\")(.*)(\")");
 
         #endregion
     }

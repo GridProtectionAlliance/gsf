@@ -30,7 +30,7 @@ namespace GSF.Media
     /// <summary>
     /// Contains classes used to create and manipulate waveform audio format (WAV) files.
     /// </summary>
-    [CompilerGenerated()]
+    [CompilerGenerated]
     class NamespaceDoc
     {
     }

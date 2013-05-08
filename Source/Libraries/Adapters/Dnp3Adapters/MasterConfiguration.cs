@@ -23,8 +23,8 @@
 //
 //******************************************************************************************************
 
-using DNP3.Interface;
 using System;
+using DNP3.Interface;
 
 namespace Dnp3Adapters
 {

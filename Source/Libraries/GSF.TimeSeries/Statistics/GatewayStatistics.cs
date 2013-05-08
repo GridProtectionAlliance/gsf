@@ -23,8 +23,8 @@
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries.Transport;
 using System.Linq;
+using GSF.TimeSeries.Transport;
 
 namespace GSF.TimeSeries.Statistics
 {

@@ -1,4 +1,4 @@
-//******************************************************************************************************
+﻿//******************************************************************************************************
 //  ConfigurationCell.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
@@ -25,7 +25,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,7 +35,7 @@ namespace GSF.PhasorProtocols.Ieee1344
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class ConfigurationCell : ConfigurationCellBase
     {
         #region [ Members ]
@@ -58,10 +57,10 @@ namespace GSF.PhasorProtocols.Ieee1344
         {
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
-                Ieee1344.PhasorDefinition.CreateNewDefinition,
+                PhasorDefinition.CreateNewDefinition,
                 Ieee1344.FrequencyDefinition.CreateNewDefinition,
                 null, // IEEE 1344 doesn't define analogs
-                Ieee1344.DigitalDefinition.CreateNewDefinition);
+                DigitalDefinition.CreateNewDefinition);
         }
 
         /// <summary>
