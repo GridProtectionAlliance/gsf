@@ -1769,11 +1769,13 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                // Lookup explicitly defined individual measurements
-                DataRow[] explicitMeasurement = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID='{0}' AND SignalID='{1}'", subscriberID, signalID));
+                bool allowed = false;
 
-                if (explicitMeasurement.Length > 0)
-                    return explicitMeasurement[0]["Allowed"].ToNonNullString("0").ParseBoolean();
+                // Lookup explicitly defined individual measurements
+                DataRow[] explicitMeasurements = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID='{0}' AND SignalID='{1}'", subscriberID, signalID));
+
+                if (explicitMeasurements.Length > 0)
+                    return explicitMeasurements.All(row => row["Allowed"].ToNonNullString("0").ParseBoolean());
 
                 // Lookup implicitly defined group based measurements
                 DataRow[] implicitMeasurements;
@@ -1783,8 +1785,17 @@ namespace GSF.TimeSeries.Transport
                     implicitMeasurements = DataSource.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID='{0}' AND MeasurementGroupID={1}", signalID, int.Parse(subscriberMeasurementGroup["MeasurementGroupID"].ToNonNullString("0"))));
 
                     if (implicitMeasurements.Length > 0)
-                        return subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean();
+                    {
+                        // If all implicit rules allow access, we can return true;
+                        // if even one rule denies access, return false
+                        if (subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean())
+                            allowed = true;
+                        else
+                            return false;
+                    }
                 }
+
+                return allowed;
             }
             catch (Exception ex)
             {
