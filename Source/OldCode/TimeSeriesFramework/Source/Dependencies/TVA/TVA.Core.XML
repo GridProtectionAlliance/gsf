@@ -29764,6 +29764,15 @@
             </summary>
             <returns>Value of <see cref="T:TVA.Units.Angle"/> in angular mil.</returns>
         </member>
+        <member name="M:TVA.Units.Angle.ToRange(TVA.Units.Angle,System.Boolean)">
+            <summary>
+            Gets the equivalent angle moved within the range of <paramref name="minValue"/>
+            and <paramref name="minValue"/> + 2.0 * <see cref="F:System.Math.PI"/>.
+            </summary>
+            <param name="minValue">The minimum value of the range.</param>
+            <param name="inclusive">Indicates whether the range is inclusive of the minimum value.</param>
+            <returns>The equivalent angle within the specified range.</returns>
+        </member>
         <member name="M:TVA.Units.Angle.CompareTo(System.Object)">
             <summary>
             Compares this instance to a specified object and returns an indication of their relative values.
