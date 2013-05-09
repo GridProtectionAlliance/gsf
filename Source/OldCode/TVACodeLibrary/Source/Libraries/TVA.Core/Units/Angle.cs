@@ -375,6 +375,21 @@ namespace TVA.Units
             return m_value / AngularMilFactor;
         }
 
+        /// <summary>
+        /// Gets the equivalent angle moved within the range of <paramref name="minValue"/>
+        /// and <paramref name="minValue"/> + 2.0 * <see cref="Math.PI"/>.
+        /// </summary>
+        /// <param name="minValue">The minimum value of the range.</param>
+        /// <param name="inclusive">Indicates whether the range is inclusive of the minimum value.</param>
+        /// <returns>The equivalent angle within the specified range.</returns>
+        public Angle ToRange(Angle minValue, bool inclusive = true)
+        {
+            const double TwoPI = 2.0D * Math.PI;
+            Angle diff = this - minValue;
+            double factor = inclusive ? Math.Floor(diff / TwoPI) : (Math.Ceiling(diff / TwoPI) - 1.0D);
+            return this - (TwoPI * factor);
+        }
+
         #region [ Numeric Interface Implementations ]
 
         /// <summary>
