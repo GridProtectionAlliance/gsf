@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using System.Web.Security;
 using System.Windows;
 using System.Windows.Controls;
+using GSF.Security;
 using GSF.TimeSeries.UI.ViewModels;
 
 namespace GSF.TimeSeries.UI.UserControls
@@ -97,8 +98,7 @@ namespace GSF.TimeSeries.UI.UserControls
                     }
                     else
                     {
-                        #pragma warning disable 612, 618
-                        m_userAccounts.CurrentItem.Password = FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + TextBoxPassword.Password, "SHA1");
+                        m_userAccounts.CurrentItem.Password = SecurityProviderUtility.EncryptPassword(TextBoxPassword.Password);
                     }
                 }
             }
@@ -108,8 +108,7 @@ namespace GSF.TimeSeries.UI.UserControls
                 {
                     if (Regex.IsMatch(TextBoxPassword.Password, m_strongPasswordRegex))
                     {
-                        #pragma warning disable 612, 618
-                        m_userAccounts.CurrentItem.Password = FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + TextBoxPassword.Password, "SHA1");
+                        m_userAccounts.CurrentItem.Password = SecurityProviderUtility.EncryptPassword(TextBoxPassword.Password);
                     }
                     else
                     {
