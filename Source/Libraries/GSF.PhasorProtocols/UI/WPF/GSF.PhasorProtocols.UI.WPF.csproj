@@ -22,21 +22,21 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <OutputPath>..\..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\GSF.PhasorProtocols.UI.WPF.xml</DocumentationFile>
+    <DocumentationFile>..\..\..\..\..\Build\Output\Debug\Libraries\GSF.PhasorProtocols.UI.WPF.xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <OutputPath>..\..\..\..\..\Build\Output\Release\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\GSF.PhasorProtocols.UI.WPF.xml</DocumentationFile>
+    <DocumentationFile>..\..\..\..\..\Build\Output\Release\Libraries\GSF.PhasorProtocols.UI.WPF.xml</DocumentationFile>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">

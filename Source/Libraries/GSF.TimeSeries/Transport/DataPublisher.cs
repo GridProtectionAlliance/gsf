@@ -636,8 +636,8 @@ namespace GSF.TimeSeries.Transport
 
             m_routingTables = new RoutingTables
                 {
-                ActionAdapters = this
-            };
+                    ActionAdapters = this
+                };
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 
             // Setup a timer for restarting the command channel if it fails
