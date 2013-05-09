@@ -644,21 +644,21 @@ namespace GSF.Security.Cryptography
         }
 
         /// <summary>
-        /// Gets the Base64 encoded SHA-2 hash of given user password.
+        /// Gets the Base64 encoded SHA-256 hash of given user password.
         /// </summary>
         /// <param name="password">User password to get hash for.</param>
-        /// <param name="keySize">Specifies the desired key size.</param>
-        /// <returns>Base64 encoded SHA-2 hash of user password.</returns>
-        public static string GetPasswordHash(string password, int keySize)
+        /// <param name="categoryID">Specifies the desired category ID.</param>
+        /// <returns>Base64 encoded SHA-256 hash of user password.</returns>
+        public static string GetPasswordHash(string password, int categoryID = 0)
         {
             string hash;
 
-            // Suffix password with key size since same password may be in use for different key sizes
-            password += keySize.ToString();
+            // Suffix password with category ID (key size) since same password may be in use for different category IDs
+            password += categoryID.ToString();
 
             lock (s_passwordHash)
             {
-                // Lookup SHA-2 hash of user password in run-time cache
+                // Lookup SHA-256 hash of user password in run-time cache
                 if (!s_passwordHash.TryGetValue(password, out hash))
                 {
                     // Password hash doesn't exist, create one

@@ -44,6 +44,7 @@ using System.Web.Security;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Net.Smtp;
+using GSF.Security.Cryptography;
 using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.Security
@@ -199,9 +200,7 @@ namespace GSF.Security
         /// <returns>Encrypted password.</returns>
         public static string EncryptPassword(string password)
         {
-            // We prepend salt text to the password and then has it to make it even more secure.
-            #pragma warning disable 612, 618
-            return FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + password, "SHA1");
+            return Cipher.GetPasswordHash(password);
         }
 
         /// <summary>

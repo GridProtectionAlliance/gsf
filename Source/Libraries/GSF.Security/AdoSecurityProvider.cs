@@ -36,8 +36,10 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Web.Security;
 using GSF.Configuration;
 using GSF.Data;
 
@@ -406,7 +408,10 @@ namespace GSF.Security
                         Password = password;
 
                         // Authenticate against backend datastore
-                        UserData.IsAuthenticated = (UserData.Password == password || UserData.Password == SecurityProviderUtility.EncryptPassword(password));
+                        UserData.IsAuthenticated =
+                            UserData.Password == password ||
+                            UserData.Password == SecurityProviderUtility.EncryptPassword(password) ||
+                            UserData.Password == EncryptBackwardsCompatible(password);
                     }
                 }
                 catch (Exception ex)
@@ -683,6 +688,12 @@ namespace GSF.Security
             {
                 LogError(ex.Source, ex.ToString());
             }
+        }
+
+        private string EncryptBackwardsCompatible(string password)
+        {
+            #pragma warning disable 612, 618
+            return FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + password, "SHA1");
         }
 
         #endregion
