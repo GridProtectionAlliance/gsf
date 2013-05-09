@@ -32,6 +32,7 @@
 using System;
 using System.ComponentModel;
 using GSF.TimeSeries;
+using GSF.Units;
 
 namespace GSF.PhasorProtocols
 {
@@ -243,7 +244,13 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                return m_parent.GetCompositeValue(m_valueIndex) * m_multiplier + m_adder;
+                double adjustedValue = m_parent.GetCompositeValue(m_valueIndex) * m_multiplier + m_adder;
+
+                // Convert phase angles to the -180 degrees to 180 degrees range
+                if (m_parent is PhasorValueBase && m_valueIndex == (int)CompositePhasorValue.Angle)
+                    adjustedValue = Angle.FromDegrees(adjustedValue).ToRange(-Math.PI, false).ToDegrees();
+                    
+                return adjustedValue;
             }
         }
 
