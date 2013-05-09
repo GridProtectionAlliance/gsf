@@ -33,6 +33,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
@@ -83,6 +84,8 @@ namespace GSF.Communication
             public SpinLock SendLock;
             public ConcurrentQueue<TlsServerPayload> SendQueue;
             public int Sending;
+
+            public WindowsPrincipal ClientPrincipal;
         }
 
         private class TlsServerPayload
@@ -108,6 +111,11 @@ namespace GSF.Communication
         /// Specifies the default value for the <see cref="PayloadAware"/> property.
         /// </summary>
         public const bool DefaultPayloadAware = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="IntegratedSecurity"/> property.
+        /// </summary>
+        public const bool DefaultIntegratedSecurity = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
@@ -138,6 +146,7 @@ namespace GSF.Communication
 
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
+        private bool m_integratedSecurity;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_maxSendQueueSize;
@@ -175,6 +184,7 @@ namespace GSF.Communication
             m_trustedCertificatesPath = DefaultTrustedCertificatesPath;
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
+            m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, TlsClientInfo>();
@@ -233,6 +243,27 @@ namespace GSF.Communication
                     throw new ArgumentNullException("value");
 
                 m_payloadMarker = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the client Windows account credentials are used for authentication.
+        /// </summary>
+        /// <remarks>   
+        /// This option is ignored under Mono deployments.
+        /// </remarks>
+        [Category("Security"),
+        DefaultValue(DefaultIntegratedSecurity),
+        Description("Indicates whether the client Windows account credentials are used for authentication.")]
+        public bool IntegratedSecurity
+        {
+            get
+            {
+                return m_integratedSecurity;
+            }
+            set
+            {
+                m_integratedSecurity = value;
             }
         }
 
@@ -536,6 +567,7 @@ namespace GSF.Communication
                 settings["ValidPolicyErrors", true].Update(ValidPolicyErrors);
                 settings["ValidChainFlags", true].Update(ValidChainFlags);
                 settings["PayloadAware", true].Update(m_payloadAware);
+                settings["IntegratedSecurity", true].Update(m_integratedSecurity);
                 settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
                 settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
                 config.Save();
@@ -562,6 +594,7 @@ namespace GSF.Communication
                 settings.Add("ValidPolicyErrors", ValidPolicyErrors, "Set of valid policy errors when validating remote certificates.");
                 settings.Add("ValidChainFlags", ValidChainFlags, "Set of valid chain flags used when validating remote certificates.");
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the client Windows account credentials are used for authentication, otherwise False.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
                 settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
                 EnabledSslProtocols = settings["EnabledSslProtocols"].ValueAs(m_enabledSslProtocols);
@@ -572,6 +605,7 @@ namespace GSF.Communication
                 ValidPolicyErrors = settings["ValidPolicyErrors"].ValueAs(ValidPolicyErrors);
                 ValidChainFlags = settings["ValidChainFlags"].ValueAs(ValidChainFlags);
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
+                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
                 MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
             }
@@ -605,9 +639,15 @@ namespace GSF.Communication
         {
             if (CurrentState == ServerState.NotRunning)
             {
+                string integratedSecuritySetting;
+
                 // Initialize if unitialized.
                 if (!Initialized)
                     Initialize();
+
+                // Overwrite config file if integrated security exists in connection string.
+                if (m_configData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                    m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
                 // Bind server socket to local end-point and listen.
                 m_tlsServer = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
@@ -807,19 +847,29 @@ namespace GSF.Communication
                     throw new SocketException((int)error);
                 }
 
-                // Process the newly connected client.
-                LoadTrustedCertificates();
+                // Get the remote end point in case we need to display useful error messages
                 remoteEndPoint = m_acceptArgs.AcceptSocket.RemoteEndPoint as IPEndPoint;
-                netStream = new NetworkStream(m_acceptArgs.AcceptSocket);
 
-                client.Provider = new TlsSocket
+                if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
+                {
+                    // Reject client connection since limit has been reached.
+                    TerminateConnection(client, false);
+                }
+                else
+                {
+                    // Process the newly connected client.
+                    LoadTrustedCertificates();
+                    netStream = new NetworkStream(m_acceptArgs.AcceptSocket);
+
+                    client.Provider = new TlsSocket
                     {
-                    Socket = m_acceptArgs.AcceptSocket,
-                    SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback)
-                };
+                        Socket = m_acceptArgs.AcceptSocket,
+                        SslStream = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback)
+                    };
 
-                client.Provider.Socket.ReceiveBufferSize = ReceiveBufferSize;
-                client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessAuthenticate, client);
+                    client.Provider.Socket.ReceiveBufferSize = ReceiveBufferSize;
+                    client.Provider.SslStream.BeginAuthenticateAsServer(m_certificate, m_requireClientCertificate, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, client);
+                }
 
                 // Return to accepting new connections.
                 m_acceptArgs.AcceptSocket = null;
@@ -846,11 +896,12 @@ namespace GSF.Communication
         /// <summary>
         /// Callback method for asynchronous authenticate operation.
         /// </summary>
-        private void ProcessAuthenticate(IAsyncResult asyncResult)
+        private void ProcessTlsAuthentication(IAsyncResult asyncResult)
         {
             TransportProvider<TlsSocket> client = (TransportProvider<TlsSocket>)asyncResult.AsyncState;
             IPEndPoint remoteEndPoint = client.Provider.Socket.RemoteEndPoint as IPEndPoint;
             SslStream stream = client.Provider.SslStream;
+            NegotiateStream negotiateStream;
 
             try
             {
@@ -864,17 +915,17 @@ namespace GSF.Communication
                     if (!stream.IsEncrypted)
                         throw new InvalidOperationException("Unable to encrypt data stream.");
                 }
-
-                if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
+                
+                if (m_integratedSecurity)
                 {
-                    // Reject client connection since limit has been reached.
-                    TerminateConnection(client, false);
+                    negotiateStream = new NegotiateStream(stream, true);
+                    negotiateStream.BeginAuthenticateAsServer(ProcessIntegratedSecurityAuthentication, Tuple.Create(client, negotiateStream));
                 }
                 else
                 {
                     // We can proceed further with receiving data from the client.
                     m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo
-                        {
+                    {
                         Client = client,
                         SendLock = new SpinLock(),
                         SendQueue = new ConcurrentQueue<TlsServerPayload>()
@@ -891,6 +942,47 @@ namespace GSF.Communication
                 string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, CertificateChecker.ReasonForFailure ?? ex.Message);
                 OnClientConnectingException(new Exception(errorMessage, ex));
                 TerminateConnection(client, false);
+            }
+        }
+
+        private void ProcessIntegratedSecurityAuthentication(IAsyncResult asyncResult)
+        {
+            Tuple<TransportProvider<TlsSocket>, NegotiateStream> state = (Tuple<TransportProvider<TlsSocket>, NegotiateStream>)asyncResult.AsyncState;
+            TransportProvider<TlsSocket> client = state.Item1;
+            IPEndPoint remoteEndPoint = client.Provider.Socket.RemoteEndPoint as IPEndPoint;
+            NegotiateStream negotiateStream = state.Item2;
+            WindowsPrincipal clientPrincipal = null;
+
+            try
+            {
+                negotiateStream.EndAuthenticateAsServer(asyncResult);
+
+                if (negotiateStream.RemoteIdentity is WindowsIdentity)
+                    clientPrincipal = new WindowsPrincipal((WindowsIdentity)negotiateStream.RemoteIdentity);
+
+                // We can proceed further with receiving data from the client.
+                m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo
+                {
+                    Client = client,
+                    SendLock = new SpinLock(),
+                    SendQueue = new ConcurrentQueue<TlsServerPayload>(),
+                    ClientPrincipal = clientPrincipal
+                });
+
+                OnClientConnected(client.ID);
+                ReceivePayloadAsync(client);
+            }
+            catch (Exception ex)
+            {
+                // Notify of the exception.
+                string clientAddress = remoteEndPoint.Address.ToString();
+                string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, CertificateChecker.ReasonForFailure ?? ex.Message);
+                OnClientConnectingException(new Exception(errorMessage, ex));
+                TerminateConnection(client, false);
+            }
+            finally
+            {
+                negotiateStream.Dispose();
             }
         }
 

@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -70,6 +71,11 @@ namespace GSF.Communication
         public const bool DefaultPayloadAware = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="IntegratedSecurity"/> property.
+        /// </summary>
+        public const bool DefaultIntegratedSecurity = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
         /// </summary>
         public const bool DefaultAllowDualStackSocket = true;
@@ -98,6 +104,7 @@ namespace GSF.Communication
 
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
+        private bool m_integratedSecurity;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_connectionAttempts;
@@ -105,6 +112,7 @@ namespace GSF.Communication
         private readonly TransportProvider<SslStream> m_sslClient;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectWaitHandle;
+        private NetworkCredential m_networkCredential;
         private readonly ConcurrentQueue<TlsClientPayload> m_sendQueue;
         private SpinLock m_sendLock;
         private int m_maxSendQueueSize;
@@ -141,6 +149,7 @@ namespace GSF.Communication
             m_trustedCertificatesPath = DefaultTrustedCertificatesPath;
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
+            m_integratedSecurity = DefaultIntegratedSecurity;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_sslClient = new TransportProvider<SslStream>();
@@ -205,6 +214,27 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Gets or sets a boolean value that indicates whether the current Windows account credentials are used for authentication.
+        /// </summary>
+        /// <remarks>   
+        /// This option is ignored under Mono deployments.
+        /// </remarks>
+        [Category("Security"),
+        DefaultValue(DefaultIntegratedSecurity),
+        Description("Indicates whether the current Windows account credentials are used for authentication.")]
+        public bool IntegratedSecurity
+        {
+            get
+            {
+                return m_integratedSecurity;
+            }
+            set
+            {
+                m_integratedSecurity = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a boolean value that determines if dual-mode socket is allowed when endpoint address is IPv6.
         /// </summary>
         [Category("Settings"),
@@ -261,6 +291,22 @@ namespace GSF.Communication
             get
             {
                 return string.Format("{0}://{1}", TransportProtocol, m_connectData["server"]).ToLower();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets network credential that is used when
+        /// <see cref="IntegratedSecurity"/> is set to <c>true</c>.
+        /// </summary>
+        public NetworkCredential NetworkCredential
+        {
+            get
+            {
+                return m_networkCredential;
+            }
+            set
+            {
+                m_networkCredential = value;
             }
         }
 
@@ -492,6 +538,7 @@ namespace GSF.Communication
                 settings["ValidPolicyErrors", true].Update(ValidPolicyErrors);
                 settings["ValidChainFlags", true].Update(ValidChainFlags);
                 settings["PayloadAware", true].Update(m_payloadAware);
+                settings["IntegratedSecurity", true].Update(m_integratedSecurity);
                 settings["AllowDualStackSocket", true].Update(m_allowDualStackSocket);
                 settings["MaxSendQueueSize", true].Update(m_maxSendQueueSize);
                 config.Save();
@@ -517,6 +564,7 @@ namespace GSF.Communication
                 settings.Add("ValidPolicyErrors", ValidPolicyErrors, "Set of valid policy errors when validating remote certificates.");
                 settings.Add("ValidChainFlags", ValidChainFlags, "Set of valid chain flags used when validating remote certificates.");
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the current Windows account credentials are used for authentication, otherwise False.");
                 settings.Add("AllowDualStackSocket", m_allowDualStackSocket, "True if dual-mode socket is allowed when IP address is IPv6, otherwise False.");
                 settings.Add("MaxSendQueueSize", m_maxSendQueueSize, "The maximum size of the send queue before payloads are dumped from the queue.");
                 EnabledSslProtocols = settings["EnabledSslProtocols"].ValueAs(m_enabledSslProtocols);
@@ -526,6 +574,7 @@ namespace GSF.Communication
                 ValidPolicyErrors = settings["ValidPolicyErrors"].ValueAs(ValidPolicyErrors);
                 ValidChainFlags = settings["ValidChainFlags"].ValueAs(ValidChainFlags);
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
+                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
                 MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
             }
@@ -566,12 +615,19 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
+            string integratedSecuritySetting;
+
             if (CurrentState == ClientState.Disconnected)
             {
                 if (m_connectWaitHandle == null)
                     m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
                 OnConnectionAttempt();
+                m_connectWaitHandle.Reset();
+
+                // Overwrite config file if integrated security exists in connection string
+                if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                    m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
                 // Create client socket to establish presence
                 Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
@@ -781,7 +837,7 @@ namespace GSF.Communication
                 m_sslClient.Provider = new SslStream(netStream, false, m_remoteCertificateValidationCallback ?? CertificateChecker.ValidateRemoteCertificate, m_localCertificateSelectionCallback);
 
                 // Authenticate.
-                m_sslClient.Provider.BeginAuthenticateAsClient(endpoint.Groups["host"].Value, m_clientCertificates, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessAuthenticate, null);
+                m_sslClient.Provider.BeginAuthenticateAsClient(endpoint.Groups["host"].Value, m_clientCertificates, m_enabledSslProtocols, m_checkCertificateRevocation, ProcessTlsAuthentication, null);
             }
             catch (SocketException ex)
             {
@@ -819,8 +875,10 @@ namespace GSF.Communication
         /// <summary>
         /// Callback method for asynchronous authenticate operation.
         /// </summary>
-        private void ProcessAuthenticate(IAsyncResult asyncResult)
+        private void ProcessTlsAuthentication(IAsyncResult asyncResult)
         {
+            NegotiateStream negotiateStream;
+
             try
             {
                 // Finish authentication.
@@ -835,15 +893,24 @@ namespace GSF.Communication
                         throw new InvalidOperationException("Connection could not be established because the data stream is not encrypted.");
                 }
 
-                // Notify of established connection
-                // and begin receiving data.
-                m_connectWaitHandle.Set();
-                OnConnectionEstablished();
-                ReceivePayloadAsync();
+                if (m_integratedSecurity)
+                {
+                    negotiateStream = new NegotiateStream(m_sslClient.Provider, true);
+                    negotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, negotiateStream);
+                }
+                else
+                {
+                    // Notify of established connection
+                    // and begin receiving data.
+                    m_connectWaitHandle.Set();
+                    OnConnectionEstablished();
+                    ReceivePayloadAsync();
+                }
             }
             catch (SocketException ex)
             {
                 OnConnectionException(ex);
+
                 if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
                     (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
                 {
@@ -868,6 +935,56 @@ namespace GSF.Communication
                 string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
                 OnConnectionException(new Exception(errorMessage, ex));
                 TerminateConnection();
+            }
+        }
+
+        private void ProcessIntegratedSecurityAuthentication(IAsyncResult asyncResult)
+        {
+            NegotiateStream negotiateStream = (NegotiateStream)asyncResult.AsyncState;
+
+            try
+            {
+                // Finish authentication.
+                negotiateStream.EndAuthenticateAsClient(asyncResult);
+
+                // Notify of established connection
+                // and begin receiving data.
+                m_connectWaitHandle.Set();
+                OnConnectionEstablished();
+                ReceivePayloadAsync();
+            }
+            catch (SocketException ex)
+            {
+                OnConnectionException(ex);
+
+                if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
+                    (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
+                {
+                    // Server is unavailable, so keep retrying connection to the server.
+                    try
+                    {
+                        ConnectAsync();
+                    }
+                    catch
+                    {
+                        TerminateConnection();
+                    }
+                }
+                else
+                {
+                    // For any other reason, clean-up as if the client was disconnected.
+                    TerminateConnection();
+                }
+            }
+            catch (Exception ex)
+            {
+                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
+                OnConnectionException(new Exception(errorMessage, ex));
+                TerminateConnection();
+            }
+            finally
+            {
+                negotiateStream.Dispose();
             }
         }
 
