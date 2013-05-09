@@ -264,11 +264,13 @@ namespace DynamicCalculator
 
                 if (measurements.TryGetValue(key, out measurement))
                     m_expressionContext.Variables[name] = measurement.AdjustedValue;
+                else
+                    m_expressionContext.Variables[name] = double.NaN;
             }
 
             // Compile the expression if it has not been compiled already
             if ((object)m_expression == null)
-                m_expression = m_expressionContext.CompileDynamic(m_expressionText);
+                m_expression = m_expressionContext.CompileDynamic(m_aliasedExpressionText);
 
             // Evaluate the expression and generate the measurement
             GenerateCalculatedMeasurement(m_expression.Evaluate() as IConvertible);
