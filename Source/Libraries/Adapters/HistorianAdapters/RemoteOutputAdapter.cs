@@ -50,7 +50,7 @@ using GSF.TimeSeries.Adapters;
 namespace HistorianAdapters
 {
     /// <summary>
-    /// Represents an output adapter that publishes measurements to TVA Historian for archival.
+    /// Represents an output adapter that publishes measurements to openHistorian for archival.
     /// </summary>
     [Description("Remote Historian: forwards measurements to a remote openHistorian for archival.")]
     public class RemoteOutputAdapter : OutputAdapterBase

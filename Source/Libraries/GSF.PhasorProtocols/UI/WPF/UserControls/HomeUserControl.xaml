@@ -32,13 +32,13 @@
 
         <GroupBox Header="Quick Links" Grid.Row="0" Grid.Column="0">
             <StackPanel Orientation="Vertical" >
-                <Button Content="Graph Measurements" Tag="openPDC.UI.UserControls.InputStatusMonitorUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
-                <Button Content="Stream Statistics" Tag="openPDC.UI.UserControls.RealTimeStatisticUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
-                <Button x:Name="ButtonInputWizard" Content="Add New Device" Tag="openPDC.UI.UserControls.InputWizardUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
-                <Button Content="Manage Devices" Tag="openPDC.UI.UserControls.DeviceListUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
-                <Button Content="Manage Output Streams" Tag="openPDC.UI.UserControls.OutputStreamUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
+                <Button Content="Graph Measurements" Tag="GSF.PhasorProtocols.UI.UserControls.InputStatusMonitorUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
+                <Button Content="Stream Statistics" Tag="GSF.PhasorProtocols.UI.UserControls.RealTimeStatisticUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
+                <Button x:Name="ButtonInputWizard" Content="Add New Device" Tag="GSF.PhasorProtocols.UI.UserControls.InputWizardUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
+                <Button Content="Manage Devices" Tag="GSF.PhasorProtocols.UI.UserControls.DeviceListUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
+                <Button Content="Manage Output Streams" Tag="GSF.PhasorProtocols.UI.UserControls.OutputStreamUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
                 <Button Content="Remote System Console" Tag="GSF.TimeSeries.UI.UserControls.MonitoringUserControl" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
-                <Button Content="Restart openPDC" Tag="Restart" x:Name="ButtonRestart" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
+                <Button Content="Restart Service" Tag="Restart" x:Name="ButtonRestart" Width="160" Height="32" FontWeight="Bold" Click="ButtonQuickLink_Click"/>
             </StackPanel>
         </GroupBox>
 

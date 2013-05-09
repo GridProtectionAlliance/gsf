@@ -165,7 +165,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         /// <summary>
         /// Creates a new IEEE C37.118 specific <see cref="IConfigurationFrame"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
-        /// <param name="baseConfigurationFrame">Protocol independent <see cref="TVA.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
+        /// <param name="baseConfigurationFrame">Protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
         /// <returns>A new IEEE C37.118 specific <see cref="IConfigurationFrame"/>.</returns>
         protected override IConfigurationFrame CreateNewConfigurationFrame(GSF.PhasorProtocols.Anonymous.ConfigurationFrame baseConfigurationFrame)
         {
@@ -308,7 +308,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
         /// <summary>
         /// Creates a new IEC 61850-90-5 (i.e., IEEE C37.118) <see cref="ConfigurationFrame"/> based on provided protocol independent <paramref name="baseConfigurationFrame"/>.
         /// </summary>
-        /// <param name="baseConfigurationFrame">Protocol independent <see cref="TVA.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
+        /// <param name="baseConfigurationFrame">Protocol independent <see cref="GSF.PhasorProtocols.Anonymous.ConfigurationFrame"/>.</param>
         /// <param name="timeBase">Timebase to use for fraction second resolution.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> to use for the new <see cref="ConfigurationFrame"/></param>.
         /// <returns>A new IEEE C37.118 <see cref="ConfigurationFrame"/>.</returns>

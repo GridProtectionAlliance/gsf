@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="Rules for TVA.PhasorProtocols" Description="This rule set was created from the CodeAnalysisRules property for the &quot;Debug (Any CPU)&quot; configuration in project &quot;C:\Projects\Applications\openPDC\Synchrophasor\Current Version\Source\Libraries\TVA.PhasorProtocols\TVA.PhasorProtocols.csproj&quot;." ToolsVersion="10.0">
+<RuleSet Name="Rules for GSF.PhasorProtocols" Description="Rule set for the GSF PhasorProtocols" ToolsVersion="10.0">
   <IncludeAll Action="Warning" />
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA1006" Action="None" />

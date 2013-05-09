@@ -287,16 +287,16 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void RestartService()
         {
-            if (MessageBox.Show("Do you want to restart openpG service?", "Restart openPG Service", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (MessageBox.Show("Do you want to restart service?", "Restart Service", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 if (m_windowsServiceClient != null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                 {
                     CommonFunctions.SendCommandToService("Restart");
-                    MessageBox.Show("Successfully sent RESTART command to openPG service.", "Restart openPG Service", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Successfully sent RESTART command to the service.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Failed sent RESTART command to openPG service." + Environment.NewLine + "openPG service is either offline or disconnected.", "Restart openPG Service", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Failed sent RESTART command to the service." + Environment.NewLine + "Service is either offline or disconnected.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -317,21 +317,22 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 {
                     this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                        TextBlockSystemHealth.Text = e.Argument.Message.TrimEnd();
-                        GroupBoxSystemHealth.Header = "System Health (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
-                    });
+                            TextBlockSystemHealth.Text = e.Argument.Message.TrimEnd();
+                            GroupBoxSystemHealth.Header = "System Health (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
+                        });
                 }
                 else if (sourceCommand.ToLower() == "status")
                 {
                     this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                        GroupBoxStatus.Header = "System Status (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
-                        TextBlockStatus.Text = e.Argument.Message.TrimEnd();
-                    });
+                            GroupBoxStatus.Header = "System Status (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
+                            TextBlockStatus.Text = e.Argument.Message.TrimEnd();
+                        });
                 }
                 else if (sourceCommand.ToLower() == "version")
                 {
-                    this.Dispatcher.BeginInvoke((Action)delegate {
+                    this.Dispatcher.BeginInvoke((Action)delegate
+                    {
                         TextBlockVersion.Text = e.Argument.Message.Substring(e.Argument.Message.ToLower().LastIndexOf("version:") + 8).Trim();
                     });
                 }
@@ -339,14 +340,14 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 {
                     this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                        string[] times = Regex.Split(e.Argument.Message, "\r\n");
-                        if (times.Count() > 0)
-                        {
-                            string[] currentTimes = Regex.Split(times[0], ",");
-                            if (currentTimes.Count() > 0)
-                                TextBlockServerTime.Text = currentTimes[0].Substring(currentTimes[0].ToLower().LastIndexOf("system time:") + 12).Trim();
-                        }
-                    });
+                            string[] times = Regex.Split(e.Argument.Message, "\r\n");
+                            if (times.Count() > 0)
+                            {
+                                string[] currentTimes = Regex.Split(times[0], ",");
+                                if (currentTimes.Count() > 0)
+                                    TextBlockServerTime.Text = currentTimes[0].Substring(currentTimes[0].ToLower().LastIndexOf("system time:") + 12).Trim();
+                            }
+                        });
                 }
             }
         }
@@ -401,7 +402,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             UnsubscribeUnsynchronizedData();
             try
             {
-                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate {
+                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate
+                {
                     ChartPlotterDynamic.Children.Remove((IPlotterElement)m_lineGraph);
                 });
             }
@@ -426,25 +428,25 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                         {
                             ChartPlotterDynamic.Dispatcher.Invoke(DispatcherPriority.Normal, (Action)delegate
                                 {
-                                if (m_yAxisDataCollection.Count == 0)
-                                {
-                                    for (int i = 0; i < m_numberOfPointsToPlot; i++)
-                                        m_yAxisDataCollection.Enqueue(tempValue);
+                                    if (m_yAxisDataCollection.Count == 0)
+                                    {
+                                        for (int i = 0; i < m_numberOfPointsToPlot; i++)
+                                            m_yAxisDataCollection.Enqueue(tempValue);
 
-                                    m_yAxisBindingCollection = new EnumerableDataSource<double>(m_yAxisDataCollection);
-                                    m_yAxisBindingCollection.SetYMapping(y => y);
+                                        m_yAxisBindingCollection = new EnumerableDataSource<double>(m_yAxisDataCollection);
+                                        m_yAxisBindingCollection.SetYMapping(y => y);
 
-                                    m_lineGraph = ChartPlotterDynamic.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, m_yAxisBindingCollection), Color.FromArgb(255, 25, 25, 200), 1, "");
+                                        m_lineGraph = ChartPlotterDynamic.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, m_yAxisBindingCollection), Color.FromArgb(255, 25, 25, 200), 1, "");
 
-                                }
-                                else
-                                {
-                                    double oldValue;
-                                    if (m_yAxisDataCollection.TryDequeue(out oldValue))
-                                        m_yAxisDataCollection.Enqueue(tempValue);
-                                }
-                                m_yAxisBindingCollection.RaiseDataChanged();
-                            });
+                                    }
+                                    else
+                                    {
+                                        double oldValue;
+                                        if (m_yAxisDataCollection.TryDequeue(out oldValue))
+                                            m_yAxisDataCollection.Enqueue(tempValue);
+                                    }
+                                    m_yAxisBindingCollection.RaiseDataChanged();
+                                });
                         }
                     }
                 }
@@ -515,7 +517,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 InitializeUnsynchronizedSubscription();
             try
             {
-                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate {
+                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate
+                {
                     ChartPlotterDynamic.Children.Remove((IPlotterElement)m_lineGraph);
                 });
             }

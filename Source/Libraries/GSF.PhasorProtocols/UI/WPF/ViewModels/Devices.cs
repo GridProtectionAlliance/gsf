@@ -619,7 +619,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private void MakeCopy(object parameter)
         {
             Device deviceToCopy = (Device)parameter;
-            string newAcronym; ;
+            string newAcronym;
+            ;
             int i = 1;
             do  // Find unique acronym.
             {
@@ -661,7 +662,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// </summary>
         private void GoToMeasurements()
         {
-            //openPDC.UI.DataModels.Device device = (openPDC.UI.DataModels.Device)parameter;
+            //GSF.PhasorProtocols.UI.DataModels.Device device = (GSF.PhasorProtocols.UI.DataModels.Device)parameter;
             PhasorMeasurementUserControl measurementUserControl = new PhasorMeasurementUserControl(CurrentItem.ID);
             CommonFunctions.LoadUserControl(measurementUserControl, "Manage Measurements for " + CurrentItem.Acronym);
         }
@@ -671,7 +672,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// </summary>        
         private void GoToPhasors()
         {
-            //openPDC.UI.DataModels.Device device = (openPDC.UI.DataModels.Device)parameter;
+            //GSF.PhasorProtocols.UI.DataModels.Device device = (GSF.PhasorProtcols.UI.DataModels.Device)parameter;
             PhasorUserControl phasorUserControl = new PhasorUserControl(CurrentItem.ID);
             CommonFunctions.LoadUserControl(phasorUserControl, "Manage Phasors for " + CurrentItem.Acronym);
         }

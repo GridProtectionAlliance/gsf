@@ -33,7 +33,7 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.UserControls;
-using openPDCManager.UI.ViewModels;
+using GSF.PhasorProtocols.UI.ViewModels;
 
 namespace GSF.PhasorProtocols.UI.UserControls
 {
@@ -71,7 +71,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ButtonHelp_Click(object sender, RoutedEventArgs e)
         {
-            PanAndZoomViewer viewer = new PanAndZoomViewer(new BitmapImage(new Uri(@"/openPDC.UI;component/Images/" + ((Button)sender).Tag, UriKind.Relative)), "Help Me Choose");
+            PanAndZoomViewer viewer = new PanAndZoomViewer(new BitmapImage(new Uri(@"/GSF.PhasorProtocols.UI;component/Images/" + ((Button)sender).Tag, UriKind.Relative)), "Help Me Choose");
             viewer.Owner = Window.GetWindow(this);
             viewer.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             viewer.ShowDialog();

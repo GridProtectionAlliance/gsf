@@ -35,9 +35,9 @@ using GSF.PhasorProtocols.UI.UserControls;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
 using GSF.TimeSeries.UI.DataModels;
-using openPDCManager.UI.DataModels;
+using GSF.PhasorProtocols.UI.DataModels;
 
-namespace openPDCManager.UI.ViewModels
+namespace GSF.PhasorProtocols.UI.ViewModels
 {
     internal class OutputStreams : PagedViewModelBase<OutputStream, int>
     {

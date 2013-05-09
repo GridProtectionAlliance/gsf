@@ -100,7 +100,7 @@ namespace ConfigurationCacher
 
         private static string GetConfigurationFileName(string[] args)
         {
-            string[] knownConfigurationFileNames = { "openPDC.exe.config", "openPG.exe.config" };
+            string[] knownConfigurationFileNames = { "openPDC.exe.config", "openPG.exe.config", "openHistorian.exe.config", "SIEGate.exe.config" };
             string absolutePath = "Configuration file";
 
             // Search for the file name in the arguments to the program

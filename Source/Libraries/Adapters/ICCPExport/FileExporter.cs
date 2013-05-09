@@ -21,7 +21,7 @@
 //  12/29/2009 - Jian R. Zuo
 //      Converted code to C# and corrected angle wrapping algorithm.
 //  01/15/2010 - J. Ritchie Carroll
-//      Abstracted code for general purpose use in the openPDC.
+//      Abstracted code for general purpose use.
 //  01/29/2010 - Jian R. Zuo
 //      Add default value to m_exportInterval avoid "Attempted to divide by zero" exception
 //  02/01/2010 - Jian R. Zuo

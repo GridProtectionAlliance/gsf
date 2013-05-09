@@ -17,7 +17,7 @@
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
 //  11/08/2011 - Ritchie
-//       Generated original version of source code based on suggestion and code  from openPDC user.
+//       Generated original version of source code based on suggestion and code from end user.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //
@@ -44,19 +44,31 @@ namespace GSF.Historian.DataServices
         /// XML array of integer historian ID's.
         /// </summary>
         [XmlArray, DataMember(Order = 0)]
-        public int[] idArray { get; set; }
+        public int[] idArray
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Start time.
         /// </summary>
         [XmlAttribute, DataMember(Order = 1)]
-        public string startTime { get; set; }
+        public string startTime
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// End time.
         /// </summary>
         [XmlAttribute, DataMember(Order = 2)]
-        public string endTime { get; set; }
+        public string endTime
+        {
+            get;
+            set;
+        }
 
         #endregion
     }

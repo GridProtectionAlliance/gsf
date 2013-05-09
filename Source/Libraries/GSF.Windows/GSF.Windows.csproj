@@ -137,8 +137,8 @@
     <EmbeddedResource Include="Forms\SecureForm.resx">
       <DependentUpon>SecureForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TVADisclaimer.txt" />
-    <EmbeddedResource Include="Forms\TVALogo.bmp" />
+    <EmbeddedResource Include="Forms\Disclaimer.txt" />
+    <EmbeddedResource Include="Forms\Logo.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GSF.Core\GSF.Core.csproj">

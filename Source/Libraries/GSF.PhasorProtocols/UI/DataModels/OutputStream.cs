@@ -39,7 +39,7 @@ using GSF.PhasorProtocols.UI.DataModels;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
 
-namespace openPDCManager.UI.DataModels
+namespace GSF.PhasorProtocols.UI.DataModels
 {
     /// <summary>
     /// Represents a record of <see cref="OutputStream"/> as defined in the database.

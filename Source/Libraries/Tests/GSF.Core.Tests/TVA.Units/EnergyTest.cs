@@ -536,7 +536,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToBoolean
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToBooleanTest()
         {
             IConvertible target = new Energy(10F);
@@ -551,7 +551,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToByte
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToByteTest()
         {
             IConvertible target = new Energy(10F);
@@ -566,7 +566,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToChar
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToCharTest()
         {
             /*
@@ -584,7 +584,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToDateTime
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToDateTimeTest()
         {
             /*
@@ -602,7 +602,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToDecimal
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToDecimalTest()
         {
             IConvertible target = new Energy(10F);
@@ -617,7 +617,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToDouble
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToDoubleTest()
         {
             IConvertible target = new Energy(10F);
@@ -632,7 +632,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToInt16
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToInt16Test()
         {
             IConvertible target = new Energy(10F);
@@ -647,7 +647,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToInt32
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToInt32Test()
         {
             IConvertible target = new Energy(10);
@@ -662,7 +662,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToInt64
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToInt64Test()
         {
             IConvertible target = new Energy(10F);
@@ -677,7 +677,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToSByte
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToSByteTest()
         {
             IConvertible target = new Energy(10F);
@@ -692,7 +692,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToSingle
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToSingleTest()
         {
             IConvertible target = new Energy(10F);
@@ -707,7 +707,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToType
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToTypeTest()
         {
             IConvertible target = new Energy(10F);
@@ -723,7 +723,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToUInt16
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToUInt16Test()
         {
             IConvertible target = new Energy(10F);
@@ -738,7 +738,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToUInt32
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToUInt32Test()
         {
             IConvertible target = new Energy(10F);
@@ -753,7 +753,7 @@ namespace GSF.Core.Tests
         ///A test for System.IConvertible.ToUInt64
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToUInt64Test()
         {
             IConvertible target = new Energy(10F);

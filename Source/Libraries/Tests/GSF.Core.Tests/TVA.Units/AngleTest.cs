@@ -331,7 +331,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToBooleanTest()
         {
             double value = 10F;
@@ -348,7 +348,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToByteTest()
         {
             double value = 10F;
@@ -365,7 +365,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToCharTest()
         {
             /*
@@ -385,7 +385,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToDateTimeTest()
         {
             /*
@@ -404,7 +404,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToDecimalTest()
         {
             double value = 10F;
@@ -420,7 +420,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToDoubleTest()
         {
             double value = 10F;
@@ -436,7 +436,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToInt16Test()
         {
             double value = 10F;
@@ -453,7 +453,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToInt32Test()
         {
             double value = 10F;
@@ -470,7 +470,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToInt64Test()
         {
             double value = 10F;
@@ -487,7 +487,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToSByteTest()
         {
             double value = 10F;
@@ -504,7 +504,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToSingleTest()
         {
             double value = 10F;
@@ -521,7 +521,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToTypeTest()
         {
             double value = 10F;
@@ -537,7 +537,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToUInt16Test()
         {
             double value = 10F;
@@ -554,7 +554,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToUInt32Test()
         {
             double value = 10F;
@@ -571,7 +571,7 @@ namespace GSF.Core.Tests
         /// These are explicitly implemented on the native System.Double implementations, so we do the same...
         /// </summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void ToUInt64Test()
         {
             double value = 10F;

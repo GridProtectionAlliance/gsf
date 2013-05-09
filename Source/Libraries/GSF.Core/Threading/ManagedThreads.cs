@@ -133,7 +133,7 @@ namespace GSF.Threading
                 //
                 // Thread 1 - Completed in 25 seconds
                 //      Type: Standard Thread
-                //      Name: TVASPDC.Service.CalculatedMeasurementInitialization.Initialize()
+                //      Name: GSF.Service.CalculatedMeasurementInitialization.Initialize()
 
                 status.AppendFormat("Managed Thread Count: {0}{1}", items.Length, Environment.NewLine);
                 status.AppendLine();

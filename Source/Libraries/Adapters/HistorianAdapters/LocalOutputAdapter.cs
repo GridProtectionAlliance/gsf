@@ -843,8 +843,8 @@ namespace HistorianAdapters
                         settings["LoadOnOpen"].Update(true);
                         settings["ReloadOnModify"].Update(false);
 
-                        // Older versions of the openPDC placed the archive data files in the same folder as the executables, for both better
-                        // organization and performance related to file monitoring, these files are now located in their own folder
+                        // Older versions placed the archive data files in the same folder as the executables, for both better organization
+                        // and performance related to file monitoring, these files are now located in their own folder
                         defaultFileName = string.Format("{0}\\{1}_dbase.dat", archivePath, acronym);
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} meta-data file including its path.", acronym));
                         fileName = settings["FileName"].Value;

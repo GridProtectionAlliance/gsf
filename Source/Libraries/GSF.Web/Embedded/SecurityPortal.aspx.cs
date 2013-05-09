@@ -87,13 +87,13 @@ namespace GSF.Web.Embedded
         private const string AccessDeniedStatusCode = "403";
         private const string PasswordResetStatusCode = "401.11";
         private const string PasswordChangeStatusCode = "403.11";
-        private const string EmbeddedHelpFile = "TVA.Web.Embedded.Files.Help.pdf";
-        private const string EmbeddedHelpImage = "TVA.Web.Embedded.Images.Help.png";
-        private const string EmbeddedWarningImage = "TVA.Web.Embedded.Images.Warning.png";
-        private const string EmbeddedCompanyLogo = "TVA.Web.Embedded.Images.TVALogo.png";
-        private const string EmbeddedStyleSheet = "TVA.Web.Embedded.Styles.SecurityPortal.css";
-        private const string DefaultCompanyLink = "http://www.tva.gov";
-        private const string DefaultFooterText = "© Tennessee Valley Authority. All rights reserved.";
+        private const string EmbeddedHelpFile = "GSF.Web.Embedded.Files.Help.pdf";
+        private const string EmbeddedHelpImage = "GSF.Web.Embedded.Images.Help.png";
+        private const string EmbeddedWarningImage = "GSF.Web.Embedded.Images.Warning.png";
+        private const string EmbeddedCompanyLogo = "GSF.Web.Embedded.Images.Logo.png";
+        private const string EmbeddedStyleSheet = "GSF.Web.Embedded.Styles.SecurityPortal.css";
+        private const string DefaultCompanyLink = "http://www.gridprotectionalliance.org/";
+        private const string DefaultFooterText = "© Grid Protection Alliance. All rights reserved.";
 
         #endregion
 
@@ -397,7 +397,7 @@ namespace GSF.Web.Embedded
                     {
                         // Show why password change failed.
                         if (!ShowFailureReason(provider))
-                                ShowMessage("Password change was not successful.", true);
+                            ShowMessage("Password change was not successful.", true);
                     }
                 }
                 else

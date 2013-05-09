@@ -65,9 +65,9 @@ namespace GSF.Windows.Forms
             InitializeComponent();
 
             AssemblyInfo executingAssembly = AssemblyInfo.ExecutingAssembly;
-            SetCompanyUrl("http://www.tva.gov");
-            SetCompanyLogo(executingAssembly.GetEmbeddedResource("GSF.Windows.Forms.TVALogo.bmp"));
-            SetCompanyDisclaimer(executingAssembly.GetEmbeddedResource("GSF.Windows.Forms.TVADisclaimer.txt"));
+            SetCompanyUrl("http://www.gridprotectionalliance.org/");
+            SetCompanyLogo(executingAssembly.GetEmbeddedResource("GSF.Windows.Forms.Logo.bmp"));
+            SetCompanyDisclaimer(executingAssembly.GetEmbeddedResource("GSF.Windows.Forms.Disclaimer.txt"));
         }
 
         #endregion
@@ -217,7 +217,7 @@ namespace GSF.Windows.Forms
             AddListViewItem(ListViewApplicationInfo, "Product", AssemblyInfo.EntryAssembly.Product);
             AddListViewItem(ListViewApplicationInfo, "Copyright", AssemblyInfo.EntryAssembly.Copyright);
 
-            // None of the openPDC assemblies contain trademark information...
+            // None of the application assemblies contain trademark information...
             //AddListViewItem(ListViewApplicationInfo, "Trademark", AssemblyInfo.EntryAssembly.Trademark);
 
             // Query all the assemblies used by the calling application.

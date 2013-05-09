@@ -19,7 +19,7 @@
 //  09/29/2009 - Jian (Ryan) Zuo
 //       Generated original version of source code.
 //  10/19/2009 - J. Ritchie Carroll
-//       Migrated code to openPDC action adapter type.
+//       Migrated code to action adapter type.
 //  04/12/2010 - J. Ritchie Carroll
 //       Performed full code review, optimization and further abstracted code for excursion detection.
 //  12/13/2012 - Starlynn Danyelle Gilliam
@@ -76,7 +76,13 @@ namespace PowerCalculations.EventDetection
         private long m_count;                       // Published frame count
 
         // Important: Make sure output definition defines points in the following order
-        private enum Output { WarningSignal, FrequencyDelta, TypeOfExcursion, EstimatedSize }
+        private enum Output
+        {
+            WarningSignal,
+            FrequencyDelta,
+            TypeOfExcursion,
+            EstimatedSize
+        }
 
         #endregion
 

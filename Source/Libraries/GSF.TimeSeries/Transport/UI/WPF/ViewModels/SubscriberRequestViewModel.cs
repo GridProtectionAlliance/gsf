@@ -38,6 +38,7 @@ using GSF.Collections;
 using GSF.Data;
 using GSF.IO;
 using GSF.PhasorProtocols.UI.DataModels;
+using GSF.Reflection;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
@@ -579,7 +580,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
         }
 
-        // Attempt to get the company acronym stored in the openPG configuration file.
+        // Attempt to get the company acronym stored in the the configuration file.
         private bool TryGetCompanyAcronym(out string acronym)
         {
             string configFileName;
@@ -591,7 +592,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             try
             {
                 // Set up XML searching
-                configFileName = FilePath.GetAbsolutePath("openPG.exe.config");
+                configFileName = FilePath.GetAbsolutePath(AssemblyInfo.EntryAssembly.Location + ".config");
                 configStream = File.Open(configFileName, FileMode.Open, FileAccess.Read);
                 configStreamReader = new StreamReader(configStream);
                 configRoot = XElement.Parse(configStreamReader.ReadToEnd());
@@ -691,7 +692,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     validPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
                     validChainFlags |= X509ChainStatusFlags.UntrustedRoot;
                 }
-                    
+
                 securitySpecificSettings = string.Format("localCertificate={0}; remoteCertificate={1}; validPolicyErrors={2}; validChainFlags={3}",
                     LocalCertificateFile, RemoteCertificateFile, validPolicyErrors, validChainFlags);
             }

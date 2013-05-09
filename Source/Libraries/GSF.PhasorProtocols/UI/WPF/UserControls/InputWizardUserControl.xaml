@@ -77,7 +77,7 @@
                             </Button.Template>
                         </Button>
                     </StackPanel>
-                    <TextBlock Text="Connection information is relative to the openPDC node." FontStyle="Italic" HorizontalAlignment="Left" />
+                    <TextBlock Text="Connection information is relative to host." FontStyle="Italic" HorizontalAlignment="Left" />
                 </StackPanel>
 
                 <TextBlock Grid.Row="4" Grid.Column="0" Text="Alternate Command Channel" TextWrapping="Wrap" VerticalAlignment="Top"/>

@@ -43,8 +43,8 @@ using GSF.Adapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests
-{    
-    
+{
+
     /// <summary>
     ///This is a test class for AdapterTest and is intended
     ///to contain all AdapterTest Unit Tests
@@ -93,7 +93,7 @@ namespace GSF.Core.Tests
                 testContextInstance = value;
             }
         }
-       
+
         #region Additional test attributes
 
         Adapter target;
@@ -118,14 +118,14 @@ namespace GSF.Core.Tests
         {
             target = new Adapter();
         }
-        
+
         //Use TestCleanup to run code after each test has run
         [TestCleanup]
         public void MyTestCleanup()
         {
             target.Dispose();
         }
-        
+
         #endregion
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace GSF.Core.Tests
         /// </summary>
         [TestMethod]
         public void AdapterConstructorTest()
-        {  
+        {
             Assert.IsInstanceOfType(target, typeof(Adapter));
             Assert.IsNotNull(target);
         }
@@ -143,14 +143,18 @@ namespace GSF.Core.Tests
         ///A test for Dispose
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void DisposeTest()
-        {     
+        {
             try
-            { target.Dispose();}
+            {
+                target.Dispose();
+            }
             catch
-            {Assert.Inconclusive("Disposing error.");}                   
-        }      
+            {
+                Assert.Inconclusive("Disposing error.");
+            }
+        }
 
         /// <summary>
         /// A test for Initialize
@@ -158,12 +162,16 @@ namespace GSF.Core.Tests
         /// </summary> 
         [TestMethod]
         public void InitializeTest()
-        { 
+        {
             try
-            {  target.Initialize();}
+            {
+                target.Initialize();
+            }
             catch
-            { Assert.Inconclusive("Can't initialize Adapter instance."); }          
-            
+            {
+                Assert.Inconclusive("Can't initialize Adapter instance.");
+            }
+
         }
 
         /// <summary>
@@ -173,9 +181,13 @@ namespace GSF.Core.Tests
         public void LoadSettingsTest()
         {
             try
-            { target.LoadSettings(); }
+            {
+                target.LoadSettings();
+            }
             catch
-            { Assert.Inconclusive("Can't load settings."); }
+            {
+                Assert.Inconclusive("Can't load settings.");
+            }
         }
 
         /// <summary>
@@ -183,20 +195,24 @@ namespace GSF.Core.Tests
         /// Raises the <see cref="Disposed"/> event.
         /// </summary>       
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void OnDisposedTest()
-        {        
+        {
             try
-            { target.Dispose(); }
+            {
+                target.Dispose();
+            }
             catch
-            { Assert.Fail(); } 
-        }        
+            {
+                Assert.Fail();
+            }
+        }
 
         /// <summary>
         ///A test for OnExecutionException
         ///</summary>
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void OnExecutionExceptionTest()
         {
             // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
@@ -211,7 +227,7 @@ namespace GSF.Core.Tests
         /// <param name="updateMessage">Update message to send to <see cref="StatusUpdate"/> event.</param>
         /// <param name="args">Arguments to be used when formatting the <paramref name="updateMessage"/>.</param>       
         [TestMethod]
-        [DeploymentItem("TVA.Core.dll")]
+        [DeploymentItem("GSF.Core.dll")]
         public void OnStatusUpdateTest()
         {
             // Creation of the private accessor for 'Microsoft.VisualStudio.TestTools.TypesAndSymbols.Assembly' failed
@@ -229,9 +245,13 @@ namespace GSF.Core.Tests
         {
             target.PersistSettings = true;
             try
-            { target.SaveSettings(); }
+            {
+                target.SaveSettings();
+            }
             catch
-            { Assert.Inconclusive("Configuration error exception"); }
+            {
+                Assert.Inconclusive("Configuration error exception");
+            }
         }
 
         /// <summary>
@@ -252,7 +272,7 @@ namespace GSF.Core.Tests
         /// </summary>
         [TestMethod]
         public void EnabledTest()
-        {       
+        {
             bool expected = false;
             bool actual;
             target.Enabled = expected;
@@ -269,12 +289,12 @@ namespace GSF.Core.Tests
         /// </remarks> 
         [TestMethod]
         public void HostFileTest()
-        {           
-            string expected = "Host File"; 
+        {
+            string expected = "Host File";
             string actual;
             target.HostFile = expected;
             actual = target.HostFile;
-            Assert.AreEqual(expected, actual);          
+            Assert.AreEqual(expected, actual);
         }
 
         /// <summary>
@@ -291,13 +311,15 @@ namespace GSF.Core.Tests
         /// </remarks> 
         [TestMethod]
         public void MemoryUsageTest()
-        {          
+        {
             double actual;
             if (AppDomain.MonitoringIsEnabled == false)
-            {AppDomain.MonitoringIsEnabled = true;}            
+            {
+                AppDomain.MonitoringIsEnabled = true;
+            }
             actual = target.MemoryUsage;
             Assert.AreNotEqual(Double.NaN, actual);
-         
+
         }
 
         /// <summary>
@@ -306,7 +328,7 @@ namespace GSF.Core.Tests
         /// </summary> 
         [TestMethod]
         public void NameTest()
-        {           
+        {
             string actual;
             actual = target.Name;
             Assert.IsNotNull(actual);
@@ -318,8 +340,8 @@ namespace GSF.Core.Tests
         /// </summary>
         [TestMethod]
         public void PersistSettingsTest()
-        {       
-            bool expected = false;  
+        {
+            bool expected = false;
             bool actual;
             target.PersistSettings = expected;
             actual = target.PersistSettings;
@@ -337,9 +359,11 @@ namespace GSF.Core.Tests
         public void ProcessorUsageTest()
         {
             double actual;
-            if (AppDomain.MonitoringIsEnabled==false)
-            { AppDomain.MonitoringIsEnabled = true; }
-            actual = target.ProcessorUsage;             
+            if (AppDomain.MonitoringIsEnabled == false)
+            {
+                AppDomain.MonitoringIsEnabled = true;
+            }
+            actual = target.ProcessorUsage;
             Assert.AreNotEqual(Double.NaN, actual);
         }
 
@@ -351,12 +375,12 @@ namespace GSF.Core.Tests
         [TestMethod]
         public void SettingsCategoryTest()
         {
-           
-            string expected = "Config File"; 
+
+            string expected = "Config File";
             string actual;
             target.SettingsCategory = expected;
             actual = target.SettingsCategory;
-            Assert.AreEqual(expected, actual); 
+            Assert.AreEqual(expected, actual);
         }
 
         /// <summary>
@@ -365,10 +389,10 @@ namespace GSF.Core.Tests
         /// </summary> 
         [TestMethod]
         public void StatusTest()
-        {          
+        {
             string actual;
             actual = target.Status;
-            Assert.IsNotNull(actual);            		
+            Assert.IsNotNull(actual);
         }
 
         /// <summary>
@@ -381,11 +405,11 @@ namespace GSF.Core.Tests
         [TestMethod]
         public void TypeNameTest()
         {
-            string expected = "TVA.Adapters.Adapter, TVA.Core"; 
+            string expected = "GSF.Adapters.Adapter, GSF.Core";
             string actual;
             target.TypeName = expected;
             actual = target.TypeName;
-            Assert.AreEqual(expected, actual);            
+            Assert.AreEqual(expected, actual);
 
         }
     }

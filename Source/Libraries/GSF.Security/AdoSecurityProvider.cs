@@ -58,7 +58,7 @@ namespace GSF.Security
     ///   </configSections>
     ///   <categorizedSettings>
     ///     <securityProvider>
-    ///       <add name="ConnectionString" value="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\ProgramData\openPDC\openPDC1.mdb" 
+    ///       <add name="ConnectionString" value="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\ProgramData\MyApp\MyAppConfig.mdb" 
     ///         description="Configuration database connection string" encrypted="false"/>
     ///       <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter" 
     ///         description="Configuration database ADO.NET data provider assembly type creation string" encrypted="false"/>    

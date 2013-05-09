@@ -840,7 +840,7 @@ namespace GSF.IO
                         string directoryName = FilePath.GetDirectoryName(m_fileName);
                         string rootFileName = FilePath.GetFileNameWithoutExtension(m_fileName);
 
-                        // We want this to run only once, when openPDC starts.
+                        // We want this to run only once, when system starts.
                         if (m_savedFilesWithTime.Count < 1)
                         {
                             string expression = string.Format("{0}*", rootFileName);

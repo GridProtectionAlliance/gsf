@@ -147,7 +147,7 @@
     <EmbeddedResource Include="Embedded\SecurityService.svc" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Embedded\Images\TVALogo.png" />
+    <EmbeddedResource Include="Embedded\Images\Logo.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded\Images\Help.png" />

@@ -76,12 +76,12 @@
                     </TextBlock>
                 </Border>
 
-                <Button Content="PG Authorization Request" Grid.Row="0" Grid.Column="1" Tag="openPG.UI.UserControls.SubscriberRequestUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
-                <Button Content="Measurement Requests" Grid.Row="1" Grid.Column="1" Tag="openPG.UI.UserControls.SubscribeMeasurementUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="PG Authorization Request" Grid.Row="0" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberRequestUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Measurement Requests" Grid.Row="1" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscribeMeasurementUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
 
-                <Button Content="Subscribing PGs" Grid.Row="2" Grid.Column="1" Tag="openPG.UI.UserControls.SubscriberUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
-                <Button Content="Measurement Groups" Grid.Row="3" Grid.Column="1" Tag="openPG.UI.UserControls.MeasurementGroupUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
-                <Button Content="Authorized Measurements" Grid.Row="4" Grid.Column="1" Tag="openPG.UI.UserControls.SubscriberMeasurementUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Subscribing PGs" Grid.Row="2" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Measurement Groups" Grid.Row="3" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.MeasurementGroupUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
+                <Button Content="Authorized Measurements" Grid.Row="4" Grid.Column="1" Tag="GSF.TimeSeries.Transport.UI.UserControls.SubscriberMeasurementUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
 
                 <Button Content="Browse Inputs" Grid.Row="5" Grid.Column="1" Tag="GSF.PhasorProtocols.UI.UserControls.DeviceListUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>
                 <Button Content="Manage Security" Grid.Row="6" Grid.Column="1" Tag="GSF.TimeSeries.UI.UserControls.SecurityUserControl" Click="CommonClickHandler" Style="{StaticResource HomeButtonStyle}" Width="170" Height="32"/>

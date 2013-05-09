@@ -359,8 +359,8 @@ namespace GSF.Web.UI
             if (!page.ClientScript.IsStartupScriptRegistered("ShowDialog." + url))
             {
                 StringBuilder script = new StringBuilder();
-                script.Append("<input type=\"hidden\" name=\"TVA_EVENT_TARGET\" value=\"\" />\r\n");
-                script.Append("<input type=\"hidden\" name=\"TVA_EVENT_ARGUMENT\" value=\"\" />\r\n");
+                script.Append("<input type=\"hidden\" name=\"GSF_EVENT_TARGET\" value=\"\" />\r\n");
+                script.Append("<input type=\"hidden\" name=\"GSF_EVENT_ARGUMENT\" value=\"\" />\r\n");
                 script.Append("<script language=\"javascript\">\r\n");
                 if (dialogResultHolder != null)
                 {
@@ -378,8 +378,8 @@ namespace GSF.Web.UI
                     {
                         if (control is HtmlForm)
                         {
-                            script.Append("       " + control.ClientID + ".TVA_EVENT_TARGET.value = 'ShowDialog';\r\n");
-                            script.Append("       " + control.ClientID + ".TVA_EVENT_ARGUMENT.value = '" + url + "';\r\n");
+                            script.Append("       " + control.ClientID + ".GSF_EVENT_TARGET.value = 'ShowDialog';\r\n");
+                            script.Append("       " + control.ClientID + ".GSF_EVENT_ARGUMENT.value = '" + url + "';\r\n");
                             script.Append("       document." + control.ClientID + ".submit();\r\n");
                             break;
                         }
@@ -542,8 +542,8 @@ namespace GSF.Web.UI
             if (!page.ClientScript.IsStartupScriptRegistered("ShowMsgBox." + prompt))
             {
                 StringBuilder script = new StringBuilder();
-                script.Append("<input type=\"hidden\" name=\"TVA_EVENT_TARGET\" value=\"\" />\r\n");
-                script.Append("<input type=\"hidden\" name=\"TVA_EVENT_ARGUMENT\" value=\"\" />\r\n");
+                script.Append("<input type=\"hidden\" name=\"GSF_EVENT_TARGET\" value=\"\" />\r\n");
+                script.Append("<input type=\"hidden\" name=\"GSF_EVENT_ARGUMENT\" value=\"\" />\r\n");
                 script.Append("<script language=\"javascript\">\r\n");
                 script.Append("   if (ShowMsgBox('" + JavaScriptEncode(ref prompt) + " ', '" + title + "', " + (int)buttons + ", " + doPostBack.ToString().ToLower() + "))\r\n");
                 script.Append("   {\r\n");
@@ -551,8 +551,8 @@ namespace GSF.Web.UI
                 {
                     if (control is HtmlForm)
                     {
-                        script.Append("       " + control.ClientID + ".TVA_EVENT_TARGET.value = 'MsgBox';\r\n");
-                        script.Append("       " + control.ClientID + ".TVA_EVENT_ARGUMENT.value = '" + title + "';\r\n");
+                        script.Append("       " + control.ClientID + ".GSF_EVENT_TARGET.value = 'MsgBox';\r\n");
+                        script.Append("       " + control.ClientID + ".GSF_EVENT_ARGUMENT.value = '" + title + "';\r\n");
                         script.Append("       document." + control.ClientID + ".submit();\r\n");
                         break;
                     }

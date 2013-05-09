@@ -83,8 +83,8 @@ namespace HistorianAdapters
         /// <see cref="EndTime"/> parameters are not set when using this constructor and must
         /// be set manually before attempting to read statistics from the archive.
         /// </summary>
-        /// <param name="openPdcConfigPath">Path to the openPDC configuration file.</param>
-        public StatisticsReader(string openPdcConfigPath)
+        /// <param name="sourceConfigPath">Path to the source configuration file.</param>
+        public StatisticsReader(string sourceConfigPath)
             : this()
         {
             XmlDocument doc;
@@ -93,11 +93,11 @@ namespace HistorianAdapters
             XmlNode intercomFileNode;
             XmlNode metadataFileNode;
 
-            if (!File.Exists(openPdcConfigPath))
-                throw new FileNotFoundException(openPdcConfigPath);
+            if (!File.Exists(sourceConfigPath))
+                throw new FileNotFoundException(sourceConfigPath);
 
             doc = new XmlDocument();
-            doc.Load(openPdcConfigPath);
+            doc.Load(sourceConfigPath);
 
             archiveFileNode = doc.SelectSingleNode("configuration/categorizedSettings/statArchiveFile");
             stateFileNode = doc.SelectSingleNode("configuration/categorizedSettings/statStateFile");

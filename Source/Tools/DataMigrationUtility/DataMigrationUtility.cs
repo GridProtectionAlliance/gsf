@@ -246,16 +246,16 @@ namespace DataMigrationUtility
             switch ((DatabaseType)index)
             {
                 case DatabaseType.Access:
-                    destination.Text = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=C:\\Program Files\\openPDC\\openPDC.mdb";
+                    destination.Text = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=C:\\Program Files\\myApp\\myAppConfig.mdb";
                     break;
                 case DatabaseType.SqlServer:
-                    destination.Text = "Provider=SQLOLEDB; Data Source=localhost; Initial Catalog=openPDC; User Id=myUsername; Password=myPassword;";
+                    destination.Text = "Provider=SQLOLEDB; Data Source=localhost; Initial Catalog=myApp; User Id=myUsername; Password=myPassword;";
                     break;
                 case DatabaseType.MySQL:
-                    destination.Text = "Provider=MySQLProv; location=MACHINE; Data Source=openPDC; User Id=myUsername; Password=myPassword;";
+                    destination.Text = "Provider=MySQLProv; location=MACHINE; Data Source=myApp; User Id=myUsername; Password=myPassword;";
                     break;
                 case DatabaseType.Oracle:
-                    destination.Text = "Provider=msdaora; Data Source=openPDC; User Id=myUsername; Password=myPassword;";
+                    destination.Text = "Provider=msdaora; Data Source=myApp; User Id=myUsername; Password=myPassword;";
                     break;
                 default:
                     destination.Text = "";

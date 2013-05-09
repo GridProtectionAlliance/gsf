@@ -42,7 +42,7 @@ using Timer = System.Timers.Timer;
 namespace HistorianAdapters
 {
     /// <summary>
-    /// Represents an output adapter that publishes measurements to TVA Historian for archival.
+    /// Represents an output adapter that publishes measurements to openHistorian for archival.
     /// </summary>
     [Description("Local Historian Reader: reads data from local openHistorian for replay.")]
     public class LocalInputAdapter : InputAdapterBase
@@ -321,7 +321,7 @@ namespace HistorianAdapters
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting, errorMessage = "{0} is missing from settings - Example: instanceName=PPA; archiveLocation=C:\\Program Files\\openPDC\\Archive\\; publicationInterval=333333";
+            string setting, errorMessage = "{0} is missing from settings - Example: instanceName=PPA; archiveLocation=D:\\ArchiveFiles\\; publicationInterval=333333";
 
             // Validate settings.
             if (!settings.TryGetValue("instanceName", out m_instanceName))
@@ -520,11 +520,11 @@ namespace HistorianAdapters
                         // Add current measurement to the collection for publication
                         measurements.Add(new Measurement
                             {
-                            ID = key.SignalID,
-                            Key = key,
-                            Timestamp = m_simulateTimestamp ? PrecisionTimer.UtcNow.Ticks : timestamp,
-                            Value = currentPoint.Value
-                        });
+                                ID = key.SignalID,
+                                Key = key,
+                                Timestamp = m_simulateTimestamp ? PrecisionTimer.UtcNow.Ticks : timestamp,
+                                Value = currentPoint.Value
+                            });
 
                         // Attempt to move to next record
                         if (m_dataReader.MoveNext())

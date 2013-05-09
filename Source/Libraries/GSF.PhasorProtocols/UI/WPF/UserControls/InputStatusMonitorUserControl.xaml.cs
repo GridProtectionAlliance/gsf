@@ -564,7 +564,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     {
                         m_waitingForData = false;
 
-                        Dispatcher.BeginInvoke(new Action(delegate {
+                        Dispatcher.BeginInvoke(new Action(delegate
+                        {
                             ModeMessage.Text = "Historical";
                         }));
                     }
@@ -618,24 +619,24 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
                                     ChartPlotterDynamic.Dispatcher.Invoke(DispatcherPriority.Normal, (Action)delegate
                                         {
-                                        int colorIndex;
-                                        Math.DivRem(m_yAxisBindingCollection.Count, 10, out colorIndex);
-                                        LineGraph lineGraph = null;
+                                            int colorIndex;
+                                            Math.DivRem(m_yAxisBindingCollection.Count, 10, out colorIndex);
+                                            LineGraph lineGraph = null;
 
-                                        if (measurement.SignalAcronym == "FREQ")
-                                            lineGraph = ChartPlotterDynamic.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
-                                        else if (measurement.SignalAcronym == "IPHA" || measurement.SignalAcronym == "VPHA")
-                                            lineGraph = PhaseAnglePlotter.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
-                                        else if (measurement.SignalAcronym == "VPHM")
-                                            lineGraph = VoltagePlotter.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
-                                        else if (measurement.SignalAcronym == "IPHM")
-                                            lineGraph = CurrentPlotter.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
+                                            if (measurement.SignalAcronym == "FREQ")
+                                                lineGraph = ChartPlotterDynamic.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
+                                            else if (measurement.SignalAcronym == "IPHA" || measurement.SignalAcronym == "VPHA")
+                                                lineGraph = PhaseAnglePlotter.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
+                                            else if (measurement.SignalAcronym == "VPHM")
+                                                lineGraph = VoltagePlotter.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
+                                            else if (measurement.SignalAcronym == "IPHM")
+                                                lineGraph = CurrentPlotter.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
 
-                                        if (lineGraph != null)
-                                            m_lineGraphCollection.TryAdd(tempSignalID, lineGraph);
+                                            if (lineGraph != null)
+                                                m_lineGraphCollection.TryAdd(tempSignalID, lineGraph);
 
-                                        measurement.Foreground = (SolidColorBrush)lineGraph.LinePen.Brush;
-                                    });
+                                            measurement.Foreground = (SolidColorBrush)lineGraph.LinePen.Brush;
+                                        });
                                 }
                             }
 
@@ -680,7 +681,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void m_subscriber_ProcessingComplete(object sender, EventArgs<string> e)
         {
-            Dispatcher.BeginInvoke(new Action(delegate {
+            Dispatcher.BeginInvoke(new Action(delegate
+            {
                 ButtonReturnToRealtime_Click(null, null);
             }));
         }
@@ -748,27 +750,27 @@ namespace GSF.PhasorProtocols.UI.UserControls
                         {
                             Dispatcher.BeginInvoke(new Action(delegate
                                 {
-                                string startTime = TextBoxStartTime.Text;
-                                string stopTime = TextBoxStopTime.Text;
-                                int processingInterval = int.Parse(TextBoxProcessInterval.Text);
+                                    string startTime = TextBoxStartTime.Text;
+                                    string stopTime = TextBoxStopTime.Text;
+                                    int processingInterval = int.Parse(TextBoxProcessInterval.Text);
 
-                                if (DateTime.Compare(AdapterBase.ParseTimeTag(startTime),
-                                                 AdapterBase.ParseTimeTag(stopTime)) < 0)
-                                {
-                                    ModeMessage.Text = "Initializing historical playback...";
+                                    if (DateTime.Compare(AdapterBase.ParseTimeTag(startTime),
+                                                     AdapterBase.ParseTimeTag(stopTime)) < 0)
+                                    {
+                                        ModeMessage.Text = "Initializing historical playback...";
 
-                                    //m_synchronizedSubscriber.SynchronizedSubscribe(true, m_framesPerSecond, m_lagTime, m_leadTime, m_selectedSignalIDs, null, m_useLocalClockAsRealtime, m_ignoreBadTimestamps, startTime: TextBoxStartTime.Text, stopTime: TextBoxStopTime.Text, processingInterval: (int)SliderProcessInterval.Value);
-                                    m_subscriber.UnsynchronizedSubscribe(true, false, m_selectedSignalIDs, null, true,
-                                                                         m_lagTime, m_leadTime,
-                                                                         m_useLocalClockAsRealtime, startTime, stopTime,
-                                                                         null, processingInterval);
-                                    m_waitingForData = true;
-                                }
-                                else
-                                {
-                                    MessageBox.Show("Start time must precede end time");
-                                }
-                            }));
+                                        //m_synchronizedSubscriber.SynchronizedSubscribe(true, m_framesPerSecond, m_lagTime, m_leadTime, m_selectedSignalIDs, null, m_useLocalClockAsRealtime, m_ignoreBadTimestamps, startTime: TextBoxStartTime.Text, stopTime: TextBoxStopTime.Text, processingInterval: (int)SliderProcessInterval.Value);
+                                        m_subscriber.UnsynchronizedSubscribe(true, false, m_selectedSignalIDs, null, true,
+                                                                             m_lagTime, m_leadTime,
+                                                                             m_useLocalClockAsRealtime, startTime, stopTime,
+                                                                             null, processingInterval);
+                                        m_waitingForData = true;
+                                    }
+                                    else
+                                    {
+                                        MessageBox.Show("Start time must precede end time");
+                                    }
+                                }));
                         }
                         else
                         {
@@ -777,7 +779,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
                         }
                     }
 
-                    ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate {
+                    ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate
+                    {
                         StartRefreshTimer();
                     });
                 }
@@ -804,7 +807,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ButtonHelp_Click(object sender, RoutedEventArgs e)
         {
-            PanAndZoomViewer viewer = new PanAndZoomViewer(new BitmapImage(new Uri(@"/openPDC.UI;component/Images/" + ((Button)sender).Tag, UriKind.Relative)), "Help Me Choose");
+            PanAndZoomViewer viewer = new PanAndZoomViewer(new BitmapImage(new Uri(@"/GSF.PhasorProtocols.UI;component/Images/" + ((Button)sender).Tag, UriKind.Relative)), "Help Me Choose");
             viewer.Owner = Window.GetWindow(this);
             viewer.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             viewer.Topmost = true;

@@ -135,7 +135,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (!CommonFunctions.CurrentPrincipal.IsInRole("Administrator,Editor"))
                 ButtonInputWizard.IsEnabled = false;
 
-            
+
 
             m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
 
@@ -209,7 +209,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_xAxisBindingCollection.SetXMapping(x => x);
 
             ComboBoxDevice.ItemsSource = Device.GetLookupList(null);
-            
+
             if (Application.Current.Resources.Contains("SelectedDevice_Home"))
                 ComboBoxDevice.SelectedIndex = (int)Application.Current.Resources["SelectedDevice_Home"];
             else
@@ -218,7 +218,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (Application.Current.Resources.Contains("SelectedMeasurement_Home"))
                 ComboBoxMeasurement.SelectedIndex = (int)Application.Current.Resources["SelectedMeasurement_Home"];
             else
-            ComboBoxMeasurement.SelectedIndex = 0;
+                ComboBoxMeasurement.SelectedIndex = 0;
         }
 
         void m_refreshTimer_Tick(object sender, EventArgs e)
@@ -297,16 +297,16 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void RestartService()
         {
-            if (MessageBox.Show("Do you want to restart openPDC service?", "Restart openPDC Service", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (MessageBox.Show("Do you want to restart service?", "Restart Service", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 if (m_windowsServiceClient != null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                 {
                     CommonFunctions.SendCommandToService("Restart");
-                    MessageBox.Show("Successfully sent RESTART command to openPDC service.", "Restart openPDC Service", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Successfully sent RESTART command to the service.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show("Failed sent RESTART command to openPDC service." + Environment.NewLine + "openPDC service is either offline or disconnected.", "Restart openPDC Service", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Failed sent RESTART command to the service." + Environment.NewLine + "Service is either offline or disconnected.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -327,21 +327,22 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 {
                     this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                        TextBlockSystemHealth.Text = e.Argument.Message.TrimEnd();
-                        GroupBoxSystemHealth.Header = "System Health (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
-                    });
+                            TextBlockSystemHealth.Text = e.Argument.Message.TrimEnd();
+                            GroupBoxSystemHealth.Header = "System Health (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
+                        });
                 }
                 else if (sourceCommand.ToLower() == "status")
                 {
                     this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                        GroupBoxStatus.Header = "System Status (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
-                        TextBlockStatus.Text = e.Argument.Message.TrimEnd();
-                    });
+                            GroupBoxStatus.Header = "System Status (Last Refreshed: " + DateTime.Now.ToString("HH:mm:ss.fff") + ")";
+                            TextBlockStatus.Text = e.Argument.Message.TrimEnd();
+                        });
                 }
                 else if (sourceCommand.ToLower() == "version")
                 {
-                    this.Dispatcher.BeginInvoke((Action)delegate {
+                    this.Dispatcher.BeginInvoke((Action)delegate
+                    {
                         TextBlockVersion.Text = e.Argument.Message.Substring(e.Argument.Message.ToLower().LastIndexOf("version:") + 8).Trim();
                     });
                 }
@@ -349,14 +350,14 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 {
                     this.Dispatcher.BeginInvoke((Action)delegate
                         {
-                        string[] times = Regex.Split(e.Argument.Message, "\r\n");
-                        if (times.Count() > 0)
-                        {
-                            string[] currentTimes = Regex.Split(times[0], ",");
-                            if (currentTimes.Count() > 0)
-                                TextBlockServerTime.Text = currentTimes[0].Substring(currentTimes[0].ToLower().LastIndexOf("system time:") + 12).Trim();
-                        }
-                    });
+                            string[] times = Regex.Split(e.Argument.Message, "\r\n");
+                            if (times.Count() > 0)
+                            {
+                                string[] currentTimes = Regex.Split(times[0], ",");
+                                if (currentTimes.Count() > 0)
+                                    TextBlockServerTime.Text = currentTimes[0].Substring(currentTimes[0].ToLower().LastIndexOf("system time:") + 12).Trim();
+                            }
+                        });
                 }
             }
         }
@@ -423,7 +424,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             ObservableCollection<Measurement> measurements = Measurement.Load(null, ((KeyValuePair<int, string>)ComboBoxDevice.SelectedItem).Key);
             ComboBoxMeasurement.ItemsSource = new ObservableCollection<Measurement>(measurements.Where(m => m.SignalSuffix == "PA" || m.SignalSuffix == "FQ"));
-            
+
 
             // assign selected value to device combo box
             if (Application.Current.Resources.Contains("SelectedDevice_Home"))
@@ -436,7 +437,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 ComboBoxMeasurement.SelectedIndex = (int)Application.Current.Resources["SelectedMeasurement_Home"];
             else
                 ComboBoxMeasurement.SelectedIndex = 0;
-            
+
         }
 
         #region [ Unsynchronized Subscription ]
@@ -447,7 +448,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
             UnsubscribeUnsynchronizedData();
             try
             {
-                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate {
+                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate
+                {
                     ChartPlotterDynamic.Children.Remove((IPlotterElement)m_lineGraph);
                 });
             }
@@ -561,7 +563,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 InitializeUnsynchronizedSubscription();
             try
             {
-                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate {
+                ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate
+                {
                     ChartPlotterDynamic.Children.Remove((IPlotterElement)m_lineGraph);
                 });
             }

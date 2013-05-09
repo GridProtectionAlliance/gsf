@@ -27,7 +27,7 @@ using System.Text;
 using GSF.IO.Checksums;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace GSF.Core.Tests.TVA.IO.Checksums
+namespace GSF.Core.Tests.GSF.IO.Checksums
 {
     /// <summary>
     /// This is a test class for Adler32 and is intended

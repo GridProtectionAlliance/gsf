@@ -72,10 +72,10 @@ namespace HistorianAdapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the host name or IP address of the TVA Historian.
+        /// Gets or sets the host name or IP address of the openHistorian.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the host name or IP address of the TVA Historian.")]
+        Description("Define the host name or IP address of the openHistorian.")]
         public string Server
         {
             get
@@ -89,10 +89,10 @@ namespace HistorianAdapters
         }
 
         /// <summary>
-        /// Gets or sets the port on which the TVA Historian is broadcasting data.
+        /// Gets or sets the port on which the openHistorian is broadcasting data.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the port on which the TVA Historian is broadcasting data.")]
+        Description("Define the port on which the openHistorian is broadcasting data.")]
         public int Port
         {
             get
@@ -106,10 +106,10 @@ namespace HistorianAdapters
         }
 
         /// <summary>
-        /// Gets or sets the type of connection used to connect to the TVA Historian.
+        /// Gets or sets the type of connection used to connect to the openHistorian.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the type of connection used to connect to the TVA Historian.")]
+        Description("Define the type of connection used to connect to the openHistorian.")]
         public TransportProtocol Protocol
         {
             get
@@ -123,10 +123,10 @@ namespace HistorianAdapters
         }
 
         /// <summary>
-        /// Gets or sets a value that indicates whether the listener will initiate the connection to the TVA Historian.
+        /// Gets or sets a value that indicates whether the listener will initiate the connection to the openHistorian.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Indicates whether the listener will initiate the connection to the TVA Historian.")]
+        Description("Indicates whether the listener will initiate the connection to the openHistorian.")]
         public bool InitiateConnection
         {
             get
@@ -193,7 +193,7 @@ namespace HistorianAdapters
             string port;
             string protocol;
             string outbound;
-            string message = "{0} is missing from Settings - Example: protocol=UDP;server=openpdc;port=2004;initiateConnection=True";
+            string message = "{0} is missing from Settings - Example: protocol=UDP;server=192.168.1.15;port=2004;initiateConnection=True";
             Dictionary<string, string> settings = Settings;
 
             // Validate settings.
@@ -296,10 +296,10 @@ namespace HistorianAdapters
                 {
                     measurements.Add(new Measurement
                         {
-                        Key = new MeasurementKey(Guid.Empty, (uint)dataPoint.HistorianID, m_historianDataListener.ID),
-                        Value = dataPoint.Value,
-                        Timestamp = dataPoint.Time
-                    });
+                            Key = new MeasurementKey(Guid.Empty, (uint)dataPoint.HistorianID, m_historianDataListener.ID),
+                            Value = dataPoint.Value,
+                            Timestamp = dataPoint.Time
+                        });
                 }
                 OnNewMeasurements(measurements);
             }
