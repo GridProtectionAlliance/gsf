@@ -181,9 +181,9 @@ namespace GSF.TimeSeries.UI
         /// Requests the status of the specified <paramref name="subscriberIDs"/>.
         /// </summary>
         /// <param name="subscriberIDs">Subscriber IDs to request status for.</param>
-        public void RequestSubsscriberStatus(IEnumerable<Guid> subscriberIDs)
+        public void RequestSubscriberStatus(IEnumerable<Guid> subscriberIDs)
         {
-            if ((object)subscriberIDs != null && subscriberIDs.Count() > 0)
+            if ((object)subscriberIDs != null && subscriberIDs.Any())
             {
                 // Create single item operation queue so that multiple requests will be handled one at a time
                 ThreadPool.QueueUserWorkItem(QueueStatusQuery, subscriberIDs.Distinct());
@@ -326,7 +326,7 @@ namespace GSF.TimeSeries.UI
                                 Arguments arguments = attachments[1] as Arguments;
 
                                 // Check the method that was invoked - the second argument after the adapter ID
-                                if (string.Compare(arguments["OrderedArg2"], "GetSubscriberStatus", true) == 0)
+                                if ((object)arguments != null && string.Compare(arguments["OrderedArg2"].ToNonNullString(), "GetSubscriberStatus", true) == 0)
                                 {
                                     Tuple<Guid, bool, string> subscriberStatus = attachments[0] as Tuple<Guid, bool, string>;
 
