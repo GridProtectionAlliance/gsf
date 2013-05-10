@@ -57,24 +57,17 @@ namespace GSF.TimeSeries
         {
             this.components = new System.ComponentModel.Container();
             this.m_clientHelper = new GSF.ServiceProcess.ClientHelper(this.components);
-            this.m_remotingClient = new GSF.Communication.TcpClient(this.components);
             this.m_errorLogger = new GSF.ErrorManagement.ErrorLogger(this.components);
+            this.m_remotingClient = new GSF.Communication.TlsClient(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.m_clientHelper)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_remotingClient)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_errorLogger)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_errorLogger.ErrorLog)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_remotingClient)).BeginInit();
             // 
             // m_clientHelper
             // 
             this.m_clientHelper.PersistSettings = true;
             this.m_clientHelper.RemotingClient = this.m_remotingClient;
-            // 
-            // m_remotingClient
-            // 
-            this.m_remotingClient.ConnectionString = "Server=localhost:8500";
-            this.m_remotingClient.PayloadAware = true;
-            this.m_remotingClient.PersistSettings = true;
-            this.m_remotingClient.SettingsCategory = "RemotingClient";
             // 
             // m_errorLogger
             // 
@@ -85,18 +78,25 @@ namespace GSF.TimeSeries
             this.m_errorLogger.LogToEventLog = false;
             this.m_errorLogger.LogToUI = true;
             this.m_errorLogger.PersistSettings = true;
+            // 
+            // m_remotingClient
+            // 
+            this.m_remotingClient.ConnectionString = "Server=localhost:8500";
+            this.m_remotingClient.PayloadAware = true;
+            this.m_remotingClient.PersistSettings = true;
+            this.m_remotingClient.SettingsCategory = "RemotingClient";
             ((System.ComponentModel.ISupportInitialize)(this.m_clientHelper)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_remotingClient)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_errorLogger.ErrorLog)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_errorLogger)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_remotingClient)).EndInit();
 
         }
 
         #endregion
 
         private GSF.ServiceProcess.ClientHelper m_clientHelper;
-        private GSF.Communication.TcpClient m_remotingClient;
         private GSF.ErrorManagement.ErrorLogger m_errorLogger;
+        private Communication.TlsClient m_remotingClient;
 
 
     }

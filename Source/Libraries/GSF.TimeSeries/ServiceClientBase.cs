@@ -28,11 +28,15 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Console;
 using GSF.Identity;
+using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security;
 using GSF.ServiceProcess;
@@ -95,6 +99,7 @@ namespace GSF.TimeSeries
         {
             string userInput = null;
             Arguments arguments = new Arguments(string.Join(" ", args));
+            SimplePolicyChecker policyChecker;
 
             if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
             {
@@ -187,6 +192,10 @@ namespace GSF.TimeSeries
                     m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
                 }
 
+                // Override remote certificate validation so that we always
+                // accept localhost, but fall back on SimplePolicyChecker.
+                m_remotingClient.RemoteCertificateValidationCallback = RemoteCertificateValidationCallback;
+
                 // Connect to service and send commands.
                 while (!m_clientHelper.Enabled)
                 {
@@ -234,6 +243,22 @@ namespace GSF.TimeSeries
                     m_innerLoopActive = false;
                 }
             }
+        }
+
+        private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            const string ServerRegex = @"tcp://localhost(?:\d+)?";
+            SimplePolicyChecker policyChecker;
+
+            if (!Regex.IsMatch(m_remotingClient.ServerUri, ServerRegex, RegexOptions.IgnoreCase))
+            {
+                policyChecker = new SimplePolicyChecker();
+                policyChecker.ValidPolicyErrors = m_remotingClient.ValidPolicyErrors;
+                policyChecker.ValidChainFlags = m_remotingClient.ValidChainFlags;
+                return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+            }
+
+            return true;
         }
 
         private void DisplayHelp()

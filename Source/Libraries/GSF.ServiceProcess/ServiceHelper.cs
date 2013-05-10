@@ -1980,7 +1980,7 @@ namespace GSF.ServiceProcess
         {
             ClientInfo requestSender = FindConnectedClient(e.Argument1);
 
-            TcpServer remotingServer = m_remotingServer as TcpServer;
+            TlsServer remotingServer = m_remotingServer as TlsServer;
             WindowsPrincipal clientPrincipal;
 
             if (requestSender == null)

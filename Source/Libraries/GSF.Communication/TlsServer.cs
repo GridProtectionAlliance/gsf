@@ -322,6 +322,8 @@ namespace GSF.Communication
         /// The certificate checker will only be used to validate certificates if
         /// the <see cref="RemoteCertificateValidationCallback"/> is set to null.
         /// </remarks>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ICertificateChecker CertificateChecker
         {
             get
@@ -337,6 +339,8 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the callback used to validate remote certificates.
         /// </summary>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RemoteCertificateValidationCallback RemoteCertificateValidationCallback
         {
             get
@@ -352,6 +356,8 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the callback used to select local certificates.
         /// </summary>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LocalCertificateSelectionCallback LocalCertificateSelectionCallback
         {
             get
@@ -367,6 +373,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the path to the certificate used for authentication.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(null),
+        Description("Path to the local certificate used by this server for authentication.")]
         public string CertificateFile
         {
             get
@@ -375,16 +384,26 @@ namespace GSF.Communication
             }
             set
             {
-                m_certificateFile = value;
+                if ((object)value == null)
+                {
+                    m_certificateFile = null;
+                    Certificate = null;
+                }
+                else
+                {
+                    m_certificateFile = FilePath.GetAbsolutePath(value);
 
-                if (File.Exists(value))
-                    Certificate = new X509Certificate2(value);
+                    if (File.Exists(m_certificateFile))
+                        Certificate = new X509Certificate2(m_certificateFile);
+                }
             }
         }
 
         /// <summary>
         /// Gets or sets the certificate used to identify this server.
         /// </summary>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public X509Certificate Certificate
         {
             get
@@ -400,6 +419,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a set of flags which determine the enabled <see cref="SslProtocols"/>.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(SslProtocols.Default),
+        Description("The set of SSL protocols that are enabled for this server.")]
         public SslProtocols EnabledSslProtocols
         {
             get
@@ -415,6 +437,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a flag that determines whether a client certificate is required during authentication.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(false),
+        Description("True if the client certificate is required during authentication, otherwise False.")]
         public bool RequireClientCertificate
         {
             get
@@ -430,6 +455,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that determines whether the certificate revocation list is checked during authentication.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(true),
+        Description("True if the certificate revocation list is to be checked during authentication, otherwise False.")]
         public bool CheckCertificateRevocation
         {
             get
@@ -445,6 +473,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the path to the directory containing the trusted certificates.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue("Trusted Certificates"),
+        Description("Path to the directory containing the trusted remote certificates.")]
         public string TrustedCertificatesPath
         {
             get
@@ -460,6 +491,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the set of valid policy errors when validating remote certificates.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(SslPolicyErrors.None),
+        Description("Set of valid policy errors when validating remote certificates.")]
         public SslPolicyErrors ValidPolicyErrors
         {
             get
@@ -475,6 +509,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the set of valid chain flags used when validating remote certificates.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(X509ChainStatusFlags.NoError),
+        Description("Set of valid chain flags used when validating remote certificates.")]
         public X509ChainStatusFlags ValidChainFlags
         {
             get
@@ -715,6 +752,25 @@ namespace GSF.Communication
                 tlsClient = clientInfo.Client;
             else
                 tlsClient = null;
+
+            return clientExists;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="WindowsPrincipal"/> object associated with the specified client ID.
+        /// </summary>
+        /// <param name="clientID">ID of the client.</param>
+        /// <param name="clientPrincipal">The principal of the client.</param>
+        /// <returns>A <see cref="WindowsPrincipal"/> object.</returns>
+        public bool TryGetClientPrincipal(Guid clientID, out WindowsPrincipal clientPrincipal)
+        {
+            TlsClientInfo clientInfo;
+            bool clientExists = m_clientInfoLookup.TryGetValue(clientID, out clientInfo);
+
+            if (clientExists)
+                clientPrincipal = clientInfo.ClientPrincipal;
+            else
+                clientPrincipal = null;
 
             return clientExists;
         }
@@ -976,7 +1032,7 @@ namespace GSF.Communication
             {
                 // Notify of the exception.
                 string clientAddress = remoteEndPoint.Address.ToString();
-                string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, CertificateChecker.ReasonForFailure ?? ex.Message);
+                string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, ex.Message);
                 OnClientConnectingException(new Exception(errorMessage, ex));
                 TerminateConnection(client, false);
             }
@@ -1322,8 +1378,11 @@ namespace GSF.Communication
                 m_defaultCertificateChecker.TrustedCertificates.Clear();
                 trustedCertificatesPath = FilePath.AddPathSuffix(FilePath.GetAbsolutePath(m_trustedCertificatesPath));
 
-                foreach (string fileName in FilePath.GetFileList(trustedCertificatesPath))
-                    m_defaultCertificateChecker.TrustedCertificates.Add(new X509Certificate2(fileName));
+                if (Directory.Exists(trustedCertificatesPath))
+                {
+                    foreach (string fileName in FilePath.GetFileList(trustedCertificatesPath))
+                        m_defaultCertificateChecker.TrustedCertificates.Add(new X509Certificate2(fileName));
+                }
             }
         }
 

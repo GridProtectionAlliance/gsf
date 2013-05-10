@@ -25,7 +25,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using GSF.Communication;
+using GSF.Net.Security;
 using GSF.ServiceProcess;
 
 namespace GSF.TimeSeries.UI
@@ -38,7 +41,7 @@ namespace GSF.TimeSeries.UI
         #region [ Members ]
 
         // Fields
-        private TcpClient m_remotingClient;
+        private TlsClient m_remotingClient;
         private ClientHelper m_clientHelper;
         private string m_cachedStatus;
         private readonly int m_statusBufferSize;
@@ -58,6 +61,10 @@ namespace GSF.TimeSeries.UI
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
             string setting;
 
+            SimplePolicyChecker policyChecker;
+            SslPolicyErrors validPolicyErrors;
+            X509ChainStatusFlags validChainFlags;
+
             if (settings.TryGetValue("statusBufferSize", out setting) && !string.IsNullOrWhiteSpace(setting))
                 m_statusBufferSize = int.Parse(setting);
             else
@@ -65,16 +72,28 @@ namespace GSF.TimeSeries.UI
 
             m_cachedStatus = string.Empty;
 
+            // Initialize TLS policy checker.
+            policyChecker = new SimplePolicyChecker();
+            policyChecker.ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
+            policyChecker.ValidChainFlags = X509ChainStatusFlags.UntrustedRoot;
+
             // Initialize remoting client socket.
-            m_remotingClient = new TcpClient();
+            m_remotingClient = new TlsClient();
             m_remotingClient.ConnectionString = connectionString;
+            m_remotingClient.PayloadAware = true;
+            m_remotingClient.MaxConnectionAttempts = -1;
+            m_remotingClient.CertificateChecker = policyChecker;
 
             // See if user wants to connect to remote service using integrated security
             if (settings.TryGetValue("integratedSecurity", out setting) && !string.IsNullOrWhiteSpace(setting))
                 m_remotingClient.IntegratedSecurity = setting.ParseBoolean();
 
-            m_remotingClient.PayloadAware = true;
-            m_remotingClient.MaxConnectionAttempts = -1;
+            // See if the user has explicitly defined valid policy errors or valid chain flags
+            if (settings.TryGetValue("validPolicyErrors", out setting) && Enum.TryParse(setting, out validPolicyErrors))
+                policyChecker.ValidPolicyErrors = validPolicyErrors;
+
+            if (settings.TryGetValue("validChainFlags", out setting) && Enum.TryParse(setting, out validChainFlags))
+                policyChecker.ValidChainFlags = validChainFlags;
 
             // Initialize windows service client.
             m_clientHelper = new ClientHelper();

@@ -137,6 +137,9 @@ namespace GSF.TimeSeries
         /// </summary>
         public ServiceHostBase()
         {
+            // Generate local certificate for remoting server
+            GenerateLocalCertificate();
+
             InitializeComponent();
 
             // Register service level event handlers
@@ -191,7 +194,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets reference to the <see cref="TcpServer"/> based remoting server.
         /// </summary>
-        protected TcpServer RemotingServer
+        protected TlsServer RemotingServer
         {
             get
             {
@@ -377,6 +380,7 @@ namespace GSF.TimeSeries
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
             m_configurationCacheComplete = new AutoResetEvent(true);
             m_queuedConfigurationCachePending = new object();
+            m_remotingServer.RemoteCertificateValidationCallback = (o, certificate, chain, errors) => true;
 
             // Setup default thread pool size
             try
@@ -641,6 +645,44 @@ namespace GSF.TimeSeries
         #endregion
 
         #region [ System Initialization ]
+
+        private static void GenerateLocalCertificate()
+        {
+            ConfigurationFile configurationFile = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection remotingServer = configurationFile.Settings["remotingServer"];
+
+            IPHostEntry hostEntry;
+            ProcessStartInfo processInfo;
+            Process makeCertProcess;
+            string certificatePath;
+            string makeCertPath;
+            string commonNameList;
+
+            remotingServer.Add("CertificateFile", "Internal.cer", "Path to the local certificate used by this server for authentication.");
+            certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
+            makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
+
+            if (!File.Exists(certificatePath) && File.Exists(makeCertPath))
+            {
+                hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+
+                commonNameList = hostEntry.AddressList
+                    .Select(address => address.ToString())
+                    .Concat(hostEntry.Aliases)
+                    .Concat(new string[] { hostEntry.HostName })
+                    .Select(commonName => "CN=" + commonName)
+                    .Aggregate((list, name) => list + ", " + name);
+
+                processInfo = new ProcessStartInfo(makeCertPath);
+                processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr LocalMachine \"{1}\"", commonNameList, certificatePath);
+                processInfo.UseShellExecute = true;
+                processInfo.Verb = "runas";
+
+                makeCertProcess = Process.Start(processInfo);
+                makeCertProcess.WaitForExit();
+                makeCertProcess.Dispose();
+            }
+        }
 
         // Perform system initialization
         private void InitializeSystem(object state)

@@ -641,14 +641,14 @@ namespace GSF.ServiceProcess
         private void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
             StringBuilder status = new StringBuilder();
-            TcpClient remotingClient;
+            TlsClient remotingClient;
 
             status.AppendFormat("Exception during connection attempt: {0}", e.Argument.Message);
             status.AppendLine();
             status.AppendLine();
             UpdateStatus(UpdateType.Alarm, status.ToString());
 
-            remotingClient = m_remotingClient as TcpClient;
+            remotingClient = m_remotingClient as TlsClient;
 
             if ((object)remotingClient != null)
                 remotingClient.NetworkCredential = null;

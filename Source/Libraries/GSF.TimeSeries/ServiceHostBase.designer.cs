@@ -110,7 +110,7 @@ namespace GSF.TimeSeries
         {
             this.components = new System.ComponentModel.Container();
             this.m_serviceHelper = new GSF.ServiceProcess.ServiceHelper(this.components);
-            this.m_remotingServer = new GSF.Communication.TcpServer(this.components);
+            this.m_remotingServer = new GSF.Communication.TlsServer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger.ErrorLog)).BeginInit();
@@ -149,12 +149,13 @@ namespace GSF.TimeSeries
             // 
             // m_remotingServer
             // 
+            this.m_remotingServer.CertificateFile = "Internal.cer";
             this.m_remotingServer.ConfigurationString = "Port=8500";
             this.m_remotingServer.PayloadAware = true;
             this.m_remotingServer.PersistSettings = true;
             this.m_remotingServer.SettingsCategory = "RemotingServer";
             // 
-            // ServiceHost
+            // ServiceHostBase
             // 
             this.ServiceName = "IaonHost";
             ((System.ComponentModel.ISupportInitialize)(this.m_serviceHelper.ErrorLogger.ErrorLog)).EndInit();
@@ -169,6 +170,6 @@ namespace GSF.TimeSeries
         #endregion
 
         private GSF.ServiceProcess.ServiceHelper m_serviceHelper;
-        private GSF.Communication.TcpServer m_remotingServer;
+        private Communication.TlsServer m_remotingServer;
     }
 }

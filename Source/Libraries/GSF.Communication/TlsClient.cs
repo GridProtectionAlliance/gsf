@@ -298,6 +298,8 @@ namespace GSF.Communication
         /// Gets or sets network credential that is used when
         /// <see cref="IntegratedSecurity"/> is set to <c>true</c>.
         /// </summary>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NetworkCredential NetworkCredential
         {
             get
@@ -317,6 +319,8 @@ namespace GSF.Communication
         /// The certificate checker will only be used to validate certificates if
         /// the <see cref="RemoteCertificateValidationCallback"/> is set to null.
         /// </remarks>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ICertificateChecker CertificateChecker
         {
             get
@@ -336,6 +340,8 @@ namespace GSF.Communication
         /// Setting this property overrides the validation
         /// callback in the <see cref="CertificateChecker"/>.
         /// </remarks>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RemoteCertificateValidationCallback RemoteCertificateValidationCallback
         {
             get
@@ -351,6 +357,8 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the callback used to select a local certificate.
         /// </summary>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LocalCertificateSelectionCallback LocalCertificateSelectionCallback
         {
             get
@@ -366,6 +374,7 @@ namespace GSF.Communication
         /// <summary>
         /// Gets the collection of X509 certificates for this client.
         /// </summary>
+        [Browsable(false)]
         public X509CertificateCollection ClientCertificates
         {
             get
@@ -377,6 +386,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a set of flags which determine the enabled <see cref="SslProtocols"/>.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(SslProtocols.Default),
+        Description("The set of SSL protocols that are enabled for this client.")]
         public SslProtocols EnabledSslProtocols
         {
             get
@@ -392,6 +404,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that determines whether the certificate revocation list is checked during authentication.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(true),
+        Description("True if the certificate revocation list is to be checked during authentication, otherwise False.")]
         public bool CheckCertificateRevocation
         {
             get
@@ -407,6 +422,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the path to the certificate used for authentication.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(null),
+        Description("Path to the certificate used by this client for authentication.")]
         public string CertificateFile
         {
             get
@@ -425,6 +443,8 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the local certificate selected by the default <see cref="LocalCertificateSelectionCallback"/>.
         /// </summary>
+        [Browsable(false),
+        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public X509Certificate Certificate
         {
             get
@@ -440,6 +460,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the path to the directory containing the trusted certificates.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue("Trusted Certificates"),
+        Description("Path to the directory containing the trusted remote certificates.")]
         public string TrustedCertificatesPath
         {
             get
@@ -455,6 +478,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the set of valid policy errors when validating remote certificates.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(SslPolicyErrors.None),
+        Description("Set of valid policy errors when validating remote certificates.")]
         public SslPolicyErrors ValidPolicyErrors
         {
             get
@@ -470,6 +496,9 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets the set of valid chain flags used when validating remote certificates.
         /// </summary>
+        [Category("Settings"),
+        DefaultValue(X509ChainStatusFlags.NoError),
+        Description("Set of valid chain flags used when validating remote certificates.")]
         public X509ChainStatusFlags ValidChainFlags
         {
             get
@@ -978,7 +1007,7 @@ namespace GSF.Communication
             }
             catch (Exception ex)
             {
-                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", CertificateChecker.ReasonForFailure ?? ex.Message);
+                string errorMessage = string.Format("Unable to authenticate connection to server: {0}", ex.Message);
                 OnConnectionException(new Exception(errorMessage, ex));
                 TerminateConnection();
             }
