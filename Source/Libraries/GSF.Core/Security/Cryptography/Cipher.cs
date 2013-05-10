@@ -435,7 +435,7 @@ namespace GSF.Security.Cryptography
             double retryDelayInterval = DefaultRetryDelayInterval;
             int maximumRetryAttempts = DefaultMaximumRetryAttempts;
             string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
-            string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
+            string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FIPSAlgorithmPolicy";
 
             // Load cryptographic settings
             ConfigurationFile config = ConfigurationFile.Current;
@@ -450,7 +450,7 @@ namespace GSF.Security.Cryptography
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
             // Determine if the user needs to use FIPS-compliant algorithms.
-            s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FipsAlgorithmPolicy", 0)).ToString() == "0";
+            s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FIPSAlgorithmPolicy", 0)).ToString() == "0";
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
             localKeyIVCache = new KeyIVCache
@@ -475,14 +475,7 @@ namespace GSF.Security.Cryptography
             try
             {
                 // Validate that user has write access to the local cryptographic cache folder
-                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid().ToString() + ".tmp";
-
-                using (File.Create(tempFile))
-                {
-                }
-
-                if (File.Exists(tempFile))
-                    File.Delete(tempFile);
+                System.Security.AccessControl.DirectorySecurity ds = Directory.GetAccessControl(FilePath.GetDirectoryName(localCacheFileName));
 
                 // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
                 s_keyIVCache = localKeyIVCache;
