@@ -646,10 +646,11 @@ namespace GSF.TimeSeries
 
         #region [ System Initialization ]
 
-        private static void GenerateLocalCertificate()
+        private void GenerateLocalCertificate()
         {
-            ConfigurationFile configurationFile = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection remotingServer = configurationFile.Settings["remotingServer"];
+            string serviceName = "IaonHost";
+            ConfigurationFile configurationFile;
+            CategorizedSettingsElementCollection remotingServer;
 
             IPHostEntry hostEntry;
             ProcessStartInfo processInfo;
@@ -658,29 +659,43 @@ namespace GSF.TimeSeries
             string makeCertPath;
             string commonNameList;
 
-            remotingServer.Add("CertificateFile", "Internal.cer", "Path to the local certificate used by this server for authentication.");
-            certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
-            makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
-
-            if (!File.Exists(certificatePath) && File.Exists(makeCertPath))
+            try
             {
-                hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+                serviceName = FilePath.GetFileNameWithoutExtension(AssemblyInfo.EntryAssembly.Location);
 
-                commonNameList = hostEntry.AddressList
-                    .Select(address => address.ToString())
-                    .Concat(hostEntry.Aliases)
-                    .Concat(new string[] { hostEntry.HostName })
-                    .Select(commonName => "CN=" + commonName)
-                    .Aggregate((list, name) => list + ", " + name);
+                configurationFile = ConfigurationFile.Current;
+                remotingServer = configurationFile.Settings["remotingServer"];
 
-                processInfo = new ProcessStartInfo(makeCertPath);
-                processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr LocalMachine \"{1}\"", commonNameList, certificatePath);
-                processInfo.UseShellExecute = true;
-                processInfo.Verb = "runas";
+                remotingServer.Add("CertificateFile", "Internal.cer", "Path to the local certificate used by this server for authentication.");
+                certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
+                makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
 
-                makeCertProcess = Process.Start(processInfo);
-                makeCertProcess.WaitForExit();
-                makeCertProcess.Dispose();
+                if (!File.Exists(certificatePath) && File.Exists(makeCertPath))
+                {
+                    hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+
+                    commonNameList = hostEntry.AddressList
+                        .Select(address => address.ToString())
+                        .Concat(hostEntry.Aliases)
+                        .Concat(new string[] { hostEntry.HostName })
+                        .Select(commonName => "CN=" + commonName)
+                        .Aggregate((list, name) => list + ", " + name);
+
+                    processInfo = new ProcessStartInfo(makeCertPath);
+                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr LocalMachine \"{1}\"", commonNameList, certificatePath);
+                    processInfo.UseShellExecute = true;
+                    processInfo.Verb = "runas";
+
+                    makeCertProcess = Process.Start(processInfo);
+                    makeCertProcess.WaitForExit();
+                    makeCertProcess.Dispose();
+
+                    EventLog.WriteEntry(serviceName, string.Format("Created self-signed certificate for service: \"{0}\"", certificatePath), EventLogEntryType.Information, 0);
+                }
+            }
+            catch (Exception ex)
+            {
+                EventLog.WriteEntry(serviceName, string.Format("{0}{1}{2}", ex.Message, Environment.NewLine, ex.StackTrace), EventLogEntryType.Error, 0);
             }
         }
 
