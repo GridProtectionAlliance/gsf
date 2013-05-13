@@ -143,7 +143,7 @@ namespace GSF.Communication
             m_defaultCertificateChecker = new SimpleCertificateChecker();
             m_localCertificateSelectionCallback = DefaultLocalCertificateSelectionCallback;
             m_clientCertificates = new X509Certificate2Collection();
-            m_enabledSslProtocols = SslProtocols.Default;
+            m_enabledSslProtocols = SslProtocols.Tls12;
             m_checkCertificateRevocation = true;
 
             m_trustedCertificatesPath = DefaultTrustedCertificatesPath;
@@ -387,7 +387,7 @@ namespace GSF.Communication
         /// Gets or sets a set of flags which determine the enabled <see cref="SslProtocols"/>.
         /// </summary>
         [Category("Settings"),
-        DefaultValue(SslProtocols.Default),
+        DefaultValue(SslProtocols.Tls12),
         Description("The set of SSL protocols that are enabled for this client.")]
         public SslProtocols EnabledSslProtocols
         {
