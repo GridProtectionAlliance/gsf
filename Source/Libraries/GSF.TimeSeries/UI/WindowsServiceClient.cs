@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Security;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using GSF.Communication;
 using GSF.Net.Security;
@@ -62,6 +63,7 @@ namespace GSF.TimeSeries.UI
             string setting;
 
             SimplePolicyChecker policyChecker;
+            SslProtocols enabledSslProtocols;
             SslPolicyErrors validPolicyErrors;
             X509ChainStatusFlags validChainFlags;
 
@@ -87,6 +89,10 @@ namespace GSF.TimeSeries.UI
             // See if user wants to connect to remote service using integrated security
             if (settings.TryGetValue("integratedSecurity", out setting) && !string.IsNullOrWhiteSpace(setting))
                 m_remotingClient.IntegratedSecurity = setting.ParseBoolean();
+
+            // See if the user has explicitly defined the set of enabled SslProtocols
+            if (settings.TryGetValue("enabledSslProtocols", out setting) && Enum.TryParse(setting, out enabledSslProtocols))
+                m_remotingClient.EnabledSslProtocols = enabledSslProtocols;
 
             // See if the user has explicitly defined valid policy errors or valid chain flags
             if (settings.TryGetValue("validPolicyErrors", out setting) && Enum.TryParse(setting, out validPolicyErrors))
