@@ -99,7 +99,6 @@ namespace GSF.TimeSeries
         {
             string userInput = null;
             Arguments arguments = new Arguments(string.Join(" ", args));
-            SimplePolicyChecker policyChecker;
 
             if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
             {
@@ -247,18 +246,25 @@ namespace GSF.TimeSeries
 
         private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            const string ServerRegex = @"tcp://localhost(?:\d+)?";
+            IPEndPoint remoteEndPoint = m_remotingClient.Client.RemoteEndPoint as IPEndPoint;
+            IPHostEntry localhost;
             SimplePolicyChecker policyChecker;
 
-            if (!Regex.IsMatch(m_remotingClient.ServerUri, ServerRegex, RegexOptions.IgnoreCase))
+            if ((object)remoteEndPoint != null)
             {
-                policyChecker = new SimplePolicyChecker();
-                policyChecker.ValidPolicyErrors = m_remotingClient.ValidPolicyErrors;
-                policyChecker.ValidChainFlags = m_remotingClient.ValidChainFlags;
-                return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+                // Create an exception and do not check policy for localhost
+                localhost = Dns.GetHostEntry("localhost");
+
+                if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
+                    return true;
             }
 
-            return true;
+            // Not connected to localhost, so use the policy checker
+            policyChecker = new SimplePolicyChecker();
+            policyChecker.ValidPolicyErrors = m_remotingClient.ValidPolicyErrors;
+            policyChecker.ValidChainFlags = m_remotingClient.ValidChainFlags;
+
+            return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
         }
 
         private void DisplayHelp()
