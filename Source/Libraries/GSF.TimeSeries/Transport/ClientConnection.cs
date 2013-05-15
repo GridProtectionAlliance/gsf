@@ -202,6 +202,7 @@ namespace GSF.TimeSeries.Transport
                 if (m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
+                    m_dataChannel.ClientConnectingException -= m_dataChannel_ClientConnectingException;
                     m_dataChannel.SendClientDataException -= m_dataChannel_SendClientDataException;
                     m_dataChannel.ServerStarted -= m_dataChannel_ServerStarted;
                     m_dataChannel.ServerStopped -= m_dataChannel_ServerStopped;
@@ -219,6 +220,7 @@ namespace GSF.TimeSeries.Transport
                     m_configurationString = m_dataChannel.ConfigurationString;
 
                     // Attach to events on new data channel reference
+                    m_dataChannel.ClientConnectingException += m_dataChannel_ClientConnectingException;
                     m_dataChannel.SendClientDataException += m_dataChannel_SendClientDataException;
                     m_dataChannel.ServerStarted += m_dataChannel_ServerStarted;
                     m_dataChannel.ServerStopped += m_dataChannel_ServerStopped;
@@ -753,6 +755,12 @@ namespace GSF.TimeSeries.Transport
         {
             // Send a no-op keep-alive ping to make sure the client is still connected
             m_parent.SendClientResponse(m_clientID, ServerResponse.NoOP, ServerCommand.Subscribe);
+        }
+
+        private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+            m_parent.OnProcessException(new InvalidOperationException(string.Format("Data channel exception occurred while sending client data to \"{0}\": {1}", m_connectionID, ex.Message), ex));
         }
 
         private void m_dataChannel_SendClientDataException(object sender, EventArgs<Guid, Exception> e)

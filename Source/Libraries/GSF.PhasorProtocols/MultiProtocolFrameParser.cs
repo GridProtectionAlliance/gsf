@@ -3402,6 +3402,7 @@ namespace GSF.PhasorProtocols
                 // Setup event handlers
                 m_serverBasedDataChannel.ClientConnected += m_serverBasedDataChannel_ClientConnected;
                 m_serverBasedDataChannel.ClientDisconnected += m_serverBasedDataChannel_ClientDisconnected;
+                m_serverBasedDataChannel.ClientConnectingException += m_serverBasedDataChannel_ClientConnectingException;
                 m_serverBasedDataChannel.ServerStarted += m_serverBasedDataChannel_ServerStarted;
                 m_serverBasedDataChannel.ServerStopped += m_serverBasedDataChannel_ServerStopped;
                 m_serverBasedDataChannel.ReceiveClientData += m_serverBasedDataChannel_ReceiveClientData;
@@ -3521,6 +3522,7 @@ namespace GSF.PhasorProtocols
                 {
                     m_serverBasedDataChannel.ClientConnected -= m_serverBasedDataChannel_ClientConnected;
                     m_serverBasedDataChannel.ClientDisconnected -= m_serverBasedDataChannel_ClientDisconnected;
+                    m_serverBasedDataChannel.ClientConnectingException -= m_serverBasedDataChannel_ClientConnectingException;
                     m_serverBasedDataChannel.ServerStarted -= m_serverBasedDataChannel_ServerStarted;
                     m_serverBasedDataChannel.ServerStopped -= m_serverBasedDataChannel_ServerStopped;
                     m_serverBasedDataChannel.ReceiveClientData -= m_serverBasedDataChannel_ReceiveClientData;
@@ -4267,6 +4269,14 @@ namespace GSF.PhasorProtocols
                 ConnectionTerminated(this, EventArgs.Empty);
         }
 
+        private void m_serverBasedDataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+
+            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
+                OnParsingException(ex, "Server based data channel send exception: {0}", ex.Message);
+        }
+
         private void m_serverBasedDataChannel_ServerStarted(object sender, EventArgs e)
         {
             if ((object)ServerStarted != null)
@@ -4284,7 +4294,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument2;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument2, "Server based data channel send exception: {0}", ex.Message);
+                OnParsingException(ex, "Server based data channel send exception: {0}", ex.Message);
         }
 
         private void m_serverBasedDataChannel_ReceiveClientDataException(object sender, EventArgs<Guid, Exception> e)
@@ -4292,7 +4302,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument2;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument2, "Server based data channel receive exception: {0}", ex.Message);
+                OnParsingException(ex, "Server based data channel receive exception: {0}", ex.Message);
         }
 
         private void m_serverBasedDataChannel_UnhandledUserException(object sender, EventArgs<Exception> e)
@@ -4300,7 +4310,7 @@ namespace GSF.PhasorProtocols
             Exception ex = e.Argument;
 
             if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException))
-                OnParsingException(e.Argument, "Server based data channel user unhandled exception: {0}", ex.Message);
+                OnParsingException(ex, "Server based data channel user unhandled exception: {0}", ex.Message);
         }
 
         #endregion

@@ -545,6 +545,7 @@ namespace PhasorProtocolAdapters
                 if (m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
+                    m_dataChannel.ClientConnectingException -= m_dataChannel_ClientConnectingException;
                     m_dataChannel.ReceiveClientDataComplete -= m_dataChannel_ReceiveClientDataComplete;
                     m_dataChannel.SendClientDataException -= m_dataChannel_SendClientDataException;
                     m_dataChannel.ServerStarted -= m_dataChannel_ServerStarted;
@@ -560,6 +561,7 @@ namespace PhasorProtocolAdapters
                 if (m_dataChannel != null)
                 {
                     // Attach to events on new data channel reference
+                    m_dataChannel.ClientConnectingException += m_dataChannel_ClientConnectingException;
                     m_dataChannel.ReceiveClientDataComplete += m_dataChannel_ReceiveClientDataComplete;
                     m_dataChannel.SendClientDataException += m_dataChannel_SendClientDataException;
                     m_dataChannel.ServerStarted += m_dataChannel_ServerStarted;
@@ -584,6 +586,7 @@ namespace PhasorProtocolAdapters
                     // Detach from events on existing command channel reference
                     m_commandChannel.ClientConnected -= m_commandChannel_ClientConnected;
                     m_commandChannel.ClientDisconnected -= m_commandChannel_ClientDisconnected;
+                    m_commandChannel.ClientConnectingException -= m_commandChannel_ClientConnectingException;
                     m_commandChannel.ReceiveClientDataComplete -= m_commandChannel_ReceiveClientDataComplete;
                     m_commandChannel.SendClientDataException -= m_commandChannel_SendClientDataException;
                     m_commandChannel.ServerStarted -= m_commandChannel_ServerStarted;
@@ -601,6 +604,7 @@ namespace PhasorProtocolAdapters
                     // Attach to events on new command channel reference
                     m_commandChannel.ClientConnected += m_commandChannel_ClientConnected;
                     m_commandChannel.ClientDisconnected += m_commandChannel_ClientDisconnected;
+                    m_commandChannel.ClientConnectingException += m_commandChannel_ClientConnectingException;
                     m_commandChannel.ReceiveClientDataComplete += m_commandChannel_ReceiveClientDataComplete;
                     m_commandChannel.SendClientDataException += m_commandChannel_SendClientDataException;
                     m_commandChannel.ServerStarted += m_commandChannel_ServerStarted;
@@ -1987,6 +1991,12 @@ namespace PhasorProtocolAdapters
 
         #region [ Data Channel Event Handlers ]
 
+        private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+            OnProcessException(new InvalidOperationException(string.Format("Exception occurred while connecting client to data channel: {0}", ex.Message), ex));
+        }
+
         private void m_dataChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
             // Queue up derived class device command handling on a different thread since this will
@@ -2045,6 +2055,12 @@ namespace PhasorProtocolAdapters
             OnStatusMessage("Client \"{0}\" disconnected from command channel.", GetConnectionID(m_commandChannel, clientID));
 
             m_connectionIDCache.TryRemove(clientID, out connectionID);
+        }
+
+        private void m_commandChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+            OnProcessException(new InvalidOperationException(string.Format("Socket exception occurred while attempting to client to command channel: {0}", ex.Message), ex));
         }
 
         private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)

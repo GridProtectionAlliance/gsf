@@ -1004,6 +1004,7 @@ namespace GSF.TimeSeries.Transport
                     // Detach from events on existing command channel reference
                     m_commandChannel.ClientConnected -= m_commandChannel_ClientConnected;
                     m_commandChannel.ClientDisconnected -= m_commandChannel_ClientDisconnected;
+                    m_commandChannel.ClientConnectingException -= m_commandChannel_ClientConnectingException;
                     m_commandChannel.ReceiveClientDataComplete -= m_commandChannel_ReceiveClientDataComplete;
                     m_commandChannel.ReceiveClientDataException -= m_commandChannel_ReceiveClientDataException;
                     m_commandChannel.SendClientDataException -= m_commandChannel_SendClientDataException;
@@ -1022,6 +1023,7 @@ namespace GSF.TimeSeries.Transport
                     // Attach to desired events on new command channel reference
                     m_commandChannel.ClientConnected += m_commandChannel_ClientConnected;
                     m_commandChannel.ClientDisconnected += m_commandChannel_ClientDisconnected;
+                    m_commandChannel.ClientConnectingException += m_commandChannel_ClientConnectingException;
                     m_commandChannel.ReceiveClientDataComplete += m_commandChannel_ReceiveClientDataComplete;
                     m_commandChannel.ReceiveClientDataException += m_commandChannel_ReceiveClientDataException;
                     m_commandChannel.SendClientDataException += m_commandChannel_SendClientDataException;
@@ -3319,6 +3321,12 @@ namespace GSF.TimeSeries.Transport
                 // Process exception for logging
                 OnProcessException(new InvalidOperationException("Failed to queue client disconnect due to exception: " + ex.Message, ex));
             }
+        }
+
+        private void m_commandChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
+        {
+            Exception ex = e.Argument;
+            OnProcessException(new InvalidOperationException("Data publisher encountered an exception while connecting client to the command channel: " + ex.Message, ex));
         }
 
         private void m_commandChannel_ServerStarted(object sender, EventArgs e)
