@@ -67,7 +67,7 @@ namespace DataQualityMonitoring
         public AlarmAdapter()
         {
             m_measurementQueue = new AsyncQueue<IEnumerable<IMeasurement>>
-                {
+            {
                 ProcessItemFunction = ProcessMeasurements
             };
 
@@ -139,7 +139,9 @@ namespace DataQualityMonitoring
             m_alarmLookup = new Dictionary<Guid, List<Alarm>>();
 
             foreach (Guid signalID in m_alarms.Select(alarm => alarm.SignalID).Distinct())
+            {
                 m_alarmLookup.Add(signalID, m_alarms.Where(alarm => alarm.SignalID == signalID).ToList());
+            }
 
             if (m_alarms.Count > 0)
             {
@@ -230,6 +232,7 @@ namespace DataQualityMonitoring
         /// Gets a collection containing all the raised alarms in the system.
         /// </summary>
         /// <returns>A collection containing all the raised alarms.</returns>
+        [AdapterCommand("Gets a collection containing all the raised alarms in the system.")]
         public ICollection<Alarm> GetRaisedAlarms()
         {
             lock (m_alarms)
@@ -239,13 +242,38 @@ namespace DataQualityMonitoring
             }
         }
 
+        /// <summary>
+        /// Gets a collection containing raised alarms with the highest severity for each signal in the system. 
+        /// </summary>
+        /// <returns>A collection containing all the highest severity raised alarms.</returns>
+        [AdapterCommand("Gets a collection containing raised alarms with the highest severity for each signal in the system.")]
+        public ICollection<Alarm> GetHighestSeverityAlarms()
+        {
+            ICollection<Alarm> alarms = GetRaisedAlarms();
+            IEnumerable<Guid> signals = alarms.Select(a => a.SignalID).Distinct();
+            IEnumerable<Alarm> highestSeverityAlarms = new List<Alarm>();
+
+            IEnumerable<Alarm> filteredAlarms;
+            AlarmSeverity highestSeverity;
+
+            foreach (Guid signal in signals)
+            {
+                filteredAlarms = alarms.Where(a => a.SignalID == signal);
+                highestSeverity = filteredAlarms.Select(a => a.Severity).Max();
+                highestSeverityAlarms = highestSeverityAlarms.Concat(filteredAlarms.Where(a => a.Severity == highestSeverity)).ToList();
+            }
+
+            return highestSeverityAlarms.ToList();
+        }
+
+
         // Creates an alarm using data defined in the database.
         private Alarm CreateAlarm(DataRow row)
         {
             object associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
 
             return new Alarm
-                {
+            {
                 ID = row.ConvertField<int>("ID"),
                 TagName = row.Field<object>("TagName").ToString(),
                 SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
@@ -291,14 +319,14 @@ namespace DataQualityMonitoring
                 foreach (Alarm alarm in raisedAlarms)
                 {
                     alarmEvent = new Measurement
-                        {
+                    {
                         Timestamp = measurement.Timestamp,
                         Value = (int)alarm.State
                     };
 
                     if ((object)alarm.AssociatedMeasurementID != null)
                     {
-                        alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
+                        alarmEvent.ID = alarm.AssociatedMeasurementID.GetValueOrDefault();
                         alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
                     }
 

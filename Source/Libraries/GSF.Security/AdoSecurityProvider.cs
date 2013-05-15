@@ -36,7 +36,6 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Security;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web.Security;
@@ -554,7 +553,7 @@ namespace GSF.Security
                 // Attempt to write success or failure to the event log
                 try
                 {
-                    EventLog.WriteEntry(ApplicationName, message, entryType, 1);
+                    LogEvent(ApplicationName, message, entryType, 1);
                 }
                 catch (Exception ex)
                 {
@@ -673,7 +672,7 @@ namespace GSF.Security
                 // Log granted role access to event log
                 try
                 {
-                    EventLog.WriteEntry(ApplicationName, message, entryType, 0);
+                    LogEvent(ApplicationName, message, entryType, 0);
                 }
                 catch (Exception ex)
                 {
@@ -690,9 +689,10 @@ namespace GSF.Security
             }
         }
 
+        // This will be removed from future builds
         private string EncryptBackwardsCompatible(string password)
         {
-            #pragma warning disable 612, 618
+#pragma warning disable 612, 618
             return FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + password, "SHA1");
         }
 

@@ -28,11 +28,21 @@
 //
 //******************************************************************************************************
 
+using System.Diagnostics;
 using System.Security;
 using GSF.Configuration;
 
 namespace GSF.Security
-{   
+{
+    /// <summary>
+    /// Defines the function signature delegate used for logging events from the <see cref="ISecurityProvider"/>.
+    /// </summary>
+    /// <param name="source">The source by which the application is registered on the specified computer.</param>
+    /// <param name="message">The string to write to the event log.</param>
+    /// <param name="type">One of the <see cref="EventLogEntryType"/> values.</param>
+    /// <param name="eventID">The application-specific identifier for the event.</param>
+    public delegate void LogEventFunctionSignature(string source, string message, EventLogEntryType type, int eventID);
+
     /// <summary>
     /// Defines a provider of role-based security in applications.
     /// </summary>
@@ -43,52 +53,98 @@ namespace GSF.Security
         /// <summary>
         /// Gets or sets the name of the application being secured as defined in the backend security datastore.
         /// </summary>
-        string ApplicationName { get; set; }
+        string ApplicationName
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the connection string to be used for connection to the backend security datastore.
         /// </summary>
-        string ConnectionString { get; set; }
+        string ConnectionString
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the password as a <see cref="SecureString"/>.
         /// </summary>
-        SecureString SecurePassword { get; set; }
+        SecureString SecurePassword
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets <see cref="SecurePassword"/> as cleartext password.
         /// </summary>
-        string Password { get; set; }
+        string Password
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the <see cref="UserData"/> object containing information about the user.
         /// </summary>
-        UserData UserData { get; }
+        UserData UserData
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
         /// </summary>
-        bool CanRefreshData { get; }
+        bool CanRefreshData
+        {
+            get;
+        }
 
         /// <summary>
         /// Geta a boolean value that indicates whether <see cref="UpdateData"/> operation is supported.
         /// </summary>
-        bool CanUpdateData { get; }
+        bool CanUpdateData
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
         /// </summary>
-        bool CanResetPassword { get; }
+        bool CanResetPassword
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets a boolean value that indicates whether <see cref="ChangePassword"/> operation is supported.
         /// </summary>
-        bool CanChangePassword { get; }
+        bool CanChangePassword
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets an authentication failure reason, if set by the provider when authentication fails.
         /// </summary>
-        string AuthenticationFailureReason { get; }
+        string AuthenticationFailureReason
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="LogEventFunctionSignature"/> to use for logging security events for the <see cref="SecurityProviderBase"/> implementation.
+        /// </summary>
+        /// <remarks>
+        /// Set <see cref="LogEvent"/> to <c>null</c> to use default handler, i.e., <see cref="EventLog.WriteEntry(string,string,EventLogEntryType,int)."/>.
+        /// </remarks>
+        LogEventFunctionSignature LogEvent
+        {
+            get;
+            set;
+        }
 
         #endregion
 

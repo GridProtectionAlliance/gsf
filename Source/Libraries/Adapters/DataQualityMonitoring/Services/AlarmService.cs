@@ -24,11 +24,8 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.ServiceModel;
 using GSF.ServiceModel;
-using GSF.TimeSeries;
 
 namespace DataQualityMonitoring.Services
 {
@@ -131,21 +128,7 @@ namespace DataQualityMonitoring.Services
         // Reads the raised alarms with the highest severity for each signal from the <see cref="AlarmAdapter"/>.
         private SerializableAlarmCollection ReadHighestSeverityAlarms()
         {
-            ICollection<Alarm> alarms = AlarmAdapter.GetRaisedAlarms();
-            IEnumerable<Guid> signals = alarms.Select(a => a.SignalID).Distinct();
-            IEnumerable<Alarm> highestSeverityAlarms = new List<Alarm>();
-
-            IEnumerable<Alarm> filteredAlarms;
-            AlarmSeverity highestSeverity;
-
-            foreach (Guid signal in signals)
-            {
-                filteredAlarms = alarms.Where(a => a.SignalID == signal);
-                highestSeverity = filteredAlarms.Select(a => a.Severity).Max();
-                highestSeverityAlarms = highestSeverityAlarms.Concat(filteredAlarms.Where(a => a.Severity == highestSeverity)).ToList();
-            }
-
-            return new SerializableAlarmCollection(highestSeverityAlarms.ToList());
+            return new SerializableAlarmCollection(AlarmAdapter.GetHighestSeverityAlarms());
         }
 
         #endregion

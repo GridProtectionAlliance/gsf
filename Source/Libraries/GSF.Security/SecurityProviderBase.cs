@@ -42,6 +42,7 @@
 
 using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 using GSF.Configuration;
@@ -190,6 +191,7 @@ namespace GSF.Security
         private readonly bool m_canUpdateData;
         private readonly bool m_canResetPassword;
         private readonly bool m_canChangePassword;
+        private LogEventFunctionSignature m_logEvent;
         private bool m_enabled;
         private bool m_initialized;
         private bool m_disposed;
@@ -218,6 +220,7 @@ namespace GSF.Security
             m_connectionString = DefaultConnectionString;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
+            m_logEvent = EventLog.WriteEntry;
         }
 
         /// <summary>
@@ -318,6 +321,27 @@ namespace GSF.Security
                     securePassword.AppendChar(c);
 
                 SecurePassword = securePassword;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="LogEventFunctionSignature"/> to use for logging security events for the <see cref="SecurityProviderBase"/> implementation.
+        /// </summary>
+        /// <remarks>
+        /// Set <see cref="LogEvent"/> to <c>null</c> to use default handler, i.e., <see cref="EventLog.WriteEntry(string,string,EventLogEntryType,int)."/>.
+        /// </remarks>
+        public virtual LogEventFunctionSignature LogEvent
+        {
+            get
+            {
+                return m_logEvent;
+            }
+            set
+            {
+                if ((object)value == null)
+                    m_logEvent = EventLog.WriteEntry;
+                else
+                    m_logEvent = value;
             }
         }
 
