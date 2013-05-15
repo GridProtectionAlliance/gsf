@@ -31,6 +31,7 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
@@ -63,7 +64,7 @@ namespace GSF.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="TrustedCertificatesPath"/> property.
         /// </summary>
-        public readonly string DefaultTrustedCertificatesPath = FilePath.GetAbsolutePath("Trusted Certificates");
+        public readonly string DefaultTrustedCertificatesPath = FilePath.GetAbsolutePath(@"Certs\Remotes");
 
         /// <summary>
         /// Specifies the default value for the <see cref="PayloadAware"/> property.
@@ -606,6 +607,11 @@ namespace GSF.Communication
                 IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
                 AllowDualStackSocket = settings["AllowDualStackSocket"].ValueAs(m_allowDualStackSocket);
                 MaxSendQueueSize = settings["MaxSendQueueSize"].ValueAs(m_maxSendQueueSize);
+            }
+
+            if (!FilePath.InApplicationPath(TrustedCertificatesPath))
+            {
+                OnConnectionException(new SecurityException(string.Format("Trusted Certificates Path ({0}) is not in Application Path", TrustedCertificatesPath)));
             }
         }
 
