@@ -103,7 +103,7 @@
     <Compile Include="MeasurementLookup.cs" />
     <Compile Include="MeasurementMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TsfDataAdapter.cs" />
+    <Compile Include="TimeSeriesDataObserver.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">

@@ -125,20 +125,20 @@ namespace Dnp3Adapters
         {
             base.Initialize();
                         
-            this.Settings.TryGetValue("commsFile", out this.m_commsFileName);
-            this.Settings.TryGetValue("mappingFile", out this.m_mappingFileName);                                  
+            Settings.TryGetValue("commsFile", out m_commsFileName);
+            Settings.TryGetValue("mappingFile", out m_mappingFileName);                                  
 
             try
             {
-                if (this.m_commsFileName == null) throw new ArgumentException("The required commsFile parameter was not specified");
-                if (this.m_mappingFileName == null) throw new ArgumentException("The required mappingFile parameter was not specified");
+                if (m_commsFileName == null) throw new ArgumentException("The required commsFile parameter was not specified");
+                if (m_mappingFileName == null) throw new ArgumentException("The required mappingFile parameter was not specified");
 
-                this.m_MasterConfig = this.ReadConfig<MasterConfiguration>(this.CommsFileName);
-                this.m_MeasMap = this.ReadConfig<MeasurementMap>(this.MappingFileName);                
+                m_MasterConfig = ReadConfig<MasterConfiguration>(CommsFileName);
+                m_MeasMap = ReadConfig<MeasurementMap>(MappingFileName);                
             }
             catch (Exception ex)
             {                
-                this.OnProcessException(ex);                
+                OnProcessException(ex);                
             }            
         }
 
@@ -148,10 +148,10 @@ namespace Dnp3Adapters
         /// <param name="disposing"><c>true</c> if disposing</param>
         protected override void Dispose(bool disposing)
         {
-            if (this.m_active)
+            if (m_active)
             {
                 m_Manager.RemovePort(m_portName);
-                this.m_active = false;
+                m_active = false;
             }
             base.Dispose(disposing);
         }
@@ -183,20 +183,20 @@ namespace Dnp3Adapters
         /// </summary>
         protected override void AttemptConnection()
         {            
-            var tcp = this.m_MasterConfig.client;
-            var master = this.m_MasterConfig.master;
-            this.m_portName = tcp.address + ":" + tcp.port;
+            var tcp = m_MasterConfig.client;
+            var master = m_MasterConfig.master;
+            m_portName = tcp.address + ":" + tcp.port;
             m_Manager.AddTCPClient(m_portName, tcp.level, tcp.retryMs, tcp.address, tcp.port);            
-            var adapter = new TsfDataObserver(new MeasurementLookup(this.m_MeasMap));
+            var adapter = new TimeSeriesDataObserver(new MeasurementLookup(m_MeasMap));
             adapter.NewMeasurements += adapter_NewMeasurements;
-            adapter.NewMeasurements += this.OnNewMeasurements;           
-            var acceptor = m_Manager.AddMaster(m_portName, this.Name, FilterLevel.LEV_WARNING, adapter, m_MasterConfig.master);
-            this.m_active = true;
+            adapter.NewMeasurements += OnNewMeasurements;           
+            var acceptor = m_Manager.AddMaster(m_portName, Name, FilterLevel.LEV_WARNING, adapter, m_MasterConfig.master);
+            m_active = true;
         }
 
         void adapter_NewMeasurements(ICollection<IMeasurement> measurements)
         {
-            this.m_numMeasurementsReceived += measurements.Count;                      
+            m_numMeasurementsReceived += measurements.Count;                      
         }        
 
         /// <summary>
@@ -204,10 +204,10 @@ namespace Dnp3Adapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            if (this.m_active)
+            if (m_active)
             {                
                 m_Manager.RemovePort(m_portName);
-                this.m_active = false;
+                m_active = false;
             }
         }
 
@@ -226,7 +226,7 @@ namespace Dnp3Adapters
         /// <returns>Short status of adapter</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return "The adapter has received " + this.m_numMeasurementsReceived + " measurements";
+            return "The adapter has received " + m_numMeasurementsReceived + " measurements";
         }
     }    
     

@@ -32,7 +32,7 @@ namespace Dnp3Adapters
     /// <summary>
     /// This is the data adapter that converts data from the dnp3 world to the TSF
     /// </summary>
-    class TsfDataObserver : IDataObserver
+    class TimeSeriesDataObserver : IDataObserver
     {
         public delegate void OnNewMeasurements(ICollection<IMeasurement> measurements);
         public event OnNewMeasurements NewMeasurements;
@@ -40,16 +40,16 @@ namespace Dnp3Adapters
         private readonly MeasurementLookup m_lookup;
         private readonly List<IMeasurement> m_Measurements = new List<IMeasurement>();
 
-        public TsfDataObserver(MeasurementLookup lookup)
+        public TimeSeriesDataObserver(MeasurementLookup lookup)
         {
-            this.m_lookup = lookup;
+            m_lookup = lookup;
         }
 
         public void End()
         {
-            if (m_Measurements.Count > 0 && this.NewMeasurements != null)
+            if (m_Measurements.Count > 0 && NewMeasurements != null)
             {
-                this.NewMeasurements(m_Measurements);
+                NewMeasurements(m_Measurements);
             }
         }
 
@@ -60,33 +60,33 @@ namespace Dnp3Adapters
 
         public void Update(SetpointStatus update, uint index)
         {
-            IMeasurement maybeNull = this.m_lookup.LookupMaybeNull(update, index);
-            if (maybeNull != null) this.m_Measurements.Add(maybeNull);
+            IMeasurement maybeNull = m_lookup.LookupMaybeNull(update, index);
+            if (maybeNull != null) m_Measurements.Add(maybeNull);
 
         }
 
         public void Update(ControlStatus update, uint index)
         {
-            IMeasurement maybeNull = this.m_lookup.LookupMaybeNull(update, index);
-            if (maybeNull != null) this.m_Measurements.Add(maybeNull);
+            IMeasurement maybeNull = m_lookup.LookupMaybeNull(update, index);
+            if (maybeNull != null) m_Measurements.Add(maybeNull);
         }
 
         public void Update(Counter update, uint index)
         {
-            IMeasurement maybeNull = this.m_lookup.LookupMaybeNull(update, index);
-            if (maybeNull != null) this.m_Measurements.Add(maybeNull);
+            IMeasurement maybeNull = m_lookup.LookupMaybeNull(update, index);
+            if (maybeNull != null) m_Measurements.Add(maybeNull);
         }
 
         public void Update(Analog update, uint index)
         {
-            IMeasurement maybeNull = this.m_lookup.LookupMaybeNull(update, index);
-            if (maybeNull != null) this.m_Measurements.Add(maybeNull);
+            IMeasurement maybeNull = m_lookup.LookupMaybeNull(update, index);
+            if (maybeNull != null) m_Measurements.Add(maybeNull);
         }
 
         public void Update(Binary update, uint index)
         {
-            IMeasurement maybeNull = this.m_lookup.LookupMaybeNull(update, index);
-            if (maybeNull != null) this.m_Measurements.Add(maybeNull);
+            IMeasurement maybeNull = m_lookup.LookupMaybeNull(update, index);
+            if (maybeNull != null) m_Measurements.Add(maybeNull);
         }
 
 
