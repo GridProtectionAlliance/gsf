@@ -121,24 +121,16 @@ namespace GSF
                 int iresult;
 
                 if (int.TryParse(value, out iresult))
-                {
                     return (iresult != 0);
-                }
-                else
-                {
-                    // Try to parse string as a boolean
-                    bool bresult;
 
-                    if (bool.TryParse(value, out bresult))
-                    {
-                        return bresult;
-                    }
-                    else
-                    {
-                        char test = value.ToUpper()[0];
-                        return (test == 'T' || test == 'Y' ? true : false);
-                    }
-                }
+                // Try to parse string as a boolean
+                bool bresult;
+
+                if (bool.TryParse(value, out bresult))
+                    return bresult;
+
+                char test = value.ToUpper()[0];
+                return (test == 'T' || test == 'Y' ? true : false);
             }
 
             return false;
@@ -209,25 +201,17 @@ namespace GSF
 
             try
             {
+                // Handle booleans as a special case to allow numeric entries as well as true/false
                 if (type.IsAssignableFrom(typeof(bool)))
-                {
-                    // Handle booleans as a special case to allow numeric entries as well as true/false
                     return (T)((object)value.ParseBoolean());
-                }
-                else
-                {
-                    if (type.IsAssignableFrom(typeof(IConvertible)))
-                    {
-                        // This is faster for native types than using type converter...
-                        return (T)Convert.ChangeType(value, type, culture);
-                    }
-                    else
-                    {
-                        // Handle objects that have type converters (e.g., Enum, Color, Point, etc.)
-                        TypeConverter converter = TypeDescriptor.GetConverter(type);
-                        return (T)converter.ConvertFromString(null, culture, value);
-                    }
-                }
+
+                // This is faster for native types than using type converter...
+                if (type.IsAssignableFrom(typeof(IConvertible)))
+                    return (T)Convert.ChangeType(value, type, culture);
+
+                // Handle objects that have type converters (e.g., Enum, Color, Point, etc.)
+                TypeConverter converter = TypeDescriptor.GetConverter(type);
+                return (T)converter.ConvertFromString(null, culture, value);
             }
             catch
             {
@@ -378,11 +362,9 @@ namespace GSF
                         valueEscaped = true;
                         continue;   // Don't add tag start delimeter to final value
                     }
-                    else
-                    {
-                        // Handle nested delimeters
-                        delimeterDepth++;
-                    }
+
+                    // Handle nested delimeters
+                    delimeterDepth++;
                 }
 
                 if (character == endValueDelimeter)
@@ -496,8 +478,8 @@ namespace GSF
 
             if (string.IsNullOrEmpty(testValue))
                 return nonEmptyReturnValue;
-            else
-                return testValue;
+
+            return testValue;
         }
 
         /// <summary>
@@ -514,6 +496,7 @@ namespace GSF
             if (characterTestFunction == (Func<char, bool>)null)
                 throw new ArgumentNullException("characterTestFunction");
             // </pex>
+
             if (string.IsNullOrEmpty(value))
                 return "";
 
@@ -545,6 +528,7 @@ namespace GSF
             if (characterTestFunction == (Func<char, bool>)null)
                 throw new ArgumentNullException("characterTestFunction");
             // </pex>
+
             if (string.IsNullOrEmpty(value))
                 return "";
 
@@ -639,6 +623,7 @@ namespace GSF
             if (value == (string)null)
                 throw new ArgumentNullException("value");
             // </pex>
+
             return value.Replace(Environment.NewLine, replacementCharacter.ToString()).ReplaceCharacters(replacementCharacter, c => c == '\r' || c == '\n');
         }
 
@@ -652,6 +637,7 @@ namespace GSF
         {
             if (string.IsNullOrEmpty(value))
                 return "";
+
             if (string.IsNullOrEmpty(duplicatedValue))
                 return value;
 
@@ -679,8 +665,8 @@ namespace GSF
 
             if (nullPos > -1)
                 return value.Substring(0, nullPos);
-            else
-                return value;
+
+            return value;
         }
 
         /// <summary>
@@ -811,6 +797,7 @@ namespace GSF
                 return false;
 
             value = value.Trim();
+
             if (value.Length == 0)
                 return false;
 
@@ -835,6 +822,7 @@ namespace GSF
                 return false;
 
             value = value.Trim();
+
             if (value.Length == 0)
                 return false;
 
@@ -858,6 +846,7 @@ namespace GSF
                 return false;
 
             value = value.Trim();
+
             if (value.Length == 0)
                 return false;
 
@@ -881,6 +870,7 @@ namespace GSF
                 return false;
 
             value = value.Trim();
+
             if (value.Length == 0)
                 return false;
 
@@ -917,6 +907,7 @@ namespace GSF
                 return false;
 
             value = value.Trim();
+
             if (value.Length == 0)
                 return false;
 
@@ -961,6 +952,7 @@ namespace GSF
                 return false;
 
             value = value.Trim();
+
             if (value.Length == 0)
                 return false;
 
@@ -992,6 +984,7 @@ namespace GSF
             if (value == (string)null)
                 throw new ArgumentNullException("value");
             // </pex>
+
             return Convert.ToChar(Convert.ToUInt16(value.Replace("\\u", "0x"), 16));
         }
 
@@ -1191,10 +1184,11 @@ namespace GSF
             {
                 if (removeRepeatingChar)
                     return value.Substring(LastIndexOfRepeatedChar(value, startChar, 0));
+
                 return value;
             }
-            else
-                return string.Concat(startChar, value);
+
+            return string.Concat(startChar, value);
         }
 
         /// <summary>
@@ -1213,8 +1207,8 @@ namespace GSF
 
             if (value.IndexOf(startString) == 0)
                 return value;
-            else
-                return string.Concat(startString, value);
+
+            return string.Concat(startString, value);
         }
 
         /// <summary>
@@ -1250,10 +1244,11 @@ namespace GSF
                     int i = LastIndexOfRepeatedChar(value.Reverse(), endChar, 0);
                     return value.Substring(0, value.Length - i);
                 }
+
                 return value;
             }
-            else
-                return string.Concat(value, endChar);
+
+            return string.Concat(value, endChar);
         }
 
         /// <summary>
@@ -1272,8 +1267,8 @@ namespace GSF
 
             if (value.EndsWith(endString))
                 return value;
-            else
-                return string.Concat(value, endString);
+
+            return string.Concat(value, endString);
         }
 
         /// <summary>
@@ -1340,7 +1335,9 @@ namespace GSF
                     }
                 }
                 else
+                {
                     c = (char)0;
+                }
             }
 
             return -1;
@@ -1393,6 +1390,7 @@ namespace GSF
                     return i - 1;
                 }
             }
+
             return -1;
         }
 

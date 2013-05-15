@@ -212,6 +212,7 @@ namespace GSF.Configuration
             {
                 // Continue only if values are different.
                 string currentValue = DecryptValue(GetRawValue());
+
                 if (value.ToNonNullString().Equals(currentValue))
                     return;
 
@@ -221,6 +222,7 @@ namespace GSF.Configuration
                     return;
 
                 value = EncryptValue(value);
+
                 if (Scope == SettingScope.Application || (object)Category[Name] == null)
                     // Setting is application wide or is being added for the first time.
                     base["value"] = value;
@@ -384,12 +386,12 @@ namespace GSF.Configuration
             try
             {
                 string value = Value;
+
+                // Value is an empty string - use default value.
                 if (string.IsNullOrEmpty(value))
-                    // Value is an empty string - use default value.
                     return defaultValue;
-                else
-                    // Value is not empty string - convert to target type.
-                    return value.ConvertToType<T>(null, m_category.Section.File.Culture);
+
+                return value.ConvertToType<T>(null, m_category.Section.File.Culture);
             }
             catch
             {
@@ -433,7 +435,22 @@ namespace GSF.Configuration
         /// <returns>Value as boolean.</returns>
         public bool ValueAsBoolean(bool defaultValue)
         {
-            return ValueAs(defaultValue);
+            try
+            {
+                string value = Value;
+
+                // Value is an empty string - use default value.
+                if (string.IsNullOrEmpty(value))
+                    return defaultValue;
+
+                // Value is not empty string - convert to boolean.
+                return value.ParseBoolean();
+            }
+            catch
+            {
+                // Conversion to target type failed so use the default value.
+                return defaultValue;
+            }
         }
 
         /// <summary>
@@ -742,6 +759,7 @@ namespace GSF.Configuration
         {
             ConfigurationFile config = m_category.Section.File;
             CategorizedSettingsElement setting;
+
             foreach (Match match in Regex.Matches(value, EvalRegex, RegexOptions.IgnoreCase))
             {
                 // Try replacing Eval() with the actual value.

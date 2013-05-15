@@ -59,8 +59,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IdentityModel.Policy;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -216,6 +216,7 @@ namespace GSF.ServiceModel
         private bool m_disposed;
         private bool m_initialized;
         private ServiceHost m_serviceHost;
+        private bool m_serviceEnabled;
 
         #endregion
 
@@ -413,10 +414,14 @@ namespace GSF.ServiceModel
         public override void Initialize()
         {
             base.Initialize();
+
             if (!m_initialized)
             {
-                InitializeServiceHost();    // Initialize the service host.
-                m_initialized = true;       // Initialize only once.
+                // Initialize the service host.
+                InitializeServiceHost();
+
+                // Initialize only once.
+                m_initialized = true;
             }
         }
 
@@ -465,6 +470,7 @@ namespace GSF.ServiceModel
                 settings.Add("PublishMetadata", m_publishMetadata, "True if the web service metadata is to be published at all the endpoints; otherwise False.");
                 settings.Add("AllowCrossDomainAccess", m_allowCrossDomainAccess, "True to allow Silverlight and Flash cross-domain access to the web service.");
                 settings.Add("AllowedDomainList", m_allowedDomainList, "Comma separated list of domain names for Silverlight and Flash cross-domain access to use when allowCrossDomainAccess is true. Use * for domain wildcards, e.g., *.consoto.com.");
+                settings.Add("Enabled", "True", "Determines if web service should be enabled at startup.");
 
                 Endpoints = settings["Endpoints"].ValueAs(m_endpoints);
                 Contract = settings["Contract"].ValueAs(m_contract);
@@ -473,6 +479,10 @@ namespace GSF.ServiceModel
                 PublishMetadata = settings["PublishMetadata"].ValueAs(m_publishMetadata);
                 AllowCrossDomainAccess = settings["AllowCrossDomainAccess"].ValueAs(m_allowCrossDomainAccess);
                 AllowedDomainList = settings["AllowedDomainList"].ValueAs(m_allowedDomainList);
+
+                // Technically removing all end points will "disable" a web service since it would bind to nothing, however,
+                // this allows you to keep configured end points and still disable the service from configuration
+                m_serviceEnabled = settings["Enabled"].ValueAsBoolean(true);
             }
         }
 
@@ -523,7 +533,7 @@ namespace GSF.ServiceModel
         /// </summary>
         protected virtual void InitializeServiceHost()
         {
-            if (!string.IsNullOrEmpty(m_endpoints))
+            if (m_serviceEnabled && !string.IsNullOrEmpty(m_endpoints))
             {
                 // Initialize service host.
                 string serviceUri = GetServiceAddress();

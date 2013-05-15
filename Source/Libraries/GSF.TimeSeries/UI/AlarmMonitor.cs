@@ -246,7 +246,7 @@ namespace GSF.TimeSeries.UI
                     foreach (XElement element in root.Element("Alarms").Elements("Alarm"))
                     {
                         newAlarmList.Add(new RaisedAlarm
-                            {
+                        {
                             ID = int.Parse(element.Element("ID").Value),
                             Severity = int.Parse(element.Element("Severity").Value),
                             TimeRaised = element.Element("TimeRaised").Value,
@@ -344,7 +344,11 @@ namespace GSF.TimeSeries.UI
         /// Gets or sets the global reference to a singleton
         /// of the <see cref="AlarmMonitor"/> class.
         /// </summary>
-        public static AlarmMonitor Default { get; set; }
+        public static AlarmMonitor Default
+        {
+            get;
+            set;
+        }
 
         #endregion
     }

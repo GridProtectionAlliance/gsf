@@ -414,6 +414,16 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Determines if the specified <paramref name="filePath"/> is contained with the current executable path.
+        /// </summary>
+        /// <param name="filePath">File name or relative file path.</param>
+        /// <returns><c>true</c> if the specified <paramref name="filePath"/> is contained with the current executable path; otherwise <c>false</c>.</returns>
+        public static bool InApplicationPath(string filePath)
+        {
+            return GetAbsolutePath(filePath).StartsWith(GetAbsolutePath(""), StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        /// <summary>
         /// Gets the path to the folder where data related to the current application can be stored.
         /// </summary>
         /// <returns>Path to the folder where data related to the current application can be stored.</returns>
