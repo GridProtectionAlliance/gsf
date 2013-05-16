@@ -46,7 +46,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         #region [ Members ]
 
         // Fields
-        private Dictionary<Guid, string> m_nodeLookupList;
         private Dictionary<Type, string> m_adapterTypeList;
         private List<AdapterConnectionStringParameter> m_parameterList;
         private AdapterType m_adapterType;
@@ -81,17 +80,6 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 return CurrentItem.ID == 0;
-            }
-        }
-
-        /// <summary>
-        /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Node"/> defined in the database.
-        /// </summary>
-        public Dictionary<Guid, string> NodeLookupList
-        {
-            get
-            {
-                return m_nodeLookupList;
             }
         }
 
@@ -221,7 +209,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         public Adapters(int itemsPerPage, AdapterType adapterType, bool autoSave = true)
             : base(0, autoSave) // Set items per page to zero to avoid load in the base class.
         {
-            m_nodeLookupList = Node.GetLookupList(null);
             ItemsPerPage = itemsPerPage;
             m_adapterType = adapterType;
             SearchDirectory = FilePath.GetAbsolutePath("");

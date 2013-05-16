@@ -81,6 +81,42 @@ namespace TimeSeriesFramework.UI.UserControls
             }
         }
 
+        private void DataGridEnabledCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            // Get a reference to the enabled checkbox that was clicked
+            CheckBox enabledCheckBox = sender as CheckBox;
+
+            if ((object)enabledCheckBox != null)
+            {
+                // Get the runtime ID of the currently selected adapter
+                string runtimeID = m_dataContext.RuntimeID;
+
+                if (!string.IsNullOrWhiteSpace(runtimeID))
+                {
+                    try
+                    {
+                        // Auto-save changes to the adapter
+                        m_dataContext.ProcessPropertyChange();
+
+                        if (m_dataContext.CanSave)
+                        {
+                            if (enabledCheckBox.IsChecked.GetValueOrDefault())
+                                CommonFunctions.SendCommandToService("Initialize " + runtimeID);
+                            else
+                                CommonFunctions.SendCommandToService("ReloadConfig");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if ((object)ex.InnerException != null)
+                            CommonFunctions.LogException(null, "Adapter Autosave", ex.InnerException);
+                        else
+                            CommonFunctions.LogException(null, "Adapter Autosave", ex);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Handles Click event on the button labeled "Browse..."
         /// </summary>
