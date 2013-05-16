@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlarmMonitor.cs" />
+    <Compile Include="AlarmStatusQuery.cs" />
     <Compile Include="AuthenticationRequest.cs" />
     <Compile Include="AuthorizedMeasurementsQuery.cs" />
     <Compile Include="Binding\Column.cs" />
@@ -154,6 +155,10 @@
     <ProjectReference Include="..\..\GSF.Windows\GSF.Windows.csproj">
       <Project>{ea70c8aa-60de-4ffd-b1d9-b5406395b1af}</Project>
       <Name>GSF.Windows</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GSF.TimeSeries.csproj">
+      <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
+      <Name>GSF.TimeSeries</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

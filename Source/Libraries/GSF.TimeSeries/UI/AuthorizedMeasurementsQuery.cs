@@ -362,7 +362,7 @@ namespace GSF.TimeSeries.UI
                                 Arguments arguments = attachments[1] as Arguments;
 
                                 // Check the method that was invoked - the second argument after the adapter ID
-                                if (string.Compare(arguments["OrderedArg2"], "GetAuthorizedSignalIDs", true) == 0)
+                                if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "GetAuthorizedSignalIDs", true) == 0)
                                 {
                                     Guid[] signalIDs = attachments[0] as Guid[];
 

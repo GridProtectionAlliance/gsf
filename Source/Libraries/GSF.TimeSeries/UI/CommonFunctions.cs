@@ -39,6 +39,7 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Security;
 using GSF.TimeSeries.UI.DataModels;
+using UIFrame = System.Windows.Controls.Frame;
 
 namespace GSF.TimeSeries.UI
 {
@@ -763,7 +764,7 @@ namespace GSF.TimeSeries.UI
                         remotingAddress = ((IPEndPoint)remotingClient.Client.RemoteEndPoint).Address.ToString();
 
                     // If this is not a local address - we will also send event to be logged on the server
-                    if (!string.IsNullOrEmpty(remotingAddress) && !Transport.IsLocalAddress(remotingAddress))
+                    if (!string.IsNullOrEmpty(remotingAddress) && !Communication.Transport.IsLocalAddress(remotingAddress))
                     {
                         string message = "";
                         EventLogEntryType eventType;
@@ -826,7 +827,7 @@ namespace GSF.TimeSeries.UI
         {
             UIElement frame = null;
             UIElement groupBox = null;
-            GetFirstChild(Application.Current.MainWindow, typeof(Frame), ref frame);
+            GetFirstChild(Application.Current.MainWindow, typeof(UIFrame), ref frame);
             GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
 
             if (frame != null)
@@ -840,7 +841,7 @@ namespace GSF.TimeSeries.UI
                 txt.Padding = new Thickness(5.0);
                 txt.Inlines.Add(run);
 
-                ((Frame)frame).Navigate(userControl, txt);
+                ((UIFrame)frame).Navigate(userControl, txt);
 
                 if (groupBox != null)
                     ((GroupBox)groupBox).Header = txt;
