@@ -168,7 +168,7 @@
     </Style>
 
     <Style TargetType="CheckBox">
-        <Setter Property="Margin" Value="5"/>
+        <Setter Property="Margin" Value="0"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>

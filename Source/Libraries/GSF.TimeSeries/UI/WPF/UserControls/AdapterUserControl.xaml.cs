@@ -29,6 +29,7 @@ using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
 using GSF.TimeSeries.UI.DataModels;
+using CheckBox = System.Windows.Controls.CheckBox;
 using DataGrid = System.Windows.Controls.DataGrid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
@@ -81,6 +82,42 @@ namespace GSF.TimeSeries.UI.UserControls
                 {
                     if (MessageBox.Show("Are you sure you want to delete " + dataGrid.SelectedItems.Count + " selected item(s)?", "Delete Selected Items", MessageBoxButton.YesNo) == MessageBoxResult.No)
                         e.Handled = true;
+                }
+            }
+        }
+
+        private void DataGridEnabledCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            // Get a reference to the enabled checkbox that was clicked
+            CheckBox enabledCheckBox = sender as CheckBox;
+
+            if ((object)enabledCheckBox != null)
+            {
+                // Get the runtime ID of the currently selected adapter
+                string runtimeID = m_dataContext.RuntimeID;
+
+                if (!string.IsNullOrWhiteSpace(runtimeID))
+                {
+                    try
+                    {
+                        // Auto-save changes to the adapter
+                        m_dataContext.ProcessPropertyChange();
+
+                        if (m_dataContext.CanSave)
+                        {
+                            if (enabledCheckBox.IsChecked.GetValueOrDefault())
+                                CommonFunctions.SendCommandToService("Initialize " + runtimeID);
+                            else
+                                CommonFunctions.SendCommandToService("ReloadConfig");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if ((object)ex.InnerException != null)
+                            CommonFunctions.LogException(null, "Adapter Autosave", ex.InnerException);
+                        else
+                            CommonFunctions.LogException(null, "Adapter Autosave", ex);
+                    }
                 }
             }
         }

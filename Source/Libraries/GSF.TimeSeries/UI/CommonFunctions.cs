@@ -488,7 +488,7 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public static void ConnectWindowsServiceClient(bool overwrite = false)
         {
-            TcpClient remotingClient;
+            TlsClient remotingClient;
             ISecurityProvider provider;
             UserData userData;
 
@@ -521,7 +521,7 @@ namespace GSF.TimeSeries.UI
                                 {
                                     s_windowsServiceClient.Helper.Username = userData.LoginID;
                                     s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(provider.Password);
-                                    remotingClient = s_windowsServiceClient.Helper.RemotingClient as TcpClient;
+                                    remotingClient = s_windowsServiceClient.Helper.RemotingClient as TlsClient;
 
                                     if ((object)remotingClient != null && (object)provider.SecurePassword != null && provider.SecurePassword.Length > 0)
                                         remotingClient.NetworkCredential = new NetworkCredential(userData.LoginID, provider.SecurePassword);
@@ -530,6 +530,7 @@ namespace GSF.TimeSeries.UI
 
                             s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
                             s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+                            s_windowsServiceClient.Helper.RemotingClient.ConnectionException += RemotingClient_ConnectionException;
                             ThreadPool.QueueUserWorkItem(ConnectAsync, null);
                         }
                     }
@@ -542,9 +543,14 @@ namespace GSF.TimeSeries.UI
             }
         }
 
-        static void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
+        private static void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
         {
             ServiceConnectionRefreshed(null, EventArgs.Empty);
+        }
+
+        private static void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
+        {
+            LogException(null, "Remoting Client Connect", e.Argument);
         }
 
         /// <summary>
@@ -749,15 +755,12 @@ namespace GSF.TimeSeries.UI
                 {
                     // Client base may be a normal TCP client or a TLS client - so we check for this
                     ClientBase client = s_windowsServiceClient.Helper.RemotingClient;
-                    TcpClient remotingClient = client as TcpClient;
-                    TlsClient secureRemotingClient = client as TlsClient;
+                    TlsClient remotingClient = client as TlsClient;
                     string remotingAddress = null;
 
                     // Get remote client address for remoting client (console) connection
                     if ((object)remotingClient != null)
                         remotingAddress = ((IPEndPoint)remotingClient.Client.RemoteEndPoint).Address.ToString();
-                    else if ((object)secureRemotingClient != null)
-                        remotingAddress = ((IPEndPoint)secureRemotingClient.Client.RemoteEndPoint).Address.ToString();
 
                     // If this is not a local address - we will also send event to be logged on the server
                     if (!string.IsNullOrEmpty(remotingAddress) && !Transport.IsLocalAddress(remotingAddress))

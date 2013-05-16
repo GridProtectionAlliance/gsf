@@ -561,6 +561,14 @@ namespace GSF.PhasorProtocols
             public event EventHandler<EventArgs<Guid>> ClientDisconnected;
 
             /// <summary>
+            /// Occurs when an exception is encountered while a client is connecting.
+            /// </summary>
+            /// <remarks>
+            /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when connecting to the client.
+            /// </remarks>
+            public event EventHandler<EventArgs<Exception>> ClientConnectingException;
+
+            /// <summary>
             /// Occurs when data is being sent to a client.
             /// </summary>
             /// <remarks>
@@ -1020,6 +1028,7 @@ namespace GSF.PhasorProtocols
                     // Attach to event handlers
                     sharedServer.ClientConnected += SharedServer_ClientConnected;
                     sharedServer.ClientDisconnected += SharedServer_ClientDisconnected;
+                    sharedServer.ClientConnectingException += SharedServer_ClientConnectingException;
                     sharedServer.ReceiveClientData += SharedServer_ReceiveClientData;
                     sharedServer.ReceiveClientDataException += SharedServer_ReceiveClientDataException;
                     sharedServer.SendClientDataException += SharedServer_SendClientDataException;
@@ -1176,6 +1185,14 @@ namespace GSF.PhasorProtocols
             {
                 if ((object)ClientDisconnected != null && e.Argument == m_clientID)
                     ClientDisconnected(this, e);
+            }
+
+            // Shared server client connecting exception handler.
+            // Forwards event to users attached to this server.
+            private void SharedServer_ClientConnectingException(object sender, EventArgs<Exception> e)
+            {
+                if ((object)ClientConnectingException != null)
+                    ClientConnectingException(this, e);
             }
 
             // Shared server receive client data handler.

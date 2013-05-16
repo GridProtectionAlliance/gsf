@@ -671,6 +671,7 @@ namespace GSF.ServiceProcess
                 if (m_remotingServer != null)
                 {
                     // Detach events from any existing instance
+                    m_remotingServer.ClientConnectingException -= RemotingServer_ClientConnectingException;
                     m_remotingServer.ClientDisconnected -= RemotingServer_ClientDisconnected;
                     m_remotingServer.ReceiveClientDataComplete -= RemotingServer_ReceiveClientDataComplete;
                 }
@@ -680,6 +681,7 @@ namespace GSF.ServiceProcess
                 if (m_remotingServer != null)
                 {
                     // Attach events to new instance
+                    m_remotingServer.ClientConnectingException += RemotingServer_ClientConnectingException;
                     m_remotingServer.ClientDisconnected += RemotingServer_ClientDisconnected;
                     m_remotingServer.ReceiveClientDataComplete += RemotingServer_ReceiveClientDataComplete;
                 }
@@ -1946,6 +1948,12 @@ namespace GSF.ServiceProcess
         private void ErrorLogger_LoggingException(object sender, EventArgs<Exception> e)
         {
             UpdateStatus(UpdateType.Alarm, "Error occurred while logging an error - {0}\r\n\r\n", e.Argument.Message);
+        }
+
+        private void RemotingServer_ClientConnectingException(object sender, EventArgs<Exception> e)
+        {
+            UpdateStatus(UpdateType.Alarm, "Error occurred while connecting client to remoting server - {0}\r\n\r\n", e.Argument.Message);
+            m_errorLogger.Log(e.Argument);
         }
 
         private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)

@@ -25,6 +25,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
@@ -74,17 +76,12 @@ namespace GSF.TimeSeries.UI
 
             m_cachedStatus = string.Empty;
 
-            // Initialize TLS policy checker.
-            policyChecker = new SimplePolicyChecker();
-            policyChecker.ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
-            policyChecker.ValidChainFlags = X509ChainStatusFlags.UntrustedRoot;
-
             // Initialize remoting client socket.
             m_remotingClient = new TlsClient();
             m_remotingClient.ConnectionString = connectionString;
             m_remotingClient.PayloadAware = true;
             m_remotingClient.MaxConnectionAttempts = -1;
-            m_remotingClient.CertificateChecker = policyChecker;
+            m_remotingClient.RemoteCertificateValidationCallback = RemoteCertificateValidationCallback;
 
             // See if user wants to connect to remote service using integrated security
             if (settings.TryGetValue("integratedSecurity", out setting) && !string.IsNullOrWhiteSpace(setting))
@@ -96,10 +93,10 @@ namespace GSF.TimeSeries.UI
 
             // See if the user has explicitly defined valid policy errors or valid chain flags
             if (settings.TryGetValue("validPolicyErrors", out setting) && Enum.TryParse(setting, out validPolicyErrors))
-                policyChecker.ValidPolicyErrors = validPolicyErrors;
+                m_remotingClient.ValidPolicyErrors = validPolicyErrors;
 
             if (settings.TryGetValue("validChainFlags", out setting) && Enum.TryParse(setting, out validChainFlags))
-                policyChecker.ValidChainFlags = validChainFlags;
+                m_remotingClient.ValidChainFlags = validChainFlags;
 
             // Initialize windows service client.
             m_clientHelper = new ClientHelper();
@@ -187,6 +184,29 @@ namespace GSF.TimeSeries.UI
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
+        }
+
+        private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            IPEndPoint remoteEndPoint = m_remotingClient.Client.RemoteEndPoint as IPEndPoint;
+            IPHostEntry localhost;
+            SimplePolicyChecker policyChecker;
+
+            if ((object)remoteEndPoint != null)
+            {
+                // Create an exception and do not check policy for localhost
+                localhost = Dns.GetHostEntry("localhost");
+
+                if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
+                    return true;
+            }
+
+            // Not connected to localhost, so use the policy checker
+            policyChecker = new SimplePolicyChecker();
+            policyChecker.ValidPolicyErrors = m_remotingClient.ValidPolicyErrors;
+            policyChecker.ValidChainFlags = m_remotingClient.ValidChainFlags;
+
+            return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
         }
 
         /// <summary>

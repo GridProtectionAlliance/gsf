@@ -86,17 +86,6 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Node"/> defined in the database.
-        /// </summary>
-        public Dictionary<Guid, string> NodeLookupList
-        {
-            get
-            {
-                return m_nodeLookupList;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the collection containing the adapter types found
         /// in the assemblies residing in the <see cref="SearchDirectory"/>.
         /// </summary>
@@ -222,7 +211,6 @@ namespace GSF.TimeSeries.UI.ViewModels
         public Adapters(int itemsPerPage, AdapterType adapterType, bool autoSave = true)
             : base(0, autoSave) // Set items per page to zero to avoid load in the base class.
         {
-            m_nodeLookupList = Node.GetLookupList(null);
             ItemsPerPage = itemsPerPage;
             m_adapterType = adapterType;
             SearchDirectory = FilePath.GetAbsolutePath("");
