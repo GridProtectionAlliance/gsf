@@ -118,6 +118,7 @@ namespace GSF.Communication
         private SpinLock m_sendLock;
         private int m_maxSendQueueSize;
         private int m_sending;
+        private int m_receiving;
         private bool m_disposed;
 
         private readonly EventHandler<SocketAsyncEventArgs> m_connectHandler;
@@ -652,38 +653,50 @@ namespace GSF.Communication
         {
             string integratedSecuritySetting;
 
-            if (CurrentState == ClientState.Disconnected)
+            try
             {
-                if (m_connectWaitHandle == null)
-                    m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+                if (CurrentState == ClientState.Disconnected && !m_disposed)
+                {
+                    // Client may still be attempting to receive data from a prior connection
+                    if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
+                        throw new InvalidOperationException("Client is not yet fully disconnected");
 
-                OnConnectionAttempt();
-                m_connectWaitHandle.Reset();
+                    if (m_connectWaitHandle == null)
+                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
-                // Overwrite config file if integrated security exists in connection string
-                if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
-                    m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
+                    OnConnectionAttempt();
+                    m_connectWaitHandle.Reset();
 
-                // Create client socket to establish presence
-                Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                    // Overwrite config file if integrated security exists in connection string
+                    if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                        m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
-                // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                    // Create client socket to establish presence
+                    Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
-                args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                args.SocketFlags = SocketFlags.None;
-                args.UserToken = socket;
-                args.Completed += m_connectHandler;
+                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation
+                    SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
-                if (!socket.ConnectAsync(args))
-                    ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+                    args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                    args.SocketFlags = SocketFlags.None;
+                    args.UserToken = socket;
+                    args.Completed += m_connectHandler;
 
-                return m_connectWaitHandle;
+                    if (!socket.ConnectAsync(args))
+                        ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+
+                    return m_connectWaitHandle;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Client is currently not disconnected");
+                }
             }
-            else
+            catch
             {
-                throw new InvalidOperationException("Client is currently not disconnected");
+                Interlocked.Exchange(ref m_receiving, 0);
+                throw;
             }
         }
 
@@ -877,6 +890,7 @@ namespace GSF.Communication
             catch (SocketException ex)
             {
                 OnConnectionException(ex);
+
                 if (ex.SocketErrorCode == SocketError.ConnectionRefused &&
                     (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
                 {
@@ -939,6 +953,9 @@ namespace GSF.Communication
                     // and begin receiving data.
                     m_connectWaitHandle.Set();
                     OnConnectionEstablished();
+
+                    // Start receiving data
+                    Interlocked.Exchange(ref m_receiving, 1);
                     ReceivePayloadAsync();
                 }
             }
@@ -986,6 +1003,9 @@ namespace GSF.Communication
                 // and begin receiving data.
                 m_connectWaitHandle.Set();
                 OnConnectionEstablished();
+
+                // Start receiving data
+                Interlocked.Exchange(ref m_receiving, 1);
                 ReceivePayloadAsync();
             }
             catch (SocketException ex)
@@ -1304,11 +1324,24 @@ namespace GSF.Communication
         /// </summary>
         private void TerminateConnection()
         {
-            if ((object)m_connectWaitHandle != null)
-                m_connectWaitHandle.Set();
+            try
+            {
+                if ((object)m_connectWaitHandle != null)
+                    m_connectWaitHandle.Set();
 
-            m_sslClient.Reset();
-            OnConnectionTerminated();
+                m_sslClient.Reset();
+                Interlocked.Exchange(ref m_receiving, 0);
+                OnConnectionTerminated();
+            }
+            catch (ThreadAbortException)
+            {
+                // This is a normal exception
+                throw;
+            }
+            catch
+            {
+                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
+            }
         }
 
         /// <summary>

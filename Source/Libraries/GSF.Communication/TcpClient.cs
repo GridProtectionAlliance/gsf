@@ -187,6 +187,7 @@ namespace GSF.Communication
         private SpinLock m_sendLock;
         private readonly ConcurrentQueue<TcpClientPayload> m_sendQueue;
         private int m_sending;
+        private int m_receiving;
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
@@ -556,51 +557,63 @@ namespace GSF.Communication
         {
             string integratedSecuritySetting;
 
-            if (CurrentState == ClientState.Disconnected && !m_disposed)
+            try
             {
-                try
+                if (CurrentState == ClientState.Disconnected && !m_disposed)
                 {
-                    if ((object)m_connectWaitHandle == null)
-                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
-
-                    OnConnectionAttempt();
-                    m_connectWaitHandle.Reset();
-
-                    // Overwrite config file if integrated security exists in connection string
-                    if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
-                        m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
-
-                    // Create client socket to establish presence
-                    if (m_tcpClient.Provider == null)
-                        m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-
-                    // Set socket receive buffer size; larger buffer size helps prevent buffer overrun
-                    m_tcpClient.Provider.ReceiveBufferSize = ReceiveBufferSize;
-
-                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-
-                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                    using (SocketAsyncEventArgs connectArgs = m_connectArgs)
+                    try
                     {
-                        m_connectArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                        // Client may still be attempting to receive data from a prior connection
+                        if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
+                            throw new InvalidOperationException("Client is not yet fully disconnected");
+
+                        if ((object)m_connectWaitHandle == null)
+                            m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+
+                        OnConnectionAttempt();
+                        m_connectWaitHandle.Reset();
+
+                        // Overwrite config file if integrated security exists in connection string
+                        if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                            m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
+
+                        // Create client socket to establish presence
+                        if (m_tcpClient.Provider == null)
+                            m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+
+                        // Set socket receive buffer size; larger buffer size helps prevent buffer overrun
+                        m_tcpClient.Provider.ReceiveBufferSize = ReceiveBufferSize;
+
+                        Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+
+                        // Begin asynchronous connect operation and return wait handle for the asynchronous operation
+                        using (SocketAsyncEventArgs connectArgs = m_connectArgs)
+                        {
+                            m_connectArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                        }
+
+                        m_connectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                        m_connectArgs.Completed += m_connectHandler;
+
+                        if (!m_tcpClient.Provider.ConnectAsync(m_connectArgs))
+                            ThreadPool.QueueUserWorkItem(state => ProcessConnect());
                     }
+                    catch (Exception ex)
+                    {
+                        if ((object)m_connectWaitHandle != null)
+                            m_connectWaitHandle.Set();
 
-                    m_connectArgs.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                    m_connectArgs.Completed += m_connectHandler;
-
-                    if (!m_tcpClient.Provider.ConnectAsync(m_connectArgs))
-                        ThreadPool.QueueUserWorkItem(state => ProcessConnect());
+                        OnConnectionException(ex);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    if ((object)m_connectWaitHandle != null)
-                        m_connectWaitHandle.Set();
 
-                    OnConnectionException(ex);
-                }
+                return m_connectWaitHandle;
             }
-
-            return m_connectWaitHandle;
+            catch
+            {
+                Interlocked.Exchange(ref m_receiving, 0);
+                throw;
+            }
         }
 
         /// <summary>
@@ -850,6 +863,7 @@ namespace GSF.Communication
                 OnConnectionEstablished();
 
                 // Set up send buffer and begin receiving.
+                Interlocked.Exchange(ref m_receiving, 1);
                 ReceivePayloadAsync();
             }
             catch (SocketException ex)
@@ -1204,6 +1218,7 @@ namespace GSF.Communication
                     m_connectWaitHandle.Set();
 
                 m_tcpClient.Reset();
+                Interlocked.Exchange(ref m_receiving, 0);
                 OnConnectionTerminated();
             }
             catch (ThreadAbortException)

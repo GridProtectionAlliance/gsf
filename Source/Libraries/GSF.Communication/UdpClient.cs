@@ -248,6 +248,7 @@ namespace GSF.Communication
 #endif
 
         private int m_sending;
+        private int m_receiving;
         private SpinLock m_sendLock;
         private readonly ConcurrentQueue<UdpClientPayload> m_sendQueue;
         private SocketAsyncEventArgs m_sendArgs;
@@ -568,37 +569,49 @@ namespace GSF.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
-
-            m_udpClient = new TransportProvider<Socket>();
-            m_udpClient.SetReceiveBuffer(m_maxPacketSize);
-
-            // Create a server endpoint.
-            if (m_connectData.ContainsKey("server"))
+            try
             {
-                // Client has a server endpoint specified.
-                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                // Client may still be attempting to receive data from a prior connection
+                if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
+                    throw new InvalidOperationException("Client is not yet fully disconnected");
 
-                if (endpoint != Match.Empty)
-                    m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
+
+                m_udpClient = new TransportProvider<Socket>();
+                m_udpClient.SetReceiveBuffer(m_maxPacketSize);
+
+                // Create a server endpoint.
+                if (m_connectData.ContainsKey("server"))
+                {
+                    // Client has a server endpoint specified.
+                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+
+                    if (endpoint != Match.Empty)
+                        m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                    else
+                        throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
+                }
                 else
-                    throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
-            }
-            else
-            {
-                // Create a random server endpoint since one is not specified.
-                m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack);
-            }
+                {
+                    // Create a random server endpoint since one is not specified.
+                    m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0, m_ipStack);
+                }
 
 #if ThreadTracking
-            m_connectionThread = new ManagedThread(OpenPort);
-            m_connectionThread.Name = "GSF.Communication.UdpClient.OpenPort()";
+                m_connectionThread = new ManagedThread(OpenPort);
+                m_connectionThread.Name = "GSF.Communication.UdpClient.OpenPort()";
 #else
-            m_connectionThread = new Thread(OpenPort);
+                m_connectionThread = new Thread(OpenPort);
 #endif
-            m_connectionThread.Start();
+                m_connectionThread.Start();
 
-            return m_connectionHandle;
+                return m_connectionHandle;
+            }
+            catch
+            {
+                Interlocked.Exchange(ref m_receiving, 0);
+                throw;
+            }
         }
 
         /// <summary>
@@ -766,6 +779,7 @@ namespace GSF.Communication
                             m_receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                         }
 
+                        Interlocked.Exchange(ref m_receiving, 1);
                         m_receiveArgs.Completed += m_receiveHandler;
                         ReceivePayloadAsync();
                     }
@@ -809,6 +823,9 @@ namespace GSF.Communication
             UdpClientPayload dequeuedPayload;
             ManualResetEventSlim handle;
             bool lockTaken = false;
+
+            if (CurrentState != ClientState.Connected)
+                throw new InvalidOperationException("Client is not connected");
 
             // Check to see if the client has reached the maximum send queue size.
             if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
@@ -1051,6 +1068,9 @@ namespace GSF.Communication
         {
             try
             {
+                if (CurrentState == ClientState.Disconnected)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
                 if (m_receiveArgs.SocketError != SocketError.Success)
                     throw new SocketException((int)m_receiveArgs.SocketError);
 
@@ -1202,6 +1222,7 @@ namespace GSF.Communication
         private void TerminateConnection(bool raiseEvent)
         {
             m_udpClient.Reset();
+            Interlocked.Exchange(ref m_receiving, 0);
 
             if (raiseEvent)
                 OnConnectionTerminated();
