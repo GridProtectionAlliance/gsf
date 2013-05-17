@@ -29,6 +29,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using PISDK;
 using TimeSeriesFramework;
 using TimeSeriesFramework.Adapters;
@@ -58,7 +59,14 @@ namespace PIAdapters
         private EventPipe m_pipe;                                             // event pipe object raises an event when a subscribed point is updated
         private int m_processedMeasurements = 0;                              // processed measurements for short status
         private bool m_autoAddOutput = false;                                 // whether or not to automatically add PI points
-        private DateTime m_lastReceivedTimestamp;                             // last received timestamp from PI
+        private DateTime m_lastReceivedTimestamp;                             // last received timestamp from PI event pipe
+        private bool m_useEventPipes = true;                                  // whether or not to use event pipes for real-time data
+        private List<IMeasurement> m_measurements;                            // Queried measurements that are prepared to be published  
+        private int m_queryTimeSpan = 30;                                     // Minutes of data to pull per query
+        private DateTime m_publishTime = DateTime.MinValue;                   // The timestamp that is currently being published
+        private DateTime m_queryTime = DateTime.MinValue;                     // The timestamp that is currently being queried from PI
+        Thread m_dataThread;                                                  // Thread to run queries
+        System.Timers.Timer m_publishTimer;                                   // Timer to publish data
 
         #endregion
 
@@ -80,6 +88,41 @@ namespace PIAdapters
         #endregion
 
         #region [ Properties ]
+
+        /// Gets or sets a value for whether the adapter will use event pipes. If event pipes are disabled, the adapter will use polling.
+        /// </summary>
+        [Description("Gets or sets a value for whether the adapter will use event pipes. If event pipes are disabled, the adapter will use polling."),
+         ConnectionStringParameter,
+         DefaultValue(true)]
+        public bool UseEventPipes
+        {
+            get 
+            { 
+                return m_useEventPipes; 
+            }
+            set 
+            { 
+                m_useEventPipes = value; 
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of seconds to query when the adapter is polling instead of using event pipes.
+        /// </summary>
+        [Description("Gets or sets the number of seconds to query when the adapter is polling instead of using event pipes."),
+         ConnectionStringParameter,
+         DefaultValue(5)]
+        public int QueryTimeSpan
+        {
+            get 
+            { 
+                return m_queryTimeSpan; 
+            }
+            set 
+            { 
+                m_queryTimeSpan = value; 
+            }
+        }
 
         /// <summary>
         /// Returns false to indicate that this <see cref="PIRTInputAdapter"/> does NOT connect asynchronously
@@ -201,8 +244,10 @@ namespace PIAdapters
         {
             get
             {
-                string status = string.Format("   Last Received Timestamp: {0}", m_lastReceivedTimestamp.ToString("MM/dd/yyyy HH:mm:ss.fff")) + Environment.NewLine;
-                status += string.Format("              Last Latency: {0}s", (DateTime.UtcNow - m_lastReceivedTimestamp).TotalSeconds) + Environment.NewLine;
+                StringBuilder status = new StringBuilder();
+                status.AppendFormat("   Last Received Timestamp: {0}\r\n", m_lastReceivedTimestamp.ToString("MM/dd/yyyy HH:mm:ss.fff"));
+                status.AppendFormat("              Last Latency: {0}s\r\n", (DateTime.UtcNow - m_lastReceivedTimestamp).TotalSeconds);
+                status.AppendFormat("         Using Event Pipes: {0}\r\n", m_useEventPipes);
                 return status + base.Status;
             }
         }
@@ -218,11 +263,13 @@ namespace PIAdapters
         {
             base.Initialize();
 
+            m_measurements = new List<IMeasurement>();
+
             Dictionary<string, string> settings = Settings;
             string setting;
 
             if (!settings.TryGetValue("ServerName", out m_servername))
-                throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format server=myservername to the connection string.");
+                throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format ServerName=myservername to the connection string.");
 
             if (!settings.TryGetValue("UserName", out setting))
                 m_userName = setting;
@@ -238,6 +285,17 @@ namespace PIAdapters
                 AutoAddOutput = false;
             else
                 AutoAddOutput = bool.Parse(setting);
+
+            if (settings.TryGetValue("UseEventPipes", out setting))
+                UseEventPipes = bool.Parse(setting);
+            else
+                UseEventPipes = true;
+
+            if (settings.TryGetValue("QueryTimeSpan", out setting))
+                QueryTimeSpan = Convert.ToInt32(setting);
+            else
+                QueryTimeSpan = 5;
+
 
             if (AutoAddOutput)
             {
@@ -255,6 +313,7 @@ namespace PIAdapters
                 }
 
                 OutputMeasurements = outputMeasurements.ToArray();
+                OnOutputMeasurementsUpdated();
             }
         }
 
@@ -277,6 +336,10 @@ namespace PIAdapters
                     else
                         m_server.Open();
                     connectionEvent.Set();
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
@@ -321,11 +384,8 @@ namespace PIAdapters
 
             var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                         from key in Keys
-                        where row["ID"].ToString().Split(':')[1] == key.ID.ToString() && row["PROTOCOL"].ToString() == "PI"
-                        select new
-                        {
-                            Key = key, AlternateTag = row["ALTERNATETAG"].ToString(), PointTag = row["POINTTAG"].ToString()
-                        };
+                        where row["ID"].ToString().Split(':')[1] == key.ID.ToString()
+                        select new { Key = key, AlternateTag = row["ALTERNATETAG"].ToString(), PointTag = row["POINTTAG"].ToString() };
 
             StringBuilder tagFilter = new StringBuilder();
             foreach (var row in query)
@@ -347,11 +407,203 @@ namespace PIAdapters
 
             m_points = m_server.GetPoints(tagFilter.ToString());
 
-            if (m_pipe != null)
-                ((_DEventPipeEvents_Event)m_pipe).OnNewValue -= (PISDK._DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
+            // event pipes are only applicable if enabled in connection string and this is a real time session, not playback
+            bool useEventPipes = m_useEventPipes && StartTimeConstraint == DateTime.MinValue && StopTimeConstraint == DateTime.MaxValue;
+            if (useEventPipes)
+            {
+                try
+                {
+                    if (m_pipe != null)
+                        ((_DEventPipeEvents_Event)m_pipe).OnNewValue -= (PISDK._DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
 
-            m_pipe = m_points.Data.EventPipe;
-            ((_DEventPipeEvents_Event)m_pipe).OnNewValue += (PISDK._DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
+                    m_pipe = m_points.Data.EventPipe;
+                    ((_DEventPipeEvents_Event)m_pipe).OnNewValue += (PISDK._DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
+                }
+                catch (ThreadAbortException) { throw; }
+                catch (Exception e)
+                {
+                    useEventPipes = false; // try to run with polling instead of event pipes;
+                    OnProcessException(e);
+                }
+            }
+
+            if (!useEventPipes)
+            {
+                // warn that we are going to use a different configuration here...
+                if (m_useEventPipes)
+                    OnStatusMessage("WARNING: PI adapter switching from event pipes to polling due to error or start/stop time constraints.");
+
+                // set up a new thread to do some long calls to PI and set up threads, timers, etc for polling
+                StopGettingData();
+                ThreadPool.QueueUserWorkItem(StartGettingData, tagFilter);
+            }
+
+            m_useEventPipes = useEventPipes;
+        }
+
+        /// <summary>
+        /// Starts threads and timers to poll the PI server for data
+        /// </summary>
+        /// <param name="state">Filter string which will get the desired points from PI</param>
+        private void StartGettingData(object state)
+        {
+            try
+            {
+                string tagFilter = state.ToString();
+                m_points = m_server.GetPoints(tagFilter);
+
+                m_dataThread = new Thread(QueryData);
+                m_dataThread.IsBackground = true;
+                m_dataThread.Start();
+
+                m_publishTimer = new System.Timers.Timer();
+                m_publishTimer.Interval = ProcessingInterval > 0 ? ProcessingInterval : 33;
+                m_publishTimer.Elapsed += m_publishTimer_Tick;
+                m_publishTimer.Start();
+            }
+            catch (ThreadAbortException) 
+            { 
+                throw; 
+            }
+            catch (Exception e) 
+            { 
+                OnProcessException(e); 
+            }
+        }
+
+        private void StopGettingData()
+        {
+            try
+            {
+                if (m_publishTimer != null)
+                {
+                    m_publishTimer.Elapsed -= m_publishTimer_Tick;
+                    m_publishTimer.Stop();
+                    m_publishTimer.Dispose();
+                }
+                m_publishTimer = null;
+
+
+                if (m_dataThread != null)
+                    m_dataThread.Abort();
+
+                m_dataThread = null;
+
+                m_points = null;
+            }
+            catch (ThreadAbortException) 
+            { 
+                throw; 
+            }
+            catch (Exception ex) 
+            { 
+                OnProcessException(ex); 
+            }
+        }
+
+        /// <summary>
+        /// Runs a constant loop to pull data from PI
+        /// </summary>
+        private void QueryData()
+        {
+            DateTime currentTime = StartTimeConstraint;
+            if (currentTime == DateTime.MinValue) // handle real-time IAON session
+                currentTime = DateTime.UtcNow;
+
+            while (currentTime <= StopTimeConstraint)
+            {
+                try
+                {
+                    DateTime endTime = currentTime.AddSeconds(m_queryTimeSpan);
+                    if (endTime <= DateTime.UtcNow)
+                    {
+                        List<IMeasurement> measToAdd = new List<IMeasurement>();
+                        foreach (PIPoint point in m_points)
+                        {
+                            PIValues values = point.Data.RecordedValues(currentTime.ToLocalTime(), endTime.ToLocalTime());
+                            foreach (PIValue value in values)
+                            {
+                                if (!value.Value.GetType().IsCOMObject)
+                                {
+                                    Measurement measurement = new Measurement();
+                                    measurement.Key = m_tagKeyMap[point.Name];
+                                    measurement.ID = measurement.Key.SignalID;
+                                    measurement.Value = Convert.ToDouble(value.Value);
+                                    measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
+                                    measToAdd.Add(measurement);
+                                }
+                            }
+                        }
+
+                        if (measToAdd.Any())
+                        {
+                            lock (m_measurements)
+                            {
+                                foreach (IMeasurement meas in measToAdd)
+                                {
+                                    m_measurements.Add(meas);
+                                    m_processedMeasurements++;
+                                }
+                            }
+                        }
+
+                        currentTime = endTime;
+                        m_queryTime = currentTime;
+                    }
+                }
+                catch (ThreadAbortException) 
+                { 
+                    throw; 
+                }
+                catch (Exception e) 
+                { 
+                    OnProcessException(e);
+                }
+
+                Thread.Sleep(33);
+            }
+        }
+
+        /// <summary>
+        /// Publishes data that was queried from PI using polling
+        /// </summary>
+        void m_publishTimer_Tick(object sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                if (m_queryTime > m_publishTime)
+                {
+                    DateTime minPublishTime = StartTimeConstraint;
+                    if (minPublishTime == DateTime.MinValue)
+                        minPublishTime = DateTime.UtcNow;
+
+                    if (m_publishTime < minPublishTime)
+                        m_publishTime = minPublishTime;
+
+                    m_publishTime = m_publishTime.AddMilliseconds(33);
+
+                    List<IMeasurement> publishMeasurements = new List<IMeasurement>();
+                    foreach (IMeasurement measurement in m_measurements.ToArray())
+                    {
+                        if (measurement.Timestamp <= m_publishTime.Ticks)
+                        {
+                            publishMeasurements.Add(measurement);
+
+                            lock (m_measurements)
+                            {
+                                m_measurements.Remove(measurement);
+                            }
+                        }
+                    }
+
+                    if (publishMeasurements != null)
+                        OnNewMeasurements(publishMeasurements);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
+            }
         }
 
         private void PipeOnOnNewValue()
@@ -420,6 +672,23 @@ namespace PIAdapters
             m_pi = null;
             m_points = null;
             m_pipe = null;
+
+            m_measurements.Clear();
+            m_measurements = null;
+
+            if (m_dataThread != null)
+            {
+                m_dataThread.Abort();
+                m_dataThread = null;
+            }
+
+            if (m_publishTimer != null)
+            {
+                m_publishTimer.Stop();
+                m_publishTimer.Elapsed -= m_publishTimer_Tick;
+                m_publishTimer.Dispose();
+                m_publishTimer = null;
+            }
         }
 
         #endregion
