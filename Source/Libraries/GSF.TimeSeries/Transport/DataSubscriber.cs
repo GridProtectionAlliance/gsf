@@ -2544,18 +2544,23 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Socket exception handler
-        private bool HandleSocketException(SocketException ex)
+        private bool HandleSocketException(Exception ex)
         {
-            if ((object)ex != null)
+            SocketException socketException = ex as SocketException;
+
+            if ((object)socketException != null)
             {
                 // WSAECONNABORTED and WSAECONNRESET are common errors after a client disconnect,
                 // if they happen for other reasons, make sure disconnect procedure is handled
-                if (ex.ErrorCode == 10053 || ex.ErrorCode == 10054)
+                if (socketException.ErrorCode == 10053 || socketException.ErrorCode == 10054)
                 {
                     DisconnectClient();
                     return true;
                 }
             }
+
+            if ((object)ex != null)
+                HandleSocketException(ex.InnerException);
 
             return false;
         }
@@ -2833,7 +2838,7 @@ namespace GSF.TimeSeries.Transport
         {
             Exception ex = e.Argument;
 
-            if (!HandleSocketException(ex as SocketException) && !(ex is ObjectDisposedException))
+            if (!HandleSocketException(ex) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while sending command channel data to publisher connection: " + ex.Message, ex));
         }
 
@@ -2869,7 +2874,7 @@ namespace GSF.TimeSeries.Transport
         {
             Exception ex = e.Argument;
 
-            if (!HandleSocketException(ex as SocketException) && !(ex is ObjectDisposedException))
+            if (!HandleSocketException(ex) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving command channel data from publisher connection: " + ex.Message, ex));
         }
 
@@ -2925,7 +2930,7 @@ namespace GSF.TimeSeries.Transport
         {
             Exception ex = e.Argument;
 
-            if (!HandleSocketException(ex as SocketException) && !(ex is ObjectDisposedException))
+            if (!HandleSocketException(ex) && !(ex is ObjectDisposedException))
                 OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving UDP data from publisher connection: " + ex.Message, ex));
         }
 
