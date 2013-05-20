@@ -529,6 +529,8 @@ namespace GSF.Communication
             {
                 if (CurrentState != ClientState.Disconnected)
                 {
+                    base.Disconnect();
+
                     if ((object)m_tcpClient.Provider != null && m_tcpClient.Provider.Connected)
                         m_tcpClient.Provider.Disconnect(false);
 
@@ -541,10 +543,6 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
-            }
-            finally
-            {
-                base.Disconnect();
             }
         }
 
@@ -1214,10 +1212,14 @@ namespace GSF.Communication
         {
             try
             {
-                if ((object)m_connectWaitHandle != null)
-                    m_connectWaitHandle.Set();
+                if (CurrentState != ClientState.Disconnected)
+                {
+                    if ((object)m_connectWaitHandle != null)
+                        m_connectWaitHandle.Set();
 
-                m_tcpClient.Reset();
+                    m_tcpClient.Reset();
+                }
+
                 Interlocked.Exchange(ref m_receiving, 0);
                 OnConnectionTerminated();
             }

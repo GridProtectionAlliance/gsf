@@ -625,6 +625,8 @@ namespace GSF.Communication
             {
                 if (CurrentState != ClientState.Disconnected)
                 {
+                    base.Disconnect();
+
                     if ((object)m_socket != null && m_socket.Connected)
                         m_socket.Disconnect(false);
 
@@ -637,10 +639,6 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 OnSendDataException(new InvalidOperationException(string.Format("Disconnect exception: {0}", ex.Message), ex));
-            }
-            finally
-            {
-                base.Disconnect();
             }
         }
 
@@ -1326,10 +1324,14 @@ namespace GSF.Communication
         {
             try
             {
-                if ((object)m_connectWaitHandle != null)
-                    m_connectWaitHandle.Set();
+                if (CurrentState != ClientState.Disconnected)
+                {
+                    if ((object)m_connectWaitHandle != null)
+                        m_connectWaitHandle.Set();
 
-                m_sslClient.Reset();
+                    m_sslClient.Reset();
+                }
+
                 Interlocked.Exchange(ref m_receiving, 0);
                 OnConnectionTerminated();
             }

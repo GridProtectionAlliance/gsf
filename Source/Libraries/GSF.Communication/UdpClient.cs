@@ -538,6 +538,8 @@ namespace GSF.Communication
             {
                 try
                 {
+                    base.Disconnect();
+
                     if ((object)m_udpServer != null && (object)m_udpClient.Provider != null)
                     {
                         // If the IP specified for the server is a multicast IP, unsubscribe from the specified multicast group.
@@ -556,8 +558,6 @@ namespace GSF.Communication
 
                 if ((object)m_connectionThread != null)
                     m_connectionThread.Abort();
-
-                base.Disconnect();
             }
         }
 
@@ -1221,7 +1221,9 @@ namespace GSF.Communication
         /// </summary>
         private void TerminateConnection(bool raiseEvent)
         {
-            m_udpClient.Reset();
+            if (CurrentState != ClientState.Disconnected)
+                m_udpClient.Reset();
+
             Interlocked.Exchange(ref m_receiving, 0);
 
             if (raiseEvent)
