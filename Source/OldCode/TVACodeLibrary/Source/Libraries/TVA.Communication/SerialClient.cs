@@ -402,11 +402,11 @@ namespace TVA.Communication
         /// Gets the <see cref="TransportProvider{SerialPort}"/> object for the <see cref="SerialClient"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<SerialPort> Client
+        public SerialPort Client
         {
             get
             {
-                return m_serialClient;
+                return m_serialClient.Provider;
             }
         }
 

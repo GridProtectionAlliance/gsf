@@ -412,6 +412,7 @@ namespace TVA.Communication
         private SpinLock m_sendLock;
         private ConcurrentQueue<TcpClientPayload> m_sendQueue;
         private int m_sending;
+        private int m_receiving;
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
@@ -583,11 +584,11 @@ namespace TVA.Communication
         /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<Socket> Client
+        public Socket Client
         {
             get
             {
-                return m_tcpClient;
+                return m_tcpClient.Provider;
             }
         }
 
@@ -781,10 +782,14 @@ namespace TVA.Communication
         {
             string integratedSecuritySetting;
 
+            try
+            {
             if (CurrentState == ClientState.Disconnected && !m_disposed)
             {
                 try
                 {
+                        if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
+                            throw new InvalidOperationException("Client is not yet fully disconnected");
                     if ((object)m_connectWaitHandle == null)
                         m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
@@ -826,6 +831,12 @@ namespace TVA.Communication
             }
 
             return m_connectWaitHandle;
+            }
+            catch
+            {
+                Interlocked.Exchange(ref m_receiving, 0);
+                throw;
+            }
         }
 
         /// <summary>
@@ -1075,6 +1086,7 @@ namespace TVA.Communication
                 OnConnectionEstablished();
 
                 // Set up send buffer and begin receiving.
+                Interlocked.Exchange(ref m_receiving, 1);
                 ReceivePayloadAsync();
             }
             catch (SocketException ex)
@@ -1429,6 +1441,7 @@ namespace TVA.Communication
                     m_connectWaitHandle.Set();
 
                 m_tcpClient.Reset();
+                Interlocked.Exchange(ref m_receiving, 0);
                 OnConnectionTerminated();
             }
             catch (ThreadAbortException)

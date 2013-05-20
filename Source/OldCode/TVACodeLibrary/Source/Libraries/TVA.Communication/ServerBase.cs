@@ -1487,7 +1487,7 @@ namespace TVA.Communication
                 }
 
                 // Create a server instance for the specified protocol.
-                switch (protocol.ToLower())
+                switch (protocol.Trim().ToLower())
                 {
                     case "tcp":
                         server = new TcpServer(settings.ToString());

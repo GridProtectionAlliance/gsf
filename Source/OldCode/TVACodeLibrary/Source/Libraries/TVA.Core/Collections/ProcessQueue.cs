@@ -595,9 +595,9 @@ namespace TVA.Collections
         private bool m_requeueOnTimeout;
         private bool m_requeueOnException;
 
+        private volatile bool m_enabled;
         private int m_processing;
         private int m_threadCount;
-        private bool m_enabled;
         private long m_itemsProcessing;
         private long m_itemsProcessed;
         private long m_startTime;

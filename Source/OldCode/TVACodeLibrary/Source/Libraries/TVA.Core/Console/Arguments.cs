@@ -533,9 +533,9 @@ namespace TVA.Console
         /// </summary>
         /// <param name="argument">The argument whose value is to be retrieved.</param>
         /// <param name="value">Value associated with the specified argument if it exists in the command-line command, otherwise null.</param>
-        public virtual void TryGetValue(string argument, out string value)
+        public virtual bool TryGetValue(string argument, out string value)
         {
-            m_arguments.TryGetValue(argument, out value);
+            return m_arguments.TryGetValue(argument, out value);
         }
 
         /// <summary>

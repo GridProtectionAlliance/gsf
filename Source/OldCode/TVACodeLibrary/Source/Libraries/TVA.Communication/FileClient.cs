@@ -648,11 +648,11 @@ namespace TVA.Communication
         /// Gets the <see cref="TransportProvider{FileStream}"/> object for the <see cref="FileClient"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<FileStream> Client
+        public FileStream Client
         {
             get
             {
-                return m_fileClient;
+                return m_fileClient.Provider;
             }
         }
 

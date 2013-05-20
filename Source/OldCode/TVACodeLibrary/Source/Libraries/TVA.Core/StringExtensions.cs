@@ -976,6 +976,32 @@ namespace TVA
         }
 
         /// <summary>
+        /// Wraps <paramref name="value"/> in the <paramref name="quoteChar"/>.
+        /// </summary>
+        /// <param name="value">Input string to process</param>
+        /// <param name="quoteChar">The char to wrap <paramref name="value"/></param>
+        /// <returns><paramref name="value"/> wrapped in <paramref name="quoteChar"/></returns>
+        public static string QuoteWrap(this string value, char quoteChar = '\"')
+        {
+            if (string.IsNullOrEmpty(value))
+                return "";
+
+            if (quoteChar == 0)
+                return value;
+
+            if (value[0] != quoteChar)
+                value = string.Concat(quoteChar, value);
+
+            if (value[value.Length - 1] != quoteChar)
+                value = string.Concat(value, quoteChar);
+
+            if (!value.StartsWith(quoteChar.ToString()))
+                value = string.Concat(quoteChar, value);
+
+            return value;
+        }
+
+        /// <summary>
         /// Counts the total number of the occurances of a character in the given string.
         /// </summary>
         /// <param name="value">Input string.</param>
@@ -1538,7 +1564,9 @@ namespace TVA
                     }
                 }
                 else
+                {
                     c = (char)0;
+                }
             }
 
             return -1;

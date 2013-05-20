@@ -640,7 +640,22 @@ namespace TVA.Configuration
         /// <returns>Value as boolean.</returns>
         public bool ValueAsBoolean(bool defaultValue)
         {
-            return ValueAs(defaultValue);
+            try
+            {
+                string value = Value;
+
+                // Value is an empty string - use default value.
+                if (string.IsNullOrEmpty(value))
+                    return defaultValue;
+
+                // Value is not empty string - convert to boolean.
+                return value.ParseBoolean();
+            }
+            catch
+            {
+                // Conversion to target type failed so use the default value.
+                return defaultValue;
+            }
         }
 
         /// <summary>

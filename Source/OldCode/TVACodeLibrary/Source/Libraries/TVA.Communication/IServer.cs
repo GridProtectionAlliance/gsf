@@ -299,6 +299,14 @@ namespace TVA.Communication
         event EventHandler<EventArgs<Guid>> ClientDisconnected;
 
         /// <summary>
+        /// Occurs when an exception is encountered while a client is connecting.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when connecting to the client.
+        /// </remarks>
+        event EventHandler<EventArgs<Exception>> ClientConnectingException;
+
+        /// <summary>
         /// Occurs when data is being sent to a client.
         /// </summary>
         /// <remarks>

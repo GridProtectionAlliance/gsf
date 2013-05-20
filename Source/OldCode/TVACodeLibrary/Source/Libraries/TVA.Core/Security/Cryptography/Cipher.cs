@@ -695,14 +695,7 @@ namespace TVA.Security.Cryptography
             try
             {
                 // Validate that user has write access to the local cryptographic cache folder
-                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid().ToString() + ".tmp";
-
-                using (File.Create(tempFile))
-                {
-                }
-
-                if (File.Exists(tempFile))
-                    File.Delete(tempFile);
+                System.Security.AccessControl.DirectorySecurity ds = Directory.GetAccessControl(FilePath.GetDirectoryName(localCacheFileName));
 
                 // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
                 s_keyIVCache = localKeyIVCache;
@@ -860,17 +853,17 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>
-        /// Gets the Base64 encoded SHA-2 hash of given user password.
+        /// Gets the Base64 encoded SHA-256 hash of given user password.
         /// </summary>
         /// <param name="password">User password to get hash for.</param>
-        /// <param name="keySize">Specifies the desired key size.</param>
-        /// <returns>Base64 encoded SHA-2 hash of user password.</returns>
-        public static string GetPasswordHash(string password, int keySize)
+        /// <param name="categoryID">Specifies the desired category ID.</param>
+        /// <returns>Base64 encoded SHA-256 hash of user password.</returns>
+        public static string GetPasswordHash(string password, int categoryID = 0)
         {
             string hash;
 
-            // Suffix password with key size since same password may be in use for different key sizes
-            password += keySize.ToString();
+            // Suffix password with category ID (key size) since same password may be in use for different category IDs
+            password += categoryID.ToString();
 
             lock (s_passwordHash)
             {

@@ -398,7 +398,12 @@ namespace TVA.Communication
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ReceiveBufferSize"/> property.
         /// </summary>
-        public new const int DefaultReceiveBufferSize = 32768;
+        public new const int DefaultReceiveBufferSize = 65536;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="MaxPacketSize"/> property.
+        /// </summary>
+        public const int DefaultMaxPacketSize = 65536;
 
         /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
@@ -458,6 +463,7 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_udpClient;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
+        private int m_maxPacketSize;
         private int m_maxSendQueueSize;
         private Dictionary<string, string> m_connectData;
         private ManualResetEvent m_connectionHandle;
@@ -468,6 +474,7 @@ namespace TVA.Communication
 #endif
 
         private int m_sending;
+        private int m_receiving;
         private SpinLock m_sendLock;
         private ConcurrentQueue<UdpClientPayload> m_sendQueue;
         private SocketAsyncEventArgs m_sendArgs;
@@ -498,6 +505,7 @@ namespace TVA.Communication
             : base(TransportProtocol.Udp, connectString)
         {
             base.ReceiveBufferSize = DefaultReceiveBufferSize;
+            m_maxPacketSize = DefaultMaxPacketSize;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
 
@@ -562,11 +570,11 @@ namespace TVA.Communication
         /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="UdpClient"/>.
         /// </summary>
         [Browsable(false)]
-        public TransportProvider<Socket> Client
+        public Socket Client
         {
             get
             {
-                return m_udpClient;
+                return m_udpClient.Provider;
             }
         }
 
@@ -596,13 +604,26 @@ namespace TVA.Communication
             {
                 base.ReceiveBufferSize = value;
 
-                if ((object)m_udpClient != null)
-                {
-                    m_udpClient.SetReceiveBuffer(value);
+                if ((object)m_udpClient != null && (object)m_udpClient.Provider != null)
+                    m_udpClient.Provider.ReceiveBufferSize = value;
+            }
+        }
 
-                    if ((object)m_udpClient.Provider != null)
-                        m_udpClient.Provider.ReceiveBufferSize = value;
-                }
+        /// <summary>
+        /// Gets or sets the maximum expected size for packets being received by this <see cref="UdpClient"/>.
+        /// </summary>
+        public int MaxPacketSize
+        {
+            get
+            {
+                return m_maxPacketSize;
+            }
+            set
+            {
+                m_maxPacketSize = value;
+
+                if ((object)m_udpClient != null)
+                    m_udpClient.SetReceiveBuffer(value);
             }
         }
 
@@ -749,18 +770,7 @@ namespace TVA.Communication
                         IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
 
                         if (Transport.IsMulticastIP(serverEndpoint.Address))
-                        {
-                            if ((object)m_udpClient.MulticastMembershipAddresses != null)
-                            {
-                                // Execute multicast unsubscribe for specific source
-                                m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropSourceMembership, m_udpClient.MulticastMembershipAddresses);
-                            }
-                            else
-                            {
-                                // Execute multicast unsubscribe for any source
-                                m_udpClient.Provider.SetSocketOption(serverEndpoint.AddressFamily == AddressFamily.InterNetworkV6 ? SocketOptionLevel.IPv6 : SocketOptionLevel.IP, SocketOptionName.DropMembership, new MulticastOption(serverEndpoint.Address));
-                            }
-                        }
+                            DropMulticastMembership(serverEndpoint.Address, null, m_udpClient.MulticastMembershipAddresses);
                     }
                 }
                 catch (Exception ex)
@@ -785,10 +795,16 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
+            try
+            {
+                // Client may still be attempting to receive data from a prior connection
+                if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
+                    throw new InvalidOperationException("Client is not yet fully disconnected");
 
-            m_udpClient = new TransportProvider<Socket>();
-            m_udpClient.SetReceiveBuffer(ReceiveBufferSize);
+                m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
+
+                m_udpClient = new TransportProvider<Socket>();
+                m_udpClient.SetReceiveBuffer(m_maxPacketSize);
 
             // Create a server endpoint.
             if (m_connectData.ContainsKey("server"))
@@ -816,6 +832,12 @@ namespace TVA.Communication
             m_connectionThread.Start();
 
             return m_connectionHandle;
+            }
+            catch
+            {
+                Interlocked.Exchange(ref m_receiving, 0);
+                throw;
+            }
         }
 
         /// <summary>
@@ -983,6 +1005,7 @@ namespace TVA.Communication
                             m_receiveArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
                         }
 
+                        Interlocked.Exchange(ref m_receiving, 1);
                         m_receiveArgs.Completed += m_receiveHandler;
                         ReceivePayloadAsync();
                     }
@@ -1026,6 +1049,9 @@ namespace TVA.Communication
             UdpClientPayload dequeuedPayload;
             ManualResetEventSlim handle;
             bool lockTaken = false;
+
+            if (CurrentState != ClientState.Connected)
+                throw new InvalidOperationException("Client is not connected");
 
             // Check to see if the client has reached the maximum send queue size.
             if (m_maxSendQueueSize > 0 && m_sendQueue.Count >= m_maxSendQueueSize)
@@ -1268,6 +1294,9 @@ namespace TVA.Communication
         {
             try
             {
+                if (CurrentState == ClientState.Disconnected)
+                    throw new SocketException((int)SocketError.Disconnecting);
+
                 if (m_receiveArgs.SocketError != SocketError.Success)
                     throw new SocketException((int)m_receiveArgs.SocketError);
 
@@ -1418,6 +1447,7 @@ namespace TVA.Communication
         private void TerminateConnection(bool raiseEvent)
         {
             m_udpClient.Reset();
+            Interlocked.Exchange(ref m_receiving, 0);
 
             if (raiseEvent)
                 OnConnectionTerminated();
