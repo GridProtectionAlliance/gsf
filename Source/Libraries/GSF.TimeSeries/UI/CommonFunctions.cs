@@ -579,7 +579,7 @@ namespace GSF.TimeSeries.UI
             }
             catch (Exception ex)
             {
-                Application.Current.MainWindow.Dispatcher.BeginInvoke(Popup, "The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
+                Application.Current.Dispatcher.BeginInvoke(Popup, "The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
             }
         }
 
