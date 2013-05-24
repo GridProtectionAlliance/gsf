@@ -34,6 +34,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Data;
 using GSF.Units;
 
 namespace GSF.TimeSeries.Adapters
@@ -1377,8 +1378,8 @@ namespace GSF.TimeSeries.Adapters
                                 // Create a new measurement for the provided field level information
                                 Measurement measurement = new Measurement
                                     {
-                                    Key = key
-                                };
+                                        Key = key
+                                    };
 
                                 // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
                                 try
@@ -1489,6 +1490,26 @@ namespace GSF.TimeSeries.Adapters
                     {
                         if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
                             keys.Add(key);
+                    }
+                }
+                else if (value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    try
+                    {
+                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                        {
+                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+
+                            foreach (DataRow row in results.Rows)
+                            {
+                                if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
+                                    keys.Add(key);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(string.Format("Could not parse input measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
                     }
                 }
                 else
@@ -1611,7 +1632,7 @@ namespace GSF.TimeSeries.Adapters
                         id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
                         measurement = new Measurement
-                            {
+                        {
                             ID = id,
                             Key = MeasurementKey.Parse(row["ID"].ToString(), id),
                             TagName = row["PointTag"].ToNonNullString(),
@@ -1620,6 +1641,36 @@ namespace GSF.TimeSeries.Adapters
                         };
 
                         measurements.Add(measurement);
+                    }
+                }
+                else if (value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    try
+                    {
+                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                        {
+                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+
+                            foreach (DataRow row in results.Rows)
+                            {
+                                id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+
+                                measurement = new Measurement
+                                {
+                                    ID = id,
+                                    Key = MeasurementKey.Parse(row["ID"].ToString(), id),
+                                    TagName = row["PointTag"].ToNonNullString(),
+                                    Adder = double.Parse(row["Adder"].ToString()),
+                                    Multiplier = double.Parse(row["Multiplier"].ToString())
+                                };
+
+                                measurements.Add(measurement);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(string.Format("Could not parse output measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
                     }
                 }
                 else
@@ -1693,11 +1744,11 @@ namespace GSF.TimeSeries.Adapters
                             // Create a new measurement for the provided field level information
                             measurement = new Measurement
                                 {
-                                ID = key.SignalID,
-                                Key = key,
-                                Adder = adder,
-                                Multiplier = multipler
-                            };
+                                    ID = key.SignalID,
+                                    Key = key,
+                                    Adder = adder,
+                                    Multiplier = multipler
+                                };
 
                             // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
                             try
