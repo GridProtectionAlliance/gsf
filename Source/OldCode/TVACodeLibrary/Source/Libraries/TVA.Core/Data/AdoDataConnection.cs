@@ -254,6 +254,7 @@
 #endregion
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -379,9 +380,9 @@ namespace TVA.Data
         // Fields
         private IDbConnection m_connection;
         private DatabaseType m_databaseType;
-        private string m_connectionString;
-        private Type m_connectionType;
-        private Type m_adapterType;
+        private readonly string m_connectionString;
+        private readonly Type m_connectionType;
+        private readonly Type m_adapterType;
         private bool m_disposed;
 
         #endregion
@@ -397,8 +398,10 @@ namespace TVA.Data
             if (string.IsNullOrWhiteSpace(settingsCategory))
                 throw new ArgumentNullException("settingsCategory", "Parameter cannot be null or empty");
 
-            // Only need to establish data types and load settings once since they are being loaded from config file
-            if ((object)s_configuredConnection == null)
+            // Only need to establish data types and load settings once per defined section since they are being loaded from config file
+            AdoDataConnection configuredConnection;
+
+            if (!s_configuredConnections.TryGetValue(settingsCategory, out configuredConnection))
             {
                 string connectionString, dataProviderString;
 
@@ -423,16 +426,17 @@ namespace TVA.Data
                 }
 
                 // Define connection settings without opening a connection
-                s_configuredConnection = new AdoDataConnection(connectionString, dataProviderString, false);
+                configuredConnection = new AdoDataConnection(connectionString, dataProviderString, false);
+                s_configuredConnections.TryAdd(settingsCategory, configuredConnection);
             }
 
             try
             {
-                // Copy static instance member variables
-                m_databaseType = s_configuredConnection.m_databaseType;
-                m_connectionString = s_configuredConnection.m_connectionString;
-                m_connectionType = s_configuredConnection.m_connectionType;
-                m_adapterType = s_configuredConnection.m_adapterType;
+                // Copy static instance data to member variables
+                m_databaseType = configuredConnection.m_databaseType;
+                m_connectionString = configuredConnection.m_connectionString;
+                m_connectionType = configuredConnection.m_connectionType;
+                m_adapterType = configuredConnection.m_adapterType;
 
                 // Open ADO.NET provider connection
                 m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
@@ -494,19 +498,19 @@ namespace TVA.Data
                 throw new InvalidOperationException("Failed to load ADO data provider, verify \"DataProviderString\": " + ex.Message, ex);
             }
 
-            if (openConnection)
+            if (!openConnection)
+                return;
+
+            try
             {
-                try
-                {
-                    // Open ADO.NET provider connection
-                    m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
-                    m_connection.ConnectionString = m_connectionString;
-                    m_connection.Open();
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException("Failed to open ADO data connection, verify \"ConnectionString\": " + ex.Message, ex);
-                }
+                // Open ADO.NET provider connection
+                m_connection = (IDbConnection)Activator.CreateInstance(m_connectionType);
+                m_connection.ConnectionString = m_connectionString;
+                m_connection.Open();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to open ADO data connection, verify \"ConnectionString\": " + ex.Message, ex);
             }
         }
 
@@ -732,7 +736,7 @@ namespace TVA.Data
         public string ParameterizedQueryString(string format, params string[] parameterNames)
         {
             char paramChar = IsOracle ? ':' : '@';
-            object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
+            object[] parameters = parameterNames.Select(name => paramChar + name).Cast<object>().ToArray();
             return string.Format(format, parameters);
         }
 
@@ -771,7 +775,13 @@ namespace TVA.Data
         #region [ Static ]
 
         // Static Fields
-        private static AdoDataConnection s_configuredConnection;
+        private static readonly ConcurrentDictionary<string, AdoDataConnection> s_configuredConnections;
+
+        // Static Constructor
+        static AdoDataConnection()
+        {
+            s_configuredConnections = new ConcurrentDictionary<string, AdoDataConnection>(StringComparer.InvariantCultureIgnoreCase);
+        }
 
         // Static Methods
 
@@ -780,10 +790,8 @@ namespace TVA.Data
         /// </summary>
         public static void ReloadConfigurationSettings()
         {
-            if ((object)s_configuredConnection != null)
-                s_configuredConnection.Dispose();
-
-            s_configuredConnection = null;
+            if ((object)s_configuredConnections != null)
+                s_configuredConnections.Clear();
         }
 
         #endregion
