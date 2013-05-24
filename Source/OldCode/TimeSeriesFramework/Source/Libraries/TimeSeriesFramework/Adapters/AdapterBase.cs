@@ -33,6 +33,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TVA;
+using TVA.Data;
 using TVA.Units;
 
 namespace TimeSeriesFramework.Adapters
@@ -1213,7 +1214,7 @@ namespace TimeSeriesFramework.Adapters
         #region [ Static ]
 
         // Static Fields
-        private static readonly Regex s_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex s_filterExpression = new Regex("(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
 
         // Static Methods
@@ -1541,11 +1542,36 @@ namespace TimeSeriesFramework.Adapters
                     string tableName = filterMatch.Result("${TableName}").Trim();
                     string expression = filterMatch.Result("${Expression}").Trim();
                     string sortField = filterMatch.Result("${SortField}").Trim();
+                    string maxRows = filterMatch.Result("${MaxRows}").Trim();
+                    int takeCount;
 
-                    foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
+                    if (string.IsNullOrEmpty(maxRows) || !int.TryParse(maxRows, out takeCount))
+                        takeCount = int.MaxValue;
+
+                    foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
                     {
                         if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
                             keys.Add(key);
+                    }
+                }
+                else if (value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    try
+                    {
+                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                        {
+                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+
+                            foreach (DataRow row in results.Rows)
+                            {
+                                if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
+                                    keys.Add(key);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(string.Format("Could not parse input measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
                     }
                 }
                 else
@@ -1657,8 +1683,13 @@ namespace TimeSeriesFramework.Adapters
                     string tableName = filterMatch.Result("${TableName}").Trim();
                     string expression = filterMatch.Result("${Expression}").Trim();
                     string sortField = filterMatch.Result("${SortField}").Trim();
+                    string maxRows = filterMatch.Result("${MaxRows}").Trim();
+                    int takeCount;
 
-                    foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
+                    if (string.IsNullOrEmpty(maxRows) || !int.TryParse(maxRows, out takeCount))
+                        takeCount = int.MaxValue;
+
+                    foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
                     {
                         id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
