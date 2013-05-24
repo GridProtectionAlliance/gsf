@@ -315,6 +315,17 @@
             <param name="allowDualStackSocket">Determines if dual-mode socket is allowed when endpoint address is IPv6.</param>
             <returns>An <see cref="T:System.Net.Sockets.Socket"/> object.</returns>
         </member>
+        <member name="M:TVA.Communication.Transport.IsLocalAddress(System.String)">
+            <summary>
+            Determines if an IP address (or DNS name) is a local IP address.
+            </summary>
+            <param name="hostNameOrAddress">DNS name or IP address to test.</param>
+            <returns><c>true</c> if <paramref name="hostNameOrAddress"/> is a local IP address; otherwise <c>false</c>.</returns>
+            <exception cref="T:System.Net.Sockets.SocketException">An error is encountered when resolving <paramref name="hostNameOrAddress"/>.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="hostNameOrAddress"/> is an invalid IP address.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">The length of <paramref name="hostNameOrAddress"/> is greater than 255 characters.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="hostNameOrAddress"/> is null.</exception>
+        </member>
         <member name="M:TVA.Communication.Transport.GetDefaultIPStack">
             <summary>
             Gets the default IP stack for this system.
@@ -1100,6 +1111,11 @@
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ReceiveBufferSize"/> property.
             </summary>
         </member>
+        <member name="F:TVA.Communication.UdpClient.DefaultMaxPacketSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.UdpClient.MaxPacketSize"/> property.
+            </summary>
+        </member>
         <member name="F:TVA.Communication.UdpClient.DefaultAllowDualStackSocket">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.UdpClient.AllowDualStackSocket"/> property.
@@ -1344,6 +1360,11 @@
             Gets or sets the size of the buffer used by the client for receiving data from the server.
             </summary>
             <exception cref="T:System.ArgumentException">The value being assigned is either zero or negative.</exception>
+        </member>
+        <member name="P:TVA.Communication.UdpClient.MaxPacketSize">
+            <summary>
+            Gets or sets the maximum expected size for packets being received by this <see cref="T:TVA.Communication.UdpClient"/>.
+            </summary>
         </member>
         <member name="P:TVA.Communication.UdpClient.ReceivePacketInfo">
             <summary>
@@ -2293,6 +2314,14 @@
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the ID of the client that disconnected from the server.
+            </remarks>
+        </member>
+        <member name="E:TVA.Communication.IServer.ClientConnectingException">
+            <summary>
+            Occurs when an exception is encountered while a client is connecting.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the <see cref="T:System.Exception"/> encountered when connecting to the client.
             </remarks>
         </member>
         <member name="E:TVA.Communication.IServer.SendClientDataStart">

@@ -16127,6 +16127,13 @@
             <param name="filePath">File name or relative file path.</param>
             <returns>Absolute file path for the specified file name or relative file path.</returns>
         </member>
+        <member name="M:TVA.IO.FilePath.InApplicationPath(System.String)">
+            <summary>
+            Determines if the specified <paramref name="filePath"/> is contained with the current executable path.
+            </summary>
+            <param name="filePath">File name or relative file path.</param>
+            <returns><c>true</c> if the specified <paramref name="filePath"/> is contained with the current executable path; otherwise <c>false</c>.</returns>
+        </member>
         <member name="M:TVA.IO.FilePath.GetApplicationDataFolder">
             <summary>
             Gets the path to the folder where data related to the current application can be stored.
@@ -26206,11 +26213,11 @@
         </member>
         <member name="M:TVA.Security.Cryptography.Cipher.GetPasswordHash(System.String,System.Int32)">
             <summary>
-            Gets the Base64 encoded SHA-2 hash of given user password.
+            Gets the Base64 encoded SHA-256 hash of given user password.
             </summary>
             <param name="password">User password to get hash for.</param>
-            <param name="keySize">Specifies the desired key size.</param>
-            <returns>Base64 encoded SHA-2 hash of user password.</returns>
+            <param name="categoryID">Specifies the desired category ID.</param>
+            <returns>Base64 encoded SHA-256 hash of user password.</returns>
         </member>
         <member name="M:TVA.Security.Cryptography.Cipher.Encrypt(System.String,System.String,TVA.Security.Cryptography.CipherStrength)">
             <summary>
@@ -27082,6 +27089,14 @@
             <param name="value">Input string.</param>
             <param name="replacementCharacter">Character used to replace the invalid characters.</param>
             <returns>>Returns <paramref name="value" /> with all invalid file name characters replaced.</returns>
+        </member>
+        <member name="M:TVA.StringExtensions.QuoteWrap(System.String,System.Char)">
+            <summary>
+            Wraps <paramref name="value"/> in the <paramref name="quoteChar"/>.
+            </summary>
+            <param name="value">Input string to process</param>
+            <param name="quoteChar">The char to wrap <paramref name="value"/></param>
+            <returns><paramref name="value"/> wrapped in <paramref name="quoteChar"/></returns>
         </member>
         <member name="M:TVA.StringExtensions.CharCount(System.String,System.Char)">
             <summary>
