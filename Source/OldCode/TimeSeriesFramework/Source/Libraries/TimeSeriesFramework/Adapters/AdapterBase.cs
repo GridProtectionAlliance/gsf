@@ -1705,6 +1705,36 @@ namespace TimeSeriesFramework.Adapters
                         measurements.Add(measurement);
                     }
                 }
+                else if (value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    try
+                    {
+                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                        {
+                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+
+                            foreach (DataRow row in results.Rows)
+                            {
+                                id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+
+                                measurement = new Measurement
+                                {
+                                    ID = id,
+                                    Key = MeasurementKey.Parse(row["ID"].ToString(), id),
+                                    TagName = row["PointTag"].ToNonNullString(),
+                                    Adder = double.Parse(row["Adder"].ToString()),
+                                    Multiplier = double.Parse(row["Multiplier"].ToString())
+                                };
+
+                                measurements.Add(measurement);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(string.Format("Could not parse output measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
+                    }
+                }
                 else
                 {
                     string[] elem;
