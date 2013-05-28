@@ -76,41 +76,15 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GSF.Communication, Version=4.0.4.15, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\GSF\GSF.Communication.dll</HintPath>
-    </Reference>
-    <Reference Include="GSF.Core, Version=4.0.4.15, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\GSF\GSF.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="GSF.Security, Version=4.0.4.15, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\GSF\GSF.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="GSF.ServiceProcess, Version=4.0.4.15, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\GSF\GSF.ServiceProcess.dll</HintPath>
-    </Reference>
     <Reference Include="GSF.TimeSeries.UI">
-      <HintPath>..\..\Dependencies\GSF\GSF.TimeSeries.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="GSF.TimeSeries.UI.WPF">
-      <HintPath>..\..\Dependencies\GSF\GSF.TimeSeries.UI.WPF.dll</HintPath>
-    </Reference>
-    <Reference Include="GSF.Windows">
-      <HintPath>..\..\Dependencies\GSF\GSF.Windows.dll</HintPath>
+      <HintPath>..\..\..\..\..\Build\Output\Debug\Libraries\GSF.TimeSeries.UI.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
-    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
-    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xaml" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
@@ -125,9 +99,9 @@
     <Content Include="Images\EditConfiguration.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\GSF.PhasorProtocols\UI\GSF.PhasorProtocols.UI.csproj">
-      <Project>{A818C4B5-52B5-4E12-917E-4854C9AB4EF3}</Project>
-      <Name>openPDC.UI</Name>
+    <ProjectReference Include="..\..\..\GSF.Core\GSF.Core.csproj">
+      <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
+      <Name>GSF.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

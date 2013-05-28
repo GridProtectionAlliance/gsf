@@ -42,10 +42,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Timers;
 using GSF;
+using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
 using NAudio.Wave;
@@ -309,7 +312,7 @@ namespace NAudioWpfDemo
                     uriSettings = ConnectionUri.Substring(uriIndex + URI_SEPARATOR.Length).ParseKeyValuePairs('&');
 
                     if (uriSettings.ContainsKey("udp"))
-                        dataChannel = string.Format("port={0}; compression={1}; interface={2}", uriSettings["udp"], EnableCompression, IPv6Enabled ? "::0" : "0.0.0.0");
+                        dataChannel = string.Format("port={0}; interface={1}", uriSettings["udp"], IPv6Enabled ? "::0" : "0.0.0.0");
                 }
 
                 m_buffer = new ConcurrentQueue<IMeasurement>();
@@ -398,7 +401,12 @@ namespace NAudioWpfDemo
             subscriber.DataStartTime += DataSubscriber_DataStartTime;
             subscriber.NewMeasurements += DataSubscriber_NewMeasurements;
 
-            subscriber.ConnectionString = string.Format("server={0}; interface={1}", server, IPv6Enabled ? "::0" : "0.0.0.0");
+            subscriber.ConnectionString = string.Format("server={0}; interface={1}; localCertificate={2}; remoteCertificate={3}; validPolicyErrors={4}; validChainFlags={5}", server, IPv6Enabled ? "::0" : "0.0.0.0", FilePath.GetAbsolutePath("Local.cer"), FilePath.GetAbsolutePath("Remote.cer"), ~SslPolicyErrors.None, ~X509ChainStatusFlags.NoError);
+            subscriber.SecurityMode = EnableEncryption ? SecurityMode.TLS : SecurityMode.None;
+
+            if (!EnableCompression)
+                subscriber.OperationalModes = DataSubscriber.DefaultOperationalModes & ~OperationalModes.CompressPayloadData;
+
             subscriber.Initialize();
             subscriber.Start();
 
@@ -457,8 +465,8 @@ namespace NAudioWpfDemo
                 m_timeoutTimer.Stop();
                 m_dataSubscriber.SendServerCommand(ServerCommand.MetaDataRefresh);
 
-                if (EnableEncryption)
-                    m_dataSubscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
+                //if (EnableEncryption)
+                //    m_dataSubscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
 
                 m_timeoutTimer.Start();
             }
