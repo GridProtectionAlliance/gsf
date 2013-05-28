@@ -276,7 +276,7 @@ namespace GSF.TimeSeries.UI
             {
                 // Create database connection to get currently defined alarms
                 database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                string query = database.ParameterizedQueryString("SELECT * FROM Alarm WHERE Node = {0} AND Enabled <> 0", "nodeID");
+                string query = database.ParameterizedQueryString("SELECT * FROM Alarm WHERE NodeID = {0} AND Enabled <> 0", "nodeID");
                 DataTable alarms = database.Connection.RetrieveData(database.AdapterType, query, database.CurrentNodeID());
 
                 return alarms.Rows.Cast<DataRow>()
