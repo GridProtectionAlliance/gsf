@@ -292,7 +292,6 @@ namespace NAudioWpfDemo
 
                     foreach (DataRow row in measurementRows)
                     {
-                        string measurementKey = row["ID"].ToNonNullString();
                         Guid measurementID = Guid.Parse(row["SignalID"].ToNonNullString());
 
                         if (m_numChannels > 0)
@@ -300,7 +299,7 @@ namespace NAudioWpfDemo
                             filterExpression.Append(';');
                         }
 
-                        filterExpression.Append(measurementKey);
+                        filterExpression.Append(measurementID);
                         m_channelIndexes[measurementID] = m_numChannels;
                         m_numChannels++;
                     }

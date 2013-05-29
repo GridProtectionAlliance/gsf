@@ -179,17 +179,22 @@ namespace GSF.Net.Security
         /// <returns>Trusted X509 certificate, if found; otherwise, <c>null</c>.</returns>
         public X509Certificate GetTrustedCertificate(X509Certificate remoteCertificate)
         {
-            byte[] hash = remoteCertificate.GetCertHash();
-            byte[] key = remoteCertificate.GetPublicKey();
+            byte[] hash, key;
             bool hashMatch, keyMatch;
 
-            foreach (X509Certificate trustedCertificate in m_trustedCertificates.Keys)
+            if ((object)remoteCertificate != null)
             {
-                hashMatch = hash.SequenceEqual(trustedCertificate.GetCertHash());
-                keyMatch = hashMatch && key.SequenceEqual(trustedCertificate.GetPublicKey());
+                hash = remoteCertificate.GetCertHash();
+                key = remoteCertificate.GetPublicKey();
 
-                if (keyMatch)
-                    return trustedCertificate;
+                foreach (X509Certificate trustedCertificate in m_trustedCertificates.Keys)
+                {
+                    hashMatch = hash.SequenceEqual(trustedCertificate.GetCertHash());
+                    keyMatch = hashMatch && key.SequenceEqual(trustedCertificate.GetPublicKey());
+
+                    if (keyMatch)
+                        return trustedCertificate;
+                }
             }
 
             return null;

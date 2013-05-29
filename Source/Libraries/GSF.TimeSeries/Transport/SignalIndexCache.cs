@@ -250,10 +250,12 @@ namespace GSF.TimeSeries.Transport
         /// <returns>Runtime signal index for given <see cref="Guid"/> <paramref name="signalID"/>.</returns>
         public ushort GetSignalIndex(Guid signalID)
         {
-            ushort index = ushort.MaxValue;
+            ushort index;
 
             if (!m_signalIDCache.TryGetValue(signalID, out index))
             {
+                index = ushort.MaxValue;
+
                 foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> item in m_reference)
                 {
                     if (item.Value.Item1 == signalID)

@@ -734,6 +734,7 @@ namespace GSF.TimeSeries.Transport
             Dictionary<string, string> settings = Settings;
             string setting;
             double interval;
+            int bufferSize;
 
             // Setup connection to data publishing server with or without authentication required
             if (settings.TryGetValue("requireAuthentication", out setting))
@@ -794,6 +795,10 @@ namespace GSF.TimeSeries.Transport
             // Define data loss interval
             if (settings.TryGetValue("dataLossInterval", out setting) && double.TryParse(setting, out interval))
                 DataLossInterval = interval;
+
+            // Define buffer size
+            if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out bufferSize))
+                bufferSize = ClientBase.DefaultReceiveBufferSize;
 
             if (m_autoConnect)
             {
@@ -859,6 +864,8 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.PayloadAware = true;
                 commandChannel.PersistSettings = false;
                 commandChannel.MaxConnectionAttempts = 1;
+                commandChannel.ReceiveBufferSize = bufferSize;
+                commandChannel.SendBufferSize = bufferSize;
 
                 // Assign command channel client reference and attach to needed events
                 this.CommandChannel = commandChannel;
@@ -880,6 +887,8 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.MaxConnectionAttempts = 1;
                 commandChannel.CertificateFile = m_localCertificate;
                 commandChannel.CertificateChecker = certificateChecker;
+                commandChannel.ReceiveBufferSize = bufferSize;
+                commandChannel.SendBufferSize = bufferSize;
 
                 // Assign command channel client reference and attach to needed events
                 this.CommandChannel = commandChannel;
