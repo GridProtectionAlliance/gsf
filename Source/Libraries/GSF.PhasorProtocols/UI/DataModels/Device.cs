@@ -1053,52 +1053,52 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     {
                         deviceList.Add(new Device
                             {
-                            NodeID = database.Guid(row, "NodeID"),
-                            ID = row.ConvertField<int>("ID"),
-                            ParentID = row.ConvertNullableField<int>("ParentID"),
-                            UniqueID = database.Guid(row, "UniqueID"),
-                            Acronym = row.Field<string>("Acronym"),
-                            Name = row.Field<string>("Name"),
-                            IsConcentrator = Convert.ToBoolean(row.Field<object>("IsConcentrator")),
-                            CompanyID = row.ConvertNullableField<int>("CompanyID"),
-                            HistorianID = row.ConvertNullableField<int>("HistorianID"),
-                            AccessID = row.ConvertField<int>("AccessID"),
-                            VendorDeviceID = row.ConvertNullableField<int>("VendorDeviceID"),
-                            ProtocolID = row.ConvertNullableField<int>("ProtocolID"),
-                            Longitude = row.ConvertNullableField<decimal>("Longitude"),
-                            Latitude = row.ConvertNullableField<decimal>("Latitude"),
-                            InterconnectionID = row.ConvertNullableField<int>("InterconnectionID"),
-                            ConnectionString = ParseConnectionString(row.Field<string>("ConnectionString").ToNonNullString()),
-                            AlternateCommandChannel = ParseAlternateCommand(row.Field<string>("ConnectionString").ToNonNullString()),
-                            TimeZone = row.Field<string>("TimeZone"),
-                            FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
-                            TimeAdjustmentTicks = Convert.ToInt64(row.Field<object>("TimeAdjustmentTicks")),
-                            DataLossInterval = row.ConvertField<double>("DataLossInterval"),
-                            ContactList = row.Field<string>("ContactList"),
-                            MeasuredLines = row.ConvertNullableField<int>("MeasuredLines"),
-                            LoadOrder = row.ConvertField<int>("LoadOrder"),
-                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                            CreatedOn = row.Field<DateTime>("CreatedOn"),
-                            AllowedParsingExceptions = Convert.ToInt32(row.Field<object>("AllowedParsingExceptions")),
-                            ParsingExceptionWindow = row.ConvertField<double>("ParsingExceptionWindow"),
-                            DelayedConnectionInterval = row.ConvertField<double>("DelayedConnectionInterval"),
-                            AllowUseOfCachedConfiguration = Convert.ToBoolean(row.Field<object>("AllowUseOfCachedConfiguration")),
-                            AutoStartDataParsingSequence = Convert.ToBoolean(row.Field<object>("AutoStartDataParsingSequence")),
-                            SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
-                            MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
-                            ConnectOnDemand = Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
-                            m_companyName = row.Field<string>("CompanyName"),
-                            m_companyAcronym = row.Field<string>("CompanyAcronym"),
-                            m_historianAcronym = row.Field<string>("HistorianAcronym"),
-                            m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
-                            m_vendorAcronym = row.Field<string>("VendorAcronym"),
-                            m_protocolName = row.Field<string>("ProtocolName"),
-                            m_protocolCategory = row.Field<string>("Category"),
-                            m_interconnectionName = row.Field<string>("InterconnectionName"),
-                            m_nodeName = row.Field<string>("NodeName"),
-                            m_parentAcronym = row.Field<string>("ParentAcronym"),
-                            m_originalSource = row.Field<string>("OriginalSource")
-                        });
+                                NodeID = database.Guid(row, "NodeID"),
+                                ID = row.ConvertField<int>("ID"),
+                                ParentID = row.ConvertNullableField<int>("ParentID"),
+                                UniqueID = database.Guid(row, "UniqueID"),
+                                Acronym = row.Field<string>("Acronym"),
+                                Name = row.Field<string>("Name"),
+                                IsConcentrator = Convert.ToBoolean(row.Field<object>("IsConcentrator")),
+                                CompanyID = row.ConvertNullableField<int>("CompanyID"),
+                                HistorianID = row.ConvertNullableField<int>("HistorianID"),
+                                AccessID = row.ConvertField<int>("AccessID"),
+                                VendorDeviceID = row.ConvertNullableField<int>("VendorDeviceID"),
+                                ProtocolID = row.ConvertNullableField<int>("ProtocolID"),
+                                Longitude = row.ConvertNullableField<decimal>("Longitude"),
+                                Latitude = row.ConvertNullableField<decimal>("Latitude"),
+                                InterconnectionID = row.ConvertNullableField<int>("InterconnectionID"),
+                                ConnectionString = ParseConnectionString(row.Field<string>("ConnectionString").ToNonNullString()),
+                                AlternateCommandChannel = ParseAlternateCommand(row.Field<string>("ConnectionString").ToNonNullString()),
+                                TimeZone = row.Field<string>("TimeZone"),
+                                FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                                TimeAdjustmentTicks = Convert.ToInt64(row.Field<object>("TimeAdjustmentTicks")),
+                                DataLossInterval = row.ConvertField<double>("DataLossInterval"),
+                                ContactList = row.Field<string>("ContactList"),
+                                MeasuredLines = row.ConvertNullableField<int>("MeasuredLines"),
+                                LoadOrder = row.ConvertField<int>("LoadOrder"),
+                                Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                                CreatedOn = row.Field<DateTime>("CreatedOn"),
+                                AllowedParsingExceptions = Convert.ToInt32(row.Field<object>("AllowedParsingExceptions")),
+                                ParsingExceptionWindow = row.ConvertField<double>("ParsingExceptionWindow"),
+                                DelayedConnectionInterval = row.ConvertField<double>("DelayedConnectionInterval"),
+                                AllowUseOfCachedConfiguration = Convert.ToBoolean(row.Field<object>("AllowUseOfCachedConfiguration")),
+                                AutoStartDataParsingSequence = Convert.ToBoolean(row.Field<object>("AutoStartDataParsingSequence")),
+                                SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
+                                MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
+                                ConnectOnDemand = Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
+                                m_companyName = row.Field<string>("CompanyName"),
+                                m_companyAcronym = row.Field<string>("CompanyAcronym"),
+                                m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                                m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
+                                m_vendorAcronym = row.Field<string>("VendorAcronym"),
+                                m_protocolName = row.Field<string>("ProtocolName"),
+                                m_protocolCategory = row.Field<string>("Category"),
+                                m_interconnectionName = row.Field<string>("InterconnectionName"),
+                                m_nodeName = row.Field<string>("NodeName"),
+                                m_parentAcronym = row.Field<string>("ParentAcronym"),
+                                m_originalSource = row.Field<string>("OriginalSource")
+                            });
                     }
                 }
 
@@ -1137,7 +1137,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (deviceType == DeviceType.Concentrator)
                 {
                     query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Device WHERE IsConcentrator = {0} AND NodeID = {1} AND Enabled= {2} ORDER BY LoadOrder",
-                        "isConcentrator", "nodeID","Enabled");
+                        "isConcentrator", "nodeID", "Enabled");
 
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true), database.CurrentNodeID(), database.Bool(true));
                 }
@@ -1502,7 +1502,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
                 // Does not delete the Parent Device
-                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Device SET ParentID = null WHERE ParentID = {0}","OldParentID", "NewParentID"), DefaultTimeout,  device.ID);
+                database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Device SET ParentID = null WHERE ParentID = {0}", "OldParentID", "NewParentID"), DefaultTimeout, device.ID);
                 // Deletes the Parent Device 
                 //database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ParentID = {0}", "ParentID"), DefaultTimeout, device.ID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ID = {0}", "deviceID"), DefaultTimeout, device.ID);
@@ -1536,13 +1536,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     return null;
 
                 //DataRow row = deviceTable.Rows[0];
-                DataRow[] rowset = deviceTable.Select("NodeID =  '" + database.CurrentNodeID() + "'");
-                if (rowset.Count() > 0)
-                {
+                DataRow[] rowset = deviceTable.Select("NodeID = '" + CommonFunctions.CurrentNodeID() + "'");
 
+                if (rowset.Length > 0)
+                {
                     DataRow row = rowset[0];
+
                     Device device = new Device
-                        {
+                    {
                         NodeID = database.Guid(row, "NodeID"),
                         ID = row.ConvertField<int>("ID"),
                         ParentID = row.ConvertNullableField<int>("ParentID"),
@@ -1623,7 +1624,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 foreach (DataRow row in deviceTable.Rows)
                 {
                     deviceList.Add(new Device
-                        {
+                    {
                         NodeID = database.Guid(row, "NodeID"),
                         ID = row.ConvertField<int>("ID"),
                         ParentID = row.ConvertNullableField<int>("ParentID"),
@@ -1688,7 +1689,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="historianID">ID of the historian to refresh metadata if device is null.</param>
         public static void NotifyService(Device device, int? historianID = null)
         {
-            if (device != null)
+            if ((object)device != null)
             {
                 if (device.Enabled)
                 {
@@ -1709,17 +1710,18 @@ namespace GSF.PhasorProtocols.UI.DataModels
             else
             {
                 CommonFunctions.SendCommandToService("ReloadConfig");
+
                 if (historianID != null)
                     CommonFunctions.SendCommandToService("Invoke " + CommonFunctions.GetRuntimeID("Historian", (int)historianID) + " RefreshMetadata");
             }
 
             Historian statHistorian = Historian.GetHistorian(null, "WHERE Acronym = 'STAT'");
+
             if (statHistorian != null)
                 CommonFunctions.SendCommandToService("Invoke " + CommonFunctions.GetRuntimeID("Historian", statHistorian.ID) + " RefreshMetadata");
 
             CommonFunctions.SendCommandToService("INVOKE /a STATISTIC!SERVICES ReloadStatistics");
             CommonFunctions.SendCommandToService("RefreshRoutes");
-
         }
 
         private static string ParseConnectionString(string connectionString)
@@ -1802,7 +1804,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 foreach (DataRow row in deviceTable.Rows)
                 {
                     deviceList.Add(new Device
-                        {
+                    {
                         NodeID = database.Guid(row, "NodeID"),
                         ID = row.ConvertField<int>("ID"),
                         ParentID = row.ConvertNullableField<int>("ParentID"),

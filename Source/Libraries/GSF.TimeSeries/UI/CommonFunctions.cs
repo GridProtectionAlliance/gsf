@@ -67,9 +67,6 @@ namespace GSF.TimeSeries.UI
         private static string s_timeSeriesDataServiceUrl;
         private static WindowsServiceClient s_windowsServiceClient;
         private static bool s_retryServiceConnection;
-        //private DispatcherTimer m_timer;
-        //private TextBlock m_statusTextBlock;
-        //private TsfPopup m_statusPopup;
 
         // Static Properties
 
@@ -199,7 +196,7 @@ namespace GSF.TimeSeries.UI
         //}
 
         /// <summary>
-        /// Retrieves web serivce url to query real time data.
+        /// Retrieves web service url to query real time data.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
         /// <returns>string, url to web service.</returns>
@@ -296,22 +293,28 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Returns current node id <see cref="System.Guid"/> UI is connected to.
         /// </summary>
+        /// <returns>Current Node ID.</returns>
+        public static Guid CurrentNodeID()
+        {
+            return s_currentNodeID;
+        }
+
+        /// <summary>
+        /// Returns current node id <see cref="System.Guid"/> UI is connected to.
+        /// </summary>
         /// <param name="database">Connected <see cref="AdoDataConnection"/></param>
         /// <returns>Proper <see cref="System.Guid"/> implementation for current node id.</returns>
         public static object CurrentNodeID(this AdoDataConnection database)
         {
-            if (s_currentNodeID == null)
-                return database.Guid(Guid.Empty);
-
             return database.Guid(s_currentNodeID);
         }
 
         #endregion
 
         /// <summary>
-        /// Assigns <see cref="CurrentNodeID"/> based ID of currently active node.
+        /// Assigns <see cref="CurrentNodeID()"/> based ID of currently active node.
         /// </summary>
-        /// <param name="nodeID">Current node ID <see cref="CurrentNodeID"/> to assign.</param>
+        /// <param name="nodeID">Current node ID <see cref="CurrentNodeID()"/> to assign.</param>
         public static void SetAsCurrentNodeID(this Guid nodeID)
         {
             s_currentNodeID = nodeID;
@@ -337,6 +340,7 @@ namespace GSF.TimeSeries.UI
         {
             if (value == null)
                 return (object)DBNull.Value;
+
             if (value is int && (int)value == 0)
                 return (object)DBNull.Value;
 
@@ -385,7 +389,7 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         /// <param name="parent">Parent UIElement.</param>
         /// <param name="targetType">Type of child UIElement looking for within parent UIElement.</param>
-        /// <param name="children">Reference paramter to return child collection.</param>
+        /// <param name="children">Reference parameter to return child collection.</param>
         public static void GetChildren(UIElement parent, Type targetType, ref List<UIElement> children)
         {
             int count = VisualTreeHelper.GetChildrenCount(parent);
@@ -458,7 +462,7 @@ namespace GSF.TimeSeries.UI
             }
             finally
             {
-                if (createdConnection && (object)database != null)
+                if (createdConnection)
                     database.Dispose();
             }
         }
@@ -508,7 +512,7 @@ namespace GSF.TimeSeries.UI
                     AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
                     try
                     {
-                        string connectionString = database.ServiceConnectionString(true);   //.RemoteStatusServerConnectionString();
+                        string connectionString = database.ServiceConnectionString(true);
 
                         if (!string.IsNullOrWhiteSpace(connectionString))
                         {
@@ -537,8 +541,7 @@ namespace GSF.TimeSeries.UI
                     }
                     finally
                     {
-                        if (database != null)
-                            database.Dispose();
+                        database.Dispose();
                     }
                 }
             }
@@ -569,7 +572,7 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Connects asynchronously to backend windows service.
         /// </summary>
-        /// <param name="state">paramter used.</param>
+        /// <param name="state">parameter used.</param>
         private static void ConnectAsync(object state)
         {
             try
@@ -601,9 +604,9 @@ namespace GSF.TimeSeries.UI
                     s_windowsServiceClient = null;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // TODO: Log into database error log.
+                LogException(null, "RemoteConsoleConnection", ex);
             }
         }
 
@@ -709,7 +712,7 @@ namespace GSF.TimeSeries.UI
             }
             finally
             {
-                if (createdConnection && connection != null)
+                if (createdConnection && (object)connection != null)
                     connection.Dispose();
             }
 
@@ -809,7 +812,7 @@ namespace GSF.TimeSeries.UI
             }
             catch
             {
-                //Do nothing.  Don't worry about it
+                // Do nothing.  Don't worry about it
             }
             finally
             {
@@ -849,6 +852,5 @@ namespace GSF.TimeSeries.UI
         }
 
         #endregion
-
     }
 }
