@@ -294,22 +294,28 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Returns current node id <see cref="System.Guid"/> UI is connected to.
         /// </summary>
+        /// <returns>Current Node ID.</returns>
+        public static Guid CurrentNodeID()
+        {
+            return s_currentNodeID;
+        }
+
+        /// <summary>
+        /// Returns current node id <see cref="System.Guid"/> UI is connected to.
+        /// </summary>
         /// <param name="database">Connected <see cref="AdoDataConnection"/></param>
         /// <returns>Proper <see cref="System.Guid"/> implementation for current node id.</returns>
         public static object CurrentNodeID(this AdoDataConnection database)
         {
-            if (s_currentNodeID == null)
-                return database.Guid(System.Guid.Empty);
-
             return database.Guid(s_currentNodeID);
         }
 
         #endregion
 
         /// <summary>
-        /// Assigns <see cref="CurrentNodeID"/> based ID of currently active node.
+        /// Assigns <see cref="CurrentNodeID()"/> based ID of currently active node.
         /// </summary>
-        /// <param name="nodeID">Current node ID <see cref="CurrentNodeID"/> to assign.</param>
+        /// <param name="nodeID">Current node ID <see cref="CurrentNodeID()"/> to assign.</param>
         public static void SetAsCurrentNodeID(this Guid nodeID)
         {
             s_currentNodeID = nodeID;
@@ -793,6 +799,5 @@ namespace TimeSeriesFramework.UI
         }
 
         #endregion
-
     }
 }
