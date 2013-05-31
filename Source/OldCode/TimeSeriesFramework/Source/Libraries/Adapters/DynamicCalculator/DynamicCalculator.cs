@@ -50,6 +50,7 @@ namespace DynamicCalculator
         private string m_variableList;
         private string m_imports;
         private bool m_supportsTemporalProcessing;
+        private bool m_skipNanOutput;
 
         private HashSet<string> m_variableNames;
         private Dictionary<MeasurementKey, string> m_keyMapping;
@@ -198,7 +199,7 @@ namespace DynamicCalculator
                 return m_supportsTemporalProcessing;
             }
         }
-
+       
         #endregion
 
         #region [ Methods ]
@@ -240,6 +241,15 @@ namespace DynamicCalculator
                 m_supportsTemporalProcessing = setting.ParseBoolean();
             else
                 m_supportsTemporalProcessing = false;
+
+            // When skipNanOutput is true, then any output measurement which 
+            // would have a value of NaN is skipped.
+            // This prevents the NaN outputs that could otherwise occur when some inputs to the calculation
+            // are at widely differing periods.
+            if (settings.TryGetValue("skipNanOutput", out setting))
+                m_skipNanOutput = setting.ParseBoolean();
+            else
+                m_skipNanOutput = false; //default to previous behavour
         }
 
         /// <summary>
@@ -389,7 +399,9 @@ namespace DynamicCalculator
         // when only a single measurement is to be provided.
         private void OnNewMeasurement(IMeasurement measurement)
         {
-            OnNewMeasurements(new IMeasurement[] { measurement });
+            // skip processing of an output with a value of NaN unless configured to process NaN outputs
+            if (!m_skipNanOutput || !double.IsNaN(measurement.Value))
+                OnNewMeasurements(new IMeasurement[] { measurement });
         }
 
         #endregion
