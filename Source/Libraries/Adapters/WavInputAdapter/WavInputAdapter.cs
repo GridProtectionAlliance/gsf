@@ -54,7 +54,7 @@ namespace WavInputAdapter
 
         // Fields
         private WaveDataReader m_data;
-        private int m_dataIndex;
+        private long m_dataIndex;
         private int m_channels;
         private int m_sampleRate;
         private int m_numSamples;
@@ -177,7 +177,10 @@ namespace WavInputAdapter
             //    throw new ArgumentException(string.Format("The number of channels in the WAV file must match the number of output measurements. Channels: {0}, Measurements: {1}", file.Channels, OutputMeasurements.Length));
 
             m_startTime = PrecisionTimer.UtcNow.Ticks;
-            (new Thread(ProcessMeasurements)).Start();
+
+            Thread t = new Thread(ProcessMeasurements);
+            t.IsBackground = true;
+            t.Start();
         }
 
         /// <summary>
@@ -235,8 +238,6 @@ namespace WavInputAdapter
         // Generates new measurements since the last time this was called.
         private void ProcessMeasurements()
         {
-            SpinWait spinner = new SpinWait();
-
             while (Enabled)
             {
                 try
@@ -249,11 +250,12 @@ namespace WavInputAdapter
                     long timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
 
                     // Declare the variables use in this method.
-                    List<IMeasurement> measurements = new List<IMeasurement>();
+                    List<IMeasurement> measurements = new List<IMeasurement>((int)(Ticks.ToSeconds(GapThreshold) * m_sampleRate * m_channels * 1.1D));
                     LittleBinaryValue[] sample;
 
                     if (now - timestamp > GapThreshold)
                     {
+                        // Reset the start time and delay next transmission in an attempt to catch up
                         m_startTime = now - (m_dataIndex * Ticks.PerSecond / m_sampleRate) + Ticks.FromSeconds(RecoveryDelay);
                         timestamp = now;
                         OnStatusMessage("Start time reset.");
@@ -293,7 +295,12 @@ namespace WavInputAdapter
                     }
 
                     OnNewMeasurements(measurements);
-                    spinner.SpinOnce();
+
+                    if (PrecisionTimer.UtcNow.Ticks - timestamp <= GapThreshold / 100)
+                    {
+                        // Ahead of schedule -- pause for a moment
+                        Thread.Sleep(1);
+                    }
                 }
                 catch (Exception ex)
                 {

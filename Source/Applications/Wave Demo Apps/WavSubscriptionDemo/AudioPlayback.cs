@@ -311,7 +311,7 @@ namespace NAudioWpfDemo
                     uriSettings = ConnectionUri.Substring(uriIndex + URI_SEPARATOR.Length).ParseKeyValuePairs('&');
 
                     if (uriSettings.ContainsKey("udp"))
-                        dataChannel = string.Format("port={0}; interface={1}", uriSettings["udp"], IPv6Enabled ? "::0" : "0.0.0.0");
+                        dataChannel = string.Format("dataChannel={{port={0}; interface={1}}}", uriSettings["udp"], IPv6Enabled ? "::0" : "0.0.0.0");
                 }
 
                 m_buffer = new ConcurrentQueue<IMeasurement>();
