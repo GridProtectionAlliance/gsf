@@ -233,6 +233,8 @@ namespace WavInputAdapter
         // Generates new measurements since the last time this was called.
         private void ProcessMeasurements()
         {
+            SpinWait spinner = new SpinWait();
+
             while (Enabled)
             {
                 try
@@ -289,7 +291,7 @@ namespace WavInputAdapter
                     }
 
                     OnNewMeasurements(measurements);
-                    Thread.Sleep(1);
+                    spinner.SpinOnce();
                 }
                 catch (Exception ex)
                 {
