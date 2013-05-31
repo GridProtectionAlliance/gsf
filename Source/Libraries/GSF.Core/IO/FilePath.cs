@@ -723,6 +723,9 @@ namespace GSF.IO
             int j = 1;
             int k = 1;
 
+            if (!File.Exists(uniqueFilePath))
+                return uniqueFilePath;
+
             while (File.Exists(uniqueFilePath))
             {
                 uniqueFilePath = Path.Combine(directory, string.Format("{0} ({1}){2}", originalFileRoot, i, fileExtension));

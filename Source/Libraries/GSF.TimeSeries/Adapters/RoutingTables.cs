@@ -28,6 +28,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -65,10 +66,8 @@ namespace GSF.TimeSeries.Adapters
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
-        private Dictionary<MeasurementKey, List<IActionAdapter>> m_actionRoutes;
-        private Dictionary<MeasurementKey, List<IOutputAdapter>> m_outputRoutes;
-        private List<IActionAdapter> m_actionBroadcastRoutes;
-        private List<IOutputAdapter> m_outputBroadcastRoutes;
+        private Dictionary<Guid, ISet<IAdapter>> m_measurementRoutes;
+        private List<IAdapter> m_broadcastRoutes;
         private ReaderWriterLockSlim m_adapterRoutesCacheLock;
         private AutoResetEvent m_calculationComplete;
         private readonly object m_queuedCalculationPending;
@@ -186,10 +185,8 @@ namespace GSF.TimeSeries.Adapters
                 {
                     if (disposing)
                     {
-                        m_actionRoutes = null;
-                        m_outputRoutes = null;
-                        m_actionBroadcastRoutes = null;
-                        m_outputBroadcastRoutes = null;
+                        m_measurementRoutes = null;
+                        m_broadcastRoutes = null;
                         m_inputAdapters = null;
                         m_actionAdapters = null;
                         m_outputAdapters = null;
@@ -306,10 +303,10 @@ namespace GSF.TimeSeries.Adapters
             try
             {
                 // Pre-calculate internal routes to improve performance
-                Dictionary<MeasurementKey, List<IActionAdapter>> actionRoutes = new Dictionary<MeasurementKey, List<IActionAdapter>>();
-                Dictionary<MeasurementKey, List<IOutputAdapter>> outputRoutes = new Dictionary<MeasurementKey, List<IOutputAdapter>>();
-                List<IActionAdapter> actionAdapters, actionBroadcastRoutes = new List<IActionAdapter>();
-                List<IOutputAdapter> outputAdapters, outputBroadcastRoutes = new List<IOutputAdapter>();
+                Dictionary<Guid, ISet<IAdapter>> measurementRoutes = new Dictionary<Guid, ISet<IAdapter>>();
+                List<IAdapter> broadcastRoutes = new List<IAdapter>();
+                ISet<IAdapter> adapters;
+
                 MeasurementKey[] measurementKeys;
 
                 Dictionary<IAdapter, ISet<IAdapter>> dependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
@@ -328,23 +325,22 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 foreach (MeasurementKey key in measurementKeys)
                                 {
-                                    if (!actionRoutes.TryGetValue(key, out actionAdapters))
+                                    if (!measurementRoutes.TryGetValue(key.SignalID, out adapters))
                                     {
-                                        actionAdapters = new List<IActionAdapter>();
-                                        actionRoutes.Add(key, actionAdapters);
+                                        adapters = new HashSet<IAdapter>();
+                                        measurementRoutes.Add(key.SignalID, adapters);
                                     }
 
-                                    if (!actionAdapters.Contains(actionAdapter))
-                                        actionAdapters.Add(actionAdapter);
+                                    adapters.Add(actionAdapter);
                                 }
                             }
                             else
-                                actionBroadcastRoutes.Add(actionAdapter);
+                                broadcastRoutes.Add(actionAdapter);
 
                             AddDependencies(actionAdapter, dependencies, backwardDependencies);
                         }
                         else
-                            actionBroadcastRoutes.Add(actionAdapter);
+                            broadcastRoutes.Add(actionAdapter);
                     }
                 }
 
@@ -361,25 +357,27 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 foreach (MeasurementKey key in measurementKeys)
                                 {
-                                    if (!outputRoutes.TryGetValue(key, out outputAdapters))
+                                    if (!measurementRoutes.TryGetValue(key.SignalID, out adapters))
                                     {
-                                        outputAdapters = new List<IOutputAdapter>();
-                                        outputRoutes.Add(key, outputAdapters);
+                                        adapters = new HashSet<IAdapter>();
+                                        measurementRoutes.Add(key.SignalID, adapters);
                                     }
 
-                                    if (!outputAdapters.Contains(outputAdapter))
-                                        outputAdapters.Add(outputAdapter);
+                                    adapters.Add(outputAdapter);
                                 }
                             }
                             else
-                                outputBroadcastRoutes.Add(outputAdapter);
+                                broadcastRoutes.Add(outputAdapter);
 
                             AddDependencies(outputAdapter, dependencies, backwardDependencies);
                         }
                         else
-                            outputBroadcastRoutes.Add(outputAdapter);
+                            broadcastRoutes.Add(outputAdapter);
                     }
                 }
+
+                foreach (HashSet<IAdapter> route in measurementRoutes.Values)
+                    broadcastRoutes.ForEach(adapter => route.Add(adapter));
 
                 m_dependencies = dependencies;
                 m_backwardDependencies = backwardDependencies;
@@ -389,10 +387,8 @@ namespace GSF.TimeSeries.Adapters
 
                 try
                 {
-                    m_actionRoutes = actionRoutes;
-                    m_outputRoutes = outputRoutes;
-                    m_actionBroadcastRoutes = actionBroadcastRoutes;
-                    m_outputBroadcastRoutes = outputBroadcastRoutes;
+                    m_measurementRoutes = measurementRoutes;
+                    m_broadcastRoutes = broadcastRoutes;
                 }
                 finally
                 {
@@ -477,18 +473,17 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual void RoutedMeasurementsHandler(IEnumerable<IMeasurement> newMeasurements)
         {
-            if ((object)m_actionRoutes == null || (object)m_outputRoutes == null)
+            if ((object)m_measurementRoutes == null)
                 return;
 
             Dictionary<IAdapter, List<IMeasurement>> adapterMeasurementsLookup = new Dictionary<IAdapter, List<IMeasurement>>();
+            List<Guid> broadcastIDs = null;
 
-            List<IActionAdapter> actionRoutes;
-            List<IOutputAdapter> outputRoutes;
             List<IMeasurement> measurements;
             ISet<IAdapter> adapters;
             ISet<IAdapter> dependencies;
-            MeasurementKey key;
             DependencyMeasurement dependencyMeasurement;
+            Guid signalID;
 
             m_adapterRoutesCacheLock.EnterReadLock();
 
@@ -497,25 +492,16 @@ namespace GSF.TimeSeries.Adapters
                 // Loop through each new measurement and look for destination routes
                 foreach (IMeasurement measurement in newMeasurements)
                 {
-                    key = measurement.Key;
+                    signalID = measurement.ID;
 
-                    // Create the set of adapters to which this measurement is routed
-                    adapters = new HashSet<IAdapter>();
-                    m_actionBroadcastRoutes.ForEach(adapter => adapters.Add(adapter));
-                    m_outputBroadcastRoutes.ForEach(adapter => adapters.Add(adapter));
-
-                    if (m_actionRoutes.TryGetValue(key, out actionRoutes))
+                    // Get the set of adapters to which this measurement is routed
+                    if (!m_measurementRoutes.TryGetValue(signalID, out adapters))
                     {
-                        // Add action adapters to the adapter set
-                        foreach (IActionAdapter actionAdapter in actionRoutes)
-                            adapters.Add(actionAdapter);
-                    }
+                        if ((object)broadcastIDs == null)
+                            broadcastIDs = new List<Guid>();
 
-                    if (m_outputRoutes.TryGetValue(key, out outputRoutes))
-                    {
-                        // Add output adapters to the adapter set
-                        foreach (IOutputAdapter outputAdapter in outputRoutes)
-                            adapters.Add(outputAdapter);
+                        broadcastIDs.Add(signalID);
+                        continue;
                     }
 
                     // Search for dependencies in each adapter receiving this measurement
@@ -562,6 +548,22 @@ namespace GSF.TimeSeries.Adapters
             finally
             {
                 m_adapterRoutesCacheLock.ExitReadLock();
+            }
+
+            // Add broadcast routes for measurements which did not previously have routes
+            if ((object)broadcastIDs != null)
+            {
+                m_adapterRoutesCacheLock.EnterWriteLock();
+
+                try
+                {
+                    foreach (Guid broadcastID in broadcastIDs)
+                        m_measurementRoutes[broadcastID] = new HashSet<IAdapter>(m_broadcastRoutes);
+                }
+                finally
+                {
+                    m_adapterRoutesCacheLock.ExitWriteLock();
+                }
             }
 
             // Send independent measurements
