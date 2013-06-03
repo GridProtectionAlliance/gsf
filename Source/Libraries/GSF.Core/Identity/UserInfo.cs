@@ -1757,31 +1757,16 @@ namespace GSF.Identity
         }
 
         // Determines if local group exists using an existing directory entry
-        private static bool LocalGroupExists(DirectoryEntry localMachine, string groupName, out DirectoryEntry groupEntry)
+        private static bool LocalAccountExists(DirectoryEntry localMachine, string accountName, string schemaType, out DirectoryEntry accountEntry)
         {
             try
             {
-                groupEntry = localMachine.Children.Find(groupName, "group");
+                accountEntry = localMachine.Children.Find(accountName, schemaType);
                 return true;
             }
             catch (DirectoryServicesCOMException)
             {
-                groupEntry = null;
-                return false;
-            }
-        }
-
-        // Determines if local user exists using an existing directory entry
-        private static bool LocalUserExists(DirectoryEntry localMachine, string userName, out DirectoryEntry userEntry)
-        {
-            try
-            {
-                userEntry = localMachine.Children.Find(userName, "user");
-                return true;
-            }
-            catch (DirectoryServicesCOMException)
-            {
-                userEntry = null;
+                accountEntry = null;
                 return false;
             }
         }
@@ -1810,7 +1795,7 @@ namespace GSF.Identity
                 DirectoryEntry groupEntry;
 
                 // Determine if local group exists
-                bool groupExists = LocalGroupExists(localMachine, groupName, out groupEntry);
+                bool groupExists = LocalAccountExists(localMachine, groupName, "group", out groupEntry);
 
                 if ((object)groupEntry != null)
                     groupEntry.Dispose();
@@ -1843,7 +1828,7 @@ namespace GSF.Identity
                 DirectoryEntry userEntry;
 
                 // Determine if local user exists
-                bool userExists = LocalUserExists(localMachine, userName, out userEntry);
+                bool userExists = LocalAccountExists(localMachine, userName, "user", out userEntry);
 
                 if ((object)userEntry != null)
                     userEntry.Dispose();
@@ -1888,11 +1873,11 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalGroupExists(localMachine, groupName, out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\", group does not exist.", userName, groupName));
 
                     // Determine if local user exists
-                    if (!LocalUserExists(localMachine, userName, out userEntry))
+                    if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
                         throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" in in local group \"{1}\", user does not exist.", userName, groupName));
 
                     // See if user is in group
@@ -1945,7 +1930,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalGroupExists(localMachine, groupName, out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
                     {
                         using (DirectoryEntry newGroup = localMachine.Children.Add(groupName, "group"))
                         {
@@ -1991,7 +1976,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (LocalGroupExists(localMachine, groupName, out groupEntry))
+                    if (LocalAccountExists(localMachine, groupName, "group", out groupEntry))
                     {
                         localMachine.Children.Remove(groupEntry);
                         return true;
@@ -2043,11 +2028,11 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalGroupExists(localMachine, groupName, out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\", group does not exist.", userName, groupName));
 
                     // Determine if local user exists
-                    if (!LocalUserExists(localMachine, userName, out userEntry))
+                    if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
                         throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\", user does not exist.", userName, groupName));
 
                     // See if user is in group
@@ -2112,16 +2097,14 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalGroupExists(localMachine, groupName, out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\", group does not exist.", userName, groupName));
 
                     // Determine if local user exists
-                    if (!LocalUserExists(localMachine, userName, out userEntry))
+                    if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
                         throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\", user does not exist.", userName, groupName));
 
                     // See if user is in group
-                    bool userIsInGroup = false;
-
                     foreach (object member in (IEnumerable)groupEntry.Invoke("Members"))
                     {
                         using (DirectoryEntry memberEntry = new DirectoryEntry(member))
@@ -2129,17 +2112,11 @@ namespace GSF.Identity
                             // If user already exists in group, take note and break loop
                             if (string.Compare(memberEntry.Name, userEntry.Name, true) == 0)
                             {
-                                userIsInGroup = true;
-                                break;
+                                // Remove existing user from group
+                                groupEntry.Invoke("Remove", new object[] { userEntry.Path });
+                                return true;
                             }
                         }
-                    }
-
-                    if (userIsInGroup)
-                    {
-                        // Remove existing user from group
-                        groupEntry.Invoke("Remove", new object[] { userEntry.Path });
-                        return true;
                     }
                 }
                 finally

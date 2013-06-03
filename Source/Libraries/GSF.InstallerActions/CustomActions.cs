@@ -28,6 +28,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using GSF.Identity;
 using GSF.Interop;
 using GSF.ServiceProcess;
 using Microsoft.Deployment.WindowsInstaller;
@@ -39,10 +40,28 @@ namespace GSF.InstallerActions
     /// </summary>
     public class CustomActions
     {
-        private const int SC_MANAGER_ALL_ACCESS = 0xF003F;
-        private const int SERVICE_ALL_ACCESS = 0xF01FF;
-        private const int SERVICE_CONFIG_FAILURE_ACTIONS = 0x2;
-        private const int SERVICE_CONFIG_FAILURE_ACTIONS_FLAG = 0x4;
+        /// <summary>
+        /// Custom action to create group for an installed service and add the service account to the group.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult ServiceGroupAction(Session session)
+        {
+            string serviceName;
+            string groupName;
+
+            session.Log("Begin ServiceGroupAction");
+
+            serviceName = session.CustomActionData["SERVICENAME"];
+            groupName = string.Format("{0} Users", serviceName);
+            UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to interact with the {0} service.", serviceName));
+            UserInfo.AddUserToLocalGroup(groupName, string.Format(@"NT SERVICE\{0}", serviceName));
+
+            session.Log("End ServiceGroupAction");
+
+            return ActionResult.Success;
+        }
 
         /// <summary>
         /// Custom action to write CompanyName and CompanyAcronym settings to the configuration file of an installed service.
@@ -119,6 +138,13 @@ namespace GSF.InstallerActions
             session.Log("End CustomServiceAction");
             return ActionResult.Success;
         }
+
+        #region [ Interop ]
+
+        private const int SC_MANAGER_ALL_ACCESS = 0xF003F;
+        private const int SERVICE_ALL_ACCESS = 0xF01FF;
+        private const int SERVICE_CONFIG_FAILURE_ACTIONS = 0x2;
+        private const int SERVICE_CONFIG_FAILURE_ACTIONS_FLAG = 0x4;
 
         // The worker method to set all the extension properties for the service
         private static void UpdateServiceConfig(Session session)
@@ -333,5 +359,7 @@ namespace GSF.InstallerActions
                 session.Log(ex.ToString());
             }
         }
+
+        #endregion
     }
 }
