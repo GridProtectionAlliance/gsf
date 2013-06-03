@@ -95,6 +95,8 @@
 //       Updated LastLogon to revert using lastLogon property instead of lastLogonTimestamp since it is
 //       updated less frequestly and fixed the parsing logic for it since the return value is a large
 //       integer.
+//  06/03/2013 - J. Ritchie Carroll
+//       Added static local user/group manipulation functions.
 //
 //******************************************************************************************************
 
@@ -110,8 +112,8 @@ using System.Reflection;
 using System.Security.Principal;
 using System.Threading;
 using GSF.Configuration;
-using GSF.IO;
 using GSF.Interop;
+using GSF.IO;
 using Microsoft.Win32;
 
 namespace GSF.Identity
@@ -1730,8 +1732,6 @@ namespace GSF.Identity
                 impersonatedUser.Undo();
                 impersonatedUser.Dispose();
             }
-
-            impersonatedUser = null;
         }
 
         /// <summary>
@@ -1756,19 +1756,403 @@ namespace GSF.Identity
             }
         }
 
-        #endregion
+        // Determines if local group exists using an existing directory entry
+        private static bool LocalGroupExists(DirectoryEntry localMachine, string groupName, out DirectoryEntry groupEntry)
+        {
+            try
+            {
+                groupEntry = localMachine.Children.Find(groupName, "group");
+                return true;
+            }
+            catch (DirectoryServicesCOMException)
+            {
+                groupEntry = null;
+                return false;
+            }
+        }
 
-        #region [ Obsolete ]
+        // Determines if local user exists using an existing directory entry
+        private static bool LocalUserExists(DirectoryEntry localMachine, string userName, out DirectoryEntry userEntry)
+        {
+            try
+            {
+                userEntry = localMachine.Children.Find(userName, "user");
+                return true;
+            }
+            catch (DirectoryServicesCOMException)
+            {
+                userEntry = null;
+                return false;
+            }
+        }
 
         /// <summary>
-        /// Returns the value for specified active directory property.
+        /// Determines if local group exists.
         /// </summary>
-        /// <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
-        /// <returns><see cref="String"/> value for the specified active directory property.</returns>
-        [Obsolete("GetUserPropertyValueAsString replaces GetUserProperty", true)]
-        public string GetUserProperty(string propertyName)
+        /// <param name="groupName">Group name to test for existence.</param>
+        /// <returns><c>true</c> if <paramref name="groupName"/> exists; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="groupName"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">No <paramref name="groupName"/> was specified.</exception>
+        public static bool LocalGroupExists(string groupName)
         {
-            return GetUserPropertyValueAsString(propertyName);
+            if ((object)groupName == null)
+                throw new ArgumentNullException("groupName");
+
+            // Remove any irrelevant white space
+            groupName = groupName.Trim();
+
+            if (groupName == string.Empty)
+                throw new ArgumentException("No group name was specified.", "groupName");
+
+            // Create a directory entry for the local machine
+            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            {
+                DirectoryEntry groupEntry;
+
+                // Determine if local group exists
+                bool groupExists = LocalGroupExists(localMachine, groupName, out groupEntry);
+
+                if ((object)groupEntry != null)
+                    groupEntry.Dispose();
+
+                return groupExists;
+            }
+        }
+
+        /// <summary>
+        /// Determines if local user exists.
+        /// </summary>
+        /// <param name="userName">User name to test for existence.</param>
+        /// <returns><c>true</c> if <paramref name="userName"/> exists; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="userName"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">No <paramref name="userName"/> was specified.</exception>
+        public static bool LocalUserExists(string userName)
+        {
+            if ((object)userName == null)
+                throw new ArgumentNullException("userName");
+
+            // Remove any irrelevant white space
+            userName = userName.Trim();
+
+            if (userName == string.Empty)
+                throw new ArgumentException("No user name was specified.", "userName");
+
+            // Create a directory entry for the local machine
+            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            {
+                DirectoryEntry userEntry;
+
+                // Determine if local user exists
+                bool userExists = LocalUserExists(localMachine, userName, out userEntry);
+
+                if ((object)userEntry != null)
+                    userEntry.Dispose();
+
+                return userExists;
+            }
+        }
+
+        /// <summary>
+        /// Determines if local user is in group.
+        /// </summary>
+        /// <param name="groupName">Group name to test.</param>
+        /// <param name="userName">User name to test.</param>
+        /// <returns><c>true</c> if local user is in group; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="groupName"/> or <paramref name="userName"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">No <paramref name="groupName"/> or <paramref name="userName"/> was specified.</exception>
+        /// <exception cref="InvalidOperationException">Could not determine if <paramref name="userName"/> is in local <paramref name="groupName"/>, user or group does not exist.</exception>
+        public static bool LocalUserIsInGroup(string groupName, string userName)
+        {
+            if ((object)groupName == null)
+                throw new ArgumentNullException("groupName");
+
+            if ((object)userName == null)
+                throw new ArgumentNullException("userName");
+
+            // Remove any irrelevant white space
+            groupName = groupName.Trim();
+            userName = userName.Trim();
+
+            if (groupName == string.Empty)
+                throw new ArgumentException("Cannot determine is user is in local group: no group name was specified.", "groupName");
+
+            if (userName == string.Empty)
+                throw new ArgumentException("Cannot determine is user is in local group: no user name was specified.", "userName");
+
+            // Create a directory entry for the local machine
+            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            {
+                DirectoryEntry groupEntry = null;
+                DirectoryEntry userEntry = null;
+
+                try
+                {
+                    // Determine if local group exists
+                    if (!LocalGroupExists(localMachine, groupName, out groupEntry))
+                        throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\", group does not exist.", userName, groupName));
+
+                    // Determine if local user exists
+                    if (!LocalUserExists(localMachine, userName, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" in in local group \"{1}\", user does not exist.", userName, groupName));
+
+                    // See if user is in group
+                    foreach (object member in (IEnumerable)groupEntry.Invoke("Members"))
+                    {
+                        using (DirectoryEntry memberEntry = new DirectoryEntry(member))
+                        {
+                            if (string.Compare(memberEntry.Name, userEntry.Name, true) == 0)
+                                return true;
+                        }
+                    }
+                }
+                finally
+                {
+                    if ((object)groupEntry != null)
+                        groupEntry.Dispose();
+
+                    if ((object)userEntry != null)
+                        userEntry.Dispose();
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Creates a new local user group if it does not exist already.
+        /// </summary>
+        /// <param name="groupName">Group name to create if it doesn't exist.</param>
+        /// <param name="groupDescription">Group description.</param>
+        /// <returns><c>true</c> if group was created; otherwise, <c>false</c> if group already existed.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="groupName"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">No <paramref name="groupName"/> was specified.</exception>
+        public static bool CreateLocalGroup(string groupName, string groupDescription = null)
+        {
+            if ((object)groupName == null)
+                throw new ArgumentNullException("groupName");
+
+            // Remove any irrelevant white space
+            groupName = groupName.Trim();
+
+            if (groupName == string.Empty)
+                throw new ArgumentException("Cannot create local group: no group name was specified.", "groupName");
+
+            // Create a directory entry for the local machine
+            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            {
+                DirectoryEntry groupEntry = null;
+
+                try
+                {
+                    // Determine if local group exists
+                    if (!LocalGroupExists(localMachine, groupName, out groupEntry))
+                    {
+                        using (DirectoryEntry newGroup = localMachine.Children.Add(groupName, "group"))
+                        {
+                            newGroup.Invoke("Put", new object[] { "Description", groupDescription ?? groupName + " group." });
+                            newGroup.CommitChanges();
+                        }
+                        return true;
+                    }
+                }
+                finally
+                {
+                    if ((object)groupEntry != null)
+                        groupEntry.Dispose();
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Removes local user group if it exists.
+        /// </summary>
+        /// <param name="groupName">Group name to remove if it exists.</param>
+        /// <returns><c>true</c> if group was removed; otherwise, <c>false</c> if group did not exist.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="groupName"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">No <paramref name="groupName"/> was specified.</exception>
+        public static bool RemoveLocalGroup(string groupName)
+        {
+            if ((object)groupName == null)
+                throw new ArgumentNullException("groupName");
+
+            // Remove any irrelevant white space
+            groupName = groupName.Trim();
+
+            if (groupName == string.Empty)
+                throw new ArgumentException("Cannot remove local group: no group name was specified.", "groupName");
+
+            // Create a directory entry for the local machine
+            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            {
+                DirectoryEntry groupEntry = null;
+
+                try
+                {
+                    // Determine if local group exists
+                    if (LocalGroupExists(localMachine, groupName, out groupEntry))
+                    {
+                        localMachine.Children.Remove(groupEntry);
+                        return true;
+                    }
+                }
+                finally
+                {
+                    if ((object)groupEntry != null)
+                        groupEntry.Dispose();
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Adds an existing local user to the specified group.
+        /// </summary>
+        /// <param name="groupName">Group name to add local user to.</param>
+        /// <param name="userName">Existing local user name.</param>
+        /// <returns><c>true</c> if user was added to local group; otherwise, <c>false</c> meaning user was already in group.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="groupName"/> or <paramref name="userName"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">No <paramref name="groupName"/> or <paramref name="userName"/> was specified.</exception>
+        /// <exception cref="InvalidOperationException">Could not add <paramref name="userName"/> to local <paramref name="groupName"/>, user or group does not exist.</exception>
+        public static bool AddUserToLocalGroup(string groupName, string userName)
+        {
+            if ((object)groupName == null)
+                throw new ArgumentNullException("groupName");
+
+            if ((object)userName == null)
+                throw new ArgumentNullException("userName");
+
+            // Remove any irrelevant white space
+            groupName = groupName.Trim();
+            userName = userName.Trim();
+
+            if (groupName == string.Empty)
+                throw new ArgumentException("Cannot add user to local group: no group name was specified.", "groupName");
+
+            if (userName == string.Empty)
+                throw new ArgumentException("Cannot add user to local group: no user name was specified.", "userName");
+
+            // Create a directory entry for the local machine
+            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            {
+                DirectoryEntry groupEntry = null;
+                DirectoryEntry userEntry = null;
+
+                try
+                {
+                    // Determine if local group exists
+                    if (!LocalGroupExists(localMachine, groupName, out groupEntry))
+                        throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\", group does not exist.", userName, groupName));
+
+                    // Determine if local user exists
+                    if (!LocalUserExists(localMachine, userName, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\", user does not exist.", userName, groupName));
+
+                    // See if user is in group
+                    foreach (object member in (IEnumerable)groupEntry.Invoke("Members"))
+                    {
+                        using (DirectoryEntry memberEntry = new DirectoryEntry(member))
+                        {
+                            // If user already exists in group, exit and return false
+                            if (string.Compare(memberEntry.Name, userEntry.Name, true) == 0)
+                                return false;
+                        }
+                    }
+
+                    // Add existing user to group
+                    groupEntry.Invoke("Add", new object[] { userEntry.Path });
+                    return true;
+                }
+                finally
+                {
+                    if ((object)groupEntry != null)
+                        groupEntry.Dispose();
+
+                    if ((object)userEntry != null)
+                        userEntry.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes local user from the specified group.
+        /// </summary>
+        /// <param name="groupName">Group name to remove local user from.</param>
+        /// <param name="userName">Existing local user name.</param>
+        /// <returns><c>true</c> if user was removed from local group; otherwise, <c>false</c> meaning user was already not in the group.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="groupName"/> or <paramref name="userName"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">No <paramref name="groupName"/> or <paramref name="userName"/> was specified.</exception>
+        /// <exception cref="InvalidOperationException">Could not add <paramref name="userName"/> to local <paramref name="groupName"/>, user or group does not exist.</exception>
+        public static bool RemoveUserFromLocalGroup(string groupName, string userName)
+        {
+            if ((object)groupName == null)
+                throw new ArgumentNullException("groupName");
+
+            if ((object)userName == null)
+                throw new ArgumentNullException("userName");
+
+            // Remove any irrelevant white space
+            groupName = groupName.Trim();
+            userName = userName.Trim();
+
+            if (groupName == string.Empty)
+                throw new ArgumentException("Cannot remove user from local group: no group name was specified.", "groupName");
+
+            if (userName == string.Empty)
+                throw new ArgumentException("Cannot remove user from local group: no user name was specified.", "userName");
+
+            // Create a directory entry for the local machine
+            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            {
+                DirectoryEntry groupEntry = null;
+                DirectoryEntry userEntry = null;
+
+                try
+                {
+                    // Determine if local group exists
+                    if (!LocalGroupExists(localMachine, groupName, out groupEntry))
+                        throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\", group does not exist.", userName, groupName));
+
+                    // Determine if local user exists
+                    if (!LocalUserExists(localMachine, userName, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\", user does not exist.", userName, groupName));
+
+                    // See if user is in group
+                    bool userIsInGroup = false;
+
+                    foreach (object member in (IEnumerable)groupEntry.Invoke("Members"))
+                    {
+                        using (DirectoryEntry memberEntry = new DirectoryEntry(member))
+                        {
+                            // If user already exists in group, take note and break loop
+                            if (string.Compare(memberEntry.Name, userEntry.Name, true) == 0)
+                            {
+                                userIsInGroup = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (userIsInGroup)
+                    {
+                        // Remove existing user from group
+                        groupEntry.Invoke("Remove", new object[] { userEntry.Path });
+                        return true;
+                    }
+                }
+                finally
+                {
+                    if ((object)groupEntry != null)
+                        groupEntry.Dispose();
+
+                    if ((object)userEntry != null)
+                        userEntry.Dispose();
+                }
+            }
+
+            return false;
         }
 
         #endregion
