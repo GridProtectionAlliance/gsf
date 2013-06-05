@@ -41,29 +41,6 @@ namespace GSF.InstallerActions
     public class CustomActions
     {
         /// <summary>
-        /// Custom action to create group for an installed service and add the service account to the group.
-        /// </summary>
-        /// <param name="session">Session object containing data from the installer.</param>
-        /// <returns>Result of the custom action.</returns>
-        [CustomAction]
-        public static ActionResult ServiceGroupAction(Session session)
-        {
-            string serviceName;
-            string groupName;
-
-            session.Log("Begin ServiceGroupAction");
-
-            serviceName = session.CustomActionData["SERVICENAME"];
-            groupName = string.Format("{0} Users", serviceName);
-            UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to interact with the {0} service.", serviceName));
-            UserInfo.AddUserToLocalGroup(groupName, string.Format(@"NT SERVICE\{0}", serviceName));
-
-            session.Log("End ServiceGroupAction");
-
-            return ActionResult.Success;
-        }
-
-        /// <summary>
         /// Custom action to write CompanyName and CompanyAcronym settings to the configuration file of an installed service.
         /// </summary>
         /// <param name="session">Session object containing data from the installer.</param>
@@ -133,9 +110,35 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult ConfigureServiceAction(Session session)
         {
-            session.Log("Begin CustomServiceAction");
+            session.Log("Begin ConfigureServiceAction");
             UpdateServiceConfig(session);
-            session.Log("End CustomServiceAction");
+            session.Log("End ConfigureServiceAction");
+            return ActionResult.Success;
+        }
+
+        /// <summary>
+        /// Custom action to create group for an installed service and add the service account to the group.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult ServiceGroupAction(Session session)
+        {
+            string serviceName;
+            string userName;
+            string groupName;
+
+            session.Log("Begin ServiceGroupAction");
+
+            serviceName = session.CustomActionData["SERVICENAME"];
+            userName = string.Format(@"NT SERVICE\{0}", serviceName);
+            groupName = string.Format("{0} Users", serviceName);
+            UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to interact with the {0} service.", serviceName));
+            UserInfo.AddUserToLocalGroup(groupName, userName);
+            UserInfo.AddUserToLocalGroup("Performance Log Users", userName);
+
+            session.Log("End ServiceGroupAction");
+
             return ActionResult.Success;
         }
 

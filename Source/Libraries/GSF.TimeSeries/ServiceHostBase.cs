@@ -682,9 +682,8 @@ namespace GSF.TimeSeries
                         .Aggregate((list, name) => list + ", " + name);
 
                     processInfo = new ProcessStartInfo(makeCertPath);
-                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr LocalMachine \"{1}\"", commonNameList, certificatePath);
+                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My \"{1}\"", commonNameList, certificatePath);
                     processInfo.UseShellExecute = true;
-                    processInfo.Verb = "runas";
 
                     makeCertProcess = Process.Start(processInfo);
                     makeCertProcess.WaitForExit();

@@ -1152,9 +1152,18 @@ namespace GSF.ServiceProcess
                 // Enable health monitoring if requested.
                 if (m_monitorServiceHealth)
                 {
-                    m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D, true);
-                    m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
-                    m_clientRequestHandlers.Add(new ClientRequestHandler("ResetHealthMonitor", "Resets the system resource utilization monitor", ResetHealthMonitor));
+                    try
+                    {
+                        m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D, true);
+                        m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
+                        m_clientRequestHandlers.Add(new ClientRequestHandler("ResetHealthMonitor", "Resets the system resource utilization monitor", ResetHealthMonitor));
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        string message = string.Format("Unable to start health monitor due to exception: {0}", ex.Message);
+                        m_errorLogger.Log(new InvalidOperationException(message, ex));
+                        UpdateStatus(UpdateType.Warning, "{0} Is the service account a member of the \"Performance Log Users\" group?");
+                    }
                 }
             }
 
