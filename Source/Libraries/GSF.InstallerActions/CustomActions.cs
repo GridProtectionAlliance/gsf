@@ -56,7 +56,7 @@ namespace GSF.InstallerActions
             serviceName = session.CustomActionData["SERVICENAME"];
             groupName = string.Format("{0} Users", serviceName);
             UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to interact with the {0} service.", serviceName));
-            UserInfo.AddMemberToLocalGroup(groupName, string.Format(@"NT SERVICE\{0}", serviceName));
+            UserInfo.AddUserToLocalGroup(groupName, string.Format(@"NT SERVICE\{0}", serviceName));
 
             session.Log("End ServiceGroupAction");
 
