@@ -545,7 +545,7 @@ namespace GSF.TimeSeries.Transport
                 base.QueueMeasurementsForProcessing(measurements);
                 publishInterval = (m_publishInterval > 0) ? m_publishInterval : LagTime;
 
-                if (PrecisionTimer.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
+                if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
                 {
                     List<IMeasurement> currentMeasurements = new List<IMeasurement>();
                     Measurement newMeasurement;
@@ -786,7 +786,7 @@ namespace GSF.TimeSeries.Transport
                 m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
 
             // Track last publication time
-            m_lastPublishTime = PrecisionTimer.UtcNow.Ticks;
+            m_lastPublishTime = DateTime.UtcNow.Ticks;
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received

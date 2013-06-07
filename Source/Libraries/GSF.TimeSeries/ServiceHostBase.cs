@@ -658,6 +658,7 @@ namespace GSF.TimeSeries
             string certificatePath;
             string makeCertPath;
             string commonNameList;
+            string certificateLocation;
 
             try
             {
@@ -681,8 +682,13 @@ namespace GSF.TimeSeries
                         .Select(commonName => "CN=" + commonName)
                         .Aggregate((list, name) => list + ", " + name);
 
+                    if (string.Compare(Environment.UserName, "SYSTEM", StringComparison.InvariantCultureIgnoreCase) == 0)
+                        certificateLocation = "LocalMachine";
+                    else
+                        certificateLocation = "CurrentUser";
+
                     processInfo = new ProcessStartInfo(makeCertPath);
-                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My \"{1}\"", commonNameList, certificatePath);
+                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr {1} \"{2}\"", commonNameList, certificateLocation, certificatePath);
                     processInfo.UseShellExecute = true;
 
                     makeCertProcess = Process.Start(processInfo);
@@ -783,7 +789,7 @@ namespace GSF.TimeSeries
         {
             DataSet configuration = null;
             bool configException = false;
-            Ticks startTime = PrecisionTimer.UtcNow.Ticks;
+            Ticks startTime = DateTime.UtcNow.Ticks;
             double elapsedTime;
 
             switch (configType)
@@ -839,16 +845,16 @@ namespace GSF.TimeSeries
                         foreach (DataRow entityRow in entities.Rows)
                         {
                             // Load configuration entity data filtered by node ID
-                            operationStartTime = PrecisionTimer.UtcNow.Ticks;
+                            operationStartTime = DateTime.UtcNow.Ticks;
                             source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], m_nodeIDQueryString));
-                            operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
+                            operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Update table name as defined in configuration entity
                             source.TableName = entityRow["RuntimeName"].ToString();
 
                             DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
 
-                            operationStartTime = PrecisionTimer.UtcNow.Ticks;
+                            operationStartTime = DateTime.UtcNow.Ticks;
 
                             // Clone data source
                             destination = source.Clone();
@@ -882,7 +888,7 @@ namespace GSF.TimeSeries
                                 destination.Rows.Add(newRow);
                             }
 
-                            operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
+                            operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Add entity configuration data to system configuration
                             configuration.Tables.Add(destination);
@@ -985,7 +991,7 @@ namespace GSF.TimeSeries
 
             if (!configException)
             {
-                elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
+                elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
                 DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, configType, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
             }
 
@@ -996,7 +1002,7 @@ namespace GSF.TimeSeries
         {
             DataSet configuration = null;
             bool configException = false;
-            Ticks startTime = PrecisionTimer.UtcNow.Ticks;
+            Ticks startTime = DateTime.UtcNow.Ticks;
             double elapsedTime;
 
             IDbConnection connection = null;
@@ -1052,7 +1058,7 @@ namespace GSF.TimeSeries
                     source = null;
                     destination = null;
 
-                    operationStartTime = PrecisionTimer.UtcNow.Ticks;
+                    operationStartTime = DateTime.UtcNow.Ticks;
 
                     // Attempt to query for updated
                     if (configuration.Tables.Contains(entityRow["RuntimeName"].ToString()))
@@ -1109,10 +1115,10 @@ namespace GSF.TimeSeries
                         configuration.Tables.Add(destination);
                     }
 
-                    operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
+                    operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
                     DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
 
-                    operationStartTime = PrecisionTimer.UtcNow.Ticks;
+                    operationStartTime = DateTime.UtcNow.Ticks;
 
                     // Get destination column collection
                     DataColumnCollection columns = destination.Columns;
@@ -1144,7 +1150,7 @@ namespace GSF.TimeSeries
                         destination.Rows.Add(newRow);
                     }
 
-                    operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
+                    operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                     DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
                 }
@@ -1168,7 +1174,7 @@ namespace GSF.TimeSeries
 
             if (!configException)
             {
-                elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
+                elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
                 DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, configType, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
             }
 

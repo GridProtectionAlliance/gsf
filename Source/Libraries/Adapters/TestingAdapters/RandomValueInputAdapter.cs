@@ -277,7 +277,7 @@ namespace TestingAdapters
             for (int i = 0; i < m_pointsToSend; i++)
             {
                 ICollection<IMeasurement> outputMeasurementClones = new List<IMeasurement>();
-                timestamp = PrecisionTimer.UtcNow.Ticks;
+                timestamp = DateTime.UtcNow.Ticks;
 
                 for (int j = 0; j < OutputMeasurements.Length; j++)
                 {

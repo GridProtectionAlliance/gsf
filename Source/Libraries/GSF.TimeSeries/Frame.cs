@@ -65,7 +65,7 @@ namespace GSF.TimeSeries
         {
             m_timestamp = timestamp;
 #if UseHighResolutionTime
-            m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
+            m_receivedTimestamp = DateTime.UtcNow.Ticks;
 #else
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
 #endif
@@ -86,7 +86,7 @@ namespace GSF.TimeSeries
         {
             m_timestamp = timestamp;
 #if UseHighResolutionTime
-            m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
+            m_receivedTimestamp = DateTime.UtcNow.Ticks;
 #else
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
 #endif
@@ -167,7 +167,7 @@ namespace GSF.TimeSeries
         /// Gets or sets exact timestamp, in ticks, of when this <see cref="Frame"/> was received (i.e., created).
         /// </summary>
         /// <remarks>
-        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
+        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
         /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
         /// </remarks>
         public Ticks ReceivedTimestamp

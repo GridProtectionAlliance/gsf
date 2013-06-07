@@ -57,7 +57,7 @@ namespace GSF.Core.Tests
             table.Columns.Add("col5", typeof(TimeSpan));
             table.Columns.Add("col6", typeof(byte[]));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
 
             for (int i = 0; i < RowCount; i++)
             {
@@ -76,7 +76,7 @@ namespace GSF.Core.Tests
                 else
                     row[3] = DBNull.Value;
 
-                row[4] = PrecisionTimer.UtcNow;
+                row[4] = DateTime.UtcNow;
                 row[5] = new TimeSpan(Random.Int64Between(Ticks.PerSecond, Ticks.PerHour));
 
                 byte[] bytes = null;
@@ -119,7 +119,7 @@ namespace GSF.Core.Tests
                 table.Rows.Add(row);
             }
 
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Initial random sample dataset created with {0} rows. ({1})\r\n", RowCount, (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendLine();
 
@@ -131,7 +131,7 @@ namespace GSF.Core.Tests
 
             string fileName = Path.Combine(path, "DataSet.bin");
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
 
             stream = new FileStream(fileName, FileMode.Create);
             sourceDataSet.SerializeToStream(stream);
@@ -139,43 +139,43 @@ namespace GSF.Core.Tests
             stream.Close();
             stream.Dispose();
 
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Dataset binary serialization time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
             string xmlFileName = Path.Combine(path, "DataSet.xml");
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
 
             sourceDataSet.WriteXml(xmlFileName, XmlWriteMode.WriteSchema);
 
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Dataset XML serialization time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendLine();
 
             DataSet destinationDataSet;
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
 
             stream = new FileStream(fileName, FileMode.Open);
             destinationDataSet = stream.DeserializeToDataSet();
             stream.Close();
             stream.Dispose();
 
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Dataset binary deserialization time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
             DataSet tempDataSet;
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
 
             tempDataSet = new DataSet();
             tempDataSet.ReadXml(xmlFileName);
 
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Dataset XML deserialization time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendLine();
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
 
             // Validate that source and destination dataset are the same
             Assert.AreEqual(sourceDataSet.DataSetName, destinationDataSet.DataSetName);
@@ -220,7 +220,7 @@ namespace GSF.Core.Tests
                 }
             }
 
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Dataset validation time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
             results.AppendLine();
 

@@ -176,7 +176,7 @@ namespace WavInputAdapter
             //if (file.Channels != OutputMeasurements.Length)
             //    throw new ArgumentException(string.Format("The number of channels in the WAV file must match the number of output measurements. Channels: {0}, Measurements: {1}", file.Channels, OutputMeasurements.Length));
 
-            m_startTime = PrecisionTimer.UtcNow.Ticks;
+            m_startTime = DateTime.UtcNow.Ticks;
 
             Thread t = new Thread(ProcessMeasurements);
             t.IsBackground = true;
@@ -238,20 +238,22 @@ namespace WavInputAdapter
         // Generates new measurements since the last time this was called.
         private void ProcessMeasurements()
         {
+            // Declare the variables use in this method.
+            List<IMeasurement> measurements = new List<IMeasurement>((int)(Ticks.ToSeconds(GapThreshold) * m_sampleRate * m_channels * 1.1D));
+            LittleBinaryValue[] sample;
+
             while (Enabled)
             {
                 try
                 {
+                    SpinWait spinner = new SpinWait();
+
                     // Determine what time it is now.
-                    long now = PrecisionTimer.UtcNow.Ticks;
+                    long now = DateTime.UtcNow.Ticks;
 
                     // Assign a timestamp to the next sample based on its location
                     // in the file relative to the other samples in the file.
                     long timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
-
-                    // Declare the variables use in this method.
-                    List<IMeasurement> measurements = new List<IMeasurement>((int)(Ticks.ToSeconds(GapThreshold) * m_sampleRate * m_channels * 1.1D));
-                    LittleBinaryValue[] sample;
 
                     if (now - timestamp > GapThreshold)
                     {
@@ -295,11 +297,12 @@ namespace WavInputAdapter
                     }
 
                     OnNewMeasurements(measurements);
+                    measurements.Clear();
 
-                    if (PrecisionTimer.UtcNow.Ticks - timestamp <= GapThreshold / 100)
+                    while (DateTime.UtcNow.Ticks - timestamp <= GapThreshold / 100)
                     {
                         // Ahead of schedule -- pause for a moment
-                        Thread.Sleep(1);
+                        spinner.SpinOnce();
                     }
                 }
                 catch (Exception ex)

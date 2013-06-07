@@ -334,19 +334,19 @@ namespace GSF.Core.Tests
             bool lossless = true;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             compressedLen = PatternCompressor.CompressBuffer(arrayOfFloats, 0, dataLen, bufferLen, 0);
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
             maxDecompressedLen = PatternDecompressor.MaximumSizeDecompressed(compressedLen);
@@ -357,9 +357,9 @@ namespace GSF.Core.Tests
                 arrayOfFloats = temp;
             }
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             decompressedLen = PatternDecompressor.DecompressBuffer(arrayOfFloats, 0, compressedLen, maxDecompressedLen);
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             decompressTime = stopTime - startTime;
 
             lossless = decompressedLen == dataLen;
@@ -426,19 +426,19 @@ namespace GSF.Core.Tests
             bool lossless = true;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             compressedLen = PatternCompressor.CompressBuffer(arrayOfInts, 0, dataLen, bufferLen, 0);
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
             maxDecompressedLen = PatternDecompressor.MaximumSizeDecompressed(compressedLen);
@@ -449,9 +449,9 @@ namespace GSF.Core.Tests
                 arrayOfInts = temp;
             }
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             decompressedLen = PatternDecompressor.DecompressBuffer(arrayOfInts, 0, compressedLen, maxDecompressedLen);
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             decompressTime = stopTime - startTime;
 
             lossless = decompressedLen == dataLen;
@@ -511,19 +511,19 @@ namespace GSF.Core.Tests
             bool lossless = true;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             compressedLen = PatternCompressor.CompressBuffer(arrayOfFloats, 0, dataLen, bufferLen, 31);
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
             maxDecompressedLen = PatternDecompressor.MaximumSizeDecompressed(compressedLen);
@@ -534,9 +534,9 @@ namespace GSF.Core.Tests
                 arrayOfFloats = temp;
             }
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             decompressedLen = PatternDecompressor.DecompressBuffer(arrayOfFloats, 0, compressedLen, maxDecompressedLen);
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             decompressTime = stopTime - startTime;
 
             lossless = decompressedLen == dataLen;
@@ -596,19 +596,19 @@ namespace GSF.Core.Tests
             bool lossless = true;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + TotalTestSampleSize));
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             compressedLen = PatternCompressor.CompressBuffer(arrayOfInts, 0, dataLen, bufferLen, 31);
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
             maxDecompressedLen = PatternDecompressor.MaximumSizeDecompressed(compressedLen);
@@ -619,9 +619,9 @@ namespace GSF.Core.Tests
                 arrayOfInts = temp;
             }
 
-            startTime = PrecisionTimer.UtcNow.Ticks;
+            startTime = DateTime.UtcNow.Ticks;
             decompressedLen = PatternDecompressor.DecompressBuffer(arrayOfInts, 0, compressedLen, maxDecompressedLen);
-            stopTime = PrecisionTimer.UtcNow.Ticks;
+            stopTime = DateTime.UtcNow.Ticks;
             decompressTime = stopTime - startTime;
 
             lossless = decompressedLen == dataLen;
@@ -678,19 +678,19 @@ namespace GSF.Core.Tests
         //    Ticks stopTime, startTime;
 
         //    // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
         //    results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
         //    results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    int compressedLen = arrayOfDoubles.Compress64bitEnumeration(0, dataLen, bufferLen, 5);
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
 
         //    // Publish results to debug window
         //    results.AppendFormat("Results of double precision floating point compression algorithm over sequential data:\r\n\r\n");
@@ -740,19 +740,19 @@ namespace GSF.Core.Tests
         //    Ticks stopTime, startTime;
 
         //    // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
         //    results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
         //    results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    int compressedLen = arrayOfLongs.Compress64bitEnumeration(0, dataLen, bufferLen, 5);
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
 
         //    // Publish results to debug window
         //    results.AppendFormat("Results of long integer compression algorithm over sequential data:\r\n\r\n");
@@ -795,19 +795,19 @@ namespace GSF.Core.Tests
         //    Ticks stopTime, startTime;
 
         //    // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
         //    results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
         //    results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    int compressedLen = arrayOfDoubles.Compress64bitEnumeration(0, dataLen, bufferLen, 150);
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
 
         //    // Publish results to debug window
         //    results.AppendFormat("Results of double precision floating point compression algorithm over random data:\r\n\r\n");
@@ -850,19 +850,19 @@ namespace GSF.Core.Tests
         //    Ticks stopTime, startTime;
 
         //    // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
         //    results.AppendFormat("Buffer Pool initial take time: {0}\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    BufferPool.ReturnBuffer(BufferPool.TakeBuffer(dataLen + 2 * TotalTestSampleSize));
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
         //    results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
-        //    startTime = PrecisionTimer.UtcNow.Ticks;
+        //    startTime = DateTime.UtcNow.Ticks;
         //    int compressedLen = arrayOfLongs.Compress64bitEnumeration(0, dataLen, bufferLen, 150);
-        //    stopTime = PrecisionTimer.UtcNow.Ticks;
+        //    stopTime = DateTime.UtcNow.Ticks;
 
         //    // Publish results to debug window
         //    results.AppendFormat("Results of long integer compression algorithm over random data:\r\n\r\n");

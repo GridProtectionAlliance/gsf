@@ -577,7 +577,7 @@ namespace FileAdapters
                     {
                         ID = OutputMeasurements[0].ID,
                         Key = OutputMeasurements[0].Key,
-                        Timestamp = PrecisionTimer.UtcNow.Ticks
+                        Timestamp = DateTime.UtcNow.Ticks
                     });
                 }
 

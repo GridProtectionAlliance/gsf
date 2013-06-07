@@ -137,7 +137,7 @@ namespace GSF.PhasorProtocols
             // Initialize IMeasurement members
             m_key = Common.UndefinedKey;
             m_stateFlags = MeasurementStateFlags.Normal;
-            m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
+            m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_timestamp = -1;
             m_adder = 0.0D;
             m_multiplier = 1.0D;

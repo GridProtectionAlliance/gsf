@@ -1644,7 +1644,7 @@ namespace PhasorProtocolAdapters
 
                 // Track latency statistics against system time - in order for these statistics
                 // to be useful, the local clock must be fairly accurate
-                long latency = PrecisionTimer.UtcNow.Ticks - (long)dataFrame.Timestamp;
+                long latency = DateTime.UtcNow.Ticks - (long)dataFrame.Timestamp;
 
                 if (m_minimumLatency > latency || m_minimumLatency == 0)
                     m_minimumLatency = latency;
@@ -1960,7 +1960,7 @@ namespace PhasorProtocolAdapters
         // Updates the measurements per second counters after receiving another set of measurements.
         private void UpdateMeasurementsPerSecond(int measurementCount)
         {
-            long secondsSinceEpoch = PrecisionTimer.UtcNow.Ticks / Ticks.PerSecond;
+            long secondsSinceEpoch = DateTime.UtcNow.Ticks / Ticks.PerSecond;
 
             if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
             {

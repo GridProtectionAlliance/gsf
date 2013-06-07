@@ -1555,7 +1555,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Sends a notification to all subscribers.")]
         public virtual void SendNotification(string message)
         {
-            string notification = string.Format("[{0}] {1}", PrecisionTimer.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), message);
+            string notification = string.Format("[{0}] {1}", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), message);
 
             lock (m_clientNotificationsLock)
             {
@@ -3142,7 +3142,7 @@ namespace GSF.TimeSeries.Transport
         // Updates the measurements per second counters after receiving another set of measurements.
         private void UpdateMeasurementsPerSecond(int measurementCount)
         {
-            long secondsSinceEpoch = PrecisionTimer.UtcNow.Ticks / Ticks.PerSecond;
+            long secondsSinceEpoch = DateTime.UtcNow.Ticks / Ticks.PerSecond;
 
             if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
             {

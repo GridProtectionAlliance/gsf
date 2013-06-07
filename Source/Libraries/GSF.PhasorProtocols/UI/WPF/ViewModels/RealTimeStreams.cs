@@ -336,7 +336,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 try
                 {
                     StreamStatistic streamStatistic;
-                    long now = PrecisionTimer.UtcNow.Ticks;
+                    long now = DateTime.UtcNow.Ticks;
 
                     // Since device health is handled by the data subscription,
                     // this subscription will only tell us whether devices have

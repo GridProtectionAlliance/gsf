@@ -60,7 +60,7 @@ namespace GSF.TimeSeries
         {
             m_measurements = new ConcurrentDictionary<Guid, TemporalMeasurement>();
             m_taggedMeasurements = new ConcurrentDictionary<string, List<Guid>>();
-            m_realTimeFunction = () => PrecisionTimer.UtcNow.Ticks;
+            m_realTimeFunction = () => DateTime.UtcNow.Ticks;
         }
 
         internal ImmediateMeasurements(ConcentratorBase parent)
@@ -178,7 +178,7 @@ namespace GSF.TimeSeries
             }
             set
             {
-                m_realTimeFunction = value ?? (() => PrecisionTimer.UtcNow.Ticks);
+                m_realTimeFunction = value ?? (() => DateTime.UtcNow.Ticks);
             }
         }
 

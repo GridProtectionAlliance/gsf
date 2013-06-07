@@ -163,87 +163,87 @@ namespace GSF
     {
         #region [ Members ]
 
-        #region [ DateTimePrecise Adaptation ]
+        //#region [ DateTimePrecise Adaptation ]
 
-        /// <summary>
-        /// This class provides a way to get a DateTime that exhibits the relative precision of
-        /// System.Diagnostics.Stopwatch, and the absolute accuracy of DateTime.Now.
-        /// </summary>
-        /// <remarks>
-        /// This class is based on James Brock's DateTimePrecise class which can be found on the Code Project:
-        /// http://www.codeproject.com/KB/cs/DateTimePrecise.aspx?msg=2688543#xx2688543xx
-        /// </remarks>
-        private class PreciseTime
-        {
-            private sealed class ImmutableTimeState
-            {
-                public ImmutableTimeState(DateTime observedTime, DateTime baseTime, long elapsedTicks, long systemFrequency)
-                {
-                    this.ObservedTime = observedTime;
-                    this.BaseTime = baseTime;
-                    this.ElapsedTicks = elapsedTicks;
-                    this.SystemFrequency = systemFrequency;
-                }
+        ///// <summary>
+        ///// This class provides a way to get a DateTime that exhibits the relative precision of
+        ///// System.Diagnostics.Stopwatch, and the absolute accuracy of DateTime.Now.
+        ///// </summary>
+        ///// <remarks>
+        ///// This class is based on James Brock's DateTimePrecise class which can be found on the Code Project:
+        ///// http://www.codeproject.com/KB/cs/DateTimePrecise.aspx?msg=2688543#xx2688543xx
+        ///// </remarks>
+        //private class PreciseTime
+        //{
+        //    private sealed class ImmutableTimeState
+        //    {
+        //        public ImmutableTimeState(DateTime observedTime, DateTime baseTime, long elapsedTicks, long systemFrequency)
+        //        {
+        //            this.ObservedTime = observedTime;
+        //            this.BaseTime = baseTime;
+        //            this.ElapsedTicks = elapsedTicks;
+        //            this.SystemFrequency = systemFrequency;
+        //        }
 
-                public readonly DateTime ObservedTime;
-                public readonly DateTime BaseTime;
-                public readonly long ElapsedTicks;
-                public readonly long SystemFrequency;
-            }
+        //        public readonly DateTime ObservedTime;
+        //        public readonly DateTime BaseTime;
+        //        public readonly long ElapsedTicks;
+        //        public readonly long SystemFrequency;
+        //    }
 
-            private readonly Stopwatch m_stopwatch;
-            private ImmutableTimeState m_timeState;
-            private readonly long m_synchronizePeriodStopwatchTicks;
-            private long m_synchronizePeriodClockTicks;
+        //    private readonly Stopwatch m_stopwatch;
+        //    private ImmutableTimeState m_timeState;
+        //    private readonly long m_synchronizePeriodStopwatchTicks;
+        //    private long m_synchronizePeriodClockTicks;
 
-            /// <summary>Creates a new instance of DateTimePrecise.</summary>
-            /// <remarks>
-            /// A large value of synchronizePeriodSeconds may cause arithmetic overthrow
-            /// exceptions to be thrown. A small value may cause the time to be unstable.
-            /// A good value is 10.
-            /// </remarks>
-            /// <param name="synchronizePeriodSeconds">The number of seconds after which the class will synchronize itself with the system clock.</param>
-            public PreciseTime(long synchronizePeriodSeconds)
-            {
-                m_stopwatch = Stopwatch.StartNew();
+        //    /// <summary>Creates a new instance of DateTimePrecise.</summary>
+        //    /// <remarks>
+        //    /// A large value of synchronizePeriodSeconds may cause arithmetic overthrow
+        //    /// exceptions to be thrown. A small value may cause the time to be unstable.
+        //    /// A good value is 10.
+        //    /// </remarks>
+        //    /// <param name="synchronizePeriodSeconds">The number of seconds after which the class will synchronize itself with the system clock.</param>
+        //    public PreciseTime(long synchronizePeriodSeconds)
+        //    {
+        //        m_stopwatch = Stopwatch.StartNew();
 
-                DateTime t = DateTime.UtcNow;
-                m_timeState = new ImmutableTimeState(t, t, m_stopwatch.ElapsedTicks, Stopwatch.Frequency);
+        //        DateTime t = DateTime.UtcNow;
+        //        m_timeState = new ImmutableTimeState(t, t, m_stopwatch.ElapsedTicks, Stopwatch.Frequency);
 
-                m_synchronizePeriodStopwatchTicks = synchronizePeriodSeconds * Stopwatch.Frequency;
-                m_synchronizePeriodClockTicks = synchronizePeriodSeconds * Ticks.PerSecond;
-            }
+        //        m_synchronizePeriodStopwatchTicks = synchronizePeriodSeconds * Stopwatch.Frequency;
+        //        m_synchronizePeriodClockTicks = synchronizePeriodSeconds * Ticks.PerSecond;
+        //    }
 
-            public DateTime UtcNow
-            {
-                get
-                {
-                    long elapsedTicks = m_stopwatch.ElapsedTicks;
-                    ImmutableTimeState timeState = m_timeState;
-                    DateTime precisionTime = timeState.BaseTime.AddTicks(((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond) / timeState.SystemFrequency);
+        //    public DateTime UtcNow
+        //    {
+        //        get
+        //        {
+        //            long elapsedTicks = m_stopwatch.ElapsedTicks;
+        //            ImmutableTimeState timeState = m_timeState;
+        //            DateTime precisionTime = timeState.BaseTime.AddTicks(((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond) / timeState.SystemFrequency);
 
-                    if (elapsedTicks >= timeState.ElapsedTicks + m_synchronizePeriodStopwatchTicks)
-                    {
-                        // Perform clock resynchronization
-                        DateTime systemTime = DateTime.UtcNow;
-                        long systemTicks = systemTime.Ticks;
-                        long observedTicks = timeState.ObservedTime.Ticks;
-                        long systemFrequencyEstimationDenominator = systemTicks - observedTicks + systemTicks + systemTicks - precisionTime.Ticks - observedTicks;
+        //            if (elapsedTicks >= timeState.ElapsedTicks + m_synchronizePeriodStopwatchTicks)
+        //            {
+        //                // Perform clock resynchronization
+        //                DateTime systemTime = DateTime.UtcNow;
+        //                long systemTicks = systemTime.Ticks;
+        //                long observedTicks = timeState.ObservedTime.Ticks;
+        //                long systemFrequencyEstimationDenominator = systemTicks - observedTicks + systemTicks + systemTicks - precisionTime.Ticks - observedTicks;
 
-                        if (systemFrequencyEstimationDenominator != 0L)
-                        {
-                            // Last parameter is a calculation that asymptotically approaches the measured system frequency
-                            m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, ((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond * 2) / systemFrequencyEstimationDenominator);
-                        }
-                    }
+        //                if (systemFrequencyEstimationDenominator != 0L)
+        //                {
+        //                    // Last parameter is a calculation that asymptotically approaches the measured system frequency
+        //                    m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, ((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond * 2) / systemFrequencyEstimationDenominator);
+        //                }
+        //            }
 
-                    // Return high-resolution timestamp
-                    return precisionTime;
-                }
-            }
-        }
+        //            // Return high-resolution timestamp
+        //            return precisionTime;
+        //        }
+        //    }
+        //}
 
-        #endregion
+        //#endregion
 
         // Defines constants for the multimedia Timer's event types.
         private enum TimerMode
@@ -615,8 +615,8 @@ namespace GSF
 
         // Static Fields
         private static readonly TimerCapabilities s_capabilities;    // Multimedia timer capabilities.
-        private static PreciseTime s_preciseTime;           // Precise time implementation.
-        private static Timer s_synchronizer;                // Lightweight timer used for precise time synchronization.
+        //private static PreciseTime s_preciseTime;           // Precise time implementation.
+        //private static Timer s_synchronizer;                // Lightweight timer used for precise time synchronization.
 
         // Static Constructor
         static PrecisionTimer()
@@ -632,55 +632,55 @@ namespace GSF
 
         // Static Properties
 
-        /// <summary>
-        /// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
-        /// expressed in Coordinated Universal Time (UTC).
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
-        /// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.UtcNow"/>.
-        /// </para>
-        /// <para>
-        /// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
-        /// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-        /// Note that the normal <see cref="DateTime.UtcNow"/> property has a maximum resolution of ~16 milliseconds.
-        /// </para>
-        /// </remarks>
-        public static DateTime UtcNow
-        {
-            get
-            {
-                // Setup a new precise time class at first call
-                if ((object)s_preciseTime == null)
-                    InitializePreciseTime();
+        ///// <summary>
+        ///// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
+        ///// expressed in Coordinated Universal Time (UTC).
+        ///// </summary>
+        ///// <remarks>
+        ///// <para>
+        ///// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
+        ///// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.UtcNow"/>.
+        ///// </para>
+        ///// <para>
+        ///// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
+        ///// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
+        ///// Note that the normal <see cref="DateTime.UtcNow"/> property has a maximum resolution of ~16 milliseconds.
+        ///// </para>
+        ///// </remarks>
+        //public static DateTime UtcNow
+        //{
+        //    get
+        //    {
+        //        // Setup a new precise time class at first call
+        //        if ((object)s_preciseTime == null)
+        //            InitializePreciseTime();
 
-                return s_preciseTime.UtcNow;
-            }
-        }
+        //        return s_preciseTime.UtcNow;
+        //    }
+        //}
 
-        /// <summary>
-        /// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
-        /// expressed in the local time zone.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
-        /// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.Now"/>.
-        /// </para>
-        /// <para>
-        /// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
-        /// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-        /// Note that the normal <see cref="DateTime.Now"/> property has a maximum resolution of ~16 milliseconds.
-        /// </para>
-        /// </remarks>
-        public static DateTime Now
-        {
-            get
-            {
-                return UtcNow.ToLocalTime();
-            }
-        }
+        ///// <summary>
+        ///// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
+        ///// expressed in the local time zone.
+        ///// </summary>
+        ///// <remarks>
+        ///// <para>
+        ///// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
+        ///// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.Now"/>.
+        ///// </para>
+        ///// <para>
+        ///// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
+        ///// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
+        ///// Note that the normal <see cref="DateTime.Now"/> property has a maximum resolution of ~16 milliseconds.
+        ///// </para>
+        ///// </remarks>
+        //public static DateTime Now
+        //{
+        //    get
+        //    {
+        //        return UtcNow.ToLocalTime();
+        //    }
+        //}
 
         /// <summary>
         /// Gets the system multimedia timer capabilities.
@@ -749,27 +749,27 @@ namespace GSF
 #endif
         }
 
-        // Initializes the the precise timing mechanism
-        private static void InitializePreciseTime()
-        {
-            // We just use the recommended synchronization period for general purpose use
-            const int synchronizationPeriod = 10;
+        //// Initializes the the precise timing mechanism
+        //private static void InitializePreciseTime()
+        //{
+        //    // We just use the recommended synchronization period for general purpose use
+        //    const int synchronizationPeriod = 10;
 
-            // Create a new precise time class
-            s_preciseTime = new PreciseTime(synchronizationPeriod);
+        //    // Create a new precise time class
+        //    s_preciseTime = new PreciseTime(synchronizationPeriod);
 
-            // We setup a lightweight timer that will make sure precise time mechanism gets
-            // called regularly, in case user doesn't, so it can maintain synchronization
-            s_synchronizer = new Timer(synchronizationPeriod * 1000.0D);
-            s_synchronizer.Elapsed += s_synchronizer_Elapsed;
-            s_synchronizer.Start();
-        }
+        //    // We setup a lightweight timer that will make sure precise time mechanism gets
+        //    // called regularly, in case user doesn't, so it can maintain synchronization
+        //    s_synchronizer = new Timer(synchronizationPeriod * 1000.0D);
+        //    s_synchronizer.Elapsed += s_synchronizer_Elapsed;
+        //    s_synchronizer.Start();
+        //}
 
-        // We make sure and call PreciseTime.UtcNow regularly so it can maintain synchronization
-        private static void s_synchronizer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            DateTime now = s_preciseTime.UtcNow;
-        }
+        //// We make sure and call PreciseTime.UtcNow regularly so it can maintain synchronization
+        //private static void s_synchronizer_Elapsed(object sender, ElapsedEventArgs e)
+        //{
+        //    DateTime now = s_preciseTime.UtcNow;
+        //}
 
 #if !MONO
         // Gets timer capabilities.

@@ -1151,7 +1151,7 @@ namespace GSF.TimeSeries
                     else
                     {
 #if UseHighResolutionTime
-                        processingTime = PrecisionTimer.UtcNow.Ticks - m_startTime;
+                        processingTime = DateTime.UtcNow.Ticks - m_startTime;
 #else
                         processingTime = DateTime.UtcNow.Ticks - m_startTime;
 #endif
@@ -1269,7 +1269,7 @@ namespace GSF.TimeSeries
                 {
                     // Assumes local system clock is the best value we have for real-time.
 #if UseHighResolutionTime
-                    return PrecisionTimer.UtcNow.Ticks;
+                    return DateTime.UtcNow.Ticks;
 #else
                     return DateTime.UtcNow.Ticks;
 #endif
@@ -1284,7 +1284,7 @@ namespace GSF.TimeSeries
                         // real-time we will use this value as the + and - timestamp tolerance to validate if the
                         // measurement time is reasonable.
 #if UseHighResolutionTime
-                        long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
+                        long currentTimeTicks = DateTime.UtcNow.Ticks;
 #else
                         long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
@@ -1485,7 +1485,7 @@ namespace GSF.TimeSeries
                 IFrame lastFrame = LastFrame;
                 IMeasurement lastDiscardedMeasurement = null;
 #if UseHighResolutionTime
-                DateTime currentTime = PrecisionTimer.UtcNow;
+                DateTime currentTime = DateTime.UtcNow;
 #else
                 DateTime currentTime = DateTime.UtcNow;
 #endif
@@ -1510,7 +1510,7 @@ namespace GSF.TimeSeries
                 {
                     status.Append("      Local clock accuracy: ");
 #if UseHighResolutionTime
-                    status.Append(SecondsFromRealTime(PrecisionTimer.UtcNow.Ticks).ToString("0.0000"));
+                    status.Append(SecondsFromRealTime(DateTime.UtcNow.Ticks).ToString("0.0000"));
 #else
                     status.Append(SecondsFromRealTime(DateTime.UtcNow.Ticks).ToString("0.0000"));
 #endif
@@ -1716,7 +1716,7 @@ namespace GSF.TimeSeries
 
                 m_stopTime = 0;
 #if UseHighResolutionTime
-                m_startTime = PrecisionTimer.UtcNow.Ticks;
+                m_startTime = DateTime.UtcNow.Ticks;
 #else
                 m_startTime = DateTime.UtcNow.Ticks;
 #endif
@@ -1744,7 +1744,7 @@ namespace GSF.TimeSeries
                     m_frameQueue.Clear();
 
 #if UseHighResolutionTime
-                m_stopTime = PrecisionTimer.UtcNow.Ticks;
+                m_stopTime = DateTime.UtcNow.Ticks;
 #else
                 m_stopTime = DateTime.UtcNow.Ticks;
 #endif
@@ -1785,7 +1785,7 @@ namespace GSF.TimeSeries
 
                 if (m_performTimestampReasonabilityCheck)
 #if UseHighResolutionTime
-                    currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
+                    currentTimeTicks = DateTime.UtcNow.Ticks;
 #else
                     currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
@@ -2015,7 +2015,7 @@ namespace GSF.TimeSeries
                                 // typically defines the tolerated accuracy of the local clock to real-time, this value
                                 // is used as the + and - timestamp tolerance to validate if the time is reasonable.
 #if UseHighResolutionTime
-                                long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
+                                long currentTimeTicks = DateTime.UtcNow.Ticks;
 #else
                                 long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
@@ -2198,7 +2198,7 @@ namespace GSF.TimeSeries
 
                             // Mark start time for publication
 #if UseHighResolutionTime
-                            startTime = PrecisionTimer.UtcNow.Ticks;
+                            startTime = DateTime.UtcNow.Ticks;
 #else
                             startTime = DateTime.UtcNow.Ticks;
 #endif
@@ -2238,7 +2238,7 @@ namespace GSF.TimeSeries
 
                                 // Mark stop time for publication
 #if UseHighResolutionTime
-                                stopTime = PrecisionTimer.UtcNow.Ticks;
+                                stopTime = DateTime.UtcNow.Ticks;
 #else
                                 stopTime = DateTime.UtcNow.Ticks;
 #endif

@@ -490,9 +490,9 @@ namespace GSF.Data
             if (usePrecisionTime)
             {
                 if (IsJetEngine)
-                    return PrecisionTimer.UtcNow.ToOADate();
+                    return DateTime.UtcNow.ToOADate();
 
-                return PrecisionTimer.UtcNow;
+                return DateTime.UtcNow;
             }
 
             if (IsJetEngine)

@@ -1972,7 +1972,7 @@ namespace PhasorProtocolAdapters
         // Updates the measurements per second counters after receiving another set of measurements.
         private void UpdateMeasurementsPerSecond(int measurementCount)
         {
-            long secondsSinceEpoch = PrecisionTimer.UtcNow.Ticks / Ticks.PerSecond;
+            long secondsSinceEpoch = DateTime.UtcNow.Ticks / Ticks.PerSecond;
 
             if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
             {

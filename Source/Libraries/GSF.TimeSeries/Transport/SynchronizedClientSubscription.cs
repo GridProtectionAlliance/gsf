@@ -588,7 +588,7 @@ namespace GSF.TimeSeries.Transport
                 ProcessBinaryMeasurements(packet, frameLevelTimestamp, useCompactMeasurementFormat, usePayloadCompression);
 
             // Update latency statistics
-            publishTime = PrecisionTimer.UtcNow.Ticks;
+            publishTime = DateTime.UtcNow.Ticks;
             m_parent.UpdateLatencyStatistics(frame.Measurements.Values.Select(m => (long)(publishTime - m.Timestamp)));
         }
 

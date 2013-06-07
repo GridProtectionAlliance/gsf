@@ -75,7 +75,7 @@ namespace GSF.PhasorProtocols
             m_valueIndex = valueIndex;
             m_key = Common.UndefinedKey;
             m_timestamp = -1;
-            m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
+            m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_multiplier = 1.0D;
         }
 
@@ -154,7 +154,7 @@ namespace GSF.PhasorProtocols
         /// Gets or sets exact timestamp, in ticks, of when this <see cref="ChannelValueMeasurement{T}"/> was received (i.e., created).
         /// </summary>
         /// <remarks>
-        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
+        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
         /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
         /// </remarks>
         public virtual Ticks ReceivedTimestamp

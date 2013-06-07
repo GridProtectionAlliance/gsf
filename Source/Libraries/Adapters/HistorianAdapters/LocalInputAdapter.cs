@@ -522,7 +522,7 @@ namespace HistorianAdapters
                             {
                                 ID = key.SignalID,
                                 Key = key,
-                                Timestamp = m_simulateTimestamp ? PrecisionTimer.UtcNow.Ticks : timestamp,
+                                Timestamp = m_simulateTimestamp ? DateTime.UtcNow.Ticks : timestamp,
                                 Value = currentPoint.Value
                             });
 

@@ -411,7 +411,7 @@ namespace GSF.PhasorProtocols
 
                     if (locked)
                     {
-                        DateTime now = PrecisionTimer.UtcNow;
+                        DateTime now = DateTime.UtcNow;
                         int frameMilliseconds, milliseconds = now.Millisecond;
                         long ticks = now.Ticks;
                         bool releaseTimer = false, resync = false;
@@ -513,7 +513,7 @@ namespace GSF.PhasorProtocols
 
                 while (repeat)
                 {
-                    next = PrecisionTimer.UtcNow.Ticks % Ticks.PerMillisecond % 1000;
+                    next = DateTime.UtcNow.Ticks % Ticks.PerMillisecond % 1000;
                     repeat = (next > last);
                     last = next;
                 }
@@ -4009,7 +4009,7 @@ namespace GSF.PhasorProtocols
                 if (m_lastFrameReceivedTime > 0)
                 {
                     // To maintain timing on "frames per second", we wait for defined frame rate interval
-                    double sleepTime = (1.0D / m_definedFrameRate) - ((double)(PrecisionTimer.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond);
+                    double sleepTime = (1.0D / m_definedFrameRate) - ((double)(DateTime.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond);
 
                     // Thread sleep time is a minimum suggested sleep time depending on system activity, when not using high-resolution
                     // input timer we assume getting close is good enough
@@ -4017,7 +4017,7 @@ namespace GSF.PhasorProtocols
                         Thread.Sleep((int)(sleepTime * 1000.0D));
                 }
 
-                m_lastFrameReceivedTime = PrecisionTimer.UtcNow.Ticks;
+                m_lastFrameReceivedTime = DateTime.UtcNow.Ticks;
 
                 if (m_injectSimulatedTimestamp)
                 {
@@ -4424,7 +4424,7 @@ namespace GSF.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Timestamp = PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedCommandFrame != null)
                     ReceivedCommandFrame(this, e);
@@ -4448,7 +4448,7 @@ namespace GSF.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Timestamp = PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedConfigurationFrame != null)
                     ReceivedConfigurationFrame(this, e);
@@ -4478,7 +4478,7 @@ namespace GSF.PhasorProtocols
                 if (m_transportProtocol == TransportProtocol.File)
                     MaintainCapturedFrameReplayTiming(e.Argument);
                 else if (m_injectSimulatedTimestamp)
-                    e.Argument.Timestamp = PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedDataFrame != null)
                     ReceivedDataFrame(this, e);
@@ -4499,7 +4499,7 @@ namespace GSF.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Timestamp = PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedHeaderFrame != null)
                     ReceivedHeaderFrame(this, e);
@@ -4516,7 +4516,7 @@ namespace GSF.PhasorProtocols
             try
             {
                 if (m_injectSimulatedTimestamp)
-                    e.Argument.Timestamp = PrecisionTimer.UtcNow.Ticks;
+                    e.Argument.Timestamp = DateTime.UtcNow.Ticks;
 
                 if ((object)ReceivedUndeterminedFrame != null)
                     ReceivedUndeterminedFrame(this, e);

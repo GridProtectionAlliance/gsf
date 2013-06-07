@@ -1928,7 +1928,7 @@ namespace GSF.TimeSeries.Transport
                                 OnNewMeasurements(measurements);
 
                             // Gather statistics on received data
-                            long timeReceived = PrecisionTimer.UtcNow.Ticks;
+                            long timeReceived = DateTime.UtcNow.Ticks;
                             int measurementCount = measurements.Count();
 
                             m_lifetimeMeasurements += measurementCount;
@@ -2760,7 +2760,7 @@ namespace GSF.TimeSeries.Transport
         // Updates the measurements per second counters after receiving another set of measurements.
         private void UpdateMeasurementsPerSecond(int measurementCount)
         {
-            long secondsSinceEpoch = PrecisionTimer.UtcNow.Ticks / Ticks.PerSecond;
+            long secondsSinceEpoch = DateTime.UtcNow.Ticks / Ticks.PerSecond;
 
             if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
             {
