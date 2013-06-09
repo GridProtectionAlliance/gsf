@@ -64,7 +64,7 @@ namespace GSF.TimeSeries.UI
         private DataSubscriber m_dataSubscriber;
         private readonly UnsynchronizedSubscriptionInfo m_subscriptionInfo;
         private readonly Dictionary<int, Alarm> m_definedAlarms;
-        private readonly object m_alarmLock;
+        private readonly object m_currentAlarmsLock;
         private IEnumerable<RaisedAlarm> m_currentAlarms;
         private int m_alarmsChanged;
         private Timer m_refreshTimer;
@@ -89,7 +89,7 @@ namespace GSF.TimeSeries.UI
             // Load all alarms defined in the database
             m_definedAlarms = LoadDefinedAlarms();
 
-            m_alarmLock = new object();
+            m_currentAlarmsLock = new object();
             m_currentAlarms = new List<RaisedAlarm>();
 
             m_refreshTimer = new Timer(m_refreshInterval * 1000);
@@ -144,7 +144,7 @@ namespace GSF.TimeSeries.UI
         /// <returns>Current <see cref="RaisedAlarm"/> list.</returns>
         public ObservableCollection<RaisedAlarm> GetAlarmList()
         {
-            lock (m_alarmLock)
+            lock (m_currentAlarmsLock)
             {
                 return new ObservableCollection<RaisedAlarm>(m_currentAlarms);
             }
@@ -208,7 +208,7 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
-        /// Starts the refresh timer that checks alarm status.
+        /// Starts the refresh timer that notifies consumer about the current alarm status.
         /// </summary>
         public void Start()
         {
@@ -322,7 +322,7 @@ namespace GSF.TimeSeries.UI
         // Creates a data model based "RaisedAlarm" from an alarm
         private RaisedAlarm CreateRaisedAlarm(Alarm alarm)
         {
-            return new RaisedAlarm()
+            return new RaisedAlarm
             {
                 ID = alarm.ID,
                 Severity = (int)alarm.Severity,
@@ -333,7 +333,7 @@ namespace GSF.TimeSeries.UI
             };
         }
 
-        // Get all the highest severity alarms created a given signal
+        // Get all the highest severity alarms created for a given signal
         private IEnumerable<Alarm> GetHighestSeverityAlarms(Guid signalID)
         {
             IEnumerable<Alarm> alarmsForSignal = m_definedAlarms.Values.Where(alarm => alarm.SignalID == signalID);
@@ -341,14 +341,14 @@ namespace GSF.TimeSeries.UI
             return alarmsForSignal.Where(alarm => alarm.Severity == highestSeverity);
         }
 
-        // Tests if alarm severity is higher than any of the current alarms
+        // Tests if alarm severity is higher than any of the current alarms - alarms compared by source signal ID
         private bool IsHigherSeverity(Alarm testAlarm, IEnumerable<Alarm> currentAlarms)
         {
             return currentAlarms
                 .Where(alarm => alarm.SignalID == testAlarm.SignalID)
                 .Any(alarm => testAlarm.Severity > alarm.Severity);
         }
-        // Tests if alarm severity is equal to or higher than any of the current alarms
+        // Tests if alarm severity is equal to or higher than any of the current alarms - alarms compared by source signal ID
         private bool IsEqualOrHigherSeverity(Alarm testAlarm, IEnumerable<Alarm> currentAlarms)
         {
             return currentAlarms
@@ -366,7 +366,7 @@ namespace GSF.TimeSeries.UI
         private void m_alarmStatusQuery_HighestSeverityAlarmStates(object sender, EventArgs<ICollection<Alarm>> e)
         {
             // Received the initial set of alarms - cache them as the "current" raised alarm state
-            lock (m_alarmLock)
+            lock (m_currentAlarmsLock)
             {
                 m_currentAlarms = e.Argument.Select(CreateRaisedAlarm);
             }
@@ -408,7 +408,7 @@ namespace GSF.TimeSeries.UI
                 .Where(alarm => (object)alarm != null);
 
             // Get current alarm list
-            lock (m_alarmLock)
+            lock (m_currentAlarmsLock)
             {
                 // Convert current list of "RaisedAlarm" data model instances to common alarms
                 currentAlarms = m_currentAlarms
@@ -450,7 +450,7 @@ namespace GSF.TimeSeries.UI
             if (alarmsToRemove.Any() || alarmsToAdd.Any())
             {
                 // Update current alarms - removing then adding alarms
-                lock (m_alarmLock)
+                lock (m_currentAlarmsLock)
                 {
                     m_currentAlarms = m_currentAlarms
                         .Where(raisedAlarm => !alarmsToRemove.Contains(raisedAlarm))
