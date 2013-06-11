@@ -624,7 +624,7 @@ namespace TVA
         {
             get
             {
-                return Ticks.ToSeconds(PrecisionTimer.Now.Ticks);
+                return Ticks.ToSeconds(DateTime.Now.Ticks);
             }
         }
 
