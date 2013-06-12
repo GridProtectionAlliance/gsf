@@ -598,17 +598,9 @@ namespace GSF.TimeSeries.Adapters
                 if (m_startTime > 0)
                 {
                     if (m_stopTime > 0)
-                    {
                         processingTime = m_stopTime - m_startTime;
-                    }
                     else
-                    {
-#if UseHighResolutionTime
                         processingTime = DateTime.UtcNow.Ticks - m_startTime;
-#else
-                        processingTime = DateTime.UtcNow.Ticks - m_startTime;
-#endif
-                    }
                 }
 
                 if (processingTime < 0)

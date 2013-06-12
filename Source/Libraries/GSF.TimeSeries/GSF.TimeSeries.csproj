@@ -35,7 +35,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
-    <DefineConstants>TRACE;UseHighResolutionTime</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\Build\Output\Release\Libraries\GSF.TimeSeries.xml</DocumentationFile>

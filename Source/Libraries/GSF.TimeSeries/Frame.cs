@@ -64,11 +64,8 @@ namespace GSF.TimeSeries
         public Frame(Ticks timestamp, int expectedMeasurements = -1)
         {
             m_timestamp = timestamp;
-#if UseHighResolutionTime
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
-#else
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
-#endif
+
             if (expectedMeasurements > 0)
                 m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(s_defaultConcurrencyLevel, expectedMeasurements * 2);
             else
@@ -85,11 +82,7 @@ namespace GSF.TimeSeries
         public Frame(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
         {
             m_timestamp = timestamp;
-#if UseHighResolutionTime
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
-#else
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
-#endif
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(measurements);
             m_sortedMeasurements = -1;
         }

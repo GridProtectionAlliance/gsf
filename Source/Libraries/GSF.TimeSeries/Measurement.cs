@@ -63,11 +63,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public Measurement()
         {
-#if UseHighResolutionTime
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
-#else
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
-#endif
             m_multiplier = 1.0D;
         }
 

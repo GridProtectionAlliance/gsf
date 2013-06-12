@@ -163,88 +163,6 @@ namespace GSF
     {
         #region [ Members ]
 
-        //#region [ DateTimePrecise Adaptation ]
-
-        ///// <summary>
-        ///// This class provides a way to get a DateTime that exhibits the relative precision of
-        ///// System.Diagnostics.Stopwatch, and the absolute accuracy of DateTime.Now.
-        ///// </summary>
-        ///// <remarks>
-        ///// This class is based on James Brock's DateTimePrecise class which can be found on the Code Project:
-        ///// http://www.codeproject.com/KB/cs/DateTimePrecise.aspx?msg=2688543#xx2688543xx
-        ///// </remarks>
-        //private class PreciseTime
-        //{
-        //    private sealed class ImmutableTimeState
-        //    {
-        //        public ImmutableTimeState(DateTime observedTime, DateTime baseTime, long elapsedTicks, long systemFrequency)
-        //        {
-        //            this.ObservedTime = observedTime;
-        //            this.BaseTime = baseTime;
-        //            this.ElapsedTicks = elapsedTicks;
-        //            this.SystemFrequency = systemFrequency;
-        //        }
-
-        //        public readonly DateTime ObservedTime;
-        //        public readonly DateTime BaseTime;
-        //        public readonly long ElapsedTicks;
-        //        public readonly long SystemFrequency;
-        //    }
-
-        //    private readonly Stopwatch m_stopwatch;
-        //    private ImmutableTimeState m_timeState;
-        //    private readonly long m_synchronizePeriodStopwatchTicks;
-        //    private long m_synchronizePeriodClockTicks;
-
-        //    /// <summary>Creates a new instance of DateTimePrecise.</summary>
-        //    /// <remarks>
-        //    /// A large value of synchronizePeriodSeconds may cause arithmetic overthrow
-        //    /// exceptions to be thrown. A small value may cause the time to be unstable.
-        //    /// A good value is 10.
-        //    /// </remarks>
-        //    /// <param name="synchronizePeriodSeconds">The number of seconds after which the class will synchronize itself with the system clock.</param>
-        //    public PreciseTime(long synchronizePeriodSeconds)
-        //    {
-        //        m_stopwatch = Stopwatch.StartNew();
-
-        //        DateTime t = DateTime.UtcNow;
-        //        m_timeState = new ImmutableTimeState(t, t, m_stopwatch.ElapsedTicks, Stopwatch.Frequency);
-
-        //        m_synchronizePeriodStopwatchTicks = synchronizePeriodSeconds * Stopwatch.Frequency;
-        //        m_synchronizePeriodClockTicks = synchronizePeriodSeconds * Ticks.PerSecond;
-        //    }
-
-        //    public DateTime UtcNow
-        //    {
-        //        get
-        //        {
-        //            long elapsedTicks = m_stopwatch.ElapsedTicks;
-        //            ImmutableTimeState timeState = m_timeState;
-        //            DateTime precisionTime = timeState.BaseTime.AddTicks(((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond) / timeState.SystemFrequency);
-
-        //            if (elapsedTicks >= timeState.ElapsedTicks + m_synchronizePeriodStopwatchTicks)
-        //            {
-        //                // Perform clock resynchronization
-        //                DateTime systemTime = DateTime.UtcNow;
-        //                long systemTicks = systemTime.Ticks;
-        //                long observedTicks = timeState.ObservedTime.Ticks;
-        //                long systemFrequencyEstimationDenominator = systemTicks - observedTicks + systemTicks + systemTicks - precisionTime.Ticks - observedTicks;
-
-        //                if (systemFrequencyEstimationDenominator != 0L)
-        //                {
-        //                    // Last parameter is a calculation that asymptotically approaches the measured system frequency
-        //                    m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, ((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond * 2) / systemFrequencyEstimationDenominator);
-        //                }
-        //            }
-
-        //            // Return high-resolution timestamp
-        //            return precisionTime;
-        //        }
-        //    }
-        //}
-
-        //#endregion
-
         // Defines constants for the multimedia Timer's event types.
         private enum TimerMode
         {
@@ -615,8 +533,6 @@ namespace GSF
 
         // Static Fields
         private static readonly TimerCapabilities s_capabilities;    // Multimedia timer capabilities.
-        //private static PreciseTime s_preciseTime;           // Precise time implementation.
-        //private static Timer s_synchronizer;                // Lightweight timer used for precise time synchronization.
 
         // Static Constructor
         static PrecisionTimer()
@@ -631,56 +547,6 @@ namespace GSF
         }
 
         // Static Properties
-
-        ///// <summary>
-        ///// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
-        ///// expressed in Coordinated Universal Time (UTC).
-        ///// </summary>
-        ///// <remarks>
-        ///// <para>
-        ///// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
-        ///// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.UtcNow"/>.
-        ///// </para>
-        ///// <para>
-        ///// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
-        ///// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-        ///// Note that the normal <see cref="DateTime.UtcNow"/> property has a maximum resolution of ~16 milliseconds.
-        ///// </para>
-        ///// </remarks>
-        //public static DateTime UtcNow
-        //{
-        //    get
-        //    {
-        //        // Setup a new precise time class at first call
-        //        if ((object)s_preciseTime == null)
-        //            InitializePreciseTime();
-
-        //        return s_preciseTime.UtcNow;
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
-        ///// expressed in the local time zone.
-        ///// </summary>
-        ///// <remarks>
-        ///// <para>
-        ///// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
-        ///// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.Now"/>.
-        ///// </para>
-        ///// <para>
-        ///// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
-        ///// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-        ///// Note that the normal <see cref="DateTime.Now"/> property has a maximum resolution of ~16 milliseconds.
-        ///// </para>
-        ///// </remarks>
-        //public static DateTime Now
-        //{
-        //    get
-        //    {
-        //        return UtcNow.ToLocalTime();
-        //    }
-        //}
 
         /// <summary>
         /// Gets the system multimedia timer capabilities.
@@ -749,6 +615,165 @@ namespace GSF
 #endif
         }
 
+#if !MONO
+        // Gets timer capabilities.
+        [DllImport("winmm.dll")]
+        private static extern int timeGetDevCaps(ref TimerCapabilities caps, int sizeOfTimerCaps);
+
+        // Creates and starts the timer.
+        [DllImport("winmm.dll")]
+        private static extern int timeSetEvent(int delay, int resolution, TimerProc proc, IntPtr user, TimerMode mode);
+
+        // Stops and destroys the timer.
+        [DllImport("winmm.dll")]
+        private static extern int timeKillEvent(int id);
+
+        // Sets the minimum resolution for periodic timers.
+        [DllImport("winmm.dll")]
+        private static extern int timeBeginPeriod(int period);
+
+        // Clears a previously set minimum timer resolution.
+        [DllImport("winmm.dll")]
+        private static extern int timeEndPeriod(int period);
+#endif
+        #endregion
+
+        #region [ DateTimePrecise Adaptation ]
+
+        // This code is suspected to be a large contributing factor for thrashing of
+        // the garbage collector. It has been removed, pending a thorough code review.
+
+        ///// <summary>
+        ///// This class provides a way to get a DateTime that exhibits the relative precision of
+        ///// System.Diagnostics.Stopwatch, and the absolute accuracy of DateTime.Now.
+        ///// </summary>
+        ///// <remarks>
+        ///// This class is based on James Brock's DateTimePrecise class which can be found on the Code Project:
+        ///// http://www.codeproject.com/KB/cs/DateTimePrecise.aspx?msg=2688543#xx2688543xx
+        ///// </remarks>
+        //private class PreciseTime
+        //{
+        //    private sealed class ImmutableTimeState
+        //    {
+        //        public ImmutableTimeState(DateTime observedTime, DateTime baseTime, long elapsedTicks, long systemFrequency)
+        //        {
+        //            this.ObservedTime = observedTime;
+        //            this.BaseTime = baseTime;
+        //            this.ElapsedTicks = elapsedTicks;
+        //            this.SystemFrequency = systemFrequency;
+        //        }
+
+        //        public readonly DateTime ObservedTime;
+        //        public readonly DateTime BaseTime;
+        //        public readonly long ElapsedTicks;
+        //        public readonly long SystemFrequency;
+        //    }
+
+        //    private readonly Stopwatch m_stopwatch;
+        //    private ImmutableTimeState m_timeState;
+        //    private readonly long m_synchronizePeriodStopwatchTicks;
+        //    private long m_synchronizePeriodClockTicks;
+
+        //    /// <summary>Creates a new instance of DateTimePrecise.</summary>
+        //    /// <remarks>
+        //    /// A large value of synchronizePeriodSeconds may cause arithmetic overthrow
+        //    /// exceptions to be thrown. A small value may cause the time to be unstable.
+        //    /// A good value is 10.
+        //    /// </remarks>
+        //    /// <param name="synchronizePeriodSeconds">The number of seconds after which the class will synchronize itself with the system clock.</param>
+        //    public PreciseTime(long synchronizePeriodSeconds)
+        //    {
+        //        m_stopwatch = Stopwatch.StartNew();
+
+        //        DateTime t = DateTime.UtcNow;
+        //        m_timeState = new ImmutableTimeState(t, t, m_stopwatch.ElapsedTicks, Stopwatch.Frequency);
+
+        //        m_synchronizePeriodStopwatchTicks = synchronizePeriodSeconds * Stopwatch.Frequency;
+        //        m_synchronizePeriodClockTicks = synchronizePeriodSeconds * Ticks.PerSecond;
+        //    }
+
+        //    public DateTime UtcNow
+        //    {
+        //        get
+        //        {
+        //            long elapsedTicks = m_stopwatch.ElapsedTicks;
+        //            ImmutableTimeState timeState = m_timeState;
+        //            DateTime precisionTime = timeState.BaseTime.AddTicks(((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond) / timeState.SystemFrequency);
+
+        //            if (elapsedTicks >= timeState.ElapsedTicks + m_synchronizePeriodStopwatchTicks)
+        //            {
+        //                // Perform clock resynchronization
+        //                DateTime systemTime = DateTime.UtcNow;
+        //                long systemTicks = systemTime.Ticks;
+        //                long observedTicks = timeState.ObservedTime.Ticks;
+        //                long systemFrequencyEstimationDenominator = systemTicks - observedTicks + systemTicks + systemTicks - precisionTime.Ticks - observedTicks;
+
+        //                if (systemFrequencyEstimationDenominator != 0L)
+        //                {
+        //                    // Last parameter is a calculation that asymptotically approaches the measured system frequency
+        //                    m_timeState = new ImmutableTimeState(systemTime, precisionTime, elapsedTicks, ((elapsedTicks - timeState.ElapsedTicks) * Ticks.PerSecond * 2) / systemFrequencyEstimationDenominator);
+        //                }
+        //            }
+
+        //            // Return high-resolution timestamp
+        //            return precisionTime;
+        //        }
+        //    }
+        //}
+
+        //private static PreciseTime s_preciseTime;           // Precise time implementation.
+        //private static Timer s_synchronizer;                // Lightweight timer used for precise time synchronization.
+
+        ///// <summary>
+        ///// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
+        ///// expressed in Coordinated Universal Time (UTC).
+        ///// </summary>
+        ///// <remarks>
+        ///// <para>
+        ///// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
+        ///// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.UtcNow"/>.
+        ///// </para>
+        ///// <para>
+        ///// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
+        ///// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
+        ///// Note that the normal <see cref="DateTime.UtcNow"/> property has a maximum resolution of ~16 milliseconds.
+        ///// </para>
+        ///// </remarks>
+        //public static DateTime UtcNow
+        //{
+        //    get
+        //    {
+        //        // Setup a new precise time class at first call
+        //        if ((object)s_preciseTime == null)
+        //            InitializePreciseTime();
+
+        //        return s_preciseTime.UtcNow;
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Gets a high-resolution <see cref="DateTime"/> value of the current time on this computer,
+        ///// expressed in the local time zone.
+        ///// </summary>
+        ///// <remarks>
+        ///// <para>
+        ///// This shared property provides a way to get a <see cref="DateTime"/> value that exhibits the relative
+        ///// precision of <see cref="Stopwatch"/>, and the absolute accuracy of <see cref="DateTime.Now"/>.
+        ///// </para>
+        ///// <para>
+        ///// This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
+        ///// "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
+        ///// Note that the normal <see cref="DateTime.Now"/> property has a maximum resolution of ~16 milliseconds.
+        ///// </para>
+        ///// </remarks>
+        //public static DateTime Now
+        //{
+        //    get
+        //    {
+        //        return UtcNow.ToLocalTime();
+        //    }
+        //}
+
         //// Initializes the the precise timing mechanism
         //private static void InitializePreciseTime()
         //{
@@ -771,27 +796,6 @@ namespace GSF
         //    DateTime now = s_preciseTime.UtcNow;
         //}
 
-#if !MONO
-        // Gets timer capabilities.
-        [DllImport("winmm.dll")]
-        private static extern int timeGetDevCaps(ref TimerCapabilities caps, int sizeOfTimerCaps);
-
-        // Creates and starts the timer.
-        [DllImport("winmm.dll")]
-        private static extern int timeSetEvent(int delay, int resolution, TimerProc proc, IntPtr user, TimerMode mode);
-
-        // Stops and destroys the timer.
-        [DllImport("winmm.dll")]
-        private static extern int timeKillEvent(int id);
-
-        // Sets the minimum resolution for periodic timers.
-        [DllImport("winmm.dll")]
-        private static extern int timeBeginPeriod(int period);
-
-        // Clears a previously set minimum timer resolution.
-        [DllImport("winmm.dll")]
-        private static extern int timeEndPeriod(int period);
-#endif
         #endregion
     }
 }
