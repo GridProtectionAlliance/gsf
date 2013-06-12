@@ -1836,37 +1836,47 @@ namespace TVA.Collections
             int sleepTime = 1;
             long noWorkSleeps = 0L;
 
-            // Creates a real-time processing loop that will start item processing as quickly as possible.
-            while (m_enabled)
+            try
             {
-                processing = Interlocked.CompareExchange(ref m_processing, 1, 0);
-
-                // Kick start processing when items exist that are not currently being processed
-                if (processing == 0 && !IsEmpty)
+                // Creates a real-time processing loop that will start item processing as quickly as possible.
+                while (m_enabled)
                 {
-                    sleepTime = 1;
-                    noWorkSleeps = 0L;
-                    ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
+                    processing = Interlocked.CompareExchange(ref m_processing, 1, 0);
+
+                    // Kick start processing when items exist that are not currently being processed
+                    if (processing == 0 && !IsEmpty)
+                    {
+                        sleepTime = 1;
+                        noWorkSleeps = 0L;
+                        ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
+                    }
+                    else
+                    {
+                        // If the processing flag was set but no items were found in the process queue,
+                        // the asynchronous loop was never spawned so we need to clear the processing flag
+                        if (processing == 0)
+                            Interlocked.Exchange(ref m_processing, 0);
+
+                        // Vary sleep time based on how often kick start is being processed, up to one second for very idle queues
+                        if (noWorkSleeps > 1000L)
+                            sleepTime = 1000;   // It will take well over 1.5 minutes of no work before sleeping for 1 second
+                        else if (noWorkSleeps > 100L)
+                            sleepTime = 100;    // It will take at least one second of no work before sleeping for 100ms
+                        else if (noWorkSleeps > 5L)
+                            sleepTime = 10;     // It will take at least 5ms of no work before sleeping for 10ms
+
+                        noWorkSleeps++;
+
+                        // Wait around for more items to process
+                        Thread.Sleep(sleepTime);
+                    }
                 }
-                else
+            }
+            catch (Exception ex)
+            {
+                if (m_enabled)
                 {
-                    // If the processing flag was set but no items were found in the process queue,
-                    // the asynchronous loop was never spawned so we need to clear the processing flag
-                    if (processing == 0)
-                        Interlocked.Exchange(ref m_processing, 0);
-
-                    // Vary sleep time based on how often kick start is being processed, up to one second for very idle queues
-                    if (noWorkSleeps > 1000L)
-                        sleepTime = 1000;   // It will take well over 1.5 minutes of no work before sleeping for 1 second
-                    else if (noWorkSleeps > 100L)
-                        sleepTime = 100;    // It will take at least one second of no work before sleeping for 100ms
-                    else if (noWorkSleeps > 5L)
-                        sleepTime = 10;     // It will take at least 5ms of no work before sleeping for 10ms
-
-                    noWorkSleeps++;
-
-                    // Wait around for more items to process
-                    Thread.Sleep(sleepTime);
+                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred in real-time processing loop: {0}", ex.Message), ex));
                 }
             }
         }
