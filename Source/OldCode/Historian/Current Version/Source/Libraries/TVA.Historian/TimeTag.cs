@@ -141,7 +141,7 @@ namespace TVA.Historian
         {
             get
             {
-                return new TimeTag(PrecisionTimer.Now.Ticks - BaseDate.Ticks);
+                return new TimeTag(DateTime.Now.Ticks - BaseDate.Ticks);
             }
         }
 
@@ -152,7 +152,7 @@ namespace TVA.Historian
         {
             get
             {
-                return new TimeTag(PrecisionTimer.UtcNow.Ticks - BaseDate.Ticks);
+                return new TimeTag(DateTime.UtcNow.Ticks - BaseDate.Ticks);
             }
         }
 
