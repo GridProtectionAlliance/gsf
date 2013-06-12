@@ -1065,7 +1065,7 @@ namespace TimeSeriesFramework.Adapters
 
         private void ProcessTimeouts()
         {
-            long now = PrecisionTimer.UtcNow.Ticks;
+            long now = DateTime.UtcNow.Ticks;
 
             IAdapter adapter;
             DependencyMeasurement dequeuedMeasurement;

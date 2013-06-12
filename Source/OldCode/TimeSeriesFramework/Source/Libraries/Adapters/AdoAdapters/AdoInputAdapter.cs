@@ -379,7 +379,7 @@ namespace AdoAdapters
             {
                 SignalIndexCache signalIndexCache = new SignalIndexCache();
                 CompactMeasurement measurement;
-                long startTime = PrecisionTimer.UtcNow.Ticks;
+                long startTime = DateTime.UtcNow.Ticks;
 
                 if (m_cacheFileName != null && File.Exists(m_cacheFileName))
                 {
@@ -442,7 +442,7 @@ namespace AdoAdapters
                                     OnStatusMessage("Loaded {0} records so far...", m_dbMeasurements.Count);
                             }
 
-                            OnStatusMessage("Completed data load in {0}", ((Ticks)(PrecisionTimer.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
+                            OnStatusMessage("Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
                         }
                     }
                     catch (Exception ex)
@@ -609,7 +609,7 @@ namespace AdoAdapters
 
                     m_dbMeasurements = m_dbMeasurements.OrderBy(m => (long)m.Timestamp).ToList();
 
-                    OnStatusMessage("Completed data load in {0}", ((Ticks)(PrecisionTimer.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
+                    OnStatusMessage("Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
 
                     if (m_cacheFileName != null)
                     {
@@ -700,7 +700,7 @@ namespace AdoAdapters
             while (Enabled)
             {
                 List<IMeasurement> measurements = new List<IMeasurement>();
-                now = PrecisionTimer.UtcNow.Ticks;
+                now = DateTime.UtcNow.Ticks;
 
                 // See if it is time to publish
                 if (now - publicationTime >= ticksPerFrame)

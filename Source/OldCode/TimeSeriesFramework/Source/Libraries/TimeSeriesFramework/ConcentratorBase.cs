@@ -1187,17 +1187,9 @@ namespace TimeSeriesFramework
                 if (m_startTime > 0)
                 {
                     if (m_stopTime > 0)
-                    {
                         processingTime = m_stopTime - m_startTime;
-                    }
                     else
-                    {
-#if UseHighResolutionTime
-                        processingTime = PrecisionTimer.UtcNow.Ticks - m_startTime;
-#else
                         processingTime = DateTime.UtcNow.Ticks - m_startTime;
-#endif
-                    }
                 }
 
                 if (processingTime < 0)
@@ -1310,11 +1302,7 @@ namespace TimeSeriesFramework
                 if (m_useLocalClockAsRealTime)
                 {
                     // Assumes local system clock is the best value we have for real-time.
-#if UseHighResolutionTime
-                    return PrecisionTimer.UtcNow.Ticks;
-#else
                     return DateTime.UtcNow.Ticks;
-#endif
                 }
                 else
                 {
@@ -1325,11 +1313,7 @@ namespace TimeSeriesFramework
                         // time. Since the lead time typically defines the tolerated accuracy of the local clock to
                         // real-time we will use this value as the + and - timestamp tolerance to validate if the
                         // measurement time is reasonable.
-#if UseHighResolutionTime
-                        long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
-#else
                         long currentTimeTicks = DateTime.UtcNow.Ticks;
-#endif
                         double distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
 
                         // Set real-time ticks to current ticks if value is outside of tolerances
@@ -1526,11 +1510,7 @@ namespace TimeSeriesFramework
                 StringBuilder status = new StringBuilder();
                 IFrame lastFrame = LastFrame;
                 IMeasurement lastDiscardedMeasurement = null;
-#if UseHighResolutionTime
-                DateTime currentTime = PrecisionTimer.UtcNow;
-#else
                 DateTime currentTime = DateTime.UtcNow;
-#endif
 
                 status.AppendFormat("     Data concentration is: {0}", Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
@@ -1558,11 +1538,7 @@ namespace TimeSeriesFramework
                 if (!m_useLocalClockAsRealTime)
                 {
                     status.Append("      Local clock accuracy: ");
-#if UseHighResolutionTime
-                    status.Append(SecondsFromRealTime(PrecisionTimer.UtcNow.Ticks).ToString("0.0000"));
-#else
                     status.Append(SecondsFromRealTime(DateTime.UtcNow.Ticks).ToString("0.0000"));
-#endif
                     status.Append(" second deviation from latest time");
                     status.AppendLine();
                 }
@@ -1764,11 +1740,7 @@ namespace TimeSeriesFramework
                 ResetStatistics();
 
                 m_stopTime = 0;
-#if UseHighResolutionTime
-                m_startTime = PrecisionTimer.UtcNow.Ticks;
-#else
                 m_startTime = DateTime.UtcNow.Ticks;
-#endif
                 m_frameQueue.Clear();
                 m_monitorTimer.Start();
 
@@ -1792,11 +1764,7 @@ namespace TimeSeriesFramework
                 if (m_frameQueue != null)
                     m_frameQueue.Clear();
 
-#if UseHighResolutionTime
-                m_stopTime = PrecisionTimer.UtcNow.Ticks;
-#else
                 m_stopTime = DateTime.UtcNow.Ticks;
-#endif
             }
         }
 
@@ -1833,11 +1801,7 @@ namespace TimeSeriesFramework
                 long currentTimeTicks;
 
                 if (m_performTimestampReasonabilityCheck)
-#if UseHighResolutionTime
-                    currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
-#else
                     currentTimeTicks = DateTime.UtcNow.Ticks;
-#endif
                 else
                     currentTimeTicks = timestamp;
 
@@ -2063,11 +2027,8 @@ namespace TimeSeriesFramework
                                 // Apply a resonability check to this value using the local clock. Since the lead time
                                 // typically defines the tolerated accuracy of the local clock to real-time, this value
                                 // is used as the + and - timestamp tolerance to validate if the time is reasonable.
-#if UseHighResolutionTime
-                                long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
-#else
                                 long currentTimeTicks = DateTime.UtcNow.Ticks;
-#endif
+
                                 if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
                                 {
                                     // The new time measurement looks good, so this function assumes the time is "real-time"
@@ -2250,11 +2211,7 @@ namespace TimeSeriesFramework
                                 WaitHandle.WaitAll(m_externalEventHandles, m_externalEventTimeout);
 
                             // Mark start time for publication
-#if UseHighResolutionTime
-                            startTime = PrecisionTimer.UtcNow.Ticks;
-#else
                             startTime = DateTime.UtcNow.Ticks;
-#endif
 
                             // Calculate index of this frame within its second - note that we have to calculate this
                             // value instead of using frameIndex since it is is possible for multiple frames to be
@@ -2290,11 +2247,8 @@ namespace TimeSeriesFramework
                                 Interlocked.Add(ref m_downsampledMeasurements, frame.DownsampledMeasurements);
 
                                 // Mark stop time for publication
-#if UseHighResolutionTime
-                                stopTime = PrecisionTimer.UtcNow.Ticks;
-#else
                                 stopTime = DateTime.UtcNow.Ticks;
-#endif
+
                                 if (m_trackPublishedTimestamp)
                                     sourceFrame.PublishedTimestamp = stopTime;
 

@@ -259,7 +259,7 @@ namespace TimeSeriesFramework
         /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was received (i.e., created).
         /// </summary>
         /// <remarks>
-        /// <para>Implementors should set this timestamp to be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
+        /// <para>Implementors should set this timestamp to be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
         /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
         /// </remarks>
         Ticks ReceivedTimestamp

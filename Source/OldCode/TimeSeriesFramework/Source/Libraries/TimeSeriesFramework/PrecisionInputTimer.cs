@@ -275,7 +275,7 @@ namespace TimeSeriesFramework
 
                 if (locked)
                 {
-                    DateTime now = PrecisionTimer.UtcNow;
+                    DateTime now = DateTime.UtcNow;
                     int frameMilliseconds, milliseconds = now.Millisecond;
                     long ticks = now.Ticks;
                     bool releaseTimer = false, resync = false;
@@ -376,7 +376,7 @@ namespace TimeSeriesFramework
 
             while (repeat)
             {
-                next = PrecisionTimer.UtcNow.Ticks % Ticks.PerMillisecond % 1000;
+                next = DateTime.UtcNow.Ticks % Ticks.PerMillisecond % 1000;
                 repeat = (next > last);
                 last = next;
             }

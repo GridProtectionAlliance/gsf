@@ -142,7 +142,7 @@ namespace ConfigurationCacher
         {
             DataSet configuration = null;
             bool configException = false;
-            Ticks startTime = PrecisionTimer.UtcNow.Ticks;
+            Ticks startTime = DateTime.UtcNow.Ticks;
             double elapsedTime;
             string nodeIDQueryString = null;
 
@@ -215,16 +215,16 @@ namespace ConfigurationCacher
                         foreach (DataRow entityRow in entities.Rows)
                         {
                             // Load configuration entity data filtered by node ID
-                            operationStartTime = PrecisionTimer.UtcNow.Ticks;
+                            operationStartTime = DateTime.UtcNow.Ticks;
                             source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"].ToString(), nodeIDQueryString));
-                            operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
+                            operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Update table name as defined in configuration entity
                             source.TableName = entityRow["RuntimeName"].ToString();
 
                             DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
 
-                            operationStartTime = PrecisionTimer.UtcNow.Ticks;
+                            operationStartTime = DateTime.UtcNow.Ticks;
 
                             // Clone data source
                             destination = source.Clone();
@@ -258,7 +258,7 @@ namespace ConfigurationCacher
                                 destination.Rows.Add(newRow);
                             }
 
-                            operationElapsedTime = (PrecisionTimer.UtcNow.Ticks - operationStartTime).ToSeconds();
+                            operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                             // Add entity configuration data to system configuration
                             configuration.Tables.Add(destination);
@@ -350,7 +350,7 @@ namespace ConfigurationCacher
 
             if (!configException)
             {
-                elapsedTime = (PrecisionTimer.UtcNow.Ticks - startTime).ToSeconds();
+                elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
                 DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, s_configurationType, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
             }
 

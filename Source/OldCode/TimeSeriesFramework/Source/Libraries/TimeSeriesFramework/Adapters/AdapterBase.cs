@@ -599,17 +599,9 @@ namespace TimeSeriesFramework.Adapters
                 if (m_startTime > 0)
                 {
                     if (m_stopTime > 0)
-                    {
                         processingTime = m_stopTime - m_startTime;
-                    }
                     else
-                    {
-#if UseHighResolutionTime
-                        processingTime = PrecisionTimer.UtcNow.Ticks - m_startTime;
-#else
                         processingTime = DateTime.UtcNow.Ticks - m_startTime;
-#endif
-                    }
                 }
 
                 if (processingTime < 0)
@@ -902,7 +894,7 @@ namespace TimeSeriesFramework.Adapters
             if (m_enabled)
             {
                 m_stopTime = 0;
-                m_startTime = PrecisionTimer.UtcNow.Ticks;
+                m_startTime = DateTime.UtcNow.Ticks;
             }
             else
                 OnProcessException(new TimeoutException("Failed to start adapter due to timeout waiting for initialization."));
@@ -915,7 +907,7 @@ namespace TimeSeriesFramework.Adapters
         public virtual void Stop()
         {
             m_enabled = false;
-            m_stopTime = PrecisionTimer.UtcNow.Ticks;
+            m_stopTime = DateTime.UtcNow.Ticks;
         }
 
         /// <summary>

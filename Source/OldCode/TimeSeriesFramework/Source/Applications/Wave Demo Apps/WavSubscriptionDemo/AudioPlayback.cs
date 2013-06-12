@@ -502,7 +502,7 @@ namespace NAudioWpfDemo
         {
             // We cannot use the time sent by the server because we don't
             // know whether our clock is synchronized with the server's.
-            m_startTime = PrecisionTimer.UtcNow.Ticks;
+            m_startTime = DateTime.UtcNow.Ticks;
         }
 
         // Handles the subscriber's NewMeasurements event.
@@ -727,7 +727,7 @@ namespace NAudioWpfDemo
         {
             if (m_lastStatCalcTime != 0)
             {
-                long now = PrecisionTimer.UtcNow.Ticks;
+                long now = DateTime.UtcNow.Ticks;
                 long measurementCount = Interlocked.Read(ref m_measurementCount);
                 double totalTime = (now - m_startTime) / (double)Ticks.PerSecond;
                 double instantaneousTime = (now - m_lastStatCalcTime) / (double)Ticks.PerSecond;
@@ -756,7 +756,7 @@ namespace NAudioWpfDemo
 
             m_lastMeasurementCount = Interlocked.Read(ref m_measurementCount);
             m_lastTotalBytesReceived = m_dataSubscriber.TotalBytesReceived;
-            m_lastStatCalcTime = PrecisionTimer.UtcNow.Ticks;
+            m_lastStatCalcTime = DateTime.UtcNow.Ticks;
         }
 
         // ------ Wave Player Methods ------

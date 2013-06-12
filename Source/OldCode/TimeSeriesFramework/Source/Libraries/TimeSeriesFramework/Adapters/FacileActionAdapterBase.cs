@@ -427,7 +427,7 @@ namespace TimeSeriesFramework.Adapters
             {
                 // When using local clock as real-time, assume this is the best value we have for real time.
                 if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
-                    return PrecisionTimer.UtcNow.Ticks;
+                    return DateTime.UtcNow.Ticks;
 
                 // Assume lastest measurement timestamp is the best value we have for real-time.
                 return m_realTimeTicks;
