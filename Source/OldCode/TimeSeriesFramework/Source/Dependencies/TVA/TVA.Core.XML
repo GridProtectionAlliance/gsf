@@ -24580,63 +24580,10 @@
             Gets <see cref="T:System.EventArgs"/> specified in <see cref="M:TVA.PrecisionTimer.Start(System.EventArgs)"/> used to pass into <see cref="E:TVA.PrecisionTimer.Tick"/> event.
             </summary>
         </member>
-        <member name="P:TVA.PrecisionTimer.UtcNow">
-            <summary>
-            Gets a high-resolution <see cref="T:System.DateTime"/> value of the current time on this computer,
-            expressed in Coordinated Universal Time (UTC).
-            </summary>
-            <remarks>
-            <para>
-            This shared property provides a way to get a <see cref="T:System.DateTime"/> value that exhibits the relative
-            precision of <see cref="T:System.Diagnostics.Stopwatch"/>, and the absolute accuracy of <see cref="P:System.DateTime.UtcNow"/>.
-            </para>
-            <para>
-            This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
-            "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-            Note that the normal <see cref="P:System.DateTime.UtcNow"/> property has a maximum resolution of ~16 milliseconds.
-            </para>
-            </remarks>
-        </member>
-        <member name="P:TVA.PrecisionTimer.Now">
-            <summary>
-            Gets a high-resolution <see cref="T:System.DateTime"/> value of the current time on this computer,
-            expressed in the local time zone.
-            </summary>
-            <remarks>
-            <para>
-            This shared property provides a way to get a <see cref="T:System.DateTime"/> value that exhibits the relative
-            precision of <see cref="T:System.Diagnostics.Stopwatch"/>, and the absolute accuracy of <see cref="P:System.DateTime.Now"/>.
-            </para>
-            <para>
-            This property is useful for obtaining high-resolution accuarate timestamps for events that occur in the
-            "sub-second" world (e.g., timestamping events happening hundreds or thousands of times per second).
-            Note that the normal <see cref="P:System.DateTime.Now"/> property has a maximum resolution of ~16 milliseconds.
-            </para>
-            </remarks>
-        </member>
         <member name="P:TVA.PrecisionTimer.Capabilities">
             <summary>
             Gets the system multimedia timer capabilities.
             </summary>
-        </member>
-        <member name="T:TVA.PrecisionTimer.PreciseTime">
-            <summary>
-            This class provides a way to get a DateTime that exhibits the relative precision of
-            System.Diagnostics.Stopwatch, and the absolute accuracy of DateTime.Now.
-            </summary>
-            <remarks>
-            This class is based on James Brock's DateTimePrecise class which can be found on the Code Project:
-            http://www.codeproject.com/KB/cs/DateTimePrecise.aspx?msg=2688543#xx2688543xx
-            </remarks>
-        </member>
-        <member name="M:TVA.PrecisionTimer.PreciseTime.#ctor(System.Int64)">
-            <summary>Creates a new instance of DateTimePrecise.</summary>
-            <remarks>
-            A large value of synchronizePeriodSeconds may cause arithmetic overthrow
-            exceptions to be thrown. A small value may cause the time to be unstable.
-            A good value is 10.
-            </remarks>
-            <param name="synchronizePeriodSeconds">The number of seconds after which the class will synchronize itself with the system clock.</param>
         </member>
         <member name="T:TVA.ProcessProgress`1">
             <summary>
