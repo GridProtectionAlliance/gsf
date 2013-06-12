@@ -265,7 +265,7 @@
     <PropertyGroup>
       <TfsServer Condition="'$(TfsServer)' == ''">https://tfs.codeplex.com/tfs/tfs07</TfsServer>
       <ServerFolder Condition="'$(ServerFolder)' == ''">$/openpdc/$(ProjectName)/Current Version</ServerFolder>
-      <LocalFolder Condition="'$(LocalFolder)' == ''">$(TEMP)\MSBuild\openpdc\$(ProjectName)</LocalFolder>
+      <LocalFolder Condition="'$(LocalFolder)' == ''">$([System.IO.Path]::GetFullPath('$(TEMP)\MSBuild\openpdc\$(ProjectName)'))</LocalFolder>
       <BuildFlavor Condition="'$(BuildFlavor)' == ''">Release</BuildFlavor>
       <BuildTarget Condition="'$(BuildTarget)' == ''">Any CPU</BuildTarget>
       <BuildOutputFolder Condition="'$(BuildOutputFolder)' == ''">$(LocalFolder)\Build\Output\$(BuildFlavor)</BuildOutputFolder>
