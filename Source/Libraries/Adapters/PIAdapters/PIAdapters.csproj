@@ -45,18 +45,19 @@
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>False</EmbedInteropTypes>
       <HintPath>..\Program Files\PIPC\PISDK\OSIsoft.PISDK.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="OSIsoft.PISDKCommon, Version=1.4.0.0, Culture=neutral, PublicKeyToken=c3309f0734ba2805, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>False</EmbedInteropTypes>
       <HintPath>..\Program Files\PIPC\PISDK\OSIsoft.PISDKCommon.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="OSIsoft.PITimeServer, Version=1.3.0.0, Culture=neutral, PublicKeyToken=c3309f0734ba2805, processorArchitecture=AMD64">
       <HintPath>..\Program Files\PIPC\PISDK\OSIsoft.PITimeServer.dll</HintPath>
       <SpecificVersion>False</SpecificVersion>
       <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
