@@ -129,9 +129,11 @@
     <Compile Include="BufferExtensions.cs" />
     <Compile Include="ByteEncoding.cs" />
     <Compile Include="CharExtensions.cs" />
+    <Compile Include="Collections\AsyncDoubleBufferedQueue.cs" />
     <Compile Include="Collections\AsyncQueue.cs" />
     <Compile Include="Collections\CollectionExtensions.cs" />
     <Compile Include="Collections\DictionaryList.cs" />
+    <Compile Include="Collections\DoubleBufferedQueue.cs" />
     <Compile Include="Collections\ProcessDictionary.cs" />
     <Compile Include="Collections\NamespaceDoc.cs" />
     <Compile Include="Collections\ProcessList.cs" />

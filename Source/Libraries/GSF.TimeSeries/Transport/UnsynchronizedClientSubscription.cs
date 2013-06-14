@@ -28,10 +28,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Timers;
 using GSF.Collections;
 using GSF.Parsing;
 using GSF.TimeSeries.Adapters;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
 {
@@ -60,7 +62,7 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
         // Fields
-        private readonly AsyncQueue<IEnumerable<IMeasurement>> m_processQueue;
+        private readonly AsyncDoubleBufferedQueue<IMeasurement> m_processQueue;
         private readonly SignalIndexCache m_signalIndexCache;
         private readonly Guid m_clientID;
         private readonly Guid m_subscriberID;
@@ -110,15 +112,11 @@ namespace GSF.TimeSeries.Transport
             m_subscriberID = subscriberID;
 
             m_signalIndexCache = new SignalIndexCache
-                {
+            {
                 SubscriberID = subscriberID
             };
 
-            m_processQueue = new AsyncQueue<IEnumerable<IMeasurement>>
-                {
-                ProcessItemFunction = ProcessMeasurements
-            };
-
+            m_processQueue = new AsyncDoubleBufferedQueue<IMeasurement>();
             m_processQueue.ProcessException += (sender, e) => OnProcessException(e.Argument);
 
             m_bufferBlockCache = new List<byte[]>();
@@ -453,6 +451,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public override void Start()
         {
+            Thread processThread = new Thread(ProcessMeasurements);
+
             if (!Enabled)
                 m_startTimeSent = false;
 
@@ -460,6 +460,9 @@ namespace GSF.TimeSeries.Transport
 
             if ((object)m_baseTimeRotationTimer != null && m_includeTime)
                 m_baseTimeRotationTimer.Start();
+
+            processThread.IsBackground = true;
+            processThread.Start();
         }
 
         /// <summary>
@@ -554,7 +557,7 @@ namespace GSF.TimeSeries.Transport
                     foreach (TemporalMeasurement measurement in LatestMeasurements)
                     {
                         newMeasurement = new Measurement
-                            {
+                        {
                             ID = measurement.ID,
                             Key = measurement.Key,
                             Value = measurement.GetValue(RealTime),
@@ -649,101 +652,122 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
+        private void ProcessMeasurements()
         {
-            if ((object)m_parent == null || m_disposed)
-                return;
+            SpinWait spinner = new SpinWait();
 
-            // Includes data packet flags and measurement count
-            const int PacketHeaderSize = DataPublisher.ClientResponseHeaderSize + 5;
-
-            List<IBinaryMeasurement> packet = new List<IBinaryMeasurement>();
-            bool usePayloadCompression = m_usePayloadCompression;
-            bool useCompactMeasurementFormat = m_useCompactMeasurementFormat || usePayloadCompression;
-            BufferBlockMeasurement bufferBlockMeasurement;
-            IBinaryMeasurement binaryMeasurement;
-            byte[] bufferBlock;
-            int binaryLength;
-            int packetSize = PacketHeaderSize;
-            ushort bufferBlockSignalIndex;
-
-            // If a set of base times has not yet been initialized, initialize a set by rotating
-            if (!m_initializedBaseTimeOffsets)
+            while (Enabled)
             {
-                if (m_parent.UseBaseTimeOffsets)
-                    RotateBaseTimes();
-
-                m_initializedBaseTimeOffsets = true;
-            }
-
-            foreach (IMeasurement measurement in measurements)
-            {
-                bufferBlockMeasurement = measurement as BufferBlockMeasurement;
-
-                if ((object)bufferBlockMeasurement != null)
+                try
                 {
-                    // Still sending buffer block measurements to client; we are expecting
-                    // confirmations which will indicate whether retransmission is necessary,
-                    // so we will restart the retransmission timer
-                    m_bufferBlockRetransmissionTimer.Stop();
+                    if ((object)m_parent == null || m_disposed)
+                        return;
 
-                    // Handle buffer block measurements as a special case - this can be any kind of data,
-                    // measurement subscriber will need to know how to interpret buffer
-                    bufferBlock = new byte[6 + bufferBlockMeasurement.Length];
+                    // Includes data packet flags and measurement count
+                    const int PacketHeaderSize = DataPublisher.ClientResponseHeaderSize + 5;
 
-                    // Prepend sequence number
-                    EndianOrder.BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
-                    m_bufferBlockSequenceNumber++;
+                    IEnumerable<IMeasurement> measurements;
+                    List<IBinaryMeasurement> packet = new List<IBinaryMeasurement>();
+                    bool usePayloadCompression = m_usePayloadCompression;
+                    bool useCompactMeasurementFormat = m_useCompactMeasurementFormat || usePayloadCompression;
+                    BufferBlockMeasurement bufferBlockMeasurement;
+                    IBinaryMeasurement binaryMeasurement;
+                    byte[] bufferBlock;
+                    int binaryLength;
+                    int packetSize = PacketHeaderSize;
+                    ushort bufferBlockSignalIndex;
 
-                    // Copy signal index into buffer
-                    bufferBlockSignalIndex = m_signalIndexCache.GetSignalIndex(bufferBlockMeasurement.ID);
-                    EndianOrder.BigEndian.CopyBytes(bufferBlockSignalIndex, bufferBlock, 4);
-
-                    // Append measurement data and send
-                    Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 6, bufferBlockMeasurement.Length);
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
-
-                    lock (m_bufferBlockCacheLock)
+                    // If a set of base times has not yet been initialized, initialize a set by rotating
+                    if (!m_initializedBaseTimeOffsets)
                     {
-                        // Cache buffer block for retransmission
-                        m_bufferBlockCache.Add(bufferBlock);
+                        if (m_parent.UseBaseTimeOffsets)
+                            RotateBaseTimes();
+
+                        m_initializedBaseTimeOffsets = true;
                     }
 
-                    // Start the retransmission timer in case we never receive a confirmation
-                    m_bufferBlockRetransmissionTimer.Start();
-                }
-                else
-                {
-                    // Serialize the current measurement.
-                    if (useCompactMeasurementFormat)
-                        binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
-                    else
-                        binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
+                    measurements = m_processQueue.Dequeue();
 
-                    // Determine the size of the measurement in bytes.
-                    binaryLength = binaryMeasurement.BinaryLength;
-
-                    // If the current measurement will not fit in the packet based on the max
-                    // packet size, process the current packet and start a new packet.
-                    if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                    foreach (IMeasurement measurement in measurements)
                     {
+                        bufferBlockMeasurement = measurement as BufferBlockMeasurement;
+
+                        if ((object)bufferBlockMeasurement != null)
+                        {
+                            // Still sending buffer block measurements to client; we are expecting
+                            // confirmations which will indicate whether retransmission is necessary,
+                            // so we will restart the retransmission timer
+                            m_bufferBlockRetransmissionTimer.Stop();
+
+                            // Handle buffer block measurements as a special case - this can be any kind of data,
+                            // measurement subscriber will need to know how to interpret buffer
+                            bufferBlock = new byte[6 + bufferBlockMeasurement.Length];
+
+                            // Prepend sequence number
+                            EndianOrder.BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
+                            m_bufferBlockSequenceNumber++;
+
+                            // Copy signal index into buffer
+                            bufferBlockSignalIndex = m_signalIndexCache.GetSignalIndex(bufferBlockMeasurement.ID);
+                            EndianOrder.BigEndian.CopyBytes(bufferBlockSignalIndex, bufferBlock, 4);
+
+                            // Append measurement data and send
+                            Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 6, bufferBlockMeasurement.Length);
+                            m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+
+                            lock (m_bufferBlockCacheLock)
+                            {
+                                // Cache buffer block for retransmission
+                                m_bufferBlockCache.Add(bufferBlock);
+                            }
+
+                            // Start the retransmission timer in case we never receive a confirmation
+                            m_bufferBlockRetransmissionTimer.Start();
+                        }
+                        else
+                        {
+                            // Serialize the current measurement.
+                            if (useCompactMeasurementFormat)
+                                binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
+                            else
+                                binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
+
+                            // Determine the size of the measurement in bytes.
+                            binaryLength = binaryMeasurement.BinaryLength;
+
+                            // If the current measurement will not fit in the packet based on the max
+                            // packet size, process the current packet and start a new packet.
+                            if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                            {
+                                ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
+                                packet.Clear();
+                                packetSize = PacketHeaderSize;
+                            }
+
+                            // Add the current measurement to the packet.
+                            packet.Add(binaryMeasurement);
+                            packetSize += binaryLength;
+                        }
+                    }
+
+                    // Process the remaining measurements.
+                    if (packet.Count > 0)
                         ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
-                        packet.Clear();
-                        packetSize = PacketHeaderSize;
-                    }
 
-                    // Add the current measurement to the packet.
-                    packet.Add(binaryMeasurement);
-                    packetSize += binaryLength;
+                    // Update latency statistics
+                    m_parent.UpdateLatencyStatistics(measurements.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
+
+                    if (measurements.Any())
+                        spinner.Reset();
+                    else
+                        spinner.SpinOnce();
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException(string.Format("Error processing measurements: {0}", ex.Message), ex));
+                    spinner.SpinOnce();
                 }
             }
-
-            // Process the remaining measurements.
-            if (packet.Count > 0)
-                ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
-
-            // Update latency statistics
-            m_parent.UpdateLatencyStatistics(measurements.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
         }
 
         private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, bool useCompactMeasurementFormat, bool usePayloadCompression)
