@@ -173,14 +173,21 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Initializes a new instance of <see cref="BlockAllocatedMemoryStream"/> for specified <paramref name="capacity"/>.
+        /// </summary>
+        /// <param name="capacity">Initial length of the stream.</param>
+        public BlockAllocatedMemoryStream(int capacity)
+            : this(capacity, DefaultBlockSize)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of <see cref="BlockAllocatedMemoryStream"/> for specified <paramref name="capacity"/>
         /// and desired block size.
         /// </summary>
         /// <param name="capacity">Initial length of the stream.</param>
         /// <param name="blockSize">Desired size of memory blocks.</param>
         /// <exception cref="ArgumentOutOfRangeException">Block size must be greater than zero.</exception>
-        // Do not create overload with only blockSize since when replacing code that uses MemoryStream with BlockAllocatedMemoryStream
-        // this would create ambiguity between original capacity argument and new block size forcing a code change to fix logic.
         public BlockAllocatedMemoryStream(int capacity, int blockSize)
         {
             if (blockSize <= 0)
