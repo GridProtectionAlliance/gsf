@@ -469,7 +469,7 @@ namespace GSF.TimeSeries.Adapters
             string setting;
 
             if (Settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, setting);
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, setting);
             else
                 InputMeasurementKeys = null;
 

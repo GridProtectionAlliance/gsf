@@ -952,12 +952,12 @@ namespace GSF.TimeSeries.Adapters
                 AllowSortsByArrival = setting.ParseBoolean();
 
             if (settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
+                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, setting);
             else
                 InputMeasurementKeys = new MeasurementKey[0];
 
             if (settings.TryGetValue("outputMeasurements", out setting))
-                OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, setting);
+                OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, true, setting);
 
             if (settings.TryGetValue("minimumMeasurementsToUse", out setting))
                 MinimumMeasurementsToUse = int.Parse(setting);

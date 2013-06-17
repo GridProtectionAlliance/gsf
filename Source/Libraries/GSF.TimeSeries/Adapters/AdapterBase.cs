@@ -34,6 +34,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Units;
 
@@ -795,12 +796,12 @@ namespace GSF.TimeSeries.Adapters
             string setting;
 
             if (settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, setting);
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, setting);
             else
                 InputMeasurementKeys = new MeasurementKey[0];
 
             if (settings.TryGetValue("outputMeasurements", out setting))
-                OutputMeasurements = ParseOutputMeasurements(DataSource, setting);
+                OutputMeasurements = ParseOutputMeasurements(DataSource, true, setting);
 
             if (settings.TryGetValue("measurementReportingInterval", out setting))
                 MeasurementReportingInterval = int.Parse(setting);
@@ -1444,10 +1445,15 @@ namespace GSF.TimeSeries.Adapters
         /// Parses input measurement keys from connection string setting.
         /// </summary>
         /// <param name="dataSource">The <see cref="DataSet"/> used to define input measurement keys.</param>
+        /// <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining input measurement keys (see remarks about security).</param>
         /// <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
         /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
         /// <returns>User selected input measurement keys.</returns>
-        public static MeasurementKey[] ParseInputMeasurementKeys(DataSet dataSource, string value, string measurementTable = "ActiveMeasurements")
+        /// <remarks>
+        /// Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
+        /// injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
+        /// </remarks>
+        public static MeasurementKey[] ParseInputMeasurementKeys(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
         {
             List<MeasurementKey> keys = new List<MeasurementKey>();
             MeasurementKey key;
@@ -1484,19 +1490,32 @@ namespace GSF.TimeSeries.Adapters
                             keys.Add(key);
                     }
                 }
-                else if (value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+                else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
                 {
                     try
                     {
-                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
-                        {
-                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+                        // Load settings from the system settings category				
+                        ConfigurationFile config = ConfigurationFile.Current;
+                        CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
+                        settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output measurements for adapters.");
 
-                            foreach (DataRow row in results.Rows)
+                        // Global configuration setting can override ability to use SELECT statements
+                        if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
+                        {
+                            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                             {
-                                if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
-                                    keys.Add(key);
+                                DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+
+                                foreach (DataRow row in results.Rows)
+                                {
+                                    if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
+                                        keys.Add(key);
+                                }
                             }
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("Database backed SELECT statements are disabled in the configuration.");
                         }
                     }
                     catch (Exception ex)
@@ -1572,22 +1591,32 @@ namespace GSF.TimeSeries.Adapters
         /// Parses output measurement keys from connection string setting.
         /// </summary>
         /// <param name="dataSource">The <see cref="DataSet"/> used to define output measurements.</param>
+        /// <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining output measurement keys (see remarks about security).</param>
         /// <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
         /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
         /// <returns>User selected output measurements.</returns>
-        public static MeasurementKey[] ParseOutputMeasurementKeys(DataSet dataSource, string value, string measurementTable = "ActiveMeasurements")
+        /// <remarks>
+        /// Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
+        /// injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
+        /// </remarks>
+        public static MeasurementKey[] ParseOutputMeasurementKeys(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
         {
-            return ParseOutputMeasurements(dataSource, value, measurementTable).MeasurementKeys().ToArray();
+            return ParseOutputMeasurements(dataSource, allowSelect, value, measurementTable).MeasurementKeys().ToArray();
         }
 
         /// <summary>
         /// Parses output measurements from connection string setting.
         /// </summary>
         /// <param name="dataSource">The <see cref="DataSet"/> used to define output measurements.</param>
+        /// <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining output measurements (see remarks about security).</param>
         /// <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
         /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
         /// <returns>User selected output measurements.</returns>
-        public static IMeasurement[] ParseOutputMeasurements(DataSet dataSource, string value, string measurementTable = "ActiveMeasurements")
+        /// <remarks>
+        /// Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
+        /// injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
+        /// </remarks>
+        public static IMeasurement[] ParseOutputMeasurements(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
         {
             List<IMeasurement> measurements = new List<IMeasurement>();
             Measurement measurement;
@@ -1635,29 +1664,42 @@ namespace GSF.TimeSeries.Adapters
                         measurements.Add(measurement);
                     }
                 }
-                else if (value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+                else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
                 {
                     try
                     {
-                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                        // Load settings from the system settings category				
+                        ConfigurationFile config = ConfigurationFile.Current;
+                        CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
+                        settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output measurements for adapters.");
+
+                        // Global configuration setting can override ability to use SELECT statements
+                        if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
                         {
-                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
-
-                            foreach (DataRow row in results.Rows)
+                            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                             {
-                                id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
 
-                                measurement = new Measurement
+                                foreach (DataRow row in results.Rows)
                                 {
-                                    ID = id,
-                                    Key = MeasurementKey.Parse(row["ID"].ToString(), id),
-                                    TagName = row["PointTag"].ToNonNullString(),
-                                    Adder = double.Parse(row["Adder"].ToString()),
-                                    Multiplier = double.Parse(row["Multiplier"].ToString())
-                                };
+                                    id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
-                                measurements.Add(measurement);
+                                    measurement = new Measurement
+                                    {
+                                        ID = id,
+                                        Key = MeasurementKey.Parse(row["ID"].ToString(), id),
+                                        TagName = row["PointTag"].ToNonNullString(),
+                                        Adder = double.Parse(row["Adder"].ToString()),
+                                        Multiplier = double.Parse(row["Multiplier"].ToString())
+                                    };
+
+                                    measurements.Add(measurement);
+                                }
                             }
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("Database backed SELECT statements are disabled in the configuration.");
                         }
                     }
                     catch (Exception ex)
@@ -1735,12 +1777,12 @@ namespace GSF.TimeSeries.Adapters
 
                             // Create a new measurement for the provided field level information
                             measurement = new Measurement
-                                {
-                                    ID = key.SignalID,
-                                    Key = key,
-                                    Adder = adder,
-                                    Multiplier = multipler
-                                };
+                            {
+                                ID = key.SignalID,
+                                Key = key,
+                                Adder = adder,
+                                Multiplier = multipler
+                            };
 
                             // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
                             try

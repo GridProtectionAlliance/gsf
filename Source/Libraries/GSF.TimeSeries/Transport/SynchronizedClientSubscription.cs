@@ -100,8 +100,8 @@ namespace GSF.TimeSeries.Transport
             m_subscriberID = subscriberID;
             m_signalIndexCache = new SignalIndexCache
                 {
-                SubscriberID = subscriberID
-            };
+                    SubscriberID = subscriberID
+                };
 
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
@@ -276,7 +276,7 @@ namespace GSF.TimeSeries.Transport
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
                         if ((object)DataSource != null && (object)m_signalIndexCache != null)
-                            value = AdapterBase.ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
+                            value = AdapterBase.ParseInputMeasurementKeys(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
                     }
 
                     base.InputMeasurementKeys = value;

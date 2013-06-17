@@ -307,7 +307,7 @@ namespace GSF.TimeSeries.Transport
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
                         if ((object)DataSource != null && (object)m_signalIndexCache != null)
-                            value = ParseInputMeasurementKeys(DataSource, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
+                            value = ParseInputMeasurementKeys(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
                     }
 
                     base.InputMeasurementKeys = value;

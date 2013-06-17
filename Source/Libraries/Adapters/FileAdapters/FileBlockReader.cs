@@ -172,7 +172,7 @@ namespace FileAdapters
             }
             set
             {
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, value).Take(1).ToArray();
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, value).Take(1).ToArray();
             }
         }
 

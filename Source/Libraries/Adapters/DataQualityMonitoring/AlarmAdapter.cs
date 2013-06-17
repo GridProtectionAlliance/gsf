@@ -149,7 +149,7 @@ namespace DataQualityMonitoring
                     .Aggregate((list, id) => list + ";" + id);
 
                 // Set input measurement keys for measurement routing
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, filterExpression);
+                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, filterExpression);
             }
 
             // Set up alarm service

@@ -140,7 +140,7 @@ namespace DynamicCalculator
                         .Aggregate((runningKeyList, nextKey) => runningKeyList + ";" + nextKey);
 
                     // Set the input measurements for this adapter
-                    InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, keyList);
+                    InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, keyList);
                 }
             }
         }
@@ -177,7 +177,7 @@ namespace DynamicCalculator
 
                         m_expressionContext.Imports.AddType(t);
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         string message = string.Format("Unable to load type from assembly: {0}", typeDef);
                         OnProcessException(new ArgumentException(message, ex));

@@ -1630,7 +1630,7 @@ namespace GSF.TimeSeries.Transport
             {
                 if (TryGetAdapterByName("LatestMeasurementCache", out cache))
                 {
-                    cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, cacheMeasurementKeys);
+                    cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, cacheMeasurementKeys);
                     m_routingTables.CalculateRoutingTables(null);
                 }
             }
@@ -2050,7 +2050,9 @@ namespace GSF.TimeSeries.Transport
         // Update rights for the given subscription.
         private void UpdateRights(IClientSubscription subscription)
         {
-            MeasurementKey[] requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, subscription.RequestedInputFilter);
+            // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
+            // from the remote subscription - this will prevent possible SQL injection attacks.
+            MeasurementKey[] requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
             HashSet<MeasurementKey> authorizedSignals = new HashSet<MeasurementKey>();
             Guid subscriberID = subscription.SubscriberID;
             string message;

@@ -429,6 +429,11 @@ namespace GSF.IO
         public override void SetLength(long value)
         {
             m_length = value;
+
+            // Note change from original code which did not perform the following operation - code
+            // matches MemoryStream operation when position exceeds length for this function:
+            if (m_position > m_length)
+                m_position = m_length;
         }
 
         /// <summary>
@@ -455,6 +460,9 @@ namespace GSF.IO
 
             // Only read as far as end of buffer regardless of how much data was requested
             int remaining = (int)(m_length - m_position);
+
+            if (remaining <= 0)
+                return 0;
 
             if (length > remaining)
                 length = remaining;
