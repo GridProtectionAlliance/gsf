@@ -109,19 +109,6 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="BlockAllocatedMemoryStream"/> with the desired block size.
-        /// </summary>
-        /// <param name="blockSize">Desired size of memory blocks.</param>
-        /// <exception cref="ArgumentOutOfRangeException">Block size must be greater than zero.</exception>
-        public BlockAllocatedMemoryStream(int blockSize)
-        {
-            if (blockSize <= 0)
-                throw new ArgumentOutOfRangeException("blockSize", "Block size must be greater than zero.");
-
-            m_blockSize = blockSize;
-        }
-
-        /// <summary>
         /// Initializes a new instance of <see cref="BlockAllocatedMemoryStream"/> from specified <paramref name="buffer"/>.
         /// </summary>
         /// <param name="buffer">Initial buffer to copy into stream.</param>
