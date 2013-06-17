@@ -211,6 +211,7 @@
     <Compile Include="Interop\VBArrayDescriptor.cs" />
     <Compile Include="Interop\WindowsApi.cs" />
     <Compile Include="BufferPool.cs" />
+    <Compile Include="IO\BlockAllocatedMemoryStream.cs" />
     <Compile Include="IO\Checksums\Adler32.cs" />
     <Compile Include="IO\Checksums\ChecksumExtensions.cs" />
     <Compile Include="IO\Checksums\Crc16.cs" />
