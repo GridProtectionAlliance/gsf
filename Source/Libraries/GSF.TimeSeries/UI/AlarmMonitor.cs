@@ -63,9 +63,10 @@ namespace GSF.TimeSeries.UI
         private AlarmStatusQuery m_alarmStatusQuery;
         private DataSubscriber m_dataSubscriber;
         private readonly UnsynchronizedSubscriptionInfo m_subscriptionInfo;
-        private readonly Dictionary<int, Alarm> m_definedAlarms;
+        private volatile Dictionary<int, Alarm> m_definedAlarmsByID;
+        private volatile Dictionary<Guid, Alarm> m_definedAlarmsByMeasurement;
         private readonly object m_currentAlarmsLock;
-        private IEnumerable<RaisedAlarm> m_currentAlarms;
+        private ISet<Alarm> m_currentAlarms;
         private int m_alarmsChanged;
         private Timer m_refreshTimer;
         private int m_refreshInterval;
@@ -86,18 +87,18 @@ namespace GSF.TimeSeries.UI
             if (!int.TryParse(refreshInterval.ToString(), out m_refreshInterval))
                 m_refreshInterval = DefaultRefreshInterval;
 
-            // Load all alarms defined in the database
-            m_definedAlarms = LoadDefinedAlarms();
-
             m_currentAlarmsLock = new object();
-            m_currentAlarms = new List<RaisedAlarm>();
+            m_currentAlarms = new HashSet<Alarm>();
 
             m_refreshTimer = new Timer(m_refreshInterval * 1000);
             m_refreshTimer.Elapsed += RefreshTimer_Elapsed;
 
             m_alarmStatusQuery = new AlarmStatusQuery();
-            m_alarmStatusQuery.HighestSeverityAlarmStates += m_alarmStatusQuery_HighestSeverityAlarmStates;
+            m_alarmStatusQuery.RaisedAlarmStates += m_alarmStatusQuery_RaisedAlarmStates;
             m_alarmStatusQuery.ProcessException += m_alarmStatusQuery_ProcessException;
+
+            // Load all alarms defined in the database
+            UpdateDefinedAlarms();
 
             // Setup subscription to subscribe to all alarm measurements
             m_subscriptionInfo = new UnsynchronizedSubscriptionInfo(false)
@@ -106,11 +107,13 @@ namespace GSF.TimeSeries.UI
             };
 
             m_dataSubscriber = new DataSubscriber();
-            m_dataSubscriber.NewMeasurements += m_dataSubscriber_NewMeasurements;
             m_dataSubscriber.ConnectionEstablished += m_dataSubscriber_ConnectionEstablished;
+            m_dataSubscriber.ReceivedServerResponse += m_dataSubscriber_ReceivedServerResponse;
+            m_dataSubscriber.NewMeasurements += m_dataSubscriber_NewMeasurements;
             m_dataSubscriber.ProcessException += m_dataSubscriber_ProcessException;
             m_dataSubscriber.ConnectionString = GetDataPublisherConnectionString();
             m_dataSubscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData;
+            m_dataSubscriber.DataLossInterval = -1;
             m_dataSubscriber.Initialize();
 
             if (singleton)
@@ -144,15 +147,96 @@ namespace GSF.TimeSeries.UI
         /// <returns>Current <see cref="RaisedAlarm"/> list.</returns>
         public ObservableCollection<RaisedAlarm> GetAlarmList()
         {
+            IEnumerable<RaisedAlarm> currentHighestSeverityAlarms;
+
             lock (m_currentAlarmsLock)
             {
-                return new ObservableCollection<RaisedAlarm>(m_currentAlarms);
+                currentHighestSeverityAlarms = m_currentAlarms
+                    .GroupBy(alarm => alarm.SignalID)
+                    .SelectMany(GetHighestSeverityAlarms)
+                    .Select(CreateRaisedAlarm);
+
+                return new ObservableCollection<RaisedAlarm>(currentHighestSeverityAlarms);
             }
         }
 
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Starts the refresh timer that notifies consumer about the current alarm status.
+        /// </summary>
+        public void Start()
+        {
+            if (!m_refreshTimer.Enabled)
+            {
+                // Start subscriber connection cycle
+                m_dataSubscriber.Start();
+
+                // Start the refresh timer
+                m_refreshTimer.Start();
+            }
+        }
+
+        /// <summary>
+        /// Updates the collection of defined system alarms.
+        /// </summary>
+        public void UpdateDefinedAlarms()
+        {
+            IEnumerable<Alarm> definedAlarms = LoadDefinedAlarms();
+            List<Alarm> oldCurrentAlarms;
+            Alarm newCurrentAlarm;
+
+            // Initialize lookup table for defined alarms by ID
+            m_definedAlarmsByID = definedAlarms.ToDictionary(alarm => alarm.ID);
+
+            // Initialize lookup table for defined alarms by associated measurement ID
+            m_definedAlarmsByMeasurement = definedAlarms
+                .Where(alarm => alarm.AssociatedMeasurementID.HasValue)
+                .ToDictionary(alarm => alarm.AssociatedMeasurementID.Value);
+
+            lock (m_currentAlarmsLock)
+            {
+                // Copy current alarms set to a list so we can iterate while removing
+                oldCurrentAlarms = new List<Alarm>(m_currentAlarms);
+
+                foreach (Alarm oldCurrentAlarm in oldCurrentAlarms)
+                {
+                    // Remove the old alarm from the set of current alarms
+                    m_currentAlarms.Remove(oldCurrentAlarm);
+
+                    // If the old alarm is still defined in the updated alarms table,
+                    // add the equivalent new defined alarm to the set of current alarms
+                    if (m_definedAlarmsByID.TryGetValue(oldCurrentAlarm.ID, out newCurrentAlarm))
+                    {
+                        newCurrentAlarm.TimeRaised = oldCurrentAlarm.TimeRaised;
+                        m_currentAlarms.Add(newCurrentAlarm);
+                    }
+                }
+            }
+
+            // Set alarms changed state to false
+            Interlocked.Exchange(ref m_alarmsChanged, 0);
+
+            // Notify that the alarms have been updated
+            OnRefreshedAlarms();
+        }
+
+        /// <summary>
+        /// Stops the refresh timer.
+        /// </summary>
+        public void Stop()
+        {
+            if (m_refreshTimer.Enabled)
+            {
+                // Stop the refresh timer
+                m_refreshTimer.Stop();
+
+                // Stop data subscriber
+                m_dataSubscriber.Stop();
+            }
+        }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or
@@ -184,7 +268,7 @@ namespace GSF.TimeSeries.UI
 
                         if ((object)m_alarmStatusQuery != null)
                         {
-                            m_alarmStatusQuery.HighestSeverityAlarmStates -= m_alarmStatusQuery_HighestSeverityAlarmStates;
+                            m_alarmStatusQuery.RaisedAlarmStates -= m_alarmStatusQuery_RaisedAlarmStates;
                             m_alarmStatusQuery.ProcessException -= m_alarmStatusQuery_ProcessException;
                             m_alarmStatusQuery.Dispose();
                             m_alarmStatusQuery = null;
@@ -192,8 +276,9 @@ namespace GSF.TimeSeries.UI
 
                         if ((object)m_dataSubscriber != null)
                         {
-                            m_dataSubscriber.NewMeasurements -= m_dataSubscriber_NewMeasurements;
                             m_dataSubscriber.ConnectionEstablished -= m_dataSubscriber_ConnectionEstablished;
+                            m_dataSubscriber.ReceivedServerResponse -= m_dataSubscriber_ReceivedServerResponse;
+                            m_dataSubscriber.NewMeasurements -= m_dataSubscriber_NewMeasurements;
                             m_dataSubscriber.ProcessException -= m_dataSubscriber_ProcessException;
                             m_dataSubscriber.Dispose();
                             m_dataSubscriber = null;
@@ -204,39 +289,6 @@ namespace GSF.TimeSeries.UI
                 {
                     m_disposed = true;          // Prevent duplicate dispose.
                 }
-            }
-        }
-
-        /// <summary>
-        /// Starts the refresh timer that notifies consumer about the current alarm status.
-        /// </summary>
-        public void Start()
-        {
-            if (!m_refreshTimer.Enabled)
-            {
-                // Get initial alarm states
-                m_alarmStatusQuery.RequestHighestSeverityAlarmStates();
-
-                // Start subscriber connection cycle
-                m_dataSubscriber.Start();
-
-                // Start the refresh timer
-                m_refreshTimer.Start();
-            }
-        }
-
-        /// <summary>
-        /// Stops the refresh timer.
-        /// </summary>
-        public void Stop()
-        {
-            if (m_refreshTimer.Enabled)
-            {
-                // Stop the refresh timer
-                m_refreshTimer.Stop();
-
-                // Stop data subscriber
-                m_dataSubscriber.Stop();
             }
         }
 
@@ -267,7 +319,7 @@ namespace GSF.TimeSeries.UI
         }
 
         // Loads existing alarms defined in the database
-        private Dictionary<int, Alarm> LoadDefinedAlarms()
+        private IEnumerable<Alarm> LoadDefinedAlarms()
         {
             // Create alarms using definitions from the database
             AdoDataConnection database = null;
@@ -281,7 +333,7 @@ namespace GSF.TimeSeries.UI
 
                 return alarms.Rows.Cast<DataRow>()
                     .Select(CreateAlarm)
-                    .ToDictionary(alarm => alarm.ID);
+                    .ToList();
             }
             finally
             {
@@ -311,14 +363,6 @@ namespace GSF.TimeSeries.UI
             };
         }
 
-        // Creates an alarm from a data model based "RaisedAlarm"
-        private Alarm CreateAlarm(RaisedAlarm raisedAlarm)
-        {
-            Alarm alarm;
-            m_definedAlarms.TryGetValue(raisedAlarm.ID, out alarm);
-            return alarm;
-        }
-
         // Creates a data model based "RaisedAlarm" from an alarm
         private RaisedAlarm CreateRaisedAlarm(Alarm alarm)
         {
@@ -326,34 +370,31 @@ namespace GSF.TimeSeries.UI
             {
                 ID = alarm.ID,
                 Severity = (int)alarm.Severity,
-                TimeRaised = ((DateTime)alarm.Cause.Timestamp).ToString("MM/dd/yyyy HH:mm:ss"),
+                TimeRaised = ((DateTime)alarm.TimeRaised).ToString("MM/dd/yyyy HH:mm:ss.fff"),
                 TagName = alarm.TagName,
-                Description = alarm.Description,
-                Value = alarm.Cause.AdjustedValue
+                Description = alarm.Description
             };
         }
 
-        // Get all the highest severity alarms created for a given signal
-        private IEnumerable<Alarm> GetHighestSeverityAlarms(Guid signalID)
+        // Get the defined alarm for the given alarm event
+        private Alarm GetDefinedAlarm(IMeasurement alarmEvent)
         {
-            IEnumerable<Alarm> alarmsForSignal = m_definedAlarms.Values.Where(alarm => alarm.SignalID == signalID);
-            AlarmSeverity highestSeverity = alarmsForSignal.Select(alarm => alarm.Severity).Max();
-            return alarmsForSignal.Where(alarm => alarm.Severity == highestSeverity);
+            Dictionary<Guid, Alarm> definedAlarmsByMeasurement;
+            Alarm definedAlarm;
+
+            definedAlarmsByMeasurement = m_definedAlarmsByMeasurement;
+
+            if (definedAlarmsByMeasurement.TryGetValue(alarmEvent.ID, out definedAlarm))
+                definedAlarm.TimeRaised = alarmEvent.Timestamp;
+
+            return definedAlarm;
         }
 
-        // Tests if alarm severity is higher than any of the current alarms - alarms compared by source signal ID
-        private bool IsHigherSeverity(Alarm testAlarm, IEnumerable<Alarm> currentAlarms)
+        // Get all the highest severity alarms in a list of alarms
+        private IEnumerable<Alarm> GetHighestSeverityAlarms(IEnumerable<Alarm> alarms)
         {
-            return currentAlarms
-                .Where(alarm => alarm.SignalID == testAlarm.SignalID)
-                .Any(alarm => testAlarm.Severity > alarm.Severity);
-        }
-        // Tests if alarm severity is equal to or higher than any of the current alarms - alarms compared by source signal ID
-        private bool IsEqualOrHigherSeverity(Alarm testAlarm, IEnumerable<Alarm> currentAlarms)
-        {
-            return currentAlarms
-                .Where(alarm => alarm.SignalID == testAlarm.SignalID)
-                .Any(alarm => testAlarm.Severity >= alarm.Severity);
+            AlarmSeverity highestSeverity = alarms.Max(alarm => alarm.Severity);
+            return alarms.Where(alarm => alarm.Severity == highestSeverity);
         }
 
         // Triggers the RefreshedAlarms event.
@@ -363,12 +404,26 @@ namespace GSF.TimeSeries.UI
                 RefreshedAlarms(this, EventArgs.Empty);
         }
 
-        private void m_alarmStatusQuery_HighestSeverityAlarmStates(object sender, EventArgs<ICollection<Alarm>> e)
+        private void m_alarmStatusQuery_RaisedAlarmStates(object sender, EventArgs<ICollection<Alarm>> e)
         {
+            Dictionary<int, Alarm> definedAlarmsByID;
+            Alarm definedAlarm;
+
+            definedAlarmsByID = m_definedAlarmsByID;
+
             // Received the initial set of alarms - cache them as the "current" raised alarm state
             lock (m_currentAlarmsLock)
             {
-                m_currentAlarms = e.Argument.Select(CreateRaisedAlarm);
+                foreach (Alarm raisedAlarm in e.Argument)
+                {
+                    // We can only add defined alarms to the set of current
+                    // alarms to allow for fast set-based operations later
+                    if (definedAlarmsByID.TryGetValue(raisedAlarm.ID, out definedAlarm))
+                    {
+                        definedAlarm.TimeRaised = raisedAlarm.TimeRaised;
+                        m_currentAlarms.Add(definedAlarm);
+                    }
+                }
             }
 
             // Set alarms changed state to false
@@ -385,76 +440,58 @@ namespace GSF.TimeSeries.UI
 
         private void m_dataSubscriber_ConnectionEstablished(object sender, EventArgs e)
         {
+            lock (m_currentAlarmsLock)
+            {
+                m_currentAlarms.Clear();
+            }
+
             m_dataSubscriber.Subscribe(m_subscriptionInfo);
+        }
+
+        private void m_dataSubscriber_ReceivedServerResponse(object sender, EventArgs<ServerResponse, ServerCommand> e)
+        {
+            // Request the latest alarm states after subscription is established to ensure all alarm states are up-to-date
+            if (e.Argument1 == ServerResponse.Succeeded && e.Argument2 == ServerCommand.Subscribe)
+                m_alarmStatusQuery.RequestRaisedAlarmStates();
         }
 
         private void m_dataSubscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
-            ICollection<IMeasurement> measurements = e.Argument;
-            List<RaisedAlarm> alarmsToRemove = new List<RaisedAlarm>();
-            List<RaisedAlarm> alarmsToAdd = new List<RaisedAlarm>();
-            IEnumerable<Alarm> currentAlarms;
+            Dictionary<Guid, Alarm> definedAlarmsByMeasurement = m_definedAlarmsByMeasurement;
+            ICollection<IMeasurement> latestMeasurements;
+            Alarm definedAlarm = null;
+
+            IEnumerable<Alarm> clearedAlarms;
+            IEnumerable<Alarm> raisedAlarms;
+
+            // Get the most recent measurement for each alarm signal
+            latestMeasurements = e.Argument
+                .GroupBy(measurement => measurement.ID)
+                .Select(group => group.Last())
+                .ToList();
 
             // Get alarms for measurements that have been cleared (i.e., value == 0)
-            IEnumerable<Alarm> clearedAlarms = measurements
+            clearedAlarms = latestMeasurements
                 .Where(measurement => measurement.AdjustedValue == 0.0D)
-                .Select(measurement => m_definedAlarms.Values.FirstOrDefault(alarm => alarm.AssociatedMeasurementID == measurement.ID))
-                .Where(alarm => (object)alarm != null);
+                .Where(measurement => definedAlarmsByMeasurement.TryGetValue(measurement.ID, out definedAlarm))
+                .Select(measurement => definedAlarm)
+                .ToList();
 
             // Get alarms for measurements that have been raised (i.e., value == 1)
-            IEnumerable<Alarm> raisedAlarms = measurements
+            raisedAlarms = latestMeasurements
                 .Where(measurement => measurement.AdjustedValue != 0.0D)
-                .Select(measurement => m_definedAlarms.Values.FirstOrDefault(alarm => alarm.AssociatedMeasurementID == measurement.ID))
-                .Where(alarm => (object)alarm != null);
-
-            // Get current alarm list
-            lock (m_currentAlarmsLock)
-            {
-                // Convert current list of "RaisedAlarm" data model instances to common alarms
-                currentAlarms = m_currentAlarms
-                    .Select(CreateAlarm)
-                    .Where(alarm => (object)alarm != null);
-            }
-
-            if (currentAlarms.Any())
-            {
-                // Only clear alarms that have an equal or greater severity for a given signal
-                alarmsToRemove.AddRange
-                (
-                    clearedAlarms
-                        .Where(alarm => IsEqualOrHigherSeverity(alarm, currentAlarms))
-                        .Select(CreateRaisedAlarm)
-                );
-
-                // Only add alarms that have a greater severity for a given signal
-                alarmsToAdd.AddRange
-                (
-                    raisedAlarms
-                        .Where(alarm => IsHigherSeverity(alarm, currentAlarms))
-                        .Select(CreateRaisedAlarm)
-                );
-            }
-            else
-            {
-                // There are no current alarms, just assume all maximum severity alarms are the current alarms
-                alarmsToAdd.AddRange
-                (
-                    raisedAlarms
-                        .Select(alarm => alarm.SignalID).Distinct()
-                        .SelectMany(GetHighestSeverityAlarms)
-                        .Select(CreateRaisedAlarm)
-                );
-            }
+                .Select(GetDefinedAlarm)
+                .Where(alarm => (object)alarm != null)
+                .ToList();
 
             // Handle any changes to current raised alarm list
-            if (alarmsToRemove.Any() || alarmsToAdd.Any())
+            if (raisedAlarms.Any() || clearedAlarms.Any())
             {
                 // Update current alarms - removing then adding alarms
                 lock (m_currentAlarmsLock)
                 {
-                    m_currentAlarms = m_currentAlarms
-                        .Where(raisedAlarm => !alarmsToRemove.Contains(raisedAlarm))
-                        .Union(alarmsToAdd);
+                    m_currentAlarms.ExceptWith(clearedAlarms);
+                    m_currentAlarms.UnionWith(raisedAlarms);
                 }
 
                 // Set alarms changed state to true

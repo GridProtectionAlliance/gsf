@@ -155,6 +155,11 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler ConnectionAuthenticated;
 
         /// <summary>
+        /// Occurs when client receives response from the server.
+        /// </summary>
+        public event EventHandler<EventArgs<ServerResponse, ServerCommand>> ReceivedServerResponse;
+
+        /// <summary>
         /// Occurs when client receives requested meta-data transmitted by data publication server.
         /// </summary>
         public event EventHandler<EventArgs<DataSet>> MetaDataReceived;
@@ -1753,6 +1758,8 @@ namespace GSF.TimeSeries.Transport
                             DataChannel = null;
                     }
 
+                    OnReceivedServerResponse(responseCode, commandCode);
+
                     switch (responseCode)
                     {
                         case ServerResponse.Succeeded:
@@ -2657,6 +2664,25 @@ namespace GSF.TimeSeries.Transport
             {
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConnectionAuthenticated event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReceivedServerResponse"/> event.
+        /// </summary>
+        /// <param name="responseCode">Response received from the server.</param>
+        /// <param name="commandCode">Command that the server responded to.</param>
+        protected void OnReceivedServerResponse(ServerResponse responseCode, ServerCommand commandCode)
+        {
+            try
+            {
+                if ((object)ReceivedServerResponse != null)
+                    ReceivedServerResponse(this, new EventArgs<ServerResponse, ServerCommand>(responseCode, commandCode));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ReceivedServerResponse event: {0}", ex.Message), ex));
             }
         }
 

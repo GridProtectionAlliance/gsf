@@ -575,7 +575,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
 
                         alarmList.Add(new Alarm
-                            {
+                        {
                             NodeID = database.Guid(row, "NodeID"),
                             ID = row.ConvertField<int>("ID"),
                             TagName = row.Field<string>("TagName"),
@@ -624,8 +624,9 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 DataRow row = alarmTable.Rows[0];
                 object associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
+
                 Alarm alarm = new Alarm
-                    {
+                {
                     NodeID = database.Guid(row, "NodeID"),
                     ID = row.ConvertField<int>("ID"),
                     TagName = row.Field<string>("TagName"),
@@ -706,6 +707,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 string successMessage = "Alarm information saved successfully";
                 object associatedMeasurementId = (alarm.AssociatedMeasurementID != null) ? database.Guid(alarm.AssociatedMeasurementID.Value) : DBNull.Value;
 
+                AlarmMonitor monitor = AlarmMonitor.Default;
+
                 if (alarm.ID == 0)
                 {
                     string query = database.ParameterizedQueryString("INSERT INTO Alarm (NodeID, TagName, SignalID, AssociatedMeasurementID, Description, Severity, Operation, SetPoint, Tolerance, Delay, " +
@@ -751,6 +754,9 @@ namespace GSF.TimeSeries.UI.DataModels
                     alarm.AssociatedMeasurementID = null;
                 }
 
+                if ((object)monitor != null)
+                    monitor.UpdateDefinedAlarms();
+
                 try
                 {
                     CommonFunctions.SendCommandToService("INITIALIZE /a ALARM!SERVICES");
@@ -781,6 +787,8 @@ namespace GSF.TimeSeries.UI.DataModels
             string query;
             object associatedMeasurementId;
 
+            AlarmMonitor monitor = AlarmMonitor.Default;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -800,6 +808,9 @@ namespace GSF.TimeSeries.UI.DataModels
                     query = database.ParameterizedQueryString("DELETE FROM Measurement WHERE SignalID = {0}", "signalId");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, signalId);
                 }
+
+                if ((object)monitor != null)
+                    monitor.UpdateDefinedAlarms();
 
                 CommonFunctions.SendCommandToService("ReloadConfig");
 
@@ -827,7 +838,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 signalTypeId = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym = 'ALRM'", DefaultTimeout));
 
                 alarmMeasurement = new Measurement
-                    {
+                {
                     HistorianID = historian.ID,
                     PointTag = alarm.TagName,
                     SignalTypeID = signalTypeId,

@@ -704,7 +704,7 @@ namespace GSF.ServiceModel
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        if (m_serviceHost != null)
+                        if ((object)m_serviceHost != null && m_serviceHost.State != CommunicationState.Faulted)
                             m_serviceHost.Close();
                     }
                 }

@@ -1644,11 +1644,6 @@ namespace GSF.TimeSeries.Transport
         {
             IClientSubscription subscription;
 
-            // If authentication is not required,
-            // rights are not applicable
-            if (!RequireAuthentication)
-                return;
-
             lock (this)
             {
                 foreach (IAdapter adapter in this)
@@ -1774,16 +1769,21 @@ namespace GSF.TimeSeries.Transport
             try
             {
                 bool allowed = false;
+                DataRow[] explicitMeasurements;
+                DataRow[] implicitMeasurements;
 
-                // Lookup explicitly defined individual measurements
-                DataRow[] explicitMeasurements = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID='{0}' AND SignalID='{1}'", subscriberID, signalID));
+                // If authentication is not required,
+                // subscriber has rights to everything
+                if (!RequireAuthentication)
+                    return true;
+
+                // Look up explicitly defined individual measurements
+                explicitMeasurements = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID='{0}' AND SignalID='{1}'", subscriberID, signalID));
 
                 if (explicitMeasurements.Length > 0)
                     return explicitMeasurements.All(row => row["Allowed"].ToNonNullString("0").ParseBoolean());
 
-                // Lookup implicitly defined group based measurements
-                DataRow[] implicitMeasurements;
-
+                // Look up implicitly defined group based measurements
                 foreach (DataRow subscriberMeasurementGroup in DataSource.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID='{0}'", subscriberID)))
                 {
                     implicitMeasurements = DataSource.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID='{0}' AND MeasurementGroupID={1}", signalID, int.Parse(subscriberMeasurementGroup["MeasurementGroupID"].ToNonNullString("0"))));

@@ -76,9 +76,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GSF.TimeSeries.UI">
-      <HintPath>..\..\..\..\..\Build\Output\Debug\Libraries\GSF.TimeSeries.UI.dll</HintPath>
-    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -102,6 +99,10 @@
     <ProjectReference Include="..\..\..\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\UI\GSF.TimeSeries.UI.csproj">
+      <Project>{7ed01b57-dd71-4a38-bb29-65d629224a12}</Project>
+      <Name>GSF.TimeSeries.UI</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

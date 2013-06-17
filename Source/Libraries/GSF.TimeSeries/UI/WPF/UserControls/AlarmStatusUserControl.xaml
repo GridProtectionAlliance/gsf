@@ -103,8 +103,7 @@
                 <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=Severity}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
                 <sdk:DataGridTextColumn Header="Time Raised" Width="2*" Binding="{tsfBinding:Column Path=TimeRaised}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
                 <sdk:DataGridTextColumn Header="Tag Name" Width="*" Binding="{tsfBinding:Column Path=TagName}" CellStyle="{StaticResource CenterAlignAlarmCellStyle}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Description" Width="3*" Binding="{tsfBinding:Column Path=Description}" IsReadOnly="True" />
-                <sdk:DataGridTextColumn Header="Value" Width="*" Binding="{tsfBinding:Column Path=Value}" CellStyle="{StaticResource RightAlignAlarmCellStyle}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Description" Width="4*" Binding="{tsfBinding:Column Path=Description}" IsReadOnly="True" />
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 

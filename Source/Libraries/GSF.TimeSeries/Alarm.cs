@@ -146,6 +146,7 @@ namespace GSF.TimeSeries
     /// Represents an alarm that tests the values of
     /// an incoming signal to determine the state of alarm.
     /// </summary>
+    [Serializable]
     public class Alarm
     {
         #region [ Members ]
@@ -155,6 +156,9 @@ namespace GSF.TimeSeries
 
         private double m_lastValue;
         private Ticks m_lastChanged;
+
+        [NonSerialized]
+        private IMeasurement m_cause;
 
         #endregion
 
@@ -320,13 +324,32 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
+        /// Gets or sets the timestamp of the most recent
+        /// measurement that caused the alarm to be raised.
+        /// </summary>
+        public Ticks TimeRaised
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the most recent measurement
         /// that caused the alarm to be raised.
         /// </summary>
         public IMeasurement Cause
         {
-            get;
-            set;
+            get
+            {
+                return m_cause;
+            }
+            set
+            {
+                m_cause = value;
+
+                if ((object)m_cause != null)
+                    TimeRaised = m_cause.Timestamp;
+            }
         }
 
         #endregion

@@ -127,22 +127,6 @@ namespace GSF.TimeSeries.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="RaisedAlarm"/> Value
-        /// </summary>
-        public double Value
-        {
-            get
-            {
-                return m_value;
-            }
-            set
-            {
-                m_value = value;
-                OnPropertyChanged("Value");
-            }
-        }
-
-        /// <summary>
         /// Gets or sets <see cref="RaisedAlarm"/> SeverityText
         /// </summary>
         public string SeverityText

@@ -51,7 +51,7 @@ namespace GSF.TimeSeries.UI
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is a collection of the current high-severity <see cref="Alarm"/> states.
         /// </remarks>
-        public event EventHandler<EventArgs<ICollection<Alarm>>> HighestSeverityAlarmStates;
+        public event EventHandler<EventArgs<ICollection<Alarm>>> RaisedAlarmStates;
 
         /// <summary>
         /// Event is raised when there is an exception encountered while processing.
@@ -174,7 +174,7 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Requests the current state of highest severity alarms.
         /// </summary>
-        public void RequestHighestSeverityAlarmStates()
+        public void RequestRaisedAlarmStates()
         {
             // Create single item operation queue so that multiple requests will be handled one at a time
             ThreadPool.QueueUserWorkItem(QueueAlarmStateQuery);
@@ -212,7 +212,7 @@ namespace GSF.TimeSeries.UI
                     m_responseComplete.Reset();
 
                 // Send command to alarm services to get highest severity alarms
-                CommonFunctions.SendCommandToService("INVOKE ALARM!SERVICES GetHighestSeverityAlarms");
+                CommonFunctions.SendCommandToService("INVOKE ALARM!SERVICES GetRaisedAlarms");
 
                 // Wait for command response allowing for processing time
                 if ((object)m_responseComplete != null)
@@ -223,7 +223,7 @@ namespace GSF.TimeSeries.UI
 
                 // If alarms were returned, expose them to consumer
                 if ((object)m_raisedAlarms != null)
-                    OnHighestSeverityAlarmStates(m_raisedAlarms);
+                    OnRaisedAlarmStates(m_raisedAlarms);
             }
             catch (Exception ex)
             {
@@ -237,13 +237,13 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
-        /// Raises <see cref="HighestSeverityAlarmStates"/> event.
+        /// Raises <see cref="RaisedAlarmStates"/> event.
         /// </summary>
         /// <param name="raisedAlarms">Alarm states.</param>
-        protected virtual void OnHighestSeverityAlarmStates(ICollection<Alarm> raisedAlarms)
+        protected virtual void OnRaisedAlarmStates(ICollection<Alarm> raisedAlarms)
         {
-            if ((object)HighestSeverityAlarmStates != null)
-                HighestSeverityAlarmStates(this, new EventArgs<ICollection<Alarm>>(raisedAlarms));
+            if ((object)RaisedAlarmStates != null)
+                RaisedAlarmStates(this, new EventArgs<ICollection<Alarm>>(raisedAlarms));
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace GSF.TimeSeries.UI
                                 Arguments arguments = attachments[1] as Arguments;
 
                                 // Check the method that was invoked - the second argument after the adapter ID
-                                if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "GetHighestSeverityAlarms", true) == 0)
+                                if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "GetRaisedAlarms", true) == 0)
                                 {
                                     m_raisedAlarms = attachments[0] as ICollection<Alarm>;
 
