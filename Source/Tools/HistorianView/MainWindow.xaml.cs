@@ -1073,7 +1073,7 @@ namespace HistorianView
 
                     foreach (string[] row in pair.Value)
                     {
-                        dataFileStream.Write(EndianOrder.LittleEndian.GetBytes(sample), 0, 4);
+                        dataFileStream.Write(EndianOrder.LittleEndian.GetBytes(sample++), 0, 4);
                         dataFileStream.Write(EndianOrder.LittleEndian.GetBytes(microseconds), 0, 4);
 
                         for (int i = 0; i < row.Length; i++)
