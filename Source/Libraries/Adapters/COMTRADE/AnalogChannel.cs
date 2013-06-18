@@ -72,8 +72,8 @@ namespace Comtrade
             m_multipler = 0.04;
             m_adder = 0.0;
             m_nominalFrequency = LineFrequency.Hz60;
-            m_minValue = short.MinValue + 1;
-            m_maxValue = short.MaxValue;
+            m_minValue = -99999;
+            m_maxValue = 99998;
             m_primaryRatio = 1.0;
             m_secondaryRatio = 1.0;
             m_scalingIdentifier = 'P';
@@ -327,7 +327,7 @@ namespace Comtrade
                             break;
                         case 'P':
                         case '+':
-                            m_phaseDesignation = '+';
+                            m_phaseDesignation = 'P';
                             break;
                         case 'N':
                         case '-':

@@ -40,6 +40,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml;
+using Comtrade;
+using GSF;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Historian;
@@ -255,6 +257,9 @@ namespace HistorianView
             #endregion
         }
 
+        // Constants
+        private const double DefaultTimeFactor = 1000.0D;
+
         // Fields
 
         private string m_currentSessionPath;
@@ -395,8 +400,10 @@ namespace HistorianView
         {
             StringBuilder startTimeBuilder = new StringBuilder();
 
-            if (!m_currentTimeCheckBox.IsChecked.Value)
+            if (!m_currentTimeCheckBox.IsChecked.GetValueOrDefault())
+            {
                 startTimeBuilder.Append(m_startTime.ToString("MM/dd/yyyy HH:mm:ss.fff"));
+            }
             else
             {
                 startTimeBuilder.Append("*-");
@@ -559,8 +566,6 @@ namespace HistorianView
         }
 
         // Saves the current session to a session file.
-        //svk_5/29/12:the earlier version crashes while saving a historian data viewer file as a null object was tried to be referenced,
-        //a fix for this error has been added.
         private void SaveCurrentSession(string filePath)
         {
             string[] attributeNames = { "archivePath", "historianId", "export" };
@@ -581,29 +586,24 @@ namespace HistorianView
             {
                 foreach (MetadataRecord record in reader.MetadataFile.Read())
                 {
-                    //The earlier version used m_metadata.Single which would throw an exception(when GetMetadata returns a null) causing the application to crash
-                    //When m_metadata.SingleOrDefault is used it returns a null(default) value when the comparison is false
-                    MetadataWrapper wrapper = m_metadata.SingleOrDefault(wrap => wrap.GetMetadata() == record);//svk_modified from Single
+                    // The earlier version used m_metadata.Single which would throw an exception(when GetMetadata returns a null) causing the application to crash
+                    // When m_metadata.SingleOrDefault is used it returns a null(default) value when the comparison is false
+                    MetadataWrapper wrapper = m_metadata.SingleOrDefault(wrap => wrap.GetMetadata() == record);
 
-
-                    if (wrapper != null)//svk_5/25/12//condition to ensure that an null referenced object is not accessed
+                    if ((object)wrapper != null && wrapper.Export)
                     {
-                        if (wrapper.Export)
+                        string[] attributeValues = { reader.FileName, record.HistorianID.ToString(), wrapper.Export.ToString() };
+                        XmlElement metadataElement = doc.CreateElement("metadata");
+
+                        for (int i = 0; i < attributeNames.Length; i++)
                         {
-                            string[] attributeValues = { reader.FileName, record.HistorianID.ToString(), wrapper.Export.ToString() };
-                            XmlElement metadataElement = doc.CreateElement("metadata");
-
-                            for (int i = 0; i < attributeNames.Length; i++)
-                            {
-                                XmlAttribute attribute = doc.CreateAttribute(attributeNames[i]);
-                                attribute.Value = attributeValues[i];
-                                metadataElement.Attributes.Append(attribute);
-                            }
-
-                            root.AppendChild(metadataElement);
+                            XmlAttribute attribute = doc.CreateAttribute(attributeNames[i]);
+                            attribute.Value = attributeValues[i];
+                            metadataElement.Attributes.Append(attribute);
                         }
-                    }
 
+                        root.AppendChild(metadataElement);
+                    }
                 }
             }
 
@@ -702,15 +702,21 @@ namespace HistorianView
             }
         }
 
-        // Exports measurements to a csv file.
+        // Exports measurements to a CSV or COMTRADE file.
         private void ExportRequested()
         {
-            string csvFilePath = GetCsvFilePath();
+            string exportFileName = GetExportFilePath();
 
-            if (csvFilePath != null)
+            if ((object)exportFileName != null)
             {
-                TextWriter writer = null;
-                StringBuilder line = null;
+                string fileType = Path.GetExtension(exportFileName) ?? "";
+                fileType = fileType.ToLowerInvariant().Trim();
+
+                // Note - all COMTRADE data files end in .DAT, just using .BIN as a marker for binary export
+                bool isComtrade = string.Compare(fileType, ".bin", StringComparison.InvariantCultureIgnoreCase) == 0 || string.Compare(fileType, ".dat", StringComparison.InvariantCultureIgnoreCase) == 0;
+
+                StreamWriter dataFileWriter = null;
+                StreamWriter configFileWriter = null;
 
                 try
                 {
@@ -718,6 +724,7 @@ namespace HistorianView
 
                     Dictionary<MetadataWrapper, ArchiveReader> metadata = m_metadata
                         .Where(wrapper => wrapper.Export)
+                        .OrderBy(wrapper => (int)wrapper.GetMetadata().GeneralFlags.DataType)
                         .ToDictionary(
                             wrapper => wrapper,
                             wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata() == record))
@@ -790,88 +797,432 @@ namespace HistorianView
                         index++;
                     }
 
-                    writer = new StreamWriter(new FileStream(csvFilePath, FileMode.Create, FileAccess.Write));
-                    line = new StringBuilder();
-
-                    // Write time interval to the CSV file.
-                    writer.Write("Historian Data Viewer Export: ");
-                    writer.Write(GetStartTime());
-                    writer.Write(" to ");
-                    writer.Write(GetEndTime());
-                    writer.WriteLine();
-                    writer.WriteLine();
-
-                    // Write average, min, and max for each measurement to the CSV file.
-                    line.Append("Average,");
-                    foreach (double average in averages)
+                    if (isComtrade)
                     {
-                        line.Append(average);
-                        line.Append(',');
+                        // COMTRADE Export
+                        string rootFileName = FilePath.GetDirectoryName(exportFileName) + FilePath.GetFileNameWithoutExtension(exportFileName);
+                        string configFileName = rootFileName + ".cfg";
+                        string dataFileName = rootFileName + ".dat";
+                        bool isBinary = string.Compare(fileType, ".bin", StringComparison.InvariantCultureIgnoreCase) == 0;
+
+                        configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
+                        Schema schema = WriteComtradeConfigFile(configFileWriter, metadata, data.Count, isBinary);
+
+                        dataFileWriter = new StreamWriter(new FileStream(dataFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
+                        WriteComtradeDataFile(dataFileWriter, schema, data, isBinary);
                     }
-                    line.Remove(line.Length - 1, 1);
-                    writer.WriteLine(line.ToString());
-                    line.Clear();
-
-                    line.Append("Maximum,");
-                    foreach (double max in maximums)
+                    else
                     {
-                        line.Append(max);
-                        line.Append(',');
-                    }
-                    line.Remove(line.Length - 1, 1);
-                    writer.WriteLine(line.ToString());
-                    line.Clear();
-
-                    line.Append("Minimum,");
-                    foreach (double min in minimums)
-                    {
-                        line.Append(min);
-                        line.Append(',');
-                    }
-                    line.Remove(line.Length - 1, 1);
-                    writer.WriteLine(line.ToString());
-                    line.Clear();
-
-                    // Write header for the data points to the CSV file.
-                    writer.WriteLine();
-                    line.Append("Time,");
-                    foreach (MetadataRecord record in metadata.Keys.Select(wrapper => wrapper.GetMetadata()))
-                    {
-                        line.Append(record.Name);
-                        line.Append(' ');
-                        line.Append(record.Description);
-                        line.Append(',');
-                    }
-                    line.Remove(line.Length - 1, 1);
-                    writer.WriteLine(line.ToString());
-                    line.Clear();
-
-                    // Write data to the CSV file.
-                    foreach (KeyValuePair<TimeTag, List<string[]>> pair in data.OrderBy(p => p.Key))
-                    {
-                        TimeTag time = pair.Key;
-
-                        foreach (string[] row in pair.Value)
-                        {
-                            line.Append(time);
-                            line.Append(',');
-
-                            foreach (string value in row)
-                            {
-                                line.Append(value ?? double.NaN.ToString());
-                                line.Append(',');
-                            }
-
-                            line.Remove(line.Length - 1, 1);
-                            writer.WriteLine(line.ToString());
-                            line.Clear();
-                        }
+                        // CSV Export
+                        dataFileWriter = new StreamWriter(new FileStream(exportFileName, FileMode.Create, FileAccess.Write));
+                        WriteCsvDataFile(dataFileWriter, metadata, data, averages, maximums, minimums);
                     }
                 }
                 finally
                 {
-                    if (writer != null)
-                        writer.Close();
+                    if ((object)dataFileWriter != null)
+                        dataFileWriter.Close();
+
+                    if ((object)configFileWriter != null)
+                        configFileWriter.Close();
+                }
+            }
+        }
+
+        private Schema WriteComtradeConfigFile(StreamWriter configFileWriter, Dictionary<MetadataWrapper, ArchiveReader> metadata, int sampleCount, bool isBinary)
+        {
+            Schema schema = new Schema();
+
+            schema.StationName = "openHistorian Export";
+            schema.DeviceID = "Source=" + m_archiveReaders.First().FileName.Replace(',', '_');
+
+            SampleRate samplingFrequency = new SampleRate();
+            samplingFrequency.Rate = 1000.0D / 30.0D;
+            samplingFrequency.EndSample = sampleCount;
+
+            schema.SampleRates = new[] { samplingFrequency };
+
+            Timestamp startTime;
+            startTime.Value = m_startTime.Ticks;
+            schema.StartTime = startTime;
+            schema.TriggerTime = startTime;
+
+            schema.FileType = isBinary ? FileType.Binary : FileType.Ascii;
+            schema.TimeFactor = DefaultTimeFactor;
+
+            AnalogChannel analogChannel;
+            DigitalChannel digitalChannel;
+
+            List<AnalogChannel> analogChannels = new List<AnalogChannel>();
+            List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
+            int analogIndex = 1;
+            int digitalIndex = 1;
+
+            //// Add default time quality digitals
+            //// Note: these flags, as defined in the standard, assume full export was all from one source PDC.
+            //// This a poor assumption since this tool can select any number of points for export, as a result
+            //// these values will always just be their default values.
+            //for (int i = 0; i < 4; i++)
+            //{
+            //    digitalChannel = new DigitalChannel();
+            //    digitalChannel.Index = digitalIndex;
+            //    digitalChannel.Name = "TQ_CNT" + i;
+            //    digitalChannel.PhaseID = "T" + digitalIndex++;
+            //    digitalChannels.Add(digitalChannel);
+            //}
+
+            //digitalChannel = new DigitalChannel();
+            //digitalChannel.Index = digitalIndex;
+            //digitalChannel.Name = "TQ_LSPND";
+            //digitalChannel.PhaseID = "T" + digitalIndex++;
+            //digitalChannels.Add(digitalChannel);
+
+            //digitalChannel = new DigitalChannel();
+            //digitalChannel.Index = digitalIndex;
+            //digitalChannel.Name = "TQ_LSOCC";
+            //digitalChannel.PhaseID = "T" + digitalIndex++;
+            //digitalChannels.Add(digitalChannel);
+
+            //digitalChannel = new DigitalChannel();
+            //digitalChannel.Index = digitalIndex;
+            //digitalChannel.Name = "TQ_LSDIR";
+            //digitalChannel.PhaseID = "T" + digitalIndex++;
+            //digitalChannels.Add(digitalChannel);
+
+            //digitalChannel = new DigitalChannel();
+            //digitalChannel.Index = digitalIndex;
+            //digitalChannel.Name = "RSV";
+            //digitalChannel.PhaseID = "T" + digitalIndex++;
+            //digitalChannels.Add(digitalChannel);
+
+            //for (int i = 1; i < 9; i++)
+            //{
+            //    digitalChannel = new DigitalChannel();
+            //    digitalChannel.Index = digitalIndex;
+            //    digitalChannel.Name = "RESV" + i;
+            //    digitalChannel.PhaseID = "T" + digitalIndex++;
+            //    digitalChannels.Add(digitalChannel);
+            //}
+
+            // Add meta data for selected points
+            foreach (MetadataRecord record in metadata.Keys.Select(wrapper => wrapper.GetMetadata()))
+            {
+                switch (record.GeneralFlags.DataType)
+                {
+                    case DataType.Analog:
+                        string signalType = record.Synonym2 ?? "ALOG";
+
+                        switch (signalType.ToUpperInvariant())
+                        {
+                            case "IPHM": // Current Magnitude
+                                analogChannel = new AnalogChannel();
+                                analogChannel.Index = analogIndex++;
+                                analogChannel.Name = record.Name;
+                                analogChannel.PhaseID = "Pm";
+                                analogChannel.Units = "A";
+                                analogChannel.Multiplier = 0.05D;
+                                analogChannels.Add(analogChannel);
+                                break;
+                            case "VPHM": // Voltage Magnitude
+                                analogChannel = new AnalogChannel();
+                                analogChannel.Index = analogIndex++;
+                                analogChannel.Name = record.Name;
+                                analogChannel.PhaseID = "Pm";
+                                analogChannel.Units = "V";
+                                analogChannel.Multiplier = 5.77362D;
+                                analogChannels.Add(analogChannel);
+                                break;
+                            case "IPHA": // Current Phase Angle
+                            case "VPHA": // Voltage Phase Angle
+                                analogChannel = new AnalogChannel();
+                                analogChannel.Index = analogIndex++;
+                                analogChannel.Name = record.Name;
+                                analogChannel.PhaseID = "Pa";
+                                analogChannel.Units = "Rads";
+                                analogChannel.Multiplier = 1.0E-4D;
+                                analogChannels.Add(analogChannel);
+                                break;
+                            case "FREQ": // Frequency
+                                analogChannel = new AnalogChannel();
+                                analogChannel.Index = analogIndex++;
+                                analogChannel.Name = record.Name;
+                                analogChannel.PhaseID = "F";
+                                analogChannel.Units = "Hz";
+                                analogChannel.Multiplier = 0.001D;
+                                analogChannels.Add(analogChannel);
+                                break;
+                            case "DFDT": // Frequency Delta (dF/dt)
+                                analogChannel = new AnalogChannel();
+                                analogChannel.Index = analogIndex++;
+                                analogChannel.Name = record.Name;
+                                analogChannel.PhaseID = "dF";
+                                analogChannel.Units = "Hz/s";
+                                analogChannel.Multiplier = 0.01D;
+                                analogChannels.Add(analogChannel);
+                                break;
+                            case "FLAG": // Status flags
+                                // Add synchrophasor status flag specific digitals
+                                int statusIndex = 0;
+
+                                for (int i = 1; i < 5; i++)
+                                {
+                                    digitalChannel = new DigitalChannel();
+                                    digitalChannel.Index = digitalIndex++;
+                                    digitalChannel.Name = record.Name + "_TRG" + i;
+                                    digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
+                                    digitalChannels.Add(digitalChannel);
+                                }
+
+                                for (int i = 1; i < 3; i++)
+                                {
+                                    digitalChannel = new DigitalChannel();
+                                    digitalChannel.Index = digitalIndex++;
+                                    digitalChannel.Name = record.Name + "_UNLK" + i;
+                                    digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
+                                    digitalChannels.Add(digitalChannel);
+                                }
+
+                                for (int i = 1; i < 5; i++)
+                                {
+                                    digitalChannel = new DigitalChannel();
+                                    digitalChannel.Index = digitalIndex++;
+                                    digitalChannel.Name = record.Name + "_SEC" + i;
+                                    digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
+                                    digitalChannels.Add(digitalChannel);
+                                }
+
+                                digitalChannel = new DigitalChannel();
+                                digitalChannel.Index = digitalIndex++;
+                                digitalChannel.Name = record.Name + "_CFGCH";
+                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
+                                digitalChannels.Add(digitalChannel);
+
+                                digitalChannel = new DigitalChannel();
+                                digitalChannel.Index = digitalIndex++;
+                                digitalChannel.Name = record.Name + "_PMUTR";
+                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
+                                digitalChannels.Add(digitalChannel);
+
+                                digitalChannel = new DigitalChannel();
+                                digitalChannel.Index = digitalIndex++;
+                                digitalChannel.Name = record.Name + "_SORT";
+                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
+                                digitalChannels.Add(digitalChannel);
+
+                                digitalChannel = new DigitalChannel();
+                                digitalChannel.Index = digitalIndex++;
+                                digitalChannel.Name = record.Name + "_SYNC";
+                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
+                                digitalChannels.Add(digitalChannel);
+
+                                digitalChannel = new DigitalChannel();
+                                digitalChannel.Index = digitalIndex++;
+                                digitalChannel.Name = record.Name + "_PMUERR";
+                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
+                                digitalChannels.Add(digitalChannel);
+
+                                digitalChannel = new DigitalChannel();
+                                digitalChannel.Index = digitalIndex++;
+                                digitalChannel.Name = record.Name + "_DTVLD";
+                                digitalChannel.PhaseID = "S" + statusIndex.ToString("X");
+                                digitalChannels.Add(digitalChannel);
+                                break;
+                            default:     // All other assumed to be analog values
+                                analogChannel = new AnalogChannel();
+                                analogChannel.Index = analogIndex++;
+                                analogChannel.Name = record.Name;
+                                analogChannel.PhaseID = "";
+                                analogChannels.Add(analogChannel);
+                                break;
+                        }
+
+                        break;
+                    case DataType.Digital:
+                        // Every synchrophasor digital is 16-bits
+                        for (int i = 0; i < 16; i++)
+                        {
+                            digitalChannel = new DigitalChannel();
+                            digitalChannel.Index = digitalIndex++;
+                            digitalChannel.Name = record.Name + "-BIT" + i;
+                            digitalChannel.PhaseID = "D" + i.ToString("X");
+                            digitalChannels.Add(digitalChannel);
+                        }
+                        break;
+                }
+            }
+
+            schema.AnalogChannels = analogChannels.ToArray();
+            schema.DigitalChannels = digitalChannels.ToArray();
+
+            configFileWriter.Write(schema.FileImage);
+
+            return schema;
+        }
+
+        private void WriteComtradeDataFile(StreamWriter dataFileWriter, Schema schema, Dictionary<TimeTag, List<string[]>> data, bool isBinary)
+        {
+            FileStream dataFileStream = (FileStream)dataFileWriter.BaseStream;
+            uint sample = 0;
+
+            if (isBinary)
+            {
+                foreach (KeyValuePair<TimeTag, List<string[]>> pair in data.OrderBy(p => p.Key))
+                {
+                    Ticks timestamp = pair.Key.ToDateTime().Ticks - schema.StartTime.Value;
+                    uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
+
+                    foreach (string[] row in pair.Value)
+                    {
+                        dataFileStream.Write(EndianOrder.LittleEndian.GetBytes(sample), 0, 4);
+                        dataFileStream.Write(EndianOrder.LittleEndian.GetBytes(microseconds), 0, 4);
+
+                        for (int i = 0; i < row.Length; i++)
+                        {
+                            double value = double.Parse(row[i] ?? double.NaN.ToString());
+
+                            if (i < schema.AnalogChannels.Length)
+                            {
+                                value -= schema.AnalogChannels[i].Adder;
+                                value /= schema.AnalogChannels[i].Multiplier;
+                            }
+
+                            dataFileStream.Write(EndianOrder.LittleEndian.GetBytes((ushort)value), 0, 2);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (KeyValuePair<TimeTag, List<string[]>> pair in data.OrderBy(p => p.Key))
+                {
+                    Ticks timestamp = pair.Key.ToDateTime().Ticks - schema.StartTime.Value;
+                    uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
+
+                    foreach (string[] row in pair.Value)
+                    {
+                        StringBuilder line = new StringBuilder();
+
+                        line.Append(sample++);
+                        line.Append(',');
+
+                        line.Append(microseconds);
+                        line.Append(',');
+
+                        for (int i = 0; i < row.Length; i++)
+                        {
+                            double value = double.Parse(row[i] ?? double.NaN.ToString());
+
+                            if (i < schema.AnalogChannels.Length)
+                            {
+                                value -= schema.AnalogChannels[i].Adder;
+                                value /= schema.AnalogChannels[i].Multiplier;
+
+                                if (i > 0)
+                                    line.Append(',');
+
+                                line.Append(value);
+                            }
+                            else
+                            {
+                                ushort digitalWord = (ushort)value;
+
+                                for (int j = 0; j < 16; j++)
+                                {
+                                    if (i > 0)
+                                        line.Append(',');
+
+                                    line.Append(digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1 : 0);
+                                }
+                            }
+                        }
+
+                        dataFileWriter.WriteLine(line.ToString());
+                    }
+                }
+
+                // Write EOF marker
+                dataFileStream.WriteByte(0x1A);
+            }
+        }
+
+        private void WriteCsvDataFile(StreamWriter dataFileWriter, Dictionary<MetadataWrapper, ArchiveReader> metadata, Dictionary<TimeTag, List<string[]>> data, List<double> averages, List<double> maximums, List<double> minimums)
+        {
+            StringBuilder line = new StringBuilder();
+
+            // Write time interval to the CSV file.
+            dataFileWriter.Write("Historian Data Viewer Export: ");
+            dataFileWriter.Write(GetStartTime());
+            dataFileWriter.Write(" to ");
+            dataFileWriter.Write(GetEndTime());
+            dataFileWriter.WriteLine();
+            dataFileWriter.WriteLine();
+
+            // Write average, min, and max for each measurement to the CSV file.
+            line.Append("Average,");
+            foreach (double average in averages)
+            {
+                line.Append(average);
+                line.Append(',');
+            }
+            line.Remove(line.Length - 1, 1);
+            dataFileWriter.WriteLine(line.ToString());
+            line.Clear();
+
+            line.Append("Maximum,");
+            foreach (double max in maximums)
+            {
+                line.Append(max);
+                line.Append(',');
+            }
+            line.Remove(line.Length - 1, 1);
+            dataFileWriter.WriteLine(line.ToString());
+            line.Clear();
+
+            line.Append("Minimum,");
+            foreach (double min in minimums)
+            {
+                line.Append(min);
+                line.Append(',');
+            }
+            line.Remove(line.Length - 1, 1);
+            dataFileWriter.WriteLine(line.ToString());
+            line.Clear();
+
+            // Write header for the data points to the CSV file.
+            dataFileWriter.WriteLine();
+            line.Append("Time,");
+
+            foreach (MetadataRecord record in metadata.Keys.Select(wrapper => wrapper.GetMetadata()))
+            {
+                line.Append(record.Name);
+                line.Append(' ');
+                line.Append(record.Description);
+                line.Append(',');
+            }
+
+            line.Remove(line.Length - 1, 1);
+            dataFileWriter.WriteLine(line.ToString());
+            line.Clear();
+
+            // Write data to the CSV file.
+            foreach (KeyValuePair<TimeTag, List<string[]>> pair in data.OrderBy(p => p.Key))
+            {
+                TimeTag time = pair.Key;
+
+                foreach (string[] row in pair.Value)
+                {
+                    line.Append(time);
+                    line.Append(',');
+
+                    foreach (string value in row)
+                    {
+                        line.Append(value ?? double.NaN.ToString());
+                        line.Append(',');
+                    }
+
+                    line.Remove(line.Length - 1, 1);
+                    dataFileWriter.WriteLine(line.ToString());
+                    line.Clear();
                 }
             }
         }
@@ -881,7 +1232,7 @@ namespace HistorianView
         {
             try
             {
-                bool canSetInterval = m_currentTimeCheckBox.IsChecked.Value || m_startTime < m_endTime;
+                bool canSetInterval = m_currentTimeCheckBox.IsChecked.GetValueOrDefault() || m_startTime < m_endTime;
 
                 if (canSetInterval)
                     m_chartWindow.SetInterval(GetStartTime(), GetEndTime());
@@ -917,19 +1268,19 @@ namespace HistorianView
         }
 
         // Gets the file path of the CSV file in which to export measurements.
-        private string GetCsvFilePath()
+        private string GetExportFilePath()
         {
             SaveFileDialog csvDialog = new SaveFileDialog();
 
-            csvDialog.Filter = "CSV files|*.csv";
+            csvDialog.Filter = "CSV Files|*.csv|COMTRADE Files (ASCII)|*.dat|COMTRADE Files (Binary)|*.bin|All Files|*.*";
             csvDialog.DefaultExt = "csv";
             csvDialog.AddExtension = true;
             csvDialog.CheckPathExists = true;
 
             if (csvDialog.ShowDialog() == true)
                 return csvDialog.FileName;
-            else
-                return null;
+
+            return null;
         }
 
         // Updates the visibility of the data grid's columns.

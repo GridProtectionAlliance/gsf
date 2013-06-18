@@ -186,6 +186,10 @@
     <Resource Include="Icons\fit_to_size.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Adapters\COMTRADE\Comtrade.csproj">
+      <Project>{9b93c212-786c-45c9-9b90-8cefd24ef19d}</Project>
+      <Name>Comtrade</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
