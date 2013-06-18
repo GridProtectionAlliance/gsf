@@ -54,11 +54,65 @@ namespace HistorianView
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         #region [ Members ]
 
         // Nested Types
+
+        /// <summary>
+        /// Defines a comparison class to property sort metadata.
+        /// </summary>
+        public class MetadataSorter : IComparer<MetadataRecord>
+        {
+            /// <summary>
+            /// Compares one metadata record to another.
+            /// </summary>
+            /// <param name="left">Left metadata record to compare.</param>
+            /// <param name="right">Right metadata record to compare.</param>
+            /// <returns>Comparison sort order of metadata record.</returns>
+            public int Compare(MetadataRecord left, MetadataRecord right)
+            {
+                int leftIndex, rightIndex, result;
+
+                // Make sure digitals (status flags first) fall behind analogs. All
+                // values not in the dictionary will return 0 thus sorting higher.
+                s_sortOrder.TryGetValue(left.Synonym2, out leftIndex);
+                s_sortOrder.TryGetValue(right.Synonym2, out rightIndex);
+
+                result = leftIndex.CompareTo(rightIndex);
+
+                // Fall back on historian ID for secondary sort order
+                if (result == 0)
+                    result = left.HistorianID.CompareTo(right.HistorianID);
+
+                return result;
+            }
+
+            /// <summary>
+            /// Default instance of the metadata record sorter.
+            /// </summary>
+            public static readonly MetadataSorter Default;
+
+            private static readonly Dictionary<string, int> s_sortOrder;
+
+            static MetadataSorter()
+            {
+                int index = 1;
+
+                // Define proper sort order for key signal types. Status flags are types of digital fields, but
+                // they are stored as a 32-bit value with an abstracted set of flags (high order) as well as the
+                // original flags (low order), since they are greater than 16-bits they are defined in the historian
+                // as an analog value. Even so they need to sort as a digital.
+                s_sortOrder = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase)
+                {
+                    {"FLAG", index++},  // Status Flags
+                    {"DIGI", index}     // Digital Value
+                };
+
+                Default = new MetadataSorter();
+            }
+        }
 
         /// <summary>
         /// This is a wrapper around a MetadataRecord that allows auto-generation
@@ -89,6 +143,8 @@ namespace HistorianView
             /// <param name="metadata">The <see cref="MetadataRecord"/> to be wrapped.</param>
             public MetadataWrapper(MetadataRecord metadata)
             {
+                metadata.Synonym2 = metadata.Synonym2 ?? "ALOG";
+                metadata.Synonym2 = metadata.Synonym2.Trim();
                 m_metadata = metadata;
             }
 
@@ -417,20 +473,13 @@ namespace HistorianView
         // Gets a string representation of the end time to be used when reading from the archive.
         private string GetEndTime()
         {
-            StringBuilder endTimeBuilder = new StringBuilder();
-
-            if (m_currentTimeCheckBox.IsChecked.Value)
+            if (m_currentTimeCheckBox.IsChecked.GetValueOrDefault())
                 return "*";
-            else
-                return m_endTime.ToString("MM/dd/yyyy HH:mm:ss.fff");
+
+            return m_endTime.ToString("MM/dd/yyyy HH:mm:ss.fff");
         }
 
-        private void OpenArchive(string fileName)
-        {
-            OpenArchives(new[] { fileName });
-        }
-
-        private void OpenArchives(string[] fileNames)
+        private void OpenArchives(IEnumerable<string> fileNames)
         {
             ClearArchives();
 
@@ -484,8 +533,7 @@ namespace HistorianView
         // Prompts the user for the location to save the current session.
         private void ShowSaveSessionDialog()
         {
-            string errorMessage = "Unable to save current time interval."
-                + " Please enter a start time that is less than or equal to the end time.";
+            const string errorMessage = "Unable to save current time interval. Please enter a start time that is less than or equal to the end time.";
 
             if (TrySetChartInterval(errorMessage))
             {
@@ -499,7 +547,7 @@ namespace HistorianView
                 if (saveSessionDialog.ShowDialog() == true)
                     SaveCurrentSession(saveSessionDialog.FileName);
 
-                this.Focus();
+                Focus();
             }
         }
 
@@ -521,12 +569,17 @@ namespace HistorianView
             IEnumerable<XmlElement> metadataElements;
 
             ClearArchives();
+
             doc.Load(filePath);
             root = doc.SelectSingleNode("historianDataViewer");
+
+            if ((object)root == null || (object)root.Attributes == null)
+                return;
+
             StartTime = DateTime.Parse(root.Attributes["startTime"].Value);
             EndTime = DateTime.Parse(root.Attributes["endTime"].Value);
             metadataElements = root.ChildNodes.Cast<XmlElement>();
-            m_archiveReaders = metadataElements.Select(element => element.Attributes["archivePath"].Value).Distinct().Select(archivePath => OpenArchiveReader(archivePath)).ToList();
+            m_archiveReaders = metadataElements.Select(element => element.Attributes["archivePath"].Value).Distinct().Select(OpenArchiveReader).ToList();
 
             foreach (ArchiveReader reader in m_archiveReaders)
             {
@@ -544,7 +597,7 @@ namespace HistorianView
             }
 
             m_currentSessionPath = filePath;
-            this.Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
+            Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
             ArchiveIsOpen = true;
             FilterBySearchResults();
             m_chartWindow.ArchiveReaders = m_archiveReaders;
@@ -556,13 +609,16 @@ namespace HistorianView
         // or prompts the user if the current file path has not been set.
         private void SaveCurrentSession()
         {
-            string errorMessage = "Unable to save current time interval."
-                + " Please enter a start time that is less than or equal to the end time.";
+            const string errorMessage = "Unable to save current time interval. Please enter a start time that is less than or equal to the end time.";
 
             if (m_currentSessionPath == null)
+            {
                 ShowSaveSessionDialog();
+            }
             else if (TrySetChartInterval(errorMessage))
+            {
                 SaveCurrentSession(m_currentSessionPath);
+            }
         }
 
         // Saves the current session to a session file.
@@ -588,7 +644,7 @@ namespace HistorianView
                 {
                     // The earlier version used m_metadata.Single which would throw an exception(when GetMetadata returns a null) causing the application to crash
                     // When m_metadata.SingleOrDefault is used it returns a null(default) value when the comparison is false
-                    MetadataWrapper wrapper = m_metadata.SingleOrDefault(wrap => wrap.GetMetadata() == record);
+                    MetadataWrapper wrapper = m_metadata.SingleOrDefault(wrap => wrap.GetMetadata().CompareTo(record) == 0);
 
                     if ((object)wrapper != null && wrapper.Export)
                     {
@@ -609,7 +665,7 @@ namespace HistorianView
 
             doc.Save(filePath);
             m_currentSessionPath = filePath;
-            this.Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
+            Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
         }
 
         // Creates an item for the data grid header area's context menu.
@@ -679,7 +735,7 @@ namespace HistorianView
         }
 
         // Searches the non-boolean properties of an object to determine if their string representations collectively contain a set of tokens.
-        private bool SearchProperties(object obj, string[] tokens)
+        private bool SearchProperties(object obj, IEnumerable<string> tokens)
         {
             IEnumerable<PropertyInfo> properties = obj.GetType().GetProperties().Where(property => property.PropertyType != typeof(bool));
             IEnumerable<string> propertyValues = properties.Select(property => property.GetValue(obj, null).ToString());
@@ -689,17 +745,16 @@ namespace HistorianView
         // Displays the chart window.
         private void TrendRequested()
         {
-            string chartIntervalErrorMessage = "Unable to set x-axis boundaries for the chart."
-                   + " Please enter a start time that is less than or equal to the end time.";
+            const string chartIntervalErrorMessage = "Unable to set x-axis boundaries for the chart. Please enter a start time that is less than or equal to the end time.";
 
-            if (TrySetChartInterval(chartIntervalErrorMessage))
-            {
-                SetChartResolution();
-                m_chartWindow.VisiblePoints = m_metadata.Where(wrapper => wrapper.Export).Select(wrapper => wrapper.GetMetadata()).ToList();
-                m_chartWindow.UpdateChart();
-                m_chartWindow.Show();
-                m_chartWindow.Focus();
-            }
+            if (!TrySetChartInterval(chartIntervalErrorMessage))
+                return;
+
+            SetChartResolution();
+            m_chartWindow.VisiblePoints = m_metadata.Where(wrapper => wrapper.Export).Select(wrapper => wrapper.GetMetadata()).ToList();
+            m_chartWindow.UpdateChart();
+            m_chartWindow.Show();
+            m_chartWindow.Focus();
         }
 
         // Exports measurements to a CSV or COMTRADE file.
@@ -724,10 +779,10 @@ namespace HistorianView
 
                     Dictionary<MetadataWrapper, ArchiveReader> metadata = m_metadata
                         .Where(wrapper => wrapper.Export)
-                        .OrderBy(wrapper => (int)wrapper.GetMetadata().GeneralFlags.DataType)
+                        .OrderBy(wrapper => wrapper.GetMetadata(), MetadataSorter.Default)
                         .ToDictionary(
                             wrapper => wrapper,
-                            wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata() == record))
+                            wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata().CompareTo(record) == 0))
                         );
 
                     Dictionary<TimeTag, List<string[]>> data = new Dictionary<TimeTag, List<string[]>>();
@@ -910,7 +965,7 @@ namespace HistorianView
                 switch (record.GeneralFlags.DataType)
                 {
                     case DataType.Analog:
-                        string signalType = record.Synonym2 ?? "ALOG";
+                        string signalType = record.Synonym2;
 
                         switch (signalType.ToUpperInvariant())
                         {
@@ -1141,11 +1196,12 @@ namespace HistorianView
                 }
 
                 // Write EOF marker
+                dataFileWriter.Flush();
                 dataFileStream.WriteByte(0x1A);
             }
         }
 
-        private void WriteCsvDataFile(StreamWriter dataFileWriter, Dictionary<MetadataWrapper, ArchiveReader> metadata, Dictionary<TimeTag, List<string[]>> data, List<double> averages, List<double> maximums, List<double> minimums)
+        private void WriteCsvDataFile(StreamWriter dataFileWriter, Dictionary<MetadataWrapper, ArchiveReader> metadata, Dictionary<TimeTag, List<string[]>> data, IEnumerable<double> averages, IEnumerable<double> maximums, IEnumerable<double> minimums)
         {
             StringBuilder line = new StringBuilder();
 
@@ -1319,12 +1375,12 @@ namespace HistorianView
         {
             StringBuilder dateString = new StringBuilder();
 
-            dateString.Append(m_startTimeDatePicker.SelectedDate.Value.ToString("MM/dd/yyyy"));
+            dateString.Append(m_startTimeDatePicker.SelectedDate.GetValueOrDefault().ToString("MM/dd/yyyy"));
             dateString.Append(' ');
             dateString.Append(m_startTime.ToString("HH:mm:ss.fff"));
 
             // Converts any date format style to US format and clubs both in dateString. 
-            string format = "MM/dd/yyyy HH:mm:ss.fff";
+            const string format = "MM/dd/yyyy HH:mm:ss.fff";
             m_startTime = DateTime.ParseExact(dateString.ToString(), format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
         }
 
@@ -1333,12 +1389,12 @@ namespace HistorianView
         {
             StringBuilder dateString = new StringBuilder();
 
-            dateString.Append(m_endTimeDatePicker.SelectedDate.Value.ToString("MM/dd/yyyy"));
+            dateString.Append(m_endTimeDatePicker.SelectedDate.GetValueOrDefault().ToString("MM/dd/yyyy"));
             dateString.Append(' ');
             dateString.Append(m_endTime.ToString("HH:mm:ss.fff"));
 
             // Converts any date format style to US format and clubs both in dateString.
-            string format = "MM/dd/yyyy HH:mm:ss.fff";
+            const string format = "MM/dd/yyyy HH:mm:ss.fff";
             m_endTime = DateTime.ParseExact(dateString.ToString(), format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
         }
 
@@ -1491,13 +1547,13 @@ namespace HistorianView
                     if (!m_visibleColumns.Contains(header))
                         m_visibleColumns.Add(header);
 
-                    if (!m_contextMenuItems.Any(menuItem => menuItem.Header.ToString() == header))
+                    if (m_contextMenuItems.All(menuItem => menuItem.Header.ToString() != header))
                         m_contextMenuItems.Add(CreateContextMenuItem(header, true));
 
                     break;
 
                 default:
-                    if (!m_contextMenuItems.Any(menuItem => menuItem.Header.ToString() == header))
+                    if (m_contextMenuItems.All(menuItem => menuItem.Header.ToString() != header))
                         m_contextMenuItems.Add(CreateContextMenuItem(header, false));
                     break;
             }
@@ -1614,7 +1670,7 @@ namespace HistorianView
         // Closes the window.
         private void CloseMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         // Clears the archives and closes child windows.
