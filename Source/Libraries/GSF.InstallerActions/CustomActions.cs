@@ -117,29 +117,108 @@ namespace GSF.InstallerActions
         }
 
         /// <summary>
-        /// Custom action to create group for an installed service and add the service account to the group.
+        /// Custom action to set up the group and necessary permissions for the service account.
         /// </summary>
         /// <param name="session">Session object containing data from the installer.</param>
         /// <returns>Result of the custom action.</returns>
         [CustomAction]
-        public static ActionResult ServiceGroupAction(Session session)
+        public static ActionResult ServiceAccountAction(Session session)
         {
             string serviceName;
-            string userName;
+            string serviceAccount;
             string groupName;
 
-            session.Log("Begin ServiceGroupAction");
+            string servicePorts;
 
+            session.Log("Begin ServiceAccountAction");
+
+            // Get properties from the installer session
             serviceName = session.CustomActionData["SERVICENAME"];
-            userName = string.Format(@"NT SERVICE\{0}", serviceName);
-            groupName = string.Format("{0} Users", serviceName);
-            UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to interact with the {0} service.", serviceName));
-            UserInfo.AddUserToLocalGroup(groupName, userName);
-            UserInfo.AddUserToLocalGroup("Performance Log Users", userName);
+            serviceAccount = session.CustomActionData["SERVICEACCOUNT"];
+            groupName = string.Format("{0} Admins", serviceName);
 
-            session.Log("End ServiceGroupAction");
+            // Create service admins group and add service account to that group as well as the Performance Log Users group
+            try
+            {
+                session.Log("Adding {0} user to {1} group...", serviceAccount, groupName);
+                UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to administrate the {0} service.", serviceName));
+                UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
+                UserInfo.AddUserToLocalGroup("Performance Log Users", serviceAccount);
+                session.Log("Done adding {0} user to {1} group.", serviceAccount, groupName);
+            }
+            catch (Exception)
+            {
+                session.Log("Failed to add {0} user to {1} group!", serviceAccount, groupName);
+            }
+
+            if (session.CustomActionData.TryGetValue("HTTPSERVICEPORTS", out servicePorts))
+            {
+                session.Log("Adding namespace reservations for default web services...");
+
+                foreach (string port in servicePorts.Split(',').Select(p => p.Trim()))
+                {
+                    // Remove existing HTTP namespace reservations in case
+                    // the current user does not match the service account
+                    RemoveHttpNamespaceReservation(port);
+                    AddHttpNamespaceReservation(serviceAccount, port);
+                }
+
+                session.Log("Done adding namespace reservations for default web services.");
+            }
+
+            session.Log("End ServiceAccountAction");
 
             return ActionResult.Success;
+        }
+
+        // Create an http namespace reservation
+        private static void AddHttpNamespaceReservation(string serviceAccount, string port)
+        {
+            ProcessStartInfo psi;
+            string parameters;
+
+            // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
+            parameters = string.Format(@"http add urlacl url=http://+:{0}/ user=""{1}""", port, serviceAccount);
+
+            psi = new ProcessStartInfo("netsh", parameters)
+            {
+                Verb = "runas",
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                Arguments = parameters
+            };
+
+            using (Process shell = Process.Start(psi))
+            {
+                if (!shell.WaitForExit(5000))
+                    shell.Kill();
+            }
+        }
+
+        // Delete an http namespace reservation
+        private static void RemoveHttpNamespaceReservation(string port)
+        {
+            ProcessStartInfo psi;
+            string parameters;
+
+            // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
+            parameters = string.Format(@"http delete urlacl url=http://+:{0}", port);
+
+            psi = new ProcessStartInfo("netsh", parameters)
+            {
+                Verb = "runas",
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                Arguments = parameters
+            };
+
+            using (Process shell = Process.Start(psi))
+            {
+                if (!shell.WaitForExit(5000))
+                    shell.Kill();
+            }
         }
 
         #region [ Interop ]

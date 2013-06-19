@@ -610,34 +610,6 @@ namespace HistorianAdapters
         private void DataServices_AdapterCreated(object sender, EventArgs<IDataService> e)
         {
             e.Argument.SettingsCategory = InstanceName + e.Argument.SettingsCategory;
-
-            // Attempt to reserve the http namespace reservation for this data service URI
-            string uri = string.Empty;
-            IDataService provider = e.Argument;
-
-            if (provider != null && !string.IsNullOrWhiteSpace(provider.Endpoints))
-            {
-                foreach (string endpoint in provider.Endpoints.Split(';'))
-                {
-                    try
-                    {
-                        if (!string.IsNullOrWhiteSpace(endpoint))
-                        {
-                            // Convert the endpoint address to standard URI format.
-                            uri = Regex.Replace(endpoint.Trim(), "http\\..*://", "http://", RegexOptions.IgnoreCase);
-
-                            if (m_useNamespaceReservation)
-                                AddNamespaceReservation(new Uri(uri));
-                            else
-                                RemoveNamespaceReservation(new Uri(uri));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        OnStatusMessage("Unable to set namespace reservation for \"{0}\", this may not be required on this OS version. Message was: {1}", uri, ex.Message);
-                    }
-                }
-            }
         }
 
         private void DataServices_AdapterLoaded(object sender, EventArgs<IDataService> e)

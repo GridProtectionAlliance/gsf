@@ -1112,6 +1112,10 @@ namespace GSF.Identity
             if (string.IsNullOrEmpty(m_domain))
                 m_domain = Environment.MachineName;
 
+            // Handle special case - '.' is an alias for local system
+            if (m_domain == ".")
+                m_domain = Environment.MachineName;
+
             // Use active directory domain account for user information lookup as long as domain is not the current machine
             if (string.Compare(Environment.MachineName, m_domain, true) != 0)
             {
