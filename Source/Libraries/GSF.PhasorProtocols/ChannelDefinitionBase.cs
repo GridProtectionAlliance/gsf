@@ -321,7 +321,7 @@ namespace GSF.PhasorProtocols
         /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
-        /// The base implementation assumes that all channel defintions begin with a label as this is
+        /// The base implementation assumes that all channel definitions begin with a label as this is
         /// the general case, override functionality if this is not the case.
         /// </remarks>
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)

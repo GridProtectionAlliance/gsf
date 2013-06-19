@@ -31,7 +31,7 @@ using GSF.PhasorProtocols;
 namespace Comtrade
 {
     /// <summary>
-    /// Represents an analog channel defintion of the <see cref="Schema"/>.
+    /// Represents an analog channel definition of the <see cref="Schema"/>.
     /// </summary>
     public class AnalogChannel
     {
@@ -89,7 +89,7 @@ namespace Comtrade
             string[] parts = lineImage.Split(',');
 
             if (parts.Length != 13)
-                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for analog channel defintion: {0} - expected 13\r\nImage = {1}", parts.Length, lineImage));
+                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for analog channel definition: {0} - expected 13\r\nImage = {1}", parts.Length, lineImage));
 
             Index = int.Parse(parts[0].Trim());
             Name = parts[1];

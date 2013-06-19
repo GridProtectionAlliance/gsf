@@ -564,7 +564,7 @@ namespace GSF.PhasorProtocols
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFooterImage(byte[] buffer, int startIndex, int length)
         {
-            // Parse nominal frequency defintion from footer...
+            // Parse nominal frequency definition from footer...
             int parsedLength;
 
             m_frequencyDefinition = State.CreateNewFrequencyDefinition(this, buffer, startIndex, out parsedLength);

@@ -30,7 +30,7 @@ using GSF.Collections;
 namespace Comtrade
 {
     /// <summary>
-    /// Represents a digital channel defintion of the <see cref="Schema"/>.
+    /// Represents a digital channel definition of the <see cref="Schema"/>.
     /// </summary>
     public class DigitalChannel
     {
@@ -65,7 +65,7 @@ namespace Comtrade
             string[] parts = lineImage.Split(',');
 
             if (parts.Length != 5)
-                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for digital channel defintion: {0} - expected 5\r\nImage = {1}", parts.Length, lineImage));
+                throw new InvalidOperationException(string.Format("Unexpected number of line image elements for digital channel definition: {0} - expected 5\r\nImage = {1}", parts.Length, lineImage));
 
             Index = int.Parse(parts[0].Trim());
             Name = parts[1];

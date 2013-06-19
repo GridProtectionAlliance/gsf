@@ -90,7 +90,7 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
-        /// Gets the channel defintion which defines the channel instance.
+        /// Gets the channel definition which defines the channel instance.
         /// </summary>
         public ChannelDefinition Definition
         {
@@ -109,7 +109,7 @@ namespace GSF.PQDIF.Logical
         {
             get
             {
-                VectorElement moduleNameVector =  m_physicalStructure.GetVectorByTag(ChannelTriggerModuleNameTag);
+                VectorElement moduleNameVector = m_physicalStructure.GetVectorByTag(ChannelTriggerModuleNameTag);
 
                 if ((object)moduleNameVector == null)
                     return null;

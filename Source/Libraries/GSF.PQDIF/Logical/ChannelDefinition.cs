@@ -372,7 +372,7 @@ namespace GSF.PQDIF.Logical
             {
                 VectorElement channelNameVector = m_physicalStructure.GetVectorByTag(ChannelNameTag);
 
-                if((object)channelNameVector == null)
+                if ((object)channelNameVector == null)
                     return null;
 
                 return Encoding.ASCII.GetString(channelNameVector.GetValues()).Trim((char)0);
@@ -483,7 +483,7 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid QuantityNameTag = new Guid("b48d8595-f5f5-11cf-9d89-0080c72e70a3");
 
         /// <summary>
-        /// Tag that identifies the series defintions collection.
+        /// Tag that identifies the series definitions collection.
         /// </summary>
         public static readonly Guid SeriesDefinitionsTag = new Guid("b48d8598-f5f5-11cf-9d89-0080c72e70a3");
 

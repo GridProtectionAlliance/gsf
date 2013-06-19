@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IAnalogDefintion.cs - Gbtc
+//  IAnalogDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -63,6 +63,10 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets <see cref="AnalogType"/> of this <see cref="IAnalogDefinition"/>.
         /// </summary>
-        AnalogType AnalogType { get; set; }
+        AnalogType AnalogType
+        {
+            get;
+            set;
+        }
     }
 }

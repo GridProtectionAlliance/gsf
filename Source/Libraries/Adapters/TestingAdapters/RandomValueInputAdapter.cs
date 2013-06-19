@@ -87,7 +87,7 @@ namespace TestingAdapters
     /// <para>
     /// Note that the random value produced for the points will be a number between 0 to 1, use the Adder and Multipler
     /// to narrow down the range for your point. For example, to produce random frequency values between 59.95 and 60.05
-    /// you would use the following point defintion:<br/>
+    /// you would use the following point definition:<br/>
     /// <c>outputMeasurements={LocalDevArchive:2,59.95,0.1}</c>
     /// </para>
     /// </remarks>

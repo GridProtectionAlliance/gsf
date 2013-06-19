@@ -81,7 +81,7 @@ namespace GSF.PhasorProtocols.Anonymous
         /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="FrequencyDefinition"/>.
         /// </summary>
         /// <remarks>
-        /// This length is not restricted for anonymous protocol defintions.
+        /// This length is not restricted for anonymous protocol definitions.
         /// </remarks>
         public override int MaximumLabelLength
         {

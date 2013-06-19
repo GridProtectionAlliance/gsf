@@ -824,7 +824,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                                 throw new InvalidOperationException("No phasor magnitude/angle signal pairs were defined.");
 
                             if (magnitudeSignals != angleSignals)
-                                throw new InvalidOperationException("Phasor magnitude/angle signal pair mismatch - there must be a one-to-one defintion between angle and magnitude signals.");
+                                throw new InvalidOperationException("Phasor magnitude/angle signal pair mismatch - there must be a one-to-one definition between angle and magnitude signals.");
 
                             if (configCell.FrequencyDefinition == null)
                                 throw new InvalidOperationException("No frequency and dF/dt signal pair was defined.");
