@@ -41,13 +41,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml;
 using Comtrade;
-using GSF;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
 using Microsoft.Win32;
+using PhasorProtocolAdapters;
 
 namespace HistorianView
 {
@@ -73,14 +73,8 @@ namespace HistorianView
             /// <returns>Comparison sort order of metadata record.</returns>
             public int Compare(MetadataRecord left, MetadataRecord right)
             {
-                int leftIndex, rightIndex, result;
-
-                // Make sure digitals (status flags first) fall behind analogs. All
-                // values not in the dictionary will return 0 thus sorting higher.
-                s_sortOrder.TryGetValue(left.Synonym2, out leftIndex);
-                s_sortOrder.TryGetValue(right.Synonym2, out rightIndex);
-
-                result = leftIndex.CompareTo(rightIndex);
+                // Perform initial sort based on analogs followed by status flags, then digitals
+                int result = ChannelMetadataSorter.Default.Compare(ConvertToChannelMetadata(left), ConvertToChannelMetadata(right));
 
                 // Fall back on historian ID for secondary sort order
                 if (result == 0)
@@ -92,26 +86,7 @@ namespace HistorianView
             /// <summary>
             /// Default instance of the metadata record sorter.
             /// </summary>
-            public static readonly MetadataSorter Default;
-
-            private static readonly Dictionary<string, int> s_sortOrder;
-
-            static MetadataSorter()
-            {
-                int index = 1;
-
-                // Define proper sort order for key signal types. Status flags are types of digital fields, but
-                // they are stored as a 32-bit value with an abstracted set of flags (high order) as well as the
-                // original flags (low order), since they are greater than 16-bits they are defined in the historian
-                // as an analog value. Even so they need to sort as a digital.
-                s_sortOrder = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase)
-                {
-                    {"FLAG", index++},  // Status Flags
-                    {"DIGI", index}     // Digital Value
-                };
-
-                Default = new MetadataSorter();
-            }
+            public static readonly MetadataSorter Default = new MetadataSorter();
         }
 
         /// <summary>
@@ -143,8 +118,11 @@ namespace HistorianView
             /// <param name="metadata">The <see cref="MetadataRecord"/> to be wrapped.</param>
             public MetadataWrapper(MetadataRecord metadata)
             {
-                metadata.Synonym2 = metadata.Synonym2 ?? "ALOG";
-                metadata.Synonym2 = metadata.Synonym2.Trim();
+                metadata.Synonym2 = ValidateSynonym2(metadata.Synonym2);
+
+                // This formats name in accordance with COMTRADE standard Annex H (may need to make this optional)
+                metadata.Name = FormatName(metadata.Name, metadata.Synonym1, metadata.Synonym2);
+
                 m_metadata = metadata;
             }
 
@@ -310,14 +288,54 @@ namespace HistorianView
                     PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
 
+            private string ValidateSynonym2(string synonnym2)
+            {
+                synonnym2 = synonnym2 ?? "ALOG";
+                return synonnym2.Trim();
+            }
+
+            private string FormatName(string name, string synonym1, string synonym2)
+            {
+                if (string.IsNullOrEmpty(name))
+                    return "[UNDEFINED]:" + synonym2;
+
+                string[] parts = name.Split(':');
+                int lastIndexOf;
+
+                if (parts.Length > 1)
+                {
+                    // Separate name from point tag suffix
+                    name = parts[0];
+
+                    switch (synonym2)
+                    {
+                        case "FLAG":
+                            return name;
+                        case "DIGI":
+                        case "ALOG":
+                            lastIndexOf = synonym1.LastIndexOf('-');
+
+                            if (lastIndexOf > 0)
+                                return name + ':' + synonym1.Substring(lastIndexOf + 1);
+
+                            return name + ':' + synonym2;
+                        default:
+                            lastIndexOf = name.LastIndexOf('-');
+
+                            if (lastIndexOf > 0)
+                                return name.Substring(0, lastIndexOf) + ':' + name.Substring(lastIndexOf + 1);
+
+                            return name + ':' + synonym2;
+                    }
+                }
+
+                return name + ':' + synonym2;
+            }
+
             #endregion
         }
 
-        // Constants
-        private const double DefaultTimeFactor = 1000.0D;
-
         // Fields
-
         private string m_currentSessionPath;
         private ICollection<ArchiveReader> m_archiveReaders;
         private readonly List<MetadataWrapper> m_metadata;
@@ -886,229 +904,29 @@ namespace HistorianView
 
         private Schema WriteComtradeConfigFile(StreamWriter configFileWriter, Dictionary<MetadataWrapper, ArchiveReader> metadata, int sampleCount, bool isBinary)
         {
-            Schema schema = new Schema();
+            // TODO: Define these parameters in an options dialog - perhaps "Binary/ASCII" should be an option there as well so there's only one COMTRADE file export option (i.e., no virtual ".bin" file)
+            //const double timeFactor = 1000.0D;
+            //const double samplingRate = 1000.0D / 30.0D;
+            //const LineFrequency nominalFrequency = LineFrequency.Hz60;
 
-            schema.StationName = "openHistorian Export";
-            schema.DeviceID = "Source=" + m_archiveReaders.First().FileName.Replace(',', '_');
+            // Convert openHistorian metadata to COMTRADE channel metadata
+            IEnumerable<ChannelMetadata> channelMetadata = metadata.Keys
+                .Select(wrapper => wrapper.GetMetadata())
+                .Select(ConvertToChannelMetadata);
 
-            SampleRate samplingFrequency = new SampleRate();
-            samplingFrequency.Rate = 1000.0D / 30.0D;
-            samplingFrequency.EndSample = sampleCount;
+            // Create new COMTRADE configuration schema
+            Schema schema = Writer.CreateSchema(
+                channelMetadata,
+                "openHistorian Export",
+                "Source=" + m_archiveReaders.First().FileName.Replace(',', '_'),
+                m_startTime.Ticks,
+                sampleCount,
+                isBinary);
+            //timeFactor,
+            //samplingRate,
+            //nominalFrequency);
 
-            schema.SampleRates = new[] { samplingFrequency };
-
-            Timestamp startTime;
-            startTime.Value = m_startTime.Ticks;
-            schema.StartTime = startTime;
-            schema.TriggerTime = startTime;
-
-            schema.FileType = isBinary ? FileType.Binary : FileType.Ascii;
-            schema.TimeFactor = DefaultTimeFactor;
-
-            AnalogChannel analogChannel;
-            DigitalChannel digitalChannel;
-
-            List<AnalogChannel> analogChannels = new List<AnalogChannel>();
-            List<DigitalChannel> digitalChannels = new List<DigitalChannel>();
-            int analogIndex = 1;
-            int digitalIndex = 1;
-
-            //// Add default time quality digitals
-            //// Note: these flags, as defined in the standard, assume full export was all from one source PDC.
-            //// This a poor assumption since this tool can select any number of points for export, as a result
-            //// these values will always just be their default values.
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    digitalChannel = new DigitalChannel();
-            //    digitalChannel.Index = digitalIndex;
-            //    digitalChannel.Name = "TQ_CNT" + i;
-            //    digitalChannel.PhaseID = "T" + digitalIndex++;
-            //    digitalChannels.Add(digitalChannel);
-            //}
-
-            //digitalChannel = new DigitalChannel();
-            //digitalChannel.Index = digitalIndex;
-            //digitalChannel.Name = "TQ_LSPND";
-            //digitalChannel.PhaseID = "T" + digitalIndex++;
-            //digitalChannels.Add(digitalChannel);
-
-            //digitalChannel = new DigitalChannel();
-            //digitalChannel.Index = digitalIndex;
-            //digitalChannel.Name = "TQ_LSOCC";
-            //digitalChannel.PhaseID = "T" + digitalIndex++;
-            //digitalChannels.Add(digitalChannel);
-
-            //digitalChannel = new DigitalChannel();
-            //digitalChannel.Index = digitalIndex;
-            //digitalChannel.Name = "TQ_LSDIR";
-            //digitalChannel.PhaseID = "T" + digitalIndex++;
-            //digitalChannels.Add(digitalChannel);
-
-            //digitalChannel = new DigitalChannel();
-            //digitalChannel.Index = digitalIndex;
-            //digitalChannel.Name = "RSV";
-            //digitalChannel.PhaseID = "T" + digitalIndex++;
-            //digitalChannels.Add(digitalChannel);
-
-            //for (int i = 1; i < 9; i++)
-            //{
-            //    digitalChannel = new DigitalChannel();
-            //    digitalChannel.Index = digitalIndex;
-            //    digitalChannel.Name = "RESV" + i;
-            //    digitalChannel.PhaseID = "T" + digitalIndex++;
-            //    digitalChannels.Add(digitalChannel);
-            //}
-
-            // Add meta data for selected points
-            foreach (MetadataRecord record in metadata.Keys.Select(wrapper => wrapper.GetMetadata()))
-            {
-                switch (record.GeneralFlags.DataType)
-                {
-                    case DataType.Analog:
-                        string signalType = record.Synonym2;
-
-                        switch (signalType.ToUpperInvariant())
-                        {
-                            case "IPHM": // Current Magnitude
-                                analogChannel = new AnalogChannel();
-                                analogChannel.Index = analogIndex++;
-                                analogChannel.Name = record.Name;
-                                analogChannel.PhaseID = "Pm";
-                                analogChannel.Units = "A";
-                                analogChannel.Multiplier = 0.05D;
-                                analogChannels.Add(analogChannel);
-                                break;
-                            case "VPHM": // Voltage Magnitude
-                                analogChannel = new AnalogChannel();
-                                analogChannel.Index = analogIndex++;
-                                analogChannel.Name = record.Name;
-                                analogChannel.PhaseID = "Pm";
-                                analogChannel.Units = "V";
-                                analogChannel.Multiplier = 5.77362D;
-                                analogChannels.Add(analogChannel);
-                                break;
-                            case "IPHA": // Current Phase Angle
-                            case "VPHA": // Voltage Phase Angle
-                                analogChannel = new AnalogChannel();
-                                analogChannel.Index = analogIndex++;
-                                analogChannel.Name = record.Name;
-                                analogChannel.PhaseID = "Pa";
-                                analogChannel.Units = "Rads";
-                                analogChannel.Multiplier = 1.0E-4D;
-                                analogChannels.Add(analogChannel);
-                                break;
-                            case "FREQ": // Frequency
-                                analogChannel = new AnalogChannel();
-                                analogChannel.Index = analogIndex++;
-                                analogChannel.Name = record.Name;
-                                analogChannel.PhaseID = "F";
-                                analogChannel.Units = "Hz";
-                                analogChannel.Multiplier = 0.001D;
-                                analogChannels.Add(analogChannel);
-                                break;
-                            case "DFDT": // Frequency Delta (dF/dt)
-                                analogChannel = new AnalogChannel();
-                                analogChannel.Index = analogIndex++;
-                                analogChannel.Name = record.Name;
-                                analogChannel.PhaseID = "dF";
-                                analogChannel.Units = "Hz/s";
-                                analogChannel.Multiplier = 0.01D;
-                                analogChannels.Add(analogChannel);
-                                break;
-                            case "FLAG": // Status flags
-                                // Add synchrophasor status flag specific digitals
-                                int statusIndex = 0;
-
-                                for (int i = 1; i < 5; i++)
-                                {
-                                    digitalChannel = new DigitalChannel();
-                                    digitalChannel.Index = digitalIndex++;
-                                    digitalChannel.Name = record.Name + "_TRG" + i;
-                                    digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
-                                    digitalChannels.Add(digitalChannel);
-                                }
-
-                                for (int i = 1; i < 3; i++)
-                                {
-                                    digitalChannel = new DigitalChannel();
-                                    digitalChannel.Index = digitalIndex++;
-                                    digitalChannel.Name = record.Name + "_UNLK" + i;
-                                    digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
-                                    digitalChannels.Add(digitalChannel);
-                                }
-
-                                for (int i = 1; i < 5; i++)
-                                {
-                                    digitalChannel = new DigitalChannel();
-                                    digitalChannel.Index = digitalIndex++;
-                                    digitalChannel.Name = record.Name + "_SEC" + i;
-                                    digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
-                                    digitalChannels.Add(digitalChannel);
-                                }
-
-                                digitalChannel = new DigitalChannel();
-                                digitalChannel.Index = digitalIndex++;
-                                digitalChannel.Name = record.Name + "_CFGCH";
-                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
-                                digitalChannels.Add(digitalChannel);
-
-                                digitalChannel = new DigitalChannel();
-                                digitalChannel.Index = digitalIndex++;
-                                digitalChannel.Name = record.Name + "_PMUTR";
-                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
-                                digitalChannels.Add(digitalChannel);
-
-                                digitalChannel = new DigitalChannel();
-                                digitalChannel.Index = digitalIndex++;
-                                digitalChannel.Name = record.Name + "_SORT";
-                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
-                                digitalChannels.Add(digitalChannel);
-
-                                digitalChannel = new DigitalChannel();
-                                digitalChannel.Index = digitalIndex++;
-                                digitalChannel.Name = record.Name + "_SYNC";
-                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
-                                digitalChannels.Add(digitalChannel);
-
-                                digitalChannel = new DigitalChannel();
-                                digitalChannel.Index = digitalIndex++;
-                                digitalChannel.Name = record.Name + "_PMUERR";
-                                digitalChannel.PhaseID = "S" + statusIndex++.ToString("X");
-                                digitalChannels.Add(digitalChannel);
-
-                                digitalChannel = new DigitalChannel();
-                                digitalChannel.Index = digitalIndex++;
-                                digitalChannel.Name = record.Name + "_DTVLD";
-                                digitalChannel.PhaseID = "S" + statusIndex.ToString("X");
-                                digitalChannels.Add(digitalChannel);
-                                break;
-                            default:     // All other assumed to be analog values
-                                analogChannel = new AnalogChannel();
-                                analogChannel.Index = analogIndex++;
-                                analogChannel.Name = record.Name;
-                                analogChannel.PhaseID = "";
-                                analogChannels.Add(analogChannel);
-                                break;
-                        }
-
-                        break;
-                    case DataType.Digital:
-                        // Every synchrophasor digital is 16-bits
-                        for (int i = 0; i < 16; i++)
-                        {
-                            digitalChannel = new DigitalChannel();
-                            digitalChannel.Index = digitalIndex++;
-                            digitalChannel.Name = record.Name + "-BIT" + i;
-                            digitalChannel.PhaseID = "D" + i.ToString("X");
-                            digitalChannels.Add(digitalChannel);
-                        }
-                        break;
-                }
-            }
-
-            schema.AnalogChannels = analogChannels.ToArray();
-            schema.DigitalChannels = digitalChannels.ToArray();
-
+            // Write new schema file
             configFileWriter.Write(schema.FileImage);
 
             return schema;
@@ -1123,26 +941,13 @@ namespace HistorianView
             {
                 foreach (KeyValuePair<TimeTag, List<string[]>> pair in data.OrderBy(p => p.Key))
                 {
-                    Ticks timestamp = pair.Key.ToDateTime().Ticks - schema.StartTime.Value;
-                    uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
-
+                    // It is expected that the normal case is that there will only be one row per timestamp, however,
+                    // for the historian it is possible to have multiple records at the same timestamp - this can happen
+                    // when there is a leap-second and the exact same second repeats. At least this way the data will be
+                    // exported - the end user will need to cipher out which rows come first based on the data.
                     foreach (string[] row in pair.Value)
                     {
-                        dataFileStream.Write(EndianOrder.LittleEndian.GetBytes(sample++), 0, 4);
-                        dataFileStream.Write(EndianOrder.LittleEndian.GetBytes(microseconds), 0, 4);
-
-                        for (int i = 0; i < row.Length; i++)
-                        {
-                            double value = double.Parse(row[i] ?? double.NaN.ToString());
-
-                            if (i < schema.AnalogChannels.Length)
-                            {
-                                value -= schema.AnalogChannels[i].Adder;
-                                value /= schema.AnalogChannels[i].Multiplier;
-                            }
-
-                            dataFileStream.Write(EndianOrder.LittleEndian.GetBytes((ushort)value), 0, 2);
-                        }
+                        Writer.WriteNextRecordBinary(dataFileStream, schema, pair.Key.ToDateTime(), row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
                     }
                 }
             }
@@ -1150,48 +955,13 @@ namespace HistorianView
             {
                 foreach (KeyValuePair<TimeTag, List<string[]>> pair in data.OrderBy(p => p.Key))
                 {
-                    Ticks timestamp = pair.Key.ToDateTime().Ticks - schema.StartTime.Value;
-                    uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
-
+                    // It is expected that the normal case is that there will only be one row per timestamp, however,
+                    // for the historian it is possible to have multiple records at the same timestamp - this can happen
+                    // when there is a leap-second and the exact same second repeats. At least this way the data will be
+                    // exported - the end user will need to cipher out which rows come first based on the data.
                     foreach (string[] row in pair.Value)
                     {
-                        StringBuilder line = new StringBuilder();
-
-                        line.Append(sample++);
-                        line.Append(',');
-
-                        line.Append(microseconds);
-                        line.Append(',');
-
-                        for (int i = 0; i < row.Length; i++)
-                        {
-                            double value = double.Parse(row[i] ?? double.NaN.ToString());
-
-                            if (i < schema.AnalogChannels.Length)
-                            {
-                                value -= schema.AnalogChannels[i].Adder;
-                                value /= schema.AnalogChannels[i].Multiplier;
-
-                                if (i > 0)
-                                    line.Append(',');
-
-                                line.Append(value);
-                            }
-                            else
-                            {
-                                ushort digitalWord = (ushort)value;
-
-                                for (int j = 0; j < 16; j++)
-                                {
-                                    if (i > 0)
-                                        line.Append(',');
-
-                                    line.Append(digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1 : 0);
-                                }
-                            }
-                        }
-
-                        dataFileWriter.WriteLine(line.ToString());
+                        Writer.WriteNextRecordAscii(dataFileWriter, schema, pair.Key.ToDateTime(), row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
                     }
                 }
 
@@ -1265,6 +1035,10 @@ namespace HistorianView
             {
                 TimeTag time = pair.Key;
 
+                // It is expected that the normal case is that there will only be one row per timestamp, however,
+                // for the historian it is possible to have multiple records at the same timestamp - this can happen
+                // when there is a leap-second and the exact same second repeats. At least this way the data will be
+                // exported - the end user will need to cipher out which rows come first based on the data.
                 foreach (string[] row in pair.Value)
                 {
                     line.Append(time);
@@ -1687,6 +1461,27 @@ namespace HistorianView
             ClearArchives();
             m_chartWindow.Closing -= ChildWindow_Closing;
             m_chartWindow.Close();
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        // Converts an openHistorian metadata record to a COMTRADE metadata record
+        private static ChannelMetadata ConvertToChannelMetadata(MetadataRecord historianRecord)
+        {
+            ChannelMetadata channelRecord = new ChannelMetadata
+            {
+                Name = historianRecord.Name,
+                IsDigital = historianRecord.GeneralFlags.DataType == DataType.Digital
+            };
+
+            if (!Enum.TryParse(historianRecord.Synonym2, true, out channelRecord.SignalType))
+                channelRecord.SignalType = SignalType.NONE;
+
+            return channelRecord;
         }
 
         #endregion

@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalogChannel.cs" />
+    <Compile Include="ChannelMetadata.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Timestamp.cs" />
     <Compile Include="DigitalChannel.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="Schema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SampleRate.cs" />
+    <Compile Include="Writer.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
