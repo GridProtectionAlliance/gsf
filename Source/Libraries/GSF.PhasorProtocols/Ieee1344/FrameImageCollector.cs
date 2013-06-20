@@ -55,7 +55,7 @@ namespace GSF.PhasorProtocols.Ieee1344
         [SuppressMessage("Microsoft.Usage", "CA1816")]
         public FrameImageCollector()
         {
-            // As an optimzation in context of usage, we don't implement IDisposable for
+            // As an optimization in context of usage, we don't implement IDisposable for
             // this class just for the memory stream since its Close method (i.e., Dispose)
             // does nothing (reflect it and look for yourself). Additionally, we go ahead
             // and suppress the finalizer for this stream to reduce that overhead too.

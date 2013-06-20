@@ -19,8 +19,8 @@
 //  08/20/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
 //  11/15/2010 - Mehulbhai P Thakker
-//       Fixed bug when DataSubscriber tries to resubscribe by setting subscriber. Initialized manually 
-//       in ReceiveClientDataComplete event handler.
+//       Fixed issue when DataSubscriber tries to resubscribe by setting subscriber. Initialized
+//       manually in ReceiveClientDataComplete event handler.
 //  12/02/2010 - J. Ritchie Carroll
 //       Fixed an issue for when DataSubcriber dynamically resubscribes with a different
 //       synchronization method (e.g., going from unsynchronized to synchronized)
@@ -634,10 +634,8 @@ namespace GSF.TimeSeries.Transport
             m_useBaseTimeOffsets = DefaultUseBaseTimeOffsets;
             m_metadataTables = DefaultMetadataTables;
 
-            m_routingTables = new RoutingTables
-                {
-                    ActionAdapters = this
-                };
+            m_routingTables = new RoutingTables();
+            m_routingTables.ActionAdapters = this;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 
             // Setup a timer for restarting the command channel if it fails
@@ -1646,7 +1644,7 @@ namespace GSF.TimeSeries.Transport
 
             lock (this)
             {
-                foreach (IAdapter adapter in this)
+                foreach (IActionAdapter adapter in this)
                 {
                     subscription = adapter as IClientSubscription;
 
@@ -1740,7 +1738,7 @@ namespace GSF.TimeSeries.Transport
             byte[] hash;
             byte[] message;
 
-            using (MemoryStream buffer = new MemoryStream())
+            using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
             {
                 if (m_clientNotifications.TryGetValue(connection.SubscriberID, out notifications))
                 {
@@ -1956,7 +1954,21 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
         internal protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
         {
-            return SendClientResponse(clientID, (byte)response, (byte)command, data);
+            return SendClientResponse(null, clientID, (byte)response, (byte)command, data);
+        }
+
+        /// <summary>
+        /// Sends response back to specified client with attached data using specified working buffer.
+        /// </summary>
+        /// <param name="workingBuffer">Working buffer to use to assemble response, or <c>null</c> to have one created for you.</param>
+        /// <param name="clientID">ID of client to send response.</param>
+        /// <param name="response">Server response.</param>
+        /// <param name="command">In response to command.</param>
+        /// <param name="data">Data to return to client; null if none.</param>
+        /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        internal protected virtual bool SendClientResponse(BlockAllocatedMemoryStream workingBuffer, Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
+        {
+            return SendClientResponse(workingBuffer, clientID, (byte)response, (byte)command, data);
         }
 
         /// <summary>
@@ -2072,30 +2084,43 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Send binary response packet to client
-        private bool SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
+        private bool SendClientResponse(BlockAllocatedMemoryStream workingBuffer, Guid clientID, byte responseCode, byte commandCode, byte[] data)
         {
-            ClientConnection connection = null;
+            ClientConnection connection;
             bool success = false;
+            bool createdBuffer = false;
 
             // Attempt to lookup associated client connection
             if (m_clientConnections.TryGetValue(clientID, out connection) && (object)connection != null)
             {
                 try
                 {
-                    MemoryStream responsePacket = new MemoryStream();
+                    // Make sure a working buffer is available and ready to use
+                    if ((object)workingBuffer == null)
+                    {
+                        // Create a new working buffer
+                        workingBuffer = new BlockAllocatedMemoryStream();
+                        createdBuffer = true;
+                    }
+                    else
+                    {
+                        // Reset existing working buffer
+                        workingBuffer.SetLength(0);
+                    }
+
                     bool dataPacketResponse = responseCode == (byte)ServerResponse.DataPacket;
                     bool useDataChannel = (dataPacketResponse || responseCode == (byte)ServerResponse.BufferBlock);
 
                     // Add response code
-                    responsePacket.WriteByte(responseCode);
+                    workingBuffer.WriteByte(responseCode);
 
                     // Add original in response to command code
-                    responsePacket.WriteByte(commandCode);
+                    workingBuffer.WriteByte(commandCode);
 
                     if ((object)data == null || data.Length == 0)
                     {
                         // Add zero sized data buffer to response packet
-                        responsePacket.Write(s_zeroLengthBytes, 0, 4);
+                        workingBuffer.Write(s_zeroLengthBytes, 0, 4);
                     }
                     else
                     {
@@ -2107,7 +2132,7 @@ namespace GSF.TimeSeries.Transport
                             int cipherIndex = connection.CipherIndex;
 
                             // Reserve space for size of data buffer to go into response packet
-                            responsePacket.Write(s_zeroLengthBytes, 0, 4);
+                            workingBuffer.Write(s_zeroLengthBytes, 0, 4);
 
                             // Get data packet flags
                             DataPacketFlags flags = (DataPacketFlags)data[0];
@@ -2117,30 +2142,30 @@ namespace GSF.TimeSeries.Transport
                                 flags |= DataPacketFlags.CipherIndex;
 
                             // Write data packet flags into response packet
-                            responsePacket.WriteByte((byte)flags);
+                            workingBuffer.WriteByte((byte)flags);
 
                             // Copy source data payload into a memory stream
                             MemoryStream sourceData = new MemoryStream(data, 1, data.Length - 1);
 
                             // Encrypt payload portion of data packet and copy into the response packet
-                            Common.SymmetricAlgorithm.Encrypt(sourceData, responsePacket, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
+                            Common.SymmetricAlgorithm.Encrypt(sourceData, workingBuffer, keyIVs[cipherIndex][0], keyIVs[cipherIndex][1]);
 
                             // Calculate length of encrypted data payload
-                            int payloadLength = (int)responsePacket.Length - 6;
+                            int payloadLength = (int)workingBuffer.Length - 6;
 
                             // Move the response packet position back to the packet size reservation
-                            responsePacket.Seek(2, SeekOrigin.Begin);
+                            workingBuffer.Seek(2, SeekOrigin.Begin);
 
                             // Add the actual size of payload length to response packet
-                            responsePacket.Write(EndianOrder.BigEndian.GetBytes(payloadLength), 0, 4);
+                            workingBuffer.Write(EndianOrder.BigEndian.GetBytes(payloadLength), 0, 4);
                         }
                         else
                         {
                             // Add size of data buffer to response packet
-                            responsePacket.Write(EndianOrder.BigEndian.GetBytes(data.Length), 0, 4);
+                            workingBuffer.Write(EndianOrder.BigEndian.GetBytes(data.Length), 0, 4);
 
                             // Add data buffer
-                            responsePacket.Write(data, 0, data.Length);
+                            workingBuffer.Write(data, 0, data.Length);
                         }
                     }
 
@@ -2155,7 +2180,7 @@ namespace GSF.TimeSeries.Transport
                     // Send response packet
                     if ((object)publishChannel != null && publishChannel.CurrentState == ServerState.Running)
                     {
-                        byte[] responseData = responsePacket.ToArray();
+                        byte[] responseData = workingBuffer.ToArray();
 
                         if (publishChannel is UdpServer)
                             publishChannel.MulticastAsync(responseData, 0, responseData.Length);
@@ -2188,6 +2213,11 @@ namespace GSF.TimeSeries.Transport
                 catch (Exception ex)
                 {
                     OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
+                }
+                finally
+                {
+                    if (createdBuffer)
+                        workingBuffer.Dispose();
                 }
             }
 
@@ -2481,10 +2511,10 @@ namespace GSF.TimeSeries.Transport
                             {
                                 // Decrypt encoded portion of buffer
                                 byte[] bytes = buffer.Decrypt(startIndex, byteLength, sharedSecret, CipherStrength.Aes256);
-                                startIndex += byteLength;
+                                //startIndex += byteLength;
 
                                 // Validate the authentication ID - if it matches, connection is authenticated
-                                connection.Authenticated = (string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength)) == 0);
+                                connection.Authenticated = (string.Compare(authenticationID, GetClientEncoding(clientID).GetString(bytes, CipherSaltLength, bytes.Length - CipherSaltLength), StringComparison.InvariantCulture) == 0);
 
                                 if (connection.Authenticated)
                                 {
@@ -2575,7 +2605,7 @@ namespace GSF.TimeSeries.Transport
                         if (byteLength > 0 && length >= 6 + byteLength)
                         {
                             string connectionString = GetClientEncoding(clientID).GetString(buffer, startIndex, byteLength);
-                            startIndex += byteLength;
+                            //startIndex += byteLength;
 
                             // Get client subscription
                             if ((object)connection.Subscription == null)
@@ -3024,7 +3054,6 @@ namespace GSF.TimeSeries.Transport
                 bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
                 bool compressSignalIndexCache = (operationalModes & OperationalModes.CompressSignalIndexCache) > 0;
 
-                MemoryStream compressedData = null;
                 GZipStream deflater = null;
 
                 if (!useCommonSerializationFormat)
@@ -3045,21 +3074,20 @@ namespace GSF.TimeSeries.Transport
                     try
                     {
                         // Compress serialized signal index cache into compressed data buffer
-                        compressedData = new MemoryStream();
-                        deflater = new GZipStream(compressedData, CompressionMode.Compress);
-                        deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
-                        deflater.Close();
-                        deflater = null;
+                        using (BlockAllocatedMemoryStream compressedData = new BlockAllocatedMemoryStream())
+                        {
+                            deflater = new GZipStream(compressedData, CompressionMode.Compress);
+                            deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
+                            deflater.Close();
+                            deflater = null;
 
-                        serializedSignalIndexCache = compressedData.ToArray();
+                            serializedSignalIndexCache = compressedData.ToArray();
+                        }
                     }
                     finally
                     {
                         if ((object)deflater != null)
                             deflater.Close();
-
-                        if ((object)compressedData != null)
-                            compressedData.Close();
                     }
                 }
             }
@@ -3079,10 +3107,7 @@ namespace GSF.TimeSeries.Transport
                 bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
                 bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
 
-                MemoryStream encodedData = null;
-                XmlTextWriter unicodeWriter = null;
-
-                MemoryStream compressedData = null;
+                XmlTextWriter xmlWriter = null;
                 GZipStream deflater = null;
 
                 if (!useCommonSerializationFormat)
@@ -3094,22 +3119,21 @@ namespace GSF.TimeSeries.Transport
                     try
                     {
                         // Encode XML into encoded data buffer
-                        encodedData = new MemoryStream();
-                        unicodeWriter = new XmlTextWriter(encodedData, GetClientEncoding(clientID));
-                        metadata.WriteXml(unicodeWriter, XmlWriteMode.WriteSchema);
-                        unicodeWriter.Close();
-                        unicodeWriter = null;
+                        using (BlockAllocatedMemoryStream encodedData = new BlockAllocatedMemoryStream())
+                        {
+                            xmlWriter = new XmlTextWriter(encodedData, GetClientEncoding(clientID));
+                            metadata.WriteXml(xmlWriter, XmlWriteMode.WriteSchema);
+                            xmlWriter.Close();
+                            xmlWriter = null;
 
-                        // Return result of compression
-                        serializedMetadata = encodedData.ToArray();
+                            // Return result of encoding
+                            serializedMetadata = encodedData.ToArray();
+                        }
                     }
                     finally
                     {
-                        if ((object)unicodeWriter != null)
-                            unicodeWriter.Close();
-
-                        if ((object)encodedData != null)
-                            encodedData.Close();
+                        if ((object)xmlWriter != null)
+                            xmlWriter.Close();
                     }
                 }
 
@@ -3118,21 +3142,21 @@ namespace GSF.TimeSeries.Transport
                     try
                     {
                         // Compress serialized metadata into compressed data buffer
-                        compressedData = new MemoryStream();
-                        deflater = new GZipStream(compressedData, CompressionMode.Compress);
-                        deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
-                        deflater.Close();
-                        deflater = null;
+                        using (BlockAllocatedMemoryStream compressedData = new BlockAllocatedMemoryStream())
+                        {
+                            deflater = new GZipStream(compressedData, CompressionMode.Compress);
+                            deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
+                            deflater.Close();
+                            deflater = null;
 
-                        serializedMetadata = compressedData.ToArray();
+                            // Return result of compression
+                            serializedMetadata = compressedData.ToArray();
+                        }
                     }
                     finally
                     {
                         if ((object)deflater != null)
                             deflater.Close();
-
-                        if ((object)compressedData != null)
-                            compressedData.Close();
                     }
                 }
 
@@ -3283,7 +3307,7 @@ namespace GSF.TimeSeries.Transport
                     {
                         // Handle unrecognized commands
                         message = " sent an unrecognized server command: 0x" + commandByte.ToString("X").PadLeft(2, '0');
-                        SendClientResponse(clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes("Client" + message));
+                        SendClientResponse(null, clientID, (byte)ServerResponse.Failed, commandByte, GetClientEncoding(clientID).GetBytes("Client" + message));
                         OnProcessException(new InvalidOperationException("WARNING: " + connection.ConnectionID + message));
                     }
                 }

@@ -151,8 +151,8 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 if (m_configurationFrame == null)
                     return m_configurationFileName;
-                else
-                    return m_configurationFrame.ConfigurationFileName;
+
+                return m_configurationFrame.ConfigurationFileName;
             }
             set
             {
@@ -382,18 +382,20 @@ namespace GSF.PhasorProtocols.Macrodyne
 
                 while (syncBytePosition > -1)
                 {
-                    MemoryStream newBuffer = new MemoryStream();
+                    using (BlockAllocatedMemoryStream newBuffer = new BlockAllocatedMemoryStream())
+                    {
+                        // Write buffer before repeated byte
+                        newBuffer.Write(buffer, offset, syncBytePosition - offset + 1);
 
-                    // Write buffer before repeated byte
-                    newBuffer.Write(buffer, offset, syncBytePosition - offset + 1);
+                        int nextByte = syncBytePosition + 2;
 
-                    int nextByte = syncBytePosition + 2;
+                        // Write buffer after repeated byte, if any
+                        if (nextByte < offset + count)
+                            newBuffer.Write(buffer, nextByte, offset + count - nextByte);
 
-                    // Write buffer after repeated byte, if any
-                    if (nextByte < offset + count)
-                        newBuffer.Write(buffer, nextByte, offset + count - nextByte);
+                        buffer = newBuffer.ToArray();
+                    }
 
-                    buffer = newBuffer.ToArray();
                     offset = 0;
                     count = buffer.Length;
 

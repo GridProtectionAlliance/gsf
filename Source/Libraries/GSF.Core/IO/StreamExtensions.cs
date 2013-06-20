@@ -29,6 +29,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.IO;
 
 namespace GSF.IO
@@ -45,6 +46,7 @@ namespace GSF.IO
         /// </summary>
         /// <param name="source">The input <see cref="Stream"/>.</param>
         /// <param name="destination">The output <see cref="Stream"/>.</param>
+        [Obsolete("Since .NET 4.0, any class inheriting from Stream has a native \"CopyTo\" function; also, .NET 4.5 has a \"CopyToAsync\" method.")]
         public static void CopyStream(this Stream source, Stream destination)
         {
             byte[] buffer = BufferPool.TakeBuffer(BufferSize);
@@ -73,11 +75,11 @@ namespace GSF.IO
         /// <returns>An array of <see cref="byte"/>.</returns>
         public static byte[] ReadStream(this Stream source)
         {
-            MemoryStream outStream = new MemoryStream();
-
-            source.CopyStream(outStream);
-
-            return outStream.ToArray();
+            using (BlockAllocatedMemoryStream outStream = new BlockAllocatedMemoryStream())
+            {
+                source.CopyTo(outStream);
+                return outStream.ToArray();
+            }
         }
     }
 }

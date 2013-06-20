@@ -41,7 +41,7 @@
 //******************************************************************************************************
 
 using System;
-using System.IO;
+using GSF.IO;
 
 namespace GSF
 {
@@ -241,19 +241,20 @@ namespace GSF
             if ((object)buffers == null)
                 throw new ArgumentNullException("buffers");
 
-            MemoryStream combinedBuffer = new MemoryStream();
-
-            // Combine all currently queued buffers
-            for (int x = 0; x < buffers.Length; x++)
+            using (BlockAllocatedMemoryStream combinedBuffer = new BlockAllocatedMemoryStream())
             {
-                if ((object)buffers[x] == null)
-                    throw new ArgumentNullException("buffers[" + x + "]");
+                // Combine all currently queued buffers
+                for (int x = 0; x < buffers.Length; x++)
+                {
+                    if ((object)buffers[x] == null)
+                        throw new ArgumentNullException("buffers[" + x + "]");
 
-                combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
+                    combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
+                }
+
+                // return combined data buffers
+                return combinedBuffer.ToArray();
             }
-
-            // return combined data buffers
-            return combinedBuffer.ToArray();
         }
 
         /// <summary>

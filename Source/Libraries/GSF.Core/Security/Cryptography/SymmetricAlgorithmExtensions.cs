@@ -27,6 +27,7 @@
 
 using System.IO;
 using System.Security.Cryptography;
+using GSF.IO;
 
 namespace GSF.Security.Cryptography
 {
@@ -47,12 +48,13 @@ namespace GSF.Security.Cryptography
         /// <returns>Encrypted version of <paramref name="data"/> buffer.</returns>
         public static byte[] Encrypt(this SymmetricAlgorithm algorithm, byte[] data, int startIndex, int length, byte[] key, byte[] iv)
         {
-            MemoryStream source = new MemoryStream(data, startIndex, length);
-            MemoryStream destination = new MemoryStream();
-
-            algorithm.Encrypt(source, destination, key, iv);
-
-            return destination.ToArray();
+            // Fastest to use existing buffer in non-expandable memory stream for source and large block allocated memory stream for destination
+            using (MemoryStream source = new MemoryStream(data, startIndex, length))
+            using (BlockAllocatedMemoryStream destination = new BlockAllocatedMemoryStream())
+            {
+                algorithm.Encrypt(source, destination, key, iv);
+                return destination.ToArray();
+            }
         }
 
         /// <summary>
@@ -93,12 +95,13 @@ namespace GSF.Security.Cryptography
         /// <returns>Decrypted version of <paramref name="data"/> buffer.</returns>
         public static byte[] Decrypt(this SymmetricAlgorithm algorithm, byte[] data, int startIndex, int length, byte[] key, byte[] iv)
         {
-            MemoryStream source = new MemoryStream(data, startIndex, length);
-            MemoryStream destination = new MemoryStream();
-
-            algorithm.Decrypt(source, destination, key, iv);
-
-            return destination.ToArray();
+            // Fastest to use existing buffer in non-expandable memory stream for source and large block allocated memory stream for destination
+            using (MemoryStream source = new MemoryStream(data, startIndex, length))
+            using (BlockAllocatedMemoryStream destination = new BlockAllocatedMemoryStream())
+            {
+                algorithm.Decrypt(source, destination, key, iv);
+                return destination.ToArray();
+            }
         }
 
         /// <summary>

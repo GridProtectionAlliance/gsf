@@ -21,7 +21,7 @@
 //  05/15/2011 - J. Ritchie Carroll
 //       Added runtime size optimizations.
 //  06/07/2011 - J. Ritchie Carroll
-//       Implemented initialize bug fix as found and proposed by Luc Cezard.
+//       Implemented initialize issue fix as found and proposed by Luc Cezard.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //
@@ -29,8 +29,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using GSF.IO;
 using GSF.IO.Compression;
 using GSF.Parsing;
 
@@ -555,7 +555,7 @@ namespace GSF.TimeSeries.Transport
         /// are consistently encoded in big-endian order prior to buffer compression.
         /// </para>
         /// </remarks>
-        public static bool CompressPayload(this IEnumerable<CompactMeasurement> compactMeasurements, MemoryStream destination, byte compressionStrength, bool includeTime, ref DataPacketFlags flags)
+        public static bool CompressPayload(this IEnumerable<CompactMeasurement> compactMeasurements, BlockAllocatedMemoryStream destination, byte compressionStrength, bool includeTime, ref DataPacketFlags flags)
         {
             byte[] buffer = null;
 
@@ -658,7 +658,7 @@ namespace GSF.TimeSeries.Transport
                 if (!(BitConverter.IsLittleEndian && (flags & DataPacketFlags.LittleEndianCompression) > 0))
                 {
                     // TODO: Set a flag, e.g., Endianness decompressAs, to pass into pattern decompressor so it
-                    // can be modified to decompress a payload that is non-native Endian order
+                    // can be modified to decompress a payload that is in a non-native Endian order
                     throw new NotImplementedException("Cannot currently decompress payload that is not in native endian-order.");
                 }
 

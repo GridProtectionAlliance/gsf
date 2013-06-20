@@ -1,28 +1,4 @@
-﻿//******************************************************************************************************
-//  UnsynchronizedClientSubscription.cs - Gbtc
-//
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
-//
-//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
-//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
-//
-//      http://www.opensource.org/licenses/eclipse-1.0.php
-//
-//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
-//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
-//  License for the specific language governing permissions and limitations.
-//
-//  Code Modification History:
-//  ----------------------------------------------------------------------------------------------------
-//  06/24/2011 - Ritchie
-//       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
-//
-//******************************************************************************************************
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using GSF.Collections;
+using GSF.IO;
 using GSF.Parsing;
 using GSF.TimeSeries.Adapters;
 using Timer = System.Timers.Timer;
@@ -83,6 +60,7 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
 
+        private readonly BlockAllocatedMemoryStream m_workingBuffer;
         private readonly List<byte[]> m_bufferBlockCache;
         private readonly object m_bufferBlockCacheLock;
         private uint m_bufferBlockSequenceNumber;
@@ -111,14 +89,13 @@ namespace GSF.TimeSeries.Transport
             m_clientID = clientID;
             m_subscriberID = subscriberID;
 
-            m_signalIndexCache = new SignalIndexCache
-            {
-                SubscriberID = subscriberID
-            };
+            m_signalIndexCache = new SignalIndexCache();
+            m_signalIndexCache.SubscriberID = subscriberID;
 
             m_processQueue = new AsyncDoubleBufferedQueue<IMeasurement>();
             m_processQueue.ProcessException += (sender, e) => OnProcessException(e.Argument);
 
+            m_workingBuffer = new BlockAllocatedMemoryStream();
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
         }
@@ -234,14 +211,14 @@ namespace GSF.TimeSeries.Transport
             {
                 if (!m_useCompactMeasurementFormat)
                     return 8;
-                else if (!m_includeTime)
+
+                if (!m_includeTime)
                     return 0;
-                else if (!m_parent.UseBaseTimeOffsets)
+
+                if (!m_parent.UseBaseTimeOffsets)
                     return 8;
-                else if (!m_useMillisecondResolution)
-                    return 4;
-                else
-                    return 2;
+
+                return !m_useMillisecondResolution ? 4 : 2;
             }
         }
 
@@ -381,6 +358,9 @@ namespace GSF.TimeSeries.Transport
                             m_baseTimeRotationTimer.Dispose();
                             m_baseTimeRotationTimer = null;
                         }
+
+                        if ((object)m_workingBuffer != null)
+                            m_workingBuffer.Dispose();
 
                         // Dispose Iaon session
                         this.DisposeTemporalSession(ref m_iaonSession);
@@ -713,7 +693,7 @@ namespace GSF.TimeSeries.Transport
 
                             // Append measurement data and send
                             Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 6, bufferBlockMeasurement.Length);
-                            m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+                            m_parent.SendClientResponse(m_workingBuffer, m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
 
                             lock (m_bufferBlockCacheLock)
                             {
@@ -772,7 +752,8 @@ namespace GSF.TimeSeries.Transport
 
         private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, bool useCompactMeasurementFormat, bool usePayloadCompression)
         {
-            MemoryStream data = new MemoryStream();
+            // Reset working buffer
+            m_workingBuffer.SetLength(0);
 
             // Serialize data packet flags into response
             DataPacketFlags flags = DataPacketFlags.NoFlags; // No flags means bit is cleared, i.e., unsynchronized
@@ -780,34 +761,34 @@ namespace GSF.TimeSeries.Transport
             if (useCompactMeasurementFormat)
                 flags |= DataPacketFlags.Compact;
 
-            data.WriteByte((byte)flags);
+            m_workingBuffer.WriteByte((byte)flags);
 
             // No frame level timestamp is serialized into the data packet since all data is unsynchronized and essentially
             // published upon receipt, however timestamps are optionally included in the serialized measurements.
 
             // Serialize total number of measurement values to follow
-            data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
+            m_workingBuffer.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
 
             // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
-            if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(data, m_compressionStrength, m_includeTime, ref flags))
+            if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(m_workingBuffer, m_compressionStrength, m_includeTime, ref flags))
             {
                 // Serialize measurements to data buffer
                 foreach (IBinaryMeasurement measurement in measurements)
                 {
-                    measurement.CopyBinaryImageToStream(data);
+                    measurement.CopyBinaryImageToStream(m_workingBuffer);
                 }
             }
 
             // Update data packet flags if it has updated compression flags
             if ((flags & DataPacketFlags.Compressed) > 0)
             {
-                data.Seek(0, SeekOrigin.Begin);
-                data.WriteByte((byte)flags);
+                m_workingBuffer.Seek(0, SeekOrigin.Begin);
+                m_workingBuffer.WriteByte((byte)flags);
             }
 
             // Publish data packet to client
             if ((object)m_parent != null)
-                m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
+                m_parent.SendClientResponse(m_workingBuffer, m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, m_workingBuffer.ToArray());
 
             // Track last publication time
             m_lastPublishTime = DateTime.UtcNow.Ticks;
@@ -837,8 +818,6 @@ namespace GSF.TimeSeries.Transport
         {
             if ((object)m_parent != null && (object)m_baseTimeRotationTimer != null)
             {
-                MemoryStream responsePacket = new MemoryStream();
-
                 if ((object)m_baseTimeOffsets == null)
                 {
                     m_baseTimeOffsets = new long[2];
@@ -857,11 +836,16 @@ namespace GSF.TimeSeries.Transport
                     m_baseTimeOffsets[oldIndex] = RealTime + (long)m_baseTimeRotationTimer.Interval * Ticks.PerMillisecond;
                 }
 
-                responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_timeIndex), 0, 4);
-                responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
-                responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
+                // Since this function will only be called periodically, there is no real benefit
+                // to maintaining this memory stream at a member level
+                using (BlockAllocatedMemoryStream responsePacket = new BlockAllocatedMemoryStream())
+                {
+                    responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_timeIndex), 0, 4);
+                    responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
+                    responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
 
-                m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateBaseTimes, ServerCommand.Subscribe, responsePacket.ToArray());
+                    m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateBaseTimes, ServerCommand.Subscribe, responsePacket.ToArray());
+                }
             }
         }
 

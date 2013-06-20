@@ -41,6 +41,7 @@ using System;
 using System.Configuration;
 using System.IO;
 using System.Xml;
+using GSF.IO;
 
 namespace GSF.Configuration
 {
@@ -167,21 +168,32 @@ namespace GSF.Configuration
         /// <param name="reader">The <see cref="System.Xml.XmlReader"/> object, which reads from the configuration file.</param>
         protected override void DeserializeSection(XmlReader reader)
         {
-            MemoryStream configSectionStream = new MemoryStream();
-            XmlDocument configSection = new XmlDocument();
-            configSection.Load(reader);
-            configSection.Save(configSectionStream);
-            // Adds all the categories that are under the categorizedSettings section of the configuration file
-            // to the property collection. Again, this is essentially doing what marking a property with the
-            // <ConfigurationProperty()> attribute does. If this is not done, then an exception will be raised
-            // when the category elements are being deserialized.
-            foreach (XmlNode category in configSection.DocumentElement.SelectNodes("*"))
+            using (BlockAllocatedMemoryStream configSectionStream = new BlockAllocatedMemoryStream())
             {
-                base.Properties.Add(new ConfigurationProperty(category.Name, typeof(CategorizedSettingsElementCollection)));
-            }
-            configSectionStream.Seek(0, SeekOrigin.Begin);
+                XmlDocument configSection = new XmlDocument();
 
-            base.DeserializeSection(XmlReader.Create(configSectionStream));
+                configSection.Load(reader);
+                configSection.Save(configSectionStream);
+
+                // Adds all the categories that are under the categorizedSettings section of the configuration file
+                // to the property collection. Again, this is essentially doing what marking a property with the
+                // <ConfigurationProperty()> attribute does. If this is not done, then an exception will be raised
+                // when the category elements are being deserialized.
+                if ((object)configSection.DocumentElement != null)
+                {
+                    XmlNodeList nodeList = configSection.DocumentElement.SelectNodes("*");
+
+                    if ((object)nodeList != null)
+                    {
+                        foreach (XmlNode category in nodeList)
+                            base.Properties.Add(new ConfigurationProperty(category.Name, typeof(CategorizedSettingsElementCollection)));
+                    }
+                }
+
+                configSectionStream.Seek(0, SeekOrigin.Begin);
+
+                base.DeserializeSection(XmlReader.Create(configSectionStream));
+            }
         }
 
         #endregion

@@ -57,17 +57,26 @@ using System.IO;
 namespace GSF.IO
 {
     /// <summary>
-    /// Defines a stream whose backing store is memory. Externally this class operates like <see cref="MemoryStream"/>, internally
-    /// it uses dynamically allocated buffer blocks instead of one large contiguous array of data.
+    /// Defines a stream whose backing store is memory. Externally this class operates similar to a <see cref="MemoryStream"/>,
+    /// internally it uses dynamically allocated buffer blocks instead of one large contiguous array of data.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The <see cref="BlockAllocatedMemoryStream"/> has two primary benefits over a normal <see cref="MemoryStream"/>, first, the
+    /// The <see cref="BlockAllocatedMemoryStream"/> has three primary benefits over a normal <see cref="MemoryStream"/>, first, the
     /// allocation of a large contiguous array of data in <see cref="MemoryStream"/> can fail when the requested amount of contiguous
     /// memory is unavailable - the <see cref="BlockAllocatedMemoryStream"/> prevents this; second, a <see cref="MemoryStream"/> will
     /// constantly reallocate the buffer size as the stream grows and shrinks and then copy all the data from the old buffer to the
-    /// new - the <see cref="BlockAllocatedMemoryStream"/> maintains its blocks over its lifecycle unless manually cleared thus
-    /// eliminating unnecessary allocations and garbage collections when growing and reusing a stream.
+    /// new - the <see cref="BlockAllocatedMemoryStream"/> maintains its blocks over its lifecycle, unless manually cleared, thus
+    /// eliminating unnecessary allocations and garbage collections when growing and reusing a stream; third, a managed buffer pool,
+    /// <see cref="BufferPool"/>, is used for internal buffer management allowing the <see cref="BlockAllocatedMemoryStream"/> to
+    /// reuse previously allocated buffers further eliminating allocations and garbage collections even for short lived instances.
+    /// </para>
+    /// <para>
+    /// Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use a user provided buffer as its
+    /// backing buffer. Any user provided buffers used to instantiate the class will be copied into internally managed reusable memory
+    /// buffers. Subsequently, the <see cref="BlockAllocatedMemoryStream"/> does not support the notion of a non-expandable stream.
+    /// In general, if you are using a <see cref="MemoryStream"/> with your own buffer, the <see cref="BlockAllocatedMemoryStream"/>
+    /// will not provide any immediate benefit.
     /// </para>
     /// <para>
     /// Note that the <see cref="BlockAllocatedMemoryStream"/> will maintain all allocated blocks for stream use until the
@@ -76,6 +85,13 @@ namespace GSF.IO
     /// <para>
     /// No members in the <see cref="BlockAllocatedMemoryStream"/> are guaranteed to be thread safe. Make sure any calls are
     /// synchronized when simultaneously accessed from different threads.
+    /// </para>
+    /// <para>
+    /// Disposing of a <see cref="MemoryStream"/> is generally not required since its actual dispose method doesn't do anything,
+    /// however, since the <see cref="BlockAllocatedMemoryStream"/> uses buffers obtained from a shared buffer pool, it is
+    /// optimal to make sure instances are properly disposed (e.g., wrapping instances in a "using(...)" statement) so that the
+    /// referenced buffers are returned to the pool as soon as possible instead of waiting for the destructor to be called from
+    /// the garbage collector.
     /// </para>
     /// </remarks>
     public class BlockAllocatedMemoryStream : Stream
@@ -113,6 +129,11 @@ namespace GSF.IO
         /// </summary>
         /// <param name="buffer">Initial buffer to copy into stream.</param>
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <remarks>
+        /// Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use the provided
+        /// <paramref name="buffer"/> as its backing buffer. The buffer will be copied into internally managed reusable
+        /// memory buffers. Subsequently, the notion of a non-expandable stream is not supported.
+        /// </remarks>
         public BlockAllocatedMemoryStream(byte[] buffer)
             : this(buffer, 0, (object)buffer == null ? 0 : buffer.Length, DefaultBlockSize)
         {
@@ -126,6 +147,11 @@ namespace GSF.IO
         /// <param name="blockSize">Desired size of memory blocks.</param>
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">Block size must be greater than zero.</exception>
+        /// <remarks>
+        /// Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use the provided
+        /// <paramref name="buffer"/> as its backing buffer. The buffer will be copied into internally managed reusable
+        /// memory buffers. Subsequently, the notion of a non-expandable stream is not supported.
+        /// </remarks>
         public BlockAllocatedMemoryStream(byte[] buffer, int blockSize)
             : this(buffer, 0, (object)buffer == null ? 0 : buffer.Length, blockSize)
         {
@@ -142,6 +168,11 @@ namespace GSF.IO
         /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
         /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
         /// </exception>
+        /// <remarks>
+        /// Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use the provided
+        /// <paramref name="buffer"/> as its backing buffer. The buffer will be copied into internally managed reusable
+        /// memory buffers. Subsequently, the notion of a non-expandable stream is not supported.
+        /// </remarks>
         public BlockAllocatedMemoryStream(byte[] buffer, int startIndex, int length)
             : this(buffer, startIndex, length, DefaultBlockSize)
         {
@@ -161,6 +192,11 @@ namespace GSF.IO
         /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
         /// </exception>
         /// <exception cref="ArgumentOutOfRangeException">Block size must be greater than zero.</exception>
+        /// <remarks>
+        /// Unlike <see cref="MemoryStream"/>, the <see cref="BlockAllocatedMemoryStream"/> will not use the provided
+        /// <paramref name="buffer"/> as its backing buffer. The buffer will be copied into internally managed reusable
+        /// memory buffers. Subsequently, the notion of a non-expandable stream is not supported.
+        /// </remarks>
         public BlockAllocatedMemoryStream(byte[] buffer, int startIndex, int length, int blockSize)
         {
             buffer.ValidateParameters(startIndex, length);
@@ -197,10 +233,9 @@ namespace GSF.IO
 
             SetLength(capacity);
 
-            // Access last block to pre-allocate memory at desired capacity
-            m_position = capacity;
-            byte[] lastBlock = Block;
-            m_position = 0;
+            // Pre-allocate memory at desired capacity
+            while (m_blocks.Count <= (int)(capacity / blockSize))
+                m_blocks.Add(BufferPool.TakeBuffer(blockSize));
         }
 
         #endregion
@@ -574,7 +609,7 @@ namespace GSF.IO
         /// This may fail if there is not enough contiguous memory available to hold current size of stream.
         /// When possible use methods which operate on streams directly instead.
         /// </remarks>
-        /// <exception cref="InvalidOperationException">Cannot create a byte array larger than 2,147,483,591.</exception>
+        /// <exception cref="InvalidOperationException">Cannot create a byte array with more than 2,147,483,591 elements.</exception>
         /// <exception cref="ObjectDisposedException">The stream is closed.</exception>
         public byte[] ToArray()
         {

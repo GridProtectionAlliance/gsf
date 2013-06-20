@@ -135,7 +135,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets flag indicating if the adapter has been initialized successfully.
         /// </summary>
         /// <remarks>
-        /// Implementors only need to track this value.
+        /// Implementers only need to track this value.
         /// </remarks>
         bool Initialized
         {
@@ -147,7 +147,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
         /// </summary>
         /// <remarks>
-        /// Implementors should use value <see cref="Timeout.Infinite"/> to wait indefinitely.
+        /// Implementers should use value <see cref="Timeout.Infinite"/> to wait indefinitely.
         /// </remarks>
         int InitializationTimeout
         {
@@ -284,7 +284,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="timeout">The number of milliseconds to wait.</param>
         /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         /// <remarks>
-        /// Implementors should create a wait handle (e.g., the <see cref="ManualResetEvent"/>) so that consumers
+        /// Implementers should create a wait handle (e.g., the <see cref="ManualResetEvent"/>) so that consumers
         /// can call this method and wait for the adapter intialization to complete before using the adapter.
         /// </remarks>
         bool WaitForInitialize(int timeout);

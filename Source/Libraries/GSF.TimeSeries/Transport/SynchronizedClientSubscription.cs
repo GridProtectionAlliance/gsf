@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Timers;
+using GSF.IO;
 using GSF.Parsing;
 using GSF.TimeSeries.Adapters;
 
@@ -71,6 +72,7 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
 
+        private readonly BlockAllocatedMemoryStream m_workingBuffer;
         private readonly List<byte[]> m_bufferBlockCache;
         private readonly object m_bufferBlockCacheLock;
         private uint m_bufferBlockSequenceNumber;
@@ -98,11 +100,11 @@ namespace GSF.TimeSeries.Transport
             m_parent = parent;
             m_clientID = clientID;
             m_subscriberID = subscriberID;
-            m_signalIndexCache = new SignalIndexCache
-                {
-                    SubscriberID = subscriberID
-                };
 
+            m_signalIndexCache = new SignalIndexCache();
+            m_signalIndexCache.SubscriberID = subscriberID;
+
+            m_workingBuffer = new BlockAllocatedMemoryStream();
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
         }
@@ -344,6 +346,9 @@ namespace GSF.TimeSeries.Transport
                         // Remove reference to parent
                         m_parent = null;
 
+                        if ((object)m_workingBuffer != null)
+                            m_workingBuffer.Dispose();
+
                         // Dispose Iaon session
                         this.DisposeTemporalSession(ref m_iaonSession);
                     }
@@ -546,7 +551,7 @@ namespace GSF.TimeSeries.Transport
 
                     // Append measurement data and send
                     Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 4, bufferBlockMeasurement.Length);
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
+                    m_parent.SendClientResponse(m_workingBuffer, m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
 
                     lock (m_bufferBlockCacheLock)
                     {
@@ -594,7 +599,8 @@ namespace GSF.TimeSeries.Transport
 
         private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, long frameLevelTimestamp, bool useCompactMeasurementFormat, bool usePayloadCompression)
         {
-            MemoryStream data = new MemoryStream();
+            // Reset working buffer
+            m_workingBuffer.SetLength(0);
 
             // Serialize data packet flags into response
             DataPacketFlags flags = DataPacketFlags.Synchronized;
@@ -602,35 +608,35 @@ namespace GSF.TimeSeries.Transport
             if (useCompactMeasurementFormat)
                 flags |= DataPacketFlags.Compact;
 
-            data.WriteByte((byte)flags);
+            m_workingBuffer.WriteByte((byte)flags);
 
             // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
             // unsynchronized subscriptions always include timestamps in the serialized measurements
-            data.Write(EndianOrder.BigEndian.GetBytes(frameLevelTimestamp), 0, 8);
+            m_workingBuffer.Write(EndianOrder.BigEndian.GetBytes(frameLevelTimestamp), 0, 8);
 
             // Serialize total number of measurement values to follow
-            data.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
+            m_workingBuffer.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
 
             // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
-            if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(data, m_compressionStrength, false, ref flags))
+            if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(m_workingBuffer, m_compressionStrength, false, ref flags))
             {
                 // Serialize measurements to data buffer
                 foreach (IBinaryMeasurement measurement in measurements)
                 {
-                    measurement.CopyBinaryImageToStream(data);
+                    measurement.CopyBinaryImageToStream(m_workingBuffer);
                 }
             }
 
             // Update data packet flags if it has updated compression flags
             if ((flags & DataPacketFlags.Compressed) > 0)
             {
-                data.Seek(0, SeekOrigin.Begin);
-                data.WriteByte((byte)flags);
+                m_workingBuffer.Seek(0, SeekOrigin.Begin);
+                m_workingBuffer.WriteByte((byte)flags);
             }
 
             // Publish data packet to client
             if (m_parent != null)
-                m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
+                m_parent.SendClientResponse(m_workingBuffer, m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, m_workingBuffer.ToArray());
         }
 
         // Retransmits all buffer blocks for which confirmation has not yet been received

@@ -53,7 +53,7 @@ namespace GSF.Parsing
         /// <param name="length">Valid number of bytes within <paramref name="buffer"/> to read from <paramref name="startIndex"/>.</param>
         /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
         /// <remarks>
-        /// Implementors should validate <paramref name="startIndex"/> and <paramref name="length"/> against <paramref name="buffer"/> length.
+        /// Implementers should validate <paramref name="startIndex"/> and <paramref name="length"/> against <paramref name="buffer"/> length.
         /// The <see cref="BufferExtensions.ValidateParameters"/> method can be used to perform this validation.
         /// </remarks>
         int ParseBinaryImage(byte[] buffer, int startIndex, int length);
@@ -65,7 +65,7 @@ namespace GSF.Parsing
         /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
         /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
         /// <remarks>
-        /// Implementors should validate <paramref name="startIndex"/> and <see cref="BinaryLength"/> against <paramref name="buffer"/> length.
+        /// Implementers should validate <paramref name="startIndex"/> and <see cref="BinaryLength"/> against <paramref name="buffer"/> length.
         /// The <see cref="BufferExtensions.ValidateParameters"/> method can be used to perform this validation.
         /// </remarks>
         int GenerateBinaryImage(byte[] buffer, int startIndex);
@@ -83,7 +83,7 @@ namespace GSF.Parsing
         /// <returns>A binary image of an object that implements <see cref="ISupportBinaryImage"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="imageSource"/> cannot be null.</exception>
         /// <remarks>
-        /// This is a convienence method. It is often optimal to use <see cref="ISupportBinaryImage.GenerateBinaryImage"/>
+        /// This is a convenience method. It is often optimal to use <see cref="ISupportBinaryImage.GenerateBinaryImage"/>
         /// directly using a common buffer instead of always allocating new buffers.
         /// </remarks>
         public static byte[] BinaryImage(this ISupportBinaryImage imageSource)

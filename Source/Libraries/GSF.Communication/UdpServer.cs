@@ -29,7 +29,7 @@
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  10/14/2009 - Pinal C. Patel
-//       Fixed bug in the processing of Handshake messages.
+//       Fixed issue in the processing of Handshake messages.
 //       Added null reference checks to Stop() and DisconnectOne() for safety.
 //  10/30/2009 - Pinal C. Patel
 //       Added support for one-way communication by specifying Port=-1 in ConfigurationString.
@@ -38,7 +38,7 @@
 //  02/13/2011 - Pinal C. Patel
 //       Modified Start() to use "interface" in the creation of client endpoint.
 //  03/10/2011 - Pinal C. Patel
-//       Fixed a bug reported by Jeffrey Martin at Areva-TD (jeffrey.martin-econ@areva-td.com) that
+//       Fixed a issue reported by Jeffrey Martin at Areva-TD (jeffrey.martin-econ@areva-td.com) that
 //       prevented the ServerStopped event from being raised under certain configuration.
 //  12/04/2011 - J. Ritchie Carroll
 //       Modified to use concurrent dictionary.
@@ -55,7 +55,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -63,6 +62,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
+using GSF.IO;
 
 namespace GSF.Communication
 {
@@ -848,17 +848,18 @@ namespace GSF.Communication
                     if (localAddress.AddressFamily != udpClientIPEndPoint.AddressFamily)
                         throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, udpClientIPEndPoint.Address));
 
-                    MemoryStream membershipAddresses = new MemoryStream();
+                    using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
+                    {
+                        byte[] serverAddressBytes = udpClientIPEndPoint.Address.GetAddressBytes();
+                        byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
+                        byte[] localAddressBytes = localAddress.GetAddressBytes();
 
-                    byte[] serverAddressBytes = udpClientIPEndPoint.Address.GetAddressBytes();
-                    byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
-                    byte[] localAddressBytes = localAddress.GetAddressBytes();
+                        membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
+                        membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
+                        membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
 
-                    membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
-                    membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
-                    membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
-
-                    udpClient.MulticastMembershipAddresses = membershipAddresses.ToArray();
+                        udpClient.MulticastMembershipAddresses = membershipAddresses.ToArray();
+                    }
 
                     // Execute multicast subscribe for specific source
                     m_udpServer.Provider.SetSocketOption(level, SocketOptionName.AddSourceMembership, udpClient.MulticastMembershipAddresses);
@@ -875,11 +876,11 @@ namespace GSF.Communication
             // Create client info object
             udpClientInfo = new UdpClientInfo
                 {
-                Client = udpClient,
-                SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
-                SendLock = new SpinLock(),
-                SendQueue = new ConcurrentQueue<UdpServerPayload>()
-            };
+                    Client = udpClient,
+                    SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
+                    SendLock = new SpinLock(),
+                    SendQueue = new ConcurrentQueue<UdpServerPayload>()
+                };
 
             // Set up SocketAsyncEventArgs
             udpClientInfo.SendArgs.RemoteEndPoint = udpClient.Provider;

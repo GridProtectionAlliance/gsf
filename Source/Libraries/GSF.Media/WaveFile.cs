@@ -67,6 +67,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Media;
+using GSF.IO;
 using GSF.Parsing;
 
 namespace GSF.Media
@@ -209,7 +210,7 @@ namespace GSF.Media
         Unknown = 0x0,
         /// <summary>Standard pulse-code modulation audio format</summary>
         PCM = 0x1,
-        /// <summary>Adpative differential pulse-code modulation encoding algorithm</summary>
+        /// <summary>Adaptive differential pulse-code modulation encoding algorithm</summary>
         ADPCM = 0x2,
         /// <summary>Floating point PCM encoding algorithm</summary>
         IeeeFloat = 0x3,
@@ -565,7 +566,7 @@ namespace GSF.Media
         /// </summary>
         /// <remarks>
         /// This property defines the number of samples per second defined in each second of data in
-        /// the <see cref="WaveFile"/>.  See <see cref="SampleRate"/> enumeraion for more details.
+        /// the <see cref="WaveFile"/>.  See <see cref="SampleRate"/> enumeration for more details.
         /// </remarks>
         public int SampleRate
         {
@@ -589,7 +590,7 @@ namespace GSF.Media
         /// <para>
         /// This is typically just the arithmetic result of:
         /// <see cref="SampleRate"/> * <see cref="Channels"/> * <see cref="BitsPerSample"/> / 8.
-        /// However, this value can be changed as needed to accomodate better buffer estimations during
+        /// However, this value can be changed as needed to accommodate better buffer estimations during
         /// data read cycle.
         /// </para>
         /// </remarks>
@@ -616,7 +617,7 @@ namespace GSF.Media
         /// <para>
         /// This is typically just the arithmetic result of:
         /// <see cref="Channels"/> * <see cref="BitsPerSample"/> / 8.
-        /// However, this value can be changed as needed to accomodate even block-alignment of non-standard
+        /// However, this value can be changed as needed to accommodate even block-alignment of non-standard
         /// <see cref="BitsPerSample"/> values.
         /// </para>
         /// </remarks>
@@ -707,7 +708,7 @@ namespace GSF.Media
         {
             get
             {
-                return Ticks.FromSeconds((m_waveData.ChunkSize / m_waveFormat.BlockAlignment) / (double)m_waveFormat.SampleRate);
+                return Ticks.FromSeconds((m_waveData.ChunkSize / (double)m_waveFormat.BlockAlignment) / (double)m_waveFormat.SampleRate);
             }
         }
 
@@ -908,11 +909,13 @@ namespace GSF.Media
         /// </summary>
         public void Play()
         {
-            MemoryStream stream = new MemoryStream();
-            SoundPlayer player = new SoundPlayer(stream);
-            Save(stream);
-            stream.Position = 0;
-            player.Play();
+            using (BlockAllocatedMemoryStream stream = new BlockAllocatedMemoryStream())
+            {
+                SoundPlayer player = new SoundPlayer(stream);
+                Save(stream);
+                stream.Position = 0;
+                player.Play();
+            }
         }
 
         /// <summary>
@@ -1196,8 +1199,8 @@ namespace GSF.Media
 
                 return source;
             }
-            else
-                throw new ArgumentException("You must provide at least two wave files to combine.", "waveFiles");
+
+            throw new ArgumentException("You must provide at least two wave files to combine.", "waveFiles");
         }
 
         /// <summary>
@@ -1239,8 +1242,8 @@ namespace GSF.Media
 
                 return source;
             }
-            else
-                throw new ArgumentException("You must provide at least two wave files to append together.", "waveFiles");
+
+            throw new ArgumentException("You must provide at least two wave files to append together.", "waveFiles");
         }
 
         /// <summary>

@@ -169,12 +169,11 @@ namespace GSF.Media
 
                 if (m_extraParametersSize > 0)
                     return chunkSize + 2 + m_extraParametersSize;
-                else
-                    return chunkSize;
+
+                return chunkSize;
             }
             set
             {
-                throw new NotImplementedException();
             }
         }
 
@@ -234,7 +233,7 @@ namespace GSF.Media
         /// </summary>
         /// <remarks>
         /// This property defines the number of samples per second defined in each second of data in
-        /// the <see cref="WaveFile"/>.  See <see cref="SampleRate"/> enumeraion for more details.
+        /// the <see cref="WaveFile"/>.  See <see cref="SampleRate"/> enumeration for more details.
         /// </remarks>
         public int SampleRate
         {
@@ -259,7 +258,7 @@ namespace GSF.Media
         /// <para>
         /// This is typically just the arithmetic result of:
         /// <see cref="SampleRate"/> * <see cref="Channels"/> * <see cref="BitsPerSample"/> / 8.
-        /// However, this value can be changed as needed to accomodate better buffer estimations during
+        /// However, this value can be changed as needed to accommodate better buffer estimations during
         /// data read cycle.
         /// </para>
         /// </remarks>
@@ -286,7 +285,7 @@ namespace GSF.Media
         /// <para>
         /// This is typically just the arithmetic result of:
         /// <see cref="Channels"/> * <see cref="BitsPerSample"/> / 8.
-        /// However, this value can be changed as needed to accomodate even block-alignment of non-standard
+        /// However, this value can be changed as needed to accommodate even block-alignment of non-standard
         /// <see cref="BitsPerSample"/> values.
         /// </para>
         /// </remarks>
@@ -436,7 +435,7 @@ namespace GSF.Media
                 if (m_extraParametersSize > 0 && (object)m_extraParameters != null)
                 {
                     Buffer.BlockCopy(m_extraParameters, 0, buffer, startIndex, m_extraParametersSize);
-                    startIndex += m_extraParametersSize;
+                    //startIndex += m_extraParametersSize;
                 }
             }
 
@@ -485,13 +484,13 @@ namespace GSF.Media
                 case 32:
                     if (m_audioFormat == (ushort)WaveFormat.IeeeFloat)
                         return TypeCode.Single;
-                    else
-                        return TypeCode.Int32;
+
+                    return TypeCode.Int32;
                 case 64:
                     if (m_audioFormat == (ushort)WaveFormat.IeeeFloat)
                         return TypeCode.Double;
-                    else
-                        return TypeCode.Int64;
+
+                    return TypeCode.Int64;
                 default:
                     // Unable to determine proper type code, consumer may be using a special data format...
                     return TypeCode.Empty;
@@ -521,13 +520,13 @@ namespace GSF.Media
                 case 32:
                     if (m_audioFormat == (ushort)WaveFormat.IeeeFloat)
                         return (Single)sample;
-                    else
-                        return (Int32)sample;
+
+                    return (Int32)sample;
                 case 64:
                     if (m_audioFormat == (ushort)WaveFormat.IeeeFloat)
                         return (Double)sample;
-                    else
-                        return (Int64)sample;
+
+                    return (Int64)sample;
                 default:
                     throw new InvalidOperationException(string.Format("Cannot cast sample \'{0}\' into {1}-bits.", sample, BitsPerSample));
             }

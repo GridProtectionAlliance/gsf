@@ -19,19 +19,19 @@
 //  06/24/2011 - Ritchie
 //       Generated original version of source code.
 //  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modifeid Header.
+//       Modified Header.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Timers;
 using GSF.Communication;
+using GSF.IO;
 using GSF.Security.Cryptography;
 
 namespace GSF.TimeSeries.Transport
@@ -136,9 +136,23 @@ namespace GSF.TimeSeries.Transport
                             m_connectionID = m_hostName + " (" + m_connectionID + ")";
                         }
                     }
-                    catch
+
+                    // Just ignoring possible DNS lookup failures...
+                    catch (ArgumentNullException)
                     {
-                        // Just ignoring possible DNS lookup failures...
+                        // The hostNameOrAddress parameter is null. 
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        // The length of hostNameOrAddress parameter is greater than 255 characters. 
+                    }
+                    catch (ArgumentException)
+                    {
+                        // The hostNameOrAddress parameter is an invalid IP address. 
+                    }
+                    catch (SocketException)
+                    {
+                        // An error was encountered when resolving the hostNameOrAddress parameter.    
                     }
                 }
             }
@@ -665,50 +679,55 @@ namespace GSF.TimeSeries.Transport
             {
                 try
                 {
-                    MemoryStream response = new MemoryStream();
+                    // Since this function cannot be not called more than once per second there
+                    // is no real benefit to maintaining these memory streams at a member level
+                    using (BlockAllocatedMemoryStream response = new BlockAllocatedMemoryStream())
+                    {
+                        byte[] bytes, bufferLen;
 
-                    // Create or update cipher keys and initialization vectors 
-                    UpdateKeyIVs();
+                        // Create or update cipher keys and initialization vectors 
+                        UpdateKeyIVs();
 
-                    // Add current cipher index to response
-                    response.WriteByte((byte)m_cipherIndex);
+                        // Add current cipher index to response
+                        response.WriteByte((byte)m_cipherIndex);
 
-                    // Serialize new keys
-                    MemoryStream buffer = new MemoryStream();
-                    byte[] bytes, bufferLen;
+                        // Serialize new keys
+                        using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
+                        {
+                            // Write even key
+                            bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[EvenKey][KeyIndex].Length);
+                            buffer.Write(bufferLen, 0, bufferLen.Length);
+                            buffer.Write(m_keyIVs[EvenKey][KeyIndex], 0, m_keyIVs[EvenKey][KeyIndex].Length);
 
-                    // Write even key
-                    bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[EvenKey][KeyIndex].Length);
-                    buffer.Write(bufferLen, 0, bufferLen.Length);
-                    buffer.Write(m_keyIVs[EvenKey][KeyIndex], 0, m_keyIVs[EvenKey][KeyIndex].Length);
+                            // Write even initialization vector
+                            bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[EvenKey][IVIndex].Length);
+                            buffer.Write(bufferLen, 0, bufferLen.Length);
+                            buffer.Write(m_keyIVs[EvenKey][IVIndex], 0, m_keyIVs[EvenKey][IVIndex].Length);
 
-                    // Write even initialization vector
-                    bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[EvenKey][IVIndex].Length);
-                    buffer.Write(bufferLen, 0, bufferLen.Length);
-                    buffer.Write(m_keyIVs[EvenKey][IVIndex], 0, m_keyIVs[EvenKey][IVIndex].Length);
+                            // Write odd key
+                            bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][KeyIndex].Length);
+                            buffer.Write(bufferLen, 0, bufferLen.Length);
+                            buffer.Write(m_keyIVs[OddKey][KeyIndex], 0, m_keyIVs[OddKey][KeyIndex].Length);
 
-                    // Write odd key
-                    bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][KeyIndex].Length);
-                    buffer.Write(bufferLen, 0, bufferLen.Length);
-                    buffer.Write(m_keyIVs[OddKey][KeyIndex], 0, m_keyIVs[OddKey][KeyIndex].Length);
+                            // Write odd initialization vector
+                            bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][IVIndex].Length);
+                            buffer.Write(bufferLen, 0, bufferLen.Length);
+                            buffer.Write(m_keyIVs[OddKey][IVIndex], 0, m_keyIVs[OddKey][IVIndex].Length);
 
-                    // Write odd initialization vector
-                    bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][IVIndex].Length);
-                    buffer.Write(bufferLen, 0, bufferLen.Length);
-                    buffer.Write(m_keyIVs[OddKey][IVIndex], 0, m_keyIVs[OddKey][IVIndex].Length);
+                            // Get bytes from serialized buffer
+                            bytes = buffer.ToArray();
+                        }
 
-                    // Get bytes from serialized buffer
-                    bytes = buffer.ToArray();
+                        // Encrypt keys using private keys known only to current client and server
+                        if (m_authenticated && !string.IsNullOrWhiteSpace(m_sharedSecret))
+                            bytes = bytes.Encrypt(m_sharedSecret, CipherStrength.Aes256);
 
-                    // Encrypt keys using private keys known only to current client and server
-                    if (m_authenticated && !string.IsNullOrWhiteSpace(m_sharedSecret))
-                        bytes = bytes.Encrypt(m_sharedSecret, CipherStrength.Aes256);
+                        // Add serialized key response
+                        response.Write(bytes, 0, bytes.Length);
 
-                    // Add serialized key response
-                    response.Write(bytes, 0, bytes.Length);
-
-                    // Send cipher key updates
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateCipherKeys, ServerCommand.Subscribe, response.ToArray());
+                        // Send cipher key updates
+                        m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateCipherKeys, ServerCommand.Subscribe, response.ToArray());
+                    }
 
                     // Send success message
                     m_parent.SendClientResponse(m_clientID, ServerResponse.Succeeded, ServerCommand.RotateCipherKeys, "New cipher keys established.");
@@ -794,12 +813,12 @@ namespace GSF.TimeSeries.Transport
             try
             {
                 m_parent.OnStatusMessage("Attempting to restart data channel...");
-                this.DataChannel = null;
+                DataChannel = null;
 
                 UdpServer dataChannel = new UdpServer(m_configurationString);
                 dataChannel.Start();
 
-                this.DataChannel = dataChannel;
+                DataChannel = dataChannel;
                 m_parent.OnStatusMessage("Data channel successfully restarted.");
             }
             catch (Exception ex)

@@ -162,7 +162,7 @@ namespace GSF
         /// Attempts binary deserialization on the byte array and returns the typed object for it.
         /// </summary>
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
-        /// <param name="deserializedObject">A byref type T that is passed in to be hold the de-serialized object.</param>
+        /// <param name="deserializedObject">A type T object, passed by reference, that is used to be hold the de-serialized object.</param>
         /// <typeparam name="T">The generic type T that is to be deserialized.</typeparam>
         /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
         [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
@@ -202,7 +202,7 @@ namespace GSF
         /// Attempts binary deserialization on the byte array and returns the typed object for it.
         /// </summary>
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
-        /// <param name="deserializedObject">A byref <see cref="object"></see> that is passed in to be hold the de-serialized object.</param>
+        /// <param name="deserializedObject">An <see cref="object"/>, passed by reference, that is used to be hold the de-serialized object.</param>
         /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
         [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static bool TryGetObject(byte[] serializedObject, out object deserializedObject)
@@ -333,13 +333,14 @@ namespace GSF
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         public static byte[] Serialize<T>(T serializableObject, SerializationFormat serializationFormat)
         {
+            // FYI, using statement will not work here as this creates a read-only variable that cannot be passed by reference
             Stream stream = null;
+
             try
             {
-                stream = new MemoryStream();
+                stream = new BlockAllocatedMemoryStream();
                 Serialize(serializableObject, serializationFormat, ref stream);
-
-                return stream.ReadStream();
+                return ((BlockAllocatedMemoryStream)stream).ToArray();
             }
             finally
             {
@@ -407,7 +408,7 @@ namespace GSF
         /// Deserializes a serialized <see cref="Object"/>.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
-        /// <param name="serializedObject"><see cref="Array"/> of <see cref="Byte"/>s contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
+        /// <param name="serializedObject"><see cref="Array"/> of <see cref="Byte"/>s containing the serialized <see cref="Object"/> that is to be deserialized.</param>
         /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
         /// <returns>The deserialized <see cref="Object"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
@@ -417,17 +418,9 @@ namespace GSF
             if ((object)serializedObject == null)
                 throw new ArgumentNullException("serializedObject");
 
-            Stream stream = null;
-            try
+            using (MemoryStream stream = new MemoryStream(serializedObject))
             {
-                stream = new MemoryStream(serializedObject);
-
                 return Deserialize<T>(stream, serializationFormat);
-            }
-            finally
-            {
-                if ((object)stream != null)
-                    stream.Dispose();
             }
         }
 
@@ -435,7 +428,7 @@ namespace GSF
         /// Deserializes a serialized <see cref="Object"/>.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
-        /// <param name="serializedObject"><see cref="Stream"/> contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
+        /// <param name="serializedObject"><see cref="Stream"/> containing the serialized <see cref="Object"/> that is to be deserialized.</param>
         /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
         /// <returns>The deserialized <see cref="Object"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
@@ -488,7 +481,7 @@ namespace GSF
         /// Attempts to deserialize a serialized <see cref="Object"/>.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
-        /// <param name="serializedObject"><see cref="Array"/> of <see cref="Byte"/>s contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
+        /// <param name="serializedObject"><see cref="Array"/> of <see cref="Byte"/>s containing the serialized <see cref="Object"/> that is to be deserialized.</param>
         /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
         /// <param name="deserializedObject">Deserialized <see cref="Object"/>.</param>
         /// <returns><c>true</c>if deserialization succeeded; otherwise <c>false</c>.</returns>
@@ -511,7 +504,7 @@ namespace GSF
         /// Attempts to deserialize a serialized <see cref="Object"/>.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
-        /// <param name="serializedObject"><see cref="Stream"/> contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
+        /// <param name="serializedObject"><see cref="Stream"/> containing the serialized <see cref="Object"/> that is to be deserialized.</param>
         /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
         /// <param name="deserializedObject">Deserialized <see cref="Object"/>.</param>
         /// <returns><c>true</c>if deserialization succeeded; otherwise <c>false</c>.</returns>

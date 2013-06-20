@@ -630,7 +630,10 @@ namespace GSF.ServiceModel
         // Converts a string of data to a UTF8 stream using "application/xml" as the content type
         private Stream StringToStream(string result)
         {
-            WebOperationContext.Current.OutgoingResponse.ContentType = "application/xml";
+            if ((object)WebOperationContext.Current != null)
+                WebOperationContext.Current.OutgoingResponse.ContentType = "application/xml";
+
+            // Using UTF8 result buffer as non-expandable memory stream for string-as-stream
             return new MemoryStream(Encoding.UTF8.GetBytes(result));
         }
 

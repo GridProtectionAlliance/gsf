@@ -61,13 +61,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
+using GSF.IO;
 
 namespace GSF.Communication
 {
@@ -1144,17 +1144,18 @@ namespace GSF.Communication
                     if (localAddress.AddressFamily != serverAddress.AddressFamily)
                         throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverAddress));
 
-                    MemoryStream membershipAddresses = new MemoryStream();
+                    using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
+                    {
+                        byte[] serverAddressBytes = serverAddress.GetAddressBytes();
+                        byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
+                        byte[] localAddressBytes = localAddress.GetAddressBytes();
 
-                    byte[] serverAddressBytes = serverAddress.GetAddressBytes();
-                    byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
-                    byte[] localAddressBytes = localAddress.GetAddressBytes();
+                        membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
+                        membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
+                        membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
 
-                    membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
-                    membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
-                    membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
-
-                    multicastMembershipAddresses = membershipAddresses.ToArray();
+                        multicastMembershipAddresses = membershipAddresses.ToArray();
+                    }
 
                     // Execute multicast subscribe for specific source
                     m_udpClient.Provider.SetSocketOption(level, SocketOptionName.AddSourceMembership, multicastMembershipAddresses);
@@ -1193,16 +1194,18 @@ namespace GSF.Communication
                         if (localAddress.AddressFamily != serverAddress.AddressFamily)
                             throw new InvalidOperationException(string.Format("Local address \"{0}\" is not in the same IP format as server address \"{1}\"", localAddress, serverAddress));
 
-                        MemoryStream membershipAddresses = new MemoryStream();
-                        byte[] serverAddressBytes = serverAddress.GetAddressBytes();
-                        byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
-                        byte[] localAddressBytes = localAddress.GetAddressBytes();
+                        using (BlockAllocatedMemoryStream membershipAddresses = new BlockAllocatedMemoryStream())
+                        {
+                            byte[] serverAddressBytes = serverAddress.GetAddressBytes();
+                            byte[] sourceAddressBytes = sourceAddress.GetAddressBytes();
+                            byte[] localAddressBytes = localAddress.GetAddressBytes();
 
-                        membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
-                        membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
-                        membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
+                            membershipAddresses.Write(serverAddressBytes, 0, serverAddressBytes.Length);
+                            membershipAddresses.Write(sourceAddressBytes, 0, sourceAddressBytes.Length);
+                            membershipAddresses.Write(localAddressBytes, 0, localAddressBytes.Length);
 
-                        multicastMembershipAddresses = membershipAddresses.ToArray();
+                            multicastMembershipAddresses = membershipAddresses.ToArray();
+                        }
                     }
 
                     // Execute multicast unsubscribe for specific source

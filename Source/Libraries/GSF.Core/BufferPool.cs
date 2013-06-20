@@ -39,17 +39,20 @@ namespace GSF
     /// time you need to use one.
     /// </para>
     /// <para>
-    /// It is very imporant to return the buffer to the pool when you are finished using it. If you are using a buffer
+    /// It is very important to return the buffer to the pool when you are finished using it. If you are using a buffer
     /// scoped within a method, make sure to use a try/finally so that you can take the buffer within the try and
     /// return the buffer within the finally. If you are using a buffer as a member scoped class field, make sure
     /// you use the standard dispose pattern and return the buffer in the <see cref="IDisposable.Dispose"/> method.
+    /// </para>
+    /// <para>
+    /// Internally this class simply wraps a static instance of the WCF <see cref="BufferManager"/>.
     /// </para>
     /// </remarks>
     public static class BufferPool
     {
         // Note that the buffer manager will create an queue buffers as needed during run-time, the default maximum
-        // pool size and default maximum buffer sizes are set to int max. Even if an application should max the pool
-        // size, the buffer manager will still sucessfully provide and manage buffers - they simply won't be cached.
+        // pool size and default maximum buffer sizes are set to int max. Even if an app happened to max out the pool
+        // size, the buffer manager will still successfully provide and manage buffers - they simply won't be cached.
         private static readonly BufferManager s_bufferManager = BufferManager.CreateBufferManager(int.MaxValue, int.MaxValue);
 
         /// <summary>

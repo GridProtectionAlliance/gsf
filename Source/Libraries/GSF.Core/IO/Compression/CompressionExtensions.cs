@@ -117,20 +117,20 @@ namespace GSF.IO.Compression
 
                 return outBuffer;
             }
-            else
-            {
-                // Create a new compression deflater
-                MemoryStream compressedData = new MemoryStream();
-                DeflateStream deflater = new DeflateStream(compressedData, CompressionMode.Compress);
 
-                // Provide data for compression
-                deflater.Write(source, startIndex, length);
-                deflater.Close();
+            // Create a new compression deflater
+            using (BlockAllocatedMemoryStream compressedData = new BlockAllocatedMemoryStream())
+            {
+                using (DeflateStream deflater = new DeflateStream(compressedData, CompressionMode.Compress))
+                {
+                    // Provide data for compression
+                    deflater.Write(source, startIndex, length);
+                }
 
                 byte[] destination = compressedData.ToArray();
                 int destinationLength = destination.Length;
 
-                // Preprend compression depth and extract only used part of compressed buffer
+                // Prepend compression depth and extract only used part of compressed buffer
                 byte[] outBuffer = new byte[++destinationLength];
 
                 // First two bits are reserved for compression strength - this leaves 6 bits for a maximum of 64 compressions
@@ -146,11 +146,11 @@ namespace GSF.IO.Compression
 
                     if (testBuffer.Length < outBuffer.Length)
                         return testBuffer;
-                    else
-                        return outBuffer;
-                }
-                else
+
                     return outBuffer;
+                }
+
+                return outBuffer;
             }
         }
 
@@ -268,22 +268,25 @@ namespace GSF.IO.Compression
                 // No compression was applied to original buffer, return specified portion of the buffer
                 return source.BlockCopy(startIndex + 1, length - 1);
             }
-            else
+
+            // Create a new decompression deflater
+            using (BlockAllocatedMemoryStream compressedData = new BlockAllocatedMemoryStream(source, startIndex + 1, length - 1))
             {
-                // Create a new decompression deflater
-                MemoryStream compressedData = new MemoryStream(source, startIndex + 1, length - 1);
-                DeflateStream inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
+                byte[] destination;
                 int compressionDepth = (source[startIndex] & ~CompressionStrengthMask) >> 2;
 
-                // Read uncompressed data
-                byte[] destination = inflater.ReadStream();
+                using (DeflateStream inflater = new DeflateStream(compressedData, CompressionMode.Decompress))
+                {
+                    // Read uncompressed data
+                    destination = inflater.ReadStream();
+                }
 
-                // When user requests muli-pass compression, there may be multiple compression passes on a buffer,
+                // When user requests multi-pass compression, there may be multiple compression passes on a buffer,
                 // so we cycle through the needed uncompressions to get back to the original data
                 if (strength == CompressionStrength.MultiPass && compressionDepth > 0)
                     return destination.Decompress();
-                else
-                    return destination;
+
+                return destination;
             }
         }
 

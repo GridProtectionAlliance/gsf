@@ -69,7 +69,7 @@ namespace GSF.TimeSeries
         /// Get the hash code for the <see cref="ITimeSeriesValue.ID"/>.
         /// </summary>
         /// <returns>Hash code for the <see cref="ITimeSeriesValue.ID"/>.</returns>
-        /// <remarks>Implementors should always return the hash code based on <see cref="ITimeSeriesValue.ID"/> of measurement.</remarks>
+        /// <remarks>Implementers should always return the hash code based on <see cref="ITimeSeriesValue.ID"/> of measurement.</remarks>
         int GetHashCode();
     }
 

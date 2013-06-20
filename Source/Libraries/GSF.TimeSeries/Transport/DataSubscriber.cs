@@ -200,7 +200,6 @@ namespace GSF.TimeSeries.Transport
         private volatile long[] m_baseTimeOffsets;
         private volatile int m_timeIndex;
         private volatile byte[][][] m_keyIVs;
-        private volatile int m_cipherIndex;
         private volatile bool m_authenticated;
         private volatile bool m_subscribed;
         private volatile int m_lastBytesReceived;
@@ -227,7 +226,6 @@ namespace GSF.TimeSeries.Transport
         private Encoding m_encoding;
 
         private readonly List<BufferBlockMeasurement> m_bufferBlockCache;
-        private object m_bufferBlockCacheLock;
         private uint m_expectedBufferBlockSequenceNumber;
 
         private long m_lifetimeMeasurements;
@@ -259,7 +257,6 @@ namespace GSF.TimeSeries.Transport
             DataLossInterval = 10.0D;
 
             m_bufferBlockCache = new List<BufferBlockMeasurement>();
-            m_bufferBlockCacheLock = new object();
         }
 
         #endregion
@@ -812,7 +809,7 @@ namespace GSF.TimeSeries.Transport
                 MetaDataReceived += DataSubscriber_MetaDataReceived;
 
                 // If active measurements are defined, attempt to defined desired subscription points from there
-                if (DataSource != null && (object)DataSource.Tables != null && DataSource.Tables.Contains("ActiveMeasurements"))
+                if (DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
                     try
                     {
@@ -925,27 +922,29 @@ namespace GSF.TimeSeries.Transport
             {
                 try
                 {
-                    MemoryStream buffer = new MemoryStream();
-                    byte[] salt = new byte[DataPublisher.CipherSaltLength];
-                    byte[] bytes;
+                    using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
+                    {
+                        byte[] salt = new byte[DataPublisher.CipherSaltLength];
+                        byte[] bytes;
 
-                    // Generate some random prefix data to make sure auth key transmission is always unique
-                    Random.GetBytes(salt);
+                        // Generate some random prefix data to make sure auth key transmission is always unique
+                        Random.GetBytes(salt);
 
-                    // Get encoded bytes of authentication key
-                    bytes = salt.Combine(m_encoding.GetBytes(authenticationID));
+                        // Get encoded bytes of authentication key
+                        bytes = salt.Combine(m_encoding.GetBytes(authenticationID));
 
-                    // Encrypt authentication key
-                    bytes = bytes.Encrypt(sharedSecret, CipherStrength.Aes256);
+                        // Encrypt authentication key
+                        bytes = bytes.Encrypt(sharedSecret, CipherStrength.Aes256);
 
-                    // Write encoded authentication key length into buffer
-                    buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
+                        // Write encoded authentication key length into buffer
+                        buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
 
-                    // Encode encrypted authentication key into buffer
-                    buffer.Write(bytes, 0, bytes.Length);
+                        // Encode encrypted authentication key into buffer
+                        buffer.Write(bytes, 0, bytes.Length);
 
-                    // Send authentication command to server with associated command buffer
-                    return SendServerCommand(ServerCommand.Authenticate, buffer.ToArray());
+                        // Send authentication command to server with associated command buffer
+                        return SendServerCommand(ServerCommand.Authenticate, buffer.ToArray());
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -965,11 +964,15 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
         public bool Subscribe(SubscriptionInfo info)
         {
-            if (info is SynchronizedSubscriptionInfo)
-                return SynchronizedSubscribe((SynchronizedSubscriptionInfo)info);
+            SynchronizedSubscriptionInfo synchronizedSubscriptionInfo = info as SynchronizedSubscriptionInfo;
 
-            if (info is UnsynchronizedSubscriptionInfo)
-                return UnsynchronizedSubscribe((UnsynchronizedSubscriptionInfo)info);
+            if ((object)synchronizedSubscriptionInfo != null)
+                return SynchronizedSubscribe(synchronizedSubscriptionInfo);
+
+            UnsynchronizedSubscriptionInfo unsynchronizedSubscriptionInfo = info as UnsynchronizedSubscriptionInfo;
+
+            if ((object)unsynchronizedSubscriptionInfo != null)
+                return UnsynchronizedSubscribe(unsynchronizedSubscriptionInfo);
 
             throw new NotSupportedException("Type of subscription used is not supported");
         }
@@ -1022,52 +1025,50 @@ namespace GSF.TimeSeries.Transport
 
                 return Subscribe(true, info.UseCompactMeasurementFormat, connectionString.ToString());
             }
-            else
+
+            // Locally concentrated subscription simply uses an unsynchronized subscription and concentrates the
+            // measurements on the subscriber side
+            if (Subscribe(FromLocallySynchronizedInfo(info)))
             {
-                // Locally concentrated subscription simply uses an unsynchronized subscription and concentrates the
-                // measurements on the subscriber side
-                if (Subscribe(FromLocallySynchronizedInfo(info)))
+                // Establish a local concentrator to synchronize received measurements
+                LocalConcentrator localConcentrator = new LocalConcentrator(this);
+                localConcentrator.ProcessException += m_localConcentrator_ProcessException;
+                localConcentrator.FramesPerSecond = info.FramesPerSecond;
+                localConcentrator.LagTime = info.LagTime;
+                localConcentrator.LeadTime = info.LeadTime;
+                localConcentrator.UseLocalClockAsRealTime = info.UseLocalClockAsRealTime;
+                localConcentrator.IgnoreBadTimestamps = info.IgnoreBadTimestamps;
+                localConcentrator.AllowSortsByArrival = info.AllowSortsByArrival;
+                localConcentrator.TimeResolution = info.TimeResolution;
+                localConcentrator.AllowPreemptivePublishing = info.AllowPreemptivePublishing;
+                localConcentrator.DownsamplingMethod = info.DownsamplingMethod;
+                localConcentrator.UsePrecisionTimer = false;
+
+                // Parse time constraints, if defined
+                DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? ParseTimeTag(info.StartTime) : DateTime.MinValue;
+                DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? ParseTimeTag(info.StopTime) : DateTime.MaxValue;
+
+                // When processing historical data, timestamps should not be evaluated for reasonability
+                if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
                 {
-                    // Establish a local concentrator to synchronize received measurements
-                    LocalConcentrator localConcentrator = new LocalConcentrator(this);
-                    localConcentrator.ProcessException += m_localConcentrator_ProcessException;
-                    localConcentrator.FramesPerSecond = info.FramesPerSecond;
-                    localConcentrator.LagTime = info.LagTime;
-                    localConcentrator.LeadTime = info.LeadTime;
-                    localConcentrator.UseLocalClockAsRealTime = info.UseLocalClockAsRealTime;
-                    localConcentrator.IgnoreBadTimestamps = info.IgnoreBadTimestamps;
-                    localConcentrator.AllowSortsByArrival = info.AllowSortsByArrival;
-                    localConcentrator.TimeResolution = info.TimeResolution;
-                    localConcentrator.AllowPreemptivePublishing = info.AllowPreemptivePublishing;
-                    localConcentrator.DownsamplingMethod = info.DownsamplingMethod;
-                    localConcentrator.UsePrecisionTimer = false;
-
-                    // Parse time constraints, if defined
-                    DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? ParseTimeTag(info.StartTime) : DateTime.MinValue;
-                    DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? ParseTimeTag(info.StopTime) : DateTime.MaxValue;
-
-                    // When processing historical data, timestamps should not be evaluated for reasonability
-                    if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
-                    {
-                        localConcentrator.PerformTimestampReasonabilityCheck = false;
-                        localConcentrator.LeadTime = double.MaxValue;
-                    }
-
-                    // Assign alternate processing interval, if defined
-                    if (info.ProcessingInterval != -1)
-                        localConcentrator.ProcessingInterval = info.ProcessingInterval;
-
-                    // Start local concentrator
-                    localConcentrator.Start();
-
-                    // Move concentrator to member variable
-                    Interlocked.Exchange(ref m_localConcentrator, localConcentrator);
-
-                    return true;
+                    localConcentrator.PerformTimestampReasonabilityCheck = false;
+                    localConcentrator.LeadTime = double.MaxValue;
                 }
 
-                return false;
+                // Assign alternate processing interval, if defined
+                if (info.ProcessingInterval != -1)
+                    localConcentrator.ProcessingInterval = info.ProcessingInterval;
+
+                // Start local concentrator
+                localConcentrator.Start();
+
+                // Move concentrator to member variable
+                Interlocked.Exchange(ref m_localConcentrator, localConcentrator);
+
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -1506,33 +1507,35 @@ namespace GSF.TimeSeries.Transport
                     this.DataChannel = dataChannel;
 
                     // Setup subscription packet
-                    MemoryStream buffer = new MemoryStream();
-                    DataPacketFlags flags = DataPacketFlags.NoFlags;
-                    byte[] bytes;
+                    using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
+                    {
+                        DataPacketFlags flags = DataPacketFlags.NoFlags;
+                        byte[] bytes;
 
-                    if (remotelySynchronized)
-                        flags |= DataPacketFlags.Synchronized;
+                        if (remotelySynchronized)
+                            flags |= DataPacketFlags.Synchronized;
 
-                    if (compactFormat)
-                        flags |= DataPacketFlags.Compact;
+                        if (compactFormat)
+                            flags |= DataPacketFlags.Compact;
 
-                    // Write data packet flags into buffer
-                    buffer.WriteByte((byte)flags);
+                        // Write data packet flags into buffer
+                        buffer.WriteByte((byte)flags);
 
-                    // Get encoded bytes of connection string
-                    bytes = m_encoding.GetBytes(connectionString);
+                        // Get encoded bytes of connection string
+                        bytes = m_encoding.GetBytes(connectionString);
 
-                    // Write encoded connection string length into buffer
-                    buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
+                        // Write encoded connection string length into buffer
+                        buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
 
-                    // Encode connection string into buffer
-                    buffer.Write(bytes, 0, bytes.Length);
+                        // Encode connection string into buffer
+                        buffer.Write(bytes, 0, bytes.Length);
 
-                    // Cache subscribed synchronization state
-                    m_synchronizedSubscription = remotelySynchronized;
+                        // Cache subscribed synchronization state
+                        m_synchronizedSubscription = remotelySynchronized;
 
-                    // Send subscribe server command with associated command buffer
-                    success = SendServerCommand(ServerCommand.Subscribe, buffer.ToArray());
+                        // Send subscribe server command with associated command buffer
+                        success = SendServerCommand(ServerCommand.Subscribe, buffer.ToArray());
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1552,7 +1555,7 @@ namespace GSF.TimeSeries.Transport
         public virtual bool Unsubscribe()
         {
             // Send unsubscribe server command
-            return SendServerCommand(ServerCommand.Unsubscribe, null);
+            return SendServerCommand(ServerCommand.Unsubscribe);
         }
 
         /// <summary>
@@ -1614,17 +1617,18 @@ namespace GSF.TimeSeries.Transport
             {
                 try
                 {
-                    MemoryStream commandPacket = new MemoryStream();
+                    using (BlockAllocatedMemoryStream commandPacket = new BlockAllocatedMemoryStream())
+                    {
+                        // Write command code into command packet
+                        commandPacket.WriteByte((byte)commandCode);
 
-                    // Write command code into command packet
-                    commandPacket.WriteByte((byte)commandCode);
+                        // Write command buffer into command packet
+                        if (data != null && data.Length > 0)
+                            commandPacket.Write(data, 0, data.Length);
 
-                    // Write command buffer into command packet
-                    if (data != null && data.Length > 0)
-                        commandPacket.Write(data, 0, data.Length);
-
-                    // Send command packet to publisher
-                    m_commandChannel.SendAsync(commandPacket.ToArray(), 0, (int)commandPacket.Length);
+                        // Send command packet to publisher
+                        m_commandChannel.SendAsync(commandPacket.ToArray(), 0, (int)commandPacket.Length);
+                    }
 
                     // Track server command in pending request queue
                     lock (m_requests)
@@ -2044,8 +2048,8 @@ namespace GSF.TimeSeries.Transport
                             m_baseTimeOffsets = new[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 8) };
                             break;
                         case ServerResponse.UpdateCipherKeys:
-                            // Get active cipher index
-                            m_cipherIndex = buffer[responseIndex++];
+                            // Move past active cipher index (not currently used anywhere else)
+                            responseIndex++;
 
                             // Extract remaining response
                             byte[] bytes = buffer.BlockCopy(responseIndex, responseLength - 1);
@@ -2096,7 +2100,7 @@ namespace GSF.TimeSeries.Transport
                             // Read odd initialization vector
                             keyIVs[OddKey][IVIndex] = new byte[bufferLen];
                             Buffer.BlockCopy(bytes, index, keyIVs[OddKey][IVIndex], 0, bufferLen);
-                            index += bufferLen;
+                            //index += bufferLen;
 
                             // Exchange keys
                             m_keyIVs = keyIVs;
@@ -2299,7 +2303,7 @@ namespace GSF.TimeSeries.Transport
                                 {
                                     // Prefix the tag name with the "updated" device name
                                     deviceID = deviceIDs[deviceAcronym];
-                                    string pointTag = sourcePrefix + row.Field<string>("PointTag") ?? string.Empty;
+                                    string pointTag = sourcePrefix + row.Field<string>("PointTag");
                                     Guid signalID = Guid.Parse(row.Field<object>("SignalID").ToString()); // adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
 
                                     // Track unique measurement signal Guids in this meta-data session, we'll need to remove any old associated measurements that no longer exist
@@ -2417,24 +2421,22 @@ namespace GSF.TimeSeries.Transport
 
             SignalIndexCache deserializedCache;
 
-            MemoryStream compressedData = null;
             GZipStream inflater = null;
 
             if (compressSignalIndexCache && gatewayCompressionMode == GatewayCompressionMode.GZip)
             {
                 try
                 {
-                    compressedData = new MemoryStream(buffer);
-                    inflater = new GZipStream(compressedData, CompressionMode.Decompress);
-                    buffer = inflater.ReadStream();
+                    using (MemoryStream compressedData = new MemoryStream(buffer))
+                    {
+                        inflater = new GZipStream(compressedData, CompressionMode.Decompress);
+                        buffer = inflater.ReadStream();
+                    }
                 }
                 finally
                 {
                     if ((object)inflater != null)
                         inflater.Close();
-
-                    if ((object)compressedData != null)
-                        compressedData.Close();
                 }
             }
 
@@ -2460,28 +2462,24 @@ namespace GSF.TimeSeries.Transport
 
             DataSet deserializedMetadata;
 
-            MemoryStream compressedData = null;
             GZipStream inflater = null;
-
-            MemoryStream encodedData = null;
-            XmlTextReader unicodeReader = null;
+            XmlTextReader xmlReader = null;
 
             if (compressMetadata && gatewayCompressionMode == GatewayCompressionMode.GZip)
             {
                 try
                 {
                     // Insert compressed data into compressed buffer
-                    compressedData = new MemoryStream(buffer);
-                    inflater = new GZipStream(compressedData, CompressionMode.Decompress);
-                    buffer = inflater.ReadStream();
+                    using (MemoryStream compressedData = new MemoryStream(buffer))
+                    {
+                        inflater = new GZipStream(compressedData, CompressionMode.Decompress);
+                        buffer = inflater.ReadStream();
+                    }
                 }
                 finally
                 {
                     if ((object)inflater != null)
                         inflater.Close();
-
-                    if ((object)compressedData != null)
-                        compressedData.Close();
                 }
             }
 
@@ -2490,20 +2488,18 @@ namespace GSF.TimeSeries.Transport
                 try
                 {
                     // Copy decompressed data into encoded buffer
-                    encodedData = new MemoryStream(buffer);
-
-                    // Read encoded data into data set as XML
-                    unicodeReader = new XmlTextReader(encodedData);
-                    deserializedMetadata = new DataSet();
-                    deserializedMetadata.ReadXml(unicodeReader, XmlReadMode.ReadSchema);
+                    using (MemoryStream encodedData = new MemoryStream(buffer))
+                    {
+                        // Read encoded data into data set as XML
+                        xmlReader = new XmlTextReader(encodedData);
+                        deserializedMetadata = new DataSet();
+                        deserializedMetadata.ReadXml(xmlReader, XmlReadMode.ReadSchema);
+                    }
                 }
                 finally
                 {
-                    if ((object)unicodeReader != null)
-                        unicodeReader.Close();
-
-                    if ((object)encodedData != null)
-                        encodedData.Close();
+                    if ((object)xmlReader != null)
+                        xmlReader.Close();
                 }
             }
             else

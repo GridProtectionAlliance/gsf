@@ -33,7 +33,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.IO;
+using GSF.IO;
 
 namespace GSF.Drawing
 {
@@ -129,15 +129,15 @@ namespace GSF.Drawing
                 if (originalImage.Width > originalImage.Height)
                 {
                     // Original image has landscape orientation.
-                    resizedImage = new Bitmap(newSize.Width, 
-                                              (int)Math.Floor((double)(newSize.Width * originalImage.Height) / (double)originalImage.Width), 
+                    resizedImage = new Bitmap(newSize.Width,
+                                              (int)Math.Floor((double)(newSize.Width * originalImage.Height) / (double)originalImage.Width),
                                               originalImage.PixelFormat);
                 }
                 else if (originalImage.Width < originalImage.Height)
                 {
                     // Original image has portrait orientation.
-                    resizedImage = new Bitmap(newSize.Height, 
-                                              (int)Math.Floor((double)(newSize.Height * originalImage.Height) / (double)originalImage.Width), 
+                    resizedImage = new Bitmap(newSize.Height,
+                                              (int)Math.Floor((double)(newSize.Height * originalImage.Height) / (double)originalImage.Width),
                                               originalImage.PixelFormat);
                 }
                 else
@@ -154,10 +154,11 @@ namespace GSF.Drawing
                     resizedImageGraphic.CompositingQuality = CompositingQuality.HighQuality;
                     resizedImageGraphic.SmoothingMode = SmoothingMode.HighQuality;
                     resizedImageGraphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    resizedImageGraphic.DrawImage(originalImage, 0, 0, resizedImage.Width, resizedImage.Height);                   
+                    resizedImageGraphic.DrawImage(originalImage, 0, 0, resizedImage.Width, resizedImage.Height);
                 }
 
-                if (disposeOriginal) originalImage.Dispose();   // Dispose original if indicated.
+                if (disposeOriginal)
+                    originalImage.Dispose();   // Dispose original if indicated.
             }
             else
             {
@@ -245,7 +246,8 @@ namespace GSF.Drawing
                 croppedImageGraphic.DrawImage(originalImage, 0, 0, croppedArea, GraphicsUnit.Pixel);
             }
 
-            if (disposeOriginal) originalImage.Dispose();   // Dispose original if indicated.
+            if (disposeOriginal)
+                originalImage.Dispose();   // Dispose original if indicated.
 
             return croppedImage;
         }
@@ -323,14 +325,21 @@ namespace GSF.Drawing
         public static Bitmap ConvertTo(this Bitmap originalImage, ImageFormat newFormat, bool disposeOriginal)
         {
             Bitmap newImage = null;
-            MemoryStream newImageStream = new MemoryStream();
 
-            originalImage.Save(newImageStream, newFormat);  // Save image to memory stream in the specified format.
-            newImage = new Bitmap(newImageStream);          // Create new bitmap from the memory stream.
+            using (BlockAllocatedMemoryStream newImageStream = new BlockAllocatedMemoryStream())
+            {
+                // Save image to memory stream in the specified format.
+                originalImage.Save(newImageStream, newFormat);
 
-            if (disposeOriginal) originalImage.Dispose();   // Dispose original if indicated.
+                // Create new bitmap from the memory stream.
+                newImage = new Bitmap(newImageStream);
 
-            return newImage;
+                // Dispose original if indicated.
+                if (disposeOriginal)
+                    originalImage.Dispose();
+
+                return newImage;
+            }
         }
     }
 }

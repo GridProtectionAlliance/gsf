@@ -25,6 +25,7 @@
 
 using System;
 using System.IO;
+using GSF.IO;
 using Ionic.Zlib;
 
 namespace GSF.PQDIF.Physical
@@ -55,7 +56,7 @@ namespace GSF.PQDIF.Physical
     }
 
     /// <summary>
-    /// Enuemration which defines the algorithms used to compress PQDIF files.
+    /// Enumeration which defines the algorithms used to compress PQDIF files.
     /// </summary>
     public enum CompressionAlgorithm : uint
     {
@@ -246,14 +247,14 @@ namespace GSF.PQDIF.Physical
         {
             return new RecordHeader
                 {
-                RecordSignature = new Guid(m_fileReader.ReadBytes(16)),
-                RecordTypeTag = new Guid(m_fileReader.ReadBytes(16)),
-                HeaderSize = m_fileReader.ReadInt32(),
-                BodySize = m_fileReader.ReadInt32(),
-                NextRecordPosition = m_fileReader.ReadInt32(),
-                Checksum = m_fileReader.ReadUInt32(),
-                Reserved = m_fileReader.ReadBytes(16)
-            };
+                    RecordSignature = new Guid(m_fileReader.ReadBytes(16)),
+                    RecordTypeTag = new Guid(m_fileReader.ReadBytes(16)),
+                    HeaderSize = m_fileReader.ReadInt32(),
+                    BodySize = m_fileReader.ReadInt32(),
+                    NextRecordPosition = m_fileReader.ReadInt32(),
+                    Checksum = m_fileReader.ReadUInt32(),
+                    Reserved = m_fileReader.ReadBytes(16)
+                };
         }
 
         // Reads the body of a record from the PQDIF file.
@@ -267,10 +268,12 @@ namespace GSF.PQDIF.Physical
 
             buffer = m_fileReader.ReadBytes(byteSize);
             Decompress(ref buffer);
+
+            // Using provided buffer as non-expandable memory stream for record body collection
             bufferStream = new MemoryStream(buffer);
 
             return new RecordBody
-                {
+            {
                 Collection = ReadCollection(new BinaryReader(bufferStream))
             };
         }
@@ -278,13 +281,15 @@ namespace GSF.PQDIF.Physical
         // Reads an element from the PQDIF file.
         private Element ReadElement(BinaryReader recordBodyReader)
         {
-            Element element = null;
+            Element element;
 
             Guid tagOfElement = new Guid(recordBodyReader.ReadBytes(16));
             ElementType typeOfElement = (ElementType)recordBodyReader.ReadByte();
             PhysicalType typeOfValue = (PhysicalType)recordBodyReader.ReadByte();
             bool isEmbedded = recordBodyReader.ReadByte() != 0;
-            byte reserved = recordBodyReader.ReadByte();
+
+            // Read reserved byte
+            recordBodyReader.ReadByte();
 
             long link;
             long returnLink;
@@ -297,7 +302,7 @@ namespace GSF.PQDIF.Physical
                 recordBodyReader.BaseStream.Seek(link, SeekOrigin.Begin);
             }
 
-            switch(typeOfElement)
+            switch (typeOfElement)
             {
                 case ElementType.Collection:
                     element = ReadCollection(recordBodyReader);
@@ -326,8 +331,8 @@ namespace GSF.PQDIF.Physical
         {
             CollectionElement collection = new CollectionElement
                 {
-                Size = recordBodyReader.ReadInt32()
-            };
+                    Size = recordBodyReader.ReadInt32()
+                };
 
             for (int i = 0; i < collection.Size; i++)
                 collection.AddElement(ReadElement(recordBodyReader));
@@ -340,9 +345,9 @@ namespace GSF.PQDIF.Physical
         {
             VectorElement element = new VectorElement
                 {
-                Size = recordBodyReader.ReadInt32(),
-                TypeOfValue = typeOfValue
-            };
+                    Size = recordBodyReader.ReadInt32(),
+                    TypeOfValue = typeOfValue
+                };
 
             byte[] values = recordBodyReader.ReadBytes(element.Size * typeOfValue.GetByteSize());
 
@@ -356,8 +361,8 @@ namespace GSF.PQDIF.Physical
         {
             ScalarElement element = new ScalarElement
                 {
-                TypeOfValue = typeOfValue
-            };
+                    TypeOfValue = typeOfValue
+                };
 
             byte[] value = recordBodyReader.ReadBytes(typeOfValue.GetByteSize());
 
@@ -374,22 +379,27 @@ namespace GSF.PQDIF.Physical
                 return;
 
             byte[] readBuffer = new byte[65536];
-            MemoryStream readStream = new MemoryStream();
-            int readAmount;
 
-            using (MemoryStream bufferStream = new MemoryStream(buffer))
+            using (BlockAllocatedMemoryStream readStream = new BlockAllocatedMemoryStream())
             {
-                using (ZlibStream inflater = new ZlibStream(bufferStream, CompressionMode.Decompress))
-                {
-                    do
-                    {
-                        readAmount = inflater.Read(readBuffer, 0, readBuffer.Length);
-                        readStream.Write(readBuffer, 0, readAmount);
-                    } while (readAmount != 0);
-                }
-            }
+                int readAmount;
 
-            buffer = readStream.ToArray();
+                // Faster here to use provided buffer as non-expandable memory stream
+                using (MemoryStream bufferStream = new MemoryStream(buffer))
+                {
+                    using (ZlibStream inflater = new ZlibStream(bufferStream, CompressionMode.Decompress))
+                    {
+                        do
+                        {
+                            readAmount = inflater.Read(readBuffer, 0, readBuffer.Length);
+                            readStream.Write(readBuffer, 0, readAmount);
+                        }
+                        while (readAmount != 0);
+                    }
+                }
+
+                buffer = readStream.ToArray();
+            }
         }
 
         #endregion

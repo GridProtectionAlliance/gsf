@@ -1407,7 +1407,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="formattedStatus">Formatted status message.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
         /// <remarks>
-        /// This overload combines string.Format and SendStatusMessage for convienence.
+        /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
         protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {

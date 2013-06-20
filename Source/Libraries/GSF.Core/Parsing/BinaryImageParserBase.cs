@@ -556,7 +556,7 @@ namespace GSF.Parsing
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
         /// <para>
-        /// Implementors can choose to focus on parsing a single frame in the buffer even if there are other frames available in the buffer.
+        /// Implementers can choose to focus on parsing a single frame in the buffer even if there are other frames available in the buffer.
         /// Base class will continue to move through buffer on behalf of derived class until all the buffer has been processed.  Just return
         /// the total amount of data was parsed and the remaining unparsed will be prepended to next received buffer.
         /// </para>
