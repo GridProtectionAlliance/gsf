@@ -818,7 +818,7 @@ namespace GSF.TimeSeries.Transport
                 UdpServer dataChannel = new UdpServer(m_configurationString);
                 dataChannel.Start();
 
-                DataChannel = dataChannel;
+                this.DataChannel = dataChannel;
                 m_parent.OnStatusMessage("Data channel successfully restarted.");
             }
             catch (Exception ex)
