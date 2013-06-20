@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Xml.Linq;
 using GSF.Identity;
 using GSF.Interop;
@@ -144,6 +145,7 @@ namespace GSF.InstallerActions
                 UserInfo.CreateLocalGroup(groupName, string.Format("Members in this group have the necessary rights to administrate the {0} service.", serviceName));
                 UserInfo.AddUserToLocalGroup(groupName, serviceAccount);
                 UserInfo.AddUserToLocalGroup("Performance Log Users", serviceAccount);
+                AddPrivileges(serviceAccount, "SeServiceLogonRight");
                 session.Log("Done adding {0} user to {1} group.", serviceAccount, groupName);
             }
             catch (Exception)
@@ -218,6 +220,21 @@ namespace GSF.InstallerActions
             {
                 if (!shell.WaitForExit(5000))
                     shell.Kill();
+            }
+        }
+
+        // Method to log to console and event log
+        private static void LogInstallMessage(Session session, EventLogEntryType logLevel, string msg)
+        {
+            session.Log(msg);
+
+            try
+            {
+                EventLog.WriteEntry(session.CustomActionData["SERVICENAME"], msg, logLevel);
+            }
+            catch (Exception ex)
+            {
+                session.Log(ex.ToString());
             }
         }
 
@@ -427,18 +444,62 @@ namespace GSF.InstallerActions
             return grantSuccess;
         }
 
-        // Method to log to console and event log
-        private static void LogInstallMessage(Session session, EventLogEntryType logLevel, string msg)
+        private static void AddPrivileges(string account, string privilege)
         {
-            session.Log(msg);
+            uint result;
 
-            try
+            // Pointer and size for the SID
+            IntPtr sid = IntPtr.Zero;
+            int sidSize = 0;
+
+            // StringBuilder and size for the domain name
+            StringBuilder domainName = new StringBuilder();
+            int nameSize = 0;
+
+            // Account-type variable for lookup
+            int accountType = 0;
+
+            // Get required buffer size
+            WindowsApi.LookupAccountName(string.Empty, account, sid, ref sidSize, domainName, ref nameSize, ref accountType);
+
+            // Allocate buffers
+            domainName = new StringBuilder(nameSize);
+            sid = Marshal.AllocHGlobal(sidSize);
+
+            // Look up SID for the account
+            if (WindowsApi.LookupAccountName(string.Empty, account, sid, ref sidSize, domainName, ref nameSize, ref accountType))
             {
-                EventLog.WriteEntry(session.CustomActionData["SERVICENAME"], msg, logLevel);
-            }
-            catch (Exception ex)
-            {
-                session.Log(ex.ToString());
+                // Initialize an empty unicode-string
+                WindowsApi.LSA_UNICODE_STRING systemName = new WindowsApi.LSA_UNICODE_STRING();
+
+                // Initialize a pointer for the policy handle
+                IntPtr policyHandle;
+
+                // These attributes are not used, but LsaOpenPolicy wants them to exist
+                WindowsApi.LSA_OBJECT_ATTRIBUTES objectAttributes = new WindowsApi.LSA_OBJECT_ATTRIBUTES();
+
+                // Get a policy handle
+                result = WindowsApi.LsaOpenPolicy(ref systemName, ref objectAttributes, (int)WindowsApi.LsaAccess.POLICY_ALL_ACCESS, out policyHandle);
+
+                if (result == 0)
+                {
+                    // Initialize a unicode-string for the privilege name
+                    WindowsApi.LSA_UNICODE_STRING[] userRights = new WindowsApi.LSA_UNICODE_STRING[1];
+
+                    userRights[0] = new WindowsApi.LSA_UNICODE_STRING();
+                    userRights[0].Buffer = Marshal.StringToHGlobalUni(privilege);
+                    userRights[0].Length = (UInt16)(privilege.Length * UnicodeEncoding.CharSize);
+                    userRights[0].MaximumLength = (UInt16)((privilege.Length + 1) * UnicodeEncoding.CharSize);
+
+                    // Add the privilege to the account 
+                    WindowsApi.LsaAddAccountRights(policyHandle, sid, userRights, 1);
+
+                    // Close LSA policy handle
+                    WindowsApi.LsaClose(policyHandle);
+                }
+
+                // Free SID
+                WindowsApi.FreeSid(sid); 
             }
         }
 

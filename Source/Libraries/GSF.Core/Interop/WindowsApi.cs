@@ -37,6 +37,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 #pragma warning disable 1591
 
@@ -669,6 +670,53 @@ namespace GSF.Interop
         }
 
         /// <summary>
+        /// LSA API policy access enumeration.
+        /// </summary>
+        public enum LsaAccess
+        {
+            POLICY_READ = 0x20006,
+            POLICY_ALL_ACCESS = 0x00F0FFF,
+            POLICY_EXECUTE = 0X20801,
+            POLICY_WRITE = 0X207F8
+        }
+
+        /// <summary>
+        /// Win32 LSA_OBJECT_ATTRIBUTES structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct LSA_OBJECT_ATTRIBUTES
+        {
+            public int Length;
+            public IntPtr RootDirectory;
+            public IntPtr ObjectName;
+            public int Attributes;
+            public IntPtr SecurityDescriptor;
+            public IntPtr SecurityQualityOfService;
+        }
+
+        /// <summary>
+        /// Win32 LSA_UNICODE_STRING structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct LSA_UNICODE_STRING
+        {
+            /// <summary>
+            /// Specifies the length of the string.
+            /// </summary>
+            public ushort Length;
+
+            /// <summary>
+            /// Specifies the maximum length of the string.
+            /// </summary>
+            public ushort MaximumLength;
+
+            /// <summary>
+            /// Pointer to string data.
+            /// </summary>
+            public IntPtr Buffer;
+        }
+
+        /// <summary>
         /// Win32 LUID_AND_ATTRIBUTES structure.
         /// </summary>
         /// <remarks>
@@ -790,6 +838,36 @@ namespace GSF.Interop
         /// </summary>
         [DllImport("advapi32.dll", SetLastError = true)]
         public static extern bool UnlockServiceDatabase(IntPtr hSCManager);
+
+        /// <summary>
+        /// Win32 LookupAccountName function.
+        /// </summary>
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true, PreserveSig = true)]
+        public static extern bool LookupAccountName(string lpSystemName, string lpAccountName, IntPtr psid, ref int cbsid, StringBuilder domainName, ref int cbdomainLength, ref int use); 
+
+        /// <summary>
+        /// Win32 LsaOpenPolicy function.
+        /// </summary>
+        [DllImport("advapi32.dll", PreserveSig = true)]
+        public static extern uint LsaOpenPolicy(ref LSA_UNICODE_STRING SystemName, ref LSA_OBJECT_ATTRIBUTES ObjectAttributes, int DesiredAccess, out IntPtr PolicyHandle); 
+
+        /// <summary>
+        /// Win32 LsaAddAccountRights function.
+        /// </summary>
+        [DllImport("advapi32.dll", SetLastError = true, PreserveSig = true)]
+        public static extern uint LsaAddAccountRights(IntPtr PolicyHandle, IntPtr AccountSid, LSA_UNICODE_STRING[] UserRights, uint CountOfRights);
+
+        /// <summary>
+        /// Win32 LsaClose function.
+        /// </summary>
+        [DllImport("advapi32")]
+        public static extern uint LsaClose(IntPtr PolicyHandle);
+
+        /// <summary>
+        /// Win32 FreeSid function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern IntPtr FreeSid(IntPtr pSid);
 
         /// <summary>
         /// Win32 GetLastError function.
