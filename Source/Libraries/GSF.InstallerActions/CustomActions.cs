@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 using System.Xml.Linq;
 using GSF.Identity;
@@ -41,6 +42,68 @@ namespace GSF.InstallerActions
     /// </summary>
     public class CustomActions
     {
+        /// <summary>
+        /// Custom action to attempt to authenticate the service account.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult AuthenticateServiceAccountAction(Session session)
+        {
+            IPrincipal servicePrincipal;
+            string serviceAccount;
+            string servicePassword;
+
+            string[] splitServiceAccount;
+            string serviceDomain = string.Empty;
+            string serviceUser = string.Empty;
+            bool isSystemAccount;
+
+            session.Log("Begin AuthenticateServiceAccountAction");
+
+            serviceAccount = session["SERVICEACCOUNT"];
+            servicePassword = session["SERVICEPASSWORD"];
+
+            splitServiceAccount = serviceAccount.Split('\\');
+
+            switch (splitServiceAccount.Length)
+            {
+                case 1:
+                    serviceDomain = UserInfo.CurrentUserID.Split('\\')[0];
+                    serviceUser = splitServiceAccount[0];
+                    break;
+
+                case 2:
+                    serviceDomain = splitServiceAccount[0];
+                    serviceUser = splitServiceAccount[1];
+                    break;
+            }
+
+            isSystemAccount =
+                serviceAccount.Equals("LocalSystem", StringComparison.InvariantCultureIgnoreCase) ||
+                serviceAccount.StartsWith(@"NT AUTHORITY\", StringComparison.InvariantCultureIgnoreCase) ||
+                serviceAccount.StartsWith(@"NT SERVICE\", StringComparison.InvariantCultureIgnoreCase);
+
+            if (isSystemAccount)
+            {
+                session["SERVICEPASSWORD"] = string.Empty;
+                session["SERVICEAUTHENTICATED"] = "yes";
+            }
+            else
+            {
+                servicePrincipal = UserInfo.AuthenticateUser(serviceDomain, serviceUser, servicePassword);
+
+                if ((object)servicePrincipal != null && servicePrincipal.Identity.IsAuthenticated)
+                    session["SERVICEAUTHENTICATED"] = "yes";
+                else
+                    session["SERVICEAUTHENTICATED"] = null;
+            }
+
+            session.Log("End AuthenticateServiceAccountAction");
+
+            return ActionResult.Success;
+        }
+
         /// <summary>
         /// Custom action to write CompanyName and CompanyAcronym settings to the configuration file of an installed service.
         /// </summary>
