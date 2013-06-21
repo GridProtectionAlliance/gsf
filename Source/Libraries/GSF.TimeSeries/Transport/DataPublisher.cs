@@ -3076,7 +3076,7 @@ namespace GSF.TimeSeries.Transport
                         // Compress serialized signal index cache into compressed data buffer
                         using (BlockAllocatedMemoryStream compressedData = new BlockAllocatedMemoryStream())
                         {
-                            deflater = new GZipStream(compressedData, CompressionMode.Compress);
+                            deflater = new GZipStream(compressedData, CompressionMode.Compress, true);
                             deflater.Write(serializedSignalIndexCache, 0, serializedSignalIndexCache.Length);
                             deflater.Close();
                             deflater = null;
@@ -3107,7 +3107,6 @@ namespace GSF.TimeSeries.Transport
                 bool useCommonSerializationFormat = (operationalModes & OperationalModes.UseCommonSerializationFormat) > 0;
                 bool compressMetadata = (operationalModes & OperationalModes.CompressMetadata) > 0;
 
-                XmlTextWriter xmlWriter = null;
                 GZipStream deflater = null;
 
                 if (!useCommonSerializationFormat)
@@ -3116,24 +3115,15 @@ namespace GSF.TimeSeries.Transport
                 }
                 else
                 {
-                    try
+                    // Encode XML into encoded data buffer
+                    using (BlockAllocatedMemoryStream encodedData = new BlockAllocatedMemoryStream())
+                    using (XmlTextWriter xmlWriter = new XmlTextWriter(encodedData, GetClientEncoding(clientID)))
                     {
-                        // Encode XML into encoded data buffer
-                        using (BlockAllocatedMemoryStream encodedData = new BlockAllocatedMemoryStream())
-                        {
-                            xmlWriter = new XmlTextWriter(encodedData, GetClientEncoding(clientID));
-                            metadata.WriteXml(xmlWriter, XmlWriteMode.WriteSchema);
-                            xmlWriter.Close();
-                            xmlWriter = null;
+                        metadata.WriteXml(xmlWriter, XmlWriteMode.WriteSchema);
+                        xmlWriter.Flush();
 
-                            // Return result of encoding
-                            serializedMetadata = encodedData.ToArray();
-                        }
-                    }
-                    finally
-                    {
-                        if ((object)xmlWriter != null)
-                            xmlWriter.Close();
+                        // Return result of encoding
+                        serializedMetadata = encodedData.ToArray();
                     }
                 }
 
@@ -3144,7 +3134,7 @@ namespace GSF.TimeSeries.Transport
                         // Compress serialized metadata into compressed data buffer
                         using (BlockAllocatedMemoryStream compressedData = new BlockAllocatedMemoryStream())
                         {
-                            deflater = new GZipStream(compressedData, CompressionMode.Compress);
+                            deflater = new GZipStream(compressedData, CompressionMode.Compress, true);
                             deflater.Write(serializedMetadata, 0, serializedMetadata.Length);
                             deflater.Close();
                             deflater = null;

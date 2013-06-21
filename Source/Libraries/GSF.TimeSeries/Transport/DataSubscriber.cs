@@ -2429,7 +2429,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     using (MemoryStream compressedData = new MemoryStream(buffer))
                     {
-                        inflater = new GZipStream(compressedData, CompressionMode.Decompress);
+                        inflater = new GZipStream(compressedData, CompressionMode.Decompress, true);
                         buffer = inflater.ReadStream();
                     }
                 }
@@ -2463,7 +2463,6 @@ namespace GSF.TimeSeries.Transport
             DataSet deserializedMetadata;
 
             GZipStream inflater = null;
-            XmlTextReader xmlReader = null;
 
             if (compressMetadata && gatewayCompressionMode == GatewayCompressionMode.GZip)
             {
@@ -2472,7 +2471,7 @@ namespace GSF.TimeSeries.Transport
                     // Insert compressed data into compressed buffer
                     using (MemoryStream compressedData = new MemoryStream(buffer))
                     {
-                        inflater = new GZipStream(compressedData, CompressionMode.Decompress);
+                        inflater = new GZipStream(compressedData, CompressionMode.Decompress, true);
                         buffer = inflater.ReadStream();
                     }
                 }
@@ -2485,21 +2484,13 @@ namespace GSF.TimeSeries.Transport
 
             if (useCommonSerializationFormat)
             {
-                try
+                // Copy decompressed data into encoded buffer
+                using (MemoryStream encodedData = new MemoryStream(buffer))
+                using (XmlTextReader xmlReader = new XmlTextReader(encodedData))
                 {
-                    // Copy decompressed data into encoded buffer
-                    using (MemoryStream encodedData = new MemoryStream(buffer))
-                    {
-                        // Read encoded data into data set as XML
-                        xmlReader = new XmlTextReader(encodedData);
-                        deserializedMetadata = new DataSet();
-                        deserializedMetadata.ReadXml(xmlReader, XmlReadMode.ReadSchema);
-                    }
-                }
-                finally
-                {
-                    if ((object)xmlReader != null)
-                        xmlReader.Close();
+                    // Read encoded data into data set as XML
+                    deserializedMetadata = new DataSet();
+                    deserializedMetadata.ReadXml(xmlReader, XmlReadMode.ReadSchema);
                 }
             }
             else
