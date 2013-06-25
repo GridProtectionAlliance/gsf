@@ -1640,18 +1640,8 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         protected void UpdateRights()
         {
-            IClientSubscription subscription;
-
-            lock (this)
-            {
-                foreach (IActionAdapter adapter in this)
-                {
-                    subscription = adapter as IClientSubscription;
-
-                    if ((object)subscription != null)
-                        UpdateRights(subscription);
-                }
-            }
+            foreach (ClientConnection connection in m_clientConnections.Values)
+                UpdateRights(connection);
 
             m_routingTables.CalculateRoutingTables(null);
         }
@@ -1774,6 +1764,10 @@ namespace GSF.TimeSeries.Transport
                 // subscriber has rights to everything
                 if (!RequireAuthentication)
                     return true;
+
+                // If subscriber has been disabled or removed from the list of valid subscribers, they no longer have rights to any signals
+                if (!DataSource.Tables["Subscribers"].Select(string.Format("SubscriberID = {0} AND Enabled <> 0", subscriberID)).Any())
+                    return false;
 
                 // Look up explicitly defined individual measurements
                 explicitMeasurements = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID='{0}' AND SignalID='{1}'", subscriberID, signalID));
@@ -2092,26 +2086,39 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Update rights for the given subscription.
-        private void UpdateRights(IClientSubscription subscription)
+        private void UpdateRights(ClientConnection connection)
         {
             // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
             // from the remote subscription - this will prevent possible SQL injection attacks.
-            MeasurementKey[] requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
-            HashSet<MeasurementKey> authorizedSignals = new HashSet<MeasurementKey>();
-            Guid subscriberID = subscription.SubscriberID;
+            IClientSubscription subscription = connection.Subscription;
+            MeasurementKey[] requestedInputs;
+            HashSet<MeasurementKey> authorizedSignals;
+            Guid subscriberID;
             string message;
 
-            foreach (MeasurementKey input in requestedInputs)
-            {
-                if (SubscriberHasRights(subscriberID, input.SignalID))
-                    authorizedSignals.Add(input);
-            }
+            // Determine if the connection has been disabled or removed - make sure to set authenticated to false if necessary
+            if (!DataSource.Tables["Subscribers"].Select(string.Format("SubscriberID = {0} AND Enabled <> 0", connection.SubscriberID)).Any())
+                connection.Authenticated = false;
 
-            if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
+            if ((object)subscription != null)
             {
-                message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
-                subscription.InputMeasurementKeys = authorizedSignals.ToArray();
-                SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
+                // Update the subscription associated with this connection based on newly acquired or revoked rights
+                requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
+                authorizedSignals = new HashSet<MeasurementKey>();
+                subscriberID = subscription.SubscriberID;
+
+                foreach (MeasurementKey input in requestedInputs)
+                {
+                    if (SubscriberHasRights(subscriberID, input.SignalID))
+                        authorizedSignals.Add(input);
+                }
+
+                if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
+                {
+                    message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
+                    subscription.InputMeasurementKeys = authorizedSignals.ToArray();
+                    SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
+                }
             }
         }
 
