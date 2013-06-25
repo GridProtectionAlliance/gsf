@@ -38,6 +38,7 @@ using GSF.Collections;
 using GSF.Data;
 using GSF.IO;
 using GSF.PhasorProtocols.UI.DataModels;
+using GSF.PhasorProtocols.UI.UserControls;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.UI;
@@ -52,8 +53,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         #region [ Members ]
 
         // Fields
-        private string m_acronym;
-        private string m_name;
+        private string m_publisherAcronym;
+        private string m_publisherName;
         private string m_hostname;
         private int m_port;
         private SecurityMode m_securityMode;
@@ -68,10 +69,11 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private string m_identityCertificate;
         private string m_validIPAddresses;
 
-        private ICommand m_generateCommand;
         private ICommand m_localBrowseCommand;
         private ICommand m_remoteBrowseCommand;
         private ICommand m_createCommand;
+        private string m_subscriberAcronym;
+        private string m_subscriberName;
 
         #endregion
 
@@ -92,33 +94,33 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the string identifier used to identify the subscriber.
+        /// Gets or sets the string identifier used to identify the publisher.
         /// </summary>
-        public string Acronym
+        public string PublisherAcronym
         {
             get
             {
-                return m_acronym;
+                return m_publisherAcronym;
             }
             set
             {
-                m_acronym = value;
+                m_publisherAcronym = value;
                 OnPropertyChanged("Acronym");
             }
         }
 
         /// <summary>
-        /// Gets or sets the name of the subscriber.
+        /// Gets or sets the name of the publisher.
         /// </summary>
-        public string Name
+        public string PublisherName
         {
             get
             {
-                return m_name;
+                return m_publisherName;
             }
             set
             {
-                m_name = value;
+                m_publisherName = value;
                 OnPropertyChanged("Name");
             }
         }
@@ -170,6 +172,38 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 OnPropertyChanged("SecurityMode");
                 OnPropertyChanged("TransportLayerSecuritySelected");
                 OnPropertyChanged("GatewaySecuritySelected");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the string identifier used to identify the subscriber.
+        /// </summary>
+        public string SubscriberAcronym
+        {
+            get
+            {
+                return m_subscriberAcronym;
+            }
+            set
+            {
+                m_subscriberAcronym = value;
+                OnPropertyChanged("SubscriberAcronym");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the name of the subscriber.
+        /// </summary>
+        public string SubscriberName
+        {
+            get
+            {
+                return m_subscriberName;
+            }
+            set
+            {
+                m_subscriberName = value;
+                OnPropertyChanged("SubscriberName");
             }
         }
 
@@ -371,6 +405,16 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
         private void Load()
         {
+            string companyAcronym;
+
+            // Try to populate defaults for subscriber acronym and name
+            // using company information from the openPDC configuration file
+            if (TryGetCompanyAcronym(out companyAcronym))
+            {
+                SubscriberAcronym = companyAcronym;
+                SubscriberName = string.Format("{0} Subscription Authorization", companyAcronym);
+            }
+
             // Connect to database to retrieve company information for current node
             using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
             {
@@ -379,8 +423,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     string query = database.ParameterizedQueryString("SELECT Company.Acronym, Company.Name FROM Company, Node WHERE Company.ID = Node.CompanyID AND Node.ID = {0}", "id");
                     DataRow row = database.Connection.RetrieveRow(database.AdapterType, query, database.CurrentNodeID());
 
-                    Acronym = row.Field<string>("Acronym");
-                    Name = row.Field<string>("Name");
+                    PublisherAcronym = row.Field<string>("Acronym");
+                    PublisherName = row.Field<string>("Name");
 
                     // Generate a default shared secret password for subscriber key and initialization vector
                     byte[] buffer = new byte[4];
@@ -483,49 +527,52 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             const string messageFormat = "Data subscription adapter \"{0}\" already exists. Unable to create subscription request.";
 
             Device device;
-            SaveFileDialog saveFileDialog;
 
-            AuthenticationRequest request;
-            string requestAcronym;
-            string requestName;
-            string[] keyIV;
-
-            if (!string.IsNullOrWhiteSpace(Acronym))
+            if (!string.IsNullOrWhiteSpace(PublisherAcronym))
             {
                 // Check if the device already exists
-                device = GetDeviceByAcronym(Acronym.Replace(" ", ""));
+                device = GetDeviceByAcronym(PublisherAcronym.Replace(" ", ""));
 
                 if ((object)device != null)
                     throw new Exception(string.Format(messageFormat, device.Acronym));
 
-                if (SecurityMode == SecurityMode.TLS)
-                {
-                    // TLS security mode saves Device record for subscriber,
-                    // but does not generate XML authorization request file
+                // Save the associated device
+                if (TryCreateRequest())
                     SaveDevice();
-                }
-                else
+            }
+            else
+            {
+                MessageBox.Show("Acronym is a required field. Please provide value.");
+            }
+        }
+
+        private bool TryCreateRequest()
+        {
+            try
+            {
+                // Generate authorization request
+                SaveFileDialog saveFileDialog;
+                Stream requestStream;
+
+                AuthenticationRequest request;
+                string[] keyIV = null;
+
+                saveFileDialog = new SaveFileDialog();
+                saveFileDialog.DefaultExt = ".srq";
+                saveFileDialog.Filter = "Subscription Requests|*.srq|All Files|*.*";
+
+                if (saveFileDialog.ShowDialog() == true)
                 {
-                    // Gateway security mode needs to generate XML authorization request
-                    saveFileDialog = new SaveFileDialog();
-                    saveFileDialog.DefaultExt = ".xml";
-                    saveFileDialog.Filter = "XML Files|*.xml|All Files|*.*";
+                    request = new AuthenticationRequest();
 
-                    if (saveFileDialog.ShowDialog() == true)
+                    // Set up the request
+                    request.Acronym = SubscriberAcronym;
+                    request.Name = SubscriberName;
+                    request.ValidIPAddresses = ValidIPAddresses;
+
+                    // Cipher key only applies to Gateway security
+                    if (SecurityMode == SecurityMode.Gateway)
                     {
-                        request = new AuthenticationRequest();
-
-                        // Get the name and acronym that go into the authentication request
-                        if (TryGetCompanyAcronym(out requestAcronym))
-                        {
-                            requestName = string.Format("{0} subscription authorization", requestAcronym);
-                        }
-                        else
-                        {
-                            requestAcronym = Acronym;
-                            requestName = "Subscription authorization";
-                        }
-
                         // Export cipher key to common crypto cache
                         if (!ExportCipherKey(SharedKey, 256))
                             throw new Exception("Failed to export cipher keys from common key cache.");
@@ -535,30 +582,38 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                         Cipher.ReloadCache();
                         keyIV = Cipher.ExportKeyIV(SharedKey, 256).Split('|');
 
-                        // Set up the request
-                        request.Acronym = requestAcronym;
-                        request.Name = requestName;
+                        // Set up crypto settings in the request
                         request.SharedSecret = SharedKey;
                         request.AuthenticationID = IdentityCertificate;
                         request.Key = keyIV[0];
                         request.IV = keyIV[1];
-                        request.ValidIPAddresses = ValidIPAddresses;
+                    }
 
-                        // Create the request
-                        File.WriteAllBytes(saveFileDialog.FileName, Serialization.Serialize(request, SerializationFormat.Xml));
+                    // Certificate only applies to TLS security
+                    if (SecurityMode == SecurityMode.TLS)
+                        request.CertificateFile = File.ReadAllBytes(LocalCertificateFile);
 
-                        // Send ReloadCryptoCache to service
+                    // Create the request
+                    using (requestStream = File.OpenWrite(saveFileDialog.FileName))
+                    {
+                        Serialization.Serialize(request, SerializationFormat.Binary, ref requestStream);
+                    }
+
+                    // Send ReloadCryptoCache to service
+                    if (SecurityMode == SecurityMode.Gateway)
                         ReloadServiceCryptoCache();
 
-                        // Save the associated device
-                        SaveDevice();
-                    }
+                    return true;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Acronym is a required field. Please provide value.");
+                string message = string.Format("Error creating authorization request: {0}", ex.Message);
+                Popup(message, "Subscription Request Error", MessageBoxImage.Error);
+                CommonFunctions.LogException(null, "Subscription Request", ex);
             }
+
+            return false;
         }
 
         // Gets the device from the database with the given acronym for the currently selected node.
@@ -583,40 +638,48 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         // Attempt to get the company acronym stored in the the configuration file.
         private bool TryGetCompanyAcronym(out string acronym)
         {
-            string configFileName;
-            FileStream configStream = null;
-            StreamReader configStreamReader = null;
-            XElement configRoot;
-            XElement systemSettings;
+            XDocument document;
+
+            // Initial value if acronym
+            // never gets set explicitly
+            acronym = null;
 
             try
             {
-                // Set up XML searching
-                configFileName = FilePath.GetAbsolutePath(AssemblyInfo.EntryAssembly.Location + ".config");
-                configStream = File.Open(configFileName, FileMode.Open, FileAccess.Read);
-                configStreamReader = new StreamReader(configStream);
-                configRoot = XElement.Parse(configStreamReader.ReadToEnd());
+                // Check all application config files for company info
+                foreach (string configFilePath in FilePath.GetFileList(FilePath.GetAbsolutePath("*.exe.config")))
+                {
+                    try
+                    {
+                        // Load the configuration file and search for CompanyAcronym
+                        document = XDocument.Load(configFilePath);
 
-                // Find company name and company acronym
-                systemSettings = configRoot.Element("categorizedSettings").Element("systemSettings");
-                acronym = systemSettings.Elements().Single(e => e.Attribute("name").Value == "CompanyAcronym").Attribute("value").Value;
+                        if ((object)document.Root != null)
+                        {
+                            acronym = document.Root
+                                .Descendants("systemSettings")
+                                .Elements("add")
+                                .Where(e => (string)e.Attribute("name") == "CompanyAcronym")
+                                .Select(e => (string)e.Attribute("value"))
+                                .SingleOrDefault();
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore exceptions here - simply check the next config file
+                    }
 
-                // Indicate success
-                return true;
+                    if ((object)acronym != null)
+                        break;
+                }
+
+                // Indicate success or failure
+                return ((object)acronym != null);
             }
             catch
             {
                 // Company info retrieval failed
-                acronym = null;
                 return false;
-            }
-            finally
-            {
-                if (configStreamReader != null)
-                    configStreamReader.Dispose();
-
-                if (configStream != null)
-                    configStream.Dispose();
             }
         }
 
@@ -671,6 +734,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 "localport=6175; transportprotocol=udp; commandChannel={{server={1}:{2}; interface=0.0.0.0}}; {3}";
 
             Device device;
+            DeviceUserControl deviceUserControl;
+
             SslPolicyErrors validPolicyErrors;
             X509ChainStatusFlags validChainFlags;
             string securitySpecificSettings = string.Empty;
@@ -698,14 +763,18 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
 
             device = new Device();
-            device.Acronym = Acronym.Replace(" ", "");
-            device.Name = Name;
+            device.Acronym = PublisherAcronym.Replace(" ", "");
+            device.Name = PublisherName;
             device.Enabled = false;
             device.IsConcentrator = true;
             device.ProtocolID = GetGatewayProtocolID();
             device.ConnectionString = string.Format(connectionStringFormat, SecurityMode, Hostname, Port, securitySpecificSettings);
 
             Device.Save(null, device);
+
+            device = Device.GetDevice(null, "WHERE Acronym = '" + device.Acronym + "'");
+            deviceUserControl = new DeviceUserControl(device);
+            CommonFunctions.LoadUserControl(deviceUserControl, "Manage Device Configuration");
         }
 
         // Get the Gateway Transport protocol ID by querying the database.

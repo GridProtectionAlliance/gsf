@@ -35,9 +35,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
 using GSF.Data;
 using GSF.IO;
@@ -45,6 +46,7 @@ using GSF.Security.Cryptography;
 using GSF.TimeSeries.Transport.UI.DataModels;
 using GSF.TimeSeries.Transport.UI.ViewModels;
 using GSF.TimeSeries.UI;
+using Microsoft.Win32;
 using Application = System.Windows.Application;
 using DataGrid = System.Windows.Controls.DataGrid;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -62,6 +64,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         #region [ Members ]
 
         private readonly Subscribers m_dataContext;
+        private string m_sharedSecret;
         private string m_key;
         private string m_iv;
 
@@ -123,11 +126,9 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
                 m_acronymField.IsReadOnly = isAdmin;
                 m_nameField.IsReadOnly = isAdmin;
-                m_sharedSecretField.IsReadOnly = isAdmin;
-                m_authenticationID.IsReadOnly = isAdmin;
                 m_validIpAddressesField.IsReadOnly = isAdmin;
                 m_enablePGConnection.IsEnabled = !isAdmin;
-                m_buttonClick.IsEnabled = !isAdmin;
+                ImportButton.IsEnabled = !isAdmin;
                 m_footerControl.IsEnabled = !isAdmin;
             }
             catch
@@ -171,7 +172,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             {
                 if (m_dataContext.SecurityMode == SecurityMode.Gateway)
                 {
-                    if (string.IsNullOrWhiteSpace(m_sharedSecretField.Text) || string.IsNullOrWhiteSpace(m_key) || string.IsNullOrWhiteSpace(m_iv))
+                    if (string.IsNullOrWhiteSpace(m_sharedSecret) || string.IsNullOrWhiteSpace(m_key) || string.IsNullOrWhiteSpace(m_iv))
                     {
                         MessageBox.Show("Failed to import key and initialization vectors for associated shared secret - these fields cannot be blank.", "Crypto Key Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         e.Cancel = true;
@@ -179,7 +180,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                     else
                     {
                         // Import key and initialization vector for subscriber into common crypto cache
-                        if (ImportCipherKey(m_sharedSecretField.Text.Trim(), 256, m_key.Trim() + "|" + m_iv.Trim()))
+                        if (ImportCipherKey(m_sharedSecret.Trim(), 256, m_key.Trim() + "|" + m_iv.Trim()))
                         {
                             ReloadServiceCryptoCache();
                             Cipher.ReloadCache();
@@ -189,6 +190,36 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                             MessageBox.Show("Failed to import key and initialization vectors for associated shared secret.", "Crypto Key Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             e.Cancel = true;
                         }
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        if (SelfSignedCheckBox.IsChecked == true)
+                        {
+                            // If remote certificate is self-signed, ensure that we expect
+                            // UntrustedRoot error to occur during certificate validation
+                            m_dataContext.CurrentItem.ValidPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
+                            m_dataContext.CurrentItem.ValidChainFlags |= X509ChainStatusFlags.UntrustedRoot;
+                        }
+
+                        if ((object)m_dataContext.RemoteCertificateTempPath != null && File.Exists(m_dataContext.RemoteCertificateTempPath))
+                        {
+                            // If an srq file was imported to populate the fields on this page,
+                            // then we will need to copy the attached certificate file from the
+                            // temp folder to the correct location
+                            File.Move(m_dataContext.RemoteCertificateTempPath, FilePath.GetAbsolutePath(m_dataContext.CurrentItem.RemoteCertificateFile));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        const string errorMessage = "Successfully imported subscription request, but was" +
+                            " unable to copy remote certificate to the path you specified. Check that" +
+                            " you have the necessary folder and file permissions to write to that directory.";
+
+                        CommonFunctions.LogException(null, "Import Subscription Request", ex);
+                        MessageBox.Show(errorMessage, "Import Subscription Request Error");
                     }
                 }
             }
@@ -292,32 +323,55 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Event arguments.</param>
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void ImportButton_Click(object sender, RoutedEventArgs e)
         {
-            AuthenticationRequest m_request = new AuthenticationRequest();
             OpenFileDialog openFileDialog = new OpenFileDialog();
+            AuthenticationRequest request;
+            string tempFilePath;
 
-            openFileDialog.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
-            openFileDialog.DefaultExt = ".xml";
-            DialogResult res = openFileDialog.ShowDialog();
+            openFileDialog.DefaultExt = ".srq";
+            openFileDialog.Filter = @"Subscription Requests|*.srq|All Files (*.*)|*.*";
 
-            if (res != DialogResult.Cancel)
+            if (openFileDialog.ShowDialog() == true)
             {
-                m_request = Serialization.Deserialize<AuthenticationRequest>(File.ReadAllBytes(openFileDialog.FileName), SerializationFormat.Xml);
+                // Deserialize subscription request file
+                using (FileStream requestStream = File.OpenRead(openFileDialog.FileName))
+                {
+                    request = Serialization.Deserialize<AuthenticationRequest>(requestStream, SerializationFormat.Binary);
+                }
 
-                Subscriber subscriber = new Subscriber
-                    {
-                    //NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key,
-                    Acronym = m_request.Acronym.ToUpper(),
-                    Name = m_request.Name,
-                    SharedSecret = m_request.SharedSecret,
-                    AuthKey = m_request.AuthenticationID,
-                    ValidIPAddresses = m_request.ValidIPAddresses
+                // Load parameters that are not specific to a particular security mode
+                Subscriber subscriber = new Subscriber()
+                {
+                    Acronym = request.Acronym.ToUpper(),
+                    Name = request.Name,
+                    ValidIPAddresses = request.ValidIPAddresses
                 };
 
                 m_dataContext.CurrentItem = subscriber;
-                m_key = m_request.Key;
-                m_iv = m_request.IV;
+
+                if ((object)request.CertificateFile == null)
+                {
+                    // No certificate file means Gateway security mode
+                    m_dataContext.SecurityMode = SecurityMode.Gateway;
+
+                    subscriber.SharedSecret = request.SharedSecret;
+                    subscriber.AuthKey = request.AuthenticationID;
+                    m_sharedSecret = request.SharedSecret;
+                    m_key = request.Key;
+                    m_iv = request.IV;
+                }
+                else
+                {
+                    // Certificate means TLS security mode
+                    m_dataContext.SecurityMode = SecurityMode.TLS;
+
+                    subscriber.RemoteCertificateFile = FilePath.GetAbsolutePath(string.Format("{0}.cer", request.Acronym.ToUpper()));
+
+                    tempFilePath = Path.GetTempFileName();
+                    m_dataContext.RemoteCertificateTempPath = tempFilePath;
+                    File.WriteAllBytes(tempFilePath, request.CertificateFile);
+                }
             }
             else
             {
@@ -325,18 +379,23 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             }
         }
 
-        private void btnBrowse_Click(object sender, RoutedEventArgs e)
+        private void RemoteCertificateBrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            FileDialog fileDialog;
 
-            openFileDialog.FileName = m_dataContext.CurrentItem.RemoteCertificateFile;
-            openFileDialog.DefaultExt = ".cer";
-            openFileDialog.Filter = "Certificate files|*.cer|All Files|*.*";
+            if ((object)m_dataContext.RemoteCertificateTempPath != null && File.Exists(m_dataContext.RemoteCertificateTempPath))
+                fileDialog = new SaveFileDialog();
+            else
+                fileDialog = new OpenFileDialog();
 
-            if (openFileDialog.ShowDialog() == true)
+            fileDialog.FileName = m_dataContext.CurrentItem.RemoteCertificateFile;
+            fileDialog.DefaultExt = ".cer";
+            fileDialog.Filter = "Certificate files|*.cer|All Files|*.*";
+
+            if (fileDialog.ShowDialog() == true)
             {
                 if ((object)m_dataContext.CurrentItem != null)
-                    m_dataContext.CurrentItem.RemoteCertificateFile = openFileDialog.FileName;
+                    m_dataContext.CurrentItem.RemoteCertificateFile = fileDialog.FileName;
             }
             else
             {
@@ -350,14 +409,14 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         private void LoadCurrentKeyIV()
         {
             // After record has been loaded, load existing key and IV from crypto cache
-            if (string.IsNullOrWhiteSpace(m_sharedSecretField.Text))
+            if (string.IsNullOrWhiteSpace(m_sharedSecret))
             {
                 m_key = "";
                 m_iv = "";
             }
             else
             {
-                string keyIV = Cipher.ExportKeyIV(m_sharedSecretField.Text, 256);
+                string keyIV = Cipher.ExportKeyIV(m_sharedSecret, 256);
                 string[] parts = keyIV.Split('|');
 
                 m_key = parts[0];

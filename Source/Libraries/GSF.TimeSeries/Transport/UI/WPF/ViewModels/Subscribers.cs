@@ -58,6 +58,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private readonly object m_subscriberStatusQueryLock;
         private readonly List<Guid> m_subscriberIDs;
         private SecurityMode m_securityMode;
+        private string m_remoteCertificateTempPath;
 
         // Delegates
 
@@ -213,6 +214,21 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             get
             {
                 return m_securityMode == SecurityMode.Gateway;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the temp file where the imported subscriber certificate is written.
+        /// </summary>
+        public string RemoteCertificateTempPath
+        {
+            get
+            {
+                return m_remoteCertificateTempPath;
+            }
+            set
+            {
+                m_remoteCertificateTempPath = value;
             }
         }
 

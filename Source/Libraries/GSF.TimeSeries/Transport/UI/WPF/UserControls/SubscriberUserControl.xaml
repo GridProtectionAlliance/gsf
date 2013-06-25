@@ -18,18 +18,23 @@
     </UserControl.Resources>
 
     <StackPanel Orientation="Vertical">
-        <StackPanel.Resources>
-            <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
-        </StackPanel.Resources>
-
-        <StackPanel Orientation="Vertical" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}" DataContextChanged="DetailView_DataContextChanged">
-            <GroupBox Header="Subscriber Info" HorizontalAlignment="Center">
+        <Grid HorizontalAlignment="Center" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}" DataContextChanged="DetailView_DataContextChanged">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            
+            <Button Grid.Row="0" Name="ImportButton" Content="Import SRQ..." Margin="10" Width="{StaticResource SmallerItemSize}" HorizontalAlignment="Left" Click="ImportButton_Click" />
+            
+            <GroupBox Grid.Row="1" Header="Subscriber Info">
                 <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5">
                     <Grid.BindingGroup>
                         <BindingGroup Name="input"/>
                     </Grid.BindingGroup>
 
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
@@ -48,17 +53,21 @@
                     <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=Name}" Name="m_nameField"/>
 
                     <!--Second Row-->
-                    <Label Grid.Row="1" Grid.Column="0" Content="Security mode" />
-                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="5" DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext}">
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Valid IP Addresses"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Width="480" Text="{tsfBinding:Column Path=ValidIPAddresses}" Name="m_validIpAddressesField"/>
+                    
+                    <!--Third Row-->
+                    <Label Grid.Row="2" Grid.Column="0" Content="Security mode" />
+                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="5" DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext}">
                         <RadioButton Name="TlsRadioButton" GroupName="SecurityMode" Content="TLS" IsChecked="True" Checked="SecurityModeRadioButton_Checked"/>
                         <RadioButton Name="GatewayRadioButton" GroupName="SecurityMode" Content="Gateway" Checked="SecurityModeRadioButton_Checked"/>
                     </StackPanel>
-                    <CheckBox Grid.Row="1" Grid.Column="3" Content="Enable PG Connection" IsChecked="{tsfBinding:Column Path=Enabled}" Name="m_enablePGConnection" />
+                    <CheckBox Grid.Row="2" Grid.Column="3" Content="Enable PG Connection" IsChecked="{tsfBinding:Column Path=Enabled}" Name="m_enablePGConnection" />
 
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="TLS" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext.TransportLayerSecuritySelected}" HorizontalAlignment="Center">
+            <GroupBox Grid.Row="2" Header="TLS" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext.TransportLayerSecuritySelected}">
                 <StackPanel HorizontalAlignment="Center">
                     <Grid Margin="0,20,0,0" HorizontalAlignment="Center">
                         <Grid.RowDefinitions>
@@ -77,8 +86,8 @@
                         <Label Grid.Row="0" Grid.Column="0" Content="Remote certificate" />
                         <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
                             <TextBox Width="{StaticResource XXLargeItemSize}" Text="{Binding Mode=TwoWay, Path=RemoteCertificateFile}"/>
-                            <Button Height="25" Content="Browse..." Click="btnBrowse_Click" Name="m_buttonBrowseClick"/>
-                            <CheckBox Content="Self-signed?" IsChecked="{Binding Mode=TwoWay, Path=RemoteCertificateIsSelfSigned}"/>
+                            <Button Name="RemoteCertificateBrowseButton" Height="25" Content="Browse..." Click="RemoteCertificateBrowseButton_Click" />
+                            <CheckBox Name="SelfSignedCheckBox" Margin="10,0,0,0" Content="Self-signed?" IsChecked="{Binding Mode=TwoWay, Path=RemoteCertificateIsSelfSigned}"/>
                         </StackPanel>
 
                         <!--Second Row-->
@@ -89,39 +98,7 @@
                     </Grid>
                 </StackPanel>
             </GroupBox>
-
-            <GroupBox Header="Gateway" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext.GatewaySecuritySelected}" HorizontalAlignment="Center">
-                <StackPanel HorizontalAlignment="Center">
-                    <Grid Margin="0,20,0,0" HorizontalAlignment="Center">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <!--First Row-->
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Pre-shared Key"/>
-                        <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=SharedSecret}" Name="m_sharedSecretField"/>
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="Identity Certificate"/>
-                        <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=AuthKey}" Name="m_authenticationID"/>
-
-                        <!--Second Row-->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Valid IP Addresses"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Width="480" Text="{tsfBinding:Column Path=ValidIPAddresses}" Name="m_validIpAddressesField"/>
-
-                        <!--Third Row-->
-                        <Button Grid.Row="2" Grid.RowSpan="4" Grid.Column="0" Grid.ColumnSpan="1" Content="Import" Click="Button_Click" Name="m_buttonClick"/>
-                    </Grid>
-                </StackPanel>
-            </GroupBox>
-        </StackPanel>
+        </Grid>
 
         <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
                 SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" Name="m_footerControl"/>

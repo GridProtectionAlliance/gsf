@@ -63,6 +63,7 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_authenticated;
         private volatile byte[][][] m_keyIVs;
         private volatile int m_cipherIndex;
+        private List<IPAddress> m_validIPAddresses;
         private IPAddress m_ipAddress;
         private IServer m_commandChannel;
         private UdpServer m_dataChannel;
@@ -453,6 +454,21 @@ namespace GSF.TimeSeries.Transport
             get
             {
                 return m_lastCipherKeyUpdateTime;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the list of valid IP addresses that this client can connect from.
+        /// </summary>
+        public List<IPAddress> ValidIPAddresses
+        {
+            get
+            {
+                return m_validIPAddresses;
+            }
+            set
+            {
+                m_validIPAddresses = value;
             }
         }
 

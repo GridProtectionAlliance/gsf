@@ -2019,8 +2019,40 @@ namespace GSF.TimeSeries.Transport
                     connection.SubscriberID = Guid.Parse(subscriber["ID"].ToNonNullString(Guid.Empty.ToString()).Trim());
                     connection.SubscriberAcronym = subscriber["Acronym"].ToNonNullString().Trim();
                     connection.SubscriberName = subscriber["Name"].ToNonNullString().Trim();
+                    connection.ValidIPAddresses = ParseAddressList(subscriber["ValidIPAddresses"].ToNonNullString());
                 }
             }
+        }
+
+        // Parses a list of IP addresses.
+        private List<IPAddress> ParseAddressList(string addressList)
+        {
+            string[] splitList = addressList.Split(';', ',');
+            List<IPAddress> ipAddressList = new List<IPAddress>();
+            IPAddress ipAddress;
+            string dualStackAddress;
+
+            foreach (string address in splitList)
+            {
+                // Attempt to parse the IP address
+                if (!IPAddress.TryParse(address.Trim(), out ipAddress))
+                    continue;
+
+                // Add the parsed address to the list
+                ipAddressList.Add(ipAddress);
+
+                // IPv4 addresses may connect as an IPv6 dual-stack equivalent,
+                // so attempt to add that equivalent address to the list as well
+                if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    dualStackAddress = string.Format("::ffff:{0}", address.Trim());
+
+                    if (IPAddress.TryParse(dualStackAddress, out ipAddress))
+                        ipAddressList.Add(ipAddress);
+                }
+            }
+
+            return ipAddressList;
         }
 
         // Update certificate validation routine.
@@ -2454,27 +2486,9 @@ namespace GSF.TimeSeries.Transport
                 // Subscriber connection is first referenced by its IP
                 foreach (DataRow row in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
                 {
-                    // Attempt to parse the defined valid IP addresses of this subscriber
-                    IEnumerable<IPAddress> ipAddresses = row["ValidIPAddresses"].ToNonNullString().Split(';', ',').Select(ip =>
-                    {
-                        IPAddress address = null;
-
-                        if (!string.IsNullOrWhiteSpace(ip))
-                            IPAddress.TryParse(ip.Trim(), out address);
-
-                        return address;
-
-                    }).Where(ip => (object)ip != null);
-
                     // See if any of these IP addresses match the connection source of the subscriber
-                    foreach (IPAddress ipAddress in ipAddresses)
-                    {
-                        if (connection.IPAddress.Equals(ipAddress))
-                        {
-                            subscriber = row;
-                            break;
-                        }
-                    }
+                    if (Enumerable.Contains(ParseAddressList(row["ValidIPAddresses"].ToNonNullString()), connection.IPAddress))
+                        subscriber = row;
 
                     if ((object)subscriber != null)
                         break;
@@ -3314,9 +3328,11 @@ namespace GSF.TimeSeries.Transport
             ClientConnection connection = new ClientConnection(this, clientID, m_commandChannel);
 
             if (m_securityMode == SecurityMode.TLS)
+            {
                 TryFindClientDetails(connection);
+                connection.Authenticated = connection.ValidIPAddresses.Contains(connection.IPAddress);
+            }
 
-            connection.Authenticated = (m_securityMode == SecurityMode.TLS);
             m_clientConnections[clientID] = connection;
 
             OnStatusMessage("Client connected to command channel.");
@@ -3328,6 +3344,16 @@ namespace GSF.TimeSeries.Transport
                     // Send any queued notifications to authenticated client
                     SendNotifications(connection);
                 }
+            }
+            else if (m_securityMode == SecurityMode.TLS)
+            {
+                const string errorFormat = "Unable to authenticate client. Client connected using" +
+                    " certificate of subscriber \"{0}\", however the IP address used ({1}) was" +
+                    " not found among the list of valid IP addresses.";
+
+                string errorMessage = string.Format(errorFormat, connection.SubscriberName, connection.IPAddress);
+
+                OnProcessException(new InvalidOperationException(errorMessage));
             }
         }
 

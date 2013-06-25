@@ -23,7 +23,7 @@
 //
 //******************************************************************************************************
 
-using System.ServiceModel;
+using System;
 using System.Xml.Serialization;
 
 namespace GSF.TimeSeries.UI
@@ -31,18 +31,24 @@ namespace GSF.TimeSeries.UI
     /// <summary>
     /// Represents a subscriber authentication request.
     /// </summary>
-    [XmlSerializerFormat]
+    [Serializable]
     public class AuthenticationRequest
     {
         #region [ Members ]
 
+        // Subscriber info
         private string m_acronym;
         private string m_name;
+        private string m_validIPAddresses;
+
+        // Gateway security info
         private string m_sharedSecret;
         private string m_authenticationID;
-        private string m_validIPAddresses;
         private string m_key;
         private string m_iv;
+
+        // TLS security info
+        private byte[] m_certificateFile;
 
         #endregion
 
@@ -51,7 +57,6 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Gets or sets the suggested subscriber acronym.
         /// </summary>
-        [XmlElement]
         public string Acronym
         {
             get
@@ -67,7 +72,6 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Gets or sets the suggested subscriber name.
         /// </summary>
-        [XmlElement]
         public string Name
         {
             get
@@ -81,9 +85,23 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
+        /// Gets or sets the list of valid IP addresses for the subscriber.
+        /// </summary>
+        public string ValidIPAddresses
+        {
+            get
+            {
+                return m_validIPAddresses;
+            }
+            set
+            {
+                m_validIPAddresses = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the shared secret for the subscriber.
         /// </summary>
-        [XmlElement]
         public string SharedSecret
         {
             get
@@ -99,7 +117,6 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Gets or sets the authentication ID for the subscriber.
         /// </summary>
-        [XmlElement]
         public string AuthenticationID
         {
             get
@@ -113,25 +130,8 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
-        /// Gets or sets the list of valid IP addresses for the subscriber.
-        /// </summary>
-        [XmlElement]
-        public string ValidIPAddresses
-        {
-            get
-            {
-                return m_validIPAddresses;
-            }
-            set
-            {
-                m_validIPAddresses = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the cryptographic key for the subscriber.
         /// </summary>
-        [XmlElement]
         public string Key
         {
             get
@@ -147,7 +147,6 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Gets or sets the cryptographic initialization vector for the subscriber.
         /// </summary>
-        [XmlElement]
         public string IV
         {
             get
@@ -157,6 +156,21 @@ namespace GSF.TimeSeries.UI
             set
             {
                 m_iv = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the file data loaded from the certificate for this subscriber.
+        /// </summary>
+        public byte[] CertificateFile
+        {
+            get
+            {
+                return m_certificateFile;
+            }
+            set
+            {
+                m_certificateFile = value;
             }
         }
 
