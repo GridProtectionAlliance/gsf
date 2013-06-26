@@ -535,6 +535,11 @@ namespace GSF.TimeSeries.Transport
         public const bool DefaultAllowSynchronizedSubscription = true;
 
         /// <summary>
+        /// Default value for <see cref="AllowMetadataRefresh"/>.
+        /// </summary>
+        public const bool DefaultAllowMetadataRefresh = true;
+
+        /// <summary>
         /// Default value for <see cref="UseBaseTimeOffsets"/>.
         /// </summary>
         public const bool DefaultUseBaseTimeOffsets = false;
@@ -589,6 +594,7 @@ namespace GSF.TimeSeries.Transport
         private int m_compressionStrength;
         private bool m_allowPayloadCompression;
         private bool m_allowSynchronizedSubscription;
+        private bool m_allowMetadataRefresh;
         private bool m_useBaseTimeOffsets;
 
         private long m_totalBytesSent;
@@ -631,6 +637,7 @@ namespace GSF.TimeSeries.Transport
             m_compressionStrength = DefaultCompressionStrength;
             m_allowPayloadCompression = DefaultAllowPayloadCompression;
             m_allowSynchronizedSubscription = DefaultAllowSynchronizedSubscription;
+            m_allowMetadataRefresh = DefaultAllowMetadataRefresh;
             m_useBaseTimeOffsets = DefaultUseBaseTimeOffsets;
             m_metadataTables = DefaultMetadataTables;
 
@@ -800,6 +807,24 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_allowSynchronizedSubscription = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that indicates if this publisher will allow synchronized subscriptions when requested by subscribers.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that indicates if this publisher will allow metadata refresh commands when requested by subscribers."),
+        DefaultValue(DefaultAllowMetadataRefresh)]
+        public bool AllowMetadataRefresh
+        {
+            get
+            {
+                return m_allowMetadataRefresh;
+            }
+            set
+            {
+                m_allowMetadataRefresh = value;
             }
         }
 
@@ -1277,6 +1302,10 @@ namespace GSF.TimeSeries.Transport
             // Check flag to see if synchronized subscriptions are allowed
             if (settings.TryGetValue("allowSynchronizedSubscription", out setting))
                 m_allowSynchronizedSubscription = setting.ParseBoolean();
+
+            // Check flag to see if metadata refresh commands are allowed
+            if (settings.TryGetValue("allowMetadataRefresh", out setting))
+                m_allowMetadataRefresh = setting.ParseBoolean();
 
             if (settings.TryGetValue("useBaseTimeOffsets", out setting))
                 m_useBaseTimeOffsets = setting.ParseBoolean();
@@ -2878,6 +2907,10 @@ namespace GSF.TimeSeries.Transport
 
             try
             {
+                // Ensure that the subscriber is allowed to request metadata
+                if (!m_allowMetadataRefresh)
+                    throw new InvalidOperationException("Metadata refresh has been disallowed by the DataPublisher.");
+
                 using (AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings"))
                 {
                     IDbConnection dbConnection = adoDatabase.Connection;
@@ -2960,7 +2993,7 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 message = "Failed to transfer meta-data due to exception: " + ex.Message;
-                SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.Subscribe, message);
+                SendClientResponse(clientID, ServerResponse.Failed, ServerCommand.MetaDataRefresh, message);
                 OnProcessException(new InvalidOperationException(message, ex));
             }
         }
