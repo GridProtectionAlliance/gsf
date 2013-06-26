@@ -210,7 +210,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                             // If an srq file was imported to populate the fields on this page,
                             // then we will need to copy the attached certificate file from the
                             // temp folder to the correct location
-                            File.Move(m_dataContext.RemoteCertificateTempPath, FilePath.GetAbsolutePath(m_dataContext.CurrentItem.RemoteCertificateFile));
+                            File.Copy(m_dataContext.RemoteCertificateTempPath, FilePath.GetAbsolutePath(m_dataContext.CurrentItem.RemoteCertificateFile));
                         }
                     }
                     catch (Exception ex)
