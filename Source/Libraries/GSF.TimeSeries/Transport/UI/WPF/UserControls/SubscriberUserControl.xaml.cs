@@ -64,7 +64,6 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         #region [ Members ]
 
         private readonly Subscribers m_dataContext;
-        private string m_sharedSecret;
         private string m_key;
         private string m_iv;
 
@@ -170,9 +169,11 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         {
             try
             {
+                string sharedSecret = m_dataContext.CurrentItem.SharedSecret;
+
                 if (m_dataContext.SecurityMode == SecurityMode.Gateway)
                 {
-                    if (string.IsNullOrWhiteSpace(m_sharedSecret) || string.IsNullOrWhiteSpace(m_key) || string.IsNullOrWhiteSpace(m_iv))
+                    if (string.IsNullOrWhiteSpace(sharedSecret) || string.IsNullOrWhiteSpace(m_key) || string.IsNullOrWhiteSpace(m_iv))
                     {
                         MessageBox.Show("Failed to import key and initialization vectors for associated shared secret - these fields cannot be blank.", "Crypto Key Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         e.Cancel = true;
@@ -180,7 +181,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                     else
                     {
                         // Import key and initialization vector for subscriber into common crypto cache
-                        if (ImportCipherKey(m_sharedSecret.Trim(), 256, m_key.Trim() + "|" + m_iv.Trim()))
+                        if (ImportCipherKey(sharedSecret.Trim(), 256, m_key.Trim() + "|" + m_iv.Trim()))
                         {
                             ReloadServiceCryptoCache();
                             Cipher.ReloadCache();
@@ -357,7 +358,6 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
                     subscriber.SharedSecret = request.SharedSecret;
                     subscriber.AuthKey = request.AuthenticationID;
-                    m_sharedSecret = request.SharedSecret;
                     m_key = request.Key;
                     m_iv = request.IV;
                 }
@@ -408,15 +408,17 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         /// </summary>
         private void LoadCurrentKeyIV()
         {
+            string sharedSecret = m_dataContext.CurrentItem.SharedSecret;
+
             // After record has been loaded, load existing key and IV from crypto cache
-            if (string.IsNullOrWhiteSpace(m_sharedSecret))
+            if (string.IsNullOrWhiteSpace(sharedSecret))
             {
                 m_key = "";
                 m_iv = "";
             }
             else
             {
-                string keyIV = Cipher.ExportKeyIV(m_sharedSecret, 256);
+                string keyIV = Cipher.ExportKeyIV(sharedSecret, 256);
                 string[] parts = keyIV.Split('|');
 
                 m_key = parts[0];
