@@ -258,7 +258,6 @@ namespace GSF.TimeSeries.UI
 
                 if (settings.ContainsKey("remotestatusserverconnectionstring"))
                 {
-                    //s_remoteStatusServerConnectionString = settings["remotestatusserverconnectionstring"];
                     Dictionary<string, string> serviceSettings;
 
                     s_serviceConnectionString = settings["remotestatusserverconnectionstring"];

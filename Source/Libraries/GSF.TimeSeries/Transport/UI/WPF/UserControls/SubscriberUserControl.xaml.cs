@@ -105,30 +105,35 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             {
                 using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
                 {
-                    Dictionary<string, string> settings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-                    settings = database.ServiceConnectionString().ParseKeyValuePairs();
-                    IPAddress[] hostIPs = null;
-                    if (settings.ContainsKey("server"))
-                        hostIPs = Dns.GetHostAddresses(settings["server"].Split(':')[0]);
+                    Dictionary<string, string> settings;
+                    string server;
 
-                    IEnumerable<IPAddress> localIPs = Dns.GetHostAddresses("localhost").Concat(Dns.GetHostAddresses(Dns.GetHostName()));
+                    IPAddress[] hostIPs = null;
+                    IEnumerable<IPAddress> localIPs;
+
+                    settings = database.DataPublisherConnectionString().ToNonNullString().ParseKeyValuePairs();
+
+                    if (settings.TryGetValue("server", out server))
+                        hostIPs = Dns.GetHostAddresses(server.Split(':')[0]);
+
+                    localIPs = Dns.GetHostAddresses("localhost").Concat(Dns.GetHostAddresses(Dns.GetHostName()));
 
                     // Check to see if entered host name corresponds to a local IP address
-                    if (hostIPs == null)
-                        MessageBox.Show("Failed to find service host address. Secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Authorize Subcriber", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    if ((object)hostIPs == null)
+                        MessageBox.Show("Failed to find service host address. If using Gateway security, secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Authorize Subcriber", MessageBoxButton.OK, MessageBoxImage.Warning);
                     else if (!hostIPs.Any(ip => localIPs.Contains(ip)))
-                        MessageBox.Show("Secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Authorize Subscriber", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show("If using Gateway security, secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Authorize Subscriber", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 
                 // If the user is not an Administrator, then the following properties for these controls are readonly and not enable
-                bool isAdmin = CommonFunctions.CurrentPrincipal.IsInRole("Administrator") ? false : true;
+                bool isAdmin = CommonFunctions.CurrentPrincipal.IsInRole("Administrator");
 
-                m_acronymField.IsReadOnly = isAdmin;
-                m_nameField.IsReadOnly = isAdmin;
-                m_validIpAddressesField.IsReadOnly = isAdmin;
-                m_enablePGConnection.IsEnabled = !isAdmin;
-                ImportButton.IsEnabled = !isAdmin;
-                m_footerControl.IsEnabled = !isAdmin;
+                AcronymField.IsReadOnly = !isAdmin;
+                NameField.IsReadOnly = !isAdmin;
+                ValidIpAddressesField.IsReadOnly = !isAdmin;
+                EnablePGConnectionCheckBox.IsEnabled = isAdmin;
+                ImportButton.IsEnabled = isAdmin;
+                FooterControl.IsEnabled = isAdmin;
             }
             catch
             {

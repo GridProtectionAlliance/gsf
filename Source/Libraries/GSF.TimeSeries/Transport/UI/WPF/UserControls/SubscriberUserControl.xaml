@@ -48,13 +48,13 @@
 
                     <!--First Row-->
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Acronym"/>
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" Name="m_acronymField" CharacterCasing="Upper"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" Name="AcronymField" CharacterCasing="Upper"/>
                     <TextBlock Grid.Row="0" Grid.Column="2" Text="Name"/>
-                    <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=Name}" Name="m_nameField"/>
+                    <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=Name}" Name="NameField"/>
 
                     <!--Second Row-->
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Valid IP Addresses"/>
-                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Width="480" Text="{tsfBinding:Column Path=ValidIPAddresses}" Name="m_validIpAddressesField"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Width="480" Text="{tsfBinding:Column Path=ValidIPAddresses}" Name="ValidIpAddressesField"/>
                     
                     <!--Third Row-->
                     <Label Grid.Row="2" Grid.Column="0" Content="Security mode" />
@@ -62,7 +62,7 @@
                         <RadioButton Name="TlsRadioButton" GroupName="SecurityMode" Content="TLS" IsChecked="True" Checked="SecurityModeRadioButton_Checked"/>
                         <RadioButton Name="GatewayRadioButton" GroupName="SecurityMode" Content="Gateway" Checked="SecurityModeRadioButton_Checked"/>
                     </StackPanel>
-                    <CheckBox Grid.Row="2" Grid.Column="3" Content="Enable PG Connection" IsChecked="{tsfBinding:Column Path=Enabled}" Name="m_enablePGConnection" />
+                    <CheckBox Grid.Row="2" Grid.Column="3" Content="Enable PG Connection" IsChecked="{tsfBinding:Column Path=Enabled}" Name="EnablePGConnectionCheckBox" />
 
                 </Grid>
             </GroupBox>
@@ -101,7 +101,7 @@
         </Grid>
 
         <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
-                SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" Name="m_footerControl"/>
+                SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" Name="FooterControl"/>
 
         <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
                       Sorting="DataGrid_Sorting" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}">

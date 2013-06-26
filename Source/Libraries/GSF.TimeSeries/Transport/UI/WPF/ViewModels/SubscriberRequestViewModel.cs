@@ -39,7 +39,6 @@ using GSF.Data;
 using GSF.IO;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.UserControls;
-using GSF.Reflection;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
@@ -56,8 +55,16 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private string m_publisherAcronym;
         private string m_publisherName;
         private string m_hostname;
-        private int m_port;
+        private int m_publisherPort;
         private SecurityMode m_securityMode;
+
+        private string m_subscriberAcronym;
+        private string m_subscriberName;
+        private int m_internalDataPublisherPort;
+
+        private string m_sharedKey;
+        private string m_identityCertificate;
+        private string m_validIPAddresses;
 
         private string m_localCertificateFile;
         private string m_remoteCertificateFile;
@@ -65,15 +72,9 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private string m_validPolicyErrors;
         private string m_validChainFlags;
 
-        private string m_sharedKey;
-        private string m_identityCertificate;
-        private string m_validIPAddresses;
-
         private ICommand m_localBrowseCommand;
         private ICommand m_remoteBrowseCommand;
         private ICommand m_createCommand;
-        private string m_subscriberAcronym;
-        private string m_subscriberName;
 
         #endregion
 
@@ -84,8 +85,9 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// </summary>
         public SubscriberRequestViewModel()
         {
-            m_port = 6172;
+            m_internalDataPublisherPort = 6170;
             m_securityMode = SecurityMode.TLS;
+            m_publisherPort = DefaultPort;
             Load();
         }
 
@@ -144,16 +146,16 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <summary>
         /// Gets or sets the port that the data publisher is listening on.
         /// </summary>
-        public int Port
+        public int PublisherPort
         {
             get
             {
-                return m_port;
+                return m_publisherPort;
             }
             set
             {
-                m_port = value;
-                OnPropertyChanged("Port");
+                m_publisherPort = value;
+                OnPropertyChanged("PublisherPort");
             }
         }
 
@@ -168,10 +170,35 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
             set
             {
+                int oldDefaultPort = DefaultPort;
+
                 m_securityMode = value;
                 OnPropertyChanged("SecurityMode");
                 OnPropertyChanged("TransportLayerSecuritySelected");
                 OnPropertyChanged("GatewaySecuritySelected");
+
+                if (m_publisherPort == oldDefaultPort)
+                    PublisherPort = DefaultPort;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the port used by the internal data publisher.
+        /// </summary>
+        public int InternalDataPublisherPort
+        {
+            get
+            {
+                return m_internalDataPublisherPort;
+            }
+            set
+            {
+                int oldDefaultPort = DefaultPort;
+
+                m_internalDataPublisherPort = value;
+
+                if (m_publisherPort == oldDefaultPort)
+                    PublisherPort = DefaultPort;
             }
         }
 
@@ -399,6 +426,17 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets the default port based on the current security mode selection.
+        /// </summary>
+        private int DefaultPort
+        {
+            get
+            {
+                return (m_securityMode == SecurityMode.Gateway) ? (m_internalDataPublisherPort + 1) : (m_internalDataPublisherPort + 2);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -453,21 +491,31 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
                 try
                 {
-                    Dictionary<string, string> settings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                    Dictionary<string, string> settings;
+                    string server;
+                    string[] splitServer;
+                    int dataPublisherPort;
+
                     IPAddress[] hostIPs = null;
                     IEnumerable<IPAddress> localIPs;
 
-                    settings = database.ServiceConnectionString().ParseKeyValuePairs();
+                    settings = database.DataPublisherConnectionString().ToNonNullString().ParseKeyValuePairs();
                     localIPs = Dns.GetHostAddresses("localhost").Concat(Dns.GetHostAddresses(Dns.GetHostName()));
 
-                    if (settings.ContainsKey("server"))
-                        hostIPs = Dns.GetHostAddresses(settings["server"].Split(':')[0]);
+                    if (settings.TryGetValue("server", out server))
+                    {
+                        splitServer = server.Split(':');
+                        hostIPs = Dns.GetHostAddresses(splitServer[0]);
+
+                        if (splitServer.Length > 1 && int.TryParse(splitServer[1], out dataPublisherPort))
+                            InternalDataPublisherPort = dataPublisherPort;
+                    }
 
                     // Check to see if entered host name corresponds to a local IP address
                     if (hostIPs == null)
-                        MessageBox.Show("Failed to find service host address. Secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Subscription Request", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show("Failed to find service host address. If using Gateway security, secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Subscription Request", MessageBoxButton.OK, MessageBoxImage.Warning);
                     else if (!hostIPs.Any(ip => localIPs.Contains(ip)))
-                        MessageBox.Show("Secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Subscription Request", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show("If using Gateway security, secure key exchange may not succeed." + Environment.NewLine + "Please make sure to run manager application with administrative privileges on the server where service is hosted.", "Subscription Request", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
                 catch
                 {
@@ -768,7 +816,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             device.Enabled = false;
             device.IsConcentrator = true;
             device.ProtocolID = GetGatewayProtocolID();
-            device.ConnectionString = string.Format(connectionStringFormat, SecurityMode, Hostname, Port, securitySpecificSettings);
+            device.ConnectionString = string.Format(connectionStringFormat, SecurityMode, Hostname, PublisherPort, securitySpecificSettings);
 
             Device.Save(null, device);
 

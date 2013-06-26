@@ -42,7 +42,7 @@
                 <Label Grid.Row="1" Grid.Column="0" Content="Hostname" />
                 <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=Hostname}" />
                 <Label Grid.Row="1" Grid.Column="2" Content="Port" />
-                <TextBox Grid.Row="1" Grid.Column="3" Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=Port}" />
+                <TextBox Grid.Row="1" Grid.Column="3" Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=PublisherPort}" />
 
                 <Label Grid.Row="2" Grid.Column="0" Content="Security mode" />
                 <StackPanel Grid.Row="2" Grid.Column="1" Margin="5">
