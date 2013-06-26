@@ -1766,7 +1766,7 @@ namespace GSF.TimeSeries.Transport
                     return true;
 
                 // If subscriber has been disabled or removed from the list of valid subscribers, they no longer have rights to any signals
-                if (!DataSource.Tables["Subscribers"].Select(string.Format("SubscriberID = {0} AND Enabled <> 0", subscriberID)).Any())
+                if (!DataSource.Tables["Subscribers"].Select(string.Format("SubscriberID = '{0}' AND Enabled <> 0", subscriberID)).Any())
                     return false;
 
                 // Look up explicitly defined individual measurements
@@ -2097,7 +2097,7 @@ namespace GSF.TimeSeries.Transport
             string message;
 
             // Determine if the connection has been disabled or removed - make sure to set authenticated to false if necessary
-            if (!DataSource.Tables["Subscribers"].Select(string.Format("SubscriberID = {0} AND Enabled <> 0", connection.SubscriberID)).Any())
+            if (!DataSource.Tables["Subscribers"].Select(string.Format("SubscriberID = '{0}' AND Enabled <> 0", connection.SubscriberID)).Any())
                 connection.Authenticated = false;
 
             if ((object)subscription != null)
