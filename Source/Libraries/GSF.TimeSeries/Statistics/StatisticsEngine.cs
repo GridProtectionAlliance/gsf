@@ -180,7 +180,7 @@ namespace GSF.TimeSeries.Statistics
         /// <summary>
         /// Starts the <see cref="StatisticsEngine"/> or restarts it if it is already running.
         /// </summary>
-        [AdapterCommand("Starts the statistics engine or restarts it if it is already running.")]
+        [AdapterCommand("Starts the statistics engine or restarts it if it is already running.", "Administrator", "Editor")]
         public override void Start()
         {
             base.Start();
@@ -192,7 +192,7 @@ namespace GSF.TimeSeries.Statistics
         /// <summary>
         /// Stops the <see cref="StatisticsEngine"/>.
         /// </summary>		
-        [AdapterCommand("Stops the statistics engine.")]
+        [AdapterCommand("Stops the statistics engine.", "Adminstrator", "Editor")]
         public override void Stop()
         {
             base.Stop();
@@ -202,7 +202,7 @@ namespace GSF.TimeSeries.Statistics
         /// <summary>
         /// Loads or reloads system statistics.
         /// </summary>
-        [AdapterCommand("Reloads system statistics."), SuppressMessage("Microsoft.Reliability", "CA2001"), SuppressMessage("Microsoft.Maintainability", "CA1502")]
+        [AdapterCommand("Reloads system statistics.", "Administrator", "Editor")]
         public void ReloadStatistics()
         {
             // Make sure setting exists to allow user to by-pass phasor data source validation at startup

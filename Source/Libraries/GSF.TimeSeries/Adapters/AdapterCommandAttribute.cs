@@ -41,6 +41,7 @@ namespace GSF.TimeSeries.Adapters
 
         // Fields
         private readonly string m_description;
+        private readonly string[] m_allowedRoles;
 
         #endregion
 
@@ -55,6 +56,17 @@ namespace GSF.TimeSeries.Adapters
             m_description = description;
         }
 
+        /// <summary>
+        /// Creates a new <see cref="AdapterCommandAttribute"/> with the specified <paramref name="description"/> value.
+        /// </summary>
+        /// <param name="description">Assigns the description for this adapter command.</param>
+        /// <param name="allowedRoles">Assigns the roles which are allowed to invoke this adapter command.</param>
+        public AdapterCommandAttribute(string description, params string[] allowedRoles)
+            : this(description)
+        {
+            m_allowedRoles = allowedRoles;
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -67,6 +79,17 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 return m_description;
+            }
+        }
+
+        /// <summary>
+        /// Gets the roles which are allowed to invoke this adapter command.
+        /// </summary>
+        public string[] AllowedRoles
+        {
+            get
+            {
+                return m_allowedRoles ?? new string[] { "Administrator" };
             }
         }
 

@@ -208,7 +208,7 @@ namespace PhasorProtocolAdapters
         /// </summary>
         /// <param name="connectionString">Connection string used to connect to phasor device.</param>
         /// <returns>A <see cref="IConfigurationFrame"/> if successful, -or- <c>null</c> if request failed.</returns>
-        [AdapterCommand("Connects to a phasor device and requests its configuration frame.")]
+        [AdapterCommand("Connects to a phasor device and requests its configuration frame.", "Administrator", "Editor")]
         public IConfigurationFrame RequestDeviceConfiguration(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString))

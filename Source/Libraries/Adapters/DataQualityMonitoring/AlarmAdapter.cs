@@ -198,7 +198,7 @@ namespace DataQualityMonitoring
         /// Gets a collection containing all the raised alarms in the system.
         /// </summary>
         /// <returns>A collection containing all the raised alarms.</returns>
-        [AdapterCommand("Gets a collection containing all the raised alarms in the system.")]
+        [AdapterCommand("Gets a collection containing all the raised alarms in the system.", "Administrator", "Editor", "Viewer")]
         public ICollection<Alarm> GetRaisedAlarms()
         {
             lock (m_alarms)
@@ -212,24 +212,13 @@ namespace DataQualityMonitoring
         /// Gets a collection containing raised alarms with the highest severity for each signal in the system. 
         /// </summary>
         /// <returns>A collection containing all the highest severity raised alarms.</returns>
-        [AdapterCommand("Gets a collection containing raised alarms with the highest severity for each signal in the system.")]
+        [AdapterCommand("Gets a collection containing raised alarms with the highest severity for each signal in the system.", "Administrator", "Editor", "Viewer")]
         public ICollection<Alarm> GetHighestSeverityAlarms()
         {
-            ICollection<Alarm> alarms = GetRaisedAlarms();
-            IEnumerable<Guid> signals = alarms.Select(a => a.SignalID).Distinct();
-            IEnumerable<Alarm> highestSeverityAlarms = new List<Alarm>();
-
-            IEnumerable<Alarm> filteredAlarms;
-            AlarmSeverity highestSeverity;
-
-            foreach (Guid signal in signals)
-            {
-                filteredAlarms = alarms.Where(a => a.SignalID == signal);
-                highestSeverity = filteredAlarms.Select(a => a.Severity).Max();
-                highestSeverityAlarms = highestSeverityAlarms.Concat(filteredAlarms.Where(a => a.Severity == highestSeverity)).ToList();
-            }
-
-            return highestSeverityAlarms.ToList();
+            return GetRaisedAlarms()
+                .GroupBy(alarm => alarm.SignalID)
+                .SelectMany(FilterToHighestSeverity)
+                .ToList();
         }
 
         /// <summary>
@@ -364,6 +353,13 @@ namespace DataQualityMonitoring
                     spinner.SpinOnce();
                 }
             }
+        }
+
+        // Get all the highest severity alarms in a list of alarms
+        private IEnumerable<Alarm> FilterToHighestSeverity(IEnumerable<Alarm> alarms)
+        {
+            AlarmSeverity highestSeverity = alarms.Max(alarm => alarm.Severity);
+            return alarms.Where(alarm => alarm.Severity == highestSeverity);
         }
 
         // Processes excpetions thrown by the alarm service.

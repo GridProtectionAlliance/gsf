@@ -838,7 +838,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Starts the <see cref="AdapterBase"/> or restarts it if it is already running.
         /// </summary>
-        [AdapterCommand("Starts the adapter or restarts it if it is already running.")]
+        [AdapterCommand("Starts the adapter or restarts it if it is already running.", "Administrator", "Editor")]
         public virtual void Start()
         {
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
@@ -860,7 +860,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Stops the <see cref="AdapterBase"/>.
         /// </summary>		
-        [AdapterCommand("Stops the adapter.")]
+        [AdapterCommand("Stops the adapter.", "Administrator", "Editor")]
         public virtual void Stop()
         {
             m_enabled = false;
@@ -885,7 +885,7 @@ namespace GSF.TimeSeries.Adapters
         /// Manually sets the initialized state of the <see cref="AdapterBase"/>.
         /// </summary>
         /// <param name="initialized">Desired initialized state.</param>
-        [AdapterCommand("Manually sets the initialized state of the adapter.")]
+        [AdapterCommand("Manually sets the initialized state of the adapter.", "Administrator", "Editor")]
         public virtual void SetInitializedState(bool initialized)
         {
             this.Initialized = initialized;
@@ -974,7 +974,7 @@ namespace GSF.TimeSeries.Adapters
         /// </list>
         /// </para>
         /// </remarks>
-        [AdapterCommand("Defines a temporal processing constraint for the adapter.")]
+        [AdapterCommand("Defines a temporal processing constraint for the adapter.", "Administrator", "Editor", "Viewer")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
             if (!string.IsNullOrWhiteSpace(startTime))

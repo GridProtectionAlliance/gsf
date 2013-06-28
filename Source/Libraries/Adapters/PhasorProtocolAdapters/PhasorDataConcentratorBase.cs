@@ -924,7 +924,7 @@ namespace PhasorProtocolAdapters
         /// to manually start the data channel, thus enabling the real-time data stream. If command channel
         /// is defined, it will be unaffected. 
         /// </remarks>
-        [AdapterCommand("Manually starts the real-time data stream.")]
+        [AdapterCommand("Manually starts the real-time data stream.", "Administrator", "Editor")]
         public virtual void StartDataChannel()
         {
             // Make sure publication channel is defined
@@ -971,7 +971,7 @@ namespace PhasorProtocolAdapters
         /// This method will allow host administrator to manually stop the data channel, thus disabling
         /// the real-time data stream. If command channel is defined, it will be unaffected.
         /// </remarks>
-        [AdapterCommand("Manually stops the real-time data stream.")]
+        [AdapterCommand("Manually stops the real-time data stream.", "Administrator", "Editor")]
         public virtual void StopDataChannel()
         {
             // Undefine publication channel. This effectively haults socket based data publication.
@@ -1113,7 +1113,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Reloads the configuration for this <see cref="PhasorDataConcentratorBase"/>.
         /// </summary>
-        [AdapterCommand("Reloads the phasor data concentrator configuration.")]
+        [AdapterCommand("Reloads the phasor data concentrator configuration.", "Administrator", "Editor")]
         public void UpdateConfiguration()
         {
             const int labelLength = 16;
@@ -1443,7 +1443,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
         /// </summary>
-        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.")]
+        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
         public virtual void ResetLifetimeCounters()
         {
             m_lifetimeMeasurements = 0L;

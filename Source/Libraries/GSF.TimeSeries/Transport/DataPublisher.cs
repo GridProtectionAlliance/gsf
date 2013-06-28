@@ -1460,7 +1460,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Enumerates connected clients.
         /// </summary>
-        [AdapterCommand("Enumerates connected clients.")]
+        [AdapterCommand("Enumerates connected clients.", "Administrator", "Editor", "Viewer")]
         public virtual void EnumerateClients()
         {
             StringBuilder clientEnumeration = new StringBuilder();
@@ -1491,7 +1491,7 @@ namespace GSF.TimeSeries.Transport
         /// Rotates cipher keys for specified client connection.
         /// </summary>
         /// <param name="clientIndex">Enumerated index for client connection.</param>
-        [AdapterCommand("Rotates cipher keys for client connection using its enumerated index.")]
+        [AdapterCommand("Rotates cipher keys for client connection using its enumerated index.", "Administrator")]
         public virtual void RotateCipherKeys(int clientIndex)
         {
             Guid clientID = Guid.Empty;
@@ -1522,7 +1522,7 @@ namespace GSF.TimeSeries.Transport
         /// Gets subscriber information for specified client connection.
         /// </summary>
         /// <param name="clientIndex">Enumerated index for client connection.</param>
-        [AdapterCommand("Gets subscriber information for client connection using its enumerated index.")]
+        [AdapterCommand("Gets subscriber information for client connection using its enumerated index.", "Administrator", "Editor", "Viewer")]
         public virtual string GetSubscriberInfo(int clientIndex)
         {
             Guid clientID = Guid.Empty;
@@ -1552,10 +1552,40 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Imports a certificate to the trusted certificates path.
+        /// </summary>
+        /// <param name="fileName">The file name to give to the certificate when imported.</param>
+        /// <param name="certificateData">The data to be written to the certificate file.</param>
+        /// <returns>The local path on the server where the file was written.</returns>
+        [AdapterCommand("Imports a certificate to the trusted certificates path.", "Administrator", "Editor")]
+        public virtual string ImportCertificate(string fileName, byte[] certificateData)
+        {
+            TlsServer commandChannel;
+            string trustedCertificatesPath;
+            string filePath;
+
+            commandChannel = m_commandChannel as TlsServer;
+
+            if ((object)commandChannel == null)
+                throw new InvalidOperationException("Certificates can only be imported in TLS security mode.");
+
+            trustedCertificatesPath = FilePath.GetAbsolutePath(commandChannel.TrustedCertificatesPath);
+            filePath = Path.Combine(trustedCertificatesPath, fileName);
+            filePath = FilePath.GetUniqueFilePathWithBinarySearch(filePath);
+
+            if (!Directory.Exists(trustedCertificatesPath))
+                Directory.CreateDirectory(trustedCertificatesPath);
+
+            File.WriteAllBytes(filePath, certificateData);
+
+            return filePath;
+        }
+
+        /// <summary>
         /// Gets subscriber status for specified subscriber ID.
         /// </summary>
         /// <param name="subscriberID">Guid based subscriber ID for client connection.</param>
-        [AdapterCommand("Gets subscriber status for client connection using its subscriber ID.")]
+        [AdapterCommand("Gets subscriber status for client connection using its subscriber ID.", "Administrator", "Editor", "Viewer")]
         public virtual Tuple<Guid, bool, string> GetSubscriberStatus(Guid subscriberID)
         {
             return new Tuple<Guid, bool, string>(subscriberID, GetConnectionProperty(subscriberID, cc => cc.IsConnected), GetConnectionProperty(subscriberID, cc => cc.SubscriberInfo));
@@ -1564,7 +1594,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
         /// </summary>
-        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.")]
+        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
         public virtual void ResetLifetimeCounters()
         {
             m_lifetimeMeasurements = 0L;
@@ -1579,7 +1609,7 @@ namespace GSF.TimeSeries.Transport
         /// Sends a notification to all subscribers.
         /// </summary>
         /// <param name="message">The message to be sent.</param>
-        [AdapterCommand("Sends a notification to all subscribers.")]
+        [AdapterCommand("Sends a notification to all subscribers.", "Administrator", "Editor")]
         public virtual void SendNotification(string message)
         {
             string notification = string.Format("[{0}] {1}", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), message);

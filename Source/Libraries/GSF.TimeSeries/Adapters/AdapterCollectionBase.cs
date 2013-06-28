@@ -1155,7 +1155,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Starts, or restarts, each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        [AdapterCommand("Starts, or restarts, each adapter in the collection.")]
+        [AdapterCommand("Starts, or restarts, each adapter in the collection.", "Administrator", "Editor")]
         public virtual void Start()
         {
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
@@ -1229,7 +1229,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Stops each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        [AdapterCommand("Stops each adapter in the collection.")]
+        [AdapterCommand("Stops each adapter in the collection.", "Administrator", "Editor")]
         public virtual void Stop()
         {
             m_enabled = false;
@@ -1263,7 +1263,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Resets the statistics of this collection.
         /// </summary>
-        [AdapterCommand("Resets the statistics of this collection.")]
+        [AdapterCommand("Resets the statistics of this collection.", "Administrator", "Editor")]
         public void ResetStatistics()
         {
             m_processedMeasurements = 0;
@@ -1344,7 +1344,7 @@ namespace GSF.TimeSeries.Adapters
         /// </list>
         /// </para>
         /// </remarks>
-        [AdapterCommand("Defines a temporal processing constraint for each adapter in the collection.")]
+        [AdapterCommand("Defines a temporal processing constraint for each adapter in the collection.", "Administrator", "Editor", "Viewer")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
             if (!string.IsNullOrWhiteSpace(startTime))

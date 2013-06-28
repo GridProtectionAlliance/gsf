@@ -1041,7 +1041,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Starts the <see cref="ActionAdapterBase"/> or restarts it if it is already running.
         /// </summary>
-        [AdapterCommand("Starts the action adapter or restarts it if it is already running.")]
+        [AdapterCommand("Starts the action adapter or restarts it if it is already running.", "Administrator", "Editor")]
         public override void Start()
         {
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
@@ -1058,7 +1058,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Stops the <see cref="ActionAdapterBase"/>.
         /// </summary>
-        [AdapterCommand("Stops the action adapter.")]
+        [AdapterCommand("Stops the action adapter.", "Administrator", "Editor")]
         public override void Stop()
         {
             base.Stop();
@@ -1067,7 +1067,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Examines the concentrator frame queue state of the <see cref="ActionAdapterBase"/>.
         /// </summary>
-        [AdapterCommand("Examines concentration frame queue state.")]
+        [AdapterCommand("Examines concentration frame queue state.", "Administrator", "Editor", "Viewer")]
         public void ExamineQueueState()
         {
             OnStatusMessage(QueueState);
@@ -1090,7 +1090,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Resets the statistics of the <see cref="ActionAdapterBase"/>.
         /// </summary>
-        [AdapterCommand("Resets the statistics of the action adapter.")]
+        [AdapterCommand("Resets the statistics of the action adapter.", "Administrator", "Editor")]
         public override void ResetStatistics()
         {
             base.ResetStatistics();
@@ -1103,7 +1103,7 @@ namespace GSF.TimeSeries.Adapters
         /// Manually sets the intialized state of the <see cref="AdapterBase"/>.
         /// </summary>
         /// <param name="initialized">Desired initialized state.</param>
-        [AdapterCommand("Manually sets the intialized state of the action adapter.")]
+        [AdapterCommand("Manually sets the intialized state of the action adapter.", "Administrator", "Editor")]
         public virtual void SetInitializedState(bool initialized)
         {
             this.Initialized = initialized;
@@ -1251,7 +1251,7 @@ namespace GSF.TimeSeries.Adapters
         /// </list>
         /// </para>
         /// </remarks>
-        [AdapterCommand("Defines a temporal processing constraint for the adapter.")]
+        [AdapterCommand("Defines a temporal processing constraint for the adapter.", "Administrator", "Editor", "Viewer")]
         public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
         {
             if (!string.IsNullOrWhiteSpace(startTime))

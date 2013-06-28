@@ -1828,31 +1828,31 @@ namespace GSF.TimeSeries
                             AdapterCommandAttribute commandAttribute;
 
                             // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
-                            if (method.TryGetAttribute(out commandAttribute))
+                            if (method.TryGetAttribute(out commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role))))
                             {
                                 ParameterInfo[] parameterInfo = method.GetParameters();
                                 object returnValue = null;
                                 bool success = true;
 
-                                if (parameterInfo == null || (parameterInfo != null && parameterInfo.Length == 0))
+                                if (parameterInfo.Length == 0)
                                 {
                                     // Invoke parameterless adapter command
                                     returnValue = method.Invoke(adapter, null);
                                 }
                                 else
                                 {
+                                    int argCount = requestInfo.Request.Arguments.Count - 2;
+                                    int attachmentCount = requestInfo.Request.Attachments.Count;
+
                                     // Create typed parameters for method and invoke
-                                    if (requestInfo.Request.Arguments.OrderedArgCount - 2 >= parameterInfo.Length)
+                                    if (argCount + attachmentCount >= parameterInfo.Length)
                                     {
                                         // Attempt to convert command parameters to the method parameter types
-                                        object[] parameters = new object[parameterInfo.Length];
-                                        string parameterValue;
-
-                                        for (int i = 0; i < parameterInfo.Length; i++)
-                                        {
-                                            parameterValue = requestInfo.Request.Arguments["OrderedArg" + (3 + i)];
-                                            parameters[i] = parameterValue.ConvertToType<object>(parameterInfo[i].ParameterType);
-                                        }
+                                        object[] parameters = requestInfo.Request.Arguments.Skip(2)
+                                            .Select((arg, i) => arg.Value.ConvertToType<object>(parameterInfo[i].ParameterType))
+                                            .Concat(requestInfo.Request.Attachments)
+                                            .Take(parameterInfo.Length)
+                                            .ToArray();
 
                                         // Invoke adapter command with specified parameters
                                         returnValue = method.Invoke(adapter, parameters);
@@ -1875,10 +1875,14 @@ namespace GSF.TimeSeries
                                 }
                             }
                             else
+                            {
                                 SendResponse(requestInfo, false, "Specified command \"{0}\" is not marked as invokable for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
+                            }
                         }
                         else
+                        {
                             SendResponse(requestInfo, false, "Specified command \"{0}\" does not exist for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -1962,6 +1966,10 @@ namespace GSF.TimeSeries
                             // Only display methods marked as invokable (i.e., AdapterCommandAttribute exists on method)
                             if (method.TryGetAttribute(out commandAttribute))
                             {
+                                // Don't bother displaying commands to users who cannot invoke them
+                                if (m_serviceHelper.SecureRemoteInteractions && !commandAttribute.AllowedRoles.Any(role => Thread.CurrentPrincipal.IsInRole(role)))
+                                    continue;
+
                                 firstParameter = true;
 
                                 methodList.Append("    ");

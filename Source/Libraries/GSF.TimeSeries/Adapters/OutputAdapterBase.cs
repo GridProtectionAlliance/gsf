@@ -462,7 +462,7 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Initiates request for metadata refresh for <see cref="OutputAdapterBase"/>, if implemented.
         /// </summary>
-        [AdapterCommand("Requests metadata refresh of output adapter.")]
+        [AdapterCommand("Requests metadata refresh of output adapter.", "Administrator", "Editor")]
         public virtual void RefreshMetadata()
         {
             // Force a recalculation of input measurement keys so that system can appropriately update routing tables

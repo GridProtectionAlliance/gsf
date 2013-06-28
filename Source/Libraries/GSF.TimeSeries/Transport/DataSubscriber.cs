@@ -1561,7 +1561,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Returns the measurements signal IDs that were authorized after the last successful subscription request.
         /// </summary>
-        [AdapterCommand("Gets authorized signal IDs from last subscription request.")]
+        [AdapterCommand("Gets authorized signal IDs from last subscription request.", "Administrator", "Editor", "Viewer")]
         public virtual Guid[] GetAuthorizedSignalIDs()
         {
             if (m_signalIndexCache != null)
@@ -1573,7 +1573,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Returns the measurements signal IDs that were unauthorized after the last successful subscription request.
         /// </summary>
-        [AdapterCommand("Gets unauthorized signal IDs from last subscription request.")]
+        [AdapterCommand("Gets unauthorized signal IDs from last subscription request.", "Administrator", "Editor", "Viewer")]
         public virtual Guid[] GetUnauthorizedSignalIDs()
         {
             if (m_signalIndexCache != null)
@@ -1585,7 +1585,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Initiate a metadata refresh.
         /// </summary>
-        [AdapterCommand("Initiates a metadata refresh.")]
+        [AdapterCommand("Initiates a metadata refresh.", "Administrator", "Editor")]
         public virtual void RefreshMetadata()
         {
             SendServerCommand(ServerCommand.MetaDataRefresh);
@@ -1594,7 +1594,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
         /// </summary>
-        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.")]
+        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
         public virtual void ResetLifetimeCounters()
         {
             m_lifetimeMeasurements = 0L;

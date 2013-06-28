@@ -418,7 +418,7 @@ namespace FileAdapters
         /// <summary>
         /// Empties the processed file list.
         /// </summary>
-        [AdapterCommand("Empties the processed file list so that newly dropped files with the same name as old processed files will not be deleted.")]
+        [AdapterCommand("Empties the processed file list so that newly dropped files with the same name as old processed files will not be deleted.", "Administrator", "Editor")]
         public void ClearProcessedFileList()
         {
             m_processedFiles.Clear();

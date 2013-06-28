@@ -37,12 +37,15 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using GSF.Console;
 using GSF.Data;
 using GSF.IO;
 using GSF.Security.Cryptography;
+using GSF.ServiceProcess;
 using GSF.TimeSeries.Transport.UI.DataModels;
 using GSF.TimeSeries.Transport.UI.ViewModels;
 using GSF.TimeSeries.UI;
@@ -64,8 +67,11 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         #region [ Members ]
 
         private readonly Subscribers m_dataContext;
+
         private string m_key;
         private string m_iv;
+
+        private ManualResetEventSlim m_certificateWaitHandle;
 
         #endregion
 
@@ -83,6 +89,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             this.DataContext = m_dataContext;
             m_dataContext.PropertyChanged += DataContext_PropertyChanged;
             m_dataContext.SecurityMode = !string.IsNullOrEmpty(m_dataContext.CurrentItem.RemoteCertificateFile) ? SecurityMode.TLS : SecurityMode.Gateway;
+            m_certificateWaitHandle = new ManualResetEventSlim();
         }
 
         #endregion
@@ -126,13 +133,14 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 }
 
                 // If the user is not an Administrator, then the following properties for these controls are readonly and not enable
-                bool isAdmin = CommonFunctions.CurrentPrincipal.IsInRole("Administrator");
+                bool isAdmin = CommonFunctions.CurrentPrincipal.IsInRole("Administrator,Editor");
 
                 AcronymField.IsReadOnly = !isAdmin;
                 NameField.IsReadOnly = !isAdmin;
                 ValidIpAddressesField.IsReadOnly = !isAdmin;
                 EnablePGConnectionCheckBox.IsEnabled = isAdmin;
-                ImportButton.IsEnabled = isAdmin;
+                ImportSRQButton.IsEnabled = isAdmin;
+                ImportCERButton.IsEnabled = isAdmin;
                 FooterControl.IsEnabled = isAdmin;
             }
             catch
@@ -175,6 +183,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             try
             {
                 string sharedSecret = m_dataContext.CurrentItem.SharedSecret;
+                WindowsServiceClient windowsServiceClient;
+                ClientRequest request;
 
                 if (m_dataContext.SecurityMode == SecurityMode.Gateway)
                 {
@@ -210,19 +220,31 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                             m_dataContext.CurrentItem.ValidChainFlags |= X509ChainStatusFlags.UntrustedRoot;
                         }
 
-                        if ((object)m_dataContext.RemoteCertificateTempPath != null && File.Exists(m_dataContext.RemoteCertificateTempPath))
+                        if ((object)m_dataContext.RemoteCertificateData != null)
                         {
+                            windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
+                            windowsServiceClient.Helper.ReceivedServiceResponse += WindowsServiceClient_ReceivedServiceResponse;
+                            m_certificateWaitHandle.Reset();
+
                             // If an srq file was imported to populate the fields on this page,
                             // then we will need to copy the attached certificate file from the
                             // temp folder to the correct location
-                            File.Copy(m_dataContext.RemoteCertificateTempPath, FilePath.GetAbsolutePath(m_dataContext.CurrentItem.RemoteCertificateFile));
+                            request = new ClientRequest("INVOKE");
+                            request.Arguments = new Arguments(string.Format("TLS!DATAPUBLISHER ImportCertificate {0}", m_dataContext.CurrentItem.RemoteCertificateFile));
+                            request.Attachments.Add(m_dataContext.RemoteCertificateData);
+                            windowsServiceClient.Helper.SendRequest(request);
+
+                            if (!m_certificateWaitHandle.Wait(5000))
+                                throw new InvalidOperationException("Timeout waiting for response to ImportCertificate command.");
+
+                            m_dataContext.RemoteCertificateData = null;
                         }
                     }
                     catch (Exception ex)
                     {
                         const string errorMessage = "Successfully imported subscription request, but was" +
-                            " unable to copy remote certificate to the path you specified. Check that" +
-                            " you have the necessary folder and file permissions to write to that directory.";
+                            " unable to import remote certificate. Check that the manager is properly" +
+                            " connected to the service.";
 
                         CommonFunctions.LogException(null, "Import Subscription Request", ex);
                         MessageBox.Show(errorMessage, "Import Subscription Request Error");
@@ -325,18 +347,17 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         }
 
         /// <summary>
-        /// Handles click event on button.
+        /// Handles click event on "Import SRQ..." button.
         /// </summary>
         /// <param name="sender">Source of the event.</param>
         /// <param name="e">Event arguments.</param>
-        private void ImportButton_Click(object sender, RoutedEventArgs e)
+        private void ImportSRQButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             AuthenticationRequest request;
-            string tempFilePath;
 
             openFileDialog.DefaultExt = ".srq";
-            openFileDialog.Filter = @"Subscription Requests|*.srq|All Files (*.*)|*.*";
+            openFileDialog.Filter = @"Subscription Requests|*.srq|All Files|*.*";
 
             if (openFileDialog.ShowDialog() == true)
             {
@@ -370,12 +391,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 {
                     // Certificate means TLS security mode
                     m_dataContext.SecurityMode = SecurityMode.TLS;
-
-                    subscriber.RemoteCertificateFile = FilePath.GetAbsolutePath(string.Format("{0}.cer", request.Acronym.ToUpper()));
-
-                    tempFilePath = Path.GetTempFileName();
-                    m_dataContext.RemoteCertificateTempPath = tempFilePath;
-                    File.WriteAllBytes(tempFilePath, request.CertificateFile);
+                    m_dataContext.RemoteCertificateData = request.CertificateFile;
+                    subscriber.RemoteCertificateFile = string.Format("{0}.cer", request.Acronym.ToUpper());
                 }
             }
             else
@@ -384,28 +401,22 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             }
         }
 
-        private void RemoteCertificateBrowseButton_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Handles click event on "Import CER..." button.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
+        private void ImportCERButton_Click(object sender, RoutedEventArgs e)
         {
-            FileDialog fileDialog;
+            OpenFileDialog openFileDialog = new OpenFileDialog();
 
-            if ((object)m_dataContext.RemoteCertificateTempPath != null && File.Exists(m_dataContext.RemoteCertificateTempPath))
-                fileDialog = new SaveFileDialog();
+            openFileDialog.DefaultExt = ".cer";
+            openFileDialog.Filter = @"Certificates|*.cer|All Files|*.*";
+
+            if (openFileDialog.ShowDialog() == true)
+                m_dataContext.RemoteCertificateData = File.ReadAllBytes(openFileDialog.FileName);
             else
-                fileDialog = new OpenFileDialog();
-
-            fileDialog.FileName = m_dataContext.CurrentItem.RemoteCertificateFile;
-            fileDialog.DefaultExt = ".cer";
-            fileDialog.Filter = "Certificate files|*.cer|All Files|*.*";
-
-            if (fileDialog.ShowDialog() == true)
-            {
-                if ((object)m_dataContext.CurrentItem != null)
-                    m_dataContext.CurrentItem.RemoteCertificateFile = fileDialog.FileName;
-            }
-            else
-            {
                 e.Handled = true;
-            }
         }
 
         /// <summary>
@@ -442,7 +453,42 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 DataGridList.SelectedIndex = -1;
         }
 
-        #endregion
+        private void WindowsServiceClient_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
+        {
+            WindowsServiceClient windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
+            ServiceResponse response = e.Argument;
 
+            if ((object)response != null)
+            {
+                string sourceCommand;
+                bool responseSuccess;
+
+                if (ClientHelper.TryParseActionableResponse(response, out sourceCommand, out responseSuccess) && responseSuccess)
+                {
+                    if (!string.IsNullOrWhiteSpace(sourceCommand) && string.Compare(sourceCommand.Trim(), "INVOKE", true) == 0)
+                    {
+                        List<object> attachments = response.Attachments;
+
+                        // A GetHighestSeverityAlarms INVOKE will have two attachments: an alarm array, item 0, and the original command arguments, item 1
+                        if ((object)attachments != null && attachments.Count > 1)
+                        {
+                            Arguments arguments = attachments[1] as Arguments;
+
+                            // Check the method that was invoked - the second argument after the adapter ID
+                            if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "ImportCertificate", true) == 0)
+                            {
+                                m_dataContext.CurrentItem.RemoteCertificateFile = attachments[0] as string;
+
+                                // Release waiting thread once desired response has been received
+                                windowsServiceClient.Helper.ReceivedServiceResponse -= WindowsServiceClient_ReceivedServiceResponse;
+                                m_certificateWaitHandle.Set();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
     }
 }

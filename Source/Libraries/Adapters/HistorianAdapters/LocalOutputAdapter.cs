@@ -239,7 +239,7 @@ namespace HistorianAdapters
         /// <summary>
         /// Refreshes metadata using all available and enabled providers.
         /// </summary>
-        [AdapterCommand("Refreshes metadata using all available and enabled providers.")]
+        [AdapterCommand("Refreshes metadata using all available and enabled providers.", "Administrator", "Editor")]
         public override void RefreshMetadata()
         {
             ThreadPool.QueueUserWorkItem(QueueMetadataRefresh);

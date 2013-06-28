@@ -715,6 +715,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     catch
                     {
                         // Ignore exceptions here - simply check the next config file
+                        continue;
                     }
 
                     if ((object)acronym != null)

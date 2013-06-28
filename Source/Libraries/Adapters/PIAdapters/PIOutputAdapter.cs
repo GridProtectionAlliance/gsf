@@ -405,7 +405,7 @@ namespace PIAdapters
         /// <summary>
         /// Refreshes metadata using all available and enabled providers.
         /// </summary>
-        [AdapterCommand("Sends updated metadata to PI")]
+        [AdapterCommand("Sends updated metadata to PI", "Administrator", "Editor")]
         public override void RefreshMetadata()
         {
             if (m_runMetadataSync)

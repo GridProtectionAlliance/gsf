@@ -1388,7 +1388,7 @@ namespace PhasorProtocolAdapters
         /// Sends the specified <see cref="DeviceCommand"/> to the current device connection.
         /// </summary>
         /// <param name="command"><see cref="DeviceCommand"/> to send to connected device.</param>
-        [AdapterCommand("Sends the specified command to connected phasor device.")]
+        [AdapterCommand("Sends the specified command to connected phasor device.", "Administrator", "Editor")]
         public void SendCommand(DeviceCommand command)
         {
             if ((object)m_frameParser != null)
@@ -1403,7 +1403,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Resets the statistics of all devices associated with this connection.
         /// </summary>
-        [AdapterCommand("Resets the statistics of all devices associated with this connection.")]
+        [AdapterCommand("Resets the statistics of all devices associated with this connection.", "Administrator", "Editor")]
         public void ResetStatistics()
         {
             if ((object)m_definedDevices != null)
@@ -1428,7 +1428,7 @@ namespace PhasorProtocolAdapters
         /// Resets the statistics of the specified device associated with this connection.
         /// </summary>
         /// <param name="idCode">Integer ID code of device on which to reset statistics.</param>
-        [AdapterCommand("Resets the statistics of the device with the specified ID code.")]
+        [AdapterCommand("Resets the statistics of the device with the specified ID code.", "Administrator", "Editor")]
         public void ResetDeviceStatistics(ushort idCode)
         {
             if ((object)m_definedDevices != null)
@@ -1454,7 +1454,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
         /// </summary>
-        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.")]
+        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
         public virtual void ResetLifetimeCounters()
         {
             m_lifetimeMeasurements = 0L;
@@ -1481,7 +1481,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Attempts to delete the last known good (i.e., cached) configuration.
         /// </summary>
-        [AdapterCommand("Attempts to delete the last known good configuration.")]
+        [AdapterCommand("Attempts to delete the last known good configuration.", "Administrator", "Editor")]
         public void DeleteCachedConfiguration()
         {
             try
@@ -1502,7 +1502,7 @@ namespace PhasorProtocolAdapters
         /// Returns the current configuration frame to the caller.
         /// </summary>
         /// <returns>A <see cref="IConfigurationFrame"/> if successful, -or- <c>null</c> if request failed.</returns>
-        [AdapterCommand("Requests the current configuration frame and returns it to the caller.")]
+        [AdapterCommand("Requests the current configuration frame and returns it to the caller.", "Administrator", "Editor")]
         public IConfigurationFrame RequestCurrentConfiguration()
         {
             return m_frameParser.ConfigurationFrame;
@@ -1511,7 +1511,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Attempts to load the last known good (i.e., cached) configuration.
         /// </summary>
-        [AdapterCommand("Attempts to load the last known good configuration.")]
+        [AdapterCommand("Attempts to load the last known good configuration.", "Administrator", "Editor")]
         public void LoadCachedConfiguration()
         {
             try
@@ -1539,7 +1539,7 @@ namespace PhasorProtocolAdapters
         /// Attempts to load the specified configuration.
         /// </summary>
         /// <param name="configurationFileName">Path and file name containing serialized configuration.</param>
-        [AdapterCommand("Attempts to load the specified configuration.")]
+        [AdapterCommand("Attempts to load the specified configuration.", "Administrator", "Editor")]
         public void LoadConfiguration(string configurationFileName)
         {
             try
@@ -1645,7 +1645,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Starts the <see cref="PhasorMeasurementMapper"/> or restarts it if it is already running.
         /// </summary>
-        [AdapterCommand("Starts the adapter or restarts it if it is already running.")]
+        [AdapterCommand("Starts the adapter or restarts it if it is already running.", "Administrator", "Editor")]
         public override void Start()
         {
             // We only start the adapter if a primary data source is not defined - otherwise we yield to its connection state to start this connection

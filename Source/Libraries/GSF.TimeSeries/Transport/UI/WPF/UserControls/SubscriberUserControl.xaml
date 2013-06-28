@@ -24,8 +24,11 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            
-            <Button Grid.Row="0" Name="ImportButton" Content="Import SRQ..." Margin="10" Width="{StaticResource SmallerItemSize}" HorizontalAlignment="Left" Click="ImportButton_Click" />
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <Button Grid.Row="0" Name="ImportSRQButton" Content="Import SRQ..." Margin="10" Width="{StaticResource SmallerItemSize}" HorizontalAlignment="Left" Click="ImportSRQButton_Click" />
+                <Button Grid.Row="0" Name="ImportCERButton" Content="Import CER..." Margin="10" Width="{StaticResource SmallerItemSize}" HorizontalAlignment="Left" Click="ImportCERButton_Click" />
+            </StackPanel>
             
             <GroupBox Grid.Row="1" Header="Subscriber Info">
                 <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5">
@@ -83,10 +86,9 @@
                         </Grid.ColumnDefinitions>
 
                         <!--First Row-->
-                        <Label Grid.Row="0" Grid.Column="0" Content="Remote certificate" />
+                        <Label Grid.Row="0" Grid.Column="0" Content="Remote certificate file name" />
                         <StackPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
                             <TextBox Width="{StaticResource XXLargeItemSize}" Text="{Binding Mode=TwoWay, Path=RemoteCertificateFile}"/>
-                            <Button Name="RemoteCertificateBrowseButton" Height="25" Content="Browse..." Click="RemoteCertificateBrowseButton_Click" />
                             <CheckBox Name="SelfSignedCheckBox" Margin="10,0,0,0" Content="Self-signed?" IsChecked="{Binding Mode=TwoWay, Path=RemoteCertificateIsSelfSigned}"/>
                         </StackPanel>
 
