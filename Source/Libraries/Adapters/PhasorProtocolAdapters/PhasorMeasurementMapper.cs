@@ -1006,45 +1006,48 @@ namespace PhasorProtocolAdapters
             else
                 m_forceLabelMapping = false;
 
-            if (settings.TryGetValue("primaryDataSource", out setting))
-            {
-                uint primaryDataSourceID = 0;
+            // Commented out for security purposes related to Parent collection --
+            // Replace with secure notification mechanism
 
-                // Lookup adapter runtime ID of specified primary data source
-                if (!string.IsNullOrWhiteSpace(setting))
-                {
-                    try
-                    {
-                        DataRow[] filteredRows = DataSource.Tables["InputAdapters"].Select(string.Format("AdapterName = '{0}'", setting));
+            //if (settings.TryGetValue("primaryDataSource", out setting))
+            //{
+            //    uint primaryDataSourceID = 0;
 
-                        if (filteredRows.Length > 0)
-                            primaryDataSourceID = uint.Parse(filteredRows[0]["ID"].ToString());
-                        else
-                            OnProcessException(new InvalidOperationException(string.Format("Failed to find input adapter ID for primary data source \"{0}\", data source was not established.", setting)));
-                    }
-                    catch (Exception ex)
-                    {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to find input adapter ID for primary data source \"{0}\" due to exception: {1} Data source was not established.", setting, ex.Message), ex));
-                    }
-                }
+            //    // Lookup adapter runtime ID of specified primary data source
+            //    if (!string.IsNullOrWhiteSpace(setting))
+            //    {
+            //        try
+            //        {
+            //            DataRow[] filteredRows = DataSource.Tables["InputAdapters"].Select(string.Format("AdapterName = '{0}'", setting));
 
-                if (primaryDataSourceID > 0)
-                {
-                    // Get matching data subscriber
-                    m_primaryDataSource = Parent.FirstOrDefault(adapter => adapter.ID == primaryDataSourceID && adapter is DataSubscriber) as DataSubscriber;
+            //            if (filteredRows.Length > 0)
+            //                primaryDataSourceID = uint.Parse(filteredRows[0]["ID"].ToString());
+            //            else
+            //                OnProcessException(new InvalidOperationException(string.Format("Failed to find input adapter ID for primary data source \"{0}\", data source was not established.", setting)));
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            OnProcessException(new InvalidOperationException(string.Format("Failed to find input adapter ID for primary data source \"{0}\" due to exception: {1} Data source was not established.", setting, ex.Message), ex));
+            //        }
+            //    }
 
-                    if ((object)m_primaryDataSource == null)
-                    {
-                        OnProcessException(new InvalidOperationException(string.Format("Input adapter \"{0}\" specified to be the primary data source was not a DataSubscriber adapter, data source was not established.", setting)));
-                    }
-                    else
-                    {
-                        // Attach to connection events of primary source adapter since these will be used to control when back connection is established...
-                        m_primaryDataSource.ConnectionEstablished += m_primaryDataSource_ConnectionEstablished;
-                        m_primaryDataSource.ConnectionTerminated += m_primaryDataSource_ConnectionTerminated;
-                    }
-                }
-            }
+            //    if (primaryDataSourceID > 0)
+            //    {
+            //        // Get matching data subscriber
+            //        m_primaryDataSource = Parent.FirstOrDefault(adapter => adapter.ID == primaryDataSourceID && adapter is DataSubscriber) as DataSubscriber;
+
+            //        if ((object)m_primaryDataSource == null)
+            //        {
+            //            OnProcessException(new InvalidOperationException(string.Format("Input adapter \"{0}\" specified to be the primary data source was not a DataSubscriber adapter, data source was not established.", setting)));
+            //        }
+            //        else
+            //        {
+            //            // Attach to connection events of primary source adapter since these will be used to control when back connection is established...
+            //            m_primaryDataSource.ConnectionEstablished += m_primaryDataSource_ConnectionEstablished;
+            //            m_primaryDataSource.ConnectionTerminated += m_primaryDataSource_ConnectionTerminated;
+            //        }
+            //    }
+            //}
 
             if (settings.TryGetValue("sharedMapping", out setting))
                 SharedMapping = setting.Trim();

@@ -106,14 +106,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets a read-only reference to the collection that contains this <see cref="IAdapter"/>.
-        /// </summary>
-        ReadOnlyCollection<IAdapter> Parent
-        {
-            get;
-        }
-
-        /// <summary>
         /// Gets or sets name of this <see cref="IAdapter"/>.
         /// </summary>
         new string Name
@@ -271,12 +263,6 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current adapter status.</returns>
         string GetShortStatus(int maxLength);
-
-        /// <summary>
-        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
-        /// </summary>
-        /// <param name="parent">Parent adapter collection.</param>
-        void AssignParentCollection(IAdapterCollection parent);
 
         /// <summary>
         /// Blocks the current thread until the adapter is <see cref="Initialized"/>.

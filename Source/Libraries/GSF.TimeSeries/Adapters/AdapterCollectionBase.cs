@@ -95,7 +95,6 @@ namespace GSF.TimeSeries.Adapters
         private uint m_id;
         private bool m_initialized;
         private string m_connectionString;
-        private IAdapterCollection m_parent;
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private string m_dataMember;
@@ -221,17 +220,6 @@ namespace GSF.TimeSeries.Adapters
                     m_settings = new Dictionary<string, string>();
                 else
                     m_settings = m_connectionString.ParseKeyValuePairs();
-            }
-        }
-
-        /// <summary>
-        /// Gets a read-only reference to the collection that contains this <see cref="AdapterCollectionBase{T}"/>, if any.
-        /// </summary>
-        public ReadOnlyCollection<IAdapter> Parent
-        {
-            get
-            {
-                return new ReadOnlyCollection<IAdapter>(m_parent);
             }
         }
 
@@ -717,8 +705,6 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendFormat("  Total adapter components: {0}", Count);
                 status.AppendLine();
                 status.AppendFormat("    Collection initialized: {0}", Initialized);
-                status.AppendLine();
-                status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
@@ -1247,20 +1233,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterCollectionBase{T}"/>, if any.
-        /// </summary>
-        /// <param name="parent">Parent adapter collection.</param>
-        protected virtual void AssignParentCollection(IAdapterCollection parent)
-        {
-            m_parent = parent;
-        }
-
-        void IAdapter.AssignParentCollection(IAdapterCollection parent)
-        {
-            AssignParentCollection(parent);
-        }
-
-        /// <summary>
         /// Resets the statistics of this collection.
         /// </summary>
         [AdapterCommand("Resets the statistics of this collection.", "Administrator", "Editor")]
@@ -1567,9 +1539,6 @@ namespace GSF.TimeSeries.Adapters
                 item.OutputMeasurementsUpdated += item_OutputMeasurementsUpdated;
                 item.Disposed += item_Disposed;
 
-                // Associate parent collection
-                item.AssignParentCollection(this);
-
                 // Update adapter routing type flag
                 item.ProcessMeasurementFilter = ProcessMeasurementFilter;
 
@@ -1627,9 +1596,6 @@ namespace GSF.TimeSeries.Adapters
                 // Make sure initialization handles are cleared in case any failed
                 // initializations are still pending
                 item.Initialized = true;
-
-                // Dissociate parent collection
-                item.AssignParentCollection(null);
 
                 // Dispose of item, then un-wire disposed event
                 item.Dispose();

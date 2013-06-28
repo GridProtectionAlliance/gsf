@@ -106,9 +106,6 @@ namespace GSF.TimeSeries.Transport
         /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
         public UnsynchronizedClientSubscription(DataPublisher parent, Guid clientID, Guid subscriberID)
         {
-            // Pass parent reference into base class
-            AssignParentCollection(parent);
-
             m_parent = parent;
             m_clientID = clientID;
             m_subscriberID = subscriberID;

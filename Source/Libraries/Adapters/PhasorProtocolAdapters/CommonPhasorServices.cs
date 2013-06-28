@@ -61,10 +61,6 @@ namespace PhasorProtocolAdapters
         #region [ Members ]
 
         // Fields
-        private IAdapterCollection m_parent;
-        private InputAdapterCollection m_inputAdapters;
-        private ActionAdapterCollection m_actionAdapters;
-        //private OutputAdapterCollection m_outputAdapters;
         private ManualResetEvent m_configurationWaitHandle;
         private MultiProtocolFrameParser m_frameParser;
         private IConfigurationFrame m_configurationFrame;
@@ -165,31 +161,6 @@ namespace PhasorProtocolAdapters
                     m_disposed = true;          // Prevent duplicate dispose.
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
-            }
-        }
-
-        /// <summary>
-        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterBase"/>.
-        /// </summary>
-        /// <param name="parent">Parent adapter collection.</param>
-        protected override void AssignParentCollection(IAdapterCollection parent)
-        {
-            base.AssignParentCollection(parent);
-
-            m_parent = parent;
-
-            if (parent != null)
-            {
-                // Dereference primary Iaon adapter collections
-                m_inputAdapters = m_parent.Parent.Where(collection => collection is InputAdapterCollection).First() as InputAdapterCollection;
-                m_actionAdapters = m_parent.Parent.Where(collection => collection is ActionAdapterCollection).First() as ActionAdapterCollection;
-                //m_outputAdapters = m_parent.Parent.Where(collection => collection is OutputAdapterCollection).First() as OutputAdapterCollection;
-            }
-            else
-            {
-                m_inputAdapters = null;
-                m_actionAdapters = null;
-                //m_outputAdapters = null;
             }
         }
 

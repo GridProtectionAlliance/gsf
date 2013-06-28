@@ -25,7 +25,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Globalization;
@@ -104,7 +103,6 @@ namespace GSF.TimeSeries.Adapters
         private string m_name;
         private uint m_id;
         private string m_connectionString;
-        private IAdapterCollection m_parent;
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private int m_initializationTimeout;
@@ -264,17 +262,6 @@ namespace GSF.TimeSeries.Adapters
                     m_settings = new Dictionary<string, string>();
                 else
                     m_settings = m_connectionString.ParseKeyValuePairs();
-            }
-        }
-
-        /// <summary>
-        /// Gets a read-only reference to the collection that contains this <see cref="AdapterBase"/>.
-        /// </summary>
-        public ReadOnlyCollection<IAdapter> Parent
-        {
-            get
-            {
-                return new ReadOnlyCollection<IAdapter>(m_parent);
             }
         }
 
@@ -650,8 +637,6 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
-                status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
-                status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
                 status.AppendLine();
                 status.AppendFormat("         Connect on demand: {0}", !AutoStart);
@@ -865,20 +850,6 @@ namespace GSF.TimeSeries.Adapters
         {
             m_enabled = false;
             m_stopTime = DateTime.UtcNow.Ticks;
-        }
-
-        /// <summary>
-        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterBase"/>.
-        /// </summary>
-        /// <param name="parent">Parent adapter collection.</param>
-        protected virtual void AssignParentCollection(IAdapterCollection parent)
-        {
-            m_parent = parent;
-        }
-
-        void IAdapter.AssignParentCollection(IAdapterCollection parent)
-        {
-            AssignParentCollection(parent);
         }
 
         /// <summary>

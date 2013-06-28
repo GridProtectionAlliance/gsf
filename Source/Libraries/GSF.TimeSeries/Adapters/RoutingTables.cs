@@ -78,7 +78,7 @@ namespace GSF.TimeSeries.Adapters
         private readonly Dictionary<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>> m_dependencyMeasurementsLookup;
         private readonly Dictionary<IAdapter, IList<IMeasurement>> m_notifiedMeasurementLookup;
         private volatile int m_operationsUntilNextPublish;
-        
+
         private bool m_disposed;
 
         #endregion
@@ -208,7 +208,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_disposed = true; // Prevent duplicate dispose.
                 }
             }
         }
@@ -519,7 +519,7 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 // Add a queuing operation to the dependency operation queue
                                 dependencyMeasurement = new DependencyMeasurement
-                                    {
+                                {
                                     Dependencies = dependencies,
                                     Measurement = measurement
                                 };
@@ -567,17 +567,20 @@ namespace GSF.TimeSeries.Adapters
             }
 
             // Send independent measurements
-            foreach (KeyValuePair<IAdapter, List<IMeasurement>> pair in adapterMeasurementsLookup)
+            ThreadPool.QueueUserWorkItem(state =>
             {
-                try
+                foreach (KeyValuePair<IAdapter, List<IMeasurement>> pair in (Dictionary<IAdapter, List<IMeasurement>>)state)
                 {
-                    QueueMeasurementsForProcessing(pair.Key, pair.Value);
+                    try
+                    {
+                        QueueMeasurementsForProcessing(pair.Key, pair.Value);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception queuing data to adapter [{0}]: {1}", pair.Key.Name, ex.Message), ex));
+                    }
                 }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception queuing data to adapter [{0}]: {1}", pair.Key.Name, ex.Message), ex));
-                }
-            }
+            }, adapterMeasurementsLookup);
         }
 
         private void QueueMeasurementsForProcessing(IAdapter adapter, IEnumerable<IMeasurement> measurements)
