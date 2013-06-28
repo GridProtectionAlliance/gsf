@@ -44,6 +44,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using GSF.IO;
+using GSF.Reflection;
 
 namespace GSF
 {
@@ -88,8 +89,8 @@ namespace GSF
             if ((object)type.BaseType == null || type.BaseType == typeof(object) || type.BaseType == typeof(MarshalByRefObject))
 #endif
                 return type;
-            else
-                return GetRootType(type.BaseType);
+
+            return GetRootType(type.BaseType);
         }
 
         /// <summary>
@@ -134,8 +135,9 @@ namespace GSF
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
         /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
         /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
+        /// <param name="validateReferences">True to validate references of loaded assemblies before attempting to instantiate types; false otherwise.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes)
+        public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes, bool validateReferences = true)
         {
             Assembly asm = null;
             List<Type> types = new List<Type>();
@@ -171,29 +173,32 @@ namespace GSF
                 {
                     // Load the assembly in the curent app domain.
                     asm = Assembly.LoadFrom(bin);
-
-                    // Process only the public types in the assembly.
-                    foreach (Type asmType in asm.GetExportedTypes())
+                    
+                    if (!validateReferences || asm.TryLoadAllReferences())
                     {
-                        if (!excludeAbstractTypes || !asmType.IsAbstract)
+                        // Process only the public types in the assembly.
+                        foreach (Type asmType in asm.GetExportedTypes())
                         {
-                            // Either the current type is not abstract or it's OK to include abstract types.
-                            if (type.IsClass && asmType.IsSubclassOf(type))
+                            if (!excludeAbstractTypes || !asmType.IsAbstract)
                             {
-                                // The type being tested is a class and current type derives from it.
-                                types.Add(asmType);
-                            }
+                                // Either the current type is not abstract or it's OK to include abstract types.
+                                if (type.IsClass && asmType.IsSubclassOf(type))
+                                {
+                                    // The type being tested is a class and current type derives from it.
+                                    types.Add(asmType);
+                                }
 
-                            if (type.IsInterface && (object)asmType.GetInterface(type.Name) != null)
-                            {
-                                // The type being tested is an interface and current type implements it.
-                                types.Add(asmType);
-                            }
+                                if (type.IsInterface && (object)asmType.GetInterface(type.Name) != null)
+                                {
+                                    // The type being tested is an interface and current type implements it.
+                                    types.Add(asmType);
+                                }
 
-                            if (type.GetRootType() == typeof(Attribute) && asmType.GetCustomAttributes(type, true).Length > 0)
-                            {
-                                // The type being tested is an attribute and current type has the attribute.
-                                types.Add(asmType);
+                                if (type.GetRootType() == typeof(Attribute) && asmType.GetCustomAttributes(type, true).Length > 0)
+                                {
+                                    // The type being tested is an attribute and current type has the attribute.
+                                    types.Add(asmType);
+                                }
                             }
                         }
                     }
