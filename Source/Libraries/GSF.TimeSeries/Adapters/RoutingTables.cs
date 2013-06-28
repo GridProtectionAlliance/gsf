@@ -28,7 +28,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -53,6 +52,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Events
+
+        /// <summary>
+        /// Provides status messages to consumer.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is new status message.
+        /// </remarks>
+        public event EventHandler<EventArgs<string>> StatusMessage;
 
         /// <summary>
         /// Event is raised when there is an exception encountered while processing.
@@ -261,10 +268,18 @@ namespace GSF.TimeSeries.Adapters
 
         private void CalculateRoutingTables(object state)
         {
+            long startTime = DateTime.UtcNow.Ticks;
+            double elapsedTime;
+
+            int destinationCount = 0;
+            int routeCount;
+
             IInputAdapter[] inputAdapterCollection = null;
             IActionAdapter[] actionAdapterCollection = null;
             IOutputAdapter[] outputAdapterCollection = null;
             bool retry = true;
+
+            OnStatusMessage("Starting measurement route calculation...");
 
             // Attempt to cache input, action, and output adapters for routing table calculation.
             // This could fail if another thread modifies the collections while caching is in
@@ -397,6 +412,18 @@ namespace GSF.TimeSeries.Adapters
 
                 // Start or stop any connect on demand adapters
                 HandleConnectOnDemandAdapters((MeasurementKey[])state, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+
+                elapsedTime = Ticks.ToSeconds(DateTime.UtcNow.Ticks - startTime);
+
+                if ((object)actionAdapterCollection != null)
+                    destinationCount += actionAdapterCollection.Length;
+
+                if ((object)outputAdapterCollection != null)
+                    destinationCount += outputAdapterCollection.Length;
+
+                routeCount = measurementRoutes.Count;
+
+                OnStatusMessage("Calculated {0} route{1} for {2} destination{3} in {4}.", routeCount, (routeCount == 1) ? "" : "s", destinationCount, (destinationCount == 1) ? "" : "s", elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
             }
             catch (Exception ex)
             {
@@ -612,6 +639,46 @@ namespace GSF.TimeSeries.Adapters
 
             m_actionAdapters.QueueMeasurementsForProcessing(newMeasurements);
             m_outputAdapters.QueueMeasurementsForProcessing(newMeasurements);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StatusMessage"/> event.
+        /// </summary>
+        /// <param name="status">New status message.</param>
+        protected virtual void OnStatusMessage(string status)
+        {
+            try
+            {
+                if (StatusMessage != null)
+                    StatusMessage(this, new EventArgs<string>(status));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StatusMessage"/> event with a formatted status message.
+        /// </summary>
+        /// <param name="formattedStatus">Formatted status message.</param>
+        /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
+        /// <remarks>
+        /// This overload combines string.Format and SendStatusMessage for convenience.
+        /// </remarks>
+        protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
+        {
+            try
+            {
+                if (StatusMessage != null)
+                    StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>

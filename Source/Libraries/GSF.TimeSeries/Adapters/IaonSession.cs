@@ -166,6 +166,7 @@ namespace GSF.TimeSeries.Adapters
 
             // Create a new set of routing tables
             m_routingTables = new RoutingTables();
+            m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 
             // Create a collection to manage all input, action and output adapter collections as a unit
@@ -509,6 +510,7 @@ namespace GSF.TimeSeries.Adapters
                         // Dispose of routing tables
                         if (m_routingTables != null)
                         {
+                            m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
                             m_routingTables.ProcessException -= m_routingTables_ProcessException;
                             m_routingTables.Dispose();
                         }
@@ -628,9 +630,9 @@ namespace GSF.TimeSeries.Adapters
                 string name = null;
                 IProvideStatus statusProvider = key as IProvideStatus;
 
-                if (statusProvider != null)
+                if ((object)statusProvider != null)
                     name = statusProvider.Name;
-                else if (key != null && key is string)
+                else if (key is string)
                     name = (string)key;
 
                 if (string.IsNullOrWhiteSpace(name))
@@ -648,7 +650,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual void RecalculateRoutingTables()
         {
-            if (m_useMeasurementRouting && m_routingTables != null && m_allAdapters != null && m_allAdapters.Initialized)
+            if (m_useMeasurementRouting && (object)m_routingTables != null && (object)m_allAdapters != null && m_allAdapters.Initialized)
                 m_routingTables.CalculateRoutingTables(m_inputMeasurementKeysRestriction);
         }
 
@@ -918,6 +920,12 @@ namespace GSF.TimeSeries.Adapters
 
             // Bubble message up to any event subscribers
             OnDisposed(sender);
+        }
+
+        // Bubble routing table messages out through Iaon session
+        private void m_routingTables_StatusMessage(object sender, EventArgs<string> e)
+        {
+            OnStatusMessage(this, e.Argument);
         }
 
         // Bubble routing table exceptions out through Iaon session

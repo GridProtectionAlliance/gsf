@@ -643,6 +643,7 @@ namespace GSF.TimeSeries.Transport
 
             m_routingTables = new RoutingTables();
             m_routingTables.ActionAdapters = this;
+            m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 
             // Setup a timer for restarting the command channel if it fails
@@ -1220,6 +1221,7 @@ namespace GSF.TimeSeries.Transport
 
                         if ((object)m_routingTables != null)
                         {
+                            m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
                             m_routingTables.ProcessException -= m_routingTables_ProcessException;
                             m_routingTables.Dispose();
                         }
@@ -2486,6 +2488,12 @@ namespace GSF.TimeSeries.Transport
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ClientConnected event: {0}", ex.Message), ex));
             }
+        }
+
+        // Make sure to expose any routing table messages
+        private void m_routingTables_StatusMessage(object sender, EventArgs<string> e)
+        {
+            OnStatusMessage(e.Argument);
         }
 
         // Make sure to expose any routing table exceptions
