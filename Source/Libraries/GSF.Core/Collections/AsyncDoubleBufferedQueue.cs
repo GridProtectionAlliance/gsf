@@ -29,7 +29,7 @@ namespace GSF.Collections
     /// <summary>
     /// Combines <see cref="AsyncQueue{T}"/> and <see cref="DoubleBufferedQueue{T}"/> to provide
     /// a low-contention, double-buffered queue suitable for multiple-producer, single-consumer
-    /// scenarios where polling is appropriate.
+    /// scenarios.
     /// </summary>
     /// <typeparam name="T">Type of items being queued.</typeparam>
     public class AsyncDoubleBufferedQueue<T>
@@ -67,6 +67,25 @@ namespace GSF.Collections
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets item processing function.
+        /// </summary>
+        public virtual DoubleBufferedQueue<T>.ProcessItemsFunctionSignature ProcessItemsFunction
+        {
+            get
+            {
+                return m_doubleBufferedQueue.ProcessItemsFunction;
+            }
+            set
+            {
+                m_doubleBufferedQueue.ProcessItemsFunction = value;
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
@@ -82,7 +101,7 @@ namespace GSF.Collections
         /// Dequeues a collection of items from the async double-buffered queue.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<T> Dequeue()
+        public IList<T> Dequeue()
         {
             return m_doubleBufferedQueue.Dequeue();
         }
