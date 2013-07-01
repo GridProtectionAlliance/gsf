@@ -59,6 +59,7 @@ namespace PIAdapters
         private bool m_runMetadataSync;                                      // whether or not to automatically create/update PI points on the server
         private string m_piPointSource;                                      // Point source to set on PI points when automatically created by the adapter
         private string m_piPointClass;                                       // Point class to use for new PI points when automatically created by the adapter
+        private bool m_bulkUpdate;                                           // flags whether the adapter will update each point in bulk or one update at a time
 
         #endregion
 
@@ -81,6 +82,22 @@ namespace PIAdapters
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Set this property true to force the adapter to send bulk updates to PI with the UpdateValues method. Set this property to false to update points one value at a time using UpdateValue method.
+        /// </summary>
+        [ConnectionStringParameter, Description("Set this property true to force the adapter to send bulk updates to PI with the UpdateValues method. Set this property to false to update points one value at a time using UpdateValue method.")]
+        public bool BulkUpdate
+        {
+            get
+            {
+                return m_bulkUpdate;
+            }
+            set
+            {
+                m_bulkUpdate = value;
+            }
+        }
 
         /// <summary>
         /// Returns true to indicate that this <see cref="PIOutputAdapter"/> is sending measurements to a historian, OSISoft PI.
@@ -262,6 +279,11 @@ namespace PIAdapters
                 m_piPointClass = setting;
             else
                 m_piPointClass = "classic";
+
+            if (settings.TryGetValue("BulkUpdate", out setting))
+                m_bulkUpdate = Convert.ToBoolean(setting);
+            else
+                m_bulkUpdate = true;
         }
 
         /// <summary>
@@ -315,37 +337,50 @@ namespace PIAdapters
         /// <param name="measurements">Measurements to queue</param>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            Dictionary<MeasurementKey, PIValues> values = new Dictionary<MeasurementKey, PIValues>();
-
             if (measurements != null)
             {
-                foreach (IMeasurement measurement in measurements)
+                if (m_bulkUpdate)
                 {
-                    if (!m_tagKeyMap.ContainsKey(measurement.Key))
-                        MapKeysToPoints();
+                    Dictionary<MeasurementKey, PIValues> values = new Dictionary<MeasurementKey, PIValues>();
 
-                    if (!values.ContainsKey(measurement.Key))
+                    foreach (IMeasurement measurement in measurements)
                     {
-                        values.Add(measurement.Key, new PIValues());
-                        values[measurement.Key].ReadOnly = false;
+                        if (!m_tagKeyMap.ContainsKey(measurement.Key))
+                            MapKeysToPoints();
+
+                        if (!values.ContainsKey(measurement.Key))
+                        {
+                            values.Add(measurement.Key, new PIValues());
+                            values[measurement.Key].ReadOnly = false;
+                        }
+
+                        values[measurement.Key].Add(new DateTime(measurement.Timestamp).ToLocalTime(), measurement.AdjustedValue, null);
+                        m_processedMeasurements++;
                     }
 
-                    values[measurement.Key].Add(new DateTime(measurement.Timestamp).ToLocalTime(), measurement.AdjustedValue, null);
-                    m_processedMeasurements++;
+                    foreach (MeasurementKey key in values.Keys)
+                    {
+                        try
+                        {
+                            // If the key isn't in the dictionary, something has gone wrong finding this point in PI
+                            if (m_tagKeyMap.ContainsKey(key))
+                                m_tagKeyMap[key].Data.UpdateValues(values[key]);
+                        }
+                        catch (Exception e)
+                        {
+                            OnProcessException(e);
+                        }
+                    }
                 }
-            }
+                else
+                {
+                    foreach (IMeasurement measurement in measurements)
+                    {
+                        if (!m_tagKeyMap.ContainsKey(measurement.Key))
+                            MapKeysToPoints();
 
-            foreach (MeasurementKey key in values.Keys)
-            {
-                try
-                {
-                    // If the key isn't in the dictionary, something has gone wrong finding this point in PI
-                    if (m_tagKeyMap.ContainsKey(key))
-                        m_tagKeyMap[key].Data.UpdateValues(values[key]);
-                }
-                catch (Exception e)
-                {
-                    OnProcessException(e);
+                        m_tagKeyMap[measurement.Key].Data.UpdateValue(measurement.AdjustedValue, new DateTime(measurement.Timestamp).ToLocalTime());
+                    }
                 }
             }
         }
