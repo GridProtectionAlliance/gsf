@@ -594,20 +594,17 @@ namespace GSF.TimeSeries.Adapters
             }
 
             // Send independent measurements
-            ThreadPool.QueueUserWorkItem(state =>
+            foreach (KeyValuePair<IAdapter, List<IMeasurement>> pair in adapterMeasurementsLookup)
             {
-                foreach (KeyValuePair<IAdapter, List<IMeasurement>> pair in (Dictionary<IAdapter, List<IMeasurement>>)state)
+                try
                 {
-                    try
-                    {
-                        QueueMeasurementsForProcessing(pair.Key, pair.Value);
-                    }
-                    catch (Exception ex)
-                    {
-                        OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception queuing data to adapter [{0}]: {1}", pair.Key.Name, ex.Message), ex));
-                    }
+                    QueueMeasurementsForProcessing(pair.Key, pair.Value);
                 }
-            }, adapterMeasurementsLookup);
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception queuing data to adapter [{0}]: {1}", pair.Key.Name, ex.Message), ex));
+                }
+            }
         }
 
         private void QueueMeasurementsForProcessing(IAdapter adapter, IEnumerable<IMeasurement> measurements)
