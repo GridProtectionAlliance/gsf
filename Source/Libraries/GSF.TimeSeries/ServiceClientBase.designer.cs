@@ -72,9 +72,11 @@ namespace GSF.TimeSeries
             // m_remotingClient
             // 
             this.m_remotingClient.ConnectionString = "Server=localhost:8500";
+            this.m_remotingClient.IgnoreInvalidCredentials = true;
             this.m_remotingClient.PayloadAware = true;
             this.m_remotingClient.PersistSettings = true;
             this.m_remotingClient.SettingsCategory = "RemotingClient";
+            this.m_remotingClient.TrustedCertificatesPath = "Certs\\Remotes";
             this.m_remotingClient.ValidChainFlags = System.Security.Cryptography.X509Certificates.X509ChainStatusFlags.UntrustedRoot;
             this.m_remotingClient.ValidPolicyErrors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
             // 

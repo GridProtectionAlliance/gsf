@@ -119,6 +119,11 @@ namespace GSF.Communication
         public const bool DefaultIntegratedSecurity = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="IgnoreInvalidCredentials"/> property.
+        /// </summary>
+        public const bool DefaultIgnoreInvalidCredentials = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
         /// </summary>
         public const bool DefaultAllowDualStackSocket = true;
@@ -148,6 +153,7 @@ namespace GSF.Communication
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
+        private bool m_ignoreInvalidCredentials;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_maxSendQueueSize;
@@ -186,6 +192,7 @@ namespace GSF.Communication
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
+            m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_clientInfoLookup = new ConcurrentDictionary<Guid, TlsClientInfo>();
@@ -265,6 +272,31 @@ namespace GSF.Communication
             set
             {
                 m_integratedSecurity = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the server
+        /// should ignore errors when the client's credentials are invalid.
+        /// </summary>
+        /// <remarks>
+        /// This property should only be set to true if there is an alternative by which
+        /// to authenticate the client when integrated security fails. When this is set
+        /// to true, if the client's credentials are invalid, the <see cref="TryGetClientPrincipal"/>
+        /// method will return true for that client, but the principal will still be null.
+        /// </remarks>
+        [Category("Security"),
+        DefaultValue(DefaultIgnoreInvalidCredentials),
+        Description("Indicates whether the client Windows account credentials are validated during authentication.")]
+        public bool IgnoreInvalidCredentials
+        {
+            get
+            {
+                return m_ignoreInvalidCredentials;
+            }
+            set
+            {
+                m_ignoreInvalidCredentials = value;
             }
         }
 
@@ -1017,10 +1049,18 @@ namespace GSF.Communication
 
             try
             {
-                negotiateStream.EndAuthenticateAsServer(asyncResult);
+                try
+                {
+                    negotiateStream.EndAuthenticateAsServer(asyncResult);
 
-                if (negotiateStream.RemoteIdentity is WindowsIdentity)
-                    clientPrincipal = new WindowsPrincipal((WindowsIdentity)negotiateStream.RemoteIdentity);
+                    if (negotiateStream.RemoteIdentity is WindowsIdentity)
+                        clientPrincipal = new WindowsPrincipal((WindowsIdentity)negotiateStream.RemoteIdentity);
+                }
+                catch (InvalidCredentialException)
+                {
+                    if (!m_ignoreInvalidCredentials)
+                        throw;
+                }
 
                 // We can proceed further with receiving data from the client.
                 m_clientInfoLookup.TryAdd(client.ID, new TlsClientInfo

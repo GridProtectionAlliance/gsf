@@ -96,6 +96,7 @@ using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Security;
 using System.Security.Principal;
 using System.ServiceProcess;
@@ -1993,18 +1994,23 @@ namespace GSF.ServiceProcess
             }
         }
 
+        private delegate bool TryGetClientPrincipal(Guid clientID, out WindowsPrincipal clientPrincipal);
+
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
             ClientInfo requestSender = FindConnectedClient(e.Argument1);
 
-            TlsServer remotingServer = m_remotingServer as TlsServer;
+            MethodInfo tryGetClientPrincipalInfo;
+            TryGetClientPrincipal tryGetClientPrincipal = null;
             WindowsPrincipal clientPrincipal;
 
             if (requestSender == null)
             {
                 // First message from a remote client should be its info.
-                ClientInfo client = null;
+                ClientInfo client;
+
                 Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out client);
+
                 try
                 {
                     if (client != null)
@@ -2012,8 +2018,23 @@ namespace GSF.ServiceProcess
                         client.ClientID = e.Argument1;
                         client.ConnectedAt = DateTime.Now;
 
-                        if ((object)remotingServer != null && remotingServer.TryGetClientPrincipal(e.Argument1, out clientPrincipal))
-                            Thread.CurrentPrincipal = clientPrincipal;
+                        // Attempt to find the TryGetClientPrincipal method using reflection
+                        if ((object)m_remotingServer != null)
+                        {
+                            tryGetClientPrincipalInfo = m_remotingServer.GetType().GetMethod("TryGetClientPrincipal", new Type[] { typeof(Guid), typeof(WindowsPrincipal).MakeByRefType() });
+
+                            if ((object)tryGetClientPrincipalInfo != null && tryGetClientPrincipalInfo.ReturnType == typeof(bool))
+                                tryGetClientPrincipal = (TryGetClientPrincipal)Delegate.CreateDelegate(typeof(TryGetClientPrincipal), m_remotingServer, tryGetClientPrincipalInfo);
+                        }
+
+                        // Attempt to get the client principal from the remoting server
+                        if ((object)tryGetClientPrincipal != null && tryGetClientPrincipal(e.Argument1, out clientPrincipal))
+                        {
+                            if ((object)clientPrincipal != null)
+                                Thread.CurrentPrincipal = clientPrincipal;
+                            else
+                                Thread.CurrentPrincipal = client.ClientUser;
+                        }
 
                         // Engage security for the remote client connection if configured.
                         if (!m_secureRemoteInteractions || (m_secureRemoteInteractions && VerifySecurity(client)))
@@ -2022,6 +2043,7 @@ namespace GSF.ServiceProcess
                             {
                                 m_remoteClients.Add(client);
                             }
+
                             SendAuthenticationSuccessResponse(client.ClientID);
                             UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
                         }

@@ -111,7 +111,7 @@ namespace TsfManager
             {
                 KeyValuePair<Guid, string> currentNode = (KeyValuePair<Guid, string>)ComboboxNode.SelectedItem;
                 m_selectedNodeId = currentNode.Key;
-                
+
                 Dictionary<Guid, string> updatedNodeList = Node.GetLookupList(null);
                 ComboboxNode.ItemsSource = updatedNodeList;
                 if (ComboboxNode.Items.Count > 0)
@@ -181,28 +181,24 @@ namespace TsfManager
                 ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectionBoxItem).Key;
             else
                 ((App)Application.Current).NodeID = ((KeyValuePair<Guid, string>)ComboboxNode.SelectedItem).Key;
-            m_menuDataItems[0].Command.Execute(null);
-            ConnectToService();
 
+            m_menuDataItems[0].Command.Execute(null);
         }
 
         private void ConnectToService()
         {
             if (m_windowsServiceClient != null)
             {
-                try
+                if ((object)m_windowsServiceClient != null && (object)m_windowsServiceClient.Helper != null && (object)m_windowsServiceClient.Helper.RemotingClient != null)
                 {
                     m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
                     m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
-                }
-                catch
-                {
                 }
             }
 
             m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
 
-            if (m_windowsServiceClient != null)
+            if ((object)m_windowsServiceClient != null)
             {
                 m_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
                 m_windowsServiceClient.Helper.RemotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
@@ -210,7 +206,7 @@ namespace TsfManager
                 if (m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
                 {
                     EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
-                        {
+                    {
                         EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
                         ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
                     });
@@ -218,7 +214,7 @@ namespace TsfManager
                 else
                 {
                     EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
-                        {
+                    {
                         EllipseConnectionState.Fill = Application.Current.Resources["RedRadialGradientBrush"] as RadialGradientBrush;
                         ToolTipService.SetToolTip(EllipseConnectionState, "Disconnected from the service");
                     });
@@ -229,19 +225,19 @@ namespace TsfManager
         private void RemotingClient_ConnectionTerminated(object sender, EventArgs e)
         {
             EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
-                {
-                    EllipseConnectionState.Fill = Application.Current.Resources["RedRadialGradientBrush"] as RadialGradientBrush;
-                    ToolTipService.SetToolTip(EllipseConnectionState, "Disconnected from the service");
-                });
+            {
+                EllipseConnectionState.Fill = Application.Current.Resources["RedRadialGradientBrush"] as RadialGradientBrush;
+                ToolTipService.SetToolTip(EllipseConnectionState, "Disconnected from the service");
+            });
         }
 
         private void RemotingClient_ConnectionEstablished(object sender, EventArgs e)
         {
             EllipseConnectionState.Dispatcher.BeginInvoke((Action)delegate
-                {
-                    EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
-                    ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
-                });
+            {
+                EllipseConnectionState.Fill = Application.Current.Resources["GreenRadialGradientBrush"] as RadialGradientBrush;
+                ToolTipService.SetToolTip(EllipseConnectionState, "Connected to the service");
+            });
         }
 
         private void FrameContent_Navigated(object sender, NavigationEventArgs e)

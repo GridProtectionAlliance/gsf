@@ -77,6 +77,11 @@ namespace GSF.Communication
         public const bool DefaultIntegratedSecurity = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="IgnoreInvalidCredentials"/> property.
+        /// </summary>
+        public const bool DefaultIgnoreInvalidCredentials = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
         /// </summary>
         public const bool DefaultAllowDualStackSocket = true;
@@ -106,6 +111,7 @@ namespace GSF.Communication
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
+        private bool m_ignoreInvalidCredentials;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_connectionAttempts;
@@ -152,6 +158,7 @@ namespace GSF.Communication
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
+            m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_sslClient = new TransportProvider<SslStream>();
@@ -233,6 +240,29 @@ namespace GSF.Communication
             set
             {
                 m_integratedSecurity = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the server
+        /// should ignore errors when the client's credentials are invalid.
+        /// </summary>
+        /// <remarks>
+        /// This property should only be set to true if there is an alternative by which
+        /// to authenticate the client when integrated security fails.
+        /// </remarks>
+        [Category("Security"),
+        DefaultValue(DefaultIgnoreInvalidCredentials),
+        Description("Indicates whether the client Windows account credentials are validated during authentication.")]
+        public bool IgnoreInvalidCredentials
+        {
+            get
+            {
+                return m_ignoreInvalidCredentials;
+            }
+            set
+            {
+                m_ignoreInvalidCredentials = value;
             }
         }
 
@@ -655,41 +685,47 @@ namespace GSF.Communication
             {
                 if (CurrentState == ClientState.Disconnected && !m_disposed)
                 {
-                    // Client may still be attempting to receive data from a prior connection
-                    if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
-                        throw new InvalidOperationException("Client is not yet fully disconnected");
+                    try
+                    {
+                        // Client may still be attempting to receive data from a prior connection
+                        if (Interlocked.CompareExchange(ref m_receiving, 0, 0) != 0)
+                            throw new InvalidOperationException("Client is not yet fully disconnected");
 
-                    if (m_connectWaitHandle == null)
-                        m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
+                        if (m_connectWaitHandle == null)
+                            m_connectWaitHandle = (ManualResetEvent)base.ConnectAsync();
 
-                    OnConnectionAttempt();
-                    m_connectWaitHandle.Reset();
+                        OnConnectionAttempt();
+                        m_connectWaitHandle.Reset();
 
-                    // Overwrite config file if integrated security exists in connection string
-                    if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
-                        m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
+                        // Overwrite config file if integrated security exists in connection string
+                        if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
+                            m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
-                    // Create client socket to establish presence
-                    Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
-                    Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                        // Create client socket to establish presence
+                        Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
+                        Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
-                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation
-                    SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
+                        // Begin asynchronous connect operation and return wait handle for the asynchronous operation
+                        SocketAsyncEventArgs args = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction();
 
-                    args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
-                    args.SocketFlags = SocketFlags.None;
-                    args.UserToken = socket;
-                    args.Completed += m_connectHandler;
+                        args.RemoteEndPoint = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value), m_ipStack);
+                        args.SocketFlags = SocketFlags.None;
+                        args.UserToken = socket;
+                        args.Completed += m_connectHandler;
 
-                    if (!socket.ConnectAsync(args))
-                        ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+                        if (!socket.ConnectAsync(args))
+                            ThreadPool.QueueUserWorkItem(state => ProcessConnect((SocketAsyncEventArgs)state), args);
+                    }
+                    catch (Exception ex)
+                    {
+                        if ((object)m_connectWaitHandle != null)
+                            m_connectWaitHandle.Set();
 
-                    return m_connectWaitHandle;
+                        OnConnectionException(ex);
+                    }
                 }
-                else
-                {
-                    throw new InvalidOperationException("Client is currently not disconnected");
-                }
+
+                return m_connectWaitHandle;
             }
             catch
             {
@@ -842,6 +878,26 @@ namespace GSF.Communication
         }
 
         /// <summary>
+        /// Raises the <see cref="ClientBase.SendDataException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ClientBase.SendDataException"/> event.</param>
+        protected override void OnSendDataException(Exception ex)
+        {
+            if (CurrentState != ClientState.Disconnected)
+                base.OnSendDataException(ex);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ClientBase.ReceiveDataException"/> event.
+        /// </summary>
+        /// <param name="ex">Exception to send to <see cref="ClientBase.ReceiveDataException"/> event.</param>
+        protected void OnReceiveDataException(SocketException ex)
+        {
+            if (ex.SocketErrorCode != SocketError.Disconnecting)
+                OnReceiveDataException((Exception)ex);
+        }
+
+        /// <summary>
         /// Raises the <see cref="ClientBase.ReceiveDataException"/> event.
         /// </summary>
         /// <param name="ex">Exception to send to <see cref="ClientBase.ReceiveDataException"/> event.</param>
@@ -849,15 +905,6 @@ namespace GSF.Communication
         {
             if (CurrentState != ClientState.Disconnected)
                 base.OnReceiveDataException(ex);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="ClientBase.ConnectionTerminated"/> event.
-        /// </summary>
-        protected override void OnConnectionTerminated()
-        {
-            if (CurrentState != ClientState.Disconnected)
-                base.OnConnectionTerminated();
         }
 
         /// <summary>
@@ -994,8 +1041,16 @@ namespace GSF.Communication
 
             try
             {
-                // Finish authentication.
-                negotiateStream.EndAuthenticateAsClient(asyncResult);
+                try
+                {
+                    // Finish authentication.
+                    negotiateStream.EndAuthenticateAsClient(asyncResult);
+                }
+                catch (InvalidCredentialException)
+                {
+                    if (!m_ignoreInvalidCredentials)
+                        throw;
+                }
 
                 // Notify of established connection
                 // and begin receiving data.

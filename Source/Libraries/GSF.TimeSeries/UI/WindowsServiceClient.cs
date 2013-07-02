@@ -64,7 +64,6 @@ namespace GSF.TimeSeries.UI
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
             string setting;
 
-            SimplePolicyChecker policyChecker;
             SslProtocols enabledSslProtocols;
             SslPolicyErrors validPolicyErrors;
             X509ChainStatusFlags validChainFlags;
@@ -80,6 +79,7 @@ namespace GSF.TimeSeries.UI
             m_remotingClient = new TlsClient();
             m_remotingClient.ConnectionString = connectionString;
             m_remotingClient.PayloadAware = true;
+            m_remotingClient.IgnoreInvalidCredentials = true;
             m_remotingClient.MaxConnectionAttempts = -1;
             m_remotingClient.RemoteCertificateValidationCallback = RemoteCertificateValidationCallback;
 

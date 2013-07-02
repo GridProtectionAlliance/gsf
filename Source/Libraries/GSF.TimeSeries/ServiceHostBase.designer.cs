@@ -151,9 +151,11 @@ namespace GSF.TimeSeries
             // 
             this.m_remotingServer.CertificateFile = "Internal.cer";
             this.m_remotingServer.ConfigurationString = "Port=8500";
+            this.m_remotingServer.IgnoreInvalidCredentials = true;
             this.m_remotingServer.PayloadAware = true;
             this.m_remotingServer.PersistSettings = true;
             this.m_remotingServer.SettingsCategory = "RemotingServer";
+            this.m_remotingServer.TrustedCertificatesPath = "Certs\\Remotes";
             // 
             // ServiceHostBase
             // 

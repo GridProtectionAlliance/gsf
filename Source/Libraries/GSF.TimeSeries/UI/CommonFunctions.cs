@@ -316,18 +316,19 @@ namespace GSF.TimeSeries.UI
         /// <param name="nodeID">Current node ID <see cref="CurrentNodeID()"/> to assign.</param>
         public static void SetAsCurrentNodeID(this Guid nodeID)
         {
-            s_currentNodeID = nodeID;
+            if (s_currentNodeID != nodeID)
+            {
+                s_currentNodeID = nodeID;
 
-            // When node selection changes, reset other static members related to node.
-            //s_remoteStatusServerConnectionString = string.Empty;
-            s_serviceConnectionString = string.Empty;
-            s_dataPublisherConnectionString = string.Empty;
-            s_realTimeStatisticServiceUrl = string.Empty;
-            //s_dataPublisherPort = string.Empty;
-            s_timeSeriesDataServiceUrl = string.Empty;
-            SetRetryServiceConnection(true);
-            DisconnectWindowsServiceClient();
-            ConnectWindowsServiceClient();
+                // When node selection changes, reset other static members related to node.
+                s_serviceConnectionString = string.Empty;
+                s_dataPublisherConnectionString = string.Empty;
+                s_realTimeStatisticServiceUrl = string.Empty;
+                s_timeSeriesDataServiceUrl = string.Empty;
+                SetRetryServiceConnection(true);
+                DisconnectWindowsServiceClient();
+                ConnectWindowsServiceClient();
+            }
         }
 
         /// <summary>
@@ -501,47 +502,46 @@ namespace GSF.TimeSeries.UI
                 DisconnectWindowsServiceClient();
                 ServiceConnectionRefreshed(null, EventArgs.Empty);
             }
-            else
+            else if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
             {
-                if (s_windowsServiceClient == null || s_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
+                if (s_windowsServiceClient != null)
+                    DisconnectWindowsServiceClient();
+
+                AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
+
+                try
                 {
-                    if (s_windowsServiceClient != null)
-                        DisconnectWindowsServiceClient();
+                    string connectionString = database.ServiceConnectionString(true);
 
-                    AdoDataConnection database = new AdoDataConnection(DefaultSettingsCategory);
-                    try
+                    if (!string.IsNullOrWhiteSpace(connectionString))
                     {
-                        string connectionString = database.ServiceConnectionString(true);
+                        s_windowsServiceClient = new WindowsServiceClient(connectionString);
 
-                        if (!string.IsNullOrWhiteSpace(connectionString))
+                        if (SecurityProviderCache.TryGetCachedProvider(CurrentUser, out provider))
                         {
-                            s_windowsServiceClient = new WindowsServiceClient(connectionString);
+                            userData = provider.UserData;
 
-                            if (SecurityProviderCache.TryGetCachedProvider(CurrentUser, out provider))
+                            if ((object)userData != null)
                             {
-                                userData = provider.UserData;
+                                s_windowsServiceClient.Helper.Username = userData.LoginID;
+                                s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(provider.Password);
+                                remotingClient = s_windowsServiceClient.Helper.RemotingClient as TlsClient;
 
-                                if ((object)userData != null)
-                                {
-                                    s_windowsServiceClient.Helper.Username = userData.LoginID;
-                                    s_windowsServiceClient.Helper.Password = SecurityProviderUtility.EncryptPassword(provider.Password);
-                                    remotingClient = s_windowsServiceClient.Helper.RemotingClient as TlsClient;
-
-                                    if ((object)remotingClient != null && (object)provider.SecurePassword != null && provider.SecurePassword.Length > 0)
-                                        remotingClient.NetworkCredential = new NetworkCredential(userData.LoginID, provider.SecurePassword);
-                                }
+                                if ((object)remotingClient != null && (object)provider.SecurePassword != null && provider.SecurePassword.Length > 0)
+                                    remotingClient.NetworkCredential = new NetworkCredential(userData.LoginID, provider.SecurePassword);
                             }
-
-                            s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
-                            s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
-                            s_windowsServiceClient.Helper.RemotingClient.ConnectionException += RemotingClient_ConnectionException;
-                            ThreadPool.QueueUserWorkItem(ConnectAsync, null);
                         }
+
+                        s_windowsServiceClient.Helper.RemotingClient.MaxConnectionAttempts = -1;
+                        s_windowsServiceClient.Helper.RemotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+                        s_windowsServiceClient.Helper.RemotingClient.ConnectionException += RemotingClient_ConnectionException;
+
+                        ConnectAsync();
                     }
-                    finally
-                    {
-                        database.Dispose();
-                    }
+                }
+                finally
+                {
+                    database.Dispose();
                 }
             }
         }
@@ -571,23 +571,20 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Connects asynchronously to backend windows service.
         /// </summary>
-        /// <param name="state">parameter used.</param>
-        private static void ConnectAsync(object state)
+        private static void ConnectAsync()
         {
-            try
+            ThreadPool.QueueUserWorkItem(state =>
             {
-                if (s_windowsServiceClient != null && s_retryServiceConnection)
-                    s_windowsServiceClient.Helper.Connect();
-            }
-            catch (Exception ex)
-            {
-                Application.Current.Dispatcher.BeginInvoke(Popup, "The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
-            }
-        }
-
-        static void dispatcherOp_Completed(object sender, EventArgs e)
-        {
-            System.Console.WriteLine("The checkbox has finished being updated!");
+                try
+                {
+                    if (s_windowsServiceClient != null && s_retryServiceConnection)
+                        s_windowsServiceClient.Helper.Connect();
+                }
+                catch (Exception ex)
+                {
+                    Application.Current.Dispatcher.BeginInvoke(Popup, "The IP address is not Valid,Please Re-check your IP address." + ex.Message + Environment.NewLine, " Exception:", MessageBoxImage.Error);
+                }
+            });
         }
 
         /// <summary>

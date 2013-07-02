@@ -61,6 +61,7 @@ using System.ComponentModel;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -169,6 +170,11 @@ namespace GSF.Communication
         public const bool DefaultIntegratedSecurity = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="IgnoreInvalidCredentials"/> property.
+        /// </summary>
+        public const bool DefaultIgnoreInvalidCredentials = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="AllowDualStackSocket"/> property.
         /// </summary>
         public const bool DefaultAllowDualStackSocket = true;
@@ -191,6 +197,7 @@ namespace GSF.Communication
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
         private bool m_integratedSecurity;
+        private bool m_ignoreInvalidCredentials;
         private IPStack m_ipStack;
         private bool m_allowDualStackSocket;
         private int m_maxSendQueueSize;
@@ -234,6 +241,7 @@ namespace GSF.Communication
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
             m_integratedSecurity = DefaultIntegratedSecurity;
+            m_ignoreInvalidCredentials = DefaultIgnoreInvalidCredentials;
             m_allowDualStackSocket = DefaultAllowDualStackSocket;
             m_maxSendQueueSize = DefaultMaxSendQueueSize;
             m_tcpClient = new TransportProvider<Socket>();
@@ -316,6 +324,29 @@ namespace GSF.Communication
             set
             {
                 m_integratedSecurity = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the server
+        /// should ignore errors when the client's credentials are invalid.
+        /// </summary>
+        /// <remarks>
+        /// This property should only be set to true if there is an alternative by which
+        /// to authenticate the client when integrated security fails.
+        /// </remarks>
+        [Category("Security"),
+        DefaultValue(DefaultIgnoreInvalidCredentials),
+        Description("Indicates whether the client Windows account credentials are validated during authentication.")]
+        public bool IgnoreInvalidCredentials
+        {
+            get
+            {
+                return m_ignoreInvalidCredentials;
+            }
+            set
+            {
+                m_ignoreInvalidCredentials = value;
             }
         }
 
@@ -832,6 +863,11 @@ namespace GSF.Communication
                         socketStream = new NetworkStream(m_tcpClient.Provider);
                         authenticationStream = new NegotiateStream(socketStream);
                         authenticationStream.AuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty);
+                    }
+                    catch (InvalidCredentialException)
+                    {
+                        if (!m_ignoreInvalidCredentials)
+                            throw;
                     }
                     finally
                     {
