@@ -294,7 +294,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         #region [ Constructor ]
 
         public OutputStreams(int itemsPerPage, bool autoSave = true)
-            : base(itemsPerPage, true)
+            : base(itemsPerPage, autoSave)
         {
         }
 

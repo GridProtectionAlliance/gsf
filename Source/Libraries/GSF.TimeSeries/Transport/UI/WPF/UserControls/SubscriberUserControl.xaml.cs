@@ -85,7 +85,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             InitializeComponent();
             this.Loaded += SubscriberUserControl_Loaded;
             this.Unloaded += SubscriberUserControl_Unloaded;
-            m_dataContext = new Subscribers(10);
+            m_dataContext = new Subscribers(10, false);
             this.DataContext = m_dataContext;
             m_dataContext.PropertyChanged += DataContext_PropertyChanged;
             m_dataContext.SecurityMode = !string.IsNullOrEmpty(m_dataContext.CurrentItem.RemoteCertificateFile) ? SecurityMode.TLS : SecurityMode.Gateway;
@@ -486,6 +486,27 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                         }
                     }
                 }
+            }
+        }
+
+        private void DataGridEnabledCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Auto-save changes to the subscriptions
+                m_dataContext.AutoSave = true;
+                m_dataContext.ProcessPropertyChange();
+                m_dataContext.AutoSave = false;
+
+                if (m_dataContext.CanSave)
+                    CommonFunctions.SendCommandToService("ReloadConfig");
+            }
+            catch (Exception ex)
+            {
+                if ((object)ex.InnerException != null)
+                    CommonFunctions.LogException(null, "Subscriber Autosave", ex.InnerException);
+                else
+                    CommonFunctions.LogException(null, "Subscriber Autosave", ex);
             }
         }
 

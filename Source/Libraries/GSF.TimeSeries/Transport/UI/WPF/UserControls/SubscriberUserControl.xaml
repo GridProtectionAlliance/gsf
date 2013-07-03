@@ -112,7 +112,13 @@
                 <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{tsfBinding:Column Path=Name}" />
                 <sdk:DataGridTextColumn Header="Valid IP Addresses" Width="2*" Binding="{tsfBinding:Column Path=ValidIPAddresses}" />
                 <sdk:DataGridTextColumn Header="Remote Certificate" Width="2*" Binding="{tsfBinding:Column Path=RemoteCertificateFile}" />
-                <sdk:DataGridTextColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}"/>
+                <sdk:DataGridTemplateColumn Header="Enabled" Width="*">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{tsfBinding:Column Path=Enabled}" HorizontalAlignment="Center" Click="DataGridEnabledCheckBox_Click" />
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 

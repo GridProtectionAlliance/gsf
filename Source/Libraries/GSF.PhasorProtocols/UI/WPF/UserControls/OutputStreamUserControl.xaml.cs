@@ -60,7 +60,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         public OutputStreamUserControl()
         {
             InitializeComponent();
-            m_dataContext = new OutputStreams(7, false);
+            m_dataContext = new OutputStreams(7);
             m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
             this.DataContext = m_dataContext;
         }
