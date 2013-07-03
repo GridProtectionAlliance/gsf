@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.ServiceModel;
 using System.Text;
 using System.Threading;
 using DataQualityMonitoring.Services;
@@ -152,12 +153,20 @@ namespace DataQualityMonitoring
                 InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, filterExpression);
             }
 
-            // Set up alarm service
-            m_alarmService = new AlarmService(this);
-            m_alarmService.SettingsCategory = base.Name.Replace("!", "").ToLower() + m_alarmService.SettingsCategory;
-            m_alarmService.ServiceProcessException += AlarmService_ServiceProcessException;
-            m_alarmService.PersistSettings = true;
-            m_alarmService.Initialize();
+            try
+            {
+                // Set up alarm service
+                m_alarmService = new AlarmService(this);
+                m_alarmService.SettingsCategory = base.Name.Replace("!", "").ToLower() + m_alarmService.SettingsCategory;
+                m_alarmService.ServiceProcessException += AlarmService_ServiceProcessException;
+                m_alarmService.PersistSettings = true;
+                m_alarmService.Initialize();
+            }
+            catch (Exception ex)
+            {
+                string message = string.Format("Unable to initialize alarm service due to exception: {0}", ex.Message);
+                OnProcessException(new InvalidOperationException(message, ex));
+            }
         }
 
         /// <summary>
