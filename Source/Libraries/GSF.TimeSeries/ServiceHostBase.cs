@@ -1738,8 +1738,15 @@ namespace GSF.TimeSeries
 
                     if (adapter != null)
                     {
-                        adapterAction(adapter);
-                        SendResponse(requestInfo, true);
+                        if (adapter.Initialized)
+                        {
+                            adapterAction(adapter);
+                            SendResponse(requestInfo, true);
+                        }
+                        else
+                        {
+                            SendResponse(requestInfo, false, "Unable to {0} -- adapter is not initialized.", actionName);
+                        }
                     }
                 }
                 else

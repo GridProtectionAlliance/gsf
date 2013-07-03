@@ -873,28 +873,22 @@ namespace PhasorProtocolAdapters
             m_lastConfigurationPublishMinute = -1;
             m_configurationFramePublished = false;
 
-            // Wait for initialization to complete
-            if (WaitForInitialize(InitializationTimeout))
-            {
-                // Start communications servers
-                if ((m_autoStartDataChannel || m_commandChannel == null) && m_dataChannel != null && m_dataChannel.CurrentState == ServerState.NotRunning)
-                    m_dataChannel.Start();
+            // Start communications servers
+            if ((m_autoStartDataChannel || m_commandChannel == null) && m_dataChannel != null && m_dataChannel.CurrentState == ServerState.NotRunning)
+                m_dataChannel.Start();
 
-                if (m_commandChannel != null && m_commandChannel.CurrentState == ServerState.NotRunning)
-                    m_commandChannel.Start();
+            if (m_commandChannel != null && m_commandChannel.CurrentState == ServerState.NotRunning)
+                m_commandChannel.Start();
 
-                // Make sure publication channel is defined
-                EstablishPublicationChannel();
+            // Make sure publication channel is defined
+            EstablishPublicationChannel();
 
-                // Base action adapter gets started once data channel has been started (see m_dataChannel_ServerStarted)
-                // so that the system doesn't attempt to start frame publication without an operational output data channel
-                // when m_autoStartDataChannel is set to false. Otherwise if data is being published on command channel,
-                // we go ahead and start concentration engine...
-                if (m_publishChannel == m_commandChannel)
-                    base.Start();
-            }
-            else
-                OnProcessException(new TimeoutException("Failed to start phasor data concentrator due to timeout waiting for initialization."));
+            // Base action adapter gets started once data channel has been started (see m_dataChannel_ServerStarted)
+            // so that the system doesn't attempt to start frame publication without an operational output data channel
+            // when m_autoStartDataChannel is set to false. Otherwise if data is being published on command channel,
+            // we go ahead and start concentration engine...
+            if (m_publishChannel == m_commandChannel)
+                base.Start();
         }
 
         /// <summary>

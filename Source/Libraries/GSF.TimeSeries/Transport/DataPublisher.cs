@@ -574,7 +574,6 @@ namespace GSF.TimeSeries.Transport
         internal const int CipherSaltLength = 8;
 
         // Fields
-        private ManualResetEvent m_initializeWaitHandle;
         private IServer m_commandChannel;
         private CertificatePolicyChecker m_certificateChecker;
         private Dictionary<X509Certificate, DataRow> m_subscriberIdentities;
@@ -625,7 +624,6 @@ namespace GSF.TimeSeries.Transport
             base.Name = "Data Publisher Collection";
             base.DataMember = "[internal]";
 
-            m_initializeWaitHandle = new ManualResetEvent(false);
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
             m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
@@ -1002,6 +1000,18 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets flag that determines if <see cref="DataPublisher"/> subscriptions
+        /// are automatically initialized when they are added to the collection.
+        /// </summary>
+        protected override bool AutoInitialize
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets dictionary of connected clients.
         /// </summary>
         internal protected ConcurrentDictionary<Guid, ClientConnection> ClientConnections
@@ -1053,29 +1063,6 @@ namespace GSF.TimeSeries.Transport
                     m_commandChannel.SendClientDataException += m_commandChannel_SendClientDataException;
                     m_commandChannel.ServerStarted += m_commandChannel_ServerStarted;
                     m_commandChannel.ServerStopped += m_commandChannel_ServerStopped;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets flag indicating if the adapter has been initialized successfully.
-        /// </summary>
-        public override bool Initialized
-        {
-            get
-            {
-                return base.Initialized;
-            }
-            set
-            {
-                base.Initialized = value;
-
-                if ((object)m_initializeWaitHandle != null)
-                {
-                    if (value)
-                        m_initializeWaitHandle.Set();
-                    else
-                        m_initializeWaitHandle.Reset();
                 }
             }
         }
@@ -1227,14 +1214,6 @@ namespace GSF.TimeSeries.Transport
                         }
                         m_routingTables = null;
 
-                        if ((object)m_initializeWaitHandle != null)
-                        {
-                            m_initializeWaitHandle.Close();
-                            m_initializeWaitHandle.Dispose();
-                        }
-
-                        m_initializeWaitHandle = null;
-
                         // Dispose command channel restart timer
                         if ((object)m_commandChannelRestartTimer != null)
                         {
@@ -1327,10 +1306,24 @@ namespace GSF.TimeSeries.Transport
 
             if (settings.TryGetValue("cacheMeasurementKeys", out setting))
             {
+                // Create adapter for caching measurements that have a slower refresh interval
                 LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", setting));
+
+                // Set up its data source first
                 cache.DataSource = DataSource;
+
+                // Add the cache as a child to the data publisher
                 Add(cache);
+
+                // AutoInitialize is false for the DataPublisher,
+                // so we must initialize manually
+                cache.Initialize();
+                cache.Initialized = true;
+
+                // Trigger routing table calculation to route cached measurements to the cache
                 m_routingTables.CalculateRoutingTables(null);
+
+                // Start tracking cached measurements
                 cache.Start();
             }
 
@@ -1407,12 +1400,6 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public override void Start()
         {
-            if (!WaitForInitialize(InitializationTimeout))
-            {
-                OnProcessException(new TimeoutException("Failed to start adapter due to timeout waiting for initialization."));
-                return;
-            }
-
             if (!Enabled)
             {
                 base.Start();
@@ -1431,19 +1418,6 @@ namespace GSF.TimeSeries.Transport
 
             if ((object)m_commandChannel != null)
                 m_commandChannel.Stop();
-        }
-
-        /// <summary>
-        /// Blocks the <see cref="Thread.CurrentThread"/> until the adapter is <see cref="Initialized"/>.
-        /// </summary>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        public override bool WaitForInitialize(int timeout)
-        {
-            if ((object)m_initializeWaitHandle != null)
-                return m_initializeWaitHandle.WaitOne(timeout);
-
-            return false;
         }
 
         /// <summary>
@@ -2389,8 +2363,8 @@ namespace GSF.TimeSeries.Transport
 
                 if (TryGetClientSubscription(clientID, out clientSubscription))
                 {
-                    Remove(clientSubscription);
                     clientSubscription.Stop();
+                    Remove(clientSubscription);
 
                     try
                     {
@@ -2754,11 +2728,6 @@ namespace GSF.TimeSeries.Transport
                             subscription.ConnectionString = connectionString;
                             subscription.DataSource = DataSource;
 
-                            if (subscription.Settings.TryGetValue("initializationTimeout", out setting))
-                                subscription.InitializationTimeout = int.Parse(setting);
-                            else
-                                subscription.InitializationTimeout = InitializationTimeout;
-
                             // Pass subscriber assembly information to connection, if defined
                             if (subscription.Settings.TryGetValue("assemblyInfo", out setting))
                                 connection.SubscriberInfo = setting;
@@ -2823,15 +2792,13 @@ namespace GSF.TimeSeries.Transport
                                 subscription.BufferBlockRetransmission += subscription_BufferBlockRetransmission;
                                 subscription.ProcessingComplete += subscription_ProcessingComplete;
                             }
-                            else
-                            {
-                                // Manually re-initialize existing client subscription
-                                subscription.Initialize();
-                                subscription.Initialized = true;
-                            }
 
-                            // Ensure that subscription is initialized and signal index cache has been updated.
-                            subscription.WaitForInitialize(subscription.InitializationTimeout);
+                            // Make sure temporal support is initialized
+                            OnRequestTemporalSupport();
+
+                            // Manually initialize client subscription
+                            subscription.Initialize();
+                            subscription.Initialized = true;
 
                             // Send updated signal index cache to client with validated rights of the selected input measurement keys
                             byte[] serializedSignalIndexCache = SerializeSignalIndexCache(clientID, subscription.SignalIndexCache);

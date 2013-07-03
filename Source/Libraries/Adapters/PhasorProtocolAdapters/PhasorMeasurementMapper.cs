@@ -187,7 +187,6 @@ namespace PhasorProtocolAdapters
         private ConcurrentDictionary<string, ConfigurationCell> m_labelDefinedDevices;
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
         private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
-        private DataSubscriber m_primaryDataSource;
         private MissingDataMonitor m_missingDataMonitor;
         private Timer m_dataStreamMonitor;
         private bool m_allowUseOfCachedConfiguration;
@@ -676,11 +675,6 @@ namespace PhasorProtocolAdapters
                     status.AppendFormat("     Shared mapping source: {0}", SharedMapping);
                     status.AppendLine();
                 }
-                if ((object)m_primaryDataSource != null)
-                {
-                    status.AppendFormat("       Primary data source: {0}", m_primaryDataSource.Name);
-                    status.AppendLine();
-                }
                 status.AppendFormat(" Source connection ID code: {0}", m_accessID);
                 status.AppendLine();
                 status.AppendFormat("     Forcing label mapping: {0}", m_forceLabelMapping);
@@ -954,13 +948,6 @@ namespace PhasorProtocolAdapters
                             m_dataStreamMonitor.Dispose();
                         }
                         m_dataStreamMonitor = null;
-
-                        if ((object)m_primaryDataSource != null)
-                        {
-                            m_primaryDataSource.ConnectionEstablished -= m_primaryDataSource_ConnectionEstablished;
-                            m_primaryDataSource.ConnectionTerminated -= m_primaryDataSource_ConnectionTerminated;
-                        }
-                        m_primaryDataSource = null;
 
                         if ((object)m_definedDevices != null)
                         {
@@ -1643,29 +1630,6 @@ namespace PhasorProtocolAdapters
                 status.Append("  ** Not connected");
 
             return status.ToString();
-        }
-
-        /// <summary>
-        /// Starts the <see cref="PhasorMeasurementMapper"/> or restarts it if it is already running.
-        /// </summary>
-        [AdapterCommand("Starts the adapter or restarts it if it is already running.", "Administrator", "Editor")]
-        public override void Start()
-        {
-            // We only start the adapter if a primary data source is not defined - otherwise we yield to its connection state to start this connection
-            if ((object)m_primaryDataSource == null)
-            {
-                base.Start();
-            }
-            else
-            {
-                // Wait for primary source adapter to initialize
-                if (!m_primaryDataSource.WaitForInitialize(m_primaryDataSource.InitializationTimeout))
-                {
-                    // Primary source adapter never initialized, so we start backup connection
-                    OnProcessException(new TimeoutException("Timeout waiting for primary source adapter initialization - starting backup connection."));
-                    base.Start();
-                }
-            }
         }
 
         /// <summary>

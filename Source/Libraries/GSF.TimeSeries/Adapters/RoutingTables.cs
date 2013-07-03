@@ -332,7 +332,7 @@ namespace GSF.TimeSeries.Adapters
                     foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                     {
                         // Make sure adapter is initialized before calculating route
-                        if (actionAdapter.WaitForInitialize(actionAdapter.InitializationTimeout))
+                        if (actionAdapter.Initialized)
                         {
                             measurementKeys = actionAdapter.InputMeasurementKeys;
 
@@ -350,12 +350,12 @@ namespace GSF.TimeSeries.Adapters
                                 }
                             }
                             else
+                            {
                                 broadcastRoutes.Add(actionAdapter);
+                            }
 
                             AddDependencies(actionAdapter, dependencies, backwardDependencies);
                         }
-                        else
-                            broadcastRoutes.Add(actionAdapter);
                     }
                 }
 
@@ -364,7 +364,7 @@ namespace GSF.TimeSeries.Adapters
                     foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
                     {
                         // Make sure adapter is initialized before calculating route
-                        if (outputAdapter.WaitForInitialize(outputAdapter.InitializationTimeout))
+                        if (outputAdapter.Initialized)
                         {
                             measurementKeys = outputAdapter.InputMeasurementKeys;
 
@@ -382,12 +382,12 @@ namespace GSF.TimeSeries.Adapters
                                 }
                             }
                             else
+                            {
                                 broadcastRoutes.Add(outputAdapter);
+                            }
 
                             AddDependencies(outputAdapter, dependencies, backwardDependencies);
                         }
-                        else
-                            broadcastRoutes.Add(outputAdapter);
                     }
                 }
 

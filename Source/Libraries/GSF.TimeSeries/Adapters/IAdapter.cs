@@ -265,17 +265,6 @@ namespace GSF.TimeSeries.Adapters
         string GetShortStatus(int maxLength);
 
         /// <summary>
-        /// Blocks the current thread until the adapter is <see cref="Initialized"/>.
-        /// </summary>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        /// <remarks>
-        /// Implementers should create a wait handle (e.g., the <see cref="ManualResetEvent"/>) so that consumers
-        /// can call this method and wait for the adapter intialization to complete before using the adapter.
-        /// </remarks>
-        bool WaitForInitialize(int timeout);
-
-        /// <summary>
         /// Defines a temporal processing constraint for the adapter.
         /// </summary>
         /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>

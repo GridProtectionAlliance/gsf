@@ -1085,21 +1085,6 @@ namespace GSF.TimeSeries.Adapters
                                     // Dispose old item, initialize new item
                                     this[i] = newAdapter;
 
-                                    try
-                                    {
-                                        // Attempt to start new item
-                                        if (AutoInitialize)
-                                            ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
-                                        else if (AutoStart)
-                                            newAdapter.Start();
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        // Process exception for logging
-                                        string errorMessage = string.Format("Failed to queue start operation for adapter {0}: {1}", newAdapter.Name, ex.Message);
-                                        OnProcessException(new InvalidOperationException(errorMessage, ex));
-                                    }
-
                                     foundItem = true;
                                     break;
                                 }
@@ -1107,25 +1092,7 @@ namespace GSF.TimeSeries.Adapters
 
                             // Add item to collection if it didn't exist
                             if (!foundItem)
-                            {
-                                // Add new adapter to the collection
                                 Add(newAdapter);
-
-                                try
-                                {
-                                    // Start new item
-                                    if (AutoInitialize)
-                                        ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
-                                    else if (AutoStart)
-                                        newAdapter.Start();
-                                }
-                                catch (Exception ex)
-                                {
-                                    // Process exception for logging
-                                    string errorMessage = string.Format("Failed to queue start operation for adapter {0}: {1}", newAdapter.Name, ex.Message);
-                                    OnProcessException(new InvalidOperationException(errorMessage, ex));
-                                }
-                            }
 
                             return true;
                         }
@@ -1145,70 +1112,91 @@ namespace GSF.TimeSeries.Adapters
         public virtual void Start()
         {
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
-            if (m_enabled)
-                Stop();
-
-            m_enabled = true;
-
-            ResetStatistics();
-
-            lock (this)
+            if (!m_enabled)
             {
-                foreach (T item in this)
+                m_enabled = true;
+
+                ResetStatistics();
+
+                lock (this)
                 {
-                    try
+                    foreach (T item in this)
                     {
-                        try
-                        {
-                            // We start items from thread pool if auto-initializing since
-                            // start will block and wait for initialization to complete
-                            if (AutoInitialize)
-                                ThreadPool.QueueUserWorkItem(StartItem, item);
-                            else if (AutoStart)
-                                item.Start();
-                        }
-                        catch (Exception ex)
-                        {
-                            // Process exception for logging
-                            string errorMessage = string.Format("Failed to queue start operation for adapter {0}: {1}", item.Name, ex.Message);
-                            OnProcessException(new InvalidOperationException(errorMessage, ex));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // We report any errors encountered during type creation...
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
+                        if (item.Initialized && item.AutoStart && !item.Enabled)
+                            item.Start();
                     }
                 }
-            }
 
-            // Start data monitor...
-            if (MonitorTimerEnabled)
-                m_monitorTimer.Start();
+                // Start data monitor...
+                if (MonitorTimerEnabled)
+                    m_monitorTimer.Start();
+            }
         }
 
-        // Thread pool delegate to handle item startup
-        private void StartItem(object state)
+        // Thread delegate to handle item startup
+        private void InitializeAndStartItem(T item)
         {
-            T item = (T)state;
+            Timer initializationTimeoutTimer = null;
 
             try
             {
-                // Wait for adapter initialization to complete and see if item is set to auto-start
-                if (item.WaitForInitialize(item.InitializationTimeout))
+                // If initialization timeout is specified for this item,
+                // start the initialization timeout timer
+                if (item.InitializationTimeout > 0)
                 {
+                    initializationTimeoutTimer = new Timer(item.InitializationTimeout);
+
+                    initializationTimeoutTimer.Elapsed += (sender, args) =>
+                    {
+                        const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
+                            " its timeout of {1} seconds. The adapter may still initialize, however this" +
+                            " may indicate a problem with the adapter. If you consider this to be normal," +
+                            " try adjusting the initialization timeout to suppress this message during" +
+                            " normal operations.";
+
+                        OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
+                    };
+
+                    initializationTimeoutTimer.AutoReset = false;
+                    initializationTimeoutTimer.Start();
+                }
+
+                // Initialize the item
+                item.Initialize();
+
+                // Initialization successfully completed, so stop the timeout timer
+                if ((object)initializationTimeoutTimer != null)
+                    initializationTimeoutTimer.Stop();
+
+                // If input measurement keys were not updated during initialize of the adapter,
+                // make sure to notify routing tables that adapter is ready for broadcast
+                OnInputMeasurementKeysUpdated();
+
+                try
+                {
+                    // If the item is set to auto-start, start it now
                     if (item.AutoStart)
                         item.Start();
                 }
-                else
+                catch (Exception ex)
                 {
-                    OnProcessException(new TimeoutException(string.Format("{0} timed out waiting for adapter initialization.", item.Name)));
+                    // We report any errors encountered during startup...
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
                 }
+
+                // Set item to its final initialized state so that
+                // start and stop commands may be issued to the adapter
+                item.Initialized = true;
             }
             catch (Exception ex)
             {
-                // We report any errors encountered during startup...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
+                // We report any errors encountered during initialization...
+                OnProcessException(new InvalidOperationException(string.Format("Failed to initialize adapter {0}: {1}", item.Name, ex.Message), ex));
+            }
+            finally
+            {
+                if ((object)initializationTimeoutTimer != null)
+                    initializationTimeoutTimer.Dispose();
             }
         }
 
@@ -1218,18 +1206,22 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Stops each adapter in the collection.", "Administrator", "Editor")]
         public virtual void Stop()
         {
-            m_enabled = false;
-
-            lock (this)
+            if (m_enabled)
             {
-                foreach (T item in this)
-                {
-                    item.Stop();
-                }
-            }
+                m_enabled = false;
 
-            // Stop data monitor...
-            m_monitorTimer.Stop();
+                lock (this)
+                {
+                    foreach (T item in this)
+                    {
+                        if (item.Initialized && item.Enabled)
+                            item.Stop();
+                    }
+                }
+
+                // Stop data monitor...
+                m_monitorTimer.Stop();
+            }
         }
 
         /// <summary>
@@ -1253,18 +1245,6 @@ namespace GSF.TimeSeries.Adapters
         public virtual string GetShortStatus(int maxLength)
         {
             return string.Format("Total components: {0:N0}", Count).CenterText(maxLength);
-        }
-
-        /// <summary>
-        /// This method does not wait for <see cref="AdapterCollectionBase{T}"/>.
-        /// </summary>
-        /// <param name="timeout">This parameter is ignored.</param>
-        /// <returns><c>true</c> for <see cref="AdapterCollectionBase{T}"/>.</returns>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public virtual bool WaitForInitialize(int timeout)
-        {
-            // Adapter collections have no need to wait
-            return true;
         }
 
         /// <summary>
@@ -1360,7 +1340,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (Notify != null)
+                if ((object)Notify != null)
                     Notify(this, new EventArgs<IMeasurement>(measurement));
             }
             catch (Exception ex)
@@ -1376,7 +1356,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         internal protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -1388,7 +1368,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(status));
             }
             catch (Exception ex)
@@ -1410,7 +1390,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
             }
             catch (Exception ex)
@@ -1418,7 +1398,6 @@ namespace GSF.TimeSeries.Adapters
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for StatusMessage event: {0}", ex.Message), ex));
             }
-
         }
 
         /// <summary>
@@ -1428,7 +1407,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (InputMeasurementKeysUpdated != null)
+                if ((object)InputMeasurementKeysUpdated != null)
                     InputMeasurementKeysUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -1445,7 +1424,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (OutputMeasurementsUpdated != null)
+                if ((object)OutputMeasurementsUpdated != null)
                     OutputMeasurementsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -1547,7 +1526,11 @@ namespace GSF.TimeSeries.Adapters
                     // If automatically initializing new elements, handle object initialization from
                     // thread pool so it can take needed amount of time
                     if (AutoInitialize)
-                        ThreadPool.QueueUserWorkItem(InitializeItem, item);
+                    {
+                        Thread itemThread = new Thread(() => InitializeAndStartItem(item));
+                        itemThread.IsBackground = true;
+                        itemThread.Start();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1555,23 +1538,6 @@ namespace GSF.TimeSeries.Adapters
                     string errorMessage = string.Format("Failed to queue initialize operation for adapter {0}: {1}", item.Name, ex.Message);
                     OnProcessException(new InvalidOperationException(errorMessage, ex));
                 }
-            }
-        }
-
-        // Thread pool delegate to handle item initialization
-        private void InitializeItem(object state)
-        {
-            T item = (T)state;
-
-            try
-            {
-                item.Initialize();
-                item.Initialized = true;
-            }
-            catch (Exception ex)
-            {
-                // We report any errors encountered during initialization...
-                OnProcessException(ex);
             }
         }
 
@@ -1592,10 +1558,6 @@ namespace GSF.TimeSeries.Adapters
                 item.ProcessException -= item_ProcessException;
                 item.InputMeasurementKeysUpdated -= item_InputMeasurementKeysUpdated;
                 item.OutputMeasurementsUpdated -= item_OutputMeasurementsUpdated;
-
-                // Make sure initialization handles are cleared in case any failed
-                // initializations are still pending
-                item.Initialized = true;
 
                 // Dispose of item, then un-wire disposed event
                 item.Dispose();

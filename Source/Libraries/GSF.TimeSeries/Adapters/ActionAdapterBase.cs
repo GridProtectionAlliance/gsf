@@ -1034,11 +1034,7 @@ namespace GSF.TimeSeries.Adapters
             if (Enabled)
                 Stop();
 
-            // Wait for adapter intialization to complete...
-            if (WaitForInitialize(InitializationTimeout))
-                base.Start();
-            else
-                OnProcessException(new TimeoutException("Failed to start action adapter due to timeout waiting for initialization."));
+            base.Start();
         }
 
         /// <summary>
@@ -1159,19 +1155,6 @@ namespace GSF.TimeSeries.Adapters
 
             // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
             return true;
-        }
-
-        /// <summary>
-        /// Blocks the <see cref="Thread.CurrentThread"/> until the action adapter is <see cref="Initialized"/>.
-        /// </summary>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        public virtual bool WaitForInitialize(int timeout)
-        {
-            if ((object)m_initializeWaitHandle != null)
-                return m_initializeWaitHandle.WaitOne(timeout);
-
-            return false;
         }
 
         /// <summary>

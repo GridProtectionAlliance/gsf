@@ -62,6 +62,11 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
 
+        /// <summary>
+        /// Event is raised when temporal support is requested.
+        /// </summary>
+        public event EventHandler RequestTemporalSupport;
+
         // Fields
         private bool m_respectInputDemands;
         private bool m_respectOutputDemands;
@@ -246,17 +251,43 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Raises <see cref="RequestTemporalSupport"/> event.
+        /// </summary>
+        protected virtual void OnRequestTemporalSupport()
+        {
+            try
+            {
+                if ((object)RequestTemporalSupport != null)
+                    RequestTemporalSupport(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for RequestTemporalSupport event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
         /// Wires events and initializes new <see cref="IActionAdapter"/> implementation.
         /// </summary>
         /// <param name="item">New <see cref="IActionAdapter"/> implementation.</param>
         protected override void InitializeItem(IActionAdapter item)
         {
+            ActionAdapterCollection collection;
+
             if (item != null)
             {
                 // Wire up events
                 item.NewMeasurements += item_NewMeasurements;
                 item.UnpublishedSamples += item_UnpublishedSamples;
                 item.DiscardingMeasurements += item_DiscardingMeasurements;
+
+                // Attach to collection-specific temporal support event
+                collection = item as ActionAdapterCollection;
+
+                if ((object)collection != null)
+                    collection.RequestTemporalSupport += item_RequestTemporalSupport;
+
                 base.InitializeItem(item);
             }
         }
@@ -267,12 +298,21 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item"><see cref="IActionAdapter"/> to dispose.</param>
         protected override void DisposeItem(IActionAdapter item)
         {
+            ActionAdapterCollection collection;
+
             if (item != null)
             {
                 // Un-wire events
                 item.NewMeasurements -= item_NewMeasurements;
                 item.UnpublishedSamples -= item_UnpublishedSamples;
                 item.DiscardingMeasurements -= item_DiscardingMeasurements;
+
+                // Detach from collection-specific temporal support event
+                collection = item as ActionAdapterCollection;
+
+                if ((object)collection != null)
+                    collection.RequestTemporalSupport -= item_RequestTemporalSupport;
+
                 base.DisposeItem(item);
             }
         }
@@ -296,6 +336,13 @@ namespace GSF.TimeSeries.Adapters
         {
             if (DiscardingMeasurements != null)
                 DiscardingMeasurements(sender, e);
+        }
+
+        // Raise request temporal support event on behalf of each item in collection
+        private void item_RequestTemporalSupport(object sender, EventArgs e)
+        {
+            if ((object)RequestTemporalSupport != null)
+                RequestTemporalSupport(sender, e);
         }
 
         #endregion

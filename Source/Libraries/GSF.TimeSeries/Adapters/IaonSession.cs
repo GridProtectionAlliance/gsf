@@ -128,6 +128,7 @@ namespace GSF.TimeSeries.Adapters
         private readonly int m_measurementDumpingThreshold;
         private readonly int m_defaultSampleSizeWarningThreshold;
         private string m_name;
+        private object m_requestTemporalSupportLock;
         private bool m_disposed;
 
         #endregion
@@ -201,6 +202,7 @@ namespace GSF.TimeSeries.Adapters
             m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
             m_actionAdapters.Notify += m_routingTables.NotifyHandler;
+            m_actionAdapters.RequestTemporalSupport += RequestTemporalSupportHandler;
 
             // Create output adapters collection
             m_outputAdapters = new OutputAdapterCollection();
@@ -219,6 +221,8 @@ namespace GSF.TimeSeries.Adapters
             m_allAdapters.Add(m_outputAdapters);
             m_allAdapters.Add(m_inputAdapters);
             m_allAdapters.Add(m_actionAdapters);
+
+            m_requestTemporalSupportLock = new object();
         }
 
         /// <summary>
@@ -357,9 +361,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_allAdapters.DataSource = value;
-
-                if (value != null)
-                    DetermineTemporalSupport();
             }
         }
 
@@ -481,6 +482,7 @@ namespace GSF.TimeSeries.Adapters
 
                             m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
                             m_actionAdapters.Notify -= m_routingTables.NotifyHandler;
+                            m_actionAdapters.RequestTemporalSupport -= RequestTemporalSupportHandler;
                             m_actionAdapters.Dispose();
                         }
                         m_actionAdapters = null;
@@ -539,60 +541,11 @@ namespace GSF.TimeSeries.Adapters
             // Initialize all adapters
             m_allAdapters.Initialize();
 
-            // Spawn a task to establish temporal support after the adapters have initialized
-            Task.Factory.StartNew(EstablishTemporalSupport);
-
             if (autoStart)
             {
-                // Start all adapters
+                // Start all adapters if they
+                // haven't started already
                 m_allAdapters.Start();
-
-                // Spawn routing table calculation
-                RecalculateRoutingTables();
-            }
-        }
-
-        private void EstablishTemporalSupport()
-        {
-            int count = 0;
-
-            // Wait for all adapters to initialize (up to one second)
-            while (!m_allAdapters.SelectMany<IAdapterCollection, bool>(col => col.Select(adapter => adapter.Initialized)).All(b => b) && count < 10)
-            {
-                Thread.Sleep(100);
-                count++;
-            }
-
-            // Initialize temporal support tables
-            DetermineTemporalSupport();
-        }
-
-        /// <summary>
-        /// Determines which adapters in the <see cref="IaonSession"/> support temporal processing.
-        /// </summary>
-        protected virtual void DetermineTemporalSupport()
-        {
-            // Create a new temporal support identification table
-            DataTable temporalSupport = new DataTable("TemporalSupport");
-
-            temporalSupport.Columns.Add("Source", typeof(string));
-            temporalSupport.Columns.Add("ID", typeof(uint));
-
-            // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
-            lock (m_allAdapters)
-            {
-                foreach (IAdapterCollection collection in m_allAdapters)
-                {
-                    foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
-                    {
-                        temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
-                    }
-                }
-
-                if (m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
-                    m_allAdapters.DataSource.Tables.Remove("TemporalSupport");
-
-                m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
             }
         }
 
@@ -850,6 +803,43 @@ namespace GSF.TimeSeries.Adapters
 
             // Bubble message up to any event subscribers
             OnUnpublishedSamples(sender, e.Argument);
+        }
+
+        /// <summary>
+        /// Event handler for requesting temporal support.
+        /// </summary>
+        /// <param name="sender">Event source reference to adapter collection, typically an action adapter collection, that is requesting temporal support.</param>
+        /// <param name="e">Event arguments are not used.</param>
+        /// <remarks>
+        /// Action adapter collections use this handler to make sure temporal support is initialized before setting up temporal sessions.
+        /// </remarks>
+        public virtual void RequestTemporalSupportHandler(object sender, EventArgs e)
+        {
+            lock (m_requestTemporalSupportLock)
+            {
+                if (!m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
+                {
+                    // Create a new temporal support identification table
+                    DataTable temporalSupport = new DataTable("TemporalSupport");
+
+                    temporalSupport.Columns.Add("Source", typeof(string));
+                    temporalSupport.Columns.Add("ID", typeof(uint));
+
+                    // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
+                    lock (m_allAdapters)
+                    {
+                        foreach (IAdapterCollection collection in m_allAdapters)
+                        {
+                            foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
+                            {
+                                temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
+                            }
+                        }
+
+                        m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
+                    }
+                }
+            }
         }
 
         /// <summary>

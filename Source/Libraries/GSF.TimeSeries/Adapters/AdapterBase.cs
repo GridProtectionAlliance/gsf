@@ -110,7 +110,6 @@ namespace GSF.TimeSeries.Adapters
         private long m_dependencyTimeout;
         private bool m_autoStart;
         private bool m_processMeasurementFilter;
-        private ManualResetEvent m_initializeWaitHandle;
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
@@ -142,8 +141,6 @@ namespace GSF.TimeSeries.Adapters
             m_processingInterval = -1;
             GenHashCode();
 
-            // Create wait handle to use for adapter initialization
-            m_initializeWaitHandle = new ManualResetEvent(false);
             m_initializationTimeout = DefaultInitializationTimeout;
         }
 
@@ -457,15 +454,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_initialized = value;
-
-                // When initialization is complete we send notification
-                if ((object)m_initializeWaitHandle != null)
-                {
-                    if (value)
-                        m_initializeWaitHandle.Set();
-                    else
-                        m_initializeWaitHandle.Reset();
-                }
             }
         }
 
@@ -750,23 +738,10 @@ namespace GSF.TimeSeries.Adapters
         {
             if (!m_disposed)
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_initializeWaitHandle != null)
-                            m_initializeWaitHandle.Close();
+                m_disposed = true;  // Prevent duplicate dispose.
 
-                        m_initializeWaitHandle = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-
-                    if (Disposed != null)
-                        Disposed(this, EventArgs.Empty);
-                }
+                if (Disposed != null)
+                    Disposed(this, EventArgs.Empty);
             }
         }
 
@@ -826,20 +801,16 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Starts the adapter or restarts it if it is already running.", "Administrator", "Editor")]
         public virtual void Start()
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(Name, "Cannot start adapter because it is disposed.");
+
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
             if (m_enabled)
                 Stop();
 
-            // Wait for adapter initialization to complete...
-            m_enabled = WaitForInitialize(InitializationTimeout);
-
-            if (m_enabled)
-            {
-                m_stopTime = 0;
-                m_startTime = DateTime.UtcNow.Ticks;
-            }
-            else
-                OnProcessException(new TimeoutException("Failed to start adapter due to timeout waiting for initialization."));
+            m_enabled = true;
+            m_stopTime = 0;
+            m_startTime = DateTime.UtcNow.Ticks;
         }
 
         /// <summary>
@@ -848,6 +819,9 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Stops the adapter.", "Administrator", "Editor")]
         public virtual void Stop()
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(Name, "Cannot stop adapter because it is disposed.");
+
             m_enabled = false;
             m_stopTime = DateTime.UtcNow.Ticks;
         }
@@ -881,19 +855,6 @@ namespace GSF.TimeSeries.Adapters
 
             // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
             return true;
-        }
-
-        /// <summary>
-        /// Blocks the <see cref="Thread.CurrentThread"/> until the adapter is <see cref="Initialized"/>.
-        /// </summary>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        public virtual bool WaitForInitialize(int timeout)
-        {
-            if ((object)m_initializeWaitHandle != null)
-                return m_initializeWaitHandle.WaitOne(timeout);
-
-            return false;
         }
 
         /// <summary>
