@@ -953,6 +953,15 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Subscriber WHERE ID = {0}", "id"), DefaultTimeout, database.Guid(id));
 
+                try
+                {
+                    CommonFunctions.SendCommandToService("ReloadConfig");
+                }
+                catch (Exception ex)
+                {
+                    return "Subscriber deleted successfully. Failed to send ReloadConfig command to backend service." + Environment.NewLine + ex.Message;
+                }
+
                 return "Subscriber deleted successfully";
             }
             finally
