@@ -309,16 +309,6 @@ namespace GSF.Security
 
                     UserData.Roles.Clear();
 
-                    // Load implicitly assigned roles
-                    query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleSecurityGroupDetail WHERE SecurityGroupName = {0}", "groupName");
-                    foreach (string group in UserData.Groups)
-                    {
-                        using (IDataReader reader = dbConnection.ExecuteReader(query, group))
-                        {
-                            userRoleDataTable.Load(reader);
-                        }
-                    }
-
                     // Load explicitly assigned roles
                     query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleUserAccountDetail WHERE UserName = {0}", "name");
 
@@ -327,11 +317,25 @@ namespace GSF.Security
                         userRoleDataTable.Load(reader);
                     }
 
-                    query = database.ParameterizedQueryString("SELECT AppRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, AppRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, AppRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM AppRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE AppRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = {0}", "name");
-
-                    using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                    if (userRoleDataTable.Rows.Count == 0)
                     {
-                        userRoleDataTable.Load(reader);
+                        // Load implicitly assigned roles
+                        query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleSecurityGroupDetail WHERE SecurityGroupName = {0}", "groupName");
+
+                        foreach (string group in UserData.Groups)
+                        {
+                            using (IDataReader reader = dbConnection.ExecuteReader(query, group))
+                            {
+                                userRoleDataTable.Load(reader);
+                            }
+                        }
+
+                        query = database.ParameterizedQueryString("SELECT AppRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, AppRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, AppRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM AppRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE AppRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = {0}", "name");
+
+                        using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                        {
+                            userRoleDataTable.Load(reader);
+                        }
                     }
 
                     foreach (DataRow role in userRoleDataTable.Rows)
