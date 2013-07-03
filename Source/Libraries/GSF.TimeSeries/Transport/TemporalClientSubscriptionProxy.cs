@@ -58,7 +58,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets or sets parent subscription for the proxy used to deliver data.
         /// </summary>
-        public new IClientSubscription Parent
+        public IClientSubscription Parent
         {
             get
             {

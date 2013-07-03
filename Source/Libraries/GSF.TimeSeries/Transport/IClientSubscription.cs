@@ -204,7 +204,7 @@ namespace GSF.TimeSeries.Transport
                     clientSubscription.OnStatusMessage("0x" + (int)e.Argument2 + e.Argument1);
             };
             EventHandler<EventArgs<Exception>> processExceptionHandler = (sender, e) => clientSubscription.OnProcessException(e.Argument);
-            EventHandler processingCompletedHandler = (sender, e) => clientSubscription.OnProcessingCompleted(sender, e);
+            EventHandler processingCompletedHandler = clientSubscription.OnProcessingCompleted;
 
             // Cache dynamic event handlers so they can be detached later
             s_statusMessageHandlers[clientSubscription] = statusMessageHandler;

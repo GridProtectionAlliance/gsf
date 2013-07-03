@@ -46,7 +46,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// This event is expected to only be raised when an input adapter has been designed to process
-        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
         event EventHandler ProcessingComplete;
 

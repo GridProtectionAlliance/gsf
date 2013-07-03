@@ -19,13 +19,13 @@
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
 //  11/18/2010 - Mehulbhai P Thakkar
-//       Fixed bug in the Pop() method by checking if m_frameQueue has any element in it.
+//       Fixed issue in the Pop() method by checking if m_frameQueue has any element in it.
 //  02/08/2011 - J. Ritchie Carroll
 //       Added ExamineQueueState method to analyze real-time queue state.
 //  05/10/2011 - J. Ritchie Carroll
 //       Updated frame queue locks to use a ReaderWriterSpinLock as an optimization.
 //  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modifeid Header.
+//       Modified Header.
 //
 //******************************************************************************************************
 
@@ -52,13 +52,13 @@ namespace GSF.TimeSeries
         private LinkedList<TrackingFrame> m_frameList;                  // We keep this list sorted by timestamp so frames are processed in order
         private ConcurrentDictionary<long, TrackingFrame> m_frameHash;  // Fast frame lookup dictionary
         private SpinLock m_queueLock;                                   // Spinning lock used for synchronizing access to frame list
-        private long m_publishedTicks;                                  // Timstamp of last published frame
+        private long m_publishedTicks;                                  // Timestamp of last published frame
         private volatile TrackingFrame m_head;                          // Reference to current top of the frame collection
         private volatile TrackingFrame m_last;                          // Reference to last published frame
         private int m_framesPerSecond;                                  // Cached frames per second
         private double m_ticksPerFrame;                                 // Cached ticks per frame
         private long m_timeResolution;                                  // Cached time resolution (max sorting resolution in ticks)
-        private DownsamplingMethod m_downsamplingMethod;                // Cached downsampling method
+        private DownsamplingMethod m_downsamplingMethod;                // Cached down-sampling method
         private bool m_disposed;                                        // Object disposed flag
 
         #endregion
@@ -243,33 +243,41 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat(" Ordered frame queue count: {0}", m_frameList.Count);
                 status.AppendLine();
-                status.AppendFormat("     Frame hashtable count: {0}", m_frameHash.Count);
+                status.AppendFormat("    Frame hash-table count: {0}", m_frameHash.Count);
                 status.AppendLine();
 
                 if (m_frameList.Count > 0)
                 {
                     LinkedListNode<TrackingFrame> node = m_frameList.First;
+
                     IFrame frame;
                     status.AppendLine();
 
                     for (int i = 0; i < m_frameList.Count; i++)
                     {
-                        if (node.Value != null)
-                            frame = node.Value.SourceFrame;
-                        else
-                            frame = null;
+                        if ((object)node != null)
+                        {
+                            if ((object)node.Value != null)
+                                frame = node.Value.SourceFrame;
+                            else
+                                frame = null;
 
-                        if (frame == null)
-                            status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
-                        else
-                            status.AppendFormat("Frame {0} @ {1} - {2} measurements, {3} received",
-                                i.ToString().PadLeft(4, '0'),
-                                (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
-                                frame.Measurements.Count,
-                                (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
+                            if (frame == null)
+                                status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
+                            else
+                                status.AppendFormat("Frame {0} @ {1} - {2} measurements, {3} received",
+                                    i.ToString().PadLeft(4, '0'),
+                                    (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
+                                    frame.Measurements.Count,
+                                    (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
 
-                        status.AppendLine();
-                        node = node.Next;
+                            status.AppendLine();
+                            node = node.Next;
+                        }
+                        else
+                        {
+                            break;
+                        }
                     }
                 }
 

@@ -83,7 +83,7 @@ namespace GSF.TimeSeries
         /// </summary>
         protected virtual void DebugHostLoading()
         {
-            // Start remote console sesstion
+            // Start remote console session
             string serviceClientName = ServiceClientName;
 
             if (!string.IsNullOrWhiteSpace(serviceClientName))

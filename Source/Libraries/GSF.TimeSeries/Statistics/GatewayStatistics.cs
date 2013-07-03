@@ -19,7 +19,7 @@
 //  03/09/2012 - Stephen C. Wills
 //       Generated original version of source code.
 //  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modifeid Header.
+//       Modified Header.
 //
 //******************************************************************************************************
 

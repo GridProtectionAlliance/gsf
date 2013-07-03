@@ -27,7 +27,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -192,7 +191,7 @@ namespace GSF.TimeSeries.Statistics
         /// <summary>
         /// Stops the <see cref="StatisticsEngine"/>.
         /// </summary>		
-        [AdapterCommand("Stops the statistics engine.", "Adminstrator", "Editor")]
+        [AdapterCommand("Stops the statistics engine.", "Administrator", "Editor")]
         public override void Stop()
         {
             base.Stop();
@@ -454,14 +453,14 @@ namespace GSF.TimeSeries.Statistics
                     // Calculate the current value of the statistic measurement
                     return new Measurement
                         {
-                        ID = signalID,
-                        Key = MeasurementKey.Parse(measurement["ID"].ToString(), signalID),
-                        TagName = measurement["PointTag"].ToNonNullString(),
-                        Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
-                        Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
-                        Value = statistic.Method(source.Source, statistic.Arguments),
-                        Timestamp = serverTime
-                    };
+                            ID = signalID,
+                            Key = MeasurementKey.Parse(measurement["ID"].ToString(), signalID),
+                            TagName = measurement["PointTag"].ToNonNullString(),
+                            Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
+                            Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
+                            Value = statistic.Method(source.Source, statistic.Arguments),
+                            Timestamp = serverTime
+                        };
                 }
             }
             catch (Exception ex)
@@ -552,11 +551,11 @@ namespace GSF.TimeSeries.Statistics
 
             sourceInfo = new StatisticSource
                 {
-                Source = source,
-                SourceName = sourceName,
-                SourceCategory = sourceCategory,
-                SourceAcronym = sourceAcronym
-            };
+                    Source = source,
+                    SourceName = sourceName,
+                    SourceCategory = sourceCategory,
+                    SourceAcronym = sourceAcronym
+                };
 
             lock (s_statisticSources)
             {

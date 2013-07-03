@@ -25,7 +25,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Threading;
@@ -210,7 +209,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets the start time temporal procesing constraint defined by call to <see cref="SetTemporalConstraint"/>.
+        /// Gets the start time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
         /// </summary>
         /// <remarks>
         /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
@@ -238,7 +237,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
         int ProcessingInterval
@@ -272,9 +271,9 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
         /// <remarks>
         /// <para>
-        /// This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+        /// This method defines a temporal processing constraint for an adapter, i.e., the start and stop time over which an
         /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
-        /// should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+        /// should be able to dynamically handle multiple calls to this function with new constraints. Passing in <c>null</c>
         /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
         /// return the adapter to standard / real-time operation.
         /// </para>

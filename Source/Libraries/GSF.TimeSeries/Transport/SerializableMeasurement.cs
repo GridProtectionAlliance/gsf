@@ -19,7 +19,7 @@
 //  08/23/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
 //  06/07/2011 - J. Ritchie Carroll
-//       Implemented binary image bug fix as found and proposed by Luc Cezard.
+//       Implemented binary image issue fix as found and proposed by Luc Cezard.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //
@@ -213,7 +213,7 @@ namespace GSF.TimeSeries.Transport
         ///   Tag        TagLen  <br/>
         ///   Value         8    <br/>
         ///   Adder         8    <br/>
-        /// Multipler       8    <br/>
+        /// Multiplier      8    <br/>
         ///   Ticks         8    <br/>
         ///   Flags         4    <br/>
         /// </para>

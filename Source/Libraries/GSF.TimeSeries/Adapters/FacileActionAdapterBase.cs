@@ -77,11 +77,11 @@ namespace GSF.TimeSeries.Adapters
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
         private bool m_respectInputDemands;
         private bool m_respectOutputDemands;
-        private int m_framesPerSecond;                              // Defined frames per second, if defined
-        private bool m_trackLatestMeasurements;                     // Determines whether or not to track latest measurements
-        private readonly ImmediateMeasurements m_latestMeasurements;         // Absolute latest received measurement values
-        private bool m_useLocalClockAsRealTime;                     // Determines whether or not to use local system clock as "real-time"
-        private long m_realTimeTicks;                               // Timstamp of real-time or the most recently received measurement
+        private int m_framesPerSecond;                                  // Defined frames per second, if defined
+        private bool m_trackLatestMeasurements;                         // Determines whether or not to track latest measurements
+        private readonly ImmediateMeasurements m_latestMeasurements;    // Absolute latest received measurement values
+        private bool m_useLocalClockAsRealTime;                         // Determines whether or not to use local system clock as "real-time"
+        private long m_realTimeTicks;                                   // Timestamp of real-time or the most recently received measurement
 
         #endregion
 
@@ -321,7 +321,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to past measurement timestamps.</para>
@@ -331,7 +331,7 @@ namespace GSF.TimeSeries.Adapters
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
         [ConnectionStringParameter,
         DefaultValue(10.0D),
-        Description("Defines the allowed past time deviation tolerance, in seconds (can be subsecond).")]
+        Description("Defines the allowed past time deviation tolerance, in seconds (can be sub-second).")]
         public double LagTime
         {
             get
@@ -345,7 +345,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to future measurement timestamps.</para>
@@ -355,7 +355,7 @@ namespace GSF.TimeSeries.Adapters
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         [ConnectionStringParameter,
         DefaultValue(5.0D),
-        Description("Defines the allowed future time deviation tolerance, in seconds (can be subsecond).")]
+        Description("Defines the allowed future time deviation tolerance, in seconds (can be sub-second).")]
         public double LeadTime
         {
             get
@@ -372,7 +372,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets flag to start tracking the absolute latest received measurement values.
         /// </summary>
         /// <remarks>
-        /// Lastest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
+        /// Latest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
         /// </remarks>
         public virtual bool TrackLatestMeasurements
         {

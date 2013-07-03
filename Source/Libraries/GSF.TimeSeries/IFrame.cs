@@ -61,7 +61,7 @@ namespace GSF.TimeSeries
         /// Gets or sets total number of measurements that have been sorted into this <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
-        /// If this property has not been assigned a value, implementors should return measurement count.
+        /// If this property has not been assigned a value, implementers should return measurement count.
         /// </remarks>
         int SortedMeasurements
         {
@@ -108,7 +108,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets ot sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="IFrame"/>.
+        /// Gets or sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
         /// <para>This value is used to help monitor slow moving measurements that are being sorted into the <see cref="IFrame"/>.</para>

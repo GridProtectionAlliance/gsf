@@ -45,7 +45,7 @@ namespace GSF.TimeSeries.Adapters
     /// </summary>
     /// <typeparam name="T">Type of <see cref="IAdapter"/> this collection contains.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public abstract class AdapterCollectionBase<T> : Collection<T>, IAdapterCollection where T : IAdapter
+    public abstract class AdapterCollectionBase<T> : Collection<T>, IAdapterCollection where T : class, IAdapter
     {
         #region [ Members ]
 
@@ -590,7 +590,7 @@ namespace GSF.TimeSeries.Adapters
                 // Apply this new processing interval for all adapters in the collection
                 lock (this)
                 {
-                    foreach (IAdapter item in this)
+                    foreach (T item in this)
                     {
                         item.ProcessingInterval = m_processingInterval;
                     }
@@ -611,7 +611,7 @@ namespace GSF.TimeSeries.Adapters
                 // Calculate new total for all adapters
                 lock (this)
                 {
-                    foreach (IAdapter item in this)
+                    foreach (T item in this)
                     {
                         processedMeasurements += item.ProcessedMeasurements;
                     }

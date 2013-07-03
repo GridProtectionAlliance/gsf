@@ -43,33 +43,33 @@ namespace GSF.TimeSeries
     #region [ Enumerations ]
 
     /// <summary>
-    /// Downsampling method enumeration.
+    /// Down-sampling method enumeration.
     /// </summary>
     public enum DownsamplingMethod
     {
         /// <summary>
-        /// Downsamples to the last measurement received.
+        /// Down-samples to the last measurement received.
         /// </summary>
         /// <remarks>
-        /// Use this option if no downsampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
+        /// Use this option if no down-sampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
         /// </remarks>
         LastReceived,
         /// <summary>
-        /// Downsamples to the measurement closest to frame time.
+        /// Down-samples to the measurement closest to frame time.
         /// </summary>
         /// <remarks>
-        /// This is the typical operation used when performing simple downsampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
+        /// This is the typical operation used when performing simple down-sampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
         /// </remarks>
         Closest,
         /// <summary>
-        /// Downsamples by applying a user-defined value filter over all received measurements to anti-alias the results.
+        /// Down-samples by applying a user-defined value filter over all received measurements to anti-alias the results.
         /// </summary>
         /// <remarks>
         /// This option will produce the best result but has a processing penalty.
         /// </remarks>
         Filtered,
         /// <summary>
-        /// Downsamples to the measurement that has the best quality closest to frame time.
+        /// Down-samples to the measurement that has the best quality closest to frame time.
         /// </summary>
         /// <remarks>
         /// This option chooses the measurement closest to the frame time with the best quality.
@@ -408,17 +408,17 @@ namespace GSF.TimeSeries
         // Fields
         private FrameQueue m_frameQueue;                    // Queue of frames to be published
         private Thread m_publicationThread;                 // Thread that handles frame publication
-        private AutoResetEvent m_publicationWaitHandle;     // Interframe publication wait handle
+        private AutoResetEvent m_publicationWaitHandle;     // Inter-frame publication wait handle
         private bool m_usePrecisionTimer;                   // Flag that enables use of precision timer (over just simple thread sleep)
         private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
-        private Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
+        private Timer m_monitorTimer;                       // Sample monitor - tracks total number of unpublished frames
         private int m_framesPerSecond;                      // Frames per second
         private double m_ticksPerFrame;                     // Ticks per frame
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
         private long m_timeResolution;                      // Maximum sorting resolution in ticks
         private int m_processingInterval;                   // Defines a specific processing interval for data, if desired
-        private DownsamplingMethod m_downsamplingMethod;    // Downsampling method to use if input is at a higher-resolution than output
+        private DownsamplingMethod m_downsamplingMethod;    // Down-sampling method to use if input is at a higher-resolution than output
         private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
         private int m_maximumPublicationTimeout;            // Maximum publication wait timeout
         private Ticks m_lagTicks;                           // Current lag time calculated in ticks
@@ -439,7 +439,7 @@ namespace GSF.TimeSeries
         private long m_discardedMeasurements;               // Total number of discarded measurements
         private long m_measurementsSortedByArrival;         // Total number of measurements that were sorted by arrival
         private long m_publishedMeasurements;               // Total number of published measurements
-        private long m_downsampledMeasurements;             // Total number of downsampled measurements
+        private long m_downsampledMeasurements;             // Total number of down-sampled measurements
         private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
         private long m_waitHandleExpirations;               // Total number of wait handle expirations encountered due to delayed precision timer releases
         private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
@@ -541,7 +541,7 @@ namespace GSF.TimeSeries
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to past measurement timestamps.</para>
@@ -580,7 +580,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to future measurement timestamps.</para>
@@ -761,7 +761,7 @@ namespace GSF.TimeSeries
         /// processing interval since it is used to define the intervals in one second that will become the time sorting
         /// destination "buckets" used by the concentrator irrespective of the data rate of the incoming data. As an example,
         /// if the frames per second of the concentrator is set to 30 and the source data rate is 60fps, then data will be
-        /// downsampled to 30 frames of sorted incoming data but the assigned processing interval will be used to publish the
+        /// down-sampled to 30 frames of sorted incoming data but the assigned processing interval will be used to publish the
         /// frames at the specified rate.
         /// </para>
         /// <para>
@@ -944,7 +944,7 @@ namespace GSF.TimeSeries
         /// Gets or sets the <see cref="GSF.TimeSeries.DownsamplingMethod"/> to be used by the concentrator.
         /// </summary>
         /// <remarks>
-        /// The downsampling method determines the algorithm to use if input is being received at a higher-resolution than the defined output.
+        /// The down-sampling method determines the algorithm to use if input is being received at a higher-resolution than the defined output.
         /// </remarks>
         public DownsamplingMethod DownsamplingMethod
         {
@@ -956,7 +956,7 @@ namespace GSF.TimeSeries
             {
                 m_downsamplingMethod = value;
 
-                // Assign desired downsampling method to frame queue
+                // Assign desired down-sampling method to frame queue
                 if (m_frameQueue != null)
                     m_frameQueue.DownsamplingMethod = m_downsamplingMethod;
             }
@@ -1257,31 +1257,27 @@ namespace GSF.TimeSeries
         {
             get
             {
+                // Assume local system clock is the best value we have for real-time when using local clock as real-time.
                 if (m_useLocalClockAsRealTime)
-                {
-                    // Assumes local system clock is the best value we have for real-time.
                     return DateTime.UtcNow.Ticks;
-                }
-                else
+
+                if (m_performTimestampReasonabilityCheck)
                 {
-                    if (m_performTimestampReasonabilityCheck)
-                    {
-                        // If the current value for real-time is outside of the time deviation tolerance of the local
-                        // clock, then we set latest measurement time (i.e., real-time) to be the current local clock
-                        // time. Since the lead time typically defines the tolerated accuracy of the local clock to
-                        // real-time we will use this value as the + and - timestamp tolerance to validate if the
-                        // measurement time is reasonable.
-                        long currentTimeTicks = DateTime.UtcNow.Ticks;
-                        double distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
+                    // If the current value for real-time is outside of the time deviation tolerance of the local
+                    // clock, then we set latest measurement time (i.e., real-time) to be the current local clock
+                    // time. Since the lead time typically defines the tolerated accuracy of the local clock to
+                    // real-time we will use this value as the + and - timestamp tolerance to validate if the
+                    // measurement time is reasonable.
+                    long currentTimeTicks = DateTime.UtcNow.Ticks;
+                    double distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
 
-                        // Set real-time ticks to current ticks if value is outside of tolerances
-                        if (distance > m_leadTime || distance < -m_leadTime)
-                            Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
-                    }
-
-                    // Assume latest measurement timestamp is the best value we have for real-time.
-                    return Thread.VolatileRead(ref m_realTimeTicks);
+                    // Set real-time ticks to current ticks if value is outside of tolerances
+                    if (distance > m_leadTime || distance < -m_leadTime)
+                        Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
                 }
+
+                // Assume latest measurement timestamp is the best value we have for real-time.
+                return Thread.VolatileRead(ref m_realTimeTicks);
             }
         }
 
@@ -1375,7 +1371,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets the total number of downsampled measurements processed by the concentrator.
+        /// Gets the total number of down-sampled measurements processed by the concentrator.
         /// </summary>
         public long DownsampledMeasurements
         {
@@ -1480,7 +1476,7 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat("   Maximum time resolution: {0} ticks", m_timeResolution);
                 status.AppendLine();
-                status.AppendFormat("       Downsampling method: {0}", m_downsamplingMethod);
+                status.AppendFormat("      Down-sampling method: {0}", m_downsamplingMethod);
                 status.AppendLine();
                 status.AppendFormat("    Local clock time (UTC): {0}", currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 status.AppendLine();
@@ -1511,7 +1507,7 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat("    Discarded measurements: {0}", DiscardedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("  Downsampled measurements: {0}", DownsampledMeasurements);
+                status.AppendFormat(" Down-sampled measurements: {0}", DownsampledMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Published measurements: {0}", PublishedMeasurements);
                 status.AppendLine();
@@ -1537,7 +1533,7 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat("  Pre-lag-time publication: {0}", (FramesAheadOfSchedule / (double)PublishedFrames).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("  Downsampling application: {0}", (DownsampledMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat(" Down-sampling application: {0}", (DownsampledMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
@@ -1891,12 +1887,12 @@ namespace GSF.TimeSeries
                     }
                     else
                     {
-                        // Derive new measurement value applying any needed downsampling
+                        // Derive new measurement value applying any needed down-sampling
                         derivedMeasurement = frame.DeriveMeasurementValue(measurement);
 
                         if (derivedMeasurement == null)
                         {
-                            // Count this as a discarded measurement if downsampling derivation was not applied.
+                            // Count this as a discarded measurement if down-sampling derivation was not applied.
                             discardMeasurement = true;
                         }
                         else
@@ -2121,87 +2117,83 @@ namespace GSF.TimeSeries
                         // Get top frame
                         frame = m_frameQueue.Head;
 
+                        // If no frame is ready to publish, exit
                         if (frame == null)
-                        {
-                            // No frame ready to publish, exit
                             break;
+
+                        // Get ticks for this frame
+                        sourceFrame = frame.SourceFrame;
+                        timestamp = sourceFrame.Timestamp;
+
+                        if (m_processByReceivedTimestamp)
+                        {
+                            // When processing by received timestamp, we need to test received timestamp against lag-time
+                            // to make sure there has been time enough to publish frame:
+                            if (m_lagTicks - (RealTime - sourceFrame.ReceivedTimestamp) > 0)
+                                break;
                         }
                         else
                         {
-                            // Get ticks for this frame
-                            sourceFrame = frame.SourceFrame;
-                            timestamp = sourceFrame.Timestamp;
-
-                            if (m_processByReceivedTimestamp)
+                            // See if any lag-time needs to pass before we begin publishing, exiting if it's not time to publish
+                            if (m_lagTicks - (RealTime - timestamp) > 0)
                             {
-                                // When processing by received timestamp, we need to test received timestamp against lagtime
-                                // to make sure there has been time enough to publish frame:
-                                if (m_lagTicks - (RealTime - sourceFrame.ReceivedTimestamp) > 0)
+                                // It's not the scheduled time to publish this frame, however, if preemptive publishing is enabled,
+                                // an expected number of measurements per-frame have been defined and the frame has received this
+                                // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
+                                // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
+                                // frame as soon as the expected data has arrived.
+                                if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || sourceFrame.SortedMeasurements < m_expectedMeasurements)
                                     break;
+
+                                // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
+                                Interlocked.Increment(ref m_framesAheadOfSchedule);
                             }
-                            else
-                            {
-                                // See if any lagtime needs to pass before we begin publishing, exiting if it's not time to publish
-                                if (m_lagTicks - (RealTime - timestamp) > 0)
-                                {
-                                    // It's not the scheduled time to publish this frame, however, if preemptive publishing is enabled,
-                                    // an expected number of measurements per-frame have been defined and the frame has received this
-                                    // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
-                                    // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
-                                    // frame as soon as the expected data has arrived.
-                                    if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || sourceFrame.SortedMeasurements < m_expectedMeasurements)
-                                        break;
+                        }
 
-                                    // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
-                                    Interlocked.Increment(ref m_framesAheadOfSchedule);
-                                }
-                            }
+                        // Mark start time for publication
+                        startTime = DateTime.UtcNow.Ticks;
 
-                            // Mark start time for publication
-                            startTime = DateTime.UtcNow.Ticks;
+                        // Calculate index of this frame within its second - note that we have to calculate this
+                        // value instead of using frameIndex since it is is possible for multiple frames to be
+                        // published within one frame period if the system is stressed
+                        frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
 
-                            // Calculate index of this frame within its second - note that we have to calculate this
-                            // value instead of using frameIndex since it is is possible for multiple frames to be
-                            // published within one frame period if the system is stressed
-                            frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
+                        // Mark the frame as published to prevent any further sorting into this frame - setting this flag
+                        // is in a critical section to ensure that sorting into this frame has ceased prior to publication
+                        frame.Lock.EnterWriteLock();
 
-                            // Mark the frame as published to prevent any further sorting into this frame - setting this flag
-                            // is in a critical section to ensure that sorting into this frame has ceased prior to publication
-                            frame.Lock.EnterWriteLock();
+                        try
+                        {
+                            sourceFrame.Published = true;
+                        }
+                        finally
+                        {
+                            frame.Lock.ExitWriteLock();
+                        }
 
-                            try
-                            {
-                                sourceFrame.Published = true;
-                            }
-                            finally
-                            {
-                                frame.Lock.ExitWriteLock();
-                            }
+                        try
+                        {
+                            // Publish the current frame (i.e., call user implemented publication function)
+                            PublishFrame(sourceFrame, frameIndex);
+                        }
+                        finally
+                        {
+                            // Remove the frame from the queue whether it is successfully published or not
+                            m_frameQueue.Pop();
 
-                            try
-                            {
-                                // Publish the current frame (i.e., call user implemented publication function)
-                                PublishFrame(sourceFrame, frameIndex);
-                            }
-                            finally
-                            {
-                                // Remove the frame from the queue whether it is successfully published or not
-                                m_frameQueue.Pop();
+                            // Update publication statistics
+                            Interlocked.Increment(ref m_publishedFrames);
+                            Interlocked.Add(ref m_publishedMeasurements, sourceFrame.SortedMeasurements);
+                            Interlocked.Add(ref m_downsampledMeasurements, frame.DownsampledMeasurements);
 
-                                // Update publication statistics
-                                Interlocked.Increment(ref m_publishedFrames);
-                                Interlocked.Add(ref m_publishedMeasurements, sourceFrame.SortedMeasurements);
-                                Interlocked.Add(ref m_downsampledMeasurements, frame.DownsampledMeasurements);
+                            // Mark stop time for publication
+                            stopTime = DateTime.UtcNow.Ticks;
 
-                                // Mark stop time for publication
-                                stopTime = DateTime.UtcNow.Ticks;
+                            if (m_trackPublishedTimestamp)
+                                sourceFrame.PublishedTimestamp = stopTime;
 
-                                if (m_trackPublishedTimestamp)
-                                    sourceFrame.PublishedTimestamp = stopTime;
-
-                                // Track total publication time
-                                Interlocked.Add(ref m_totalPublishTime, stopTime - startTime);
-                            }
+                            // Track total publication time
+                            Interlocked.Add(ref m_totalPublishTime, stopTime - startTime);
                         }
                     }
                     catch (ThreadAbortException)

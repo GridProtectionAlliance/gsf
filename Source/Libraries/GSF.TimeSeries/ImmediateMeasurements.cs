@@ -183,7 +183,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to past measurement timestamps.</para>
@@ -211,7 +211,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to future measurement timestamps.</para>

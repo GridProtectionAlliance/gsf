@@ -29,7 +29,7 @@ using System.Collections.Generic;
 namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
-    /// Represents thet abstract interface for any action adapter.
+    /// Represents the abstract interface for any action adapter.
     /// </summary>
     public interface IActionAdapter : IAdapter
     {
@@ -90,7 +90,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
-        /// Set to <c>null</c> apply no filter.
+        /// Set to <c>null</c> to apply no filter.
         /// </remarks>
         string[] InputSourceIDs
         {
@@ -103,7 +103,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
-        /// Set to <c>null</c> apply no filter.
+        /// Set to <c>null</c> to apply no filter.
         /// </remarks>
         string[] OutputSourceIDs
         {

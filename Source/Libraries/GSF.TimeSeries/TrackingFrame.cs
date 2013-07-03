@@ -30,7 +30,7 @@ using GSF.Threading;
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// <see cref="IFrame"/> container used to track <see cref="IMeasurement"/> values for downsampling.
+    /// <see cref="IFrame"/> container used to track <see cref="IMeasurement"/> values for down-sampling.
     /// </summary>
     internal class TrackingFrame
     {
@@ -91,7 +91,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Total number of measurements downsampled by <see cref="TrackingFrame"/>.
+        /// Total number of measurements down-sampled by <see cref="TrackingFrame"/>.
         /// </summary>
         public long DownsampledMeasurements
         {
@@ -118,7 +118,7 @@ namespace GSF.TimeSeries
         #region [ Methods ]
 
         /// <summary>
-        /// Derives measurement value, downsampling if needed.
+        /// Derives measurement value, down-sampling if needed.
         /// </summary>
         /// <param name="measurement">New <see cref="IMeasurement"/> value.</param>
         /// <returns>New derived <see cref="IMeasurement"/> value, or null if value should not be assigned to <see cref="IFrame"/>.</returns>
@@ -192,8 +192,7 @@ namespace GSF.TimeSeries
                                     measurementValueFilter = Measurement.AverageValueFilter;
 
                                 // Add new measurement to tracking collection
-                                if ((object)measurement != null)
-                                    values.Add(measurement);
+                                values.Add(measurement);
 
                                 // Perform filter calculation as specified by device measurement
                                 if (values.Count > 1)

@@ -70,7 +70,7 @@ namespace GSF.TimeSeries
         /// </summary>
         Database,
         /// <summary>
-        /// Configuration source is a webservice.
+        /// Configuration source is a web-service.
         /// </summary>
         WebService,
         /// <summary>
@@ -90,7 +90,7 @@ namespace GSF.TimeSeries
     /// </summary>
     /// <param name="connection">Connection to database.</param>
     /// <param name="adapterType">Adapter type for database connection.</param>
-    /// <param name="nodeIDQueryString">Formatted node ID guid query string.</param>
+    /// <param name="nodeIDQueryString">Formatted node ID Guid query string.</param>
     /// <param name="arguments">Optional data operation arguments.</param>
     /// <param name="statusMessage">Reference to host status message function.</param>
     /// <param name="processException">Reference to host process exception function.</param>
@@ -405,13 +405,13 @@ namespace GSF.TimeSeries
                 m_gcCollectTimer.Enabled = true;
             }
 
-            // Define guid with query string delimeters according to database needs
+            // Define guid with query string delimiters according to database needs
             Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
             string setting;
 
             if (settings.TryGetValue("Provider", out setting))
             {
-                // Check if provider is for Access since it uses braces as Guid delimeters
+                // Check if provider is for Access since it uses braces as Guid delimiters
                 if (setting.StartsWith("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase))
                 {
                     m_nodeIDQueryString = "{" + m_iaonSession.NodeID + "}";
@@ -523,7 +523,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Authenticate", "Authenticates network shares for health and status exports", AuthenticateRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Restart", "Attempts to restart the host service", RestartServiceHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RefreshRoutes", "Spawns request to recalculate routing tables", RefreshRoutesRequestHandler));
-            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TemporalSupport", "Detemines if any adapters support temporal processing", TemporalSupportRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TemporalSupport", "Determines if any adapters support temporal processing", TemporalSupportRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("LogEvent", "Logs remote event log entries.", LogEventRequestHandler, false));
 
             try
@@ -916,7 +916,7 @@ namespace GSF.TimeSeries
                     break;
                 case ConfigurationType.WebService:
                     // Attempt to load configuration from webservice based connection
-                    WebRequest request = null;
+                    WebRequest request;
                     Stream response = null;
                     try
                     {
@@ -1000,7 +1000,7 @@ namespace GSF.TimeSeries
 
         private DataSet GetAugmentedConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString)
         {
-            DataSet configuration = null;
+            DataSet configuration;
             bool configException = false;
             Ticks startTime = DateTime.UtcNow.Ticks;
             double elapsedTime;
@@ -2421,7 +2421,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                DataSet dataSource = null;
+                DataSet dataSource;
 
                 DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
                 dataSource = GetAugmentedConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
@@ -2513,11 +2513,14 @@ namespace GSF.TimeSeries
                         xmlDoc.LoadXml(xml);
 
                         // List settings categories.
-                        foreach (XmlNode node in xmlDoc.DocumentElement)
+                        if ((object)xmlDoc.DocumentElement != null)
                         {
-                            categoryList.Append("   ");
-                            categoryList.Append(node.Name);
-                            categoryList.AppendLine();
+                            foreach (XmlNode node in xmlDoc.DocumentElement)
+                            {
+                                categoryList.Append("   ");
+                                categoryList.Append(node.Name);
+                                categoryList.AppendLine();
+                            }
                         }
 
                         categoryList.AppendLine();

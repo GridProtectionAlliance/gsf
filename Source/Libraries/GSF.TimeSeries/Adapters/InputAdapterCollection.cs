@@ -50,7 +50,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// This event is expected to only be raised when an input adapter has been designed to process
-        /// a finite amount of data, e.g., reading a historical range of data during temporal procesing.
+        /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
         public event EventHandler ProcessingComplete;
 
@@ -130,7 +130,7 @@ namespace GSF.TimeSeries.Adapters
         {
             if (item != null)
             {
-                // Un-wire new meaurements event
+                // Un-wire new measurements event
                 item.NewMeasurements -= item_NewMeasurements;
                 item.ProcessingComplete -= item_ProcessingComplete;
                 base.DisposeItem(item);

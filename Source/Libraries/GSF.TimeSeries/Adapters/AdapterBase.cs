@@ -93,10 +93,6 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Event is raised when <see cref="AdapterBase"/> is disposed.
         /// </summary>
-        /// <remarks>
-        /// If an adapter references another adapter by enumerating the <see cref="Parent"/> collection, this
-        /// event should be monitored to release the reference.
-        /// </remarks>
         public event EventHandler Disposed;
 
         // Fields

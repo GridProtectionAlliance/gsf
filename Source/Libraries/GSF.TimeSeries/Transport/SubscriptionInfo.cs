@@ -62,7 +62,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Creates a new instance of the <see cref="SubscriptionInfo"/> class.
         /// </summary>
-        public SubscriptionInfo()
+        protected SubscriptionInfo()
         {
             m_useCompactMeasurementFormat = true;
             m_dataChannelLocalPort = 9500;
@@ -143,7 +143,7 @@ namespace GSF.TimeSeries.Transport
 
         /// <summary>
         /// Gets or sets the allowed past time deviation
-        /// tolerance in seconds (can be subsecond).
+        /// tolerance in seconds (can be sub-second).
         /// </summary>
         public virtual double LagTime
         {
@@ -159,7 +159,7 @@ namespace GSF.TimeSeries.Transport
 
         /// <summary>
         /// Gets or sets the allowed future time deviation
-        /// tolerance, in seconds (can be subsecond).
+        /// tolerance, in seconds (can be sub-second).
         /// </summary>
         public virtual double LeadTime
         {
@@ -216,7 +216,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// <para>
-        /// When the <see cref="StartTime"/> or <see cref="StopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+        /// When the <see cref="StartTime"/> or <see cref="StopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
         /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <see cref="StartTime"/>
         /// and <see cref="StopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
         /// </para>
@@ -274,7 +274,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// <para>
-        /// When the <see cref="StartTime"/> or <see cref="StopTime"/> temporal processing contraints are defined (i.e., not <c>null</c>), this
+        /// When the <see cref="StartTime"/> or <see cref="StopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
         /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <see cref="StartTime"/>
         /// and <see cref="StopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
         /// </para>
@@ -327,7 +327,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets the aditional constraint parameters
+        /// Gets or sets the additional constraint parameters
         /// supplied to temporal adapters in a temporal session.
         /// </summary>
         public virtual string ConstraintParameters
@@ -350,7 +350,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, the <see cref="ProcessingInterval"/> value specifies the desired historical playback data
-        /// processing interval in milliseconds. This is basically a delay, or timer interval, overwhich to process data. Setting this value to -1 means
+        /// processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
         /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
         /// </remarks>
         public virtual int ProcessingInterval
@@ -474,7 +474,7 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets the downsampling method used when the frame rate of
+        /// Gets or sets the down-sampling method used when the frame rate of
         /// the subscription is lower than the frame rate of the measurement's
         /// source.
         /// </summary>

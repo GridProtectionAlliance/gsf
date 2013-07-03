@@ -53,7 +53,7 @@ namespace GSF.TimeSeries.Adapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets flag that detemines if <see cref="IAdapter"/> implementations are automatically initialized
+        /// Gets flag that determines if <see cref="IAdapter"/> implementations are automatically initialized
         /// when they are added to the collection.
         /// </summary>
         /// <remarks>

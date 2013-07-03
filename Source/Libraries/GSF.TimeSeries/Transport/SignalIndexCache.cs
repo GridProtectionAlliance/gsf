@@ -87,7 +87,7 @@ namespace GSF.TimeSeries.Transport
             m_subscriberID = remoteCache.SubscriberID;
 
             // If active measurements are defined, interpret signal cache in context of current measurement key definitions
-            if (dataSource != null && dataSource.Tables != null && dataSource.Tables.Contains("ActiveMeasurements"))
+            if (dataSource != null && dataSource.Tables.Contains("ActiveMeasurements"))
             {
                 DataTable activeMeasurements = dataSource.Tables["ActiveMeasurements"];
                 m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
@@ -358,7 +358,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
         public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            int binaryLength = 0;
+            int binaryLength;
             int offset = startIndex;
 
             int referenceCount;

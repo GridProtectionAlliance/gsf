@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
@@ -191,7 +190,7 @@ namespace GSF.TimeSeries.Adapters
         ///     <item>
         ///         <term>Multiplier</term>
         ///         <term>FLOAT</term>
-        ///         <description>Multipler to apply to value, if any (default to 1.0).</description>
+        ///         <description>Multiplier to apply to value, if any (default to 1.0).</description>
         ///     </item>
         /// </list>
         /// </para>
@@ -384,7 +383,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to past measurement timestamps.</para>
@@ -393,7 +392,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
         [ConnectionStringParameter,
-        Description("Defines the allowed past time deviation tolerance, in seconds (can be subsecond).")]
+        Description("Defines the allowed past time deviation tolerance, in seconds (can be sub-second).")]
         public new double LagTime
         {
             get
@@ -407,7 +406,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
         /// <para>Defines the time sensitivity to future measurement timestamps.</para>
@@ -416,7 +415,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         [ConnectionStringParameter,
-        Description("Defines the allowed future time deviation tolerance, in seconds (can be subsecond).")]
+        Description("Defines the allowed future time deviation tolerance, in seconds (can be sub-second).")]
         public new double LeadTime
         {
             get
@@ -592,7 +591,7 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets the start time temporal procesing constraint defined by call to <see cref="SetTemporalConstraint"/>.
+        /// Gets the start time temporal processing constraint defined by call to <see cref="SetTemporalConstraint"/>.
         /// </summary>
         /// <remarks>
         /// This value will be <see cref="DateTime.MinValue"/> when start time constraint is not set - meaning the adapter
@@ -758,7 +757,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
                     status.AppendLine();
                 }
-                status.AppendFormat("                Adpater ID: {0}", ID);
+                status.AppendFormat("                Adapter ID: {0}", ID);
                 status.AppendLine();
 
                 Dictionary<string, string> keyValuePairs = Settings;
@@ -976,7 +975,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 else
                 {
-                    OnStatusMessage("WARNING: No downsampling method labeled \"{0}\" exists, \"LastReceived\" method was selected.", setting);
+                    OnStatusMessage("WARNING: No down-sampling method labeled \"{0}\" exists, \"LastReceived\" method was selected.", setting);
                     DownsamplingMethod = DownsamplingMethod.LastReceived;
                 }
             }
@@ -1068,10 +1067,10 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Manually sets the intialized state of the <see cref="AdapterBase"/>.
+        /// Manually sets the initialized state of the <see cref="AdapterBase"/>.
         /// </summary>
         /// <param name="initialized">Desired initialized state.</param>
-        [AdapterCommand("Manually sets the intialized state of the action adapter.", "Administrator", "Editor")]
+        [AdapterCommand("Manually sets the initialized state of the action adapter.", "Administrator", "Editor")]
         public virtual void SetInitializedState(bool initialized)
         {
             this.Initialized = initialized;
@@ -1165,9 +1164,9 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
         /// <remarks>
         /// <para>
-        /// This method defines a temporal processing contraint for an adapter, i.e., the start and stop time over which an
+        /// This method defines a temporal processing constraint for an adapter, i.e., the start and stop time over which an
         /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
-        /// should be able to dynamically handle multitple calls to this function with new constraints. Passing in <c>null</c>
+        /// should be able to dynamically handle multiple calls to this function with new constraints. Passing in <c>null</c>
         /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
         /// return the adapter to standard / real-time operation.
         /// </para>
@@ -1276,9 +1275,9 @@ namespace GSF.TimeSeries.Adapters
                 // Loop through all input measurements to see if they exist in this frame
                 IMeasurement measurement;
 
-                for (int x = 0; x < measurementKeys.Length; x++)
+                foreach (MeasurementKey key in measurementKeys)
                 {
-                    if (frameMeasurements.TryGetValue(measurementKeys[x], out measurement))
+                    if (frameMeasurements.TryGetValue(key, out measurement))
                     {
                         measurements[index++] = measurement;
                         if (index == minNeeded)

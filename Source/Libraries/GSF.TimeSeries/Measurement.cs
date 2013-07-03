@@ -179,7 +179,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Defines a mulplicative offset to apply to the measurement value. This defaults to 1.0.
+        /// Defines a multiplicative offset to apply to the measurement value. This defaults to 1.0.
         /// </summary>
         [DefaultValue(1.0)]
         public virtual double Multiplier
@@ -250,7 +250,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
         public virtual MeasurementValueFilterFunction MeasurementValueFilter
         {
@@ -420,7 +420,7 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator ==(Measurement measurement1, Measurement measurement2)
         {
-            return measurement1.Equals(measurement2);
+            return (object)measurement1 != null && measurement1.Equals(measurement2);
         }
 
         /// <summary>
@@ -431,7 +431,7 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator !=(Measurement measurement1, Measurement measurement2)
         {
-            return !measurement1.Equals(measurement2);
+            return (object)measurement1 != null && !measurement1.Equals(measurement2);
         }
 
         /// <summary>
@@ -487,8 +487,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public static readonly Measurement Undefined = new Measurement
             {
-            Key = MeasurementKey.Undefined
-        };
+                Key = MeasurementKey.Undefined
+            };
 
         /// <summary>
         /// Creates a copy of the specified measurement.
@@ -499,15 +499,15 @@ namespace GSF.TimeSeries
         {
             return new Measurement
                 {
-                ID = measurementToClone.ID,
-                Key = measurementToClone.Key,
-                Value = measurementToClone.Value,
-                Adder = measurementToClone.Adder,
-                Multiplier = measurementToClone.Multiplier,
-                Timestamp = measurementToClone.Timestamp,
-                TagName = measurementToClone.TagName,
-                StateFlags = measurementToClone.StateFlags
-            };
+                    ID = measurementToClone.ID,
+                    Key = measurementToClone.Key,
+                    Value = measurementToClone.Value,
+                    Adder = measurementToClone.Adder,
+                    Multiplier = measurementToClone.Multiplier,
+                    Timestamp = measurementToClone.Timestamp,
+                    TagName = measurementToClone.TagName,
+                    StateFlags = measurementToClone.StateFlags
+                };
         }
 
         /// <summary>
@@ -520,15 +520,15 @@ namespace GSF.TimeSeries
         {
             return new Measurement
                 {
-                ID = measurementToClone.ID,
-                Key = measurementToClone.Key,
-                Value = measurementToClone.Value,
-                Adder = measurementToClone.Adder,
-                Multiplier = measurementToClone.Multiplier,
-                Timestamp = timestamp,
-                TagName = measurementToClone.TagName,
-                StateFlags = measurementToClone.StateFlags
-            };
+                    ID = measurementToClone.ID,
+                    Key = measurementToClone.Key,
+                    Value = measurementToClone.Value,
+                    Adder = measurementToClone.Adder,
+                    Multiplier = measurementToClone.Multiplier,
+                    Timestamp = timestamp,
+                    TagName = measurementToClone.TagName,
+                    StateFlags = measurementToClone.StateFlags
+                };
         }
 
         /// <summary>
@@ -542,15 +542,15 @@ namespace GSF.TimeSeries
         {
             return new Measurement
                 {
-                ID = measurementToClone.ID,
-                Key = measurementToClone.Key,
-                Value = value,
-                Adder = measurementToClone.Adder,
-                Multiplier = measurementToClone.Multiplier,
-                Timestamp = timestamp,
-                TagName = measurementToClone.TagName,
-                StateFlags = measurementToClone.StateFlags
-            };
+                    ID = measurementToClone.ID,
+                    Key = measurementToClone.Key,
+                    Value = value,
+                    Adder = measurementToClone.Adder,
+                    Multiplier = measurementToClone.Multiplier,
+                    Timestamp = timestamp,
+                    TagName = measurementToClone.TagName,
+                    StateFlags = measurementToClone.StateFlags
+                };
         }
 
         /// <summary>
@@ -562,19 +562,15 @@ namespace GSF.TimeSeries
         public static string ToString(IMeasurement measurement, bool includeTagName = true)
         {
             if (measurement == null)
-            {
                 return "Undefined";
-            }
-            else
-            {
-                string tagName = measurement.TagName;
-                string keyText = measurement.Key.ToString();
 
-                if (includeTagName && !string.IsNullOrWhiteSpace(tagName))
-                    return string.Format("{0} [{1}]", tagName, keyText);
-                else
-                    return keyText;
-            }
+            string tagName = measurement.TagName;
+            string keyText = measurement.Key.ToString();
+
+            if (includeTagName && !string.IsNullOrWhiteSpace(tagName))
+                return string.Format("{0} [{1}]", tagName, keyText);
+
+            return keyText;
         }
 
         /// <summary>

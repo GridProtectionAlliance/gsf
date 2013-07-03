@@ -330,11 +330,10 @@ namespace GSF.TimeSeries
                             releaseTimer = true;
                             break;
                         }
-                        else if (frameMilliseconds > milliseconds)
-                        {
-                            // Time has yet to pass, wait till the next tick
+
+                        // If time has yet to pass, wait till the next tick
+                        if (frameMilliseconds > milliseconds)
                             break;
-                        }
                     }
 
                     if (releaseTimer)
@@ -433,7 +432,8 @@ namespace GSF.TimeSeries
                 }
 
                 // Increment reference count for input timer at given frame rate
-                timer.AddReference();
+                if ((object)timer != null)
+                    timer.AddReference();
             }
 
             return timer;

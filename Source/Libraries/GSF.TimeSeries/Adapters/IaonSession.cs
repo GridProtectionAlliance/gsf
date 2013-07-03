@@ -28,8 +28,6 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using GSF.Collections;
 using GSF.Configuration;
 
@@ -127,8 +125,8 @@ namespace GSF.TimeSeries.Adapters
         private readonly int m_measurementWarningThreshold;
         private readonly int m_measurementDumpingThreshold;
         private readonly int m_defaultSampleSizeWarningThreshold;
+        private readonly object m_requestTemporalSupportLock;
         private string m_name;
-        private object m_requestTemporalSupportLock;
         private bool m_disposed;
 
         #endregion

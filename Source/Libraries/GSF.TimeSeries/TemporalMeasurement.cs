@@ -85,7 +85,7 @@ namespace GSF.TimeSeries
 
         #region [ Properties ]
 
-        /// <summary>Allowed past time deviation tolerance in seconds (can be subsecond).</summary>
+        /// <summary>Allowed past time deviation tolerance in seconds (can be sub-second).</summary>
         /// <remarks>
         /// <para>This value defines the time sensitivity to past measurement timestamps.</para>
         /// <para>Defined the number of seconds allowed before assuming a measurement timestamp is too old.</para>
@@ -106,7 +106,7 @@ namespace GSF.TimeSeries
             }
         }
 
-        /// <summary>Allowed future time deviation tolerance in seconds (can be subsecond).</summary>
+        /// <summary>Allowed future time deviation tolerance in seconds (can be sub-second).</summary>
         /// <remarks>
         /// <para>This value defines the time sensitivity to future measurement timestamps.</para>
         /// <para>Defined the number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
@@ -137,7 +137,7 @@ namespace GSF.TimeSeries
         /// <para>Note that returned value will be offset by adder and multiplier.</para>
         /// </remarks>
         /// <param name="timestamp">Timestamp used to constrain <see cref="TemporalMeasurement"/> (typically set to real-time, i.e. "now").</param>
-        /// <returns>Value offset by adder and multipler (i.e., Value * Multiplier + Adder).</returns>
+        /// <returns>Value offset by adder and multiplier (i.e., Value * Multiplier + Adder).</returns>
         public double GetAdjustedValue(Ticks timestamp)
         {
             // We only return a measurement value that is up-to-date...

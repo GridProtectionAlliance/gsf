@@ -250,7 +250,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
         public override int ProcessingInterval
@@ -546,7 +546,7 @@ namespace GSF.TimeSeries.Adapters
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Exception occured during disconnect: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception occurred during disconnect: {0}", ex.Message), ex));
             }
         }
 
@@ -678,8 +678,8 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// <para>
         /// It is possible for items to be added to the queue while the flush is executing. The flush will continue to
-        /// process items as quickly as possible until the queue is empty. Unless the user stops queueing items to be
-        /// processed, the flush call may never return (not a happy situtation on shutdown).
+        /// process items as quickly as possible until the queue is empty. Unless the user stops queuing items to be
+        /// processed, the flush call may never return (not a happy situation on shutdown).
         /// </para>
         /// <para>
         /// The <see cref="OutputAdapterBase"/> does not clear queue prior to destruction. If the user fails to call
@@ -708,15 +708,6 @@ namespace GSF.TimeSeries.Adapters
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnprocessedMeasurements event: {0}", ex.Message), ex));
             }
-        }
-
-        /// <summary>
-        /// Raises <see cref="AdapterBase.ProcessException"/> event.
-        /// </summary>
-        /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected override void OnProcessException(Exception ex)
-        {
-            base.OnProcessException(ex);
         }
 
         private void m_connectionTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -755,7 +746,7 @@ namespace GSF.TimeSeries.Adapters
             OnUnprocessedMeasurements(m_measurementQueue.Count);
         }
 
-        // Bubble any exceptions occuring in the process queue to the base class event
+        // Bubble any exceptions occurring in the process queue to the base class event
         private void m_measurementQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(e.Argument);
