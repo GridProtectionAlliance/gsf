@@ -1177,7 +1177,7 @@ namespace GSF.TimeSeries.Adapters
                     catch (Exception ex)
                     {
                         // We report any errors encountered during type creation...
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter: {0}", ex.Message), ex));
+                        OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
                     }
                 }
             }
@@ -1202,13 +1202,13 @@ namespace GSF.TimeSeries.Adapters
                 }
                 else
                 {
-                    OnProcessException(new TimeoutException("Timeout waiting for adapter initialization."));
+                    OnProcessException(new TimeoutException(string.Format("{0} timed out waiting for adapter initialization.", item.Name)));
                 }
             }
             catch (Exception ex)
             {
                 // We report any errors encountered during startup...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
             }
         }
 
