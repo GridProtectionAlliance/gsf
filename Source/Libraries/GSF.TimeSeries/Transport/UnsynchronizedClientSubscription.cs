@@ -83,7 +83,7 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_initializedBaseTimeOffsets;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
-        private volatile int m_currentProcessThreadID;
+        private int m_processThreadState;
 
         private readonly BlockAllocatedMemoryStream m_workingBuffer;
         private readonly List<byte[]> m_bufferBlockCache;
@@ -463,10 +463,17 @@ namespace GSF.TimeSeries.Transport
             if ((object)m_baseTimeRotationTimer != null && m_includeTime)
                 m_baseTimeRotationTimer.Start();
 
-            processThread = new Thread(ProcessMeasurements);
-            m_currentProcessThreadID = processThread.ManagedThreadId;
-            processThread.IsBackground = true;
-            processThread.Start();
+            // If state is stopping (1), set it to running (2)
+            if (Interlocked.CompareExchange(ref m_processThreadState, 2, 1) == 0)
+            {
+                // If state is stopped (0), set it to running (2) and run the new thread
+                if (Interlocked.CompareExchange(ref m_processThreadState, 2, 0) == 0)
+                {
+                    processThread = new Thread(ProcessMeasurements);
+                    processThread.IsBackground = true;
+                    processThread.Start();
+                }
+            }
         }
 
         /// <summary>
@@ -475,6 +482,9 @@ namespace GSF.TimeSeries.Transport
         public override void Stop()
         {
             base.Stop();
+
+            // If state is running (2), set it to stopping (1)
+            Interlocked.CompareExchange(ref m_processThreadState, 1, 2);
 
             if ((object)m_baseTimeRotationTimer != null)
             {
@@ -659,9 +669,10 @@ namespace GSF.TimeSeries.Transport
         private void ProcessMeasurements()
         {
             SpinWait spinner = new SpinWait();
-            int threadID = Thread.CurrentThread.ManagedThreadId;
 
-            while (Enabled && threadID == m_currentProcessThreadID)
+            // If state is stopping (1), set it to stopped (0)
+            // If state is running (2), continue looping
+            while (Interlocked.CompareExchange(ref m_processThreadState, 0, 1) == 2)
             {
                 try
                 {
@@ -769,11 +780,8 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    if (threadID == m_currentProcessThreadID)
-                    {
-                        OnProcessException(new InvalidOperationException(string.Format("Error processing measurements: {0}", ex.Message), ex));
-                        spinner.SpinOnce();
-                    }
+                    OnProcessException(new InvalidOperationException(string.Format("Error processing measurements: {0}", ex.Message), ex));
+                    spinner.SpinOnce();
                 }
             }
         }
