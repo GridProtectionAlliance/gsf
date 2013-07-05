@@ -595,7 +595,7 @@ namespace GSF.PhasorProtocols
         /// </returns>
         public bool Equals(IConfigurationCell other)
         {
-            return (CompareTo(other) == 0);
+            return ((object)other != null) && (CompareTo(other) == 0);
         }
 
         /// <summary>
