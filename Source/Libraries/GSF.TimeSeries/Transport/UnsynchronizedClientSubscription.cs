@@ -83,6 +83,7 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_initializedBaseTimeOffsets;
         private volatile bool m_startTimeSent;
         private IaonSession m_iaonSession;
+        private volatile int m_currentProcessThreadID;
 
         private readonly BlockAllocatedMemoryStream m_workingBuffer;
         private readonly List<byte[]> m_bufferBlockCache;
@@ -452,7 +453,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public override void Start()
         {
-            Thread processThread = new Thread(ProcessMeasurements);
+            Thread processThread;
 
             if (!Enabled)
                 m_startTimeSent = false;
@@ -462,6 +463,8 @@ namespace GSF.TimeSeries.Transport
             if ((object)m_baseTimeRotationTimer != null && m_includeTime)
                 m_baseTimeRotationTimer.Start();
 
+            processThread = new Thread(ProcessMeasurements);
+            m_currentProcessThreadID = processThread.ManagedThreadId;
             processThread.IsBackground = true;
             processThread.Start();
         }
@@ -656,8 +659,9 @@ namespace GSF.TimeSeries.Transport
         private void ProcessMeasurements()
         {
             SpinWait spinner = new SpinWait();
+            int threadID = Thread.CurrentThread.ManagedThreadId;
 
-            while (Enabled)
+            while (Enabled && threadID == m_currentProcessThreadID)
             {
                 try
                 {
@@ -765,8 +769,11 @@ namespace GSF.TimeSeries.Transport
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Error processing measurements: {0}", ex.Message), ex));
-                    spinner.SpinOnce();
+                    if (threadID == m_currentProcessThreadID)
+                    {
+                        OnProcessException(new InvalidOperationException(string.Format("Error processing measurements: {0}", ex.Message), ex));
+                        spinner.SpinOnce();
+                    }
                 }
             }
         }

@@ -53,6 +53,7 @@ namespace DataQualityMonitoring
         private Dictionary<Guid, List<Alarm>> m_alarmLookup;
         private AlarmService m_alarmService;
 
+        private volatile int m_currentProcessThreadID;
         private readonly AsyncDoubleBufferedQueue<IMeasurement> m_measurementQueue;
         private long m_eventCount;
 
@@ -174,14 +175,15 @@ namespace DataQualityMonitoring
         /// </summary>
         public override void Start()
         {
-            Thread t;
+            Thread processThread;
 
             base.Start();
             m_eventCount = 0L;
 
-            t = new Thread(ProcessMeasurements);
-            t.IsBackground = true;
-            t.Start();
+            processThread = new Thread(ProcessMeasurements);
+            m_currentProcessThreadID = processThread.ManagedThreadId;
+            processThread.IsBackground = true;
+            processThread.Start();
         }
 
         /// <summary>
@@ -284,6 +286,7 @@ namespace DataQualityMonitoring
         {
             IEnumerable<IMeasurement> measurements;
             SpinWait spinner;
+            int threadID;
 
             List<Alarm> alarms;
             List<Alarm> raisedAlarms;
@@ -292,10 +295,11 @@ namespace DataQualityMonitoring
             IMeasurement alarmEvent;
             long processedMeasurements;
 
+            threadID = Thread.CurrentThread.ManagedThreadId;
             spinner = new SpinWait();
             alarmEvents = new List<IMeasurement>();
 
-            while (Enabled)
+            while (Enabled && threadID == m_currentProcessThreadID)
             {
                 try
                 {
@@ -356,10 +360,13 @@ namespace DataQualityMonitoring
                 }
                 catch (Exception ex)
                 {
-                    // Log error and continue processing alarm events
-                    string message = string.Format("Exception occurred while processing alarm measurements: {0}", ex.Message);
-                    OnProcessException(new InvalidOperationException(message, ex));
-                    spinner.SpinOnce();
+                    if (threadID == m_currentProcessThreadID)
+                    {
+                        // Log error and continue processing alarm events
+                        string message = string.Format("Exception occurred while processing alarm measurements: {0}", ex.Message);
+                        OnProcessException(new InvalidOperationException(message, ex));
+                        spinner.SpinOnce();
+                    }
                 }
             }
         }
