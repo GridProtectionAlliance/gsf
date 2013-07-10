@@ -39,7 +39,7 @@ public class GraphLines : MonoBehaviour
     #region [ Members ]
 
     // Nested Types
-	
+
 	// Defines a common set of methods for a line
 	private interface ILine
 	{
@@ -232,8 +232,8 @@ public class GraphLines : MonoBehaviour
 
     // Constants
 	private const string IniFileName = "GraphLines.ini";	
-	private const int ControlWindowVisibleHeight = 75;
-	private const int ControlWindowHiddenHeight = 20;
+	private const int ControlWindowActiveHeight = 110;
+	private const int ControlWindowMinimizedHeight = 20;
 
     // Fields	
 	private ConcurrentDictionary<Guid, DataLine> m_dataLines;
@@ -250,18 +250,17 @@ public class GraphLines : MonoBehaviour
 	// Subscriber control window variables
 	private int m_lastScreenHeight = -1;
 	private int m_lastScreenWidth = -1;
-	private Rect m_controlWindowContentVisible;
-	private Rect m_controlWindowContentHidden;
-	private bool m_controlWindowVisible = false;
-	private bool m_mouseWasDown;
+	private Rect m_controlWindowActiveLocation;
+	private Rect m_controlWindowMinimizedLocation;
+	private bool m_controlWindowMinimized = true;
 	private string m_startTime = "*-5M";
 	private string m_stopTime = "*";
 	private int m_processInterval = 33;
-	private bool m_changeMessageReady;
+	private bool m_historicalSubscription = false;
 		
 	// Public fields exposed to Unity UI interface
 	public string m_title = "GPA Grid Solutions Framework Subscription Demo";
-	public string m_connectionString = "server=localhost:6165";
+	public string m_connectionString = "server=localhost:6165;";
 	public string m_filterExpression = "FILTER ActiveMeasurements WHERE SignalType='FREQ' OR SignalType LIKE 'VPH*'";
 	public Material m_lineMaterial;
 	public int m_lineWidth = 4;
@@ -282,14 +281,17 @@ public class GraphLines : MonoBehaviour
 	
 	#region [ Unity Event Handlers ]
 	
-	protected void Start()
+	protected void Awake()
 	{
-		string iniFilePath = Application.dataPath + "/" + IniFileName;
+		string defaultIniPath = Application.dataPath + "/" + IniFileName;
+		string userIniPath = Application.persistentDataPath + "/" + IniFileName;
 		
-		if (Application.platform == RuntimePlatform.Android)
-			iniFilePath = Application.persistentDataPath + "/" + IniFileName;
+		// Copy INI file with default settings to user INI file if one doesn't exist
+		if (File.Exists(defaultIniPath) && !File.Exists(userIniPath))
+			File.Copy(defaultIniPath, userIniPath);
 		
-		IniFile iniFile = new IniFile(iniFilePath);
+		// Load settings from INI file
+		IniFile iniFile = new IniFile(userIniPath);
 		
 		m_title = iniFile["Settings", "Title", m_title];
 		m_connectionString = iniFile["Settings", "ConnectionString", m_connectionString];
@@ -300,23 +302,43 @@ public class GraphLines : MonoBehaviour
 		m_legendFormat = iniFile["Settings", "LegendFormat", m_legendFormat];
 		m_statusRows = int.Parse(iniFile["Settings", "StatusRows", m_statusRows.ToString()]);
 		m_statusDisplayInterval = double.Parse(iniFile["Settings", "StatusDisplayInterval", m_statusDisplayInterval.ToString()]);
-
-		// Attempt to save new INI file if one doesn't exist
-		if (!File.Exists(iniFilePath))
+		m_startTime = iniFile["Settings", "StartTime", m_startTime];
+		m_stopTime = iniFile["Settings", "StopTime", m_stopTime];
+		
+		// Attempt to save INI file updates (e.g., to restore any missing settings)
+		try
 		{
-			try
-			{
-				iniFile.Save();
-			}
-			catch (Exception ex)
-			{
-				Debug.Log("ERROR: " + ex.Message);
-			}
+			iniFile.Save();
 		}
+		catch (Exception ex)
+		{
+			Debug.Log("ERROR: " + ex.Message);
+		}		
 		
 		// Attempt to reference active mouse orbit script
 		m_mouseOrbitScript = GetComponent<MouseOrbit>();				
+		
+		// Create line dictionary and data queue
+		m_dataLines = new ConcurrentDictionary<Guid, DataLine>();
+		m_dataQueue = new ConcurrentQueue<IMeasurement>();		
+		m_legendLines = new List<LegendLine>();
+				
+		// Initialize status rows and timer to hide status after a period of no updates
+		m_statusText = new string[m_statusRows];
+		
+		for (int i = 0; i < m_statusRows; i++)
+		{
+			m_statusText[i] = "";	
+		}
+		
+		m_hideStatusTimer = new System.Timers.Timer();
+		m_hideStatusTimer.AutoReset = false;
+		m_hideStatusTimer.Interval = m_statusDisplayInterval;
+		m_hideStatusTimer.Elapsed += m_hideStatusTimer_Elapsed;
+	}
 	
+	protected void Start()
+	{
 		// Attempt to update title
 		GameObject titleObject = GameObject.Find("Title");
 		
@@ -327,11 +349,6 @@ public class GraphLines : MonoBehaviour
 			if ((object)titleMesh != null)
 				titleMesh.text = m_title;
 		}
-		
-		// Create line dictionary and data queue
-		m_dataLines = new ConcurrentDictionary<Guid, DataLine>();
-		m_dataQueue = new ConcurrentQueue<IMeasurement>();		
-		m_legendLines = new List<LegendLine>();
 		
 		// If 3D text legend mesh property was not defined, attempt to look it up by name
 		if ((object)m_legendMesh == null)
@@ -350,75 +367,13 @@ public class GraphLines : MonoBehaviour
 			if ((object)statusObject != null)
 				m_statusMesh = statusObject.GetComponent<TextMesh>();
 		}
-				
-		// Initialize status rows and timer to hide status after a period of no updates
-		m_statusText = new string[m_statusRows];
-		
-		for (int i = 0; i < m_statusRows; i++)
-		{
-			m_statusText[i] = "";	
-		}
-		
-		m_hideStatusTimer = new System.Timers.Timer();
-		m_hideStatusTimer.AutoReset = false;
-		m_hideStatusTimer.Interval = m_statusDisplayInterval;
-		m_hideStatusTimer.Elapsed += m_hideStatusTimer_Elapsed;
-		
-		// Attempt to extract server name from connection string
-		string server = "unknown";
-		
-		if (!string.IsNullOrEmpty(m_connectionString))
-		{
-			Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
-			
-			if (!settings.TryGetValue("server", out server))
-				server = "unknown";
-		}
-				
-		UpdateStatus("Attempting connection to \"{0}\"...", server);
-		
-		// Create a new data subscriber
-		m_subscriber = new DataSubscriber();
-		
-		// Attach to subscriber events
-		m_subscriber.MetaDataReceived += subscriber_MetaDataReceived;
-        m_subscriber.StatusMessage += subscriber_StatusMessage;
-        m_subscriber.ProcessException += subscriber_ProcessException;
-        m_subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
-        m_subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
-        m_subscriber.NewMeasurements += subscriber_NewMeasurements;
-		m_subscriber.ProcessingComplete += subscriber_ProcessingComplete;
 
-        // Initialize subscriber
-        m_subscriber.ConnectionString = m_connectionString;
-        m_subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressMetadata;
-        m_subscriber.Initialize();
-
-        // Start subscriber connection cycle
-        m_subscriber.Start();
+		InitiateConnection();
 	}
 	
 	protected void OnDestroy()
 	{
-		if ((object)m_subscriber != null)
-		{
-			// Stop the subscription if connected
-			m_subscriber.Stop();
-						
-			// Detach from subscriber events
-			m_subscriber.MetaDataReceived -= subscriber_MetaDataReceived;
-	        m_subscriber.StatusMessage -= subscriber_StatusMessage;
-	        m_subscriber.ProcessException -= subscriber_ProcessException;
-	        m_subscriber.ConnectionEstablished -= subscriber_ConnectionEstablished;
-	        m_subscriber.ConnectionTerminated -= subscriber_ConnectionTerminated;
-	        m_subscriber.NewMeasurements -= subscriber_NewMeasurements;
-			m_subscriber.ProcessingComplete -= subscriber_ProcessingComplete;
-			
-			// Dispose of the subscription
-			m_subscriber.Dispose();
-		}
-		
-		m_subscriber = null;
+		TerminateConnection();
 		
 		if ((object)m_hideStatusTimer != null)
 		{
@@ -427,6 +382,34 @@ public class GraphLines : MonoBehaviour
 		}
 		
 		m_hideStatusTimer = null;
+	}
+	
+	protected void OnApplicationQuit()
+	{
+		// Make sure destroy gets called
+		OnDestroy();
+		
+		// Load existing INI file settings
+		IniFile iniFile = new IniFile(Application.persistentDataPath + "/" + IniFileName);
+		
+		// Apply any user updated settings to INI file. Note that semi-colons are
+		// treated as comments in INI files so we suffix connection string with a
+		// semi-colon since this string can contain valid semi-colons - only the
+		// last one will be treated as a comment prefix and removed at load.
+		iniFile["Settings", "ConnectionString"] = m_connectionString + ";";
+		iniFile["Settings", "FilterExpression"] = m_filterExpression;
+		iniFile["Settings", "StartTime"] = m_startTime;
+		iniFile["Settings", "StopTime"] = m_stopTime;
+
+		// Attempt to save INI file updates
+		try
+		{
+			iniFile.Save();
+		}
+		catch (Exception ex)
+		{
+			Debug.Log("ERROR: " + ex.Message);
+		}
 	}
 
 	protected void Update()
@@ -462,26 +445,32 @@ public class GraphLines : MonoBehaviour
 	
 	private void OnGUI()
 	{
-		Rect controlWindowLocation = m_controlWindowVisible ? m_controlWindowContentVisible : m_controlWindowContentHidden;
-		GUILayout.Window(0, controlWindowLocation, DrawControlsWindow, "Subscription Controls");
+		Rect controlWindowLocation = m_controlWindowMinimized ? m_controlWindowMinimizedLocation : m_controlWindowActiveLocation;
 		
-		Event e = Event.current;        
+		// Create a solid background for the control window
+		Texture2D texture = new Texture2D(1, 1);
+		texture.SetPixel(0, 0, new Color32(10, 25, 70, 255));
+    	texture.Apply();
 		
-		if (e.isMouse)
+		GUIStyle style = new GUIStyle(GUI.skin.GetStyle("Window"));
+		style.normal.background = texture;
+		style.onNormal = style.normal;		
+		
+		GUILayout.Window(0, controlWindowLocation, DrawControlsWindow, "Subscription Controls", style);		
+		Event e = Event.current;
+		
+		if (e.isMouse && Input.GetMouseButtonUp(0))
 		{
-			bool mouseInWindow = controlWindowLocation.Contains(e.mousePosition);
+			bool mouseOverWindow = controlWindowLocation.Contains(e.mousePosition);
 			
-			if (e.type == EventType.mouseDown)
-				m_mouseWasDown = mouseInWindow;
-
-			if (m_mouseWasDown && e.clickCount == 1 && e.type == EventType.mouseUp && mouseInWindow)
-			{
-				m_mouseWasDown = false;				
-				m_controlWindowVisible = !m_controlWindowVisible;
-				
-				if ((object)m_mouseOrbitScript != null)
-					m_mouseOrbitScript.isActive = !m_controlWindowVisible;
-			}
+			// If mouse is over minimized control window during click, "pop-up" control window
+			if (mouseOverWindow && m_controlWindowMinimized)
+				m_controlWindowMinimized = false;
+			else if (!m_controlWindowMinimized)
+				m_controlWindowMinimized = true;
+			
+			if ((object)m_mouseOrbitScript != null)
+				m_mouseOrbitScript.isActive = m_controlWindowMinimized;
 		}
 	}
 	
@@ -609,6 +598,8 @@ public class GraphLines : MonoBehaviour
 			m_hideStatusTimer.Stop();
 			m_hideStatusTimer.Start();
 		}
+		
+		//Debug.Log(statusText);
 	}
 	
 	private void m_hideStatusTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -691,7 +682,74 @@ public class GraphLines : MonoBehaviour
 		if (m_dataLines.TryGetValue(id, out dataLine))
 			m_legendLines.Add(new LegendLine(this, id, m_legendLines.Count, dataLine.VectorColor));
 	}
+	
+	
+	// Connects or reconnects to a data publisher
+	private void InitiateConnection()
+	{
+		// Shutdown any existing connection
+		TerminateConnection();
+				
+		// Attempt to extract server name from connection string
+		string server = "unknown";
+		
+		if (!string.IsNullOrEmpty(m_connectionString))
+		{
+			Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+			
+			if (!settings.TryGetValue("server", out server))
+				server = "unknown";
+		}
 
+		UpdateStatus("Attempting connection to \"{0}\"...", server);
+
+		// Create a new data subscriber
+		m_subscriber = new DataSubscriber();
+		
+		// Attach to subscriber events
+		m_subscriber.MetaDataReceived += subscriber_MetaDataReceived;
+        m_subscriber.StatusMessage += subscriber_StatusMessage;
+        m_subscriber.ProcessException += subscriber_ProcessException;
+        m_subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
+        m_subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
+        m_subscriber.NewMeasurements += subscriber_NewMeasurements;
+		m_subscriber.ProcessingComplete += subscriber_ProcessingComplete;
+
+        // Initialize subscriber
+        m_subscriber.ConnectionString = m_connectionString;
+        m_subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressMetadata;
+        m_subscriber.Initialize();
+
+        // Start subscriber connection cycle
+        m_subscriber.Start();
+	}
+	
+	// Terminates an existing connection to a data publisher
+	private void TerminateConnection()
+	{
+		if ((object)m_subscriber != null)
+		{
+			UpdateStatus("Terminating current connection...");
+
+			// Stop the subscription if connected
+			m_subscriber.Stop();
+						
+			// Detach from subscriber events
+			m_subscriber.MetaDataReceived -= subscriber_MetaDataReceived;
+	        m_subscriber.StatusMessage -= subscriber_StatusMessage;
+	        m_subscriber.ProcessException -= subscriber_ProcessException;
+	        m_subscriber.ConnectionEstablished -= subscriber_ConnectionEstablished;
+	        m_subscriber.ConnectionTerminated -= subscriber_ConnectionTerminated;
+	        m_subscriber.NewMeasurements -= subscriber_NewMeasurements;
+			m_subscriber.ProcessingComplete -= subscriber_ProcessingComplete;
+			
+			// Dispose of the subscription
+			m_subscriber.Dispose();
+		}
+		
+		m_subscriber = null;
+	}
+	
 	// Subscribes or resubscribes to real-time stream using current filter expression
 	private void InitiateSubscription()
 	{
@@ -701,11 +759,13 @@ public class GraphLines : MonoBehaviour
 	// Subscribes or resubscribes to real-time or historical stream using current filter expression
 	private void InitiateSubscription(bool historical)
 	{
-		if (m_subscribed)
+		if (m_subscribed || m_historicalSubscription)
 		{
 			m_subscriber.Unsubscribe();
 			ClearSubscription();
 		}
+		
+		m_historicalSubscription = historical;
 		
 		UnsynchronizedSubscriptionInfo subscriptionInfo;
 
@@ -716,9 +776,25 @@ public class GraphLines : MonoBehaviour
 		{
 			subscriptionInfo.StartTime = m_startTime;
 			subscriptionInfo.StopTime = m_stopTime;
+			subscriptionInfo.ProcessingInterval = m_processInterval;
 			UpdateStatus("*** Starting historical replay at {0} playback speed ***", m_processInterval == 0 ? "fast as possible" : m_processInterval + "ms");
 		}		
-		subscriptionInfo.ProcessingInterval = m_processInterval;
+
+		// Attempt to extract possible data channel setting from connection string.
+		// For example, adding "; dataChannel={port=9191}" to the connection string
+		// would request that the data publisher send data to the subscriber over
+		// UDP on port 9191. Technically this is part of the subscription info but
+		// we allow this definition in the connection string for this application.
+		string dataChannel = null;
+		
+		if (!string.IsNullOrEmpty(m_connectionString))
+		{
+			Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();			
+			settings.TryGetValue("dataChannel", out dataChannel);
+		}
+		
+		if ((object)dataChannel != null)
+			subscriptionInfo.ExtraConnectionStringParameters = "dataChannel={" + dataChannel + "}";
 		
 		m_subscriber.UnsynchronizedSubscribe(subscriptionInfo);
 	}
@@ -729,7 +805,6 @@ public class GraphLines : MonoBehaviour
 		// Reset subscription state
 		m_subscribed = false;
 		m_linesInitializedWaitHandle = null;
-		m_changeMessageReady = false;
 		
 		// Erase data lines
 		if ((object)m_dataLines != null)
@@ -772,54 +847,77 @@ public class GraphLines : MonoBehaviour
 	{
 		m_lastScreenHeight = Screen.height;
 		m_lastScreenWidth = Screen.width;
-		m_controlWindowContentVisible = new Rect(0, Screen.height - ControlWindowVisibleHeight, Screen.width, ControlWindowVisibleHeight);
-		m_controlWindowContentHidden = new Rect(0, Screen.height - ControlWindowHiddenHeight, Screen.width, ControlWindowVisibleHeight);
+		m_controlWindowActiveLocation = new Rect(0, Screen.height - ControlWindowActiveHeight, Screen.width, ControlWindowActiveHeight);
+		m_controlWindowMinimizedLocation = new Rect(0, Screen.height - ControlWindowMinimizedHeight, Screen.width, ControlWindowActiveHeight);
 	}
 	
 	private void DrawControlsWindow(int windowID)
 	{
-		GUILayout.BeginVertical();		
-
-		// Row 1 - filter expression
-		GUILayout.BeginHorizontal();
+		GUILayout.BeginVertical();
 		
-		GUILayout.Label(" Filter Expression:", GUILayout.Width(108));
-		m_filterExpression = GUILayout.TextField(m_filterExpression);
-		
-		// Resubscribe using new filter expression
-		if (GUILayout.Button("Subscribe", GUILayout.Width(100)))
-			InitiateSubscription();
-		
-		GUILayout.EndHorizontal();
-
-		// Row 2 - historical query
-		GUILayout.BeginHorizontal();
+			// Row 0 - server connection string
+			GUILayout.BeginHorizontal();
+			
+				GUILayout.Label(" Connection String:", GUILayout.Width(112));
+				m_connectionString = GUILayout.TextField(m_connectionString);
+				
+				// Reconnect using new connection string
+				if (GUILayout.Button("Connect", GUILayout.Width(100)))
+					InitiateConnection();
+			
+			GUILayout.EndHorizontal();
 	
-		GUILayout.Label(" Start Time:", GUILayout.Width(70));
-		m_startTime = GUILayout.TextField(m_startTime);
+			// Row 1 - filter expression
+			GUILayout.BeginHorizontal();
+			
+				GUILayout.Label(" Filter Expression:", GUILayout.Width(108));
+				m_filterExpression = GUILayout.TextField(m_filterExpression);
+				
+				// Resubscribe using new filter expression
+				if (GUILayout.Button("Update", GUILayout.Width(100)))
+					InitiateSubscription();
+			
+			GUILayout.EndHorizontal();
+	
+			// Row 2 - historical query
+			GUILayout.BeginHorizontal();
 		
-		GUILayout.Label(" Stop Time:", GUILayout.Width(70));
-		m_stopTime = GUILayout.TextField(m_stopTime);
+				GUILayout.Label(" Start Time:", GUILayout.Width(70));
+				m_startTime = GUILayout.TextField(m_startTime);
+				
+				GUILayout.Label(" Stop Time:", GUILayout.Width(70));
+				m_stopTime = GUILayout.TextField(m_stopTime);
+				
+				GUILayout.Label("Process Interval:", GUILayout.Width(100));
+				m_processInterval = (int)GUILayout.HorizontalSlider((float)m_processInterval, 0.0F, 300.0F, GUILayout.Width(125));
+				
+				// Dynamically update processing interval when user moves slider control
+				if (m_subscribed && (object)m_subscriber != null && m_processInterval != m_subscriber.ProcessingInterval)
+				{
+					bool showMessage = (m_subscriber.ProcessingInterval != -1);
+					m_subscriber.ProcessingInterval = m_processInterval;
+					
+					if (showMessage)
+						UpdateStatus("*** Changing historical replay speed to {0} ***", m_processInterval == 0 ? "fast as possible" : m_processInterval + "ms");
+				}
+				
+				// Resubscribe with historical replay parameters
+				if (GUILayout.Button("Replay", GUILayout.Width(100)))
+					InitiateSubscription(true);
+			
+			GUILayout.EndHorizontal();
+			
+			// Row 3 - INI file path
+			GUILayout.BeginHorizontal();
+	
+				GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+				labelStyle.fontSize = 10;
+				labelStyle.fontStyle = FontStyle.Italic;
+				labelStyle.alignment = TextAnchor.UpperCenter;
 		
-		GUILayout.Label("Process Interval:", GUILayout.Width(100));
-		m_processInterval = (int)GUILayout.HorizontalSlider((float)m_processInterval, 0.0F, 300.0F, GUILayout.Width(125));
-		
-		// Dynamically update processing interval when user moves slider control
-		if ((object)m_subscriber != null && m_processInterval != m_subscriber.ProcessingInterval)
-		{			
-			if (m_changeMessageReady)
-			{
-				m_subscriber.ProcessingInterval = m_processInterval;
-				UpdateStatus("*** Changing historical replay speed to {0} ***", m_processInterval == 0 ? "fast as possible" : m_processInterval + "ms");
-			}
-			m_changeMessageReady = true;
-		}
-		
-		// Resubscribe with historical replay parameters
-		if (GUILayout.Button("Replay", GUILayout.Width(100)))
-			InitiateSubscription(true);
-		
-		GUILayout.EndHorizontal();
+				GUILayout.Label(" INI File Path = " + Application.persistentDataPath + "/" + IniFileName, labelStyle); 
+			
+			GUILayout.EndHorizontal();
 		
 		GUILayout.EndVertical();
 	}
