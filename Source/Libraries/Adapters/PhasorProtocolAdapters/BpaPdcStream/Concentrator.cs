@@ -130,7 +130,7 @@ namespace PhasorProtocolAdapters.BpaPdcStream
             foreach (GSF.PhasorProtocols.Anonymous.ConfigurationCell baseCell in baseConfigurationFrame.Cells)
             {
                 baseCell.StationName = baseCell.IDLabel.TruncateLeft(baseCell.MaximumStationNameLength);
-                baseCell.IDLabel = DataSource.Tables["OutputStreamDevices"].Select(string.Format("ID={0}", baseCell.IDCode))[0]["BpaAcronym"].ToNonNullString(baseCell.IDLabel).TruncateLeft(4);
+                baseCell.IDLabel = DataSource.Tables["OutputStreamDevices"].Select(string.Format("IDCode={0}", baseCell.IDCode))[0]["BpaAcronym"].ToNonNullString(baseCell.IDLabel).TruncateLeft(4);
 
                 // If no ID label was provided, we default to first 4 characters of station name
                 if (string.IsNullOrEmpty(baseCell.IDLabel))

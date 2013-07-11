@@ -41,7 +41,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         #region [ Members ]
 
         // Fields
-        private readonly int m_dummy;
+        private readonly uint m_dummy;
         private double m_frequencyOffset;
 
         #endregion
@@ -70,6 +70,8 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             string[] entry = entryValue.Split(',');
             FrequencyDefinition defaultFrequency;
             int index = 0;
+            uint iValue;
+            double dValue;
 
             if (parent != null)
                 defaultFrequency = parent.Parent.DefaultFrequency;
@@ -80,28 +82,28 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             if (string.Compare(entry[index].Trim(), "F", true) == 0)
                 index++;
 
-            if (entry.Length > index)
-                ScalingValue = uint.Parse(entry[index++].Trim());
+            if (entry.Length > index && uint.TryParse(entry[index++].Trim(), out iValue))
+                ScalingValue = iValue;
             else
                 ScalingValue = defaultFrequency.ScalingValue;
 
-            if (entry.Length > index)
-                Offset = double.Parse(entry[index++].Trim());
+            if (entry.Length > index && double.TryParse(entry[index++].Trim(), out dValue))
+                Offset = dValue;
             else
                 Offset = defaultFrequency.Offset;
 
-            if (entry.Length > index)
-                DfDtScalingValue = uint.Parse(entry[index++].Trim());
+            if (entry.Length > index && uint.TryParse(entry[index++].Trim(), out iValue))
+                DfDtScalingValue = iValue;
             else
                 DfDtScalingValue = defaultFrequency.DfDtScalingValue;
 
-            if (entry.Length > index)
-                DfDtOffset = double.Parse(entry[index++].Trim());
+            if (entry.Length > index && double.TryParse(entry[index++].Trim(), out dValue))
+                DfDtOffset = dValue;
             else
                 DfDtOffset = defaultFrequency.DfDtOffset;
 
-            if (entry.Length > index)
-                m_dummy = int.Parse(entry[index++].Trim());
+            if (entry.Length > index && uint.TryParse(entry[index++].Trim(), out iValue))
+                m_dummy = iValue;
             else
                 m_dummy = defaultFrequency.m_dummy;
 

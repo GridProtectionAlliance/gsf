@@ -232,7 +232,7 @@ public class GraphLines : MonoBehaviour
 
     // Constants
 	private const string IniFileName = "GraphLines.ini";	
-	private const int ControlWindowActiveHeight = 110;
+	private const int ControlWindowActiveHeight = 130;
 	private const int ControlWindowMinimizedHeight = 20;
 
     // Fields	
@@ -257,6 +257,8 @@ public class GraphLines : MonoBehaviour
 	private string m_stopTime = "*";
 	private int m_processInterval = 33;
 	private bool m_historicalSubscription = false;
+	private Vector2 m_scrollPosition;
+	private int m_guiSize = 1;
 		
 	// Public fields exposed to Unity UI interface
 	public string m_title = "GPA Grid Solutions Framework Subscription Demo";
@@ -334,7 +336,21 @@ public class GraphLines : MonoBehaviour
 		m_hideStatusTimer = new System.Timers.Timer();
 		m_hideStatusTimer.AutoReset = false;
 		m_hideStatusTimer.Interval = m_statusDisplayInterval;
-		m_hideStatusTimer.Elapsed += m_hideStatusTimer_Elapsed;
+		m_hideStatusTimer.Elapsed += m_hideStatusTimer_Elapsed;		
+		
+		// For mobile applications we use a larger GUI font size.
+		// Other deployments might benefit from this as well - larger
+		// size modes may work also but are not tested
+		switch (Application.platform)
+		{
+			case RuntimePlatform.Android:
+			case RuntimePlatform.IPhonePlayer:
+				if (Screen.height <= 720)
+					m_guiSize = 2;	// 720P
+				else
+					m_guiSize = 3;	// 1080P or higher
+				break;
+		}
 	}
 	
 	protected void Start()
@@ -441,22 +457,33 @@ public class GraphLines : MonoBehaviour
 			if (m_dataLines.TryGetValue(measurement.ID, out line))
 				line.UpdateValue((float)measurement.Value);
 		}		
+        
+		// Allow application exit via "ESC" key
+		if (Input.GetKey("escape"))
+            Application.Quit();
 	}
 	
 	private void OnGUI()
 	{
-		Rect controlWindowLocation = m_controlWindowMinimized ? m_controlWindowMinimizedLocation : m_controlWindowActiveLocation;
+		Rect controlWindowLocation = m_controlWindowMinimized ? m_controlWindowMinimizedLocation : m_controlWindowActiveLocation;		
 		
 		// Create a solid background for the control window
 		Texture2D texture = new Texture2D(1, 1);
 		texture.SetPixel(0, 0, new Color32(10, 25, 70, 255));
     	texture.Apply();
+				
+		GUIStyle windowStyle = new GUIStyle(GUI.skin.window);
+		windowStyle.normal.background = texture;
+		windowStyle.onNormal = windowStyle.normal;		
 		
-		GUIStyle style = new GUIStyle(GUI.skin.GetStyle("Window"));
-		style.normal.background = texture;
-		style.onNormal = style.normal;		
+		// Adjust font size for window title for larger GUI sizes
+		if (m_guiSize > 1)
+			windowStyle.fontSize = 11 * m_guiSize;
 		
-		GUILayout.Window(0, controlWindowLocation, DrawControlsWindow, "Subscription Controls", style);		
+		// Create subscription control window
+		GUILayout.Window(0, controlWindowLocation, DrawControlsWindow, "Subscription Controls", windowStyle, GUILayout.MaxWidth(Screen.width));
+		
+		// Handle click events to show/hide control window
 		Event e = Event.current;
 		
 		if (e.isMouse && Input.GetMouseButtonUp(0))
@@ -469,9 +496,19 @@ public class GraphLines : MonoBehaviour
 			else if (!m_controlWindowMinimized)
 				m_controlWindowMinimized = true;
 			
+			// Mouse based camera orbit is disabled while control window is active
 			if ((object)m_mouseOrbitScript != null)
 				m_mouseOrbitScript.isActive = m_controlWindowMinimized;
 		}
+		
+		// Add a close application button on the main screen, this is handy
+		// on mobile deployments where hitting ESC button is not so easy
+		GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+		buttonStyle.fontSize = 12 * m_guiSize;
+		int size = 20 * m_guiSize;
+		
+		if (GUI.Button(new Rect(Screen.width - size, 0, size, size), "X", buttonStyle))
+			Application.Quit();
 	}
 	
     #endregion
@@ -534,6 +571,7 @@ public class GraphLines : MonoBehaviour
 			m_subscribed = true;
 		}
 		
+		// Queue up new measurements for processing
 		foreach(IMeasurement measurement in e.Argument)
 		{
 			m_dataQueue.Enqueue(measurement);
@@ -847,22 +885,71 @@ public class GraphLines : MonoBehaviour
 	{
 		m_lastScreenHeight = Screen.height;
 		m_lastScreenWidth = Screen.width;
-		m_controlWindowActiveLocation = new Rect(0, Screen.height - ControlWindowActiveHeight, Screen.width, ControlWindowActiveHeight);
-		m_controlWindowMinimizedLocation = new Rect(0, Screen.height - ControlWindowMinimizedHeight, Screen.width, ControlWindowActiveHeight);
+		
+		// Make control window size adjustments for larger GUI sizes
+		float heightScalar = m_guiSize > 1 ? m_guiSize * 0.80F : 1.0F;
+		int heighOffset =  m_guiSize > 1 ? 12 : 0;
+		
+		m_controlWindowActiveLocation = new Rect(0, Screen.height - ControlWindowActiveHeight * heightScalar, Screen.width, ControlWindowActiveHeight * heightScalar);
+		m_controlWindowMinimizedLocation = new Rect(0, Screen.height - (ControlWindowMinimizedHeight + heighOffset), Screen.width, ControlWindowActiveHeight * heightScalar);
 	}
-	
+		
 	private void DrawControlsWindow(int windowID)
 	{
+		GUIStyle horizontalScrollbarThumbStyle = new GUIStyle(GUI.skin.horizontalScrollbarThumb);
+		GUIStyle verticalScrollbarThumbStyle = new GUIStyle(GUI.skin.verticalScrollbarThumb);
+		GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+		GUIStyle textFieldStyle = new GUIStyle(GUI.skin.textField);
+		GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+		GUIStyle sliderStyle = new GUIStyle(GUI.skin.horizontalSlider);
+		GUIStyle sliderThumbStyle = new GUIStyle(GUI.skin.horizontalSliderThumb);
+		
+		float widthScalar = 1.0F;
+		
+		// Handle larger sizes for GUI elements
+		if (m_guiSize > 1)
+		{
+			horizontalScrollbarThumbStyle.fixedHeight *= (m_guiSize * 0.75F);
+			verticalScrollbarThumbStyle.fixedWidth *= (m_guiSize * 0.75F);
+			labelStyle.fontSize = 11 * m_guiSize;
+			textFieldStyle.fontSize = 11 * m_guiSize;
+			buttonStyle.fontSize = 11 * m_guiSize;
+			sliderStyle.fixedHeight *= m_guiSize;
+			sliderThumbStyle.fixedHeight *= m_guiSize;
+			sliderThumbStyle.padding.right *= m_guiSize;
+		
+			widthScalar = m_guiSize * 0.85F;
+		}
+		
+		// Adjust vertical alignment for slider control for better vertical centering
+		sliderStyle.margin.top += 5;
+		sliderThumbStyle.padding.top += 5;
+			
+		// Text field contents will auto-stretch control window beyond screen extent,
+		// so we add automatic scroll bars to the region in case things expand
+		m_scrollPosition = GUILayout.BeginScrollView(m_scrollPosition, horizontalScrollbarThumbStyle, verticalScrollbarThumbStyle);
 		GUILayout.BeginVertical();
+		
+			// Until a better way is found, just adding some vertical padding
+			// with a blank row for larger GUI sizes
+			if (m_guiSize > 1)
+			{		
+				GUIStyle blankLabelStyle = new GUIStyle(GUI.skin.label);
+				blankLabelStyle.fontSize = 4;
+			
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("", blankLabelStyle);
+				GUILayout.EndHorizontal();
+			}
 		
 			// Row 0 - server connection string
 			GUILayout.BeginHorizontal();
 			
-				GUILayout.Label(" Connection String:", GUILayout.Width(112));
-				m_connectionString = GUILayout.TextField(m_connectionString);
+				GUILayout.Label(" Connection String:", labelStyle, GUILayout.Width(112 * widthScalar));
+				m_connectionString = GUILayout.TextField(m_connectionString, textFieldStyle);
 				
 				// Reconnect using new connection string
-				if (GUILayout.Button("Connect", GUILayout.Width(100)))
+				if (GUILayout.Button("Connect", buttonStyle, GUILayout.Width(100 * widthScalar)))
 					InitiateConnection();
 			
 			GUILayout.EndHorizontal();
@@ -870,11 +957,11 @@ public class GraphLines : MonoBehaviour
 			// Row 1 - filter expression
 			GUILayout.BeginHorizontal();
 			
-				GUILayout.Label(" Filter Expression:", GUILayout.Width(108));
-				m_filterExpression = GUILayout.TextField(m_filterExpression);
+				GUILayout.Label(" Filter Expression:", labelStyle, GUILayout.Width(108 * widthScalar));
+				m_filterExpression = GUILayout.TextField(m_filterExpression, textFieldStyle);
 				
 				// Resubscribe using new filter expression
-				if (GUILayout.Button("Update", GUILayout.Width(100)))
+				if (GUILayout.Button("Update", buttonStyle, GUILayout.Width(100 * widthScalar)))
 					InitiateSubscription();
 			
 			GUILayout.EndHorizontal();
@@ -882,14 +969,14 @@ public class GraphLines : MonoBehaviour
 			// Row 2 - historical query
 			GUILayout.BeginHorizontal();
 		
-				GUILayout.Label(" Start Time:", GUILayout.Width(70));
-				m_startTime = GUILayout.TextField(m_startTime);
+				GUILayout.Label(" Start Time:", labelStyle, GUILayout.Width(70 * widthScalar));
+				m_startTime = GUILayout.TextField(m_startTime, textFieldStyle);
 				
-				GUILayout.Label(" Stop Time:", GUILayout.Width(70));
-				m_stopTime = GUILayout.TextField(m_stopTime);
+				GUILayout.Label(" Stop Time:", labelStyle, GUILayout.Width(70 * widthScalar));
+				m_stopTime = GUILayout.TextField(m_stopTime, textFieldStyle);
 				
-				GUILayout.Label("Process Interval:", GUILayout.Width(100));
-				m_processInterval = (int)GUILayout.HorizontalSlider((float)m_processInterval, 0.0F, 300.0F, GUILayout.Width(125));
+				GUILayout.Label("Process Interval:", labelStyle, GUILayout.Width(100 * widthScalar));
+				m_processInterval = (int)GUILayout.HorizontalSlider((float)m_processInterval, 0.0F, 300.0F, sliderStyle, sliderThumbStyle, GUILayout.Width(125 * widthScalar));
 				
 				// Dynamically update processing interval when user moves slider control
 				if (m_subscribed && (object)m_subscriber != null && m_processInterval != m_subscriber.ProcessingInterval)
@@ -902,7 +989,7 @@ public class GraphLines : MonoBehaviour
 				}
 				
 				// Resubscribe with historical replay parameters
-				if (GUILayout.Button("Replay", GUILayout.Width(100)))
+				if (GUILayout.Button("Replay", buttonStyle, GUILayout.Width(100 * widthScalar)))
 					InitiateSubscription(true);
 			
 			GUILayout.EndHorizontal();
@@ -910,16 +997,17 @@ public class GraphLines : MonoBehaviour
 			// Row 3 - INI file path
 			GUILayout.BeginHorizontal();
 	
-				GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-				labelStyle.fontSize = 10;
-				labelStyle.fontStyle = FontStyle.Italic;
-				labelStyle.alignment = TextAnchor.UpperCenter;
+				GUIStyle iniLabelStyle = new GUIStyle(GUI.skin.label);
+				iniLabelStyle.fontSize = 10 + (m_guiSize > 1 ? m_guiSize * 4 : 0);
+				iniLabelStyle.fontStyle = FontStyle.Italic;
+				iniLabelStyle.alignment = TextAnchor.UpperCenter;
 		
-				GUILayout.Label(" INI File Path = " + Application.persistentDataPath + "/" + IniFileName, labelStyle); 
+				GUILayout.Label(string.Format(" Settings File = \"{0}\" - Resolution = {1} x {2}", Application.persistentDataPath + "/" + IniFileName, Screen.width, Screen.height), iniLabelStyle);
 			
 			GUILayout.EndHorizontal();
 		
 		GUILayout.EndVertical();
+		GUILayout.EndScrollView();
 	}
 
     #endregion

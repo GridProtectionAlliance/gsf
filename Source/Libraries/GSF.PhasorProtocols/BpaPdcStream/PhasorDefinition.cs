@@ -85,6 +85,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             string[] entry = entryValue.Split(',');
             string entryType = entry[0].Trim().Substring(0, 1).ToUpper();
             PhasorDefinition defaultPhasor;
+            double dValue;
 
             if (parent != null)
             {
@@ -111,28 +112,28 @@ namespace GSF.PhasorProtocols.BpaPdcStream
                 defaultPhasor = new PhasorDefinition(null as ConfigurationCell);
             }
 
-            if (entry.Length > 1)
-                Ratio = double.Parse(entry[1].Trim());
+            if (entry.Length > 1 && double.TryParse(entry[1].Trim(), out dValue))
+                Ratio = dValue;
             else
                 Ratio = defaultPhasor.Ratio;
 
-            if (entry.Length > 2)
-                CalFactor = double.Parse(entry[2].Trim());
+            if (entry.Length > 2 && double.TryParse(entry[2].Trim(), out dValue))
+                CalFactor = dValue;
             else
-                ConversionFactor = defaultPhasor.ConversionFactor;
+                CalFactor = defaultPhasor.CalFactor;
 
-            if (entry.Length > 3)
-                Offset = double.Parse(entry[3].Trim());
+            if (entry.Length > 3 && double.TryParse(entry[3].Trim(), out dValue))
+                Offset = dValue;
             else
                 Offset = defaultPhasor.Offset;
 
-            if (entry.Length > 4)
-                Shunt = double.Parse(entry[4].Trim());
+            if (entry.Length > 4 && double.TryParse(entry[4].Trim(), out dValue))
+                Shunt = dValue;
             else
                 Shunt = defaultPhasor.Shunt;
 
-            if (entry.Length > 5)
-                VoltageReferenceIndex = (int)double.Parse(entry[5].Trim());
+            if (entry.Length > 5 && double.TryParse(entry[5].Trim(), out dValue))
+                VoltageReferenceIndex = (int)dValue;
             else
                 VoltageReferenceIndex = defaultPhasor.VoltageReferenceIndex;
 
