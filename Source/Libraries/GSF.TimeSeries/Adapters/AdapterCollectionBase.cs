@@ -1168,10 +1168,6 @@ namespace GSF.TimeSeries.Adapters
                 if ((object)initializationTimeoutTimer != null)
                     initializationTimeoutTimer.Stop();
 
-                // If input measurement keys were not updated during initialize of the adapter,
-                // make sure to notify routing tables that adapter is ready for broadcast
-                OnInputMeasurementKeysUpdated();
-
                 try
                 {
                     // If the item is set to auto-start, start it now
@@ -1187,6 +1183,10 @@ namespace GSF.TimeSeries.Adapters
                 // Set item to its final initialized state so that
                 // start and stop commands may be issued to the adapter
                 item.Initialized = true;
+
+                // If input measurement keys were not updated during initialize of the adapter,
+                // make sure to notify routing tables that adapter is ready for broadcast
+                OnInputMeasurementKeysUpdated();
             }
             catch (Exception ex)
             {
