@@ -1163,7 +1163,7 @@ namespace GSF.ServiceProcess
                     {
                         string message = string.Format("Unable to start health monitor due to exception: {0}", ex.Message);
                         m_errorLogger.Log(new InvalidOperationException(message, ex));
-                        UpdateStatus(UpdateType.Warning, "{0} Is the service account a member of the \"Performance Log Users\" group?");
+                        UpdateStatus(UpdateType.Warning, "{0} Is the service account a member of the \"Performance Log Users\" group?", message);
                     }
                 }
             }
