@@ -261,7 +261,7 @@ public class GraphLines : MonoBehaviour
 	private int m_guiSize = 1;
 		
 	// Public fields exposed to Unity UI interface
-	public string m_title = "GPA Grid Solutions Framework Subscription Demo";
+	public string m_title = "Gateway Exchange Protocol Subscription Tester";
 	public string m_connectionString = "server=localhost:6165;";
 	public string m_filterExpression = "FILTER ActiveMeasurements WHERE SignalType='FREQ' OR SignalType LIKE 'VPH*'";
 	public Material m_lineMaterial;
@@ -765,6 +765,8 @@ public class GraphLines : MonoBehaviour
 	// Terminates an existing connection to a data publisher
 	private void TerminateConnection()
 	{
+		ClearSubscription();
+		
 		if ((object)m_subscriber != null)
 		{
 			UpdateStatus("Terminating current connection...");
@@ -909,6 +911,7 @@ public class GraphLines : MonoBehaviour
 		// Handle larger sizes for GUI elements
 		if (m_guiSize > 1)
 		{
+			// This work was non-deterministic - should be a better way...
 			horizontalScrollbarThumbStyle.fixedHeight *= (m_guiSize * 0.75F);
 			verticalScrollbarThumbStyle.fixedWidth *= (m_guiSize * 0.75F);
 			labelStyle.fontSize = 11 * m_guiSize;
@@ -931,7 +934,7 @@ public class GraphLines : MonoBehaviour
 		GUILayout.BeginVertical();
 		
 			// Until a better way is found, just adding some vertical padding
-			// with a blank row for larger GUI sizes
+			// with a blank row for larger GUI sizes (optional Row 0)
 			if (m_guiSize > 1)
 			{		
 				GUIStyle blankLabelStyle = new GUIStyle(GUI.skin.label);
@@ -942,7 +945,7 @@ public class GraphLines : MonoBehaviour
 				GUILayout.EndHorizontal();
 			}
 		
-			// Row 0 - server connection string
+			// Row 1 - server connection string
 			GUILayout.BeginHorizontal();
 			
 				GUILayout.Label(" Connection String:", labelStyle, GUILayout.Width(112 * widthScalar));
@@ -954,7 +957,7 @@ public class GraphLines : MonoBehaviour
 			
 			GUILayout.EndHorizontal();
 	
-			// Row 1 - filter expression
+			// Row 2 - filter expression
 			GUILayout.BeginHorizontal();
 			
 				GUILayout.Label(" Filter Expression:", labelStyle, GUILayout.Width(108 * widthScalar));
@@ -966,7 +969,7 @@ public class GraphLines : MonoBehaviour
 			
 			GUILayout.EndHorizontal();
 	
-			// Row 2 - historical query
+			// Row 3 - historical query
 			GUILayout.BeginHorizontal();
 		
 				GUILayout.Label(" Start Time:", labelStyle, GUILayout.Width(70 * widthScalar));
@@ -994,7 +997,7 @@ public class GraphLines : MonoBehaviour
 			
 			GUILayout.EndHorizontal();
 			
-			// Row 3 - INI file path
+			// Row 4 - INI file path
 			GUILayout.BeginHorizontal();
 	
 				GUIStyle iniLabelStyle = new GUIStyle(GUI.skin.label);
