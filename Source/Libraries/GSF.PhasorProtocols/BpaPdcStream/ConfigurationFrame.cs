@@ -33,8 +33,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
-using GSF.IO.Checksums;
 using GSF.Interop;
+using GSF.IO.Checksums;
 using GSF.Parsing;
 using GSF.Reflection;
 
@@ -478,7 +478,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
-        /// This method is overriden so INI file can be loaded after binary image has been parsed.
+        /// This method is overridden so INI file can be loaded after binary image has been parsed.
         /// </remarks>
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {

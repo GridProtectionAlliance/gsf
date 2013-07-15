@@ -498,6 +498,22 @@ namespace GSF.PhasorProtocols.Macrodyne
         }
 
         /// <summary>
+        /// Raises the <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.
+        /// </summary>
+        /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.</param>
+        protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
+        {
+            // We override this method so we can cache configuration frame when it's received
+            base.OnReceivedConfigurationFrame(frame);
+
+            // Cache new configuration frame for parsing subsequent data frames...
+            ConfigurationFrame configurationFrame = frame as ConfigurationFrame;
+
+            if ((object)configurationFrame != null)
+                m_configurationFrame = configurationFrame;
+        }
+
+        /// <summary>
         /// Raises the <see cref="FrameParserBase{TypeIndentifier}.ReceivedHeaderFrame"/> event.
         /// </summary>
         /// <param name="frame"><see cref="IHeaderFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedHeaderFrame"/> event.</param>

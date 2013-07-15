@@ -43,7 +43,7 @@ namespace GSF.Parsing
         /// Gets the length of the <see cref="BinaryImageBase"/> object.
         /// </summary>
         /// <remarks>
-        /// This property is not typically overriden since it is the sum of the header, body and footer lengths.
+        /// This property is not typically overridden since it is the sum of the header, body and footer lengths.
         /// </remarks>
         public virtual int BinaryLength
         {
@@ -57,7 +57,7 @@ namespace GSF.Parsing
         /// Gets the length of the header portion of the <see cref="BinaryImageBase"/> object.
         /// </summary>
         /// <remarks>
-        /// This property is typically overriden by a specific protocol implementation.
+        /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int HeaderLength
         {
@@ -71,7 +71,7 @@ namespace GSF.Parsing
         /// Gets the length of the body portion of the <see cref="BinaryImageBase"/> object.
         /// </summary>
         /// <remarks>
-        /// This property is typically overriden by a specific protocol implementation.
+        /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int BodyLength
         {
@@ -85,7 +85,7 @@ namespace GSF.Parsing
         /// Gets the length of the footer portion of the <see cref="BinaryImageBase"/> object.
         /// </summary>
         /// <remarks>
-        /// This property is typically overriden by a specific protocol implementation.
+        /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int FooterLength
         {
@@ -112,7 +112,7 @@ namespace GSF.Parsing
         /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
         /// </exception>
         /// <remarks>
-        /// This method is not typically overriden since it is parses the header, body and footer images in sequence.
+        /// This method is not typically overridden since it is parses the header, body and footer images in sequence.
         /// </remarks>
         public virtual int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
@@ -136,7 +136,7 @@ namespace GSF.Parsing
         /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
         /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
         /// <remarks>
-        /// This method is typically overriden by a specific protocol implementation.
+        /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int ParseHeaderImage(byte[] buffer, int startIndex, int length)
         {
@@ -151,7 +151,7 @@ namespace GSF.Parsing
         /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
         /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
         /// <remarks>
-        /// This method is typically overriden by a specific protocol implementation.
+        /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
@@ -166,7 +166,7 @@ namespace GSF.Parsing
         /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
         /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
         /// <remarks>
-        /// This method is typically overriden by a specific protocol implementation.
+        /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int ParseFooterImage(byte[] buffer, int startIndex, int length)
         {
@@ -185,7 +185,7 @@ namespace GSF.Parsing
         /// <paramref name="startIndex"/> and <see cref="ISupportBinaryImage.BinaryLength"/> will exceed <paramref name="buffer"/> length.
         /// </exception>
         /// <remarks>
-        /// This property is not typically overriden since it is the generates the combination of the header, body and footer images.
+        /// This property is not typically overridden since it is the generates the combination of the header, body and footer images.
         /// </remarks>
         public virtual int GenerateBinaryImage(byte[] buffer, int startIndex)
         {
@@ -208,7 +208,7 @@ namespace GSF.Parsing
         /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
         /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
         /// <remarks>
-        /// This method is typically overriden by a specific protocol implementation.
+        /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int GenerateHeaderImage(byte[] buffer, int startIndex)
         {
@@ -222,7 +222,7 @@ namespace GSF.Parsing
         /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
         /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
         /// <remarks>
-        /// This method is typically overriden by a specific protocol implementation.
+        /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int GenerateBodyImage(byte[] buffer, int startIndex)
         {
@@ -236,7 +236,7 @@ namespace GSF.Parsing
         /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
         /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
         /// <remarks>
-        /// This method is typically overriden by a specific protocol implementation.
+        /// This method is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual int GenerateFooterImage(byte[] buffer, int startIndex)
         {

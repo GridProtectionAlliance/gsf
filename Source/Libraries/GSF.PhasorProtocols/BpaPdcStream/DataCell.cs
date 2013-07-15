@@ -470,7 +470,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         /// Gets the length of the <see cref="DataCell"/>.
         /// </summary>
         /// <remarks>
-        /// This property is overriden to extend length evenly at 4-byte intervals.
+        /// This property is overridden to extend length evenly at 4-byte intervals.
         /// </remarks>
         public override int BinaryLength
         {
@@ -559,7 +559,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
-        /// This property is overriden to extend parsed length evenly at 4-byte intervals.
+        /// This property is overridden to extend parsed length evenly at 4-byte intervals.
         /// </remarks>
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {

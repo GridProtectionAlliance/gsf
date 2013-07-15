@@ -196,22 +196,6 @@ namespace GSF.PhasorProtocols.FNet
         #region [ Methods ]
 
         /// <summary>
-        /// Parses the binary image.
-        /// </summary>
-        /// <param name="buffer">Binary image to parse.</param>
-        /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
-        /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        /// <remarks>
-        /// This method is overriden to compensate for lack of CRC in F-NET frame.
-        /// </remarks>
-        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
-        {
-            // Subtract 2 bytes from total length, F-NET doesn't use CRC
-            return base.ParseBinaryImage(buffer, startIndex, length) - 2;
-        }
-
-        /// <summary>
         /// Determines if checksum in the <paramref name="buffer"/> is valid.
         /// </summary>
         /// <param name="buffer">Buffer image to validate.</param>

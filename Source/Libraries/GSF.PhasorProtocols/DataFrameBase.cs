@@ -162,7 +162,7 @@ namespace GSF.PhasorProtocols
         /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
-        /// This method is overriden to ensure assignment of configuration frame.
+        /// This method is overridden to ensure assignment of configuration frame.
         /// </remarks>
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {

@@ -33,8 +33,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
-using GSF.IO.Checksums;
 using GSF.Interop;
+using GSF.IO.Checksums;
 using GSF.Parsing;
 using GSF.Reflection;
 
@@ -426,7 +426,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// Gets the length of the <see cref="ConfigurationFrame"/>.
         /// </summary>
         /// <remarks>
-        /// This property is overriden so the length can be extended to include a 1-byte checksum.
+        /// This property is overridden so the length can be extended to include a 1-byte checksum.
         /// </remarks>
         public override int BinaryLength
         {
@@ -437,9 +437,9 @@ namespace GSF.PhasorProtocols.Macrodyne
                 // instead of the calculated length...
                 if (ParsedBinaryLength > 0)
                     return ParsedBinaryLength;
-                else
-                    // Subtract one byte for Macrodyne 1-byte CRC
-                    return base.BinaryLength - 1;
+
+                // Subtract one byte for Macrodyne 1-byte CRC
+                return base.BinaryLength - 1;
             }
         }
 
@@ -619,7 +619,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
-        /// This method is overriden so INI file can be loaded after binary image has been parsed as well as adjusting CRC length.
+        /// This method is overridden so INI file can be loaded after binary image has been parsed as well as adjusting CRC length.
         /// </remarks>
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
@@ -628,8 +628,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             // Load INI file image and associate parsed cells to cells in configuration file...
             Refresh();
 
-            // Subtract one byte for Macrodyne 1-byte CRC
-            return parsedLength - 1;
+            return parsedLength;
         }
 
         /// <summary>

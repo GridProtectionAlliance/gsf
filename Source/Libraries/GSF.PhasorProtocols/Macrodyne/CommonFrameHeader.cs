@@ -92,7 +92,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             if (firstByte != 0xAA && firstByte != 0xBB)
                 throw new InvalidOperationException("Bad data stream, expected 0xAA or 0xBB as first byte in Macrodyne ON-LINE data frame or configuration frame request response, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
-            // Determine frame type (it's either the sync byte of a data frame or the repsonse by from a command request)
+            // Determine frame type (it's either the sync byte of a data frame or the response by from a command request)
             if (firstByte == 0xAA)
             {
                 TypeID = Macrodyne.FrameType.DataFrame;

@@ -164,7 +164,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// Gets the length of the <see cref="DataFrame"/>.
         /// </summary>
         /// <remarks>
-        /// This property is overriden so the length can be adjusted for 1-byte checksum.
+        /// This property is overridden so the length can be adjusted for 1-byte checksum.
         /// </remarks>
         public override int BinaryLength
         {
@@ -172,9 +172,9 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 if (ParsedBinaryLength > 0)
                     return ParsedBinaryLength;
-                else
-                    // Subtract one byte for Macrodyne 1-byte CRC
-                    return base.BinaryLength - 1;
+
+                // Subtract one byte for Macrodyne 1-byte CRC
+                return base.BinaryLength - 1;
             }
         }
 
@@ -203,20 +203,6 @@ namespace GSF.PhasorProtocols.Macrodyne
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Parses the binary image.
-        /// </summary>
-        /// <param name="buffer">Binary image to parse.</param>
-        /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
-        /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        /// <exception cref="InvalidOperationException">Invalid binary image detected - check sum did not match.</exception>
-        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
-        {
-            // Subtract one byte for Macrodyne 1-byte CRC
-            return base.ParseBinaryImage(buffer, startIndex, length) - 1;
-        }
 
         /// <summary>
         /// Parses the binary header image.

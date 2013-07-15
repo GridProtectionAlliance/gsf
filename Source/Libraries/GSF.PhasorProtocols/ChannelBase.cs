@@ -114,7 +114,7 @@ namespace GSF.PhasorProtocols
         /// Gets the binary image of the <see cref="ChannelBase"/> object.
         /// </summary>
         /// <remarks>
-        /// This property is not typically overriden since it is the combination of the header, body and footer images.
+        /// This property is not typically overridden since it is the combination of the header, body and footer images.
         /// </remarks>
         public virtual byte[] BinaryImage
         {
@@ -154,7 +154,7 @@ namespace GSF.PhasorProtocols
         /// Gets the binary header image of the <see cref="ChannelBase"/> object.
         /// </summary>
         /// <remarks>
-        /// This property is typically overriden by a specific protocol implementation.
+        /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual byte[] HeaderImage
         {
@@ -168,7 +168,7 @@ namespace GSF.PhasorProtocols
         /// Gets the binary body image of the <see cref="ChannelBase"/> object.
         /// </summary>
         /// <remarks>
-        /// This property is typically overriden by a specific protocol implementation.
+        /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual byte[] BodyImage
         {
@@ -182,7 +182,7 @@ namespace GSF.PhasorProtocols
         /// Gets the binary footer image of the <see cref="BinaryImageBase"/> object.
         /// </summary>
         /// <remarks>
-        /// This property is typically overriden by a specific protocol implementation.
+        /// This property is typically overridden by a specific protocol implementation.
         /// </remarks>
         protected virtual byte[] FooterImage
         {

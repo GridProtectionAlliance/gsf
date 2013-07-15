@@ -1001,7 +1001,7 @@ namespace GSF.PhasorProtocols
                 bool sharing;
                 EndPoint localEndPoint;
                 TcpServer sharedServer;
-                
+
                 lock (s_sharedServers)
                 {
                     localEndPoint = GetLocalEndPoint();
@@ -2304,7 +2304,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <remarks>
         /// This property is automatically derived based on the selected <see cref="PhasorProtocol"/>, <see cref="TransportProtocol"/>
-        /// and <see cref="ConnectionString"/>, but can be overriden if the consumer already knows that a device supports commands.
+        /// and <see cref="ConnectionString"/>, but can be overridden if the consumer already knows that a device supports commands.
         /// </remarks>
         public bool DeviceSupportsCommands
         {

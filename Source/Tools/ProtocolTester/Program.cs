@@ -87,8 +87,13 @@ namespace ProtocolTester
             parser.ReceivedDataFrame += parser_ReceivedDataFrame;
 
             // Define the connection string
-            //parser.ConnectionString = @"phasorProtocol=Macrodyne; accessID=1; transportProtocol=File; skipDisableRealTimeData = true; file=C:\Users\Ritchie\Desktop\Macrodyne\ING.out; iniFileName=C:\Users\Ritchie\Desktop\Macrodyne\BCH18Aug2011.ini; deviceLabel=ING1; protocolVersion=G";
-            parser.ConnectionString = @"phasorProtocol=Iec61850_90_5; accessID=1; transportProtocol=UDP; skipDisableRealTimeData = true; localPort=102; interface=0.0.0.0; commandChannel={transportProtocol=TCP; server=172.21.1.201:4712; interface=0.0.0.0}";
+            //parser.ConnectionString = @"phasorProtocol=IeeeC37_118V1; transportProtocol=UDP; localport=5000; server=233.123.123.123:5000; interface=0.0.0.0";
+            //parser.ConnectionString = @"phasorProtocol=Ieee1344; transportProtocol=File; file=D:\Projects\Applications\openPDC\Synchrophasor\Current Version\Build\Output\Debug\Applications\openPDC\Sample1344.PmuCapture";
+            //parser.ConnectionString = @"phasorProtocol=Macrodyne; accessID=1; transportProtocol=File; skipDisableRealTimeData = true; file=C:\Users\rcarroll.GPA\Desktop\Macrodyne\ING.out; iniFileName=C:\Users\rcarroll.GPA\Desktop\Macrodyne\BCH18Aug2011.ini; deviceLabel=ING1; protocolVersion=G";
+            //parser.ConnectionString = @"phasorProtocol=Iec61850_90_5; accessID=1; transportProtocol=UDP; skipDisableRealTimeData = true; localPort=102; interface=0.0.0.0; commandChannel={transportProtocol=TCP; server=172.21.1.201:4712; interface=0.0.0.0}";
+            parser.ConnectionString = @"phasorProtocol=FNET; transportProtocol=TCP; server=172.21.4.100:4001; interface=0.0.0.0; isListener=false";
+            //parser.ConnectionString = @"phasorProtocol=Macrodyne; transportProtocol=Serial; port=COM6; baudrate=38400; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";
+            //parser.ConnectionString = @"phasorProtocol=SelFastMessage; transportProtocol=Serial; port=COM5; baudrate=57600; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";
 
             // When connecting to a file based resource you may want to loop the data
             parser.AutoRepeatCapturedPlayback = true;
@@ -283,9 +288,9 @@ namespace ProtocolTester
                 Guid id = Guid.NewGuid();
                 return new Measurement
                     {
-                    Key = new MeasurementKey(id, ++measurementID, signal),
-                    ID = id
-                };
+                        Key = new MeasurementKey(id, ++measurementID, signal),
+                        ID = id
+                    };
             });
 
             // Lookup signal reference in defined measurement list

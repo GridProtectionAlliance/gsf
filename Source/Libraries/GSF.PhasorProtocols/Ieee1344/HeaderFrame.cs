@@ -236,7 +236,7 @@ namespace GSF.PhasorProtocols.Ieee1344
         /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
-        /// This method is overriden to parse from cumulated frame images.
+        /// This method is overridden to parse from cumulated frame images.
         /// </remarks>
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {

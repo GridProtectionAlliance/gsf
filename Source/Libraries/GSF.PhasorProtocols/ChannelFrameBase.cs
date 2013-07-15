@@ -340,7 +340,7 @@ namespace GSF.PhasorProtocols
         /// Gets the length of the <see cref="BinaryImage"/>.
         /// </summary>
         /// <remarks>
-        /// This property is overriden so the length can be extended to include a checksum.
+        /// This property is overridden so the length can be extended to include a checksum.
         /// </remarks>
         public override int BinaryLength
         {
@@ -360,7 +360,7 @@ namespace GSF.PhasorProtocols
         /// Gets the binary image of this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
         /// <remarks>
-        /// This property is overriden to include a checksum in the image.
+        /// This property is overridden to include a checksum in the image.
         /// </remarks>
         public override byte[] BinaryImage
         {
@@ -455,7 +455,7 @@ namespace GSF.PhasorProtocols
         /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
-        /// This method is overriden to validate the checksum in the <see cref="ChannelFrameBase{T}"/>.
+        /// This method is overridden to validate the checksum in the <see cref="ChannelFrameBase{T}"/>.
         /// </remarks>
         /// <exception cref="InvalidOperationException">Invalid binary image detected - check sum did not match.</exception>
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
@@ -464,7 +464,7 @@ namespace GSF.PhasorProtocols
             // information about cell contents at this early parsing stage
             m_parsedBinaryLength = State.ParsedBinaryLength;
 
-            // Normal binary image parsing is overriden for a frame so that checksum can be validated           
+            // Normal binary image parsing is overridden for a frame so that checksum can be validated           
             if (!ChecksumIsValid(buffer, startIndex))
             {
                 // If user selects incorrect protocol, image may be very large - so we don't log the image 
@@ -473,8 +473,11 @@ namespace GSF.PhasorProtocols
                 throw new CrcException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
             }
 
-            // Include 2 bytes for CRC in returned parsed length
-            return base.ParseBinaryImage(buffer, startIndex, length) + 2;
+            // Normally one would expect image size returned should match parsed image size - but it's possible that these may
+            // differ, so we assume the parsed length header length is better of the two values
+            base.ParseBinaryImage(buffer, startIndex, length);
+
+            return State.ParsedBinaryLength;
         }
 
         /// <summary>

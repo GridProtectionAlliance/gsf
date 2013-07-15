@@ -1745,7 +1745,7 @@ namespace PhasorProtocolAdapters
         /// <param name="commandBuffer">Data buffer received from connected client device.</param>
         /// <param name="length">Valid length of data within the buffer.</param>
         /// <remarks>
-        /// This method should be overriden by derived classes in order to handle incoming commands,
+        /// This method should be overridden by derived classes in order to handle incoming commands,
         /// specifically handling requests for configuration frames.
         /// </remarks>
         protected virtual void DeviceCommandHandler(Guid clientID, string connectionID, byte[] commandBuffer, int length)
