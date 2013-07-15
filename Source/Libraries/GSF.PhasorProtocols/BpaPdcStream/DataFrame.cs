@@ -73,7 +73,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="DataFrame"/>.</param>
         /// <param name="configurationFrame">The <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.</param>
         /// <param name="packetNumber">Packet number for this <see cref="DataFrame"/>.</param>
-        /// <param name="sampleNumber">Sample number for thie <see cref="DataFrame"/>.</param>
+        /// <param name="sampleNumber">Sample number for this <see cref="DataFrame"/>.</param>
         /// <remarks>
         /// This constructor is used by a consumer to generate a BPA PDCstream data frame.
         /// </remarks>
@@ -263,10 +263,10 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                if (ConfigurationFrame.StreamType == StreamType.Legacy)
+                if ((object)ConfigurationFrame != null && ConfigurationFrame.StreamType == StreamType.Legacy)
                     return 12 + ConfigurationFrame.Cells.Count * 8;
-                else
-                    return 12;
+
+                return 12;
             }
         }
 
@@ -361,7 +361,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
         /// <returns>The length of the data that was parsed.</returns>
         /// <remarks>
-        /// This method is overriden to compensate for lack of CRC in DST files.
+        /// This method is overridden to compensate for lack of CRC in DST files.
         /// </remarks>
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
@@ -386,6 +386,10 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             IDataFrameParsingState state = State;
             ConfigurationFrame configurationFrame = state.ConfigurationFrame as ConfigurationFrame;
 
+            // Check for unlikely occurrence of unexpected configuration frame type
+            if ((object)configurationFrame == null)
+                throw new InvalidOperationException("Unexpected configuration frame encountered - BPA PDCstream configuration frame expected, cannot parse data frame.");
+
             if (m_usePhasorDataFileFormat)
             {
                 // Because in cases where PDCxchng is being used the data cell count will be smaller than the
@@ -397,44 +401,42 @@ namespace GSF.PhasorProtocols.BpaPdcStream
 
                 return CommonFrameHeader.FixedLength;
             }
+
+            // Only need to parse what wasn't already parsed in common frame header
+            int index = startIndex + CommonFrameHeader.FixedLength;
+
+            // Parse frame timestamp
+            uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, index);
+            m_sampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index + 4);
+            index += 6;
+
+            if (configurationFrame.RevisionNumber == RevisionNumber.Revision0)
+                Timestamp = (new NtpTimeTag(secondOfCentury, 0)).ToDateTime().Ticks + (long)((m_sampleNumber - 1) * configurationFrame.TicksPerFrame);
             else
+                Timestamp = (new UnixTimeTag(secondOfCentury)).ToDateTime().Ticks + (long)((m_sampleNumber - 1) * configurationFrame.TicksPerFrame);
+
+            // Because in cases where PDCxchng is being used the data cell count will be smaller than the
+            // configuration cell count - we save this count to calculate the offsets later
+            state.CellCount = EndianOrder.BigEndian.ToUInt16(buffer, index);
+            index += 2;
+
+            if (state.CellCount > configurationFrame.Cells.Count)
+                throw new InvalidOperationException("Stream/Config File Mismatch: PMU count (" + state.CellCount + ") in stream does not match defined count in configuration file (" + configurationFrame.Cells.Count + ")");
+
+            // We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
+            if (configurationFrame.StreamType == StreamType.Legacy)
             {
-                // Only need to parse what wan't already parsed in common frame header
-                int index = startIndex + CommonFrameHeader.FixedLength;
+                m_legacyLabels = new string[state.CellCount];
 
-                // Parse frame timestamp
-                uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, index);
-                m_sampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index + 4);
-                index += 6;
-
-                if (configurationFrame.RevisionNumber == RevisionNumber.Revision0)
-                    Timestamp = (new NtpTimeTag(secondOfCentury, 0)).ToDateTime().Ticks + (long)((m_sampleNumber - 1) * configurationFrame.TicksPerFrame);
-                else
-                    Timestamp = (new UnixTimeTag(secondOfCentury)).ToDateTime().Ticks + (long)((m_sampleNumber - 1) * configurationFrame.TicksPerFrame);
-
-                // Because in cases where PDCxchng is being used the data cell count will be smaller than the
-                // configuration cell count - we save this count to calculate the offsets later
-                state.CellCount = EndianOrder.BigEndian.ToUInt16(buffer, index);
-                index += 2;
-
-                if (state.CellCount > configurationFrame.Cells.Count)
-                    throw new InvalidOperationException("Stream/Config File Mismatch: PMU count (" + state.CellCount + ") in stream does not match defined count in configuration file (" + configurationFrame.Cells.Count + ")");
-
-                // We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
-                if (configurationFrame.StreamType == StreamType.Legacy)
+                for (int x = 0; x < state.CellCount; x++)
                 {
-                    m_legacyLabels = new string[state.CellCount];
-
-                    for (int x = 0; x < state.CellCount; x++)
-                    {
-                        m_legacyLabels[x] = Encoding.ASCII.GetString(buffer, index, 4);
-                        // We don't need offsets, so we skip them...
-                        index += 8;
-                    }
+                    m_legacyLabels[x] = Encoding.ASCII.GetString(buffer, index, 4);
+                    // We don't need offsets, so we skip them...
+                    index += 8;
                 }
-
-                return (index - startIndex);
             }
+
+            return (index - startIndex);
         }
 
         /// <summary>
@@ -475,16 +477,12 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         /// </remarks>
         protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
         {
+            // DST files don't use checksums
             if (m_usePhasorDataFileFormat)
-            {
-                // DST files don't use checksums
                 return true;
-            }
-            else
-            {
-                int sumLength = BinaryLength - 2;
-                return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
-            }
+
+            int sumLength = BinaryLength - 2;
+            return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
         }
 
         /// <summary>
