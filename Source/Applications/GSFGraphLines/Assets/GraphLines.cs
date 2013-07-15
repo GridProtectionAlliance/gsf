@@ -460,7 +460,7 @@ public class GraphLines : MonoBehaviour
         
 		// Allow application exit via "ESC" key
 		if (Input.GetKey("escape"))
-            Application.Quit();
+            EndApplication();
 	}
 	
 	private void OnGUI()
@@ -508,7 +508,7 @@ public class GraphLines : MonoBehaviour
 		int size = 20 * m_guiSize;
 		
 		if (GUI.Button(new Rect(Screen.width - size, 0, size, size), "X", buttonStyle))
-			Application.Quit();
+			EndApplication();
 	}
 	
     #endregion
@@ -606,6 +606,16 @@ public class GraphLines : MonoBehaviour
 	}
 
     #endregion
+	
+	private void EndApplication()
+	{
+		TerminateConnection();
+
+		if ((object)m_statusMesh != null)
+			m_statusMesh.UpdateText("");
+		
+		Application.Quit();
+	}
 	
 	private void UpdateStatus(string formattedStatusText, params object[] args)
 	{
