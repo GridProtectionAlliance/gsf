@@ -779,6 +779,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                     SelFastMessage.ConnectionParameters selParameters = connectionSettings.ConnectionParameters as SelFastMessage.ConnectionParameters;
                                     if ((object)selParameters != null)
                                         ConnectionString += "; messagePeriod=" + selParameters.MessagePeriod;
+                                    AccessID = 0;
                                     break;
                                 case PhasorProtocol.Iec61850_90_5:
                                     Iec61850_90_5.ConnectionParameters iecParameters = connectionSettings.ConnectionParameters as Iec61850_90_5.ConnectionParameters;
@@ -789,6 +790,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                     Macrodyne.ConnectionParameters macrodyneParameters = connectionSettings.ConnectionParameters as Macrodyne.ConnectionParameters;
                                     if ((object)macrodyneParameters != null)
                                         ConnectionString += "; protocolVersion=" + macrodyneParameters.ProtocolVersion + "; iniFileName=" + macrodyneParameters.ConfigurationFileName + "; refreshConfigFileOnChange=" + macrodyneParameters.RefreshConfigurationFileOnChange + "; deviceLabel=" + macrodyneParameters.DeviceLabel;
+                                    AccessID = 0;
                                     break;
                             }
                         }
