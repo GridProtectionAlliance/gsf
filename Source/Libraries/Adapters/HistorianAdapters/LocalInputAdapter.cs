@@ -519,12 +519,13 @@ namespace HistorianAdapters
 
                         // Add current measurement to the collection for publication
                         measurements.Add(new Measurement
-                            {
-                                ID = key.SignalID,
-                                Key = key,
-                                Timestamp = m_simulateTimestamp ? DateTime.UtcNow.Ticks : timestamp,
-                                Value = currentPoint.Value
-                            });
+                        {
+                            ID = key.SignalID,
+                            Key = key,
+                            Timestamp = m_simulateTimestamp ? DateTime.UtcNow.Ticks : timestamp,
+                            Value = currentPoint.Value,
+                            StateFlags = currentPoint.Quality.MeasurementQuality()
+                        });
 
                         // Attempt to move to next record
                         if (m_dataReader.MoveNext())
