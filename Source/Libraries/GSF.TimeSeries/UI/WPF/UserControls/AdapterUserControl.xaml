@@ -20,8 +20,8 @@
     <StackPanel Orientation="Vertical">
 
         <StackPanel.Resources>
-            <CollectionViewSource Source="{Binding Path=AdapterTypeList}" x:Key="AdapterTypeList"/>
-            <CollectionViewSource Source="{Binding Path=ParameterList}" x:Key="ParameterList"/>
+            <CollectionViewSource Source="{Binding Path=AdapterTypeList}" x:Key="AdapterTypeList" />
+            <CollectionViewSource Source="{Binding Path=ParameterList}" x:Key="ParameterList" />
         </StackPanel.Resources>
 
         <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}" DataContextChanged="GridDetailView_DataContextChanged">
@@ -82,8 +82,20 @@
                         </Button>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Type" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" DisplayMemberPath="Value" HorizontalContentAlignment="Left" Width="560"
-                              SelectedItem="{tsfBinding:Column Path=TypeName, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource AdapterTypeList}}" />
+                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" HorizontalContentAlignment="Left" Width="560"
+                              DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext}" SelectedIndex="{Binding Mode=TwoWay, Path=AdapterTypeSelectedIndex}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="5">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock FontWeight="Bold" Text="{Binding Path=Item2.Header}" Visibility="{Binding Path=Value.HeaderVisibility}" Margin="0" />
+                                        <TextBlock Text=": " Visibility="{Binding Path=Item2.HeaderVisibility}" Margin="0" />
+                                        <TextBlock Text="{Binding Path=Item2.Description}" Margin="0" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </Grid>
             </GroupBox>
             <GroupBox Grid.Row="3" Grid.ColumnSpan="4" Header="Connection String">
@@ -170,9 +182,6 @@
 
         <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
                 SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
-
-        <!--<uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
-                SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />-->
 
         <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown" Sorting="DataGrid_Sorting"
                       SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}">

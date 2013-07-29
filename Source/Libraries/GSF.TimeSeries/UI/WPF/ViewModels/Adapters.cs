@@ -46,9 +46,40 @@ namespace GSF.TimeSeries.UI.ViewModels
     {
         #region [ Members ]
 
+        // Nested Types
+        public class AdapterTypeDescription
+        {
+            public string Header
+            {
+                get;
+                set;
+            }
+
+            public string Description
+            {
+                get;
+                set;
+            }
+
+            public Visibility HeaderVisibility
+            {
+                get
+                {
+                    return ((object)Header != null) ? Visibility.Visible : Visibility.Collapsed;
+                }
+            }
+
+            public override string ToString()
+            {
+                if ((object)Header != null)
+                    return string.Format("{0}: {1}", Header, Description);
+
+                return Description;
+            }
+        }
+
         // Fields
-        private readonly Dictionary<Guid, string> m_nodeLookupList;
-        private Dictionary<Type, string> m_adapterTypeList;
+        private List<Tuple<Type, AdapterTypeDescription>> m_adapterTypeList;
         private List<AdapterConnectionStringParameter> m_parameterList;
         private readonly AdapterType m_adapterType;
         private string m_searchDirectory;
@@ -56,6 +87,25 @@ namespace GSF.TimeSeries.UI.ViewModels
         private RelayCommand m_initializeCommand;
         private string m_runtimeID;
         private bool m_suppressConnectionStringUpdates;
+
+        #endregion
+
+        #region [ Constructor ]
+
+        /// <summary>
+        /// Creates an instance of <see cref="Adapters"/> class.
+        /// </summary>
+        /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
+        /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
+        /// <param name="adapterType"><see cref="AdapterType"/> to determine type.</param>
+        public Adapters(int itemsPerPage, AdapterType adapterType, bool autoSave = true)
+            : base(0, autoSave) // Set items per page to zero to avoid load in the base class.
+        {
+            ItemsPerPage = itemsPerPage;
+            m_adapterType = adapterType;
+            SearchDirectory = FilePath.GetAbsolutePath("");
+            Load();
+        }
 
         #endregion
 
@@ -89,7 +139,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// Gets or sets the collection containing the adapter types found
         /// in the assemblies residing in the <see cref="SearchDirectory"/>.
         /// </summary>
-        public Dictionary<Type, string> AdapterTypeList
+        public List<Tuple<Type, AdapterTypeDescription>> AdapterTypeList
         {
             get
             {
@@ -99,6 +149,32 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 m_adapterTypeList = value;
                 OnPropertyChanged("AdapterTypeList");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the index of the selected item in the <see cref="AdapterTypeList"/>.
+        /// </summary>
+        public int AdapterTypeSelectedIndex
+        {
+            get
+            {
+                int index = m_adapterTypeList
+                    .Select(tuple => tuple.Item1)
+                    .TakeWhile(type => type.FullName != CurrentItem.TypeName)
+                    .Count();
+
+                if (index == m_adapterTypeList.Count)
+                    index = -1;
+
+                return index;
+            }
+            set
+            {
+                if (value >= 0 && value < AdapterTypeList.Count)
+                    CurrentItem.TypeName = AdapterTypeList[value].Item1.FullName;
+
+                OnPropertyChanged("AdapterTypeSelectedIndex");
             }
         }
 
@@ -187,34 +263,15 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets the command whose action is evoked when the user clicks the initialize button.
+        /// </summary>
         public ICommand InitializeCommand
         {
             get
             {
-                if (m_initializeCommand == null)
-                    m_initializeCommand = new RelayCommand(InitializeAdapter, () => CanSave);
-
-                return m_initializeCommand;
+                return m_initializeCommand ?? (m_initializeCommand = new RelayCommand(InitializeAdapter, () => CanSave));
             }
-        }
-
-        #endregion
-
-        #region [ Constructor ]
-
-        /// <summary>
-        /// Creates an instance of <see cref="Adapters"/> class.
-        /// </summary>
-        /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
-        /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
-        /// <param name="adapterType"><see cref="AdapterType"/> to determine type.</param>
-        public Adapters(int itemsPerPage, AdapterType adapterType, bool autoSave = true)
-            : base(0, autoSave) // Set items per page to zero to avoid load in the base class.
-        {
-            ItemsPerPage = itemsPerPage;
-            m_adapterType = adapterType;
-            SearchDirectory = FilePath.GetAbsolutePath("");
-            Load();
         }
 
         #endregion
@@ -336,7 +393,9 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 // If there exists a type in the adapter type list that
                 // matches the type name, also update the assembly name.
-                Type selectedType = m_adapterTypeList.Keys.SingleOrDefault(type => type.FullName == CurrentItem.TypeName);
+                Type selectedType = m_adapterTypeList
+                    .Select(tuple => tuple.Item1)
+                    .SingleOrDefault(type => type.FullName == CurrentItem.TypeName);
 
                 if (selectedType != null)
                     CurrentItem.AssemblyName = Path.GetFileName(selectedType.Assembly.Location);
@@ -345,6 +404,8 @@ namespace GSF.TimeSeries.UI.ViewModels
                 // the current list of parameters generated by searching the
                 // selected type is no longer valid.
                 ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
+
+                OnPropertyChanged("AdapterTypeSelectedIndex");
             }
 
             // Occurs when CurrentItem.AssemblyName changes.
@@ -443,6 +504,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 // parameter list and parameters won't be updated. We take care of that here.
                 ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
                 UpdateConnectionStringParameters(m_parameterList, CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs());
+                OnPropertyChanged("AdapterTypeSelectedIndex");
             }
         }
 
@@ -451,9 +513,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             try
             {
                 if (Confirm("Do you want to send Initialize " + GetCurrentItemName() + "?", "Confirm Initialize"))
-                {
                     Popup(CommonFunctions.SendCommandToService("Initialize " + RuntimeID), "Initialize", MessageBoxImage.Information);
-                }
             }
             catch (Exception ex)
             {
@@ -469,12 +529,17 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <returns>The interface type corresponding to the adapter type.</returns>
         private Type GetAdapterInterfaceType(AdapterType type)
         {
-            if (type == AdapterType.Input)
-                return typeof(IInputAdapter);
-            else if (type == AdapterType.Output)
-                return typeof(IOutputAdapter);
-            else
-                return typeof(IActionAdapter);
+            switch (type)
+            {
+                case AdapterType.Input:
+                    return typeof(IInputAdapter);
+                case AdapterType.Action:
+                    return typeof(IActionAdapter);
+                case AdapterType.Output:
+                    return typeof(IOutputAdapter);
+                default:
+                    return null;
+            }
         }
 
         /// <summary>
@@ -485,12 +550,17 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <param name="searchDirectory">The directory in which to search for assemblies.</param>
         /// <param name="adapterType">The type to be searched for in the assemblies.</param>
         /// <returns>The collection of types found as well as their descriptions.</returns>
-        private Dictionary<Type, string> GetAdapterTypeList(string searchDirectory, Type adapterType)
+        private List<Tuple<Type, AdapterTypeDescription>> GetAdapterTypeList(string searchDirectory, Type adapterType)
         {
+            DescriptionAttribute descriptionAttribute;
+
             return adapterType.LoadImplementations(searchDirectory, true)
                 .Distinct()
                 .Where(type => GetEditorBrowsableState(type) == EditorBrowsableState.Always)
-                .ToDictionary(type => type, GetDescription);
+                .Select(type => Tuple.Create(type, GetDescription(type)))
+                .OrderByDescending(pair => pair.Item1.TryGetAttribute(out descriptionAttribute))
+                .ThenBy(pair => pair.Item2.ToString())
+                .ToList();
         }
 
         /// <summary>
@@ -509,8 +579,8 @@ namespace GSF.TimeSeries.UI.ViewModels
 
             if (type.TryGetAttribute(out editorBrowsableAttribute))
                 return editorBrowsableAttribute.State;
-            else
-                return EditorBrowsableState.Always;
+
+            return EditorBrowsableState.Always;
         }
 
         /// <summary>
@@ -523,14 +593,28 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// Either the description as defined by a <see cref="DescriptionAttribute"/>
         /// or else the <see cref="Type.FullName"/> of the parameter.
         /// </returns>
-        private string GetDescription(Type type)
+        private AdapterTypeDescription GetDescription(Type type)
         {
+            AdapterTypeDescription adapterTypeDescription = new AdapterTypeDescription();
             DescriptionAttribute descriptionAttribute;
+            string[] splitDescription;
 
             if (type.TryGetAttribute(out descriptionAttribute))
-                return descriptionAttribute.Description;
+                splitDescription = descriptionAttribute.Description.ToNonNullNorEmptyString(type.FullName).Split(':');
             else
-                return type.FullName;
+                splitDescription = new string[] { type.FullName };
+
+            if (splitDescription.Length > 1)
+            {
+                adapterTypeDescription.Header = splitDescription[0].Trim();
+                adapterTypeDescription.Description = splitDescription[1].Trim();
+            }
+            else
+            {
+                adapterTypeDescription.Description = splitDescription[0].Trim();
+            }
+
+            return adapterTypeDescription;
         }
 
         /// <summary>
@@ -553,9 +637,10 @@ namespace GSF.TimeSeries.UI.ViewModels
 
                 // For convenience, start by searching the type
                 // list for a type matching the parameters.
-                Type adapterType = m_adapterTypeList.Keys.
-                    Where(type => Path.GetFileName(type.Assembly.Location).Equals(assemblyName, StringComparison.CurrentCultureIgnoreCase)).
-                    SingleOrDefault(type => type.FullName == typeName);
+                Type adapterType = m_adapterTypeList
+                    .Select(tuple => tuple.Item1)
+                    .Where(type => Path.GetFileName(type.Assembly.Location).Equals(assemblyName, StringComparison.CurrentCultureIgnoreCase))
+                    .SingleOrDefault(type => type.FullName == typeName);
 
                 // Attempt to find that assembly and retrieve the type.
                 if (adapterType == null && File.Exists(assemblyName))
@@ -576,10 +661,10 @@ namespace GSF.TimeSeries.UI.ViewModels
                     // Convert both lists into ConnectionStringParameter lists, combine
                     // the two lists, and then order them lexically while giving precedence
                     // to "required" parameters (those lacking a default value).
-                    return infoList.Select(info => GetParameter(info))
-                        .Union(keyList.Select(key => GetParameter(key)))
-                        .OrderBy(parameter => parameter.Name)
+                    return infoList.Select(GetParameter)
+                        .Union(keyList.Select(GetParameter))
                         .OrderByDescending(parameter => parameter.IsRequired)
+                        .ThenBy(parameter => parameter.Name)
                         .ToList();
                 }
             }
@@ -628,8 +713,8 @@ namespace GSF.TimeSeries.UI.ViewModels
             if (parameter == null)
             {
                 // Create a brand new parameter to be returned.
-                parameter = new AdapterConnectionStringParameter
-                    {
+                parameter = new AdapterConnectionStringParameter()
+                {
                     Info = info,
                     Name = info.Name,
                     Description = description,
@@ -640,8 +725,6 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
             else if (parameter.Info == null)
             {
-                bool red = (parameter.Value == null) && (defaultValue == null);
-
                 // Update the existing parameter with newly obtained information.
                 parameter.Info = info;
                 parameter.Description = description;
@@ -664,10 +747,10 @@ namespace GSF.TimeSeries.UI.ViewModels
             if (m_parameterList != null)
                 parameter = m_parameterList.SingleOrDefault(param => param.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
 
-            if (parameter == null)
+            if ((object)parameter == null)
             {
-                parameter = new AdapterConnectionStringParameter
-                    {
+                parameter = new AdapterConnectionStringParameter()
+                {
                     Name = name,
                     DefaultValue = string.Empty,
                     IsRequired = false
@@ -688,7 +771,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </param>
         private void UpdateConnectionStringParameters(List<AdapterConnectionStringParameter> parameters, Dictionary<string, string> settings)
         {
-            if (parameters != null)
+            if ((object)parameters != null)
             {
                 foreach (AdapterConnectionStringParameter parameter in parameters)
                     parameter.Value = settings.ContainsKey(parameter.Name) ? settings[parameter.Name] : null;
