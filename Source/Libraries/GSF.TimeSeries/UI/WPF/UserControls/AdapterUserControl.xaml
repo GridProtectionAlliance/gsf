@@ -66,7 +66,7 @@
                 <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
-            <GroupBox Grid.Row="2" Grid.ColumnSpan="4" Header="Adapter Type">
+            <GroupBox Grid.Row="2" Grid.ColumnSpan="4" Header="{Binding TypeInfo}" DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -80,8 +80,7 @@
 
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Search Directory" />
                     <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Orientation="Horizontal">
-                        <TextBox DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}, Path=DataContext}"
-                                 Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="525" />
+                        <TextBox Name="SearchDirectoryTextBox" Text="{tsfBinding:Column Path=SearchDirectory}" Width="525" />
                         <Button Click="Browse_Click" Width="Auto" ToolTip="Browse">
                             <Button.Template>
                                 <ControlTemplate>
@@ -90,9 +89,10 @@
                             </Button.Template>
                         </Button>
                     </StackPanel>
+                    
                     <TextBlock Grid.Row="1" Grid.Column="0" Text="Type" />
-                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}" HorizontalContentAlignment="Left" Width="560"
-                              DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext}" SelectedIndex="{Binding Mode=TwoWay, Path=AdapterTypeSelectedIndex}">
+                    <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding Source={StaticResource AdapterTypeList}}"
+                              HorizontalContentAlignment="Left" Width="560" SelectedIndex="{Binding Mode=TwoWay, Path=AdapterTypeSelectedIndex}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <Border Padding="5">

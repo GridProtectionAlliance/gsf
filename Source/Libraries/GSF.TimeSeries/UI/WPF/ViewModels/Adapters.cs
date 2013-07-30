@@ -179,6 +179,20 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets additional information about the type selected from the dropdown.
+        /// </summary>
+        public string TypeInfo
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(CurrentItem.TypeName))
+                    return "Adapter Type";
+
+                return string.Format("Adapter Type: {0} from {1}", CurrentItem.TypeName, CurrentItem.AssemblyName);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the list of <see cref="Adapter.ConnectionString"/> parameters found by
         /// searching the class defined by <see cref="Adapter.AssemblyName"/> and
         /// <see cref="Adapter.TypeName"/> plus the parameters defined by the ConnectionString.
@@ -422,6 +436,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
 
                 OnAdapterTypeSelectedIndexChanged();
+                OnPropertyChanged("TypeInfo");
             }
 
             // Occurs when CurrentItem.AssemblyName changes.
@@ -521,6 +536,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
                 UpdateConnectionStringParameters(m_parameterList, CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs());
                 OnAdapterTypeSelectedIndexChanged();
+                OnPropertyChanged("TypeInfo");
             }
         }
 
