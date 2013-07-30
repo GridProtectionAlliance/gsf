@@ -93,7 +93,7 @@
             </StackPanel>
             <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Multiplier}" Width="{StaticResource XSmallItemSize}"/>
             <TextBlock Grid.Row="5" Grid.Column="2" Text="Measurement GUID"/>
-            <TextBox Grid.Row="5" Grid.Column="3" Text="{Binding Path=SignalID}" TextAlignment="Left" IsReadOnly="True" BorderThickness="0" Margin="5,5,0,5" Width="214" />
+            <TextBox Grid.Row="5" Grid.Column="3" Text="{Binding Path=SignalID}" TextAlignment="Left" IsReadOnly="True" BorderThickness="0" Margin="5,5,0,5" Width="{StaticResource XLargeItemSize}" />
         </Grid>
 
         <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
