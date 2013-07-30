@@ -28,6 +28,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
+using GSF.Reflection;
+using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.UI.DataModels;
 using CheckBox = System.Windows.Controls.CheckBox;
 using DataGrid = System.Windows.Controls.DataGrid;
@@ -189,6 +191,45 @@ namespace GSF.TimeSeries.UI.UserControls
         {
             if (m_dataContext.IsNewRecord)
                 DataGridList.SelectedIndex = -1;
+        }
+
+        private void ButtonOpenCustomConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            CustomConfigurationEditorAttribute customConfigurationEditorAttribute;
+            UIElement customConfigurationElement;
+            int adapterTypeIndex;
+
+            try
+            {
+                adapterTypeIndex = m_dataContext.AdapterTypeSelectedIndex;
+
+                if (adapterTypeIndex >= 0)
+                {
+                    if (CustomConfigurationPanel.Children.Count > 1)
+                        CustomConfigurationPanel.Children.RemoveAt(0);
+
+                    if (m_dataContext.AdapterTypeList[adapterTypeIndex].Item1.TryGetAttribute(out customConfigurationEditorAttribute))
+                    {
+                        customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem) as UIElement;
+
+                        if ((object)customConfigurationElement != null)
+                        {
+                            CustomConfigurationPanel.Children.Insert(0, customConfigurationElement);
+                            CustomConfigurationPopup.IsOpen = true;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                string message = string.Format("Unable to open custom configuration control due to exception: {0}", ex.Message);
+                m_dataContext.Popup(message, "Custom Configuration Error", MessageBoxImage.Error);
+            }
+        }
+
+        private void ButtonCloseCustomConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            CustomConfigurationPopup.IsOpen = false;
         }
 
         #endregion

@@ -174,7 +174,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 if (value >= 0 && value < AdapterTypeList.Count)
                     CurrentItem.TypeName = AdapterTypeList[value].Item1.FullName;
 
-                OnPropertyChanged("AdapterTypeSelectedIndex");
+                OnAdapterTypeSelectedIndexChanged();
             }
         }
 
@@ -271,6 +271,22 @@ namespace GSF.TimeSeries.UI.ViewModels
             get
             {
                 return m_initializeCommand ?? (m_initializeCommand = new RelayCommand(InitializeAdapter, () => CanSave));
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the custom configuration button is visible.
+        /// </summary>
+        public Visibility CustomConfigurationButtonVisibility
+        {
+            get
+            {
+                CustomConfigurationEditorAttribute customConfigurationEditorAttribute;
+
+                if (AdapterTypeSelectedIndex >= 0 && AdapterTypeList[AdapterTypeSelectedIndex].Item1.TryGetAttribute(out customConfigurationEditorAttribute))
+                    return Visibility.Visible;
+
+                return Visibility.Collapsed;
             }
         }
 
@@ -405,7 +421,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 // selected type is no longer valid.
                 ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
 
-                OnPropertyChanged("AdapterTypeSelectedIndex");
+                OnAdapterTypeSelectedIndexChanged();
             }
 
             // Occurs when CurrentItem.AssemblyName changes.
@@ -504,7 +520,7 @@ namespace GSF.TimeSeries.UI.ViewModels
                 // parameter list and parameters won't be updated. We take care of that here.
                 ParameterList = GetParameterList(CurrentItem.AssemblyName, CurrentItem.TypeName);
                 UpdateConnectionStringParameters(m_parameterList, CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs());
-                OnPropertyChanged("AdapterTypeSelectedIndex");
+                OnAdapterTypeSelectedIndexChanged();
             }
         }
 
@@ -776,6 +792,12 @@ namespace GSF.TimeSeries.UI.ViewModels
                 foreach (AdapterConnectionStringParameter parameter in parameters)
                     parameter.Value = settings.ContainsKey(parameter.Name) ? settings[parameter.Name] : null;
             }
+        }
+
+        private void OnAdapterTypeSelectedIndexChanged()
+        {
+            OnPropertyChanged("AdapterTypeSelectedIndex");
+            OnPropertyChanged("CustomConfigurationButtonVisibility");
         }
 
         #endregion

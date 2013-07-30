@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using AverageFrequencyUI;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -36,7 +37,8 @@ namespace OneSecondFrequencyAverager
     /// Represents an adapter that calculates the average
     /// of the input frequencies over each full second.
     /// </summary>
-    [Description("One Second Frequency Averager: averages frequencies over one second intervals")]
+    [Description("One Second Frequency Averager: averages frequencies over one second intervals"),
+    CustomConfigurationEditor(typeof(AverageFrequencyUserControl))]
     public class OneSecondFrequencyAverager : ActionAdapterBase
     {
         #region [ Members ]
