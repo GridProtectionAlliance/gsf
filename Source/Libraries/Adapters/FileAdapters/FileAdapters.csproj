@@ -36,18 +36,26 @@
     <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\FileAdapters.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileBlockReader.cs" />
     <Compile Include="FileBlockWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RetransmissionStatPicker.xaml.cs">
+      <DependentUpon>RetransmissionStatPicker.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="RetransmissionStatViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
@@ -58,6 +66,20 @@
       <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\GSF.TimeSeries\UI\GSF.TimeSeries.UI.csproj">
+      <Project>{7ed01b57-dd71-4a38-bb29-65d629224a12}</Project>
+      <Name>GSF.TimeSeries.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.TimeSeries\UI\WPF\GSF.TimeSeries.UI.WPF.csproj">
+      <Project>{5af0d55a-30bf-46a5-8a47-fa885f56bfef}</Project>
+      <Name>GSF.TimeSeries.UI.WPF</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="RetransmissionStatPicker.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

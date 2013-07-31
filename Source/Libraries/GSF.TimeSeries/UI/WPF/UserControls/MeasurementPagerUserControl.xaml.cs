@@ -312,8 +312,11 @@ namespace GSF.TimeSeries.UI.UserControls
         // Saves advanced find settings when the pager is unloaded
         private void MeasurementPager_Unloaded(object sender, RoutedEventArgs e)
         {
-            Application.Current.Exit -= Application_Exit;
-            m_dataContext.SaveSettings();
+            if (!DesignerProperties.GetIsInDesignMode(this))
+            {
+                Application.Current.Exit -= Application_Exit;
+                m_dataContext.SaveSettings();
+            }
         }
 
         /// <summary>

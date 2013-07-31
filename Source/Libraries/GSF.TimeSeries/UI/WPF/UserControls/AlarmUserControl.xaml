@@ -21,7 +21,6 @@
     <StackPanel Orientation="Vertical">
 
         <StackPanel.Resources>
-            <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
             <CollectionViewSource Source="{Binding Path=SeverityList}" x:Key="SeverityList"/>
             <CollectionViewSource Source="{Binding Path=OperationList}" x:Key="OperationList"/>
         </StackPanel.Resources>

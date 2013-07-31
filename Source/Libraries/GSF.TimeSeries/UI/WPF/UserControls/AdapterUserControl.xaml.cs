@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -211,6 +212,42 @@ namespace GSF.TimeSeries.UI.UserControls
                     if (m_dataContext.AdapterTypeList[adapterTypeIndex].Item1.TryGetAttribute(out customConfigurationEditorAttribute))
                     {
                         customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem) as UIElement;
+
+                        if ((object)customConfigurationElement != null)
+                        {
+                            CustomConfigurationPanel.Children.Insert(0, customConfigurationElement);
+                            CustomConfigurationPopup.IsOpen = true;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                string message = string.Format("Unable to open custom configuration control due to exception: {0}", ex.Message);
+                m_dataContext.Popup(message, "Custom Configuration Error", MessageBoxImage.Error);
+            }
+        }
+
+        private void ButtonOpenParameterConfiguration_Click(object sender, RoutedEventArgs e)
+        {
+            CustomConfigurationEditorAttribute customConfigurationEditorAttribute;
+            UIElement customConfigurationElement;
+            int adapterTypeIndex;
+
+            try
+            {
+                adapterTypeIndex = m_dataContext.AdapterTypeSelectedIndex;
+
+                if (adapterTypeIndex >= 0)
+                {
+                    if (CustomConfigurationPanel.Children.Count > 1)
+                        CustomConfigurationPanel.Children.RemoveAt(0);
+
+                    customConfigurationEditorAttribute = m_dataContext.SelectedParameter.Info.GetCustomAttribute<CustomConfigurationEditorAttribute>();
+
+                    if ((object)customConfigurationEditorAttribute != null)
+                    {
+                        customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, m_dataContext.SelectedParameter.Name) as UIElement;
 
                         if ((object)customConfigurationElement != null)
                         {

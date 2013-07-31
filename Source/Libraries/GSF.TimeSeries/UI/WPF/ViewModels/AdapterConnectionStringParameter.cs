@@ -29,6 +29,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
+using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.UI.ViewModels
 {
@@ -225,6 +226,26 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets a value that indicates whether the value of this parameter can be configured via a
+        /// custom control. This determines whether the hyperlink that links to the custom configuration
+        /// popup is visible.
+        /// </summary>
+        public bool IsCustom
+        {
+            get
+            {
+                try
+                {
+                    return (m_info != null) && (m_info.GetCustomAttribute<CustomConfigurationEditorAttribute>() != null);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets a value that indicates whether the type of this <see cref="AdapterConnectionStringParameter"/>
         /// is defined to be a <see cref="bool"/> in the adapter type. This determines whether the
         /// <see cref="System.Windows.Controls.RadioButton"/>s labeled "True" and "False" are visible.
@@ -233,7 +254,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             get
             {
-                return (m_info == null) ? false : (m_info.PropertyType == typeof(bool));
+                return !IsCustom && (m_info != null) && (m_info.PropertyType == typeof(bool));
             }
         }
 
@@ -246,7 +267,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             get
             {
-                return (m_info == null) ? false : m_info.PropertyType.IsEnum;
+                return !IsCustom && (m_info != null) && m_info.PropertyType.IsEnum;
             }
         }
 
@@ -260,7 +281,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             get
             {
-                return !IsBoolean && !IsEnum;
+                return !IsCustom && !IsBoolean && !IsEnum;
             }
         }
 

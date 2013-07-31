@@ -163,7 +163,8 @@ namespace FileAdapters
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Determines the statistic that defines the number of buffer block retransmissions in the system.")]
+        Description("Determines the statistic that defines the number of buffer block retransmissions in the system."),
+        CustomConfigurationEditor(typeof(RetransmissionStatPicker))]
         public string RetransmissionStat
         {
             get
@@ -339,7 +340,7 @@ namespace FileAdapters
         /// </summary>
         public override void Initialize()
         {
-            const string errorMessage = @"{0} is missing from Settings - Example: watchDirectory=C:\Files; outputMeasurements=FILES:20";
+            const string ErrorMessage = @"{0} is missing from Settings - Example: watchDirectory=C:\Files; outputMeasurements=FILES:20";
 
             Dictionary<string, string> settings;
             string setting;
@@ -351,12 +352,12 @@ namespace FileAdapters
             // Required parameters
 
             if (!settings.TryGetValue("watchDirectory", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "watchDirectory"));
+                throw new ArgumentException(string.Format(ErrorMessage, "watchDirectory"));
 
             m_watchDirectory = FilePath.GetAbsolutePath(setting);
 
             if (OutputMeasurements.Length <= 0)
-                throw new ArgumentException(string.Format(errorMessage, "outputMeasurements"));
+                throw new ArgumentException(string.Format(ErrorMessage, "outputMeasurements"));
 
             // Optional parameters
 

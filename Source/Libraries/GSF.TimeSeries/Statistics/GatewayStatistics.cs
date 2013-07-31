@@ -332,6 +332,17 @@ namespace GSF.TimeSeries.Statistics
             return statistic;
         }
 
+        private static double GetPublisherStatistic_BufferBlockRetransmissions(object source, string arguments)
+        {
+            double statistic = 0.0D;
+            DataPublisher publisher = source as DataPublisher;
+
+            if ((object)publisher != null)
+                statistic = s_statisticValueCache.GetDifference(publisher, publisher.BufferBlockRetransmissions, "BufferBlockRetransmissions");
+
+            return statistic;
+        }
+
         #endregion
 
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
