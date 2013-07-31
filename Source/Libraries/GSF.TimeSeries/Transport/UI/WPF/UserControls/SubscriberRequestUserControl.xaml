@@ -49,6 +49,16 @@
                     <RadioButton GroupName="SecurityMode" Content="TLS" IsChecked="True" Checked="SecurityModeRadioButton_Checked" />
                     <RadioButton GroupName="SecurityMode" Content="Gateway" Checked="SecurityModeRadioButton_Checked" />
                 </StackPanel>
+                
+                <Label Grid.Row="2" Grid.Column="2" Content="UDP Port" />
+                <StackPanel Grid.Row="2" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                    <TextBox Width="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=UdpDataChannelPort}" IsEnabled="{Binding ElementName=UdpCheckBox, Path=IsChecked}" />
+                    <CheckBox Name="UdpCheckBox" IsChecked="{Binding Mode=TwoWay, Path=UseUdpDataChannel}">
+                        <TextBlock FontSize="10" FontStyle="Italic">
+                            Leave unchecked for TCP only.
+                        </TextBlock>
+                    </CheckBox>
+                </StackPanel>
             </Grid>
         </GroupBox>
 

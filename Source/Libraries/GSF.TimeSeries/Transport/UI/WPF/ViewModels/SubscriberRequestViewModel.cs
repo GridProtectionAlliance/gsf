@@ -57,6 +57,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private string m_hostname;
         private int m_publisherPort;
         private SecurityMode m_securityMode;
+        private bool m_useUdpDataChannel;
+        private int m_udpDataChannelPort;
 
         private string m_subscriberAcronym;
         private string m_subscriberName;
@@ -87,6 +89,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         {
             m_internalDataPublisherPort = 6170;
             m_securityMode = SecurityMode.TLS;
+            m_udpDataChannelPort = 6175;
             m_publisherPort = DefaultPort;
             Load();
         }
@@ -179,6 +182,39 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
                 if (m_publisherPort == oldDefaultPort)
                     PublisherPort = DefaultPort;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the subscriber
+        /// should be configured with or without a UDP data channel.
+        /// </summary>
+        public bool UseUdpDataChannel
+        {
+            get
+            {
+                return m_useUdpDataChannel;
+            }
+            set
+            {
+                m_useUdpDataChannel = value;
+                OnPropertyChanged("UseUdpDataChannel");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the port used for the UDP data channel.
+        /// </summary>
+        public int UdpDataChannelPort
+        {
+            get
+            {
+                return m_udpDataChannelPort;
+            }
+            set
+            {
+                m_udpDataChannelPort = value;
+                OnPropertyChanged("UdpDataChannelPort");
             }
         }
 
@@ -779,8 +815,11 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         // authorization request and save it.
         private void SaveDevice()
         {
-            const string connectionStringFormat = "interface=0.0.0.0; compression=false; autoConnect=true; securityMode={0}; " +
-                "localport=6175; transportprotocol=udp; commandChannel={{server={1}:{2}; interface=0.0.0.0}}; {3}";
+            const string TcpConnectionStringFormat = "interface=0.0.0.0; compression=false; autoConnect=true; securityMode={0}; " +
+                "server={1}:{2}; {3}";
+
+            const string UdpConnectionStringFormat = "interface=0.0.0.0; compression=false; autoConnect=true; securityMode={0}; " +
+                "localport={1}; transportprotocol=udp; commandChannel={{server={2}:{3}; interface=0.0.0.0}}; {4}";
 
             Device device;
             DeviceUserControl deviceUserControl;
@@ -817,7 +856,11 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             device.Enabled = false;
             device.IsConcentrator = true;
             device.ProtocolID = GetGatewayProtocolID();
-            device.ConnectionString = string.Format(connectionStringFormat, SecurityMode, Hostname, PublisherPort, securitySpecificSettings);
+
+            if (UseUdpDataChannel)
+                device.ConnectionString = string.Format(UdpConnectionStringFormat, SecurityMode, UdpDataChannelPort, Hostname, PublisherPort, securitySpecificSettings);
+            else
+                device.ConnectionString = string.Format(TcpConnectionStringFormat, SecurityMode, Hostname, PublisherPort, securitySpecificSettings);
 
             Device.Save(null, device);
 
