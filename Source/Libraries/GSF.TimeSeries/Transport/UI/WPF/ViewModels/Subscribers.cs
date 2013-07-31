@@ -27,11 +27,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using GSF.Collections;
+using GSF.Data;
 using GSF.TimeSeries.Transport.UI.DataModels;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
@@ -48,7 +50,10 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         #region [ Members ]
 
         // Fields
-        private Dictionary<Guid, string> m_nodeLookupList;
+        private DataSet m_subscriberPermissionsDataSet;
+        private ICollection<DataModelMeasurement> m_currentAvailableMeasurementsPage;
+        private object m_availableMeasurementsLock;
+
         private RelayCommand m_addAllowedMeasurementGroupCommand;
         private RelayCommand m_removeAllowedMeasurementGroupCommand;
         private RelayCommand m_addDeniedMeasurementGroupCommand;
@@ -111,13 +116,26 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Node"/> defined in the database.
+        /// Gets or sets measurements with Subscribed flag set to true.
         /// </summary>
-        public Dictionary<Guid, string> NodeLookupList
+        public ICollection<DataModelMeasurement> CurrentAvailableMeasurementsPage
         {
             get
             {
-                return m_nodeLookupList;
+                lock (m_availableMeasurementsLock)
+                {
+                    // Return a copy of the measurements since we can't request consumer to lock the collection
+                    return new ObservableCollection<DataModelMeasurement>(m_currentAvailableMeasurementsPage ?? new DataModelMeasurement[0]);
+                }
+            }
+            set
+            {
+                lock (m_availableMeasurementsLock)
+                {
+                    m_currentAvailableMeasurementsPage = value;
+                }
+
+                UpdateEffectivePermissions();
             }
         }
 
@@ -325,22 +343,13 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="Subscriber"/> and assigns it to CurrentItem.
-        /// </summary>
-        public override void Clear()
-        {
-            base.Clear();
-            if (m_nodeLookupList.Count > 0)
-                CurrentItem.NodeID = m_nodeLookupList.First().Key;
-        }
-
-        /// <summary>
-        /// Initialization to be done before the initial call to <see cref="PagedViewModelBase{T1,T2}.Load"/>.
+        /// Initialization to be done before the initial call to <see cref="PagedViewModelBase{TDataModel,TPrimaryKey}.Load"/>.
         /// </summary>
         public override void Initialize()
         {
+            m_availableMeasurementsLock = new object();
             base.Initialize();
-            m_nodeLookupList = Node.GetLookupList(null);
+            LoadPermissionsDataSet();
         }
 
         /// <summary>
@@ -384,6 +393,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 CommonFunctions.LogException(null, "", ex);
             }
+
+            LoadPermissionsDataSet();
         }
 
         /// <summary>
@@ -412,6 +423,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 CommonFunctions.LogException(null, "", ex);
             }
+
+            LoadPermissionsDataSet();
         }
 
         /// <summary>
@@ -455,6 +468,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 CommonFunctions.LogException(null, "", ex);
             }
+
+            LoadPermissionsDataSet();
         }
 
         /// <summary>
@@ -483,6 +498,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 CommonFunctions.LogException(null, "", ex);
             }
+
+            LoadPermissionsDataSet();
         }
 
         /// <summary>
@@ -523,6 +540,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 {
                     CommonFunctions.LogException(null, "", ex);
                 }
+
+                LoadPermissionsDataSet();
             }
         }
 
@@ -564,6 +583,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 {
                     CommonFunctions.LogException(null, "", ex);
                 }
+
+                LoadPermissionsDataSet();
             }
         }
 
@@ -605,6 +626,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 {
                     CommonFunctions.LogException(null, "", ex);
                 }
+
+                LoadPermissionsDataSet();
             }
         }
 
@@ -646,13 +669,18 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 {
                     CommonFunctions.LogException(null, "", ex);
                 }
+
+                LoadPermissionsDataSet();
             }
         }
 
         private void PropertyChangedHandler(object sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName == "CurrentItem")
+            {
+                LoadPermissionsDataSet();
                 m_securityMode = !string.IsNullOrEmpty(CurrentItem.RemoteCertificateFile) ? SecurityMode.TLS : SecurityMode.Gateway;
+            }
         }
 
         // Attempt to get measurement name from signal ID
@@ -677,6 +705,97 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private static string ShortFormattedList<T>(IEnumerable<T> items, int total = 10)
         {
             return items.Take(total).Select(item => item.ToString()).ToDelimitedString(", ") + (items.Count() > total ? ", ..." : "");
+        }
+
+        // Determines the effective permissions of each of the measurements in the current page
+        private void UpdateEffectivePermissions()
+        {
+            foreach (DataModelMeasurement measurement in CurrentAvailableMeasurementsPage)
+            {
+                measurement.Selected = SubscriberHasRights(measurement.SignalID);
+            }
+        }
+
+        // Loads the data set used to determine effective permissions
+        private void LoadPermissionsDataSet()
+        {
+            Dictionary<string, string> dataTableDefinitions = new Dictionary<string, string>()
+            {
+                { "Subscriber", "Subscribers" },
+                { "SubscriberMeasurement", "SubscriberMeasurements" },
+                { "SubscriberMeasurementGroup", "SubscriberMeasurementGroups" },
+                { "MeasurementGroupMeasurement", "MeasurementGroupMeasurements" }
+            };
+
+            DataTable dataTable;
+            string queryFormat;
+            string parameterizedQuery;
+
+            m_subscriberPermissionsDataSet = new DataSet();
+
+            using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+            {
+                foreach (KeyValuePair<string, string> definition in dataTableDefinitions)
+                {
+                    queryFormat = string.Format("SELECT * FROM {0} WHERE NodeID = {{0}}", definition.Key);
+                    parameterizedQuery = database.ParameterizedQueryString(queryFormat, "nodeID");
+                    dataTable = database.Connection.RetrieveData(database.AdapterType, parameterizedQuery, DataExtensions.DefaultTimeoutDuration, database.CurrentNodeID());
+                    dataTable.TableName = definition.Value;
+                    dataTable.DataSet.Tables.Remove(dataTable);
+                    m_subscriberPermissionsDataSet.Tables.Add(dataTable);
+                }
+            }
+
+            UpdateEffectivePermissions();
+        }
+
+        /// <summary>
+        /// Determines if subscriber has rights to specified <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
+        /// <returns><c>true</c> if subscriber has rights to specified <paramref name="signalID"/>; otherwise <c>false</c>.</returns>
+        private bool SubscriberHasRights(Guid signalID)
+        {
+            try
+            {
+                bool allowed = false;
+                DataRow[] explicitMeasurements;
+                DataRow[] implicitMeasurements;
+
+                // If subscriber has been disabled or removed from the list of valid subscribers, they no longer have rights to any signals
+                if (!m_subscriberPermissionsDataSet.Tables["Subscribers"].Select(string.Format("ID = '{0}'", CurrentItem.ID)).Any())
+                    return false;
+
+                // Look up explicitly defined individual measurements
+                explicitMeasurements = m_subscriberPermissionsDataSet.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID='{0}' AND SignalID='{1}'", CurrentItem.ID, signalID));
+
+                if (explicitMeasurements.Length > 0)
+                    return explicitMeasurements.All(row => row["Allowed"].ToNonNullString("0").ParseBoolean());
+
+                // Look up implicitly defined group based measurements
+                foreach (DataRow subscriberMeasurementGroup in m_subscriberPermissionsDataSet.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID='{0}'", CurrentItem.ID)))
+                {
+                    implicitMeasurements = m_subscriberPermissionsDataSet.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID='{0}' AND MeasurementGroupID={1}", signalID, int.Parse(subscriberMeasurementGroup["MeasurementGroupID"].ToNonNullString("0"))));
+
+                    if (implicitMeasurements.Length > 0)
+                    {
+                        // If all implicit rules allow access, we can return true;
+                        // if even one rule denies access, return false
+                        if (subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean())
+                            allowed = true;
+                        else
+                            return false;
+                    }
+                }
+
+                return allowed;
+            }
+            catch (Exception ex)
+            {
+                CommonFunctions.LogException(null, "Subscriber Effective Permissions", new InvalidOperationException(string.Format("Failed to determine subscriber rights for {0} due to exception: {1}", CurrentItem.Acronym, ex.Message), ex));
+            }
+
+            return false;
         }
 
         #endregion

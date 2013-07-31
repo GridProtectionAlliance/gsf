@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -57,6 +58,11 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
         #endregion
 
         #region [ Methods ]
+
+        private void AvailableMeasurementsPager_CurrentPageChanged(object sender, EventArgs e)
+        {
+            m_dataContext.CurrentAvailableMeasurementsPage = AvailableMeasurementsPager.CurrentPage;
+        }
 
         private void DataContext_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {

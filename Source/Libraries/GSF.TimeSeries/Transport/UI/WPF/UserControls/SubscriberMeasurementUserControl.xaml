@@ -77,7 +77,22 @@
 
             <StackPanel Grid.Column="3" Margin="0,35,0,0">
                 <TextBlock Text="Available Measurements" HorizontalAlignment="Left" FontWeight="Bold"/>
-                <uc:MeasurementPagerUserControl Name="AvailableMeasurementsPager" ItemsPerPage="13" Selectable="True" Searchable="True" ShowPageSize="False" Width="395" Height="360" VerticalAlignment="Top" Margin="0" />
+                <uc:MeasurementPagerUserControl Name="AvailableMeasurementsPager" ItemsPerPage="13" Selectable="True" Searchable="True" ShowPageSize="False" Width="395" Height="360" VerticalAlignment="Top" Margin="0" CurrentPageChanged="AvailableMeasurementsPager_CurrentPageChanged">
+                    <uc:MeasurementPagerUserControl.DataGridColumns>
+                        <DataGridTextColumn Width="*" Header="Point Tag" Binding="{Binding PointTag}" />
+                        <DataGridTextColumn Width="*" Header="ID" Binding="{Binding ID}"/>
+                        <DataGridTemplateColumn Width="Auto">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Canvas>
+                                        <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{StaticResource GreenRadialGradientBrush}" Visibility="{Binding Path=Selected, Converter={StaticResource ObjectToVisibilityConverter}}" ToolTip="Authorized" Canvas.ZIndex="1" />
+                                        <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{StaticResource RedRadialGradientBrush}" ToolTip="Unauthorized" Canvas.ZIndex="0" />
+                                    </Canvas>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </uc:MeasurementPagerUserControl.DataGridColumns>
+                </uc:MeasurementPagerUserControl>
             </StackPanel>
 
         </Grid>
