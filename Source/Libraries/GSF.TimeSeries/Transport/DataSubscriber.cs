@@ -2193,6 +2193,9 @@ namespace GSF.TimeSeries.Transport
                     if (!connection.ExecuteScalar(string.Format("SELECT IsConcentrator FROM Device WHERE ID = {0}", parentID)).ToString().ParseBoolean())
                         connection.ExecuteNonQuery(string.Format("UPDATE Device SET IsConcentrator = 1 WHERE ID = {0}", parentID));
 
+                    // Get any historian associated with the subscriber device
+                    object historianID = connection.ExecuteScalar(string.Format("SELECT HistorianID FROM Device WHERE ID = {0}", parentID));
+
                     // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
                     if (m_nodeID == Guid.Empty)
                         m_nodeID = Guid.Parse(connection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0}", ID)).ToString());
@@ -2228,10 +2231,10 @@ namespace GSF.TimeSeries.Transport
                                 if (Convert.ToInt32(connection.ExecuteScalar(selectSql, database.Guid(uniqueID))) == 0)
                                 {
                                     // Insert new device record
-                                    insertSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, Acronym, Name, ProtocolID, IsConcentrator, Enabled, OriginalSource) " +
-                                        "VALUES ({0}, {1}, {2}, {3}, {4}, 0, 1, {5})", "nodeID", "parentID", "acronym", "name", "protocolID", "originalSource");
+                                    insertSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, HistorianID, Acronym, Name, ProtocolID, IsConcentrator, Enabled, OriginalSource) " +
+                                        "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, 0, 1, {6})", "nodeID", "parentID", "historianID", "acronym", "name", "protocolID", "originalSource");
 
-                                    connection.ExecuteNonQuery(insertSql, database.Guid(m_nodeID), parentID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID,
+                                    connection.ExecuteNonQuery(insertSql, database.Guid(m_nodeID), parentID, historianID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID,
                                         m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
 
                                     // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
@@ -2246,16 +2249,16 @@ namespace GSF.TimeSeries.Transport
                                     {
                                         // Gateway is assuming ownership of the device records when the "internal" flag is true - this means the device's measurements can be forwarded to another party.
                                         // From a device record perspective, ownership is inferred by setting 'OriginalSource' to null.
-                                        updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3} WHERE UniqueID = {4}", "acronym", "name", "originalSource", "protocolID", "uniqueID");
-                                        connection.ExecuteNonQuery(updateSql, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, m_gatewayProtocolID, database.Guid(uniqueID));
+                                        updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3}, HistorianID = {4} WHERE UniqueID = {5}", "acronym", "name", "originalSource", "protocolID", "historianID", "uniqueID");
+                                        connection.ExecuteNonQuery(updateSql, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, m_gatewayProtocolID, historianID, database.Guid(uniqueID));
                                     }
                                     else
                                     {
                                         // When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed locally. From a device
                                         // record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurements. This field allows a
                                         // mirrored source restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection.
-                                        updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, ProtocolID = {2} WHERE UniqueID = {3}", "acronym", "name", "protocolID", "uniqueID");
-                                        connection.ExecuteNonQuery(updateSql, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, database.Guid(uniqueID));
+                                        updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, ProtocolID = {2}, HistorianID = {3} WHERE UniqueID = {4}", "acronym", "name", "protocolID", "historianID", "uniqueID");
+                                        connection.ExecuteNonQuery(updateSql, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, historianID, database.Guid(uniqueID));
                                     }
                                 }
                             }
@@ -2315,8 +2318,8 @@ namespace GSF.TimeSeries.Transport
                                     if (Convert.ToInt32(connection.ExecuteScalar(selectSql, database.Guid(signalID))) == 0)
                                     {
                                         // Insert new measurement record
-                                        insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, PointTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, 0, 1)", "deviceID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
-                                        connection.ExecuteNonQuery(insertSql, 30, deviceID, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
+                                        insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, HistorianID, PointTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, 0, 1)", "deviceID", "historianID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
+                                        connection.ExecuteNonQuery(insertSql, 30, deviceID, historianID, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
 
                                         // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
                                         // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
@@ -2326,8 +2329,8 @@ namespace GSF.TimeSeries.Transport
                                     else
                                     {
                                         // Update existing measurement record. Note that this update assumes that measurements will remain associated with a static source device.
-                                        updateSql = database.ParameterizedQueryString("UPDATE Measurement SET PointTag = {0}, SignalTypeID = {1}, SignalReference = {2}, Description = {3}, Internal = {4} WHERE SignalID = {5}", "pointTag", "signalTypeID", "signalReference", "description", "internal", "signalID");
-                                        connection.ExecuteNonQuery(updateSql, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
+                                        updateSql = database.ParameterizedQueryString("UPDATE Measurement SET HistorianID = {0}, PointTag = {1}, SignalTypeID = {2}, SignalReference = {3}, Description = {4}, Internal = {5} WHERE SignalID = {6}", "historianID", "pointTag", "signalTypeID", "signalReference", "description", "internal", "signalID");
+                                        connection.ExecuteNonQuery(updateSql, historianID, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
                                     }
                                 }
                             }
