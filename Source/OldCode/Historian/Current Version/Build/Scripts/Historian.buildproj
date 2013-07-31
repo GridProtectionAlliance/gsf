@@ -53,7 +53,7 @@
     <PropertyGroup>
       <!-- Project specific settings. -->
       <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
-      <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\gpaweb\NightlyBuilds\openHistorian\Beta</BuildDeployFolder>
+      <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\gpaweb\NightlyBuilds\openPDC\openHistorian1.0\Beta</BuildDeployFolder>
     </PropertyGroup>
   </Target>
 
