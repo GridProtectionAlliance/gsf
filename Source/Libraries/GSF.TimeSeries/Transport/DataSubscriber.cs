@@ -808,53 +808,8 @@ namespace GSF.TimeSeries.Transport
                 ConnectionAuthenticated += DataSubscriber_ConnectionAuthenticated;
                 MetaDataReceived += DataSubscriber_MetaDataReceived;
 
-                // If active measurements are defined, attempt to defined desired subscription points from there
-                if (DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
-                {
-                    try
-                    {
-                        // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
-                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0");
-                        List<IMeasurement> subscribedMeasurements = new List<IMeasurement>();
-                        MeasurementKey key;
-                        Guid signalID;
-
-                        foreach (DataRow row in filteredRows)
-                        {
-                            // Create a new measurement for the provided field level information
-                            Measurement measurement = new Measurement();
-
-                            // Parse primary measurement identifier
-                            signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-
-                            // Set measurement key if defined
-                            if (MeasurementKey.TryParse(row["ID"].ToString(), signalID, out key))
-                                measurement.Key = key;
-
-                            // Assign other attributes
-                            measurement.ID = signalID;
-                            measurement.TagName = row["PointTag"].ToNonNullString();
-                            measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-                            measurement.Adder = double.Parse(row["Adder"].ToString());
-
-                            subscribedMeasurements.Add(measurement);
-                        }
-
-                        if (subscribedMeasurements.Count > 0)
-                        {
-                            // Combine subscribed output measurement with any existing output measurement and return unique set
-                            if (OutputMeasurements == null)
-                                OutputMeasurements = subscribedMeasurements.ToArray();
-                            else
-                                OutputMeasurements = subscribedMeasurements.Concat(OutputMeasurements).Distinct().ToArray();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // Errors here may not be catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to define subscribed measurements: {0}", ex.Message), ex));
-                    }
-                }
+                // Update output measurements to include "subscribed" points
+                UpdateOutputMeasurements(true);
             }
 
             if (m_securityMode != SecurityMode.TLS)
@@ -908,6 +863,77 @@ namespace GSF.TimeSeries.Transport
             StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
 
             Initialized = true;
+        }
+
+        // Initialize (or reinitialize) the output measurements associated with the data subscriber.
+        // Returns true if output measurements were updated, otherwise false if they remain the same.
+        private bool UpdateOutputMeasurements(bool initialCall = false)
+        {
+            IMeasurement[] originalOutputMeasurements = OutputMeasurements;
+
+            // Reapply output measurements if reinitializing - this way filter expressions and/or sourceIDs
+            // will be reapplied. This can be important after a metadata refresh which may have added new
+            // measurements that could now be applicable as desired output measurements.
+            if (!initialCall)
+            {
+                string setting;
+
+                if (Settings.TryGetValue("outputMeasurements", out setting))
+                    OutputMeasurements = ParseOutputMeasurements(DataSource, true, setting);
+
+                OutputSourceIDs = OutputSourceIDs;
+            }
+
+            // If active measurements are defined, attempt to defined desired subscription points from there
+            if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
+            {
+                try
+                {
+                    // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
+                    DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0");
+                    List<IMeasurement> subscribedMeasurements = new List<IMeasurement>();
+                    MeasurementKey key;
+                    Guid signalID;
+
+                    foreach (DataRow row in filteredRows)
+                    {
+                        // Create a new measurement for the provided field level information
+                        Measurement measurement = new Measurement();
+
+                        // Parse primary measurement identifier
+                        signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+
+                        // Set measurement key if defined
+                        if (MeasurementKey.TryParse(row["ID"].ToString(), signalID, out key))
+                            measurement.Key = key;
+
+                        // Assign other attributes
+                        measurement.ID = signalID;
+                        measurement.TagName = row["PointTag"].ToNonNullString();
+                        measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
+                        measurement.Adder = double.Parse(row["Adder"].ToString());
+
+                        subscribedMeasurements.Add(measurement);
+                    }
+
+                    if (subscribedMeasurements.Count > 0)
+                    {
+                        // Combine subscribed output measurement with any existing output measurement and return unique set
+                        if ((object)OutputMeasurements == null)
+                            OutputMeasurements = subscribedMeasurements.ToArray();
+                        else
+                            OutputMeasurements = subscribedMeasurements.Concat(OutputMeasurements).Distinct().ToArray();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Errors here may not be catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to apply subscribed measurements to subscription filter: {0}", ex.Message), ex));
+                }
+            }
+
+            // Determine if output measurements have changed
+            return originalOutputMeasurements.CompareTo(OutputMeasurements) != 0;
         }
 
         /// <summary>
@@ -2130,6 +2156,15 @@ namespace GSF.TimeSeries.Transport
         // Handles auto-connection subscription initialization
         private void StartSubscription()
         {
+            SubscribeToOutputMeasurements(!m_synchronizeMetadata);
+
+            // Initiate meta-data refresh
+            if (m_synchronizeMetadata)
+                SendServerCommand(ServerCommand.MetaDataRefresh);
+        }
+
+        private void SubscribeToOutputMeasurements(bool metaDataRefreshCompleted)
+        {
             StringBuilder filterExpression = new StringBuilder();
             string dataChannel = null;
 
@@ -2152,14 +2187,10 @@ namespace GSF.TimeSeries.Transport
 #pragma warning disable 0618
                 UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
             }
-            else
+            else if (metaDataRefreshCompleted)
             {
                 OnStatusMessage("WARNING: No measurements are currently defined for subscription.");
             }
-
-            // Initiate meta-data refresh
-            if (m_synchronizeMetadata)
-                SendServerCommand(ServerCommand.MetaDataRefresh);
         }
 
         /// <summary>
@@ -2404,6 +2435,11 @@ namespace GSF.TimeSeries.Transport
                         m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
 
                     OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3));
+
+                    // For automatic connections, when metadata refresh is complete, update output measurements to see if any
+                    // points for subscription have changed after reapplication of filter expressions and if so, resubscribe
+                    if (m_autoConnect && UpdateOutputMeasurements())
+                        SubscribeToOutputMeasurements(true);
                 }
                 else
                 {
