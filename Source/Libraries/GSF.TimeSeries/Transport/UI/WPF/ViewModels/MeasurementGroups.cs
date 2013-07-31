@@ -101,6 +101,19 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         }
 
         /// <summary>
+        /// Saves the record for the associated <see cref="MeasurementGroup"/>.
+        /// </summary>
+        public override void Save()
+        {
+            string groupName = CurrentItem.Name;
+
+            base.Save();
+
+            if (IsNewRecord)
+                CurrentItem = ItemsSource.FirstOrDefault(group => group.Name == groupName);
+        }
+
+        /// <summary>
         /// Adds the measurements identified by the given collection to the measurement group.
         /// </summary>
         /// <param name="measurementIDs">Collection of signal identifiers for the measurements to be added.</param>
