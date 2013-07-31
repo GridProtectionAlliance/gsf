@@ -7,7 +7,7 @@
              xmlns:ui="clr-namespace:FileAdapters"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
-             Width="400" Height="450" Unloaded="RetransmissionStatPicker_Unloaded">
+             Width="500" Height="450" Unloaded="RetransmissionStatPicker_Unloaded">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -27,8 +27,20 @@
 
         <uc:MeasurementPagerUserControl Name="MeasurementPager" ItemsPerPage="18" FilterExpression="{Binding FilterExpression}" Selectable="False" Searchable="True">
             <uc:MeasurementPagerUserControl.DataGridColumns>
-                <DataGridTextColumn Header="ID" Width="2*" Binding="{Binding ID}" IsReadOnly="True" ToolTipService.ToolTip="{Binding SignalReference}"/>
-                <DataGridTextColumn Header="Description" Width="9*" Binding="{Binding Description}" IsReadOnly="True" ToolTipService.ToolTip="{Binding Description}"/>
+                <DataGridTextColumn Header="ID" Width="2*" Binding="{Binding ID}" IsReadOnly="True">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="ToolTip" Value="{Binding SignalReference}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Description" Width="9*" Binding="{Binding Description}" IsReadOnly="True">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="ToolTip" Value="{Binding Description}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
             </uc:MeasurementPagerUserControl.DataGridColumns>
         </uc:MeasurementPagerUserControl>
     </StackPanel>
