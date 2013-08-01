@@ -126,6 +126,7 @@ namespace GSF.TimeSeries
         private MultipleDestinationExporter m_statusExporter;
         private AutoResetEvent m_configurationCacheComplete;
         private object m_queuedConfigurationCachePending;
+        private object m_systemConfigurationLoadLock;
         private object m_latestConfiguration;
 
         #endregion
@@ -381,6 +382,7 @@ namespace GSF.TimeSeries
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
             m_configurationCacheComplete = new AutoResetEvent(true);
             m_queuedConfigurationCachePending = new object();
+            m_systemConfigurationLoadLock = new object();
             m_remotingServer.RemoteCertificateValidationCallback = (o, certificate, chain, errors) => true;
 
             // Setup default thread pool size
@@ -736,53 +738,56 @@ namespace GSF.TimeSeries
         // Load the the system configuration data set
         private bool LoadSystemConfiguration()
         {
-            DataSet dataSource;
-            bool loadedFromCache;
-
-            DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-            loadedFromCache = m_preferCachedConfiguration;
-
-            // Attempt to load (or reload) system configuration
-            if (m_preferCachedConfiguration)
+            lock (m_systemConfigurationLoadLock)
             {
-                dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
+                DataSet dataSource;
+                bool loadedFromCache;
 
-                if ((object)dataSource == null)
-                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
+                DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+                loadedFromCache = m_preferCachedConfiguration;
 
-                if ((object)dataSource == null)
+                // Attempt to load (or reload) system configuration
+                if (m_preferCachedConfiguration)
                 {
-                    loadedFromCache = false;
-                    dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
-                }
-            }
-            else
-            {
-                dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
-
-                if ((object)dataSource == null)
-                {
-                    loadedFromCache = true;
                     dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
+
+                    if ((object)dataSource == null)
+                        dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
+
+                    if ((object)dataSource == null)
+                    {
+                        loadedFromCache = false;
+                        dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+                    }
+                }
+                else
+                {
+                    dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+
+                    if ((object)dataSource == null)
+                    {
+                        loadedFromCache = true;
+                        dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
+                    }
+
+                    if ((object)dataSource == null)
+                        dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
                 }
 
-                if ((object)dataSource == null)
-                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
+                if ((object)dataSource != null)
+                {
+                    // Update data source on all adapters in all collections
+                    m_iaonSession.DataSource = dataSource;
+
+                    // Cache the configuration if it wasn't already loaded from a cache
+                    if (!loadedFromCache)
+                        CacheCurrentConfiguration(dataSource);
+
+                    return true;
+                }
+
+                return false;
             }
-
-            if ((object)dataSource != null)
-            {
-                // Update data source on all adapters in all collections
-                m_iaonSession.DataSource = dataSource;
-
-                // Cache the configuration if it wasn't already loaded from a cache
-                if (!loadedFromCache)
-                    CacheCurrentConfiguration(dataSource);
-
-                return true;
-            }
-
-            return false;
         }
 
         // Load system configuration data set
@@ -1268,7 +1273,7 @@ namespace GSF.TimeSeries
             {
                 try
                 {
-                    // Queue new configration cache after waiting for any prior cache operation to complete
+                    // Queue new configuration cache after waiting for any prior cache operation to complete
                     if (m_configurationCacheComplete.WaitOne())
                     {
                         object latestConfiguration = null;

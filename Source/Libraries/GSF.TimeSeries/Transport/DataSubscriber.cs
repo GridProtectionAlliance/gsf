@@ -184,6 +184,12 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler<EventArgs<string>> NotificationReceived;
 
         /// <summary>
+        /// Occurs when the server has sent a notification that its configuration has changed, this
+        /// can allow subscriber to request updated meta-data if desired.
+        /// </summary>
+        public event EventHandler ServerConfigurationChanged;
+
+        /// <summary>
         /// Defines default value for <see cref="DataSubscriber.OperationalModes"/>.
         /// </summary>
         public const OperationalModes DefaultOperationalModes = OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData | OperationalModes.UseCommonSerializationFormat;
@@ -209,6 +215,8 @@ namespace GSF.TimeSeries.Transport
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
         private readonly List<ServerCommand> m_requests;
+        private AutoResetEvent m_synchronizationComplete;
+        private readonly object m_queuedSynchronizationPending;
         private SecurityMode m_securityMode;
         private bool m_synchronizedSubscription;
         private bool m_useMillisecondResolution;
@@ -252,6 +260,8 @@ namespace GSF.TimeSeries.Transport
         public DataSubscriber()
         {
             m_requests = new List<ServerCommand>();
+            m_synchronizationComplete = new AutoResetEvent(true);
+            m_queuedSynchronizationPending = new object();
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             DataLossInterval = 10.0D;
@@ -718,6 +728,15 @@ namespace GSF.TimeSeries.Transport
                         CommandChannel = null;
                         DataChannel = null;
                         DisposeLocalConcentrator();
+
+                        if ((object)m_synchronizationComplete != null)
+                        {
+                            // Release any waiting threads before disposing wait handle
+                            m_synchronizationComplete.Set();
+                            m_synchronizationComplete.Dispose();
+                        }
+
+                        m_synchronizationComplete = null;
                     }
                 }
                 finally
@@ -1611,15 +1630,6 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Initiate a metadata refresh.
-        /// </summary>
-        [AdapterCommand("Initiates a metadata refresh.", "Administrator", "Editor")]
-        public virtual void RefreshMetadata()
-        {
-            SendServerCommand(ServerCommand.MetaDataRefresh);
-        }
-
-        /// <summary>
         /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
         /// </summary>
         [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
@@ -1631,6 +1641,35 @@ namespace GSF.TimeSeries.Transport
             m_lifetimeMinimumLatency = 0L;
             m_lifetimeMaximumLatency = 0L;
             m_lifetimeLatencyMeasurements = 0L;
+        }
+
+        /// <summary>
+        /// Initiate a metadata refresh.
+        /// </summary>
+        [AdapterCommand("Initiates a metadata refresh.", "Administrator", "Editor")]
+        public virtual void RefreshMetadata()
+        {
+            SendServerCommand(ServerCommand.MetaDataRefresh);
+        }
+
+        /// <summary>
+        /// Spawn meta-data synchronization.
+        /// </summary>
+        /// <param name="metadata"><see cref="DataSet"/> to use for synchronization.</param>
+        /// <remarks>
+        /// This method makes sure only one meta-data synchronization happens at a time.
+        /// </remarks>
+        public void SynchronizeMetadata(DataSet metadata)
+        {
+            try
+            {
+                ThreadPool.QueueUserWorkItem(QueueMetaDataSynchronization, metadata);
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(new InvalidOperationException("Failed to queue meta-data synchronization: " + ex.Message, ex));
+            }
         }
 
         /// <summary>
@@ -2148,6 +2187,17 @@ namespace GSF.TimeSeries.Transport
                             // Send confirmation of receipt of the notification
                             SendServerCommand(ServerCommand.ConfirmNotification, buffer.BlockCopy(responseIndex, 4));
                             break;
+                        case ServerResponse.ConfigurationChanged:
+                            OnStatusMessage("Received notification from publisher that configuration has changed.");
+                            OnServerConfigurationChanged();
+
+                            // Initiate meta-data refresh when publisher configuration has changed - we only do this
+                            // for automatic connections since API style connections have to manually initiate a
+                            // meta-data refresh. API style connection should attach to server configuration changed
+                            // event and request meta-data refresh to complete automated cycle.
+                            if (m_autoConnect && m_synchronizeMetadata)
+                                SendServerCommand(ServerCommand.MetaDataRefresh);
+                            break;
                     }
                 }
                 catch (Exception ex)
@@ -2197,12 +2247,41 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        // Queues meta-data synchronization one at a time
+        private void QueueMetaDataSynchronization(object state)
+        {
+            try
+            {
+                // Queue up a synchronization unless another thread has already requested one
+                if (!m_disposed && Monitor.TryEnter(m_queuedSynchronizationPending))
+                {
+                    try
+                    {
+                        // Queue new synchronization after waiting for any prior synchronization to complete
+                        if (m_synchronizationComplete.WaitOne())
+                            ThreadPool.QueueUserWorkItem(SynchronizeMetadata, state);
+                    }
+                    finally
+                    {
+                        Monitor.Exit(m_queuedSynchronizationPending);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Process exception for logging
+                OnProcessException(new InvalidOperationException("Failed to queue meta-data synchronization: " + ex.Message, ex));
+            }
+        }
+
         /// <summary>
-        /// Handles auto-connection metadata synchronization to local system. 
+        /// Handles meta-data synchronization to local system.
         /// </summary>
-        /// <param name="state"><see cref="DataSet"/> metadata collection passed into state parameter.</param>
+        /// <param name="state"><see cref="DataSet"/> meta-data collection passed into state parameter.</param>
         /// <remarks>
-        /// This function is normally called from thread pool since synchronization can take some time.
+        /// This function should only be initiated from call to <see cref="SynchronizeMetadata(DataSet)"/> to make
+        /// sure only one meta-data synchronization happens at once. Users can override this method to customize
+        /// process of meta-data synchronization.
         /// </remarks>
         protected virtual void SynchronizeMetadata(object state)
         {
@@ -2477,6 +2556,11 @@ namespace GSF.TimeSeries.Transport
             {
                 OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
             }
+            finally
+            {
+                if ((object)m_synchronizationComplete != null)
+                    m_synchronizationComplete.Set();
+            }
         }
 
         private SignalIndexCache DeserializeSignalIndexCache(byte[] buffer)
@@ -2658,7 +2742,7 @@ namespace GSF.TimeSeries.Transport
             {
                 // We handle synchronization on a separate thread since this process may be lengthy
                 if (m_synchronizeMetadata)
-                    ThreadPool.QueueUserWorkItem(SynchronizeMetadata, e.Argument);
+                    SynchronizeMetadata(e.Argument);
             }
             catch (Exception ex)
             {
@@ -2796,10 +2880,39 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Raises the <see cref="NotificationReceived"/> event.
+        /// </summary>
+        /// <param name="message">Message for the notification.</param>
         protected void OnNotificationReceived(string message)
         {
-            if ((object)NotificationReceived != null)
-                NotificationReceived(this, new EventArgs<string>(message));
+            try
+            {
+                if ((object)NotificationReceived != null)
+                    NotificationReceived(this, new EventArgs<string>(message));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NotificationReceived event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ServerConfigurationChanged"/> event.
+        /// </summary>
+        protected void OnServerConfigurationChanged()
+        {
+            try
+            {
+                if ((object)ServerConfigurationChanged != null)
+                    ServerConfigurationChanged(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ServerConfigurationChanged event: {0}", ex.Message), ex));
+            }
         }
 
         /// <summary>

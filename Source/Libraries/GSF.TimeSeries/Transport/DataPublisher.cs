@@ -261,6 +261,14 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         Notify = 0x89,
         /// <summary>
+        /// Configuration changed response.
+        /// </summary>
+        /// <remarks>
+        /// Unsolicited response provides a notification that the publisher's source configuration has changed and that
+        /// client may want to request a meta-data refresh.
+        /// </remarks>
+        ConfigurationChanged = 0x8A,
+        /// <summary>
         /// No operation keep-alive ping.
         /// </summary>
         /// <remarks>
@@ -930,9 +938,10 @@ namespace GSF.TimeSeries.Transport
                 base.DataSource = value;
 
                 UpdateRights();
+                UpdateCertificateChecker();
                 UpdateClientNotifications();
                 UpdateLatestMeasurementCache();
-                UpdateCertificateChecker();
+                NotifyClientsOfConfigurationChange();
             }
         }
 
@@ -1656,16 +1665,23 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         protected void UpdateLatestMeasurementCache()
         {
-            string cacheMeasurementKeys;
-            IActionAdapter cache;
-
-            if (Settings.TryGetValue("cacheMeasurementKeys", out cacheMeasurementKeys))
+            try
             {
-                if (TryGetAdapterByName("LatestMeasurementCache", out cache))
+                string cacheMeasurementKeys;
+                IActionAdapter cache;
+
+                if (Settings.TryGetValue("cacheMeasurementKeys", out cacheMeasurementKeys))
                 {
-                    cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, cacheMeasurementKeys);
-                    m_routingTables.CalculateRoutingTables(null);
+                    if (TryGetAdapterByName("LatestMeasurementCache", out cache))
+                    {
+                        cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, cacheMeasurementKeys);
+                        m_routingTables.CalculateRoutingTables(null);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Failed to update latest measurement cache: {0}", ex.Message), ex));
             }
         }
 
@@ -1683,19 +1699,43 @@ namespace GSF.TimeSeries.Transport
 
         private void UpdateClientNotifications()
         {
-            Guid subscriberID;
-
-            lock (m_clientNotificationsLock)
+            try
             {
-                m_clientNotifications.Clear();
+                Guid subscriberID;
 
-                foreach (DataRow row in DataSource.Tables["Subscribers"].Rows)
+                lock (m_clientNotificationsLock)
                 {
-                    if (Guid.TryParse(row["ID"].ToNonNullString(), out subscriberID))
-                        m_clientNotifications.Add(subscriberID, new Dictionary<int, string>());
-                }
+                    m_clientNotifications.Clear();
 
-                DeserializeClientNotifications();
+                    foreach (DataRow row in DataSource.Tables["Subscribers"].Rows)
+                    {
+                        if (Guid.TryParse(row["ID"].ToNonNullString(), out subscriberID))
+                            m_clientNotifications.Add(subscriberID, new Dictionary<int, string>());
+                    }
+
+                    DeserializeClientNotifications();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Failed to initialize client notification dictionary: {0}", ex.Message), ex));
+            }
+        }
+
+        private void NotifyClientsOfConfigurationChange()
+        {
+            // Make sure publisher allows meta-data refresh, no need to notify clients of configuration change if they can't receive updates
+            if (m_allowMetadataRefresh)
+            {
+                // This can be a lazy notification so we queue up work and return quickly
+                ThreadPool.QueueUserWorkItem(state =>
+                {
+                    // Make a copy of client connection enumeration with ToArray() in case connections are added or dropped during notification
+                    foreach (ClientConnection connection in m_clientConnections.Values)
+                    {
+                        SendClientResponse(connection.ClientID, ServerResponse.ConfigurationChanged, ServerCommand.Subscribe);
+                    }
+                });
             }
         }
 
@@ -1703,7 +1743,7 @@ namespace GSF.TimeSeries.Transport
         {
             string notificationsFileName = FilePath.GetAbsolutePath(string.Format("{0}Notifications.txt", Name));
 
-            // Delete existing file for reserialization
+            // Delete existing file for re-serialization
             if (File.Exists(notificationsFileName))
                 File.Delete(notificationsFileName);
 
@@ -2087,73 +2127,97 @@ namespace GSF.TimeSeries.Transport
         // Update certificate validation routine.
         private void UpdateCertificateChecker()
         {
-            CertificatePolicy policy;
-            SslPolicyErrors validPolicyErrors;
-            X509ChainStatusFlags validChainFlags;
-
-            string remoteCertificateFile;
-            X509Certificate certificate;
-
-            if ((object)m_certificateChecker == null)
-                return;
-
-            m_certificateChecker.DistrustAll();
-            m_subscriberIdentities.Clear();
-
-            foreach (DataRow subscriber in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
+            try
             {
-                policy = new CertificatePolicy();
-                remoteCertificateFile = subscriber["RemoteCertificateFile"].ToNonNullString();
+                CertificatePolicy policy;
+                SslPolicyErrors validPolicyErrors;
+                X509ChainStatusFlags validChainFlags;
 
-                if (Enum.TryParse(subscriber["ValidPolicyErrors"].ToNonNullString(), out validPolicyErrors))
-                    policy.ValidPolicyErrors = validPolicyErrors;
+                string remoteCertificateFile;
+                X509Certificate certificate;
 
-                if (Enum.TryParse(subscriber["ValidChainFlags"].ToNonNullString(), out validChainFlags))
-                    policy.ValidChainFlags = validChainFlags;
+                if ((object)m_certificateChecker == null || m_securityMode != SecurityMode.TLS)
+                    return;
 
-                if (File.Exists(remoteCertificateFile))
+                m_certificateChecker.DistrustAll();
+                m_subscriberIdentities.Clear();
+
+                foreach (DataRow subscriber in DataSource.Tables["Subscribers"].Select("Enabled <> 0"))
                 {
-                    certificate = new X509Certificate2(remoteCertificateFile);
-                    m_certificateChecker.Trust(certificate, policy);
-                    m_subscriberIdentities.Add(certificate, subscriber);
+                    try
+                    {
+                        policy = new CertificatePolicy();
+                        remoteCertificateFile = subscriber["RemoteCertificateFile"].ToNonNullString();
+
+                        if (Enum.TryParse(subscriber["ValidPolicyErrors"].ToNonNullString(), out validPolicyErrors))
+                            policy.ValidPolicyErrors = validPolicyErrors;
+
+                        if (Enum.TryParse(subscriber["ValidChainFlags"].ToNonNullString(), out validChainFlags))
+                            policy.ValidChainFlags = validChainFlags;
+
+                        if (File.Exists(remoteCertificateFile))
+                        {
+                            certificate = new X509Certificate2(remoteCertificateFile);
+                            m_certificateChecker.Trust(certificate, policy);
+                            m_subscriberIdentities.Add(certificate, subscriber);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        OnProcessException(new InvalidOperationException(string.Format("Failed to add subscriber \"{0}\" certificate to trusted certificates: {1}", subscriber["Acronym"].ToNonNullNorEmptyString("[UNKNOWN]"), ex.Message), ex));
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Failed to update certificate checker: {0}", ex.Message), ex));
             }
         }
 
         // Update rights for the given subscription.
         private void UpdateRights(ClientConnection connection)
         {
-            // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
-            // from the remote subscription - this will prevent possible SQL injection attacks.
-            IClientSubscription subscription = connection.Subscription;
-            MeasurementKey[] requestedInputs;
-            HashSet<MeasurementKey> authorizedSignals;
-            Guid subscriberID;
-            string message;
-
-            // Determine if the connection has been disabled or removed - make sure to set authenticated to false if necessary
-            if (!DataSource.Tables["Subscribers"].Select(string.Format("ID = '{0}' AND Enabled <> 0", connection.SubscriberID)).Any())
-                connection.Authenticated = false;
-
-            if ((object)subscription != null)
+            try
             {
-                // Update the subscription associated with this connection based on newly acquired or revoked rights
-                requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
-                authorizedSignals = new HashSet<MeasurementKey>();
-                subscriberID = subscription.SubscriberID;
+                // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
+                // from the remote subscription - this will prevent possible SQL injection attacks.
+                IClientSubscription subscription = connection.Subscription;
+                MeasurementKey[] requestedInputs;
+                HashSet<MeasurementKey> authorizedSignals;
+                Guid subscriberID;
+                string message;
 
-                foreach (MeasurementKey input in requestedInputs)
-                {
-                    if (SubscriberHasRights(subscriberID, input.SignalID))
-                        authorizedSignals.Add(input);
-                }
+                // Determine if the connection has been disabled or removed - make sure to set authenticated to false if necessary
+                if (!DataSource.Tables["Subscribers"].Select(string.Format("ID = '{0}' AND Enabled <> 0", connection.SubscriberID)).Any())
+                    connection.Authenticated = false;
 
-                if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
+                if ((object)subscription != null)
                 {
-                    message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
-                    subscription.InputMeasurementKeys = authorizedSignals.ToArray();
-                    SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
+                    // Update the subscription associated with this connection based on newly acquired or revoked rights
+                    requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
+                    authorizedSignals = new HashSet<MeasurementKey>();
+                    subscriberID = subscription.SubscriberID;
+
+                    foreach (MeasurementKey input in requestedInputs)
+                    {
+                        if (SubscriberHasRights(subscriberID, input.SignalID))
+                            authorizedSignals.Add(input);
+                    }
+
+                    if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
+                    {
+                        message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
+                        subscription.InputMeasurementKeys = authorizedSignals.ToArray();
+                        SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Failed to update authorized signal rights for \"{0}\" - connection will be terminated: {1}", connection.ConnectionID, ex.Message), ex));
+
+                // If we can't assign rights, terminate connection
+                ThreadPool.QueueUserWorkItem(DisconnectClient, connection.ClientID);
             }
         }
 
