@@ -29,7 +29,7 @@
 //  06/18/2009 - Pinal C. Patel
 //       Fixed the implementation of Enabled property.
 //  07/02/2009 - Pinal C. Patel
-//       Modified state alterning properties to reopen the file when changed.
+//       Modified state alternating properties to reopen the file when changed.
 //  09/02/2009 - Pinal C. Patel
 //       Modified code to prevent writes to dependency files when their access mode doesn't allow writes.
 //  09/10/2009 - Pinal C. Patel
@@ -40,28 +40,28 @@
 //       Removed event handler on StateFile.FileModified event to avoid unnecessary processing.
 //  09/14/2009 - Pinal C. Patel
 //       Fixed NullReferenceException encountered in Statistics if accessed when file is being opened.
-//       Fixed bug in MetadataFile property related to event handlers.
+//       Fixed issue in MetadataFile property related to event handlers.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  09/17/2009 - Pinal C. Patel
-//       Implementated the IProvideStatus interface.
+//       Implemented the IProvideStatus interface.
 //  09/23/2009 - Pinal C. Patel
 //       Edited code comments.
 //       Removed the dependency on ArchiveDataPoint.
 //  10/14/2009 - Pinal C. Patel
 //       Re-coded the way current data was being written for maximum write throughput.
 //       Fixed DivideByZero exception in Statistics property.
-//       Fixed a bug in quality-based alarm processing.
+//       Fixed a issue in quality-based alarm processing.
 //       Removed unused/unnecessary event raised during the write process.
 //  11/06/2009 - Pinal C. Patel
 //       Modified Read() and Write() methods to wait on the rollover process.
 //  12/01/2009 - Pinal C. Patel
 //       Removed unused RolloverOnFull property.
-//       Fixed a bug in the rollover process that is encountered only when dependency files are 
+//       Fixed a issue in the rollover process that is encountered only when dependency files are 
 //       configured to not load records in memory.
 //  12/02/2009 - Pinal C. Patel
 //       Modified Status property to show the total number of historic archive files.
-//       Fixed a bug in the update of historic archive file list.
+//       Fixed a issue in the update of historic archive file list.
 //  12/03/2009 - Pinal C. Patel
 //       Updated Read() to incorporate changes made to ArchiveFileAllocationTable.FindDataBlocks().
 //  12/08/2009 - Pinal C. Patel
@@ -187,7 +187,7 @@ namespace GSF.Historian.Files
                 }
                 else
                 {
-                    // We will only compare file name for equality because the result will be incorrent if one of
+                    // We will only compare file name for equality because the result will be incorrect if one of
                     // the ArchiveFileInfo instance is created from the filename by GetHistoricFileInfo() function.
                     return string.Compare(FilePath.GetFileName(FileName), FilePath.GetFileName(other.FileName), true) == 0;
                 }
@@ -779,7 +779,7 @@ namespace GSF.Historian.Files
         /// Gets or sets the maximum number of historic <see cref="ArchiveFile"/>s to be kept at both the primary and offload locations combined.
         /// </summary>
         /// <remarks>
-        /// Set <see cref="MaxHistoricArchiveFiles"/> to -1 to keep historic <see cref="ArchiveFile"/>s indefinately.
+        /// Set <see cref="MaxHistoricArchiveFiles"/> to -1 to keep historic <see cref="ArchiveFile"/>s indefinitely.
         /// </remarks>
         [Category("Archive"),
         DefaultValue(DefaultMaxHistoricArchiveFiles),
@@ -978,7 +978,7 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ArchiveFile"/> are to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the settings of ArchiveFile are to be saved to the config file.")]
         public bool PersistSettings
@@ -997,7 +997,7 @@ namespace GSF.Historian.Files
         /// Gets or sets the category under which the settings of <see cref="ArchiveFile"/> are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of ArchiveFile are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
@@ -2868,7 +2868,7 @@ namespace GSF.Historian.Files
         private void WriteToCurrentArchiveFile(IDataPoint[] items)
         {
             Dictionary<int, List<IDataPoint>> sortedDataPoints = new Dictionary<int, List<IDataPoint>>();
-            // First we'll seperate all point data by ID.
+            // First we'll separate all point data by ID.
             for (int i = 0; i < items.Length; i++)
             {
                 if (!sortedDataPoints.ContainsKey(items[i].HistorianID))
@@ -3213,7 +3213,7 @@ namespace GSF.Historian.Files
                 m_buildHistoricFileListThread.Join();
 
             Dictionary<int, List<IDataPoint>> sortedPointData = new Dictionary<int, List<IDataPoint>>();
-            // First we'll seperate all point data by ID.
+            // First we'll separate all point data by ID.
             for (int i = 0; i < items.Length; i++)
             {
                 if (!sortedPointData.ContainsKey(items[i].HistorianID))

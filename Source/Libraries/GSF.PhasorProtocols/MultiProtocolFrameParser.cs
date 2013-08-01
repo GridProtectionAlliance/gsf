@@ -2524,7 +2524,7 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <remarks>
         /// When connection is made to a file for replay purposes or consumer doesn't trust remote clock source, this flag
-        /// can be set to true replace all frame timestamps with a UTC timestamp dervied from the local system clock.
+        /// can be set to true replace all frame timestamps with a UTC timestamp derived from the local system clock.
         /// </remarks>
         public bool InjectSimulatedTimestamp
         {

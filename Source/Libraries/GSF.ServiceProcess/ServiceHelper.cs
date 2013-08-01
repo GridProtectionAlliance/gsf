@@ -538,7 +538,7 @@ namespace GSF.ServiceProcess
             set
             {
                 if (value < 1)
-                    throw new ArgumentOutOfRangeException("RequestHistoryLimit", "Value must be greater that 0");
+                    throw new ArgumentOutOfRangeException("value", "Value must be greater that 0");
 
                 m_requestHistoryLimit = value;
             }
@@ -601,7 +601,7 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ServiceHelper"/> are to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the settings of ServiceHelper are to be saved to the config file.")]
         public bool PersistSettings
@@ -621,7 +621,7 @@ namespace GSF.ServiceProcess
         /// if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of ServiceHelper are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
@@ -879,8 +879,8 @@ namespace GSF.ServiceProcess
             {
                 if (m_parentService == null)
                     return m_settingsCategory;
-                else
-                    return m_parentService.ServiceName;
+
+                return m_parentService.ServiceName;
             }
         }
 
@@ -957,17 +957,17 @@ namespace GSF.ServiceProcess
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void BeginInit()
         {
-            if (!DesignMode)
-            {
-                try
-                {
-                    // Nothing needs to be done before component is initialized.
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
+            //if (!DesignMode)
+            //{
+            //    try
+            //    {
+            //        // Nothing needs to be done before component is initialized.
+            //    }
+            //    catch
+            //    {
+            //        // Prevent the IDE from crashing when component is in design mode.
+            //    }
+            //}
         }
 
         /// <summary>
@@ -986,7 +986,7 @@ namespace GSF.ServiceProcess
                 {
                     Initialize();
                 }
-                catch (Exception)
+                catch
                 {
                     // Prevent the IDE from crashing when component is in design mode.
                 }
@@ -1155,7 +1155,7 @@ namespace GSF.ServiceProcess
                 {
                     try
                     {
-                        m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D, true);
+                        m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D);
                         m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
                         m_clientRequestHandlers.Add(new ClientRequestHandler("ResetHealthMonitor", "Resets the system resource utilization monitor", ResetHealthMonitor));
                     }
@@ -1848,7 +1848,7 @@ namespace GSF.ServiceProcess
 
         private void ProcessStatusUpdates(StatusUpdate[] items)
         {
-            bool displayUpdate = false;
+            bool displayUpdate;
             int suppressedUpdates = 0;
             foreach (StatusUpdate item in items)
             {
@@ -2076,7 +2076,7 @@ namespace GSF.ServiceProcess
             else
             {
                 // All subsequest messages from a remote client would be requests.
-                ClientRequest request = null;
+                ClientRequest request;
                 Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out request);
                 if (request != null)
                 {
@@ -2885,7 +2885,7 @@ namespace GSF.ServiceProcess
                     foreach (object component in m_serviceComponents)
                     {
                         typedComponent = component as IPersistSettings;
-                        if ((object) typedComponent != null &&
+                        if ((object)typedComponent != null &&
                             string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
                         {
                             typedComponent.LoadSettings();

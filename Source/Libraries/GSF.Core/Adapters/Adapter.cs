@@ -19,7 +19,7 @@
 //  09/23/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //  11/19/2010 - Pinal C. Patel
-//       Removed the persistance of Enabled property to the config file.
+//       Removed the persistence of Enabled property to the config file.
 //  11/24/2010 - Pinal C. Patel
 //       Modified Name property to use SettingsCategory instead of Type name.
 //  12/07/2010 - Pinal C. Patel
@@ -57,7 +57,7 @@ using GSF.IO;
 namespace GSF.Adapters
 {
     /// <summary>
-    /// Represents an adapter that could execute in isolation in a seperate <see cref="AppDomain"/>.
+    /// Represents an adapter that could execute in isolation in a separate <see cref="AppDomain"/>.
     /// </summary>
     /// <seealso cref="IAdapter"/>
     /// <seealso cref="AdapterLoader{T}"/>
@@ -224,11 +224,11 @@ namespace GSF.Adapters
         }
 
         /// <summary>
-        /// Gets the memory utilzation of the <see cref="Adapter"/> in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
+        /// Gets the memory utilization of the <see cref="Adapter"/> in bytes if executing in a separate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <see cref="MemoryUsage"/> gets updated only after a full blocking collection by <see cref="GC"/> (eg. <see cref="GC.Collect()"/>).
+        /// <see cref="MemoryUsage"/> gets updated only after a full blocking collection by <see cref="GC"/> (e.g. <see cref="GC.Collect()"/>).
         /// </para>
         /// <para>
         /// This method always returns <c><see cref="Double.NaN"/></c> under Mono deployments.
@@ -249,7 +249,7 @@ namespace GSF.Adapters
         }
 
         /// <summary>
-        /// Gets the % processor utilization of the <see cref="Adapter"/> if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
+        /// Gets the % processor utilization of the <see cref="Adapter"/> if executing in a separate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
         /// </summary>
         /// <remarks>
         /// This method always returns <c><see cref="Double.NaN"/></c> under Mono deployments.

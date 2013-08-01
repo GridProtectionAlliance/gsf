@@ -30,7 +30,7 @@ using GSF.Validation;
 namespace GSF.Collections
 {
     /// <summary>
-    /// A collection of settings that can be represented as a string of key-value pairs for easy persistance and also provide built-in validation support for the settings.
+    /// A collection of settings that can be represented as a string of key-value pairs for easy persistence and also provide built-in validation support for the settings.
     /// </summary>
     /// <example>
     /// This example shows how to use <see cref="SettingsCollection"/> for key-value pair type settings and apply validation to them:

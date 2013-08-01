@@ -23,13 +23,13 @@
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  09/17/2009 - Pinal C. Patel
-//       Modified ProcessAdapter() to instantiate types with a default public contructor only.
+//       Modified ProcessAdapter() to instantiate types with a default public constructor only.
 //  12/10/2009 - Pinal C. Patel
 //       Added new AdapterCreated event.
 //       Implemented IProvideStatus interface.
 //       Enhanced the implementation of Enabled property.
 //  09/23/2010 - Pinal C. Patel
-//       Added adapter isolation capability to allow for loading qualified adapters in seperate 
+//       Added adapter isolation capability to allow for loading qualified adapters in separate 
 //       application domain for isolated execution.
 //  10/01/2010 - Pinal C. Patel
 //       Added adapter monitoring capability to monitor the resource utilization of adapters.
@@ -55,7 +55,7 @@
 //       Modified to support buffer optimized ISupportBinaryImage.
 //  12/06/2011 - Pinal C. Patel
 //       Updated to instantiate a FileSystemWatcher object that watches for adapters only if needed 
-//       to avoid a bug introduced in .NET 4.0 that causes memory leak.
+//       to avoid a issue introduced in .NET 4.0 that causes memory leak.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //
@@ -107,7 +107,7 @@ namespace GSF.Adapters
     /// </summary>
     /// <typeparam name="T"><see cref="Type"/> of adapters to be loaded.</typeparam>
     /// <example>
-    /// This example show how to use the <see cref="AdapterLoader{T}"/> to isolate adapters in seperate <see cref="AppDomain"/>s and monitor their resource usage:
+    /// This example show how to use the <see cref="AdapterLoader{T}"/> to isolate adapters in separate <see cref="AppDomain"/>s and monitor their resource usage:
     /// <code>
     /// using System;
     /// using System.Collections.Generic;
@@ -246,7 +246,7 @@ namespace GSF.Adapters
             {
                 if (adapterFormat == AdapterFileFormat.SerializedBin)
                 {
-                    // Attempt binary desrialization.
+                    // Attempt binary deserialization.
                     return Serialization.Deserialize<T>(File.ReadAllBytes(adapterFile), SerializationFormat.Binary);
                 }
                 else if (adapterFormat == AdapterFileFormat.SerializedXml)
@@ -353,7 +353,7 @@ namespace GSF.Adapters
         /// <summary>
         /// Occurs when an adapter has exceeded either the <see cref="AllowableAdapterMemoryUsage"/> or <see cref="AllowableAdapterProcessorUsage"/>.
         /// </summary>
-        /// <see cref="EventArgs{T}.Argument"/> is the adapter that exceeded the allowable system resource utlization.
+        /// <see cref="EventArgs{T}.Argument"/> is the adapter that exceeded the allowable system resource utilization.
         public event EventHandler<EventArgs<T>> AdapterResourceUsageExceeded;
 
         /// <summary>
@@ -512,7 +512,7 @@ namespace GSF.Adapters
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="Adapters"/> are loaded in seperate <see cref="AppDomain"/> for isolated execution.
+        /// Gets or sets a boolean value that indicates whether <see cref="Adapters"/> are loaded in separate <see cref="AppDomain"/> for isolated execution.
         /// </summary>
         public bool IsolateAdapters
         {
@@ -945,8 +945,8 @@ namespace GSF.Adapters
                 settings.Add("AdapterFileExtension", m_adapterFileExtension, "Extension of the adapter files.");
                 settings.Add("AdapterFileFormat", m_adapterFileFormat, "Format (Assembly; SerializedBin; SerializedXml) of the adapter files.");
                 settings.Add("WatchForAdapters", m_watchForAdapters, "True to monitor adapter directory for new adapters, otherwise False.");
-                settings.Add("IsolateAdapters", m_isolateAdapters, "True to isolate adapters in seperate application domains, otherwise False.");
-                settings.Add("MonitorAdapters", m_monitorAdapters, "True to monitor adapter resource utilization when isolated in seperate application domains, otherwise False.");
+                settings.Add("IsolateAdapters", m_isolateAdapters, "True to isolate adapters in separate application domains, otherwise False.");
+                settings.Add("MonitorAdapters", m_monitorAdapters, "True to monitor adapter resource utilization when isolated in separate application domains, otherwise False.");
                 settings.Add("AllowableProcessMemoryUsage", m_allowableProcessMemoryUsage, "Memory in megabytes the current process is allowed to use before the internal monitoring process starts looking for offending adapters.");
                 settings.Add("AllowableProcessProcessorUsage", m_allowableProcessProcessorUsage, "Processor time in % the current process is allowed to use before the internal monitoring process starts looking for offending adapters.");
                 settings.Add("AllowableAdapterMemoryUsage", m_allowableAdapterMemoryUsage, "Memory in megabytes the adapters are allowed to use before being flagged as offending by the internal monitoring process.");
@@ -1067,7 +1067,7 @@ namespace GSF.Adapters
             {
                 Thread.Sleep(5000);
 
-                // Don't interfere if process memory and processor utlization is in check.
+                // Don't interfere if process memory and processor utilization is in check.
                 currentProcess = Process.GetCurrentProcess();
                 if (GetMemoryUsage(currentProcess) / SI2.Mega <= m_allowableProcessMemoryUsage &&
                     GetProcessorUsage(currentProcess) <= m_allowableProcessProcessorUsage)
@@ -1116,7 +1116,7 @@ namespace GSF.Adapters
         /// <summary>
         /// Gets the % processor usage of the specified <paramref name="process"/>.
         /// </summary>
-        /// <param name="process">The <see cref="Process"/> whose processot usage is to be determined.</param>
+        /// <param name="process">The <see cref="Process"/> whose processor usage is to be determined.</param>
         /// <returns>Processor usage in % of the specified <paramref name="process"/>.</returns>
         protected virtual double GetProcessorUsage(Process process)
         {

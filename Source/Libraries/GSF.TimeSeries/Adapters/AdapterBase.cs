@@ -91,6 +91,11 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler OutputMeasurementsUpdated;
 
         /// <summary>
+        /// Event is raised when adapter is aware of a configuration change.
+        /// </summary>
+        public event EventHandler ConfigurationChanged;
+
+        /// <summary>
         /// Event is raised when <see cref="AdapterBase"/> is disposed.
         /// </summary>
         public event EventHandler Disposed;
@@ -946,7 +951,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (Notify != null)
+                if ((object)Notify != null)
                     Notify(this, new EventArgs<IMeasurement>(measurement));
             }
             catch (Exception ex)
@@ -964,7 +969,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(status));
             }
             catch (Exception ex)
@@ -986,7 +991,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (StatusMessage != null)
+                if ((object)StatusMessage != null)
                     StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
             }
             catch (Exception ex)
@@ -1002,7 +1007,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
@@ -1013,7 +1018,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (InputMeasurementKeysUpdated != null)
+                if ((object)InputMeasurementKeysUpdated != null)
                     InputMeasurementKeysUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -1030,13 +1035,30 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (OutputMeasurementsUpdated != null)
+                if ((object)OutputMeasurementsUpdated != null)
                     OutputMeasurementsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputMeasurementsUpdated event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
+        /// Raises <see cref="ConfigurationChanged"/> event.
+        /// </summary>
+        protected virtual void OnConfigurationChanged()
+        {
+            try
+            {
+                if ((object)ConfigurationChanged != null)
+                    ConfigurationChanged(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConfigurationChanged event: {0}", ex.Message), ex));
             }
         }
 

@@ -79,7 +79,7 @@ namespace GSF.Historian.Files
                 }
                 else
                 {
-                    // Text is specfied, so search for matches.
+                    // Text is specified, so search for matches.
                     foreach (MetadataRecord record in Read())
                     {
                         if (record.Name.IndexOf(searchPart, StringComparison.CurrentCultureIgnoreCase) >= 0 ||

@@ -118,7 +118,7 @@ namespace GSF.Configuration
         }
 
         /// <summary>
-        /// Gets or sets <see cref="BindingFlags"/> used to access fields and properties of dervied class.
+        /// Gets or sets <see cref="BindingFlags"/> used to access fields and properties of derived class.
         /// </summary>
         /// <remarks>
         /// Value defaults to <c><see cref="BindingFlags.Public"/> | <see cref="BindingFlags.Instance"/> | <see cref="BindingFlags.DeclaredOnly"/></c>.
@@ -506,9 +506,9 @@ namespace GSF.Configuration
         }
 
         /// <summary>
-        /// Executes specified action over all public dervied class member fields.
+        /// Executes specified action over all public derived class member fields.
         /// </summary>
-        /// <param name="fieldAction">Action to excute for all dervied class member fields.</param>
+        /// <param name="fieldAction">Action to excute for all derived class member fields.</param>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected void ExecuteActionForFields(Action<FieldInfo> fieldAction)
         {
@@ -516,7 +516,7 @@ namespace GSF.Configuration
         }
 
         /// <summary>
-        /// Executes specified action over all public dervied class properties.
+        /// Executes specified action over all public derived class properties.
         /// </summary>
         /// <param name="propertyAction">Action to execute for all properties.</param>
         /// <param name="isGetOrSet"><see cref="BindingFlags.GetProperty"/> or <see cref="BindingFlags.SetProperty"/>.</param>

@@ -47,9 +47,9 @@
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization methods in GSF.Serialization class.
 //  12/02/2011 - J. Ritchie Carroll
-//       Updated event data publication to provide "copy" of resuable buffer instead of original
+//       Updated event data publication to provide "copy" of reusable buffer instead of original
 //       buffer since you cannot assume how user will use the buffer (they may cache it).
-//  12/29/2011 - J. Ritchie Carrol
+//  12/29/2011 - J. Ritchie Carroll
 //       Updated Status property to show ConnectionString information.
 //  04/26/2012 - Pinal C. Patel
 //       Updated Create() static method to apply settings from the connection string to the created 
@@ -356,7 +356,7 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the client settings are to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the client settings are to be saved to the config file.")]
         public bool PersistSettings
@@ -375,7 +375,7 @@ namespace GSF.Communication
         /// Gets or sets the category under which the client settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the client settings are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
@@ -705,7 +705,7 @@ namespace GSF.Communication
         {
             if (CurrentState == ClientState.Disconnected)
             {
-                // Initialize if unitialized.
+                // Initialize if uninitialized.
                 if (!m_initialized)
                     Initialize();
 

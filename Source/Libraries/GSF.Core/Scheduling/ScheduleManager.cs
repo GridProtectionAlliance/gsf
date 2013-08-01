@@ -39,7 +39,7 @@
 //       Added new header and license agreement.
 //  06/21/2010 - Stephen C. Wills
 //       Modified code to avoid calls to abort the m_startTimerThread.
-//  07/02/2010 - J. Ritchie Caroll
+//  07/02/2010 - J. Ritchie Carroll
 //       Fixed an issue related to accessing a disposed timer.
 //  08/04/2010 - Pinal C. Patel
 //       Fixed an issue with NullReferenceException being encountered when ScheduleManager object is 
@@ -213,7 +213,7 @@ namespace GSF.Scheduling
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ScheduleManager"/> object are 
         /// to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the settings of ScheduleManager object are to be saved to the config file.")]
         public bool PersistSettings
@@ -233,7 +233,7 @@ namespace GSF.Scheduling
         /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of ScheduleManager object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
@@ -694,7 +694,7 @@ namespace GSF.Scheduling
                 EventArgs<Schedule> args = new EventArgs<Schedule>(schedule);
                 foreach (EventHandler<EventArgs<Schedule>> handler in ScheduleDue.GetInvocationList())
                 {
-                    // Asynchrnonously invoke handlers...
+                    // Asynchronously invoke handlers...
                     handler.BeginInvoke(this, args, null, null);
                 }
             }

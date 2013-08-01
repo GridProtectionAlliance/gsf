@@ -299,11 +299,11 @@ namespace GSF.Core.Tests
 
         /// <summary>
         /// A test for MemoryUsage
-        /// Gets the memory utilzation of the <see cref="Adapter"/> in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
+        /// Gets the memory utilzation of the <see cref="Adapter"/> in bytes if executing in a separate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <see cref="MemoryUsage"/> gets updated only after a full blocking collection by <see cref="GC"/> (eg. <see cref="GC.Collect()"/>).
+        /// <see cref="MemoryUsage"/> gets updated only after a full blocking collection by <see cref="GC"/> (e.g. <see cref="GC.Collect()"/>).
         /// </para>
         /// <para>
         /// This method always returns <c><see cref="Double.NaN"/></c> under Mono deployments.
@@ -350,7 +350,7 @@ namespace GSF.Core.Tests
 
         /// <summary>
         /// A test for ProcessorUsage
-        /// Gets the % processor utilization of the <see cref="Adapter"/> if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
+        /// Gets the % processor utilization of the <see cref="Adapter"/> if executing in a separate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
         /// </summary>
         /// <remarks>
         /// This method always returns <c><see cref="Double.NaN"/></c> under Mono deployments.

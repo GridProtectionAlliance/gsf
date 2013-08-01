@@ -293,7 +293,7 @@ namespace GSF.ServiceProcess
         /// <param name="arguments">Arguments to be passed in to the <see cref="ExecutionMethod"/>.</param>
         public void Start(object[] arguments)
         {
-            // Start the execution on a seperate thread.
+            // Start the execution on a separate thread.
 #if ThreadTracking
             m_processThread = new ManagedThread(InvokeExecutionMethod);
             m_processThread.Name = "GSF.ServiceProcess.ServiceProcess.InvokeExecutionMethod() [" + m_name + "]";

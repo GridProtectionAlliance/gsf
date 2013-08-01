@@ -79,6 +79,11 @@ namespace GSF.TimeSeries.Adapters
         event EventHandler OutputMeasurementsUpdated;
 
         /// <summary>
+        /// Event is raised when adapter is aware of a configuration change.
+        /// </summary>
+        event EventHandler ConfigurationChanged;
+
+        /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to <see cref="IAdapter"/>.
         /// </summary>
         DataSet DataSource

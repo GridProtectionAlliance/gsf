@@ -55,7 +55,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Gets delegate that quickly creates new instance of the specfied type.
+        /// Gets delegate that quickly creates new instance of the specified type.
         /// </summary>
         public static Func<T> CreateObjectFunction
         {

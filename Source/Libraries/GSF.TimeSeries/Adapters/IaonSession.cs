@@ -77,6 +77,11 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler OutputMeasurementsUpdated;
 
         /// <summary>
+        /// Event is raised when adapter is aware of a configuration change.
+        /// </summary>
+        public event EventHandler ConfigurationChanged;
+
+        /// <summary>
         /// Event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
@@ -176,6 +181,7 @@ namespace GSF.TimeSeries.Adapters
             m_allAdapters.ProcessException += ProcessExceptionHandler;
             m_allAdapters.InputMeasurementKeysUpdated += InputMeasurementKeysUpdatedHandler;
             m_allAdapters.OutputMeasurementsUpdated += OutputMeasurementsUpdatedHandler;
+            m_allAdapters.ConfigurationChanged += ConfigurationChangedHandler;
             m_allAdapters.Disposed += DisposedHandler;
 
             // Create input adapters collection
@@ -502,6 +508,7 @@ namespace GSF.TimeSeries.Adapters
                             m_allAdapters.ProcessException -= ProcessExceptionHandler;
                             m_allAdapters.InputMeasurementKeysUpdated -= InputMeasurementKeysUpdatedHandler;
                             m_allAdapters.OutputMeasurementsUpdated -= OutputMeasurementsUpdatedHandler;
+                            m_allAdapters.ConfigurationChanged -= ConfigurationChangedHandler;
                             m_allAdapters.Disposed -= DisposedHandler;
                             m_allAdapters.Dispose();
                         }
@@ -613,7 +620,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="type"><see cref="UpdateType"/> of status message.</param>
         protected virtual void OnStatusMessage(object sender, string status, UpdateType type = UpdateType.Information)
         {
-            if (StatusMessage != null)
+            if ((object)StatusMessage != null)
             {
                 // When using default informational update type, see if an update type code was embedded in the status message - this allows for compatibility for event
                 // handlers that are normally unaware of the update type
@@ -636,7 +643,7 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         protected virtual void OnStatusMessage(object sender, string formattedStatus, UpdateType type, params object[] args)
         {
-            if (StatusMessage != null)
+            if ((object)StatusMessage != null)
                 OnStatusMessage(sender, string.Format(formattedStatus, args), type);
         }
 
@@ -647,7 +654,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(object sender, Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(sender, new EventArgs<Exception>(ex));
         }
 
@@ -657,7 +664,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="sender">Object source raising the event.</param>
         protected virtual void OnInputMeasurementKeysUpdated(object sender)
         {
-            if (InputMeasurementKeysUpdated != null)
+            if ((object)InputMeasurementKeysUpdated != null)
                 InputMeasurementKeysUpdated(sender, EventArgs.Empty);
         }
 
@@ -667,8 +674,18 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="sender">Object source raising the event.</param>
         protected virtual void OnOutputMeasurementsUpdated(object sender)
         {
-            if (OutputMeasurementsUpdated != null)
+            if ((object)OutputMeasurementsUpdated != null)
                 OutputMeasurementsUpdated(sender, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises <see cref="ConfigurationChanged"/> event.
+        /// </summary>
+        /// <param name="sender">Object source raising the event.</param>
+        protected virtual void OnConfigurationChanged(object sender)
+        {
+            if ((object)ConfigurationChanged != null)
+                ConfigurationChanged(sender, EventArgs.Empty);
         }
 
         /// <summary>
@@ -678,7 +695,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(object sender, int seconds)
         {
-            if (UnpublishedSamples != null)
+            if ((object)UnpublishedSamples != null)
                 UnpublishedSamples(sender, new EventArgs<int>(seconds));
         }
 
@@ -689,7 +706,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
         protected virtual void OnUnprocessedMeasurements(object sender, int unprocessedMeasurements)
         {
-            if (UnprocessedMeasurements != null)
+            if ((object)UnprocessedMeasurements != null)
                 UnprocessedMeasurements(sender, new EventArgs<int>(unprocessedMeasurements));
         }
 
@@ -700,7 +717,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="e"><see cref="EventArgs"/>, if any.</param>
         protected virtual void OnProcessingComplete(object sender, EventArgs e = null)
         {
-            if (ProcessingComplete != null)
+            if ((object)ProcessingComplete != null)
                 ProcessingComplete(sender, e ?? EventArgs.Empty);
         }
 
@@ -710,7 +727,7 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="sender">Object source raising the event.</param>
         protected virtual void OnDisposed(object sender)
         {
-            if (Disposed != null)
+            if ((object)Disposed != null)
                 Disposed(sender, EventArgs.Empty);
         }
 
@@ -764,6 +781,17 @@ namespace GSF.TimeSeries.Adapters
 
             // Bubble message up to any event subscribers
             OnOutputMeasurementsUpdated(sender);
+        }
+
+        /// <summary>
+        /// Event handler for adapter notifications about configuration changes.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event arguments, if any.</param>
+        public virtual void ConfigurationChangedHandler(object sender, EventArgs e)
+        {
+            // Bubble message up to any event subscribers
+            OnConfigurationChanged(sender);
         }
 
         /// <summary>

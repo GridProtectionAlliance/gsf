@@ -86,6 +86,11 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler OutputMeasurementsUpdated;
 
         /// <summary>
+        /// Event is raised when adapter is aware of a configuration change.
+        /// </summary>
+        public event EventHandler ConfigurationChanged;
+
+        /// <summary>
         /// Event is raised when this <see cref="AdapterCollectionBase{T}"/> is disposed or an <see cref="IAdapter"/> in the collection is disposed.
         /// </summary>
         public event EventHandler Disposed;
@@ -1435,6 +1440,23 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Raises <see cref="ConfigurationChanged"/> event.
+        /// </summary>
+        protected virtual void OnConfigurationChanged()
+        {
+            try
+            {
+                if ((object)ConfigurationChanged != null)
+                    ConfigurationChanged(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConfigurationChanged event: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
         /// Removes all elements from the <see cref="Collection{T}"/>.
         /// </summary>
         protected override void ClearItems()
@@ -1516,6 +1538,7 @@ namespace GSF.TimeSeries.Adapters
                 item.ProcessException += item_ProcessException;
                 item.InputMeasurementKeysUpdated += item_InputMeasurementKeysUpdated;
                 item.OutputMeasurementsUpdated += item_OutputMeasurementsUpdated;
+                item.ConfigurationChanged += item_ConfigurationChanged;
                 item.Disposed += item_Disposed;
 
                 // Update adapter routing type flag
@@ -1558,6 +1581,7 @@ namespace GSF.TimeSeries.Adapters
                 item.ProcessException -= item_ProcessException;
                 item.InputMeasurementKeysUpdated -= item_InputMeasurementKeysUpdated;
                 item.OutputMeasurementsUpdated -= item_OutputMeasurementsUpdated;
+                item.ConfigurationChanged -= item_ConfigurationChanged;
 
                 // Dispose of item, then un-wire disposed event
                 item.Dispose();
@@ -1598,6 +1622,13 @@ namespace GSF.TimeSeries.Adapters
         {
             if ((object)OutputMeasurementsUpdated != null)
                 OutputMeasurementsUpdated(sender, e);
+        }
+
+        // Raise configuration changed event on behalf of each item in collection
+        private void item_ConfigurationChanged(object sender, EventArgs e)
+        {
+            if ((object)ConfigurationChanged != null)
+                ConfigurationChanged(sender, e);
         }
 
         // Raise disposed event on behalf of each item in collection

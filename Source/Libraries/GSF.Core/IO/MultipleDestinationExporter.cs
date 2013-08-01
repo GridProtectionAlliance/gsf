@@ -421,7 +421,7 @@ namespace GSF.IO
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="MultipleDestinationExporter"/> object are 
         /// to be saved to the config file.
         /// </summary>
-        [Category("Persistance"), DefaultValue(DefaultPersistSettings), Description("Indicates whether the settings of MultipleDestinationExporter object are to be saved to the config file.")]
+        [Category("Persistence"), DefaultValue(DefaultPersistSettings), Description("Indicates whether the settings of MultipleDestinationExporter object are to be saved to the config file.")]
         public bool PersistSettings
         {
             get
@@ -439,7 +439,7 @@ namespace GSF.IO
         /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [Category("Persistance"), DefaultValue(DefaultSettingsCategory), Description("Category under which the settings of MultipleDestinationExporter object are to be saved to the config file if the PersistSettings property is set to true.")]
+        [Category("Persistence"), DefaultValue(DefaultSettingsCategory), Description("Category under which the settings of MultipleDestinationExporter object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get
@@ -994,9 +994,9 @@ namespace GSF.IO
                         {
                             exportStates[i] = new ExportState
                                 {
-                                SourceFileName = filename,
-                                DestinationFileName = destinations[i].DestinationFile
-                            };
+                                    SourceFileName = filename,
+                                    DestinationFileName = destinations[i].DestinationFile
+                                };
                         }
 
                         // Spool threads to attempt copy of export files

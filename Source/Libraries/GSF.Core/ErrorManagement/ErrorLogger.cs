@@ -77,8 +77,8 @@ using System.Web;
 using System.Windows.Forms;
 using GSF.Configuration;
 using GSF.Data;
-using GSF.IO;
 using GSF.Identity;
+using GSF.IO;
 using GSF.Net.Smtp;
 using GSF.Reflection;
 using GSF.Windows.Forms;
@@ -550,7 +550,7 @@ namespace GSF.ErrorManagement
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ErrorLogger"/> object are 
         /// to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the settings of ErrorLogger object are to be saved to the config file.")]
         public bool PersistSettings
@@ -570,7 +570,7 @@ namespace GSF.ErrorManagement
         /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of ErrorLogger object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory

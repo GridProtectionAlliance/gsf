@@ -50,13 +50,13 @@ namespace UpdateWAVMetaData
             string parameterizedQuery;
             int protocolID, signalTypeID;
 
-            // Define guid with query string delimeters according to database needs
+            // Define guid with query string delimiters according to database needs
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
             string setting;
 
             if (settings.TryGetValue("Provider", out setting))
             {
-                // Check if provider is for Access since it uses braces as Guid delimeters
+                // Check if provider is for Access since it uses braces as Guid delimiters
                 if (setting.StartsWith("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase))
                     nodeIDQueryString = "{" + nodeID + "}";
             }

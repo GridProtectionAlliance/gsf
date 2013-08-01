@@ -375,7 +375,7 @@ namespace GSF.Communication
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the server settings are to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the server settings are to be saved to the config file.")]
         public bool PersistSettings
@@ -394,7 +394,7 @@ namespace GSF.Communication
         /// Gets or sets the category under which the server settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the server settings are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory

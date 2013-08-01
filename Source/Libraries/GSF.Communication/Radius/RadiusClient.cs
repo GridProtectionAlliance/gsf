@@ -366,12 +366,12 @@ namespace GSF.Communication.Radius
         /// Send a request to the server and waits for a response back.
         /// </summary>
         /// <param name="request">Request to be sent to the server.</param>
-        /// <returns>Response packet if a valid reponse is received from the server; otherwise Nothing.</returns>
+        /// <returns>Response packet if a valid response is received from the server; otherwise Nothing.</returns>
         public RadiusPacket ProcessRequest(RadiusPacket request)
         {
             CheckDisposed();
             RadiusPacket response = null;
-            // We wait indefinately for the connection to establish. But since this is UDP, the connection
+            // We wait indefinitely for the connection to establish. But since this is UDP, the connection
             // will always be successful (locally we're binding to any available UDP port).
             if (m_udpClient.CurrentState == ClientState.Connected)
             {
@@ -535,7 +535,7 @@ namespace GSF.Communication.Radius
                 request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserPassword, RadiusPacket.EncryptPassword(password, m_sharedSecret, authenticator)));
                 if (state != null)
                 {
-                    // State attribute is used when responding to a AccessChallenge reponse.
+                    // State attribute is used when responding to a AccessChallenge response.
                     request.Attributes.Add(new RadiusPacketAttribute(AttributeType.State, state));
                 }
 

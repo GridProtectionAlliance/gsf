@@ -301,7 +301,7 @@ namespace GSF.PhasorProtocols.Ieee1344
         #region [ Static ]
 
         // Static Methods
-        
+
         // Cumulates frame images
         internal static void CumulateFrameImage(CommonFrameHeader parsedFrameHeader, byte[] buffer, int offset, ref FrameImageCollector frameImages)
         {
@@ -356,7 +356,7 @@ namespace GSF.PhasorProtocols.Ieee1344
                         derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
                     }
 
-                    // Create equivalent dervied frequency definition
+                    // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
                     if (sourceFrequency != null)
@@ -364,7 +364,7 @@ namespace GSF.PhasorProtocols.Ieee1344
 
                     // IEEE 1344 does not define analog values...
 
-                    // Create equivalent dervied digital definitions
+                    // Create equivalent derived digital definitions
                     foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
                     {
                         derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
@@ -380,7 +380,7 @@ namespace GSF.PhasorProtocols.Ieee1344
 
             return derivedFrame;
         }
-        
-        #endregion   
+
+        #endregion
     }
 }

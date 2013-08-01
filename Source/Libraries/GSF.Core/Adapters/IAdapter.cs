@@ -39,7 +39,7 @@ using GSF.Configuration;
 namespace GSF.Adapters
 {
     /// <summary>
-    /// Defines an adapter that could execute in isolation in a seperate <see cref="AppDomain"/>.
+    /// Defines an adapter that could execute in isolation in a separate <see cref="AppDomain"/>.
     /// </summary>
     public interface IAdapter : ISupportLifecycle, IProvideStatus, IPersistSettings
     {
@@ -96,7 +96,7 @@ namespace GSF.Adapters
         }
 
         /// <summary>
-        /// Gets the memory utilzation of the <see cref="IAdapter"/> in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
+        /// Gets the memory utilization of the <see cref="IAdapter"/> in bytes if executing in a separate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
         /// </summary>
         double MemoryUsage
         {
@@ -104,7 +104,7 @@ namespace GSF.Adapters
         }
 
         /// <summary>
-        /// Gets the % processor utilization of the <see cref="IAdapter"/> if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
+        /// Gets the % processor utilization of the <see cref="IAdapter"/> if executing in a separate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
         /// </summary>
         double ProcessorUsage
         {

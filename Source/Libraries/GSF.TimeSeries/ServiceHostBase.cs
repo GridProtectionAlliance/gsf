@@ -310,6 +310,7 @@ namespace GSF.TimeSeries
             m_iaonSession = new IaonSession();
             m_iaonSession.StatusMessage += m_iaonSession_StatusMessage;
             m_iaonSession.ProcessException += m_iaonSession_ProcessException;
+            m_iaonSession.ConfigurationChanged += m_iaonSession_ConfigurationChanged;
 
             // Create a handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
@@ -589,6 +590,7 @@ namespace GSF.TimeSeries
                 m_iaonSession.Dispose();
                 m_iaonSession.StatusMessage -= m_iaonSession_StatusMessage;
                 m_iaonSession.ProcessException -= m_iaonSession_ProcessException;
+                m_iaonSession.ConfigurationChanged -= m_iaonSession_ConfigurationChanged;
             }
             m_iaonSession = null;
 
@@ -1433,6 +1435,19 @@ namespace GSF.TimeSeries
         private void m_iaonSession_ProcessException(object sender, EventArgs<Exception> e)
         {
             m_serviceHelper.ErrorLogger.Log(e.Argument, false);
+        }
+
+        /// <summary>
+        /// Event handler for processing notifications from adapters that configuration has changed.
+        /// </summary>
+        /// <param name="sender">Event source of the notification.</param>
+        /// <param name="e">Event arguments, if any.</param>
+        /// <remarks>
+        /// The time-series framework <see cref="IaonSession"/> uses this event to report configuration changes.
+        /// </remarks>
+        private void m_iaonSession_ConfigurationChanged(object sender, EventArgs e)
+        {
+            LoadSystemConfiguration();
         }
 
         // Handle task scheduler exceptions

@@ -26,7 +26,7 @@
 //  11/24/2010 - Pinal C. Patel
 //       Updated the text returned by Status property.
 //  01/07/2011 - Pinal C. Patel
-//       Fixed initialization bug that prevented the service from functioning when hosted inside ASP.NET.
+//       Fixed initialization issue that prevented the service from functioning when hosted inside ASP.NET.
 //  02/03/2011 - Pinal C. Patel
 //       Added GetLatestMessage() operation that can be used to retrieve the latest message published 
 //       to the subscribers of a topic.
@@ -1213,12 +1213,12 @@ namespace GSF.ServiceBus
 
         private void SaveMessages()
         {
-            // For use later when enabling message persistance.
+            // For use later when enabling message persistence.
         }
 
         private void LoadMessages()
         {
-            // For use later when enabling message persistance.
+            // For use later when enabling message persistence.
         }
 
         private void OnChannelClosing(object sender, EventArgs e)

@@ -154,7 +154,7 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
-                // Cumulate any properties with errors using line feed as delimeter
+                // Cumulate any properties with errors using line feed as delimiter
                 return m_propertyErrors.Where(kvPair => !string.IsNullOrWhiteSpace(kvPair.Value)).ToDelimitedString(Environment.NewLine);
             }
         }
@@ -196,7 +196,7 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
-        /// Gets or sets <see cref="BindingFlags"/> used to access properties of dervied class.
+        /// Gets or sets <see cref="BindingFlags"/> used to access properties of derived class.
         /// </summary>
         /// <remarks>
         /// Value defaults to <c><see cref="BindingFlags.Public"/> | <see cref="BindingFlags.Instance"/> | <see cref="BindingFlags.DeclaredOnly"/></c>.
@@ -316,7 +316,7 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
-        /// Executes specified action over all public dervied class properties.
+        /// Executes specified action over all public derived class properties.
         /// </summary>
         /// <param name="propertyAction">Action to execute for all properties.</param>
         /// <param name="propertyFilter">Filter used to select which properties to execute the action.</param>

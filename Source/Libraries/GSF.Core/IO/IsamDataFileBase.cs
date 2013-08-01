@@ -32,7 +32,7 @@
 //  05/19/2009 - Pinal C. Patel
 //       Implemented the IProvideStatus interface.
 //  07/02/2009 - Pinal C. Patel
-//       Modified state alterning properties to reopen the file when changed.
+//       Modified state alternating properties to reopen the file when changed.
 //  08/10/2009 - Pinal C. Patel
 //       Modified Write() to write empty intermediate records that are missing to avoid garbage data 
 //       for the missing intermediate records when records are being written to disk directly.
@@ -391,7 +391,7 @@ namespace GSF.IO
         /// Gets or sets the name of the file.
         /// </summary>
         /// <remarks>
-        /// Changing the <see cref="FileName"/> when the file is open will cause the file to be re-opend.
+        /// Changing the <see cref="FileName"/> when the file is open will cause the file to be re-opened.
         /// </remarks>
         public string FileName
         {

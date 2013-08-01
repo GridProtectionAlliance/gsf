@@ -115,7 +115,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// </summary>
         public override bool ProtocolUsesSyncBytes
         {
-	        get
+            get
             {
                 return true;
             }
@@ -221,7 +221,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
 
                 // Derive frame length from common frame header
                 int frameLength = (int)parsedFrameHeader.FrameSize;
-                
+
                 // We also make sure entire frame buffer image is available to be parsed
                 if (length >= frameLength)
                 {
@@ -247,7 +247,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
                     }
                 }
             }
-            
+
             return null;
         }
 
@@ -324,7 +324,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
                         derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.PhasorType, null));
                     }
 
-                    // Create equivalent dervied frequency definition
+                    // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
                     if (sourceFrequency != null)

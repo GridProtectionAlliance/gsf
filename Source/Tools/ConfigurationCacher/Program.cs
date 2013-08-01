@@ -192,7 +192,7 @@ namespace ConfigurationCacher
                         // Get the node ID query string
                         if (settings.TryGetValue("Provider", out setting))
                         {
-                            // Check if provider is for Access since it uses braces as Guid delimeters
+                            // Check if provider is for Access since it uses braces as Guid delimiters
                             if (setting.StartsWith("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase))
                             {
                                 nodeIDQueryString = "{" + s_nodeID + "}";

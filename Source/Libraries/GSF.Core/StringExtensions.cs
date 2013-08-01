@@ -21,7 +21,7 @@
 //  01/24/2006 - J. Ritchie Carroll
 //       Migrated 2.0 version of source code from 1.1 source (GSF.Shared.String).
 //  06/01/2006 - J. Ritchie Carroll
-//       Added ParseBoolean function to parse strings representing booleans that may be numeric.
+//       Added ParseBoolean function to parse strings representing boolean's that may be numeric.
 //  07/07/2006 - J. Ritchie Carroll
 //       Added GetStringSegments function to break a string up into smaller chunks for parsing.
 //       and/or displaying.
@@ -54,7 +54,7 @@
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  01/11/2010 - Galen K. Riley
-//      Bug fixes for unit tests:
+//      Issue fixes for unit tests:
 //      ConvertToType - Fix to throw ArgumentNullException instead of NullReferenceException for null value
 //      ConvertToType - Handling failed conversions better. Calling ConvertToType<int>("\0") returns properly
 //      JoinKeyValuePairs - Fix to throw ArgumentNullException instead of NullReferenceException
@@ -63,7 +63,7 @@
 //      ReplaceCrLfs - Fix to throw ArgumentNullException instead of NullReferenceException for null value
 //      RegexDecode - Fix to throw ArgumentNullException instead of NullReferenceException for null value
 //  12/03/2010 - J. Ritchie Carroll
-//      Modifed ParseKeyValuePairs such that it could handle nested pairs to any needed depth.
+//      Modified ParseKeyValuePairs such that it could handle nested pairs to any needed depth.
 //  12/05/2010 - Pinal C. Patel
 //       Added an overload for ConvertToType() that takes CultureInfo as a parameter.
 //  12/07/2010 - Pinal C. Patel
@@ -141,7 +141,7 @@ namespace GSF
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
-        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <returns><see cref="String"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
         /// <remarks>
         /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified type T,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
@@ -159,7 +159,7 @@ namespace GSF
         /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
-        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <returns><see cref="String"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
         /// <remarks>
         /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified <paramref name="type"/>,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
@@ -178,7 +178,7 @@ namespace GSF
         /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
         /// <param name="culture"><see cref="CultureInfo"/> to use for the conversion.</param>
-        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <returns><see cref="String"/> converted to specified <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
         /// <remarks>
         /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified <paramref name="type"/>,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
@@ -220,9 +220,9 @@ namespace GSF
         }
 
         /// <summary>
-        /// Turns source string into an array of string segements - each with a set maximum width - for parsing or displaying.
+        /// Turns source string into an array of string segments - each with a set maximum width - for parsing or displaying.
         /// </summary>
-        /// <param name="value">Input string to break up into segements.</param>
+        /// <param name="value">Input string to break up into segments.</param>
         /// <param name="segmentSize">Maximum size of returned segment.</param>
         /// <returns>Array of string segments as parsed from source string.</returns>
         /// <remarks>Returns a single element array with an empty string if source string is null or empty.</remarks>
@@ -252,8 +252,8 @@ namespace GSF
         /// Combines a dictionary of key-value pairs in to a string.
         /// </summary>
         /// <param name="pairs">Dictionary of key-value pairs.</param>
-        /// <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
-        /// <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
+        /// <param name="parameterDelimeter">Character that delimits one key-value pair from another (e.g. ';').</param>
+        /// <param name="keyValueDelimeter">Character that delimits a key from its value (e.g. '=').</param>
         /// <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
         /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "{").</param>
         /// <param name="endValueDelimeter">Optional character that marks the end of a value such that value could contain other
@@ -317,7 +317,7 @@ namespace GSF
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">value is null.</exception>
-        /// <exception cref="ArgumentException">All delimeters must be unique -or- all keys must be unique when
+        /// <exception cref="ArgumentException">All delimiters must be unique -or- all keys must be unique when
         /// <paramref name="ignoreDuplicateKeys"/> is set to <c>false</c>.</exception>
         /// <exception cref="FormatException">Total nested key/value value pair expressions are mismatched -or- encountered
         /// <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
@@ -332,7 +332,7 @@ namespace GSF
                 keyValueDelimeter == startValueDelimeter ||
                 keyValueDelimeter == endValueDelimeter ||
                 startValueDelimeter == endValueDelimeter)
-                throw new ArgumentException("All delimeters must be unique");
+                throw new ArgumentException("All delimiters must be unique");
 
             Dictionary<string, string> keyValuePairs = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
             StringBuilder escapedValue = new StringBuilder();
@@ -346,7 +346,7 @@ namespace GSF
             int delimeterDepth = 0;
             char character;
 
-            // Escape any parameter or key/value delimeters within tagged value sequences
+            // Escape any parameter or key/value delimiters within tagged value sequences
             //      For example, the following string:
             //          "normalKVP=-1; nestedKVP={p1=true; p2=false}")
             //      would be encoded as:
@@ -360,10 +360,10 @@ namespace GSF
                     if (!valueEscaped)
                     {
                         valueEscaped = true;
-                        continue;   // Don't add tag start delimeter to final value
+                        continue;   // Don't add tag start delimiter to final value
                     }
 
-                    // Handle nested delimeters
+                    // Handle nested delimiters
                     delimeterDepth++;
                 }
 
@@ -373,24 +373,24 @@ namespace GSF
                     {
                         if (delimeterDepth > 0)
                         {
-                            // Handle nested delimeters
+                            // Handle nested delimiters
                             delimeterDepth--;
                         }
                         else
                         {
                             valueEscaped = false;
-                            continue;   // Don't add tag stop delimeter to final value
+                            continue;   // Don't add tag stop delimiter to final value
                         }
                     }
                     else
                     {
-                        throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimeter mismatch. Encountered end value delimeter \'{0}\' before start value delimeter \'{1}\'.", endValueDelimeter, startValueDelimeter));
+                        throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter \'{0}\' before start value delimiter \'{1}\'.", endValueDelimeter, startValueDelimeter));
                     }
                 }
 
                 if (valueEscaped)
                 {
-                    // Escape any delimeter characters inside nested key/value pair
+                    // Escape any delimiter characters inside nested key/value pair
                     if (character == parameterDelimeter)
                         escapedValue.Append(escapedParameterDelimeter);
                     else if (character == keyValueDelimeter)
@@ -414,7 +414,7 @@ namespace GSF
                 if (valueEscaped)
                     delimeterDepth = 1;
 
-                throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimeter mismatch. Encountered more {0} than {1}.", delimeterDepth > 0 ? "start value delimeters \'" + startValueDelimeter + "\'" : "end value delimeters \'" + endValueDelimeter + "\'", delimeterDepth < 0 ? "start value delimeters \'" + startValueDelimeter + "\'" : "end value delimeters \'" + endValueDelimeter + "\'"));
+                throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more {0} than {1}.", delimeterDepth > 0 ? "start value delimiters \'" + startValueDelimeter + "\'" : "end value delimiters \'" + endValueDelimeter + "\'", delimeterDepth < 0 ? "start value delimiters \'" + startValueDelimeter + "\'" : "end value delimiters \'" + endValueDelimeter + "\'"));
             }
 
             // Parse key/value pairs from escaped value
@@ -764,11 +764,11 @@ namespace GSF
         }
 
         /// <summary>
-        /// Counts the total number of the occurances of a character in the given string.
+        /// Counts the total number of the occurrences of a character in the given string.
         /// </summary>
         /// <param name="value">Input string.</param>
         /// <param name="characterToCount">Character to be counted.</param>
-        /// <returns>Total number of the occurances of <paramref name="characterToCount" /> in the given string.</returns>
+        /// <returns>Total number of the occurrences of <paramref name="characterToCount" /> in the given string.</returns>
         public static int CharCount(this string value, char characterToCount)
         {
             if (string.IsNullOrEmpty(value))

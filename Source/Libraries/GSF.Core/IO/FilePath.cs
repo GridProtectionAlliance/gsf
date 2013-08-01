@@ -27,7 +27,7 @@
 //  10/24/2008 - Pinal C. Patel
 //       Edited code comments.
 //  12/17/2008 - F. Russell Robertson
-//       Fixed bug in GetFilePatternRegularExpression().
+//       Fixed issue in GetFilePatternRegularExpression().
 //  06/30/2009 - Pinal C. Patel
 //       Removed FilePathHasFileName() since the result was error prone.
 //  09/14/2009 - Stephen C. Wills
@@ -41,9 +41,9 @@
 //  01/28/2011 - J. Ritchie Carroll
 //       Added IsValidFileName function.
 //  02/14/2011 - J. Ritchie Carroll
-//       Fixed bug in GetDirectoryName where last directory was being truncated as a file name.
+//       Fixed issue in GetDirectoryName where last directory was being truncated as a file name.
 //  06/06/2011 - Stephen C. Wills
-//       Fixed bug in GetFileName where path suffix was being removed before extracting the file name.
+//       Fixed issue in GetFileName where path suffix was being removed before extracting the file name.
 //  07/29/2011 - Pinal C. Patel
 //       Updated GetApplicationDataFolder() to use the TEMP directory for web applications.
 //  12/14/2012 - Starlynn Danyelle Gilliam
@@ -139,7 +139,7 @@ namespace GSF.IO
         /// <param name="sharename">UNC share name to connect to.</param>
         /// <param name="username">Username to use for connection.</param>
         /// <param name="password">Password to use for connection.</param>
-        /// <param name="domain">Domain name to use for connetion. Specify the computer name for local system accounts.</param>
+        /// <param name="domain">Domain name to use for connection. Specify the computer name for local system accounts.</param>
         public static void ConnectToNetworkShare(string sharename, string username, string password, string domain)
         {
             NETRESOURCE resource = new NETRESOURCE();
@@ -371,9 +371,9 @@ namespace GSF.IO
                 int index;
                 char[] dirVolChars = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, Path.VolumeSeparatorChar };
 
-                // Remove file name and trailing directory seperator character from the file path.
+                // Remove file name and trailing directory separator character from the file path.
                 filePath = RemovePathSuffix(GetDirectoryName(filePath));
-                // Keep going through the file path until all directory seperator characters are removed.
+                // Keep going through the file path until all directory separator characters are removed.
                 while ((index = filePath.IndexOfAny(dirVolChars)) > -1)
                 {
                     filePath = filePath.Substring(index + 1);

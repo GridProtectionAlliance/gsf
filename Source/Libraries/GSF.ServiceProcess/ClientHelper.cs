@@ -27,7 +27,7 @@
 //       Added AuthenticationMethod, AuthenticationUsername and AuthenticationPassword properties to
 //       provision for the authentication process as part of security.
 //       Added ISupportLifecycle, ISupportInitialize and IPersistSettings interface implementations
-//       to support the persistance and retrieval of settings from the config file.
+//       to support the persistence and retrieval of settings from the config file.
 //  07/17/2009 - Pinal C. Patel
 //       Added static PretendRequest() method that can be used to create pretend request for manually
 //       invoking request handlers registered with the ServiceHelper.
@@ -277,7 +277,7 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ClientHelper"/> are to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the settings of ClientHelper are to be saved to the config file.")]
         public bool PersistSettings
@@ -296,7 +296,7 @@ namespace GSF.ServiceProcess
         /// Gets or sets the category under which the settings of <see cref="ClientHelper"/> are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of ClientHelper are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
@@ -664,9 +664,10 @@ namespace GSF.ServiceProcess
             status.AppendLine();
             UpdateStatus(UpdateType.Warning, status.ToString());
 
-            // Attempt reconnection on a seperate thread.
+            // Attempt reconnection on a separate thread.
             if (m_attemptReconnection)
-                new Thread((ThreadStart)delegate {
+                new Thread((ThreadStart)delegate
+                {
                     Connect();
                 }).Start();
         }

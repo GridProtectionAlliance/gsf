@@ -620,7 +620,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                         derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.PhasorType, null));
                     }
 
-                    // Create equivalent dervied frequency definition
+                    // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
                     if (sourceFrequency != null)
@@ -631,7 +631,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                         };
                     }
 
-                    // Create equivalent dervied digital definitions
+                    // Create equivalent derived digital definitions
                     foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
                     {
                         derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));

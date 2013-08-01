@@ -136,7 +136,7 @@ namespace GSF.NumericalAnalysis
 
             if (m_xValues.Count >= m_pointCount && !m_calculating)
             {
-                // Performs curve fit calculation on seperate thread, since it could be time consuming.
+                // Performs curve fit calculation on separate thread, since it could be time consuming.
 #if ThreadTracking
                 ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(PerformCalculation);
                 thread.Name = "GSF.Math.RealTimeSlope.PerformCalculation()";

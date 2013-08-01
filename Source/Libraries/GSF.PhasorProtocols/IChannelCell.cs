@@ -36,7 +36,7 @@ namespace GSF.PhasorProtocols
     /// </summary>
     /// <remarks>
     /// This phasor protocol implementation defines a "cell" as a portion of a "frame", i.e., a logical unit of data.
-    /// For example, a <see cref="IDataCell"/> (dervied from <see cref="IChannelCell"/>) could be defined as a PMU
+    /// For example, a <see cref="IDataCell"/> (derived from <see cref="IChannelCell"/>) could be defined as a PMU
     /// within a frame of data, a <see cref="IDataFrame"/>, that contains multiple PMU's coming from a PDC.
     /// </remarks>
     public interface IChannelCell : IChannel, ISerializable
@@ -44,12 +44,20 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets a reference to the parent <see cref="IChannelFrame"/> for this <see cref="IChannelCell"/>.
         /// </summary>
-        IChannelFrame Parent { get; set; }
+        IChannelFrame Parent
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the parsing state for the this <see cref="ChannelCellBase"/>.
         /// </summary>
-        new IChannelCellParsingState State { get; set; }
+        new IChannelCellParsingState State
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the numeric ID code for this <see cref="IChannelCell"/>.
@@ -58,6 +66,10 @@ namespace GSF.PhasorProtocols
         /// Most phasor measurement devices define some kind of numeric identifier (e.g., a hardware identifier coded into the device ROM); this is the
         /// abstract representation of this identifier.
         /// </remarks>
-        ushort IDCode { get; set; }
+        ushort IDCode
+        {
+            get;
+            set;
+        }
     }
 }

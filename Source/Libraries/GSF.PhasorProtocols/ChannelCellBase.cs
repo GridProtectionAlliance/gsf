@@ -38,7 +38,7 @@ namespace GSF.PhasorProtocols
     /// </summary>
     /// <remarks>
     /// This phasor protocol implementation defines a "cell" as a portion of a frame, i.e., a logical unit of data.
-    /// For example, a <see cref="DataCellBase"/> (dervied from <see cref="ChannelCellBase"/>) could be defined as a PMU
+    /// For example, a <see cref="DataCellBase"/> (derived from <see cref="ChannelCellBase"/>) could be defined as a PMU
     /// within a frame of data, a <see cref="DataFrameBase"/>, that contains multiple PMU's coming from a PDC.
     /// </remarks>
     [Serializable]

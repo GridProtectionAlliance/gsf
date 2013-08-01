@@ -393,7 +393,7 @@ namespace GSF.TimeSeries
         /// <returns>A <c>true</c> if <see cref="MeasurementKey"/>representation contained in <paramref name="value"/> could be parsed; otherwise <c>false</c>.</returns>
         public static bool TryParse(string value, Guid signalID, out MeasurementKey key)
         {
-            // Check cache for an existing measurment key definition if signal ID is defined
+            // Check cache for an existing measurement key definition if signal ID is defined
             if (signalID != Guid.Empty && s_idCache.TryGetValue(signalID, out key))
                 return true;
 

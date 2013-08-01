@@ -28,7 +28,7 @@
 //  06/18/2009 - Pinal C. Patel
 //       Fixed the implementation of Enabled property.
 //  07/02/2009 - Pinal C. Patel
-//       Modified state alterning properties to reopen the file when changed.
+//       Modified state alternating properties to reopen the file when changed.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  07/30/2012 - Vijay Sukhavasi
@@ -299,7 +299,7 @@ namespace GSF.IO
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="LogFile"/> object are 
         /// to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultPersistSettings),
         Description("Indicates whether the settings of LogFile object are to be saved to the config file.")]
         public bool PersistSettings
@@ -319,7 +319,7 @@ namespace GSF.IO
         /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [Category("Persistance"),
+        [Category("Persistence"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of LogFile object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
@@ -690,7 +690,7 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Reads text from the <see cref="LogFile"/> and returns a list of lines created by seperating the text by the "newline"
+        /// Reads text from the <see cref="LogFile"/> and returns a list of lines created by separating the text by the "newline"
         /// characters if and where present.
         /// </summary>
         /// <returns>A list of lines from the text read from the <see cref="LogFile"/>.</returns>

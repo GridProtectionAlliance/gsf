@@ -57,21 +57,21 @@ namespace GSF
         }
 
         /// <summary>
-        /// Tests a character to determine if it marks the end of a typical english word.
+        /// Tests a character to determine if it marks the end of a typical English word.
         /// </summary>
         /// <param name="value">Input character to check.</param>
-        /// <returns><c>true</c> if character is a work seperator.</returns>
+        /// <returns><c>true</c> if character is a work separator.</returns>
         /// <remarks>
-        /// Preforms no testing for ASCII codes &gt; 127.<br/>
-        /// Does not seperate words based on punctuation of ' %  - _  <br/>
-        /// However does include the angle bracket symbols &lt; &gt; as seperators<br/>
+        /// Performs no testing for ASCII codes &gt; 127.<br/>
+        /// Does not separate words based on punctuation of ' %  - _  <br/>
+        /// However does include the angle bracket symbols &lt; &gt; as separators<br/>
         /// <br/>
         /// For reference the standard char tests are:
         /// <ul>
         /// <li>"IsSperator (1) == simple space (32 or 160) only.</li>
         /// <li>IsPunctuation (23) == . , ! ? : ; " ' [ ] { } ( ) \ / @ % # * &amp; - _  (plus other char's &gt; 127)</li>
         /// <li>IsSymbol (8) == $ + &lt; &gt; = ^ ` ~</li>
-        /// <li>IsWhiteSpace (6) == control char's 9 thry 13, plus 32 -- TAB, LF, VT, FF, CR, SP</li>
+        /// <li>IsWhiteSpace (6) == control char's 9 thru 13, plus 32 -- TAB, LF, VT, FF, CR, SP</li>
         /// </ul>
         /// </remarks>
         public static bool IsWordTerminator(this char value)

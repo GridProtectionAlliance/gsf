@@ -77,7 +77,7 @@ namespace GSF.Collections
         /// <param name="others">Other dictionaries to merge with source dictionary.</param>
         /// <returns>
         /// A merged collection of all unique dictionary elements, all <paramref name="others"/> merged left to the source with no duplicate
-        /// key values overwritten (i.e., first encounted key value pair is the one that remains in the returned merged dictionary).
+        /// key values overwritten (i.e., first encountered key value pair is the one that remains in the returned merged dictionary).
         /// </returns>
         public static T Merge<T, TKey, TValue>(this T source, params IDictionary<TKey, TValue>[] others) where T : IDictionary<TKey, TValue>, new()
         {
@@ -414,7 +414,7 @@ namespace GSF.Collections
             return source.Max<TSource>(comparer.Compare);
         }
 
-        /// <summary>Converts an enumeration to a string, using the default delimeter ("|") that can later be
+        /// <summary>Converts an enumeration to a string, using the default delimiter ("|") that can later be
         /// converted back to a list using LoadDelimitedString.</summary>
         /// <typeparam name="TSource">The generic type used.</typeparam>
         /// <param name="source">The source object to be converted into a delimited string.</param>
@@ -451,7 +451,7 @@ namespace GSF.Collections
         /// <typeparam name="TSource">The generic enumeration type used.</typeparam>
         /// <typeparam name="TDelimiter">The generic delimiter type used.</typeparam>
         /// <param name="source">The source object to be converted into a delimited string.</param>
-        /// <param name="delimiter">The delimeter of type TDelimiter used.</param>
+        /// <param name="delimiter">The delimiter of type TDelimiter used.</param>
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
         private static string ToDelimitedString<TSource, TDelimiter>(IEnumerable<TSource> source, TDelimiter delimiter)
         {
@@ -471,7 +471,7 @@ namespace GSF.Collections
         }
 
         /// <summary>Appends items parsed from delimited string, created with ToDelimitedString, using the default
-        /// delimeter ("|") into the given list.</summary>
+        /// delimiter ("|") into the given list.</summary>
         /// <remarks>Items that are converted are added to list. The list is not cleared in advance.</remarks>
         /// <typeparam name="TSource">The generic type used.</typeparam>
         /// <param name="destination">The list we are adding items to.</param>
@@ -487,9 +487,9 @@ namespace GSF.Collections
         /// <typeparam name="TSource">The generic type used.</typeparam>
         /// <param name="destination">The list we are adding items to.</param>
         /// <param name="delimitedString">The delimited string to parse for items.</param>
-        /// <param name="delimeter">The <see cref="char"/> value to look for in the <paramref name="delimitedString"/> as the delimiter.</param>
+        /// <param name="delimiter">The <see cref="char"/> value to look for in the <paramref name="delimitedString"/> as the delimiter.</param>
         /// <param name="convertFromString">Delegate that takes one parameter and converts from string to type TSource.</param>
-        public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, char delimeter, Func<string, TSource> convertFromString)
+        public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, char delimiter, Func<string, TSource> convertFromString)
         {
             if ((object)delimitedString == null)
                 throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
@@ -497,7 +497,7 @@ namespace GSF.Collections
             if (destination.IsReadOnly)
                 throw new ArgumentException("Cannot add items to a read only list");
 
-            foreach (string item in delimitedString.Split(delimeter))
+            foreach (string item in delimitedString.Split(delimiter))
             {
                 destination.Add(convertFromString(item.Trim()));
             }
@@ -630,66 +630,65 @@ namespace GSF.Collections
         /// <summary>Compares two arrays.</summary>
         /// <param name="array1">The first type array to compare to.</param>
         /// <param name="array2">The second type array to compare against.</param>
+        /// <param name="orderIsImportant"><c>true</c> if order of elements should be considered for equality; otherwise, <c>false</c>.</param>
         /// <returns>An <see cref="int"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
-        /// <typeparam name="TSource">The generic type of the list.</typeparam>
-        public static int CompareTo<TSource>(this TSource[] array1, TSource[] array2)
+        /// <typeparam name="TSource">The generic type of the array.</typeparam>
+        /// <exception cref="ArgumentException">Cannot compare multidimensional arrays.</exception>
+        public static int CompareTo<TSource>(this TSource[] array1, TSource[] array2, bool orderIsImportant = true)
         {
-            return CompareTo(array1, array2, Comparer<TSource>.Default);
+            return CompareTo(array1, array2, Comparer<TSource>.Default, orderIsImportant);
         }
 
         /// <summary>Compares two arrays.</summary>
         /// <param name="array1">The first <see cref="Array"/> to compare to.</param>
         /// <param name="array2">The second <see cref="Array"/> to compare against.</param>
         /// <param name="comparer">An interface <see cref="IComparer"/> that exposes a method to compare the two arrays.</param>
+        /// <param name="orderIsImportant"><c>true</c> if order of elements should be considered for equality; otherwise, <c>false</c>.</param>
         /// <returns>An <see cref="int"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
         /// <remarks>This is a default comparer to make arrays comparable.</remarks>
-        public static int CompareTo(this Array array1, Array array2, IComparer comparer)
+        /// <exception cref="ArgumentException">Cannot compare multidimensional arrays.</exception>
+        private static int CompareTo(this Array array1, Array array2, IComparer comparer, bool orderIsImportant = true)
         {
             if ((object)comparer == null)
                 throw new ArgumentNullException("comparer");
 
             if ((object)array1 == null && (object)array2 == null)
-            {
                 return 0;
-            }
-            else if ((object)array1 == null)
-            {
+
+            if ((object)array1 == null)
                 return -1;
-            }
-            else if ((object)array2 == null)
-            {
+
+            if ((object)array2 == null)
                 return 1;
-            }
-            else
+
+            if (array1.Rank != 1 || array2.Rank != 1)
+                throw new ArgumentException("Cannot compare multidimensional arrays");
+
+            // For arrays that do not have the same number of elements, the array with most elements
+            // is assumed to be larger.
+            if (array1.Length != array2.Length)
+                return array1.Length.CompareTo(array2.Length);
+
+            if (!orderIsImportant)
             {
-                if (array1.Rank == 1 && array2.Rank == 1)
-                {
-                    if (array1.Length == array2.Length)
-                    {
-                        int comparison = 0;
+                array1 = array1.Cast<object>().ToArray();
+                array2 = array2.Cast<object>().ToArray();
 
-                        for (int x = 0; x < array1.Length; x++)
-                        {
-                            comparison = comparer.Compare(array1.GetValue(x), array2.GetValue(x));
-
-                            if (comparison != 0)
-                                break;
-                        }
-
-                        return comparison;
-                    }
-                    else
-                    {
-                        // For arrays that do not have the same number of elements, the array with most elements
-                        // is assumed to be larger.
-                        return array1.Length.CompareTo(array2.Length);
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException("Cannot compare multidimensional arrays");
-                }
+                Array.Sort(array1, comparer);
+                Array.Sort(array2, comparer);
             }
+
+            int comparison = 0;
+
+            for (int x = 0; x < array1.Length; x++)
+            {
+                comparison = comparer.Compare(array1.GetValue(x), array2.GetValue(x));
+
+                if (comparison != 0)
+                    break;
+            }
+
+            return comparison;
         }
     }
 }

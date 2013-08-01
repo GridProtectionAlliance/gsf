@@ -482,7 +482,9 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
                 status.AppendFormat("                Subscribed: {0}", m_subscribed);
                 status.AppendLine();
-                status.AppendFormat("      Data packet security: {0}", m_keyIVs == null ? "unencrypted" : "encrypted");
+                status.AppendFormat("      Data packet security: {0}", (object)m_keyIVs == null ? "Unencrypted" : "Encrypted");
+                status.AppendLine();
+                status.AppendFormat("      Data monitor enabled: {0}", (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled);
                 status.AppendLine();
 
                 if (DataLossInterval > 0.0D)
@@ -544,7 +546,7 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
@@ -552,14 +554,14 @@ namespace GSF.TimeSeries.Transport
                     m_dataChannel.ReceiveData -= m_dataChannel_ReceiveData;
                     m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
 
-                    if (m_dataChannel != value)
+                    if ((object)m_dataChannel != value)
                         m_dataChannel.Dispose();
                 }
 
                 // Assign new data channel reference
                 m_dataChannel = value;
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     // Attach to desired events on new data channel reference
                     m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
@@ -581,7 +583,7 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     // Detach from events on existing command channel reference
                     m_commandChannel.ConnectionAttempt -= m_commandChannel_ConnectionAttempt;
@@ -599,7 +601,7 @@ namespace GSF.TimeSeries.Transport
                 // Assign new command channel reference
                 m_commandChannel = value;
 
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     // Attach to desired events on new command channel reference
                     m_commandChannel.ConnectionAttempt += m_commandChannel_ConnectionAttempt;
@@ -933,7 +935,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Determine if output measurements have changed
-            return originalOutputMeasurements.CompareTo(OutputMeasurements) != 0;
+            return originalOutputMeasurements.CompareTo(OutputMeasurements, false) != 0;
         }
 
         /// <summary>
@@ -1590,7 +1592,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Gets authorized signal IDs from last subscription request.", "Administrator", "Editor", "Viewer")]
         public virtual Guid[] GetAuthorizedSignalIDs()
         {
-            if (m_signalIndexCache != null)
+            if ((object)m_signalIndexCache != null)
                 return m_signalIndexCache.AuthorizedSignalIDs;
 
             return new Guid[0];
@@ -1602,7 +1604,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Gets unauthorized signal IDs from last subscription request.", "Administrator", "Editor", "Viewer")]
         public virtual Guid[] GetUnauthorizedSignalIDs()
         {
-            if (m_signalIndexCache != null)
+            if ((object)m_signalIndexCache != null)
                 return m_signalIndexCache.UnauthorizedSignalIDs;
 
             return new Guid[0];
@@ -1639,7 +1641,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
         public virtual bool SendServerCommand(ServerCommand commandCode, byte[] data = null)
         {
-            if (m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
+            if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
             {
                 try
                 {
@@ -1649,7 +1651,7 @@ namespace GSF.TimeSeries.Transport
                         commandPacket.WriteByte((byte)commandCode);
 
                         // Write command buffer into command packet
-                        if (data != null && data.Length > 0)
+                        if ((object)data != null && data.Length > 0)
                             commandPacket.Write(data, 0, data.Length);
 
                         // Send command packet to publisher
@@ -1723,7 +1725,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            if (m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
+            if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
                 return string.Format("Subscriber is connected and receiving {0} data points", m_synchronizedSubscription ? "synchronized" : "unsynchronized").CenterText(maxLength);
 
             return "Subscriber is not connected.".CenterText(maxLength);
@@ -1805,8 +1807,6 @@ namespace GSF.TimeSeries.Transport
                                     case ServerCommand.Subscribe:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
                                         m_subscribed = true;
-                                        if ((object)m_dataStreamMonitor != null)
-                                            m_dataStreamMonitor.Enabled = true;
                                         break;
                                     case ServerCommand.Unsubscribe:
                                         OnStatusMessage("Success code received in response to server command \"{0}\": {1}", commandCode, InterpretResponseMessage(buffer, responseIndex, responseLength));
@@ -1860,6 +1860,10 @@ namespace GSF.TimeSeries.Transport
                             Ticks timestamp = 0;
                             int count;
 
+                            // At the point when data is being received, data monitor should be enabled
+                            if (m_totalBytesReceived == 0 && (object)m_dataStreamMonitor != null && !m_dataStreamMonitor.Enabled)
+                                m_dataStreamMonitor.Enabled = true;
+
                             // Track total data packet bytes received from any channel
                             m_totalBytesReceived += m_lastBytesReceived;
                             m_monitoredBytesReceived += m_lastBytesReceived;
@@ -1874,7 +1878,7 @@ namespace GSF.TimeSeries.Transport
                             int cipherIndex = (flags & DataPacketFlags.CipherIndex) > 0 ? 1 : 0;
 
                             // Decrypt data packet payload if keys are available
-                            if (m_keyIVs != null)
+                            if ((object)m_keyIVs != null)
                             {
                                 // Get a local copy of volatile keyIVs reference since this can change at any time
                                 keyIVs = m_keyIVs;
@@ -2172,7 +2176,7 @@ namespace GSF.TimeSeries.Transport
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
 
-            if (OutputMeasurements != null)
+            if ((object)OutputMeasurements != null && OutputMeasurements.Length > 0)
             {
                 foreach (IMeasurement measurement in OutputMeasurements)
                 {
@@ -2180,7 +2184,7 @@ namespace GSF.TimeSeries.Transport
                         filterExpression.Append(';');
 
                     // Subscribe by associated Guid...
-                    filterExpression.Append(measurement.ID.ToString());
+                    filterExpression.Append(measurement.ID);
                 }
 
                 // Start unsynchronized subscription
@@ -2206,8 +2210,17 @@ namespace GSF.TimeSeries.Transport
             {
                 DataSet metadata = state as DataSet;
 
-                if (metadata != null)
+                if ((object)metadata != null)
                 {
+                    bool dataMonitoringEnabled = false;
+
+                    // Reset data stream monitor while meta-data synchronization is in progress
+                    if ((object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled)
+                    {
+                        m_dataStreamMonitor.Enabled = false;
+                        dataMonitoringEnabled = true;
+                    }
+
                     // Track total meta-data synchronization process time
                     Ticks startTime = DateTime.UtcNow.Ticks;
 
@@ -2436,10 +2449,24 @@ namespace GSF.TimeSeries.Transport
 
                     OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3));
 
+                    // Send notification that system configuration has changed
+                    OnConfigurationChanged();
+
                     // For automatic connections, when metadata refresh is complete, update output measurements to see if any
-                    // points for subscription have changed after reapplication of filter expressions and if so, resubscribe
+                    // points for subscription have changed after re-application of filter expressions and if so, resubscribe
                     if (m_autoConnect && UpdateOutputMeasurements())
+                    {
+                        OnStatusMessage("Meta-data received from publisher modified measurement availability, adjusting active subscription...");
+
+                        // Updating subscription will restart data stream monitor upon successful resubscribe
                         SubscribeToOutputMeasurements(true);
+                    }
+                    else
+                    {
+                        // Restart data stream monitor after meta-data synchronization if it was originally enabled
+                        if (dataMonitoringEnabled && (object)m_dataStreamMonitor != null)
+                            m_dataStreamMonitor.Enabled = true;
+                    }
                 }
                 else
                 {
@@ -2647,7 +2674,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (ConnectionEstablished != null)
+                if ((object)ConnectionEstablished != null)
                     ConnectionEstablished(this, EventArgs.Empty);
 
                 m_lastMissingCacheWarning = 0L;
@@ -2666,7 +2693,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (ConnectionTerminated != null)
+                if ((object)ConnectionTerminated != null)
                     ConnectionTerminated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -2683,7 +2710,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (ConnectionAuthenticated != null)
+                if ((object)ConnectionAuthenticated != null)
                     ConnectionAuthenticated(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -2720,7 +2747,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (MetaDataReceived != null)
+                if ((object)MetaDataReceived != null)
                     MetaDataReceived(this, new EventArgs<DataSet>(metadata));
             }
             catch (Exception ex)
@@ -2738,7 +2765,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (DataStartTime != null)
+                if ((object)DataStartTime != null)
                     DataStartTime(this, new EventArgs<Ticks>(startTime));
             }
             catch (Exception ex)
@@ -2756,7 +2783,7 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                if (ProcessingComplete != null)
+                if ((object)ProcessingComplete != null)
                     ProcessingComplete(this, new EventArgs<string>(source));
 
                 // Also raise base class event in case this event has been subscribed
@@ -2921,7 +2948,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 finally
                 {
-                    if (buffer != null)
+                    if ((object)buffer != null)
                         BufferPool.ReturnBuffer(buffer);
                 }
             }
@@ -2977,7 +3004,7 @@ namespace GSF.TimeSeries.Transport
                 }
                 finally
                 {
-                    if (buffer != null)
+                    if ((object)buffer != null)
                         BufferPool.ReturnBuffer(buffer);
                 }
             }

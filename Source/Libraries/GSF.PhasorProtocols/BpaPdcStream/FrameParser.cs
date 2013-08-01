@@ -490,19 +490,19 @@ namespace GSF.PhasorProtocols.BpaPdcStream
                         derivedCell.PhasorDefinitions.Add(new PhasorDefinition(derivedCell, sourcePhasor.Label, sourcePhasor.ScalingValue, sourcePhasor.Offset, sourcePhasor.PhasorType, null));
                     }
 
-                    // Create equivalent dervied frequency definition
+                    // Create equivalent derived frequency definition
                     sourceFrequency = sourceCell.FrequencyDefinition;
 
                     if (sourceFrequency != null)
                         derivedCell.FrequencyDefinition = new FrequencyDefinition(derivedCell, sourceFrequency.Label);
 
-                    // Create equivalent dervied analog definitions (assuming analog type = SinglePointOnWave)
+                    // Create equivalent derived analog definitions (assuming analog type = SinglePointOnWave)
                     foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
                     {
                         derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
                     }
 
-                    // Create equivalent dervied digital definitions
+                    // Create equivalent derived digital definitions
                     foreach (IDigitalDefinition sourceDigital in sourceCell.DigitalDefinitions)
                     {
                         derivedCell.DigitalDefinitions.Add(new DigitalDefinition(derivedCell, sourceDigital.Label));
