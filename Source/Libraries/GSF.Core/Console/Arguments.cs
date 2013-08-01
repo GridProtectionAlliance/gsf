@@ -40,6 +40,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using GSF.Collections;
@@ -293,6 +294,19 @@ namespace GSF.Console
             get
             {
                 return m_orderedArgCount;
+            }
+        }
+
+        /// <summary>
+        /// Gets the ordered arguments as an array of strings.
+        /// </summary>
+        public virtual string[] OrderedArgs
+        {
+            get
+            {
+                return Enumerable.Range(1, OrderedArgCount)
+                    .Select(arg => this[OrderedArgID + arg])
+                    .ToArray();
             }
         }
 
