@@ -96,6 +96,10 @@ namespace WavInputAdapter
         /// by this adapter will be copies of these output measurements, in which
         /// only the values and timestamps will differ.
         /// </remarks>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override IMeasurement[] OutputMeasurements
         {
             get

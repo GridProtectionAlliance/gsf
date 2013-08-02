@@ -441,7 +441,8 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public virtual MeasurementKey[] InputMeasurementKeys
         {
             get
@@ -477,7 +478,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public virtual IMeasurement[] OutputMeasurements
         {
             get

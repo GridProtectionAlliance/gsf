@@ -73,6 +73,9 @@
     <Compile Include="Editors\FolderBrowserEditor.xaml.cs">
       <DependentUpon>FolderBrowserEditor.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Editors\MeasurementEditor.xaml.cs">
+      <DependentUpon>MeasurementEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="IViewModel.cs" />
     <Compile Include="MenuDataItem.cs" />
     <Compile Include="MenuItemStyleSelector.cs" />
@@ -230,6 +233,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Editors\FolderBrowserEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Editors\MeasurementEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
