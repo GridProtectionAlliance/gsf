@@ -38,6 +38,7 @@ using System.Timers;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.UI.Editors;
 using Timer = System.Timers.Timer;
 
 namespace CsvAdapters
@@ -94,7 +95,8 @@ namespace CsvAdapters
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the name of the CSV file from which measurements will be read."),
-        DefaultValue("measurements.csv")]
+        DefaultValue("measurements.csv"),
+        CustomConfigurationEditor(typeof(FileDialogEditor), "type=open; checkFileExists=true; defaultExt=.csv; filter=CSV files|*.csv|AllFiles|*.*")]
         public string FileName
         {
             get

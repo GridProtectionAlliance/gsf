@@ -104,6 +104,9 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="FacileActionAdapterBase"/> expects, if any.
         /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
         public override MeasurementKey[] InputMeasurementKeys
         {
             get

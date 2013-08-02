@@ -67,6 +67,12 @@
   <ItemGroup>
     <Compile Include="Commands\MenuCommand.cs" />
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="Editors\FileDialogEditor.xaml.cs">
+      <DependentUpon>FileDialogEditor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Editors\FolderBrowserEditor.xaml.cs">
+      <DependentUpon>FolderBrowserEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="IViewModel.cs" />
     <Compile Include="MenuDataItem.cs" />
     <Compile Include="MenuItemStyleSelector.cs" />
@@ -219,6 +225,14 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Editors\FileDialogEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Editors\FolderBrowserEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Modal\ErrorDetailDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

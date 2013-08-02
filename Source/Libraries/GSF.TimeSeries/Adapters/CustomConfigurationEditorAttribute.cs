@@ -39,6 +39,7 @@ namespace GSF.TimeSeries.Adapters
         private string m_assemblyName;
         private string m_typeName;
         private Type m_editorType;
+        private string m_connectionString;
 
         #endregion
 
@@ -49,19 +50,21 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="assemblyName">The name of the assembly in which the editor type resides.</param>
         /// <param name="typeName">The full name of the type of the editor.</param>
-        public CustomConfigurationEditorAttribute(string assemblyName, string typeName)
+        public CustomConfigurationEditorAttribute(string assemblyName, string typeName, string connectionString = null)
         {
             m_assemblyName = assemblyName;
             m_typeName = typeName;
+            m_connectionString = connectionString;
         }
 
         /// <summary>
         /// Creates a new instance of the <see cref="CustomConfigurationEditorAttribute"/> class.
         /// </summary>
         /// <param name="editorType">The type of the editor.</param>
-        public CustomConfigurationEditorAttribute(Type editorType)
+        public CustomConfigurationEditorAttribute(Type editorType, string connectionString = null)
         {
             m_editorType = editorType;
+            m_connectionString = connectionString;
         }
 
         #endregion
@@ -84,6 +87,17 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 return m_editorType;
+            }
+        }
+
+        /// <summary>
+        /// Gets the connection string used to configure the editor.
+        /// </summary>
+        public string ConnectionString
+        {
+            get
+            {
+                return m_connectionString;
             }
         }
 

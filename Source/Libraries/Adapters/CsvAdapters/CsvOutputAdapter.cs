@@ -31,6 +31,7 @@ using System.Text;
 using GSF;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.UI.Editors;
 
 namespace CsvAdapters
 {
@@ -40,7 +41,6 @@ namespace CsvAdapters
     [Description("CSV: archives measurements to a CSV file.")]
     public class CsvOutputAdapter : OutputAdapterBase
     {
-
         #region [ Members ]
 
         // Fields
@@ -70,7 +70,8 @@ namespace CsvAdapters
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the name of the CSV file to which measurements will be archived."),
-        DefaultValue("measurements.csv")]
+        DefaultValue("measurements.csv"),
+        CustomConfigurationEditor(typeof(FileDialogEditor), "type=save; defaultExt=.csv; filter=CSV files|*.csv|All files|*.*")]
         public string FileName
         {
             get

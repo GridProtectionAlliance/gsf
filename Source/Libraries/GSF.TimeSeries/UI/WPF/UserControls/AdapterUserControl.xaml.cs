@@ -211,7 +211,10 @@ namespace GSF.TimeSeries.UI.UserControls
 
                     if (m_dataContext.AdapterTypeList[adapterTypeIndex].Item1.TryGetAttribute(out customConfigurationEditorAttribute))
                     {
-                        customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem) as UIElement;
+                        if ((object)customConfigurationEditorAttribute.ConnectionString != null)
+                            customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, customConfigurationEditorAttribute.ConnectionString) as UIElement;
+                        else
+                            customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem) as UIElement;
 
                         if ((object)customConfigurationElement != null)
                         {
@@ -247,7 +250,10 @@ namespace GSF.TimeSeries.UI.UserControls
 
                     if ((object)customConfigurationEditorAttribute != null)
                     {
-                        customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, m_dataContext.SelectedParameter.Name) as UIElement;
+                        if ((object)customConfigurationEditorAttribute.ConnectionString != null)
+                            customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, m_dataContext.SelectedParameter.Name, customConfigurationEditorAttribute.ConnectionString) as UIElement;
+                        else
+                            customConfigurationElement = Activator.CreateInstance(customConfigurationEditorAttribute.EditorType, m_dataContext.CurrentItem, m_dataContext.SelectedParameter.Name) as UIElement;
 
                         if ((object)customConfigurationElement != null)
                         {

@@ -187,7 +187,7 @@
                                 <ComboBox ItemsSource="{Binding Source={StaticResource EnumValues}}" SelectedItem="{Binding Path=Value}" />
                             </StackPanel>
 
-                            <StackPanel Margin="5" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
+                            <StackPanel Margin="5" Width="{Binding ElementName=ParameterValueTextBox, Path=Width}" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
                                         Visibility="{Binding Path=IsCustom, Converter={StaticResource ObjectToVisibilityConverter}}">
                                 <Button Width="150" Height="Auto" FontSize="14" Content="Click here to edit parameter value."
                                         Foreground="Blue" Template="{StaticResource WrappedHyperlinkStyleButtonTemplate}" Click="ButtonOpenParameterConfiguration_Click" />

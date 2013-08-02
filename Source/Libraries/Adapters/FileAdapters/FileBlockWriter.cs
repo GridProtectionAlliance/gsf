@@ -30,6 +30,7 @@ using GSF;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.UI.Editors;
 
 namespace FileAdapters
 {
@@ -58,7 +59,8 @@ namespace FileAdapters
         /// Gets or sets the directory to which files are written.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Defines the directory to which files are written.")]
+        Description("Defines the directory to which files are written."),
+        CustomConfigurationEditor(typeof(FolderBrowserEditor))]
         public string OutputDirectory
         {
             get

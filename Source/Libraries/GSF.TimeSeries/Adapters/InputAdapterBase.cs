@@ -226,6 +226,24 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
+        /// </summary>
+        /// <remarks>
+        /// Redefined to hide attributes defined in the base class.
+        /// </remarks>
+        public new virtual MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return base.InputMeasurementKeys;
+            }
+            set
+            {
+                base.InputMeasurementKeys = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

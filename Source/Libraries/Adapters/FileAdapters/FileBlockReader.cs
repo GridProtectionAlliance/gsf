@@ -32,6 +32,7 @@ using GSF;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.UI.Editors;
 
 namespace FileAdapters
 {
@@ -127,7 +128,8 @@ namespace FileAdapters
         /// Gets or sets the path to the directory to be watched for files.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Defines the path to the directory to be watched for files.")]
+        Description("Defines the path to the directory to be watched for files."),
+        CustomConfigurationEditor(typeof(FolderBrowserEditor))]
         public string WatchDirectory
         {
             get
@@ -169,11 +171,11 @@ namespace FileAdapters
         {
             get
             {
-                return InputMeasurementKeys.First().ToString();
+                return base.InputMeasurementKeys.First().ToString();
             }
             set
             {
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, value).Take(1).ToArray();
+                base.InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, value).Take(1).ToArray();
             }
         }
 
@@ -328,6 +330,81 @@ namespace FileAdapters
             {
                 double processIntervalAdjustment = m_processInterval * (m_processIntervalAdjustment * 0.01);
                 return m_processInterval + (m_throttleMultiplier * processIntervalAdjustment);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the <see cref="FileBlockReader"/> expects, if any.
+        /// </summary>
+        public override MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return base.InputMeasurementKeys;
+            }
+            set
+            {
+                // InputMeasurementKeys was redefined via the RetransmissionStat parameter
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the frames per second to be used by the <see cref="FacileActionAdapterBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Overridden to hide base class attributes.
+        /// </remarks>
+        public new int FramesPerSecond
+        {
+            get
+            {
+                return base.FramesPerSecond;
+            }
+            set
+            {
+                base.FramesPerSecond = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to past measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+        /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
+        public new double LagTime
+        {
+            get
+            {
+                return base.LagTime;
+            }
+            set
+            {
+                base.LagTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to future measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+        /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
+        public new double LeadTime
+        {
+            get
+            {
+                return base.LeadTime;
+            }
+            set
+            {
+                base.LeadTime = value;
             }
         }
 

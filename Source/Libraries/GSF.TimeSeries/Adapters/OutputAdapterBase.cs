@@ -392,6 +392,24 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
+        /// <summary>
+        /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
+        /// </summary>
+        /// <remarks>
+        /// Redefined to hide attributes defined in the base class.
+        /// </remarks>
+        public new virtual IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return base.OutputMeasurements;
+            }
+            set
+            {
+                base.OutputMeasurements = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
