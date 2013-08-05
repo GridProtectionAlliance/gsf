@@ -458,6 +458,21 @@ namespace GSF.TimeSeries.Transport
                 ConnectionString = connectionString;
             }
 
+            public override DataSet DataSource
+            {
+                get
+                {
+                    return base.DataSource;
+                }
+                set
+                {
+                    base.DataSource = value;
+
+                    if (Initialized)
+                        UpdateInputMeasurementKeys();
+                }
+            }
+
             public override string Name
             {
                 get
@@ -481,6 +496,14 @@ namespace GSF.TimeSeries.Transport
             public override string GetShortStatus(int maxLength)
             {
                 return "LatestMeasurementCache happily exists. :)";
+            }
+
+            private void UpdateInputMeasurementKeys()
+            {
+                string inputMeasurementKeys;
+
+                if (Settings.TryGetValue("inputMeasurementKeys", out inputMeasurementKeys))
+                    InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, inputMeasurementKeys);
             }
         }
 
@@ -595,6 +618,7 @@ namespace GSF.TimeSeries.Transport
         private RoutingTables m_routingTables;
         private string m_metadataTables;
         private string m_dependencies;
+        private string m_cacheMeasurementKeys;
         private SecurityMode m_securityMode;
         private bool m_encryptPayload;
         private bool m_sharedDatabase;
@@ -920,6 +944,26 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 base.DependencyTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the set of measurements which are cached by the data
+        /// publisher to be published to subscribers immediately upon subscription.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(""),
+        Description("Defines the set of measurements to be cached and sent to subscribers immediately upon subscription."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public string CacheMeasurementKeys
+        {
+            get
+            {
+                return m_cacheMeasurementKeys;
+            }
+            set
+            {
+                m_cacheMeasurementKeys = value;
             }
         }
 
@@ -1313,10 +1357,10 @@ namespace GSF.TimeSeries.Transport
             else
                 DependencyTimeout = Ticks.PerSecond / 30L;
 
-            if (settings.TryGetValue("cacheMeasurementKeys", out setting))
+            if (settings.TryGetValue("cacheMeasurementKeys", out m_cacheMeasurementKeys))
             {
                 // Create adapter for caching measurements that have a slower refresh interval
-                LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", setting));
+                LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", m_cacheMeasurementKeys));
 
                 // Set up its data source first
                 cache.DataSource = DataSource;
