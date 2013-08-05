@@ -72,7 +72,7 @@
                             VerticalAlignment="Top" ToolTip="Build connection string" Width="Auto">
                             <Button.Template>
                                 <ControlTemplate>
-                                    <Image Source="/GSF.TimeSeries.UI;component/images/Plus.png" Height="24" Width="24" />
+                                    <Image Source="/GSF.TimeSeries.UI;component/images/Edit.png" Height="24" Width="24" />
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
@@ -87,7 +87,7 @@
                             VerticalAlignment="Top" ToolTip="Build alternate command channel" Width="Auto">
                         <Button.Template>
                             <ControlTemplate>
-                                <Image Source="/GSF.TimeSeries.UI;component/images/Plus.png" Height="24" Width="24" />
+                                <Image Source="/GSF.TimeSeries.UI;component/images/Edit.png" Height="24" Width="24" />
                             </ControlTemplate>
                         </Button.Template>
                     </Button>

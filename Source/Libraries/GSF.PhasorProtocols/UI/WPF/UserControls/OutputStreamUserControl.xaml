@@ -21,7 +21,6 @@
     <StackPanel Orientation="Vertical">
         
         <StackPanel.Resources>
-            <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
             <CollectionViewSource Source="{Binding Path=TypeLookupList}" x:Key="TypeLookupList"/>
             <CollectionViewSource Source="{Binding Path=DownSamplingMethodLookupList}" x:Key="DownSamplingMethodLookupList"/>
             <CollectionViewSource Source="{Binding Path=DataFormatLookupList}" x:Key="DataFormatLookupList"/>
@@ -85,7 +84,7 @@
                         Command="{Binding Path=DataContext.BuildCommandChannelCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}">
                         <Button.Template>
                             <ControlTemplate>
-                                <Image Source="/GSF.TimeSeries.UI;component/images/Plus.png" Height="24" Width="24" />
+                                <Image Source="/GSF.TimeSeries.UI;component/images/Edit.png" Height="24" Width="24" />
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
@@ -97,7 +96,7 @@
                         Command="{Binding Path=DataContext.BuildDataChannelCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}">
                         <Button.Template>
                             <ControlTemplate>
-                                <Image Source="/GSF.TimeSeries.UI;component/images/Plus.png" Height="24" Width="24" />
+                                <Image Source="/GSF.TimeSeries.UI;component/images/Edit.png" Height="24" Width="24" />
                             </ControlTemplate>
                         </Button.Template>
                     </Button>

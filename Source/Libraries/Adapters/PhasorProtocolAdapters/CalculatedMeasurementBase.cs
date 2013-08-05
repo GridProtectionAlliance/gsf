@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -136,6 +137,10 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets or sets primary keys of input measurements the calculated measurement expects.
         /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override MeasurementKey[] InputMeasurementKeys
         {
             get
@@ -158,6 +163,10 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Gets or sets output measurements that the calculated measurement will produce, if any.
         /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override IMeasurement[] OutputMeasurements
         {
             get

@@ -114,7 +114,6 @@
     <Resource Include="Images\Delete.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\Clear.png" />
     <Resource Include="Images\Save.png" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +159,9 @@
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Edit.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

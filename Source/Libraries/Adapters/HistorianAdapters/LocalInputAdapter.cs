@@ -37,6 +37,7 @@ using GSF.Historian.Files;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.UI.Editors;
 using Timer = System.Timers.Timer;
 
 namespace HistorianAdapters
@@ -107,7 +108,8 @@ namespace HistorianAdapters
         /// Gets or sets archive path for this <see cref="LocalInputAdapter"/>.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the archive location (i.e., the file system path) of the historical data.")]
+        Description("Define the archive location (i.e., the file system path) of the historical data."),
+        CustomConfigurationEditor(typeof(FolderBrowserEditor))]
         public string ArchiveLocation
         {
             get

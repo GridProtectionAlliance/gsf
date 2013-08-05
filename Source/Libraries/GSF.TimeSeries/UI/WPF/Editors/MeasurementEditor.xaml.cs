@@ -89,7 +89,10 @@ namespace GSF.TimeSeries.UI.Editors
                 settings = m_connectionString.ParseKeyValuePairs();
 
                 if (settings.TryGetValue("filterExpression", out setting))
+                {
                     MeasurementPager.FilterExpression = setting;
+                    MeasurementPager.ReloadDataGrid();
+                }
 
                 if (settings.TryGetValue("selectable", out setting))
                 {

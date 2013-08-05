@@ -7,7 +7,7 @@
              d:DesignHeight="30" d:DesignWidth="800">
     
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-        <Button x:Name="ButtonDelete" Command="{Binding DeleteCommand}" Margin="2">
+        <Button x:Name="ButtonDelete" Command="{Binding DeleteCommand}" Width="Auto" Margin="2">
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -22,12 +22,12 @@
                 </ControlTemplate>
             </Button.Template>
         </Button>
-        <Button x:Name="ButtonClear" Command="{Binding ClearCommand}" Margin="2">
+        <Button x:Name="ButtonClear" Command="{Binding ClearCommand}" Width="Auto" Margin="2">
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Image Source="/GSF.TimeSeries.UI;component/images/Clear.png" Height="16" Width="16" Margin="2"/>
-                        <TextBlock x:Name="TextBlockText" Text="Clear" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Image Source="/GSF.TimeSeries.UI;component/images/Plus.png" Height="16" Width="16" Margin="2"/>
+                        <TextBlock x:Name="TextBlockText" Text="Add New" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsEnabled" Value="False">
@@ -37,7 +37,7 @@
                 </ControlTemplate>
             </Button.Template>
         </Button>
-        <Button x:Name="ButtonSave" Command="{Binding SaveCommand}" IsEnabled="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=SaveEnabled}" Margin="2">
+        <Button x:Name="ButtonSave" Command="{Binding SaveCommand}" IsEnabled="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type UserControl}}, Path=SaveEnabled}" Width="Auto" Margin="2">
             <Button.Template>
                 <ControlTemplate>
                     <StackPanel Orientation="Horizontal">

@@ -38,6 +38,7 @@ using GSF.Parsing;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Transport;
+using GSF.TimeSeries.UI.Editors;
 using SerializationFormat = GSF.SerializationFormat;
 
 namespace AdoAdapters
@@ -192,7 +193,9 @@ namespace AdoAdapters
         /// Gets or sets a cache file name so that when defined, future data loads will be from cache instead of the database as an optimization.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Defines a cache file name so that when defined, future data loads will be from cache instead of the database as an optimization.")]
+        Description("Defines a cache file name so that when defined, future data loads will be from cache instead of the database as an optimization."),
+        DefaultValue(null),
+        CustomConfigurationEditor(typeof(FileDialogEditor), "type=save; defaultExt=.ado; filter=ADO Cache Files|*.ado|All Files|*.*")]
         public string CacheFileName
         {
             get
