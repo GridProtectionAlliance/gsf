@@ -15,12 +15,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
             </ResourceDictionary.MergedDictionaries>
-
-            <ControlTemplate x:Key="WrappedHyperlinkStyleButtonTemplate" TargetType="Button">
-                <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand"
-                           HorizontalAlignment="Center" Width="Auto" Height="Auto" Foreground="{TemplateBinding Foreground}"
-                           TextWrapping="Wrap" TextAlignment="Center" />
-            </ControlTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -126,9 +120,18 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     
-                    <Button Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Width="Auto" FontSize="16" FontWeight="Bold" Foreground="Blue" Template="{StaticResource HyperlinkStyleButtonTemplate}"
+                    <Button Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Width="Auto" FontSize="16" FontWeight="Bold" Foreground="Blue"
                             DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Path=DataContext}"
                             Visibility="{Binding CustomConfigurationButtonVisibility}" Click="ButtonOpenCustomConfiguration_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Image Source="/GSF.TimeSeries.UI;component/Images/Wand.png" />
+                                    <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand"
+                                               VerticalAlignment="Center" Width="Auto" Height="Auto" Foreground="{TemplateBinding Foreground}"/>
+                                </StackPanel>
+                            </ControlTemplate>
+                        </Button.Template>
                         Click here for adapter's custom configuration wizard!
                     </Button>
 
@@ -187,8 +190,22 @@
 
                             <StackPanel Margin="5" Width="{Binding ElementName=ParameterValueTextBox, Path=Width}" Height="{Binding ElementName=ParameterValueTextBox, Path=Height}"
                                         Visibility="{Binding Path=IsCustom, Converter={StaticResource ObjectToVisibilityConverter}}">
-                                <Button Width="150" Height="Auto" FontSize="14" Content="Click here to edit parameter value."
-                                        Foreground="Blue" Template="{StaticResource WrappedHyperlinkStyleButtonTemplate}" Click="ButtonOpenParameterConfiguration_Click" />
+                                <Button Width="Auto" Height="Auto" HorizontalAlignment="Center"
+                                        FontSize="14" Foreground="Blue" Click="ButtonOpenParameterConfiguration_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="/GSF.TimeSeries.UI;component/Images/Configure.png" />
+                                                <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand"
+                                                           Width="Auto" Height="Auto" Foreground="{TemplateBinding Foreground}"
+                                                           VerticalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap">
+                                                    Click here to edit<LineBreak/>
+                                                    parameter value.
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
