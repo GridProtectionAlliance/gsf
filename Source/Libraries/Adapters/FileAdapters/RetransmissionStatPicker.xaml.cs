@@ -57,6 +57,7 @@ namespace FileAdapters
             m_fileBlockReader = fileBlockReader;
             m_parameterName = parameterName;
             ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+            OriginalValueTextBox.Text = GetParameterValue();
         }
 
         #endregion
@@ -75,20 +76,44 @@ namespace FileAdapters
 
         #region [ Methods ]
 
-        private void RetransmissionStatPicker_Unloaded(object sender, RoutedEventArgs e)
-        {
-            if (MeasurementPager.CurrentItem.SignalID != Guid.Empty)
-            {
-                Dictionary<string, string> settings = m_fileBlockReader.ConnectionString.ToNonNullString().ParseKeyValuePairs();
-                settings[m_parameterName] = MeasurementPager.CurrentItem.SignalID.ToString();
-                m_fileBlockReader.ConnectionString = settings.JoinKeyValuePairs();
-            }
-        }
-
         private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs propertyChangedEventArgs)
         {
             if (propertyChangedEventArgs.PropertyName == "FilterExpression")
                 MeasurementPager.ReloadDataGrid();
+        }
+
+        private void MeasurementPager_CurrentItemChanged(object sender, EventArgs e)
+        {
+            Guid signalID = MeasurementPager.CurrentItem.SignalID;
+
+            if (signalID != Guid.Empty)
+                NewValueTextBox.Text = signalID.ToString();
+        }
+
+        private void MeasurementPager_ButtonClick(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private void OKButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (MeasurementPager.CurrentItem.SignalID != Guid.Empty)
+            {
+                Dictionary<string, string> settings = m_fileBlockReader.ConnectionString.ToNonNullString().ParseKeyValuePairs();
+                settings[m_parameterName] = NewValueTextBox.Text;
+                m_fileBlockReader.ConnectionString = settings.JoinKeyValuePairs();
+            }
+        }
+
+        private string GetParameterValue()
+        {
+            Dictionary<string, string> settings = m_fileBlockReader.ConnectionString.ToNonNullString().ParseKeyValuePairs();
+            string value;
+
+            if (settings.TryGetValue(m_parameterName, out value))
+                return value;
+
+            return null;
         }
 
         #endregion

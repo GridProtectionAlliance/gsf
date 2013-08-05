@@ -7,7 +7,7 @@
              xmlns:ui="clr-namespace:FileAdapters"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
-             Width="500" Height="450" Unloaded="RetransmissionStatPicker_Unloaded">
+             Width="500">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -19,13 +19,32 @@
         </ResourceDictionary>
     </UserControl.Resources>
     
-    <StackPanel DataContext="{StaticResource ViewModel}">
-        <StackPanel Orientation="Horizontal">
+    <Grid DataContext="{StaticResource ViewModel}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        
+        <Label Grid.Row="0" Grid.Column="0" Content="Original Value" />
+        <TextBox Grid.Row="0" Grid.Column="1" Name="OriginalValueTextBox" Width="{StaticResource XLargeItemSize}" IsReadOnly="True" />
+
+        <Label Grid.Row="1" Grid.Column="0" Content="New Value" />
+        <TextBox Grid.Row="1" Grid.Column="1" Name="NewValueTextBox" Width="{StaticResource XLargeItemSize}" />
+
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,10,0,0" Orientation="Horizontal">
             <CheckBox Content="Filter by signal index " IsChecked="{Binding Mode=TwoWay, Path=UseFilterExpression}" />
             <TextBox Width="{StaticResource XXXSmallItemSize}" HorizontalContentAlignment="Center" Text="{Binding Mode=TwoWay, Path=SignalIndex}" IsEnabled="{Binding UseFilterExpression}" />
         </StackPanel>
 
-        <uc:MeasurementPagerUserControl Name="MeasurementPager" ItemsPerPage="18" FilterExpression="{Binding FilterExpression}" Selectable="False" Searchable="True">
+        <uc:MeasurementPagerUserControl Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Name="MeasurementPager" ItemsPerPage="18" FilterExpression="{Binding FilterExpression}" Selectable="False" Searchable="True" CurrentItemChanged="MeasurementPager_CurrentItemChanged" Button.Click="MeasurementPager_ButtonClick">
             <uc:MeasurementPagerUserControl.DataGridColumns>
                 <DataGridTextColumn Header="ID" Width="2*" Binding="{Binding ID}" IsReadOnly="True">
                     <DataGridTextColumn.CellStyle>
@@ -43,5 +62,10 @@
                 </DataGridTextColumn>
             </uc:MeasurementPagerUserControl.DataGridColumns>
         </uc:MeasurementPagerUserControl>
-    </StackPanel>
+        
+        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Margin="5" Content="OK" IsDefault="True" Click="OKButton_Click" />
+            <Button Margin="5" Content="Cancel" IsCancel="True" />
+        </StackPanel>
+    </Grid>
 </UserControl>

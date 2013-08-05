@@ -30,6 +30,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="10" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="10" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         
         <Grid Grid.Row="0">
@@ -58,7 +60,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <DataGrid Grid.Column="0" Height="500" ItemsSource="{Binding IOMappings}" SelectedItem="{Binding Mode=TwoWay, Path=SelectedIOMapping}" SelectionMode="Single" IsReadOnly="True">
+            <DataGrid Grid.Column="0" VerticalAlignment="Stretch" ItemsSource="{Binding IOMappings}" SelectedItem="{Binding Mode=TwoWay, Path=SelectedIOMapping}" SelectionMode="Single" IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Signal Reference" Binding="{Binding Mode=OneWay, Path=SignalReference}" />
                     <DataGridTextColumn Header="Input" Binding="{Binding Mode=OneWay, Path=InputKey}" />
@@ -71,12 +73,14 @@
                 <Button Width="45" Height="23" Margin="5" Content="&gt;&gt;" Command="{Binding RemoveSelectedCommand}" />
             </StackPanel>
 
-            <DataGrid Grid.Column="2" Height="500" ItemsSource="{Binding FrequencyMeasurements}" SelectedItem="{Binding Mode=TwoWay, Path=SelectedFrequencyMeasurement}" SelectionMode="Single" IsReadOnly="True">
+            <DataGrid Grid.Column="2" VerticalAlignment="Stretch" ItemsSource="{Binding FrequencyMeasurements}" SelectedItem="{Binding Mode=TwoWay, Path=SelectedFrequencyMeasurement}" SelectionMode="Single" IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Signal Reference" Binding="{Binding Mode=OneWay, Path=SignalReference}" />
                     <DataGridTextColumn Header="Measurement Key" Binding="{Binding Mode=OneWay, Path=Key}" />
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
+        
+        <Button Grid.Row="4" Margin="5" HorizontalAlignment="Right" Content="Close" IsDefault="True" IsCancel="True" />
     </Grid>
 </UserControl>

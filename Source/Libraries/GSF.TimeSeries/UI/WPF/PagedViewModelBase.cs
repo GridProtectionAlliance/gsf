@@ -264,7 +264,6 @@ namespace GSF.TimeSeries.UI
             {
                 if ((object)value != null)
                 {
-
                     if ((object)m_currentItem != null)
                         m_currentItem.PropertyChanged -= m_currentItem_PropertyChanged;
 

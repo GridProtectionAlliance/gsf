@@ -6,10 +6,20 @@
              xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
-             Width="500" Height="450" Unloaded="MeasurementEditor_Unloaded">
+             Width="500" KeyDown="MeasurementEditor_KeyDown">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Name="Row0" Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         
@@ -19,8 +29,14 @@
         </Grid.ColumnDefinitions>
         
         <Label Grid.Row="0" Grid.Column="0" Content="Filter Expression" Visibility="{Binding ElementName=FilterExpressionTextBox, Path=Visibility}" />
-        <TextBox Grid.Row="0" Grid.Column="1" Name="FilterExpressionTextBox" Width="Auto" HorizontalAlignment="Stretch" TextChanged="FilterExpressionTextBox_TextChanged" />
+        <TextBox Grid.Row="0" Grid.Column="1" Name="FilterExpressionTextBox" Width="Auto" Height="{StaticResource XSmallItemSize}" HorizontalAlignment="Stretch"
+                 TextWrapping="Wrap" TextChanged="FilterExpressionTextBox_TextChanged" ScrollViewer.VerticalScrollBarVisibility="Visible" />
 
-        <uc:MeasurementPagerUserControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="MeasurementPager" ItemsPerPage="18" Selectable="True" Searchable="True" Loaded="MeasurementEditor_Loaded" SelectedMeasurementsChanged="MeasurementPager_SelectedMeasurementsChanged" />
+        <uc:MeasurementPagerUserControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" x:Name="MeasurementPager" ItemsPerPage="18" Selectable="True" Searchable="True" Loaded="MeasurementPager_Loaded" SelectedMeasurementsChanged="MeasurementPager_SelectedMeasurementsChanged" Button.Click="MeasurementPager_ButtonClick" />
+        
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Margin="5" Content="OK" IsDefault="True" Click="OKButton_Click" />
+            <Button Margin="5" Content="Cancel" IsCancel="True" />
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -27,16 +27,11 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Input;
 using GSF.Reflection;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.UI.DataModels;
-using CheckBox = System.Windows.Controls.CheckBox;
-using DataGrid = System.Windows.Controls.DataGrid;
-using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MessageBox = System.Windows.MessageBox;
-using UserControl = System.Windows.Controls.UserControl;
+using FolderBrowserDialog = System.Windows.Forms.FolderBrowserDialog;
 
 namespace GSF.TimeSeries.UI.UserControls
 {
@@ -136,7 +131,7 @@ namespace GSF.TimeSeries.UI.UserControls
 
             browser.SelectedPath = SearchDirectoryTextBox.Text;
 
-            if (browser.ShowDialog() == DialogResult.OK)
+            if (browser.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 SearchDirectoryTextBox.Text = browser.SelectedPath;
         }
 
@@ -206,8 +201,7 @@ namespace GSF.TimeSeries.UI.UserControls
 
                 if (adapterTypeIndex >= 0)
                 {
-                    if (CustomConfigurationPanel.Children.Count > 1)
-                        CustomConfigurationPanel.Children.RemoveAt(0);
+                    CustomConfigurationPanel.Children.Clear();
 
                     if (m_dataContext.AdapterTypeList[adapterTypeIndex].Item1.TryGetAttribute(out customConfigurationEditorAttribute))
                     {
@@ -243,9 +237,7 @@ namespace GSF.TimeSeries.UI.UserControls
 
                 if (adapterTypeIndex >= 0)
                 {
-                    if (CustomConfigurationPanel.Children.Count > 1)
-                        CustomConfigurationPanel.Children.RemoveAt(0);
-
+                    CustomConfigurationPanel.Children.Clear();
                     customConfigurationEditorAttribute = m_dataContext.SelectedParameter.Info.GetCustomAttribute<CustomConfigurationEditorAttribute>();
 
                     if ((object)customConfigurationEditorAttribute != null)
@@ -257,7 +249,7 @@ namespace GSF.TimeSeries.UI.UserControls
 
                         if ((object)customConfigurationElement != null)
                         {
-                            CustomConfigurationPanel.Children.Insert(0, customConfigurationElement);
+                            CustomConfigurationPanel.Children.Add(customConfigurationElement);
                             CustomConfigurationPopup.IsOpen = true;
                         }
                     }
@@ -270,9 +262,12 @@ namespace GSF.TimeSeries.UI.UserControls
             }
         }
 
-        private void ButtonCloseCustomConfiguration_Click(object sender, RoutedEventArgs e)
+        private void CustomConfigurationPopup_ButtonClick(object sender, RoutedEventArgs e)
         {
-            CustomConfigurationPopup.IsOpen = false;
+            Button originalSource = e.OriginalSource as Button;
+
+            if ((object)originalSource != null && (originalSource.IsDefault || originalSource.IsCancel))
+                CustomConfigurationPopup.IsOpen = false;
         }
 
         #endregion

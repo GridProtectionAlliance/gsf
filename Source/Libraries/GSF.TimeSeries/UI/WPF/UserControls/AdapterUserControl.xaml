@@ -31,11 +31,9 @@
             <CollectionViewSource Source="{Binding Path=ParameterList}" x:Key="ParameterList" />
         </StackPanel.Resources>
 
-        <tsf:TsfPopup x:Name="CustomConfigurationPopup" Placement="Center" Topmost="False" Visibility="Collapsed">
+        <tsf:TsfPopup x:Name="CustomConfigurationPopup" Placement="Center" Topmost="False" Visibility="Collapsed" Button.Click="CustomConfigurationPopup_ButtonClick">
             <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
-                <StackPanel Name="CustomConfigurationPanel" Orientation="Vertical" Margin="5">
-                    <Button Content="Close" Width="Auto" HorizontalAlignment="Right" Click="ButtonCloseCustomConfiguration_Click" Margin="5"/>
-                </StackPanel>
+                <StackPanel Name="CustomConfigurationPanel" Margin="5" />
             </Border>
         </tsf:TsfPopup>
 

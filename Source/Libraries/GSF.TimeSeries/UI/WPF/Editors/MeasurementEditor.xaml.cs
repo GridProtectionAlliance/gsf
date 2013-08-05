@@ -27,6 +27,7 @@ using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using GSF.Data;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.UI.DataModels;
@@ -78,7 +79,7 @@ namespace GSF.TimeSeries.UI.Editors
 
         #region [ Methods ]
 
-        private void MeasurementEditor_Loaded(object sender, RoutedEventArgs e)
+        private void MeasurementPager_Loaded(object sender, RoutedEventArgs e)
         {
             Dictionary<string, string> settings;
             string setting;
@@ -103,16 +104,24 @@ namespace GSF.TimeSeries.UI.Editors
             FilterExpressionTextBox.Text = GetParameterValue();
         }
 
-        private void MeasurementEditor_Unloaded(object sender, RoutedEventArgs e)
+        private void MeasurementEditor_KeyDown(object sender, KeyEventArgs e)
         {
-            Dictionary<string, string> settings = m_adapter.ConnectionString.ToNonNullString().ParseKeyValuePairs();
+            bool setFocus;
 
-            if (MeasurementPager.Selectable)
-                settings[m_parameterName] = FilterExpressionTextBox.Text;
-            else
-                settings[m_parameterName] = MeasurementPager.CurrentItem.SignalID.ToString();
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                setFocus = true;
 
-            m_adapter.ConnectionString = settings.JoinKeyValuePairs();
+                if (e.Key == Key.Z && FilterExpressionTextBox.CanUndo)
+                    FilterExpressionTextBox.Undo();
+                else if (e.Key == Key.Y && FilterExpressionTextBox.CanRedo)
+                    FilterExpressionTextBox.Redo();
+                else
+                    setFocus = false;
+
+                if (setFocus)
+                    FilterExpressionTextBox.Focus();
+            }
         }
 
         private void FilterExpressionTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -135,6 +144,7 @@ namespace GSF.TimeSeries.UI.Editors
                 finally
                 {
                     MeasurementPager.ReloadDataGrid();
+                    MeasurementPager.UpdateSelections();
                     m_updatingSelectedMeasurements = false;
                 }
             }
@@ -154,6 +164,23 @@ namespace GSF.TimeSeries.UI.Editors
                     m_updatingSelectedMeasurements = false;
                 }
             }
+        }
+
+        private void MeasurementPager_ButtonClick(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private void OKButton_Click(object sender, RoutedEventArgs e)
+        {
+            Dictionary<string, string> settings = m_adapter.ConnectionString.ToNonNullString().ParseKeyValuePairs();
+
+            if (MeasurementPager.Selectable)
+                settings[m_parameterName] = FilterExpressionTextBox.Text;
+            else
+                settings[m_parameterName] = MeasurementPager.CurrentItem.SignalID.ToString();
+
+            m_adapter.ConnectionString = settings.JoinKeyValuePairs();
         }
 
         private DataSet GetDataSource()
