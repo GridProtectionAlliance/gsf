@@ -86,6 +86,8 @@ namespace GSF.TimeSeries.UI.ViewModels
         private AdapterConnectionStringParameter m_selectedParameter;
         private RelayCommand m_initializeCommand;
         private string m_runtimeID;
+
+        private bool m_suppressParameterValueUpdates;
         private bool m_suppressConnectionStringUpdates;
 
         #endregion
@@ -214,8 +216,8 @@ namespace GSF.TimeSeries.UI.ViewModels
 
                 // Reselect the previously selected parameter, and update
                 // the connection string parameters if necessary.
-                SelectedParameter = selectedParameter;
                 UpdateConnectionStringParameters(m_parameterList, CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs());
+                SelectedParameter = selectedParameter;
             }
         }
 
@@ -449,7 +451,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
 
             // Occurs when CurrentItem.ConnectionString changes.
-            if (!m_suppressConnectionStringUpdates && e.PropertyName == "ConnectionString")
+            if (e.PropertyName == "ConnectionString")
             {
                 Dictionary<string, string> settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
 
@@ -482,16 +484,13 @@ namespace GSF.TimeSeries.UI.ViewModels
         protected virtual void ConnectionStringParameter_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             AdapterConnectionStringParameter parameter = sender as AdapterConnectionStringParameter;
+            Dictionary<string, string> settings;
 
             if (!m_suppressConnectionStringUpdates && parameter != null && e.PropertyName == "Value")
             {
-                Dictionary<string, string> settings;
-
                 try
                 {
-                    // Attempting to modify the connection string without first suppressing
-                    // connection string updates would result in an infinite loop.
-                    m_suppressConnectionStringUpdates = true;
+                    m_suppressParameterValueUpdates = true;
 
                     // The easiest way to update is to break the connection string into key
                     // value pairs, update the value of the pair corresponding to the parameter
@@ -499,14 +498,10 @@ namespace GSF.TimeSeries.UI.ViewModels
                     settings = CurrentItem.ConnectionString.ToNonNullString().ParseKeyValuePairs();
                     settings[parameter.Name] = parameter.Value.ToString();
                     CurrentItem.ConnectionString = settings.JoinKeyValuePairs();
-
-                    // Update connection string parameters, if necessary.
-                    UpdateConnectionStringParameters(m_parameterList, settings);
                 }
                 finally
                 {
-                    // Indicate that we want to stop suppressing connection string updates.
-                    m_suppressConnectionStringUpdates = false;
+                    m_suppressParameterValueUpdates = false;
                 }
             }
         }
@@ -803,10 +798,12 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </param>
         private void UpdateConnectionStringParameters(List<AdapterConnectionStringParameter> parameters, Dictionary<string, string> settings)
         {
-            if ((object)parameters != null)
+            string value;
+
+            if (!m_suppressParameterValueUpdates && (object)parameters != null)
             {
                 foreach (AdapterConnectionStringParameter parameter in parameters)
-                    parameter.Value = settings.ContainsKey(parameter.Name) ? settings[parameter.Name] : null;
+                    parameter.Value = settings.TryGetValue(parameter.Name, out value) ? value : null;
             }
         }
 
