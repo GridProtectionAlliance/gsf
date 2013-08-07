@@ -223,6 +223,118 @@ namespace GSF.Data
             }
         }
 
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(this IDbCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteNonQuery(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(this IDbCommand command, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.AddParametersWithValues(sql, parameters);
+            return command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(this OleDbCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteNonQuery(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(this OleDbCommand command, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(this OdbcCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteNonQuery(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(this OdbcCommand command, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(this SqlCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteNonQuery(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the number of rows affected.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The number of rows affected.</returns>
+        public static int ExecuteNonQuery(this SqlCommand command, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteNonQuery();
+        }
+
         #endregion
 
         #region [ ExecuteReader Overloaded Extensions ]
@@ -366,6 +478,135 @@ namespace GSF.Data
             }
         }
 
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and builds a <see cref="IDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        public static IDataReader ExecuteReader(this IDbCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and builds a <see cref="IDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        public static IDataReader ExecuteReader(this IDbCommand command, string sql, int timeout, params object[] parameters)
+        {
+            return command.ExecuteReader(sql, CommandBehavior.Default, timeout, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and builds a <see cref="IDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        public static IDataReader ExecuteReader(this IDbCommand command, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.AddParametersWithValues(sql, parameters);
+            return command.ExecuteReader(behavior);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and builds a <see cref="OleDbDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="OleDbDataReader"/> object.</returns>
+        public static OleDbDataReader ExecuteReader(this OleDbCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and builds a <see cref="OleDbDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="OleDbDataReader"/> object.</returns>
+        public static OleDbDataReader ExecuteReader(this OleDbCommand command, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteReader(behavior);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and builds a <see cref="OdbcDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="OdbcDataReader"/> object.</returns>
+        public static OdbcDataReader ExecuteReader(this OdbcCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and builds a <see cref="OdbcDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="OdbcDataReader"/> object.</returns>
+        public static OdbcDataReader ExecuteReader(this OdbcCommand command, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteReader(behavior);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and builds a <see cref="SqlDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="SqlDataReader"/> object.</returns>
+        public static SqlDataReader ExecuteReader(this SqlCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and builds a <see cref="SqlDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="SqlDataReader"/> object.</returns>
+        public static SqlDataReader ExecuteReader(this SqlCommand command, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteReader(behavior);
+        }
+
         #endregion
 
         #region [ ExecuteScalar Overloaded Extensions ]
@@ -497,6 +738,126 @@ namespace GSF.Data
                 command.PopulateParameters(parameters);
                 return command.ExecuteScalar();
             }
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the value in the first column 
+        /// of the first row in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        public static object ExecuteScalar(this IDbCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the value in the first column 
+        /// of the first row in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        public static object ExecuteScalar(this IDbCommand command, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.AddParametersWithValues(sql, parameters);
+            return command.ExecuteScalar();
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the value in the first column 
+        /// of the first row in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        public static object ExecuteScalar(this OleDbCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the value in the first column 
+        /// of the first row in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        public static object ExecuteScalar(this OleDbCommand command, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteScalar();
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the value in the first column 
+        /// of the first row in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        public static object ExecuteScalar(this OdbcCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the value in the first column 
+        /// of the first row in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        public static object ExecuteScalar(this OdbcCommand command, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteScalar();
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the value in the first column 
+        /// of the first row in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        public static object ExecuteScalar(this SqlCommand command, string sql, params object[] parameters)
+        {
+            return command.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the value in the first column 
+        /// of the first row in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        public static object ExecuteScalar(this SqlCommand command, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            return command.ExecuteScalar();
         }
 
         #endregion
@@ -687,6 +1048,197 @@ namespace GSF.Data
         public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = connection.RetrieveData(dataAdapterType, sql, timeout, parameters);
+
+            if (dataTable.Rows.Count == 0)
+                dataTable.Rows.Add(dataTable.NewRow());
+
+            return dataTable.Rows[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OleDbCommand command, string sql)
+        {
+            return command.RetrieveRow(sql, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OleDbCommand command, string sql, int timeout)
+        {
+            return command.RetrieveRow(sql, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OleDbCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OleDbCommand command, string sql, int timeout, params object[] parameters)
+        {
+            DataTable dataTable = command.RetrieveData(sql, 0, 1, timeout, parameters);
+
+            if (dataTable.Rows.Count == 0)
+                dataTable.Rows.Add(dataTable.NewRow());
+
+            return dataTable.Rows[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OdbcCommand command, string sql)
+        {
+            return command.RetrieveRow(sql, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OdbcCommand command, string sql, int timeout)
+        {
+            return command.RetrieveRow(sql, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OdbcCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OdbcCommand command, string sql, int timeout, params object[] parameters)
+        {
+            DataTable dataTable = command.RetrieveData(sql, 0, 1, timeout, parameters);
+
+            if (dataTable.Rows.Count == 0)
+                dataTable.Rows.Add(dataTable.NewRow());
+
+            return dataTable.Rows[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this SqlCommand command, string sql)
+        {
+            return command.RetrieveRow(sql, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this SqlCommand command, string sql, int timeout)
+        {
+            return command.RetrieveRow(sql, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this SqlCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this SqlCommand command, string sql, int timeout, params object[] parameters)
+        {
+            DataTable dataTable = command.RetrieveData(sql, 0, 1, timeout, parameters);
+
+            if (dataTable.Rows.Count == 0)
+                dataTable.Rows.Add(dataTable.NewRow());
+
+            return dataTable.Rows[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this IDbCommand command, Type dataAdapterType, string sql, params object[] parameters)
+        {
+            return command.RetrieveRow(dataAdapterType, sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this IDbCommand command, Type dataAdapterType, string sql, int timeout, params object[] parameters)
+        {
+            DataTable dataTable = command.RetrieveData(dataAdapterType, sql, timeout, parameters);
 
             if (dataTable.Rows.Count == 0)
                 dataTable.Rows.Add(dataTable.NewRow());
@@ -893,6 +1445,203 @@ namespace GSF.Data
         public static DataTable RetrieveData(this IDbConnection connection, Type dataAdapterType, string sql, int timeout, params object[] parameters)
         {
             return connection.RetrieveDataSet(dataAdapterType, sql, timeout, parameters).Tables[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OleDbCommand command, string sql)
+        {
+            return command.RetrieveData(sql, 0, int.MaxValue, 30);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OleDbCommand command, string sql, int startRow, int maxRows, int timeout)
+        {
+            return command.RetrieveData(sql, startRow, maxRows, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OleDbCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveData(sql, 0, int.MaxValue, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OleDbCommand command, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
+        {
+            return command.RetrieveDataSet(sql, startRow, maxRows, timeout, parameters).Tables[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OdbcCommand command, string sql)
+        {
+            return command.RetrieveData(sql, 0, int.MaxValue, 30);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OdbcCommand command, string sql, int startRow, int maxRows, int timeout)
+        {
+            return command.RetrieveData(sql, startRow, maxRows, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OdbcCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveData(sql, 0, int.MaxValue, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OdbcCommand command, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
+        {
+            return command.RetrieveDataSet(sql, startRow, maxRows, timeout, parameters).Tables[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this SqlCommand command, string sql)
+        {
+            return command.RetrieveData(sql, 0, int.MaxValue, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this SqlCommand command, string sql, int startRow, int maxRows, int timeout)
+        {
+            return command.RetrieveData(sql, startRow, maxRows, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this SqlCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveData(sql, 0, int.MaxValue, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this SqlCommand command, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
+        {
+            return command.RetrieveDataSet(sql, startRow, maxRows, timeout, parameters).Tables[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this IDbCommand command, Type dataAdapterType, string sql, params object[] parameters)
+        {
+            return command.RetrieveData(dataAdapterType, sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this IDbCommand command, Type dataAdapterType, string sql, int timeout, params object[] parameters)
+        {
+            return command.RetrieveDataSet(dataAdapterType, sql, timeout, parameters).Tables[0];
         }
 
         #endregion
@@ -1127,6 +1876,229 @@ namespace GSF.Data
 
                 return data;
             }
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OleDbCommand command, string sql)
+        {
+            return command.RetrieveDataSet(sql, 0, int.MaxValue, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OleDbCommand command, string sql, int startRow, int maxRows, int timeout)
+        {
+            return command.RetrieveDataSet(sql, startRow, maxRows, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OleDbCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveDataSet(sql, 0, int.MaxValue, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OleDbCommand command, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
+        {
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            OleDbDataAdapter dataAdapter = new OleDbDataAdapter(command);
+            DataSet data = new DataSet("Temp");
+            dataAdapter.Fill(data, startRow, maxRows, "Table1");
+
+            return data;
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OdbcCommand command, string sql)
+        {
+            return command.RetrieveDataSet(sql, 0, int.MaxValue, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OdbcCommand command, string sql, int startRow, int maxRows, int timeout)
+        {
+            return command.RetrieveDataSet(sql, startRow, maxRows, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OdbcCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveDataSet(sql, 0, int.MaxValue, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OdbcCommand command, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
+        {
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            OdbcDataAdapter dataAdapter = new OdbcDataAdapter(command);
+            DataSet data = new DataSet("Temp");
+            dataAdapter.Fill(data, startRow, maxRows, "Table1");
+
+            return data;
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple table depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this SqlCommand command, string sql)
+        {
+            return command.RetrieveDataSet(sql, 0, int.MaxValue, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this SqlCommand command, string sql, int startRow, int maxRows, int timeout)
+        {
+            return command.RetrieveDataSet(sql, startRow, maxRows, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this SqlCommand command, string sql, params object[] parameters)
+        {
+            return command.RetrieveDataSet(sql, 0, int.MaxValue, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this SqlCommand command, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.PopulateParameters(parameters);
+            SqlDataAdapter dataAdapter = new SqlDataAdapter(command);
+            DataSet data = new DataSet("Temp");
+            dataAdapter.Fill(data, startRow, maxRows, "Table1");
+
+            return data;
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this IDbCommand command, Type dataAdapterType, string sql, params object[] parameters)
+        {
+            return command.RetrieveDataSet(dataAdapterType, sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this IDbCommand command, Type dataAdapterType, string sql, int timeout, params object[] parameters)
+        {
+            command.CommandTimeout = timeout;
+            command.Parameters.Clear();
+            command.AddParametersWithValues(sql, parameters);
+            IDataAdapter dataAdapter = (IDataAdapter)Activator.CreateInstance(dataAdapterType, command);
+            DataSet data = new DataSet("Temp");
+            dataAdapter.Fill(data);
+
+            return data;
         }
 
         #endregion

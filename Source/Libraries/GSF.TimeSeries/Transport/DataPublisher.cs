@@ -369,6 +369,20 @@ namespace GSF.TimeSeries.Transport
         /// </remarks>
         UseCommonSerializationFormat = (uint)Bits.Bit24,
         /// <summary>
+        /// Determines whether external measurements are exchanged during metadata synchronization.
+        /// </summary>
+        /// <remarks>
+        /// Bit set = external measurements are exchanged, bit clear = no external measurements are exchanged
+        /// </remarks>
+        ReceiveExternalMetadata = (uint)Bits.Bit25,
+        /// <summary>
+        /// Determines whether internal measurements are exchanged during metadata synchronization.
+        /// </summary>
+        /// <remarks>
+        /// Bit set = internal measurements are exchanged, bit clear = no internal measurements are exchanged
+        /// </remarks>
+        ReceiveInternalMetadata = (uint)Bits.Bit26,
+        /// <summary>
         /// Determines whether payload data is compressed when exchanging between publisher and subscriber.
         /// </summary>
         /// <remarks>
@@ -585,7 +599,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public const string DefaultMetadataTables =
             "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
-            "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail WHERE Internal <> 0;" +
+            "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail;" +
             "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
 
         /// <summary>
@@ -3035,6 +3049,10 @@ namespace GSF.TimeSeries.Transport
                     // Initialize active node ID
                     Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
 
+                    // Determine whether we're sending internal and external metadata
+                    bool sendExternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveExternalMetadata);
+                    bool sendInternalMetadata = !sendExternalMetadata || connection.OperationalModes.HasFlag(OperationalModes.ReceiveInternalMetadata);
+
                     // Copy key meta-data tables
                     foreach (string tableExpression in m_metadataTables.Split(';'))
                     {
@@ -3050,9 +3068,10 @@ namespace GSF.TimeSeries.Transport
                             // If table has a NodeID column, filter table data for just this node.
                             // Also, determine whether we need to check subscriber for rights to the data
                             bool applyNodeIDFilter = table.Columns.Contains("NodeID");
+                            bool applyInternalFilter = table.Columns.Contains("Internal") && !(sendInternalMetadata && sendExternalMetadata);
                             bool checkSubscriberRights = RequireAuthentication && table.Columns.Contains("SignalID");
 
-                            if (m_sharedDatabase || (!applyNodeIDFilter && !checkSubscriberRights))
+                            if (m_sharedDatabase || (!applyNodeIDFilter && !applyInternalFilter && !checkSubscriberRights))
                             {
                                 // Add a copy of the results to the dataset for meta-data exchange
                                 metadata.Tables.Add(table.Copy());
@@ -3065,9 +3084,13 @@ namespace GSF.TimeSeries.Transport
                                 // Make a copy of the table structure
                                 metadata.Tables.Add(table.Clone());
 
-                                // Reduce data to only this node
-                                if (applyNodeIDFilter)
+                                // Filter data by node and internal
+                                if (applyNodeIDFilter && applyInternalFilter)
+                                    filteredRows = table.Select(string.Format("NodeID = '{0}' AND Internal {1} 0", nodeID, sendExternalMetadata ? "=" : "<>"));
+                                else if (applyNodeIDFilter)
                                     filteredRows = table.Select(string.Format("NodeID = '{0}'", nodeID));
+                                else if (applyInternalFilter)
+                                    filteredRows = table.Select(string.Format("Internal {0} 0", sendExternalMetadata ? "=" : "<>"));
                                 else
                                     filteredRows = table.Rows.Cast<DataRow>();
 
