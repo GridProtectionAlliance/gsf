@@ -2688,14 +2688,16 @@ namespace GSF.TimeSeries.Transport
 
                                         if (Convert.ToInt32(command.ExecuteScalar(selectSql, m_metadataSynchronizationTimeout, database.Guid(signalID))) == 0)
                                         {
+                                            string alternateTag = Guid.NewGuid().ToString();
+
                                             // Insert new measurement record
-                                            insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, HistorianID, PointTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, 0, 1)", "deviceID", "historianID", "pointTag", "signalTypeID", "signalReference", "description", "internal");
-                                            command.ExecuteNonQuery(insertSql, m_metadataSynchronizationTimeout, deviceID, historianID, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
+                                            insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, HistorianID, PointTag, AlternateTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, 0, 1)", "deviceID", "historianID", "pointTag", "alternateTag", "signalTypeID", "signalReference", "description", "internal");
+                                            command.ExecuteNonQuery(insertSql, m_metadataSynchronizationTimeout, deviceID, historianID, pointTag, alternateTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
 
                                             // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
                                             // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
-                                            updateSql = database.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0} WHERE PointTag = {1}", "signalID", "pointTag");
-                                            command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, database.Guid(signalID), pointTag);
+                                            updateSql = database.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0}, AlternateTag = NULL WHERE AlternateTag = {1}", "signalID", "alternateTag");
+                                            command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, database.Guid(signalID), alternateTag);
                                         }
                                         else
                                         {
