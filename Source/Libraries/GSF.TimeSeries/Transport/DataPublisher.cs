@@ -993,13 +993,16 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                base.DataSource = value;
+                if (DataSourceChanged(value))
+                {
+                    base.DataSource = value;
 
-                UpdateRights();
-                UpdateCertificateChecker();
-                UpdateClientNotifications();
-                UpdateLatestMeasurementCache();
-                NotifyClientsOfConfigurationChange();
+                    UpdateRights();
+                    UpdateCertificateChecker();
+                    UpdateClientNotifications();
+                    UpdateLatestMeasurementCache();
+                    NotifyClientsOfConfigurationChange();
+                }
             }
         }
 
@@ -2626,6 +2629,67 @@ namespace GSF.TimeSeries.Transport
                     OnProcessException(new InvalidOperationException("Failed to restart data publisher command channel: " + ex.Message, ex));
                 }
             }
+        }
+
+        private bool DataSourceChanged(DataSet newDataSource)
+        {
+            DataSet dataSource = DataSource;
+            DataTable newTable;
+            object field;
+            object newField;
+
+            // If the two data sets are the same object, they are equal
+            if ((object)dataSource == (object)newDataSource)
+                return true;
+
+            // Check that the number of tables match
+            if (dataSource.Tables.Count != newDataSource.Tables.Count)
+                return false;
+
+            foreach (DataTable table in dataSource.Tables)
+            {
+                // Check that both data sets have this table defined
+                if (!newDataSource.Tables.Contains(table.TableName))
+                    return false;
+
+                newTable = newDataSource.Tables[table.TableName];
+
+                // Check that both tables have the same number of rows
+                if (table.Rows.Count != newTable.Rows.Count)
+                    return false;
+
+                // Check that both tables have the same number of columns
+                if (table.Columns.Count != newTable.Columns.Count)
+                    return false;
+
+                for (int i = 0; i < table.Rows.Count; i++)
+                {
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        // Check that both tables contain this particular column
+                        if (!newTable.Columns.Contains(column.ColumnName))
+                            return false;
+
+                        field = table.Rows[i][column.ColumnName];
+                        newField = newTable.Rows[i][column.ColumnName];
+
+                        if (field == DBNull.Value || newField == DBNull.Value)
+                        {
+                            // At least one value is DBNull,
+                            // so this checks if they are both DBNull
+                            if (field != newField)
+                                return false;
+                        }
+                        else if (!field.Equals(newField))
+                        {
+                            // The values are not equal
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
 
         #region [ Server Command Request Handlers ]

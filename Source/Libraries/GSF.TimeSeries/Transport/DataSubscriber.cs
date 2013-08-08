@@ -2601,7 +2601,7 @@ namespace GSF.TimeSeries.Transport
                                         }
                                         else
                                         {
-                                            selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0} AND ParentID <> {1}", "deviceGuid", "parentID");
+                                            selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0} AND (ParentID <> {1} OR ParentID IS NULL)", "deviceGuid", "parentID");
 
                                             // Safety check to preserve device records which are not safe to overwrite
                                             if (Convert.ToInt32(command.ExecuteScalar(selectSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
