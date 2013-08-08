@@ -2603,12 +2603,12 @@ namespace GSF.TimeSeries.Transport
                                         {
                                             selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0} AND ParentID <> {1}", "deviceGuid", "parentID");
 
-                                            // Update existing device record
+                                            // Safety check to preserve device records which are not safe to overwrite
                                             if (Convert.ToInt32(command.ExecuteScalar(selectSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
-                                            {
-                                                OnProcessException(new InvalidOperationException(string.Format("Unable to synchronize metadata for device '{0}'. Another device with the same unique ID already exists.", row.Field<string>("Acronym"))));
-                                            }
-                                            else if (m_internal)
+                                                continue;
+
+                                            // Update existing device record
+                                            if (m_internal)
                                             {
                                                 // Gateway is assuming ownership of the device records when the "internal" flag is true - this means the device's measurements can be forwarded to another party.
                                                 // From a device record perspective, ownership is inferred by setting 'OriginalSource' to null.
@@ -2627,8 +2627,8 @@ namespace GSF.TimeSeries.Transport
                                     }
 
                                     // Capture local device ID auto-inc value for measurement association
-                                    selectSql = database.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0} AND ParentID = {1}", "deviceGuid", "parentID");
-                                    deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(command.ExecuteScalar(selectSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), parentID));
+                                    selectSql = database.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "deviceGuid");
+                                    deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(command.ExecuteScalar(selectSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID)));
                                 }
 
                                 // Remove any device records associated with this subscriber that no longer exist in the meta-data
