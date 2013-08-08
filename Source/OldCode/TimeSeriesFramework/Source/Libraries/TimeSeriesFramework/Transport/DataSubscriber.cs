@@ -1951,10 +1951,7 @@ namespace TimeSeriesFramework.Transport
 
                                             // Update existing device record
                                             if (Convert.ToInt32(command.ExecuteScalar(selectSql, MetadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
-                                            {
-                                                OnProcessException(new InvalidOperationException(string.Format("Unable to synchronize metadata for device '{0}'. Another device with the same unique ID already exists.", row.Field<string>("Acronym"))));
                                                 continue;
-                                            }
 
                                             if (m_internal)
                                             {
