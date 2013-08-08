@@ -57,6 +57,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private string m_hostname;
         private int m_publisherPort;
         private SecurityMode m_securityMode;
+        private bool m_receiveExternalMetadata;
+        private bool m_receiveInternalMetadata;
         private bool m_useUdpDataChannel;
         private int m_udpDataChannelPort;
 
@@ -77,6 +79,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private ICommand m_localBrowseCommand;
         private ICommand m_remoteBrowseCommand;
         private ICommand m_createCommand;
+        private ICommand m_saveCommand;
 
         #endregion
 
@@ -89,6 +92,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         {
             m_internalDataPublisherPort = 6170;
             m_securityMode = SecurityMode.TLS;
+            m_receiveInternalMetadata = true;
             m_udpDataChannelPort = 6175;
             m_publisherPort = DefaultPort;
             Load();
@@ -182,6 +186,46 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
                 if (m_publisherPort == oldDefaultPort)
                     PublisherPort = DefaultPort;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the subscriber is
+        /// requesting metadata for internal signals from the publisher.
+        /// </summary>
+        public bool ReceiveInternalMetadata
+        {
+            get
+            {
+                return m_receiveInternalMetadata;
+            }
+            set
+            {
+                m_receiveInternalMetadata = value;
+                OnPropertyChanged("ReceiveInternalMetadata");
+
+                if (!m_receiveInternalMetadata && !m_receiveExternalMetadata)
+                    ReceiveExternalMetadata = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether the subscriber is
+        /// requesting metadata for external signals from the publisher.
+        /// </summary>
+        public bool ReceiveExternalMetadata
+        {
+            get
+            {
+                return m_receiveExternalMetadata;
+            }
+            set
+            {
+                m_receiveExternalMetadata = value;
+                OnPropertyChanged("ReceiveExternalMetadata");
+
+                if (!m_receiveInternalMetadata && !m_receiveExternalMetadata)
+                    ReceiveInternalMetadata = true;
             }
         }
 
@@ -463,13 +507,40 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets the command that executes when the user chooses to save their subscriber.
+        /// </summary>
+        public ICommand SaveCommand
+        {
+            get
+            {
+                if ((object)m_saveCommand == null)
+                    m_saveCommand = new RelayCommand(SaveInternal, () => true);
+
+                return m_saveCommand;
+            }
+        }
+
+        /// <summary>
         /// Gets the default port based on the current security mode selection.
         /// </summary>
         private int DefaultPort
         {
             get
             {
-                return (m_securityMode == SecurityMode.Gateway) ? (m_internalDataPublisherPort + 1) : (m_internalDataPublisherPort + 2);
+                switch (m_securityMode)
+                {
+                    case SecurityMode.None:
+                        return m_internalDataPublisherPort;
+
+                    case SecurityMode.Gateway:
+                        return m_internalDataPublisherPort + 1;
+
+                    case SecurityMode.TLS:
+                        return m_internalDataPublisherPort + 2;
+
+                    default:
+                        return m_internalDataPublisherPort;
+                }
             }
         }
 
@@ -811,6 +882,27 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
         }
 
+        private void SaveInternal()
+        {
+            try
+            {
+                SaveDevice();
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Internal Subscription Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Internal Subscription", ex.InnerException);
+                }
+                else
+                {
+                    Popup(ex.Message, "Internal Subscription Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Internal Subscription", ex);
+                }
+            }
+        }
+
         // Associate the given device with the
         // authorization request and save it.
         private void SaveDevice()
@@ -828,7 +920,11 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             X509ChainStatusFlags validChainFlags;
             string securitySpecificSettings = string.Empty;
 
-            if (SecurityMode == SecurityMode.Gateway)
+            if (SecurityMode == SecurityMode.None)
+            {
+                securitySpecificSettings = string.Format("internal=true; receiveInternalMetadata={0}; receiveExternalMetadata={1}; outputMeasurements={{FILTER ActiveMeasurements WHERE Protocol = 'GatewayTransport'}}", m_receiveInternalMetadata, m_receiveExternalMetadata);
+            }
+            else if (SecurityMode == SecurityMode.Gateway)
             {
                 securitySpecificSettings = string.Format("sharedSecret={0}; authenticationID={{{1}}}", SharedKey, IdentityCertificate);
             }
@@ -853,7 +949,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             device = new Device();
             device.Acronym = PublisherAcronym.Replace(" ", "");
             device.Name = PublisherName;
-            device.Enabled = false;
+            device.Enabled = m_securityMode == SecurityMode.None;
             device.IsConcentrator = true;
             device.ProtocolID = GetGatewayProtocolID();
 
@@ -862,7 +958,14 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             else
                 device.ConnectionString = string.Format(TcpConnectionStringFormat, SecurityMode, Hostname, PublisherPort, securitySpecificSettings);
 
-            Device.Save(null, device);
+            try
+            {
+                Device.Save(null, device);
+            }
+            catch (ApplicationException ex)
+            {
+                CommonFunctions.LogException(null, "Save Subscriber Device", ex);
+            }
 
             device = Device.GetDevice(null, "WHERE Acronym = '" + device.Acronym + "'");
             deviceUserControl = new DeviceUserControl(device);

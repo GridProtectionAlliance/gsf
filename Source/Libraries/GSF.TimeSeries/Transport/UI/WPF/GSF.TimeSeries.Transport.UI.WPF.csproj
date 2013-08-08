@@ -97,6 +97,9 @@
     <Compile Include="UserControls\HomeUserControl.xaml.cs">
       <DependentUpon>HomeUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\InternalSubscriptionUserControl.xaml.cs">
+      <DependentUpon>InternalSubscriptionUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\MeasurementGroupUserControl.xaml.cs">
       <DependentUpon>MeasurementGroupUserControl.xaml</DependentUpon>
     </Compile>
@@ -171,6 +174,10 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="UserControls\HomeUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\InternalSubscriptionUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

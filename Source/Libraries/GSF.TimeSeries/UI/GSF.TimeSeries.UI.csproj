@@ -167,6 +167,9 @@
     <Resource Include="Images\Configure.png" />
     <Resource Include="Images\Wand.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\ArrowCurved.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
