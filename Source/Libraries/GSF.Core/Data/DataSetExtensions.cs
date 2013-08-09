@@ -282,7 +282,7 @@ namespace GSF.Data
         /// <summary>
         /// Deserializes a <see cref="DataSet"/> from a <see cref="Stream"/>.
         /// </summary>
-        /// <param name="source"><see cref="Stream"/> to deseralize <see cref="DataSet"/> from.</param>
+        /// <param name="source"><see cref="Stream"/> to deserialize <see cref="DataSet"/> from.</param>
         public static DataSet DeserializeToDataSet(this Stream source)
         {
             if ((object)source == null)
@@ -326,7 +326,7 @@ namespace GSF.Data
                     dataType = (DataType)input.ReadByte();
                     column.DataType = dataType.DeriveColumnType();
 
-                    // Track data types and column indicies in parallel lists for faster DataRow deserialization
+                    // Track data types and column indices in parallel lists for faster DataRow deserialization
                     columnIndices.Add(column.Ordinal);
                     columnDataTypes.Add(dataType);
                 }
@@ -422,7 +422,7 @@ namespace GSF.Data
         /// Attempts to derive <see cref="DataType"/> based on object <see cref="Type"/>.
         /// </summary>
         /// <param name="objectType"><see cref="Type"/> of object to test.</param>
-        /// <returns>Derived <see cref="DataType"/> based on object <see cref="Type"/> if matched; otherse <see cref="DataType.Object"/>.</returns>
+        /// <returns>Derived <see cref="DataType"/> based on object <see cref="Type"/> if matched; otherwise <see cref="DataType.Object"/>.</returns>
         public static DataType GetDataType(this Type objectType)
         {
             for (int i = 0; i < s_supportedDataTypes.Length; i++)

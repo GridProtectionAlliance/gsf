@@ -331,7 +331,10 @@ namespace GSF.TimeSeries.Transport
     /// Operational modes that affect how <see cref="DataPublisher"/> and <see cref="DataSubscriber"/> communicate.
     /// </summary>
     /// <remarks>
-    /// Operational modes only apply to fundamental protocol control.
+    /// Operational modes are sent from a subscriber to a publisher to request operational behaviors for the
+    /// connection, as a result the operation modes must be sent before any other command. The publisher may
+    /// silently refuse some requests (e.g., compression) based on its configuration. Operational modes only
+    /// apply to fundamental protocol control.
     /// </remarks>
     [Flags]
     public enum OperationalModes : uint
@@ -347,16 +350,16 @@ namespace GSF.TimeSeries.Transport
         /// Mask to get mode of compression.
         /// </summary>
         /// <remarks>
-        /// Compression mode is currently not supported.
-        /// These bits are simply reserved for different compression modes.
+        /// GZip compression is only mode currently supported. Remaining bits are
+        /// reserved for future compression modes.
         /// </remarks>
         CompressionModeMask = (uint)(Bits.Bit07 | Bits.Bit06 | Bits.Bit05),
         /// <summary>
         /// Mask to get character encoding used when exchanging messages between publisher and subscriber.
         /// </summary>
         /// <remarks>
-        /// 00 = UTF-16 little endian<br/>
-        /// 01 = UTF-16 big endian<br/>
+        /// 00 = UTF-16, little endian<br/>
+        /// 01 = UTF-16, big endian<br/>
         /// 10 = UTF-8<br/>
         /// 11 = ANSI
         /// </remarks>
@@ -365,7 +368,9 @@ namespace GSF.TimeSeries.Transport
         /// Determines type of serialization to use when exchanging signal index cache and metadata.
         /// </summary>
         /// <remarks>
-        /// Bit set = common serialization format, bit clear = .NET serialization format
+        /// Bit set = common serialization format, bit clear = .NET serialization format. The .NET
+        /// serialization format is only for backwards compatibility with older GEP implementations
+        /// and considered obsolete, it may be removed from future builds.
         /// </remarks>
         UseCommonSerializationFormat = (uint)Bits.Bit24,
         /// <summary>
@@ -420,11 +425,11 @@ namespace GSF.TimeSeries.Transport
     public enum OperationalEncoding : uint
     {
         /// <summary>
-        /// UTF-16 little endian
+        /// UTF-16, little endian
         /// </summary>
         Unicode = (uint)Bits.Nil,
         /// <summary>
-        /// UTF-16 bit endian
+        /// UTF-16, big endian
         /// </summary>
         BigEndianUnicode = (uint)Bits.Bit08,
         /// <summary>
