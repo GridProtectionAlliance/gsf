@@ -486,7 +486,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             AdapterConnectionStringParameter parameter = sender as AdapterConnectionStringParameter;
             Dictionary<string, string> settings;
 
-            if (!m_suppressConnectionStringUpdates && parameter != null && e.PropertyName == "Value")
+            if (!m_suppressConnectionStringUpdates && (object)parameter != null && (object)parameter.Value != null && e.PropertyName == "Value")
             {
                 try
                 {
