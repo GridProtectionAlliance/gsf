@@ -2588,8 +2588,19 @@ namespace GSF.TimeSeries.Transport
                                 if (metadata.Tables.Contains("DeviceDetail"))
                                 {
                                     List<Guid> uniqueIDs = new List<Guid>();
+                                    DataRow[] deviceRows;
 
-                                    foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
+                                    // Determine which device rows should be synchronized based on operational mode flags
+                                    if (ReceiveInternalMetadata && ReceiveExternalMetadata)
+                                        deviceRows = metadata.Tables["DeviceDetail"].Select();
+                                    else if (ReceiveInternalMetadata)
+                                        deviceRows = metadata.Tables["DeviceDetail"].Select("OriginalSource IS NULL");
+                                    else if (ReceiveExternalMetadata)
+                                        deviceRows = metadata.Tables["DeviceDetail"].Select("OriginalSource IS NOT NULL");
+                                    else
+                                        deviceRows = new DataRow[0];
+
+                                    foreach (DataRow row in deviceRows)
                                     {
                                         Guid uniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString()); // adoDatabase.Guid(row, "UniqueID"); // row.Field<Guid>("UniqueID");
 
@@ -2597,7 +2608,7 @@ namespace GSF.TimeSeries.Transport
                                         uniqueIDs.Add(uniqueID);
 
                                         // We will synchronize metadata only if the source owns this device and it's not defined as a concentrator (these should normally be filtered by publisher - but we check just in case).
-                                        if (row.Field<object>("OriginalSource") == null && !row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
+                                        if (!row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                                         {
                                             // Define query to determine if this device is already defined (this should always be based on the unique device Guid)
                                             selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
@@ -2637,8 +2648,8 @@ namespace GSF.TimeSeries.Transport
                                                     // When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed locally. From a device
                                                     // record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurements. This field allows a
                                                     // mirrored source restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection.
-                                                    updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, ProtocolID = {2}, HistorianID = {3} WHERE UniqueID = {4}", "acronym", "name", "protocolID", "historianID", "uniqueID");
-                                                    command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, historianID, database.Guid(uniqueID));
+                                                    updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3}, HistorianID = {4} WHERE UniqueID = {5}", "acronym", "name", "originalSource", "protocolID", "historianID", "uniqueID");
+                                                    command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"), m_gatewayProtocolID, historianID, database.Guid(uniqueID));
                                                 }
                                             }
                                         }

@@ -922,7 +922,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
             if (SecurityMode == SecurityMode.None)
             {
-                securitySpecificSettings = string.Format("internal=true; receiveInternalMetadata={0}; receiveExternalMetadata={1}; outputMeasurements={{FILTER ActiveMeasurements WHERE Protocol = 'GatewayTransport'}}", m_receiveInternalMetadata, m_receiveExternalMetadata);
+                securitySpecificSettings = string.Format("internal={0}; receiveInternalMetadata={1}; receiveExternalMetadata={2}; outputMeasurements={{FILTER ActiveMeasurements WHERE Protocol = 'GatewayTransport'}}", !(m_receiveExternalMetadata && !m_receiveInternalMetadata), m_receiveInternalMetadata, m_receiveExternalMetadata);
             }
             else if (SecurityMode == SecurityMode.Gateway)
             {

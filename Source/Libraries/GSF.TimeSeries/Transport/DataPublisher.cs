@@ -603,7 +603,7 @@ namespace GSF.TimeSeries.Transport
         /// Default value for <see cref="MetadataTables"/>.
         /// </summary>
         public const string DefaultMetadataTables =
-            "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE OriginalSource IS NULL AND IsConcentrator = 0;" +
+            "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE IsConcentrator = 0;" +
             "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail;" +
             "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
 
@@ -3085,13 +3085,26 @@ namespace GSF.TimeSeries.Transport
                             Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
                             table.TableName = regexMatch.Value.Split(' ')[1];
 
-                            // If table has a NodeID column, filter table data for just this node.
-                            // Also, determine whether we need to check subscriber for rights to the data
-                            bool applyNodeIDFilter = table.Columns.Contains("NodeID");
-                            bool applyInternalFilter = table.Columns.Contains("Internal") && !(sendInternalMetadata && sendExternalMetadata);
+                            // Build parallel arrays for filters as well as boolean
+                            // flags to determine whether to apply the filters
+                            string[] filters =
+                            {
+                                string.Format("NodeID = '{0}'", nodeID),
+                                string.Format("Internal {0} 0", sendExternalMetadata ? "=" : "<>"),
+                                string.Format("OriginalSource IS {0} NULL", sendExternalMetadata ? "NOT" : "")
+                            };
+
+                            bool[] filterFlags =
+                            {
+                                table.Columns.Contains("NodeID"),
+                                table.Columns.Contains("Internal") && !(sendInternalMetadata && sendExternalMetadata),
+                                table.Columns.Contains("OriginalSource") && !(sendInternalMetadata && sendExternalMetadata)
+                            };
+
+                            // Determine whether we need to check subscriber for rights to the data
                             bool checkSubscriberRights = RequireAuthentication && table.Columns.Contains("SignalID");
 
-                            if (m_sharedDatabase || (!applyNodeIDFilter && !applyInternalFilter && !checkSubscriberRights))
+                            if (m_sharedDatabase || (filterFlags.All(flag => !flag) && !checkSubscriberRights))
                             {
                                 // Add a copy of the results to the dataset for meta-data exchange
                                 metadata.Tables.Add(table.Copy());
@@ -3104,15 +3117,7 @@ namespace GSF.TimeSeries.Transport
                                 // Make a copy of the table structure
                                 metadata.Tables.Add(table.Clone());
 
-                                // Filter data by node and internal
-                                if (applyNodeIDFilter && applyInternalFilter)
-                                    filteredRows = table.Select(string.Format("NodeID = '{0}' AND Internal {1} 0", nodeID, sendExternalMetadata ? "=" : "<>"));
-                                else if (applyNodeIDFilter)
-                                    filteredRows = table.Select(string.Format("NodeID = '{0}'", nodeID));
-                                else if (applyInternalFilter)
-                                    filteredRows = table.Select(string.Format("Internal {0} 0", sendExternalMetadata ? "=" : "<>"));
-                                else
-                                    filteredRows = table.Rows.Cast<DataRow>();
+                                filteredRows = table.Select(string.Join(" AND ", filters.Where((filter, index) => filterFlags[index])));
 
                                 // Reduce data to only what the subscriber has rights to
                                 if (checkSubscriberRights)
