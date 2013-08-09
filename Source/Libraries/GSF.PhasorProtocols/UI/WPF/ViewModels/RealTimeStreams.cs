@@ -34,6 +34,7 @@ using GSF.Data;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.ServiceProcess;
 using GSF.TimeSeries;
+using GSF.TimeSeries.Statistics;
 using GSF.TimeSeries.Transport;
 using GSF.TimeSeries.UI;
 
@@ -479,7 +480,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                     {
                                         int value;
 
-                                        if (int.TryParse(statisticMeasurement.Value, out value) && value > 0)
+                                        if (StatisticsEngine.RegexMatch(statisticMeasurement.SignalReference, "PMU") && int.TryParse(statisticMeasurement.Value, out value) && value > 0)
                                             device.StatusColor = "Yellow";
                                     }
                                 }
