@@ -269,6 +269,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             DeviceList = new ObservableCollection<RealTimeDevice>(
                                     from device in resultSet.Tables["DeviceTable"].AsEnumerable()
                                     where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym")
+                                    let settings = device.Field<string>("ConnectionString").ParseKeyValuePairs()
                                     select new RealTimeDevice
                                         {
                                         ID = device.ConvertNullableField<int>("ID"),
@@ -282,7 +283,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         Enabled = Convert.ToBoolean(device.Field<object>("Enabled")),
                                         MeasurementList = new ObservableCollection<RealTimeMeasurement>(
                                                 from measurement in resultSet.Tables["MeasurementTable"].AsEnumerable()
-                                                where measurement.ConvertNullableField<int>("DeviceID") == device.ConvertNullableField<int>("ID") && (measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal"))   //We will only display measurements which are internal or subscribed to avoid confusion.
+                                                where measurement.ConvertNullableField<int>("DeviceID") == device.ConvertNullableField<int>("ID") && (measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal") || (settings.ContainsKey("securityMode") && settings["securityMode"].Equals("None", StringComparison.InvariantCultureIgnoreCase)))   //We will only display measurements which are internal or subscribed to avoid confusion.
                                                 select new RealTimeMeasurement
                                                     {
                                                     ID = measurement.Field<string>("ID"),
@@ -297,7 +298,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                                     EngineeringUnit = measurement.Field<string>("SignalAcronym") == "FLAG" ? "Hex" : measurement.Field<string>("EngineeringUnits"),
                                                     Expanded = false,
                                                     Selected = false,
-                                                    Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" ? true : measurement.Field<string>("SignalAcronym") == "IPHA" ? true : measurement.Field<string>("SignalAcronym") == "VPHM" ? true : measurement.Field<string>("SignalAcronym") == "VPHA" ? true : measurement.Field<string>("SignalAcronym") == "FREQ" ? true : false,
+                                                    Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
                                                     TimeTag = "N/A",
                                                     Value = "--",
                                                     Quality = "N/A",
