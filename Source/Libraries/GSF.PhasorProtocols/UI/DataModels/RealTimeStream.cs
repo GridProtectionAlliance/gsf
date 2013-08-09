@@ -221,7 +221,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 resultSet.EnforceConstraints = false;
 
                 // Get PDCs list.
-                resultSet.Tables.Add(database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, Acronym, Name, CompanyName, Enabled FROM DeviceDetail " +
+                resultSet.Tables.Add(database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, Acronym, Name, ConnectionString, CompanyName, Enabled FROM DeviceDetail " +
                     "WHERE NodeID = {0} AND IsConcentrator = {1} AND Enabled = {2} ORDER BY Acronym", "nodeID", "isConcentrator", "enabled"), DefaultTimeout, database.CurrentNodeID(), database.Bool(true), database.Bool(true)).Copy());
 
                 resultSet.Tables[0].TableName = "PdcTable";
@@ -236,7 +236,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 resultSet.Tables["PdcTable"].Rows.Add(row);
 
                 // Get Non-PDC device list.
-                resultSet.Tables.Add(database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, Acronym, Name,CompanyName, ProtocolName, VendorDeviceName, " +
+                resultSet.Tables.Add(database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, Acronym, Name, CompanyName, ProtocolName, VendorDeviceName, " +
                     "ParentAcronym, Enabled FROM DeviceDetail WHERE NodeID = {0} AND IsConcentrator = {1} AND Enabled = {2} ORDER BY Acronym", "nodeID", "isConcentrator", "enabled"),
                     DefaultTimeout, database.CurrentNodeID(), database.Bool(false), database.Bool(true)).Copy());
 
@@ -257,6 +257,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 realTimeStreamList = new ObservableCollection<RealTimeStream>(
                         from pdc in resultSet.Tables["PdcTable"].AsEnumerable()
+                        let settings = pdc.Field<string>("ConnectionString").ToNonNullString().ParseKeyValuePairs()
                         select new RealTimeStream
                             {
                             ID = pdc.ConvertField<int>("ID"),
@@ -269,7 +270,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             DeviceList = new ObservableCollection<RealTimeDevice>(
                                     from device in resultSet.Tables["DeviceTable"].AsEnumerable()
                                     where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym")
-                                    let settings = device.Field<string>("ConnectionString").ParseKeyValuePairs()
                                     select new RealTimeDevice
                                         {
                                         ID = device.ConvertNullableField<int>("ID"),
