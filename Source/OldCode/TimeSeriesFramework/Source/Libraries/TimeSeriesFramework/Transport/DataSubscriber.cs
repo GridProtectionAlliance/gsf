@@ -1947,7 +1947,7 @@ namespace TimeSeriesFramework.Transport
                                         }
                                         else
                                         {
-                                            selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0} AND ParentID <> {1}", "deviceGuid", "parentID");
+                                            selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0} AND (ParentID <> {1} OR ParentID IS NULL)", "deviceGuid", "parentID");
 
                                             // Update existing device record
                                             if (Convert.ToInt32(command.ExecuteScalar(selectSql, MetadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
@@ -1972,8 +1972,8 @@ namespace TimeSeriesFramework.Transport
                                     }
 
                                     // Capture local device ID auto-inc value for measurement association
-                                    selectSql = database.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0} AND ParentID = {1}", "deviceGuid", "parentID");
-                                    deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(command.ExecuteScalar(selectSql, MetadataSynchronizationTimeout, database.Guid(uniqueID), parentID));
+                                    selectSql = database.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "deviceGuid");
+                                    deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(command.ExecuteScalar(selectSql, MetadataSynchronizationTimeout, database.Guid(uniqueID)));
                                 }
 
                                 // Remove any device records associated with this subscriber that no longer exist in the meta-data
