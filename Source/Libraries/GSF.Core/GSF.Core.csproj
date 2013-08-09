@@ -161,6 +161,7 @@
     <Compile Include="Console\NamespaceDoc.cs" />
     <Compile Include="Data\AdoDataConnection.cs" />
     <Compile Include="Data\DataExtensions.cs" />
+    <Compile Include="Data\DataSetEqualityComparer.cs" />
     <Compile Include="Data\DataSetExtensions.cs" />
     <Compile Include="Data\NamespaceDoc.cs" />
     <Compile Include="DateTimeExtensions.cs" />
