@@ -522,12 +522,14 @@ namespace NAudioWpfDemo
                     // Perform a rough per signal upsample if minimum sample rate is not met
                     if (m_sampleRate < MINIMUM_SAMPLE_RATE)
                     {
+                        IMeasurement upsampledMeasurement;
                         double frequency = measurement.Value;
 
                         for (int i = 0; i < MINIMUM_SAMPLE_RATE / m_sampleRate; i++)
                         {
-                            measurement.Value = Timbre.PureTone(frequency, i, 0, MINIMUM_SAMPLE_RATE) * Int16.MaxValue / 2;
-                            m_buffer.Enqueue(measurement);
+                            upsampledMeasurement = Measurement.Clone(measurement);
+                            upsampledMeasurement.Value = Timbre.PureTone(frequency, i, 0, MINIMUM_SAMPLE_RATE) * Damping.Natural(i, MINIMUM_SAMPLE_RATE / m_sampleRate, MINIMUM_SAMPLE_RATE) * (Int16.MaxValue * 0.90D);
+                            m_buffer.Enqueue(upsampledMeasurement);
                         }
                     }
                     else
