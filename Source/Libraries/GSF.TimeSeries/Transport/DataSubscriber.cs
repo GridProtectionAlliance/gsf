@@ -939,7 +939,7 @@ namespace GSF.TimeSeries.Transport
             int metadataSynchronizationTimeout;
             double interval;
             int bufferSize;
-            
+
             // Setup connection to data publishing server with or without authentication required
             if (settings.TryGetValue("requireAuthentication", out setting))
                 RequireAuthentication = setting.ParseBoolean();
@@ -2616,10 +2616,10 @@ namespace GSF.TimeSeries.Transport
                                             if (Convert.ToInt32(command.ExecuteScalar(selectSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID))) == 0)
                                             {
                                                 // Insert new device record
-                                                insertSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, HistorianID, Acronym, Name, ProtocolID, IsConcentrator, Enabled, OriginalSource) " +
-                                                    "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, 0, 1, {6})", "nodeID", "parentID", "historianID", "acronym", "name", "protocolID", "originalSource");
+                                                insertSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, HistorianID, Acronym, Name, ProtocolID, FramesPerSecond, IsConcentrator, Enabled, OriginalSource) " +
+                                                    "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, 0, 1, {7})", "nodeID", "parentID", "historianID", "acronym", "name", "protocolID", "framesPerSecond", "originalSource");
 
-                                                command.ExecuteNonQuery(insertSql, m_metadataSynchronizationTimeout, database.Guid(m_nodeID), parentID, historianID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID,
+                                                command.ExecuteNonQuery(insertSql, m_metadataSynchronizationTimeout, database.Guid(m_nodeID), parentID, historianID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, row.Field<int>("FramesPerSecond"),
                                                                            m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"));
 
                                                 // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
@@ -2640,16 +2640,16 @@ namespace GSF.TimeSeries.Transport
                                                 {
                                                     // Gateway is assuming ownership of the device records when the "internal" flag is true - this means the device's measurements can be forwarded to another party.
                                                     // From a device record perspective, ownership is inferred by setting 'OriginalSource' to null.
-                                                    updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3}, HistorianID = {4} WHERE UniqueID = {5}", "acronym", "name", "originalSource", "protocolID", "historianID", "uniqueID");
-                                                    command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, m_gatewayProtocolID, historianID, database.Guid(uniqueID));
+                                                    updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3}, FramesPerSecond = {4}, HistorianID = {5} WHERE UniqueID = {6}", "acronym", "name", "originalSource", "protocolID", "framesPerSecond", "historianID", "uniqueID");
+                                                    command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), (object)DBNull.Value, m_gatewayProtocolID, row.Field<int>("FramesPerSecond"), historianID, database.Guid(uniqueID));
                                                 }
                                                 else
                                                 {
                                                     // When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed locally. From a device
                                                     // record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurements. This field allows a
                                                     // mirrored source restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection.
-                                                    updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3}, HistorianID = {4} WHERE UniqueID = {5}", "acronym", "name", "originalSource", "protocolID", "historianID", "uniqueID");
-                                                    command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"), m_gatewayProtocolID, historianID, database.Guid(uniqueID));
+                                                    updateSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3}, FramesPerSecond = {4}, HistorianID = {5} WHERE UniqueID = {6}", "acronym", "name", "originalSource", "protocolID", "framesPerSecond", "historianID", "uniqueID");
+                                                    command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"), m_gatewayProtocolID, row.Field<int>("FramesPerSecond"), historianID, database.Guid(uniqueID));
                                                 }
                                             }
                                         }
