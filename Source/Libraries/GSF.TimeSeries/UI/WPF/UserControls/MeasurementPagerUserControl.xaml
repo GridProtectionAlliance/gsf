@@ -29,7 +29,7 @@
 
         <Button Name="SelectAllHyperlink" Width="Auto" Content="Click here to select all measurements on all pages." HorizontalAlignment="Left" Visibility="Collapsed" Template="{StaticResource HyperlinkStyleButtonTemplate}" Click="SelectAllHyperlink_Click" Margin="0" />
 
-        <DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" Sorting="DataGrid_Sorting" IsReadOnly="True" LoadingRow="DataGridList_LoadingRow" SelectionMode="Single">
+        <DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" Sorting="DataGrid_Sorting" IsReadOnly="True" LoadingRow="DataGridList_LoadingRow" SelectionMode="Single" ScrollViewer.HorizontalScrollBarVisibility="Visible">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Width="50" Visibility="Collapsed">
                     <DataGridTemplateColumn.CellTemplate>
@@ -43,8 +43,9 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.HeaderTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Width="*" Header="Point Tag" Binding="{Binding PointTag}" />
-                <DataGridTextColumn Width="*" Header="ID" Binding="{Binding ID}"/>
+                <DataGridTextColumn Width="Auto" Header="Point Tag" Binding="{Binding PointTag}" />
+                <DataGridTextColumn Width="Auto" Header="Description" Binding="{Binding Description}" />
+                <DataGridTextColumn Width="Auto" Header="ID" Binding="{Binding ID}"/>
             </DataGrid.Columns>
         </DataGrid>
 
