@@ -151,6 +151,10 @@
     <Resource Include="Resources\arrow_right_green.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Libraries\GSF.Media\GSF.Media.csproj">
+      <Project>{0f8e8efc-e7c7-4843-8ee6-8c7c7353892a}</Project>
+      <Name>GSF.Media</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
       <Name>GSF.TimeSeries</Name>

@@ -77,21 +77,25 @@ namespace UpdateWAVMetaData
                 }
 
                 protocolID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM Protocol WHERE Acronym='WAV'"));
-                signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='ALOG'"));
+
+                // Typically these values should be defined as analogs, however, we use a voltage magnitude signal type
+                // since these types of values can be better graphed with auto-scaling in the visualization tools 
+                signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='VPHM'"));
+                //signalTypeID = Convert.ToInt32(connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='ALOG'"));
 
                 string pathRoot = FilePath.GetDirectoryName((args.Length > 0) ? args[0] : systemSettings["MusicDirectory"].Value);
                 string sourcePath = pathRoot + "*\\*.wav";
 
                 foreach (string sourceFileName in FilePath.GetFileList(sourcePath))
                 {
-                    WaveFile sourceWave = null;
+                    WaveFile sourceWave;
                     string fileName = FilePath.GetFileName(sourceFileName);
                     char[] invalidChars = new[] { '\'', '[', ']', '(', ')', ',', '-', '.' };
 
                     Console.WriteLine("Loading metadata for \"{0}\"...\r\n", fileName);
                     sourceWave = WaveFile.Load(sourceFileName, false);
 
-                    fileName = FilePath.GetFileNameWithoutExtension(fileName).RemoveDuplicateWhiteSpace().RemoveCharacters(c => invalidChars.Contains(c)).Trim();
+                    fileName = FilePath.GetFileNameWithoutExtension(fileName).RemoveDuplicateWhiteSpace().RemoveCharacters(invalidChars.Contains).Trim();
                     string acronym = fileName.Replace(' ', '_').ToUpper() + "_" + (int)(sourceWave.SampleRate / SI.Kilo) + "KHZ";
                     string name = GenerateSongName(sourceWave, fileName);
 
@@ -123,7 +127,7 @@ namespace UpdateWAVMetaData
 
                             // Insert new measurement record
                             connection.ExecuteNonQuery(parameterizedQuery, (object)deviceID, pointTag, signalTypeID, acronym + "-AV" + index, name + " - channel " + index, database.Bool(true));
-                            index = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT PointID FROM Measurement WHERE PointTag = {0}", "pointTag"), pointTag));
+                            //index = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT PointID FROM Measurement WHERE PointTag = {0}", "pointTag"), pointTag));
                         }
 
                         // Disable all non analog measurements that may be associated with this device
@@ -165,7 +169,8 @@ namespace UpdateWAVMetaData
 
             if (title.Length + suffix.Length > 200)
                 return title.TruncateRight(199 - suffix.Length) + " " + suffix;
-            else if (title.Length + artist.Length + suffix.Length > 200)
+
+            if (title.Length + artist.Length + suffix.Length > 200)
                 return title + artist.TruncateRight(200 - title.Length - suffix.Length) + " " + suffix;
 
             return title + artist + suffix;

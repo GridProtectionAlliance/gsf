@@ -49,6 +49,7 @@ using System.Threading;
 using System.Timers;
 using GSF;
 using GSF.IO;
+using GSF.Media.Music;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
 using NAudio.Wave;
@@ -74,6 +75,7 @@ namespace NAudioWpfDemo
 
     class AudioPlayback : IDisposable
     {
+        public const int MINIMUM_SAMPLE_RATE = 8000;
         public const int DEFAULT_SAMPLE_RATE = 44100;
         public const int DEFAULT_NUM_CHANNELS = 2;
         public const int PERIOD_COUNT = 10;
@@ -144,10 +146,6 @@ namespace NAudioWpfDemo
         /// <summary>
         /// Gets or sets a flag that determines whether to enable compression on the UDP stream.
         /// </summary>
-        /// <remarks>
-        /// Compression is typically enabled on the TCP stream, therefore this flag doesn't
-        /// do anything if the udp parameter is not supplied in the <see cref="ConnectionUri"/>.
-        /// </remarks>
         public bool EnableCompression
         {
             get;
@@ -157,13 +155,6 @@ namespace NAudioWpfDemo
         /// <summary>
         /// Gets or sets a flag that determines whether to enable encryption on the data stream.
         /// </summary>
-        /// <remarks>
-        /// The data stream can be TCP or UDP. Key exchange is not secured since client is not
-        /// authenticated, but data is encrypted. When compression is enabled it is currently
-        /// applied after encryption; since encrypted data is basically uncompressable, bandwidth
-        /// requirements may actually go up when both compression and encryption are enabled.
-        /// Note that TCP channel is typically compressed by default.
-        /// </remarks>
         public bool EnableEncryption
         {
             get;
@@ -284,7 +275,7 @@ namespace NAudioWpfDemo
                 {
                     IEnumerable<DataRow> measurementRows = measurementTable.Rows.Cast<DataRow>()
                         .Where(row => row["DeviceName"].ToNonNullString() == songName)
-                        .Where(row => row["SignalAcronym"].ToNonNullString() != "STAT")
+                        .Where(row => row["SignalAcronym"].ToNonNullString() == "ALOG" || row["SignalAcronym"].ToNonNullString() == "VPHM")
                         .Where(row => row["Enabled"].ToNonNullString().ParseBoolean())
                         .OrderBy(row => row["ID"].ToNonNullString());
 
@@ -295,9 +286,7 @@ namespace NAudioWpfDemo
                         Guid measurementID = Guid.Parse(row["SignalID"].ToNonNullString());
 
                         if (m_numChannels > 0)
-                        {
                             filterExpression.Append(';');
-                        }
 
                         filterExpression.Append(measurementID);
                         m_channelIndexes[measurementID] = m_numChannels;
@@ -317,7 +306,7 @@ namespace NAudioWpfDemo
                 m_buffer = new ConcurrentQueue<IMeasurement>();
                 m_dumpTimer = CreateDumpTimer();
                 m_statTimer = CreateStatTimer();
-                m_waveProvider = new BufferedWaveProvider(new WaveFormat(m_sampleRate, m_numChannels));
+                m_waveProvider = new BufferedWaveProvider(new WaveFormat(m_sampleRate < MINIMUM_SAMPLE_RATE ? MINIMUM_SAMPLE_RATE : m_sampleRate, m_numChannels));
                 m_wavePlayer = CreateWavePlayer(m_waveProvider);
 
                 info = new UnsynchronizedSubscriptionInfo(false)
@@ -405,6 +394,9 @@ namespace NAudioWpfDemo
 
             if (!EnableCompression)
                 subscriber.OperationalModes = DataSubscriber.DefaultOperationalModes & ~OperationalModes.CompressPayloadData;
+
+            subscriber.ReceiveInternalMetadata = true;
+            subscriber.ReceiveExternalMetadata = true;
 
             subscriber.Initialize();
             subscriber.Start();
@@ -496,9 +488,10 @@ namespace NAudioWpfDemo
             if (deviceTable != null)
             {
                 songs = deviceTable.Rows.Cast<DataRow>()
-                    .Where(row => row["ProtocolName"].ToNonNullString() == "Wave Form Input Adapter")
                     .Where(row => row["Enabled"].ToNonNullString("0").ParseBoolean())
                     .Select(row => row["Name"].ToNonNullString()).ToList();
+
+                //.Where(row => row["ProtocolName"].ToNonNullString() == "Wave Form Input Adapter")
 
                 OnGotSongList(songs);
             }
@@ -526,7 +519,21 @@ namespace NAudioWpfDemo
             {
                 if (m_channelIndexes.ContainsKey(measurement.ID))
                 {
-                    m_buffer.Enqueue(measurement);
+                    // Perform a rough per signal upsample if minimum sample rate is not met
+                    if (m_sampleRate < MINIMUM_SAMPLE_RATE)
+                    {
+                        double frequency = measurement.Value;
+
+                        for (int i = 0; i < MINIMUM_SAMPLE_RATE / m_sampleRate; i++)
+                        {
+                            measurement.Value = Timbre.PureTone(frequency, i, 0, MINIMUM_SAMPLE_RATE) * Int16.MaxValue / 2;
+                            m_buffer.Enqueue(measurement);
+                        }
+                    }
+                    else
+                    {
+                        m_buffer.Enqueue(measurement);
+                    }
                 }
             }
 
@@ -655,7 +662,7 @@ namespace NAudioWpfDemo
             try
             {
                 List<IMeasurement[]> dumpMeasurements = new List<IMeasurement[]>();
-                IMeasurement dequeuedMeasurement = null;
+                IMeasurement dequeuedMeasurement;
                 int count = 0;
 
                 // Remove all the measurements from the buffer and place them in the list of samples.
@@ -684,6 +691,7 @@ namespace NAudioWpfDemo
                     {
                         byte[] channelValue;
 
+                        // Assuming 16-bit integer samples for WAV files
                         if (sample[i] != null)
                             channelValue = EndianOrder.LittleEndian.GetBytes((short)sample[i].Value);
                         else
@@ -706,7 +714,7 @@ namespace NAudioWpfDemo
                     {
                         const float volume = 0.000035F;
                         float left = (sample[0] != null) ? (float)sample[0].Value : 0.0F;
-                        float right = (sample[1] != null) ? (float)sample[1].Value : 0.0F;
+                        float right = m_numChannels > 1 ? ((sample[1] != null) ? (float)sample[1].Value : 0.0F) : left;
                         OnSample(this, new SampleEventArgs(left * volume, right * volume));
                     }
                 }
