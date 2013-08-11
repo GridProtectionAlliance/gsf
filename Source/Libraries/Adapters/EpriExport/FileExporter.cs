@@ -37,7 +37,6 @@ using GSF.Collections;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.UI.Editors;
 using GSF.Units;
 using PhasorProtocolAdapters;
 
@@ -80,7 +79,7 @@ namespace EpriExport
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the file export path for the EPRI export."),
-        CustomConfigurationEditor(typeof(FolderBrowserEditor))]
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.FolderBrowserEditor")]
         public string FileExportPath
         {
             get
@@ -150,7 +149,7 @@ namespace EpriExport
         [ConnectionStringParameter,
         Description("Define the key of the measurement used to adjust the value of phase angles."),
         DefaultValue(""),
-        CustomConfigurationEditor(typeof(MeasurementEditor), "filterExpression={SignalAcronym = 'IPHA' OR SignalAcronym = 'VPHA'}; selectable=false")]
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "filterExpression={SignalAcronym = 'IPHA' OR SignalAcronym = 'VPHA'}; selectable=false")]
         public string ReferenceAngleMeasurement
         {
             get

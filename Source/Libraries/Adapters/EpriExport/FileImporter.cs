@@ -39,7 +39,6 @@ using GSF;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.UI.Editors;
 using Timer = System.Timers.Timer;
 
 namespace EpriExport
@@ -101,7 +100,7 @@ namespace EpriExport
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the import path for EPRI CSV files from which measurements will be read."),
-        CustomConfigurationEditor(typeof(FolderBrowserEditor))]
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.FolderBrowserEditor")]
         public string ImportPath
         {
             get

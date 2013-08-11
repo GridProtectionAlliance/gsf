@@ -50,7 +50,6 @@ using GSF.Collections;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.UI.Editors;
 using PhasorProtocolAdapters;
 
 namespace ICCPExport
@@ -130,7 +129,7 @@ namespace ICCPExport
         [ConnectionStringParameter,
         Description("Define the key of the measurement used to adjust the value of phase angles."),
         DefaultValue(""),
-        CustomConfigurationEditor(typeof(MeasurementEditor), "filterExpression={SignalAcronym = 'IPHA' OR SignalAcronym = 'VPHA'}; selectable=false")]
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "filterExpression={SignalAcronym = 'IPHA' OR SignalAcronym = 'VPHA'}; selectable=false")]
         public string ReferenceAngleMeasurement
         {
             get
