@@ -35,16 +35,24 @@ namespace GSF.TimeSeries.UI.Converters
 
             if ((object)pointTag != null)
             {
-                int colon = pointTag.LastIndexOf(':');
-                int start = pointTag.IndexOf('!');
-                int stop;
-
-                if (colon >= 0)
+                if (pointTag.CharCount('!') > 2)
                 {
-                    stop = pointTag.Substring(0, colon).LastIndexOf('!');
+                    int start = pointTag.IndexOf('!');
+                    int stop = pointTag.LastIndexOf('!');
 
-                    if (start >= 0 && start < stop)
-                        return string.Format("{0}!...{1}", pointTag.Substring(0, start), pointTag.Substring(stop));
+                    // Handle statistics as a special case
+                    if (pointTag.Contains(":ST"))
+                    {
+                        stop--;
+
+                        while (pointTag[stop] != '!')
+                            stop--;
+                    }
+
+                    if (start == stop)
+                        return value;
+
+                    return pointTag.Substring(0, start + 1) + "..." + pointTag.Substring(stop, pointTag.Length - stop);
                 }
             }
 

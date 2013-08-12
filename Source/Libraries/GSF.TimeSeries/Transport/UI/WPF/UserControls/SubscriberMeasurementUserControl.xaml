@@ -79,15 +79,6 @@
                 <TextBlock Text="Available Measurements" HorizontalAlignment="Left" FontWeight="Bold"/>
                 <uc:MeasurementPagerUserControl Name="AvailableMeasurementsPager" ItemsPerPage="13" Selectable="True" Searchable="True" ShowPageSize="False" Width="395" Height="360" VerticalAlignment="Top" Margin="0" CurrentPageChanged="AvailableMeasurementsPager_CurrentPageChanged">
                     <uc:MeasurementPagerUserControl.DataGridColumns>
-                        <DataGridTextColumn Width="Auto" Header="Point Tag" Binding="{Binding Path=PointTag, Converter={StaticResource PointTagConverter}}">
-                            <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="ToolTip" Value="{Binding PointTag}" />
-                                </Style>
-                            </DataGridTextColumn.CellStyle>
-                        </DataGridTextColumn>
-                        <DataGridTextColumn Width="Auto" Header="Description" Binding="{Binding Description}" />
-                        <DataGridTextColumn Width="Auto" Header="ID" Binding="{Binding ID}"/>
                         <DataGridTemplateColumn Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -98,6 +89,21 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTextColumn Width="60" Header="ID" Binding="{Binding ID}" ToolTipService.IsEnabled="True" >
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="ToolTip" Value="{Binding ID}" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Width="200" Header="Point Tag" Binding="{Binding Path=PointTag, Converter={StaticResource PointTagConverter}}" ToolTipService.IsEnabled="True" >
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="ToolTip" Value="{Binding PointTag}" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Width="Auto" Header="Description" Binding="{Binding Description}" />
                     </uc:MeasurementPagerUserControl.DataGridColumns>
                 </uc:MeasurementPagerUserControl>
             </StackPanel>
