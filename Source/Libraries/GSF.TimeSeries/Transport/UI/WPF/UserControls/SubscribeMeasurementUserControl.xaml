@@ -60,8 +60,15 @@
             <TextBlock Grid.Column="0" Grid.Row="0" Text="Subscribed Measurements" HorizontalAlignment="Left" FontWeight="Bold" VerticalAlignment="Top"/>
             <uc:MeasurementPagerUserControl Name="SubscribedMeasurementsPager" Grid.Column="0" Grid.Row="1" ItemsPerPage="25" FilterExpression="Subscribed &lt;&gt; 0" Selectable="True" Searchable="True" ShowPageSize="False" Width="400" Height="580" VerticalAlignment="Top" HorizontalAlignment="Right" CurrentPageChanged="SubscribedMeasurementsPager_CurrentPageChanged">
                 <uc:MeasurementPagerUserControl.DataGridColumns>
-                    <DataGridTextColumn Width="*" Header="Point Tag" Binding="{Binding PointTag}" />
-                    <DataGridTextColumn Width="*" Header="ID" Binding="{Binding ID}"/>
+                    <DataGridTextColumn Width="Auto" Header="Point Tag" Binding="{Binding Path=PointTag, Converter={StaticResource PointTagConverter}}">
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="ToolTip" Value="{Binding PointTag}" />
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Width="Auto" Header="Description" Binding="{Binding Description}" />
+                    <DataGridTextColumn Width="Auto" Header="ID" Binding="{Binding ID}"/>
                     <DataGridTemplateColumn Width="Auto">
                         <sdk:DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>

@@ -67,6 +67,7 @@
     <Compile Include="Converters\DictionaryToKeyValuePairConverter.cs" />
     <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="Converters\ObjectToVisibilityConverter.cs" />
+    <Compile Include="Converters\PointTagConverter.cs" />
     <Compile Include="Converters\RoleBasedVisibilityConverter.cs" />
     <Compile Include="Converters\StringToBooleanConverter.cs" />
     <Compile Include="Converters\StringToStatusColorConverter.cs" />

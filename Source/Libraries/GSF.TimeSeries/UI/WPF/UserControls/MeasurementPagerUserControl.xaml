@@ -43,7 +43,13 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.HeaderTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Width="Auto" Header="Point Tag" Binding="{Binding PointTag}" />
+                <DataGridTextColumn Width="Auto" Header="Point Tag" Binding="{Binding Path=PointTag, Converter={StaticResource PointTagConverter}}">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="ToolTip" Value="{Binding PointTag}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
                 <DataGridTextColumn Width="Auto" Header="Description" Binding="{Binding Description}" />
                 <DataGridTextColumn Width="Auto" Header="ID" Binding="{Binding ID}"/>
             </DataGrid.Columns>

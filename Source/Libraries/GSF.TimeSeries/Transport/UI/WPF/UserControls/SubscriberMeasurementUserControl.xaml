@@ -79,8 +79,15 @@
                 <TextBlock Text="Available Measurements" HorizontalAlignment="Left" FontWeight="Bold"/>
                 <uc:MeasurementPagerUserControl Name="AvailableMeasurementsPager" ItemsPerPage="13" Selectable="True" Searchable="True" ShowPageSize="False" Width="395" Height="360" VerticalAlignment="Top" Margin="0" CurrentPageChanged="AvailableMeasurementsPager_CurrentPageChanged">
                     <uc:MeasurementPagerUserControl.DataGridColumns>
-                        <DataGridTextColumn Width="*" Header="Point Tag" Binding="{Binding PointTag}" />
-                        <DataGridTextColumn Width="*" Header="ID" Binding="{Binding ID}"/>
+                        <DataGridTextColumn Width="Auto" Header="Point Tag" Binding="{Binding Path=PointTag, Converter={StaticResource PointTagConverter}}">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="ToolTip" Value="{Binding PointTag}" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Width="Auto" Header="Description" Binding="{Binding Description}" />
+                        <DataGridTextColumn Width="Auto" Header="ID" Binding="{Binding ID}"/>
                         <DataGridTemplateColumn Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
