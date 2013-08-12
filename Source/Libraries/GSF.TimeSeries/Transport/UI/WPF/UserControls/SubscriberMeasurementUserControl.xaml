@@ -91,14 +91,14 @@
                         </DataGridTemplateColumn>
                         <DataGridTextColumn Width="60" Header="ID" Binding="{Binding ID}" ToolTipService.IsEnabled="True" >
                             <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
                                     <Setter Property="ToolTip" Value="{Binding ID}" />
                                 </Style>
                             </DataGridTextColumn.CellStyle>
                         </DataGridTextColumn>
                         <DataGridTextColumn Width="200" Header="Point Tag" Binding="{Binding Path=PointTag, Converter={StaticResource PointTagConverter}}" ToolTipService.IsEnabled="True" >
                             <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
                                     <Setter Property="ToolTip" Value="{Binding PointTag}" />
                                 </Style>
                             </DataGridTextColumn.CellStyle>
