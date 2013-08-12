@@ -425,6 +425,11 @@ namespace GSF.TimeSeries.Adapters
 
                 OnStatusMessage("Calculated {0} route{1} for {2} destination{3} in {4}.", routeCount, (routeCount == 1) ? "" : "s", destinationCount, (destinationCount == 1) ? "" : "s", elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
             }
+            catch (ObjectDisposedException)
+            {
+                // Ignore this error. Seems to happen during normal
+                // operation and does not affect the result.
+            }
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException("Routing tables calculation error: " + ex.Message, ex));
