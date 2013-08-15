@@ -31,15 +31,18 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Xml.Linq;
 using GSF.Collections;
+using GSF.Console;
 using GSF.Data;
 using GSF.IO;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.UserControls;
 using GSF.Security.Cryptography;
+using GSF.ServiceProcess;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
 using Microsoft.Win32;
@@ -71,15 +74,24 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private string m_validIPAddresses;
 
         private string m_localCertificateFile;
+        private byte[] m_localCertificateData;
         private string m_remoteCertificateFile;
+        private byte[] m_remoteCertificateData;
         private bool m_isRemoteCertificateSelfSigned;
         private string m_validPolicyErrors;
         private string m_validChainFlags;
+        private Visibility m_connectivityMessageVisibility;
 
+        private AutoResetEvent m_responseComplete;
         private ICommand m_localBrowseCommand;
-        private ICommand m_remoteBrowseCommand;
+        private ICommand m_importCertificateCommand;
         private ICommand m_createCommand;
         private ICommand m_saveCommand;
+        private string m_localCertificateServerPath;
+        private bool m_advancedTlsSettingsPopupIsOpen;
+        private ICommand m_advancedTlsSettingsOpenCommand;
+        private ICommand m_advancedTlsSettingsCloseCommand;
+        private ICommand m_remoteBrowseCommand;
 
         #endregion
 
@@ -113,8 +125,14 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
             set
             {
+                bool updateRemoteCertificateFile = (string.IsNullOrEmpty(m_publisherAcronym) && string.IsNullOrEmpty(m_remoteCertificateFile)) ||
+                    m_remoteCertificateFile.Equals(string.Format("{0}.cer", m_publisherAcronym), StringComparison.CurrentCultureIgnoreCase);
+
                 m_publisherAcronym = value;
                 OnPropertyChanged("Acronym");
+
+                if (updateRemoteCertificateFile)
+                    RemoteCertificateFile = string.IsNullOrEmpty(m_publisherAcronym) ? string.Empty : string.Format("{0}.cer", m_publisherAcronym);
             }
         }
 
@@ -336,8 +354,30 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
             set
             {
+                bool updateServerPath = (string.IsNullOrEmpty(m_localCertificateFile) && string.IsNullOrEmpty(m_localCertificateServerPath)) ||
+                    ((object)m_localCertificateFile != null && m_localCertificateFile.Equals(m_localCertificateServerPath, StringComparison.CurrentCultureIgnoreCase));
+
                 m_localCertificateFile = value;
                 OnPropertyChanged("LocalCertificateFile");
+
+                if (updateServerPath)
+                    LocalCertificateServerPath = m_localCertificateFile;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the path on the server to the local certificate used to identify the subscriber.
+        /// </summary>
+        public string LocalCertificateServerPath
+        {
+            get
+            {
+                return m_localCertificateServerPath;
+            }
+            set
+            {
+                m_localCertificateServerPath = value;
+                OnPropertyChanged("LocalCertificateServerPath");
             }
         }
 
@@ -478,17 +518,25 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Gets the command that executes when the user chooses to browse for a remote certificate.
-        /// </summary>
         public ICommand RemoteBrowseCommand
         {
             get
             {
-                if ((object)m_remoteBrowseCommand == null)
-                    m_remoteBrowseCommand = new RelayCommand(BrowseRemoteCertificateFile, () => true);
+                return m_remoteBrowseCommand ?? (m_remoteBrowseCommand = new RelayCommand(BrowseRemoteCertificateFile, () => true));
+            }
+        }
 
-                return m_remoteBrowseCommand;
+        /// <summary>
+        /// Gets the command that executes when the user chooses to browse for a remote certificate.
+        /// </summary>
+        public ICommand ImportCertificateCommand
+        {
+            get
+            {
+                if ((object)m_importCertificateCommand == null)
+                    m_importCertificateCommand = new RelayCommand(ImportCertificateFile, () => true);
+
+                return m_importCertificateCommand;
             }
         }
 
@@ -541,6 +589,60 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     default:
                         return m_internalDataPublisherPort;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the visibility of the connectivity message.
+        /// </summary>
+        public Visibility ConnectivityMessageVisibility
+        {
+            get
+            {
+                return m_connectivityMessageVisibility;
+            }
+            set
+            {
+                m_connectivityMessageVisibility = value;
+                OnPropertyChanged("ConnectivityMessageVisibility");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets whether the advanced TLS settings popup is open.
+        /// </summary>
+        public bool AdvancedTlsSettingsPopupIsOpen
+        {
+            get
+            {
+                return m_advancedTlsSettingsPopupIsOpen;
+            }
+            set
+            {
+                m_advancedTlsSettingsPopupIsOpen = value;
+                OnPropertyChanged("AdvancedTlsSettingsPopupIsOpen");
+            }
+        }
+
+        /// <summary>
+        /// Gets the command that is executed when the user chooses to view the advanced TLS settings.
+        /// </summary>
+        public ICommand AdvancedTlsSettingsOpenCommand
+        {
+            get
+            {
+                return m_advancedTlsSettingsOpenCommand ?? (m_advancedTlsSettingsOpenCommand = new RelayCommand(() => AdvancedTlsSettingsPopupIsOpen = true, () => true));
+            }
+        }
+
+        /// <summary>
+        /// Gets the command that is executed whent he user chooses to save adv
+        /// </summary>
+        public ICommand AdvancedTlsSettingsCloseCommand
+        {
+            get
+            {
+                return m_advancedTlsSettingsCloseCommand ?? (m_advancedTlsSettingsCloseCommand = new RelayCommand(() => AdvancedTlsSettingsPopupIsOpen = false, () => true));
             }
         }
 
@@ -638,6 +740,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             fileDialog.FileName = LocalCertificateFile;
             fileDialog.DefaultExt = ".cer";
             fileDialog.Filter = "Certificate files|*.cer|All Files|*.*";
+            fileDialog.CheckFileExists = false;
+            fileDialog.CheckPathExists = false;
 
             if (fileDialog.ShowDialog() == true)
                 LocalCertificateFile = fileDialog.FileName;
@@ -650,9 +754,25 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             fileDialog.FileName = RemoteCertificateFile;
             fileDialog.DefaultExt = ".cer";
             fileDialog.Filter = "Certificate files|*.cer|All Files|*.*";
+            fileDialog.CheckFileExists = false;
+            fileDialog.CheckPathExists = false;
 
             if (fileDialog.ShowDialog() == true)
                 RemoteCertificateFile = fileDialog.FileName;
+        }
+
+        private void ImportCertificateFile()
+        {
+            OpenFileDialog fileDialog = new OpenFileDialog();
+
+            fileDialog.FileName = RemoteCertificateFile;
+            fileDialog.DefaultExt = ".cer";
+            fileDialog.Filter = "Certificate files|*.cer|All Files|*.*";
+            fileDialog.CheckFileExists = false;
+            fileDialog.CheckPathExists = false;
+
+            if (fileDialog.ShowDialog() == true && File.Exists(fileDialog.FileName))
+                m_remoteCertificateData = File.ReadAllBytes(fileDialog.FileName);
         }
 
         private void CreateAuthenticationRequest()
@@ -679,7 +799,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         // Export the authorization request.
         private void ExportAuthorizationRequest()
         {
-            const string messageFormat = "Data subscription adapter \"{0}\" already exists. Unable to create subscription request.";
+            const string MessageFormat = "Data subscription adapter \"{0}\" already exists. Unable to create subscription request.";
 
             Device device;
 
@@ -689,7 +809,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 device = GetDeviceByAcronym(PublisherAcronym.Replace(" ", ""));
 
                 if ((object)device != null)
-                    throw new Exception(string.Format(messageFormat, device.Acronym));
+                    throw new Exception(string.Format(MessageFormat, device.Acronym));
 
                 // Save the associated device
                 if (TryCreateRequest())
@@ -709,8 +829,10 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 SaveFileDialog saveFileDialog;
                 Stream requestStream;
 
+                WindowsServiceClient serviceClient;
+                ClientRequest clientRequest;
                 AuthenticationRequest request;
-                string[] keyIV = null;
+                string[] keyIV;
 
                 saveFileDialog = new SaveFileDialog();
                 saveFileDialog.DefaultExt = ".srq";
@@ -744,9 +866,56 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                         request.IV = keyIV[1];
                     }
 
-                    // Certificate only applies to TLS security
+                    // Local certificate only applies to TLS security
                     if (SecurityMode == SecurityMode.TLS)
-                        request.CertificateFile = File.ReadAllBytes(LocalCertificateFile);
+                    {
+                        if (File.Exists(m_localCertificateFile))
+                        {
+                            request.CertificateFile = File.ReadAllBytes(m_localCertificateFile);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                serviceClient = CommonFunctions.GetWindowsServiceClient();
+                                serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
+                                serviceClient.Helper.SendRequest("INVOKE TLS!DATAPUBLISHER GetLocalCertificate");
+
+                                // Wait for command response allowing for processing time
+                                if ((object)m_responseComplete != null)
+                                {
+                                    if (!m_responseComplete.WaitOne(5000))
+                                        throw new TimeoutException("Timed-out after 5 seconds waiting for service response.");
+                                }
+
+                                request.CertificateFile = m_localCertificateData;
+                            }
+                            catch (Exception ex)
+                            {
+                                string message = string.Format("Unable to get the local certificate used by the service: {0}", ex.Message);
+                                throw new InvalidOperationException(message, ex);
+                            }
+                        }
+
+                        if ((object)m_remoteCertificateData != null)
+                        {
+                            serviceClient = CommonFunctions.GetWindowsServiceClient();
+                            serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
+
+                            clientRequest = new ClientRequest("INVOKE");
+                            clientRequest.Arguments = new Arguments(string.Format("TLS!DATAPUBLISHER ImportCertificate {0}", m_remoteCertificateFile));
+                            clientRequest.Attachments.Add(m_remoteCertificateData);
+                            serviceClient.Helper.SendRequest(clientRequest);
+
+                            if ((object)m_responseComplete != null)
+                            {
+                                if (!m_responseComplete.WaitOne(5000))
+                                    throw new InvalidOperationException("Timeout waiting for response to ImportCertificate command.");
+                            }
+
+                            m_remoteCertificateData = null;
+                        }
+                    }
 
                     // Create the request
                     using (requestStream = File.OpenWrite(saveFileDialog.FileName))
@@ -942,8 +1111,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     validChainFlags |= X509ChainStatusFlags.UntrustedRoot;
                 }
 
-                securitySpecificSettings = string.Format("localCertificate={0}; remoteCertificate={1}; validPolicyErrors={2}; validChainFlags={3}",
-                    LocalCertificateFile, RemoteCertificateFile, validPolicyErrors, validChainFlags);
+                securitySpecificSettings = string.Format("{0}remoteCertificate={1}; validPolicyErrors={2}; validChainFlags={3}",
+                    GetLocalCertificateSetting(), RemoteCertificateFile, validPolicyErrors, validChainFlags);
             }
 
             device = new Device();
@@ -972,23 +1141,83 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             CommonFunctions.LoadUserControl(deviceUserControl, "Manage Device Configuration");
         }
 
+        // Get the setting for the local certificate path
+        private string GetLocalCertificateSetting()
+        {
+            if (string.IsNullOrEmpty(LocalCertificateServerPath))
+                return string.Empty;
+
+            return string.Format("localCertificate={0}; ", LocalCertificateServerPath);
+        }
+
         // Get the Gateway Transport protocol ID by querying the database.
         private int? GetGatewayProtocolID()
         {
-            const string query = "SELECT ID FROM Protocol WHERE Acronym = 'GatewayTransport'";
+            const string Query = "SELECT ID FROM Protocol WHERE Acronym = 'GatewayTransport'";
             AdoDataConnection database = null;
             object queryResult;
 
             try
             {
                 database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                queryResult = database.Connection.ExecuteScalar(query);
+                queryResult = database.Connection.ExecuteScalar(Query);
                 return (queryResult != null) ? Convert.ToInt32(queryResult) : 8;
             }
             finally
             {
                 if ((object)database != null)
                     database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Handles ReceivedServiceResponse event.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
+        private void Helper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
+        {
+            if ((object)e != null)
+            {
+                ServiceResponse response = e.Argument;
+
+                if ((object)response != null)
+                {
+                    string sourceCommand;
+                    bool responseSuccess;
+
+                    if (ClientHelper.TryParseActionableResponse(response, out sourceCommand, out responseSuccess) && responseSuccess)
+                    {
+                        if (!string.IsNullOrWhiteSpace(sourceCommand) && string.Compare(sourceCommand.Trim(), "INVOKE", true) == 0)
+                        {
+                            List<object> attachments = response.Attachments;
+
+                            // A GetHighestSeverityAlarms INVOKE will have two attachments: an alarm array, item 0, and the original command arguments, item 1
+                            if ((object)attachments != null && attachments.Count > 1)
+                            {
+                                Arguments arguments = attachments[1] as Arguments;
+
+                                // Check the method that was invoked - the second argument after the adapter ID
+                                if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "GetLocalCertificate", true) == 0)
+                                {
+                                    m_localCertificateData = attachments[0] as byte[];
+
+                                    // Release waiting thread once desired response has been received
+                                    if ((object)m_responseComplete != null)
+                                        m_responseComplete.Set();
+                                }
+                                else if ((object)arguments != null && string.Compare(arguments["OrderedArg2"], "ImportCertificate", true) == 0)
+                                {
+                                    m_remoteCertificateFile = attachments[0] as string;
+
+                                    // Release waiting thread once desired response has been received
+                                    if ((object)m_responseComplete != null)
+                                        m_responseComplete.Set();
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

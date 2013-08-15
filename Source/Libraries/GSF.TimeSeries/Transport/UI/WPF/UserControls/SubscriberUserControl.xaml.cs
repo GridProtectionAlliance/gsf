@@ -242,12 +242,12 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                     }
                     catch (Exception ex)
                     {
-                        const string errorMessage = "Successfully imported subscription request, but was" +
+                        const string ErrorMessage = "Successfully imported subscription request, but was" +
                             " unable to import remote certificate. Check that the manager is properly" +
                             " connected to the service.";
 
                         CommonFunctions.LogException(null, "Import Subscription Request", ex);
-                        MessageBox.Show(errorMessage, "Import Subscription Request Error");
+                        MessageBox.Show(ErrorMessage, "Import Subscription Request Error");
                     }
                 }
             }

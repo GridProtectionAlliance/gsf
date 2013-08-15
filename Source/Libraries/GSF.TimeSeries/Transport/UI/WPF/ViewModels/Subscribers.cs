@@ -37,7 +37,6 @@ using GSF.Data;
 using GSF.TimeSeries.Transport.UI.DataModels;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
-using GSF.TimeSeries.UI.DataModels;
 using DataModelMeasurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.TimeSeries.Transport.UI.ViewModels

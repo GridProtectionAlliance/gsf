@@ -42,6 +42,7 @@ using System.Timers;
 using System.Xml;
 using GSF.Collections;
 using GSF.Communication;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
 using GSF.Net.Security;
@@ -962,9 +963,9 @@ namespace GSF.TimeSeries.Transport
             if (m_securityMode == SecurityMode.TLS)
             {
                 if (!settings.TryGetValue("localCertificate", out m_localCertificate) || !File.Exists(m_localCertificate))
-                    throw new ArgumentException("The \"localCertificate\" setting must be defined and certificate file must exist when using TLS security mode.");
+                    m_localCertificate = GetLocalCertificate();
 
-                if (!settings.TryGetValue("remoteCertificate", out m_remoteCertificate) || !File.Exists(m_remoteCertificate))
+                if (!settings.TryGetValue("remoteCertificate", out m_remoteCertificate) || !RemoteCertificateExists())
                     throw new ArgumentException("The \"remoteCertificate\" setting must be defined and certificate file must exist when using TLS security mode.");
 
                 if (!settings.TryGetValue("validPolicyErrors", out setting) || !Enum.TryParse(setting, out m_validPolicyErrors))
@@ -1057,7 +1058,7 @@ namespace GSF.TimeSeries.Transport
                 SimpleCertificateChecker certificateChecker = new SimpleCertificateChecker();
 
                 // Set up certificate checker
-                certificateChecker.TrustedCertificates.Add(new X509Certificate2(m_remoteCertificate));
+                certificateChecker.TrustedCertificates.Add(new X509Certificate2(FilePath.GetAbsolutePath(m_remoteCertificate)));
                 certificateChecker.ValidPolicyErrors = m_validPolicyErrors;
                 certificateChecker.ValidChainFlags = m_validChainFlags;
 
@@ -1065,7 +1066,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.PayloadAware = true;
                 commandChannel.PersistSettings = false;
                 commandChannel.MaxConnectionAttempts = 1;
-                commandChannel.CertificateFile = m_localCertificate;
+                commandChannel.CertificateFile = FilePath.GetAbsolutePath(ConfigurationFile.Current.Settings["systemSettings"]["LocalCertificate"].Value);
                 commandChannel.CertificateChecker = certificateChecker;
                 commandChannel.ReceiveBufferSize = bufferSize;
                 commandChannel.SendBufferSize = bufferSize;
@@ -1086,6 +1087,41 @@ namespace GSF.TimeSeries.Transport
             StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
 
             Initialized = true;
+        }
+
+        // Gets the path to the local certificate from the configuration file
+        private string GetLocalCertificate()
+        {
+            CategorizedSettingsElement localCertificateElement = ConfigurationFile.Current.Settings["systemSettings"]["LocalCertificate"];
+            string localCertificate = null;
+
+            if ((object)localCertificateElement != null)
+                localCertificate = localCertificateElement.Value;
+
+            if ((object)localCertificate == null || !File.Exists(localCertificate))
+                throw new InvalidOperationException("Unable to find local certificate. Local certificate file must exist when using TLS security mode.");
+
+            return localCertificate;
+        }
+
+        // Checks if the specified certificate exists
+        private bool RemoteCertificateExists()
+        {
+            string fullPath = FilePath.GetAbsolutePath(m_remoteCertificate);
+            CategorizedSettingsElement remoteCertificateElement;
+
+            if (!File.Exists(fullPath))
+            {
+                remoteCertificateElement = ConfigurationFile.Current.Settings["systemSettings"]["RemoteCertificatesPath"];
+
+                if ((object)remoteCertificateElement != null)
+                {
+                    m_remoteCertificate = Path.Combine(remoteCertificateElement.Value, m_remoteCertificate);
+                    fullPath = FilePath.GetAbsolutePath(m_remoteCertificate);
+                }
+            }
+
+            return File.Exists(fullPath);
         }
 
         // Initialize (or reinitialize) the output measurements associated with the data subscriber.

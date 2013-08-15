@@ -41,7 +41,7 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Default value for <see cref="ResponseTimeout"/>.
         /// </summary>
-        public const int DefaultResponseTimeout = 5000; // Defaulting to waiting for five seconds, could be lots of alarms
+        public const int DefaultResponseTimeout = 20000; // Defaulting to waiting twenty seconds, could be lots of alarms
 
         // Events
 

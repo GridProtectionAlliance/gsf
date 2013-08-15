@@ -337,6 +337,8 @@ namespace GSF.TimeSeries
             systemSettings.Add("GCCollectInterval", DefaultGCCollectInterval, "Defines the interval, in milliseconds, over which to force a garbage collection. Set to -1 to disable.");
             systemSettings.Add("ConfigurationBackups", DefaultConfigurationBackups, "Defines the total number of older backup configurations to maintain.");
             systemSettings.Add("PreferCachedConfiguration", "False", "Set to true to try the cached configuration first, before loading database configuration - typically used when cache is updated by external process.");
+            systemSettings.Add("LocalCertificate", string.Format("{0}.cer", ServiceName), "Path to the local certificate used by this server for authentication.");
+            systemSettings.Add("RemoteCertificatesPath", @"Certs\Remotes", "Path to the directory where remote certificates are stored.");
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];

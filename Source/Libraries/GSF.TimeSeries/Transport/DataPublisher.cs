@@ -1603,6 +1603,23 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets the local certificate currently in use by the data publisher.
+        /// </summary>
+        /// <returns>The local certificate file read directly from the certificate file as an array of bytes.</returns>
+        [AdapterCommand("Gets the local certificate currently in use by the data publisher.", "Administrator", "Editor")]
+        public virtual byte[] GetLocalCertificate()
+        {
+            TlsServer commandChannel;
+
+            commandChannel = m_commandChannel as TlsServer;
+
+            if ((object)commandChannel == null)
+                throw new InvalidOperationException("Certificates can only be imported in TLS security mode.");
+
+            return File.ReadAllBytes(FilePath.GetAbsolutePath(commandChannel.CertificateFile));
+        }
+
+        /// <summary>
         /// Imports a certificate to the trusted certificates path.
         /// </summary>
         /// <param name="fileName">The file name to give to the certificate when imported.</param>

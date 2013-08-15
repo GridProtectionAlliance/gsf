@@ -24,6 +24,8 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using GSF.Communication;
+using GSF.ServiceProcess;
 using GSF.TimeSeries.Transport.UI.ViewModels;
 using GSF.TimeSeries.UI;
 
@@ -46,18 +48,81 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         #endregion
 
+        #region [ Properties ]
+
+        private SubscriberRequestViewModel ViewModel
+        {
+            get
+            {
+                return Resources["ViewModel"] as SubscriberRequestViewModel;
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
+
+        private void SubscriberRequestUserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Attach to service connected events
+            CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
+
+            // Determine initial state of connectivity
+            UpdateServiceConnectivity();
+        }
+
+        private void CommonFunctions_ServiceConnectionRefreshed(object sender, EventArgs eventArgs)
+        {
+            // Determine new state of connectivity
+            UpdateServiceConnectivity();
+        }
+
+        private void RemotingClient_ConnectionTerminated(object sender, EventArgs eventArgs)
+        {
+            IClient remotingClient = sender as IClient;
+
+            // Attempt to detach from the event that just occurred
+            if ((object)remotingClient != null)
+                remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+
+            // Determine new state of connectivity
+            UpdateServiceConnectivity();
+        }
+
+        private void UpdateServiceConnectivity()
+        {
+            WindowsServiceClient serviceClient = CommonFunctions.GetWindowsServiceClient();
+            ClientHelper clientHelper = ((object)serviceClient != null) ? serviceClient.Helper : null;
+            IClient remotingClient = ((object)clientHelper != null) ? clientHelper.RemotingClient : null;
+
+            if ((object)remotingClient == null || remotingClient.CurrentState != ClientState.Connected)
+            {
+                // If remoting client is not connected, make the message visible
+                Dispatcher.BeginInvoke(new Action(() => ViewModel.ConnectivityMessageVisibility = Visibility.Visible));
+            }
+            else
+            {
+                // If remoting client is connected, hide the message and attach to connection terminated event
+                remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
+                Dispatcher.BeginInvoke(new Action(() => ViewModel.ConnectivityMessageVisibility = Visibility.Collapsed));
+            }
+        }
+
+        private void SubscriberRequestUserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Detach from service connected events
+            CommonFunctions.ServiceConnectionRefreshed -= CommonFunctions_ServiceConnectionRefreshed;
+        }
 
         private void SecurityModeRadioButton_Checked(object sender, RoutedEventArgs e)
         {
             RadioButton tlsRadioButton = sender as RadioButton;
-            SubscriberRequestViewModel viewModel = Resources["ViewModel"] as SubscriberRequestViewModel;
             SecurityMode securityMode;
 
-            if ((object)tlsRadioButton != null && (object)viewModel != null)
+            if ((object)tlsRadioButton != null)
             {
                 if (Enum.TryParse(tlsRadioButton.Content.ToString(), out securityMode))
-                    viewModel.SecurityMode = securityMode;
+                    ViewModel.SecurityMode = securityMode;
             }
         }
 
