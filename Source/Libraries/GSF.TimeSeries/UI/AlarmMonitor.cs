@@ -165,6 +165,60 @@ namespace GSF.TimeSeries.UI
         #region [ Methods ]
 
         /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or
+        /// resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="AlarmMonitor"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if ((object)m_refreshTimer != null)
+                        {
+                            m_refreshTimer.Dispose();
+                            m_refreshTimer = null;
+                        }
+
+                        if ((object)m_alarmStatusQuery != null)
+                        {
+                            m_alarmStatusQuery.RaisedAlarmStates -= m_alarmStatusQuery_RaisedAlarmStates;
+                            m_alarmStatusQuery.ProcessException -= m_alarmStatusQuery_ProcessException;
+                            m_alarmStatusQuery.Dispose();
+                            m_alarmStatusQuery = null;
+                        }
+
+                        if ((object)m_dataSubscriber != null)
+                        {
+                            m_dataSubscriber.ConnectionEstablished -= m_dataSubscriber_ConnectionEstablished;
+                            m_dataSubscriber.ReceivedServerResponse -= m_dataSubscriber_ReceivedServerResponse;
+                            m_dataSubscriber.NewMeasurements -= m_dataSubscriber_NewMeasurements;
+                            m_dataSubscriber.ProcessException -= m_dataSubscriber_ProcessException;
+                            m_dataSubscriber.Dispose();
+                            m_dataSubscriber = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
         /// Starts the refresh timer that notifies consumer about the current alarm status.
         /// </summary>
         public void Start()
@@ -235,60 +289,6 @@ namespace GSF.TimeSeries.UI
 
                 // Stop data subscriber
                 m_dataSubscriber.Stop();
-            }
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or
-        /// resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="AlarmMonitor"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_refreshTimer != null)
-                        {
-                            m_refreshTimer.Dispose();
-                            m_refreshTimer = null;
-                        }
-
-                        if ((object)m_alarmStatusQuery != null)
-                        {
-                            m_alarmStatusQuery.RaisedAlarmStates -= m_alarmStatusQuery_RaisedAlarmStates;
-                            m_alarmStatusQuery.ProcessException -= m_alarmStatusQuery_ProcessException;
-                            m_alarmStatusQuery.Dispose();
-                            m_alarmStatusQuery = null;
-                        }
-
-                        if ((object)m_dataSubscriber != null)
-                        {
-                            m_dataSubscriber.ConnectionEstablished -= m_dataSubscriber_ConnectionEstablished;
-                            m_dataSubscriber.ReceivedServerResponse -= m_dataSubscriber_ReceivedServerResponse;
-                            m_dataSubscriber.NewMeasurements -= m_dataSubscriber_NewMeasurements;
-                            m_dataSubscriber.ProcessException -= m_dataSubscriber_ProcessException;
-                            m_dataSubscriber.Dispose();
-                            m_dataSubscriber = null;
-                        }
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
             }
         }
 

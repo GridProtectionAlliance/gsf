@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using GSF.Communication;
 using GSF.Console;
 using GSF.ServiceProcess;
 
@@ -41,7 +42,7 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Default value for <see cref="ResponseTimeout"/>.
         /// </summary>
-        public const int DefaultResponseTimeout = 20000; // Defaulting to waiting twenty seconds, could be lots of alarms
+        public const int DefaultResponseTimeout = 20000; // Default to waiting twenty seconds, could be lots of alarms
 
         // Events
 
@@ -68,6 +69,7 @@ namespace GSF.TimeSeries.UI
         private AutoResetEvent m_responseComplete;
         private readonly object m_queuedQueryPending;
         private int m_responseTimeout;
+        private bool m_connectedToService;
         private bool m_disposed;
 
         #endregion
@@ -79,8 +81,11 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public AlarmStatusQuery()
         {
-            m_serviceClient = CommonFunctions.GetWindowsServiceClient();
-            m_serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
+            // Attach to service connected events
+            CommonFunctions.ServiceConnectionRefreshed += CommonFunctions_ServiceConnectionRefreshed;
+
+            // Determine initial state of connectivity
+            UpdateServiceConnectivity();
 
             m_responseComplete = new AutoResetEvent(false);
             m_requestComplete = new AutoResetEvent(true);
@@ -162,6 +167,9 @@ namespace GSF.TimeSeries.UI
                         }
 
                         m_requestComplete = null;
+
+                        // Detach from service connected events
+                        CommonFunctions.ServiceConnectionRefreshed -= CommonFunctions_ServiceConnectionRefreshed;
                     }
                 }
                 finally
@@ -169,6 +177,60 @@ namespace GSF.TimeSeries.UI
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
+        }
+
+        private void UpdateServiceConnectivity(bool refreshRaisedAlarms = false)
+        {
+            // Detach from original service response if refreshing service connection
+            if ((object)m_serviceClient != null && (object)m_serviceClient.Helper != null)
+                m_serviceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
+
+            // Get new service client
+            m_serviceClient = CommonFunctions.GetWindowsServiceClient();
+            ClientHelper clientHelper = ((object)m_serviceClient != null) ? m_serviceClient.Helper : null;
+            IClient remotingClient = ((object)clientHelper != null) ? clientHelper.RemotingClient : null;
+
+            if ((object)clientHelper != null)
+                clientHelper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
+
+            if ((object)remotingClient == null || remotingClient.CurrentState != ClientState.Connected)
+            {
+                // Remoting client is not connected to service
+                m_connectedToService = false;
+
+                // Release any waiting threads if service has been disconnected
+                if ((object)m_responseComplete != null)
+                    m_responseComplete.Set();
+            }
+            else
+            {
+                // If remoting client is connected, refresh raised alarms if requested and attach to connection terminated event
+                m_connectedToService = true;
+
+                if (refreshRaisedAlarms)
+                    RequestRaisedAlarmStates();
+
+                remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
+            }
+        }
+
+        private void CommonFunctions_ServiceConnectionRefreshed(object sender, EventArgs eventArgs)
+        {
+            // Determine new state of connectivity - since we are reconnecting and this could be to a
+            // new node an/or a restarted system, re-request raised alarm states
+            UpdateServiceConnectivity(true);
+        }
+
+        private void RemotingClient_ConnectionTerminated(object sender, EventArgs eventArgs)
+        {
+            IClient remotingClient = sender as IClient;
+
+            // Attempt to detach from the event that just occurred
+            if ((object)remotingClient != null)
+                remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+
+            // Determine new state of connectivity
+            UpdateServiceConnectivity();
         }
 
         /// <summary>
@@ -190,7 +252,7 @@ namespace GSF.TimeSeries.UI
                 {
                     // Queue new query after waiting for any prior query request to complete
                     if (m_requestComplete.WaitOne())
-                        ThreadPool.QueueUserWorkItem(ExecuteAlarmStateQuery, state);
+                        ThreadPool.QueueUserWorkItem(ExecuteAlarmStateQuery);
                 }
                 finally
                 {
@@ -202,6 +264,10 @@ namespace GSF.TimeSeries.UI
         // Execute alarm state query
         private void ExecuteAlarmStateQuery(object state)
         {
+            // Nothing to do if not connected to service
+            if (!m_connectedToService)
+                return;
+
             try
             {
                 // Clear any existing raised alarms
@@ -218,7 +284,7 @@ namespace GSF.TimeSeries.UI
                 if ((object)m_responseComplete != null)
                 {
                     if (!m_responseComplete.WaitOne(m_responseTimeout))
-                        OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for service response.", (m_responseTimeout / 1000.0D).ToString("0.00"))));
+                        OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for service response{1}.", (m_responseTimeout / 1000.0D).ToString("0.00"), m_connectedToService ? "" : " - service is disconnected")));
                 }
 
                 // If alarms were returned, expose them to consumer
@@ -252,7 +318,7 @@ namespace GSF.TimeSeries.UI
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
         protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
