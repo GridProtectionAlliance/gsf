@@ -74,24 +74,25 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private string m_validIPAddresses;
 
         private string m_localCertificateFile;
+        private string m_localCertificateServerPath;
         private byte[] m_localCertificateData;
         private string m_remoteCertificateFile;
         private byte[] m_remoteCertificateData;
         private bool m_isRemoteCertificateSelfSigned;
         private string m_validPolicyErrors;
         private string m_validChainFlags;
+
         private Visibility m_connectivityMessageVisibility;
+        private bool m_advancedTlsSettingsPopupIsOpen;
 
         private AutoResetEvent m_responseComplete;
         private ICommand m_localBrowseCommand;
+        private ICommand m_remoteBrowseCommand;
         private ICommand m_importCertificateCommand;
-        private ICommand m_createCommand;
-        private ICommand m_saveCommand;
-        private string m_localCertificateServerPath;
-        private bool m_advancedTlsSettingsPopupIsOpen;
         private ICommand m_advancedTlsSettingsOpenCommand;
         private ICommand m_advancedTlsSettingsCloseCommand;
-        private ICommand m_remoteBrowseCommand;
+        private ICommand m_createCommand;
+        private ICommand m_saveCommand;
 
         #endregion
 
