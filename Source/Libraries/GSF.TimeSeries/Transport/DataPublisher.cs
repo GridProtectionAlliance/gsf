@@ -3164,6 +3164,38 @@ namespace GSF.TimeSeries.Transport
                         }
                     }
 
+                    // Do some post analysis on the meta-data to be delivered to the client, e.g., if a device exists with no associated measurements - don't send the device.
+                    if (metadata.Tables.Contains("MeasurementDetail") && metadata.Tables["MeasurementDetail"].Columns.Contains("DeviceAcronym") && metadata.Tables.Contains("DeviceDetail") && metadata.Tables["DeviceDetail"].Columns.Contains("Acronym"))
+                    {
+                        List<DataRow> rowsToRemove = new List<DataRow>();
+                        string deviceAcronym;
+
+                        // Remove device records where no associated measurements records exist
+                        foreach (DataRow row in metadata.Tables["DeviceDetail"].Rows)
+                        {
+                            deviceAcronym = row["Acronym"].ToNonNullString();
+
+                            if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["MeasurementDetail"].Compute("Count(DeviceAcronym)", string.Format("DeviceAcronym = '{0}'", deviceAcronym)) == 0)
+                                rowsToRemove.Add(row);
+                        }
+
+                        if (metadata.Tables.Contains("PhasorDetail") && metadata.Tables["PhasorDetail"].Columns.Contains("DeviceAcronym"))
+                        {
+                            // Remove phasor records where no associated device records exist
+                            foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
+                            {
+                                deviceAcronym = row["DeviceAcronym"].ToNonNullString();
+
+                                if (!string.IsNullOrEmpty(deviceAcronym) && (int)metadata.Tables["DeviceDetail"].Compute("Count(Acronym)", string.Format("Acronym = '{0}'", deviceAcronym)) == 0)
+                                    rowsToRemove.Add(row);
+                            }
+                        }
+
+                        // Remove any unnecessary rows
+                        foreach (DataRow row in rowsToRemove)
+                            row.Delete();
+                    }
+
                     serializedMetadata = SerializeMetadata(clientID, metadata);
                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
                 }
