@@ -33,6 +33,14 @@
 //
 //******************************************************************************************************
 
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Security.Cryptography;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -51,14 +59,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
 using System.Xml;
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Security.Cryptography;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
@@ -124,6 +124,8 @@ namespace GSF.TimeSeries.Transport
         /// Received device list should be defined as children of the "parent" server device connection similar to the way
         /// PMUs are defined as children of a parent PDC device connection.
         /// Devices and measurements contain unique Guids that should be used to key metadata updates in local repository.
+        /// Optional string based message can follow command that should represent client requested meta-data filtering
+        /// expressions, e.g.: "FILTER MeasurementDetail WHERE SignalType &lt;&gt; 'STAT'"
         /// </remarks>
         MetaDataRefresh = 0x01,
         /// <summary>
@@ -3064,101 +3066,131 @@ namespace GSF.TimeSeries.Transport
         }
 
         // Handles meta-data refresh request
-        private void HandleMetadataRefresh(ClientConnection connection)
+        private void HandleMetadataRefresh(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
+            // Ensure that the subscriber is allowed to request meta-data
+            if (!m_allowMetadataRefresh)
+                throw new InvalidOperationException("Meta-data refresh has been disallowed by the DataPublisher.");
+
             Guid clientID = connection.ClientID;
+            Dictionary<string, string> filterExpressions = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             string message;
+
+            // Attempt to parse out any subscriber provided meta-data filter expressions
+            try
+            {
+                if (length > 4)
+                {
+                    int responseLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                    startIndex += 4;
+
+                    if (length >= responseLength + 4)
+                    {
+                        string metadataFilters = GetClientEncoding(clientID).GetString(buffer, startIndex, responseLength);
+                        string[] expressions = metadataFilters.Split(';');
+                        string tableName, filterExpression, sortField;
+                        int takeCount;
+
+                        // Go through each subscriber specified filter expressions
+                        foreach (string expression in expressions)
+                        {
+                            // Attempt to parse filter expression and add it dictionary if successful
+                            if (AdapterBase.ParseFilterExpression(expression, out tableName, out filterExpression, out sortField, out takeCount))
+                                filterExpressions.Add(tableName, filterExpression);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException("Failed to parse subscriber provided meta-data filter expressions: " + ex.Message, ex));
+            }
 
             try
             {
-                // Ensure that the subscriber is allowed to request metadata
-                if (!m_allowMetadataRefresh)
-                    throw new InvalidOperationException("Metadata refresh has been disallowed by the DataPublisher.");
-
                 using (AdoDataConnection adoDatabase = new AdoDataConnection("systemSettings"))
                 {
                     IDbConnection dbConnection = adoDatabase.Connection;
                     DataSet metadata = new DataSet();
                     DataTable table;
-
+                    string filterExpression;
                     byte[] serializedMetadata;
 
                     // Initialize active node ID
                     Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
 
-                    // Determine whether we're sending internal and external metadata
+                    // Determine whether we're sending internal and external meta-data
                     bool sendExternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveExternalMetadata);
                     bool sendInternalMetadata = !sendExternalMetadata || connection.OperationalModes.HasFlag(OperationalModes.ReceiveInternalMetadata);
 
                     // Copy key meta-data tables
                     foreach (string tableExpression in m_metadataTables.Split(';'))
                     {
-                        if (!string.IsNullOrWhiteSpace(tableExpression))
+                        if (string.IsNullOrWhiteSpace(tableExpression))
+                            continue;
+
+                        // Query the table or view information from the database
+                        table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
+
+                        // Remove any expression from table name
+                        Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
+                        table.TableName = regexMatch.Value.Split(' ')[1];
+
+                        // Build filter list
+                        List<string> filters = new List<string>();
+
+                        if (table.Columns.Contains("NodeID"))
+                            filters.Add(string.Format("NodeID = '{0}'", nodeID));
+
+                        if (table.Columns.Contains("Internal") && !(sendInternalMetadata && sendExternalMetadata))
+                            filters.Add(string.Format("Internal {0} 0", sendExternalMetadata ? "=" : "<>"));
+
+                        if (table.Columns.Contains("OriginalSource") && !(sendInternalMetadata && sendExternalMetadata))
+                            filters.Add(string.Format("OriginalSource IS {0} NULL", sendExternalMetadata ? "NOT" : ""));
+
+                        if (filterExpressions.TryGetValue(table.TableName, out filterExpression))
+                            filters.Add(filterExpression);
+
+                        // Determine whether we need to check subscriber for rights to the data
+                        bool checkSubscriberRights = RequireAuthentication && table.Columns.Contains("SignalID");
+
+                        if (m_sharedDatabase || (filters.Count == 0 && !checkSubscriberRights))
                         {
-                            // Query the table or view information from the database
-                            table = dbConnection.RetrieveData(adoDatabase.AdapterType, tableExpression);
+                            // Add a copy of the results to the dataset for meta-data exchange
+                            metadata.Tables.Add(table.Copy());
+                        }
+                        else
+                        {
+                            IEnumerable<DataRow> filteredRows;
+                            List<DataRow> filteredRowList;
 
-                            // Remove any expression from table name
-                            Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
-                            table.TableName = regexMatch.Value.Split(' ')[1];
+                            // Make a copy of the table structure
+                            metadata.Tables.Add(table.Clone());
 
-                            // Build parallel arrays for filters as well as boolean
-                            // flags to determine whether to apply the filters
-                            string[] filters =
+                            filteredRows = table.Select(string.Join(" AND ", filters));
+
+                            // Reduce data to only what the subscriber has rights to
+                            if (checkSubscriberRights)
+                                filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
+
+                            filteredRowList = filteredRows.ToList();
+
+                            if (filteredRowList.Count > 0)
                             {
-                                string.Format("NodeID = '{0}'", nodeID),
-                                string.Format("Internal {0} 0", sendExternalMetadata ? "=" : "<>"),
-                                string.Format("OriginalSource IS {0} NULL", sendExternalMetadata ? "NOT" : "")
-                            };
+                                DataTable metadataTable = metadata.Tables[table.TableName];
 
-                            bool[] filterFlags =
-                            {
-                                table.Columns.Contains("NodeID"),
-                                table.Columns.Contains("Internal") && !(sendInternalMetadata && sendExternalMetadata),
-                                table.Columns.Contains("OriginalSource") && !(sendInternalMetadata && sendExternalMetadata)
-                            };
-
-                            // Determine whether we need to check subscriber for rights to the data
-                            bool checkSubscriberRights = RequireAuthentication && table.Columns.Contains("SignalID");
-
-                            if (m_sharedDatabase || (filterFlags.All(flag => !flag) && !checkSubscriberRights))
-                            {
-                                // Add a copy of the results to the dataset for meta-data exchange
-                                metadata.Tables.Add(table.Copy());
-                            }
-                            else
-                            {
-                                IEnumerable<DataRow> filteredRows;
-                                List<DataRow> filteredRowList;
-
-                                // Make a copy of the table structure
-                                metadata.Tables.Add(table.Clone());
-
-                                filteredRows = table.Select(string.Join(" AND ", filters.Where((filter, index) => filterFlags[index])));
-
-                                // Reduce data to only what the subscriber has rights to
-                                if (checkSubscriberRights)
-                                    filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
-
-                                filteredRowList = filteredRows.ToList();
-
-                                if (filteredRowList.Count > 0)
+                                // Manually copy-in each row into table
+                                foreach (DataRow row in filteredRowList)
                                 {
-                                    DataTable metadataTable = metadata.Tables[table.TableName];
+                                    DataRow newRow = metadataTable.NewRow();
 
-                                    // Manually copy-in each row into table
-                                    foreach (DataRow row in filteredRowList)
+                                    // Copy each column of data in the current row
+                                    for (int x = 0; x < table.Columns.Count; x++)
                                     {
-                                        DataRow newRow = metadataTable.NewRow();
-
-                                        // Copy each column of data in the current row
-                                        for (int x = 0; x < table.Columns.Count; x++)
-                                        {
-                                            newRow[x] = row[x];
-                                        }
-
-                                        metadataTable.Rows.Add(newRow);
+                                        newRow[x] = row[x];
                                     }
+
+                                    metadataTable.Rows.Add(newRow);
                                 }
                             }
                         }
@@ -3533,7 +3565,7 @@ namespace GSF.TimeSeries.Transport
                                 break;
                             case ServerCommand.MetaDataRefresh:
                                 // Handle meta data refresh (per subscriber request)
-                                HandleMetadataRefresh(connection);
+                                HandleMetadataRefresh(connection, buffer, index, length);
                                 break;
                             case ServerCommand.RotateCipherKeys:
                                 // Handle rotation of cipher keys (per subscriber request)

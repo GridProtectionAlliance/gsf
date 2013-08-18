@@ -23,6 +23,9 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
+using GSF.Data;
+using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,9 +36,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Units;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -1103,6 +1103,49 @@ namespace GSF.TimeSeries.Adapters
         // Static Methods
 
         /// <summary>
+        /// Parses a standard FILTER styles expression into its constituent parts.
+        /// </summary>
+        /// <param name="filterExpression">Filter expression to parse.</param>
+        /// <param name="tableName">Name of table in filter expression.</param>
+        /// <param name="whereExpression">Where expression in filter expression.</param>
+        /// <param name="sortField">Sort field, if any, in filter expression.</param>
+        /// <param name="takeCount">Total row restriction, if any, in filter expression.</param>
+        /// <returns><c>true</c> if filter expression was successfully parsed; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// This method can be safely called from multiple threads.
+        /// </remarks>
+        public static bool ParseFilterExpression(string filterExpression, out string tableName, out string whereExpression, out string sortField, out int takeCount)
+        {
+            tableName = null;
+            whereExpression = null;
+            sortField = null;
+            takeCount = 0;
+
+            if (string.IsNullOrWhiteSpace(filterExpression))
+                return false;
+
+            Match filterMatch;
+
+            lock (s_filterExpression)
+            {
+                filterMatch = s_filterExpression.Match(filterExpression.ReplaceControlCharacters());
+            }
+
+            if (!filterMatch.Success)
+                return false;
+
+            tableName = filterMatch.Result("${TableName}").Trim();
+            whereExpression = filterMatch.Result("${Expression}").Trim();
+            sortField = filterMatch.Result("${SortField}").Trim();
+            string maxRows = filterMatch.Result("${MaxRows}").Trim();
+
+            if (string.IsNullOrEmpty(maxRows) || !int.TryParse(maxRows, out takeCount))
+                takeCount = int.MaxValue;
+
+            return true;
+        }
+
+        /// <summary>
         /// Parses a string formatted as an absolute or relative time tag.
         /// </summary>
         /// <param name="timetag">String formatted as an absolute or relative time tag.</param>
@@ -1410,127 +1453,111 @@ namespace GSF.TimeSeries.Adapters
             List<MeasurementKey> keys = new List<MeasurementKey>();
             MeasurementKey key;
             Guid id;
-            Match filterMatch = null;
+            string tableName, expression, sortField;
+            int takeCount;
             bool dataSourceAvailable = ((object)dataSource != null);
 
             value = value.Trim();
 
-            if (!string.IsNullOrWhiteSpace(value))
+            if (string.IsNullOrWhiteSpace(value))
+                return keys.ToArray();
+
+            if (dataSourceAvailable && ParseFilterExpression(value, out tableName, out expression, out sortField, out takeCount))
             {
-                if (dataSourceAvailable)
+                foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
                 {
-                    lock (s_filterExpression)
-                    {
-                        filterMatch = s_filterExpression.Match(value);
-                    }
+                    if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
+                        keys.Add(key);
                 }
-
-                if (dataSourceAvailable && filterMatch.Success)
+            }
+            else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                try
                 {
-                    string tableName = filterMatch.Result("${TableName}").Trim();
-                    string expression = filterMatch.Result("${Expression}").Trim();
-                    string sortField = filterMatch.Result("${SortField}").Trim();
-                    string maxRows = filterMatch.Result("${MaxRows}").Trim();
-                    int takeCount;
+                    // Load settings from the system settings category				
+                    ConfigurationFile config = ConfigurationFile.Current;
+                    CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
+                    settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output measurements for adapters.");
 
-                    if (string.IsNullOrEmpty(maxRows) || !int.TryParse(maxRows, out takeCount))
-                        takeCount = int.MaxValue;
-
-                    foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
+                    // Global configuration setting can override ability to use SELECT statements
+                    if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
                     {
-                        if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
-                            keys.Add(key);
-                    }
-                }
-                else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    try
-                    {
-                        // Load settings from the system settings category				
-                        ConfigurationFile config = ConfigurationFile.Current;
-                        CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
-                        settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output measurements for adapters.");
-
-                        // Global configuration setting can override ability to use SELECT statements
-                        if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
+                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                         {
-                            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
-                            {
-                                DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
 
-                                foreach (DataRow row in results.Rows)
-                                {
-                                    if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
-                                        keys.Add(key);
-                                }
+                            foreach (DataRow row in results.Rows)
+                            {
+                                if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
+                                    keys.Add(key);
                             }
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Database backed SELECT statements are disabled in the configuration.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(string.Format("Could not parse input measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
+                }
+            }
+            else
+            {
+                // Add manually defined measurement keys
+                foreach (string item in value.Split(';'))
+                {
+                    if (string.IsNullOrWhiteSpace(item))
+                        continue;
+
+                    if (MeasurementKey.TryParse(item, Guid.Empty, out key))
+                    {
+                        // Attempt to update empty signal ID if available
+                        if (dataSourceAvailable && key.SignalID == Guid.Empty)
+                        {
+                            if (dataSource.Tables.Contains(measurementTable))
+                            {
+                                DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
+
+                                if (filteredRows.Length > 0)
+                                    key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                            }
+                        }
+
+                        keys.Add(key);
+                    }
+                    else if (Guid.TryParse(item, out id))
+                    {
+                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                        {
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
+
+                            if (filteredRows.Length > 0 && MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key))
+                                keys.Add(key);
                         }
                         else
                         {
-                            throw new InvalidOperationException("Database backed SELECT statements are disabled in the configuration.");
+                            keys.Add(MeasurementKey.LookupBySignalID(id));
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        throw new InvalidOperationException(string.Format("Could not parse input measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
-                    }
-                }
-                else
-                {
-                    // Add manually defined measurement keys
-                    foreach (string item in value.Split(';'))
-                    {
-                        if (!string.IsNullOrWhiteSpace(item))
+                        // Attempt to update empty signal ID if available
+                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            if (MeasurementKey.TryParse(item, Guid.Empty, out key))
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
+
+                            if (filteredRows.Length > 0)
                             {
-                                // Attempt to update empty signal ID if available
-                                if (dataSourceAvailable && key.SignalID == Guid.Empty)
-                                {
-                                    if (dataSource.Tables.Contains(measurementTable))
-                                    {
-                                        DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
-
-                                        if (filteredRows.Length > 0)
-                                            key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                                    }
-                                }
-
+                                key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
                                 keys.Add(key);
                             }
-                            else if (Guid.TryParse(item, out id))
-                            {
-                                if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                                {
-                                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
+                        }
 
-                                    if (filteredRows.Length > 0 && MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key))
-                                        keys.Add(key);
-                                }
-                                else
-                                {
-                                    keys.Add(MeasurementKey.LookupBySignalID(id));
-                                }
-                            }
-                            else
-                            {
-                                // Attempt to update empty signal ID if available
-                                if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                                {
-                                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
-
-                                    if (filteredRows.Length > 0)
-                                    {
-                                        key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
-                                        keys.Add(key);
-                                    }
-                                }
-
-                                if (key == default(MeasurementKey))
-                                {
-                                    throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
-                                }
-                            }
+                        if (key == default(MeasurementKey))
+                        {
+                            throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
                         }
                     }
                 }
@@ -1573,206 +1600,190 @@ namespace GSF.TimeSeries.Adapters
             List<IMeasurement> measurements = new List<IMeasurement>();
             Measurement measurement;
             MeasurementKey key;
-            Match filterMatch = null;
             Guid id;
+            string tableName, expression, sortField;
+            int takeCount;
             bool dataSourceAvailable = ((object)dataSource != null);
 
             value = value.Trim();
 
-            if (!string.IsNullOrWhiteSpace(value))
+            if (string.IsNullOrWhiteSpace(value))
+                return measurements.ToArray();
+
+            if (dataSourceAvailable && ParseFilterExpression(value, out tableName, out expression, out sortField, out takeCount))
             {
-                if (dataSourceAvailable)
+                foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
                 {
-                    lock (s_filterExpression)
+                    id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+
+                    measurement = new Measurement
                     {
-                        filterMatch = s_filterExpression.Match(value);
-                    }
+                        ID = id,
+                        Key = MeasurementKey.Parse(row["ID"].ToString(), id),
+                        TagName = row["PointTag"].ToNonNullString(),
+                        Adder = double.Parse(row["Adder"].ToString()),
+                        Multiplier = double.Parse(row["Multiplier"].ToString())
+                    };
+
+                    measurements.Add(measurement);
                 }
-
-                if (dataSourceAvailable && filterMatch.Success)
+            }
+            else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
+            {
+                try
                 {
-                    string tableName = filterMatch.Result("${TableName}").Trim();
-                    string expression = filterMatch.Result("${Expression}").Trim();
-                    string sortField = filterMatch.Result("${SortField}").Trim();
-                    string maxRows = filterMatch.Result("${MaxRows}").Trim();
-                    int takeCount;
+                    // Load settings from the system settings category				
+                    ConfigurationFile config = ConfigurationFile.Current;
+                    CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
+                    settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output measurements for adapters.");
 
-                    if (string.IsNullOrEmpty(maxRows) || !int.TryParse(maxRows, out takeCount))
-                        takeCount = int.MaxValue;
-
-                    foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
+                    // Global configuration setting can override ability to use SELECT statements
+                    if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
                     {
-                        id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-
-                        measurement = new Measurement
+                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                         {
-                            ID = id,
-                            Key = MeasurementKey.Parse(row["ID"].ToString(), id),
-                            TagName = row["PointTag"].ToNonNullString(),
-                            Adder = double.Parse(row["Adder"].ToString()),
-                            Multiplier = double.Parse(row["Multiplier"].ToString())
-                        };
+                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
 
-                        measurements.Add(measurement);
-                    }
-                }
-                else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    try
-                    {
-                        // Load settings from the system settings category				
-                        ConfigurationFile config = ConfigurationFile.Current;
-                        CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
-                        settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output measurements for adapters.");
-
-                        // Global configuration setting can override ability to use SELECT statements
-                        if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
-                        {
-                            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                            foreach (DataRow row in results.Rows)
                             {
-                                DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
+                                id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
-                                foreach (DataRow row in results.Rows)
+                                measurement = new Measurement
                                 {
-                                    id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                    ID = id,
+                                    Key = MeasurementKey.Parse(row["ID"].ToString(), id),
+                                    TagName = row["PointTag"].ToNonNullString(),
+                                    Adder = double.Parse(row["Adder"].ToString()),
+                                    Multiplier = double.Parse(row["Multiplier"].ToString())
+                                };
 
-                                    measurement = new Measurement
-                                    {
-                                        ID = id,
-                                        Key = MeasurementKey.Parse(row["ID"].ToString(), id),
-                                        TagName = row["PointTag"].ToNonNullString(),
-                                        Adder = double.Parse(row["Adder"].ToString()),
-                                        Multiplier = double.Parse(row["Multiplier"].ToString())
-                                    };
+                                measurements.Add(measurement);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Database backed SELECT statements are disabled in the configuration.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(string.Format("Could not parse output measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
+                }
+            }
+            else
+            {
+                string[] elem;
+                double adder, multipler;
 
-                                    measurements.Add(measurement);
-                                }
+                foreach (string item in value.Split(';'))
+                {
+                    if (string.IsNullOrWhiteSpace(item))
+                        continue;
+
+                    elem = item.Trim().Split(',');
+
+                    if (!MeasurementKey.TryParse(elem[0], Guid.Empty, out key))
+                    {
+                        if (Guid.TryParse(item, out id))
+                        {
+                            if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                            {
+                                DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
+
+                                if (filteredRows.Length > 0)
+                                    MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
+                            }
+                            else
+                            {
+                                key = MeasurementKey.LookupBySignalID(id);
                             }
                         }
                         else
                         {
-                            throw new InvalidOperationException("Database backed SELECT statements are disabled in the configuration.");
+                            // Attempt to update empty signal ID if available
+                            if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                            {
+                                DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
+
+                                if (filteredRows.Length > 0)
+                                {
+                                    key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
+                                }
+                            }
+
+                            if (key == default(MeasurementKey))
+                            {
+                                throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+                            }
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException(string.Format("Could not parse output measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
-                    }
-                }
-                else
-                {
-                    string[] elem;
-                    double adder, multipler;
 
-                    foreach (string item in value.Split(';'))
+                    // Adder and multiplier may be optionally specified
+                    if (elem.Length > 1)
                     {
-                        if (!string.IsNullOrWhiteSpace(item))
+                        if (!double.TryParse(elem[1].Trim(), out adder))
+                            adder = 0.0D;
+                    }
+                    else
+                    {
+                        adder = 0.0D;
+                    }
+
+                    if (elem.Length > 2)
+                    {
+                        if (!double.TryParse(elem[2].Trim(), out multipler))
+                            multipler = 1.0D;
+                    }
+                    else
+                    {
+                        multipler = 1.0D;
+                    }
+
+                    // Create a new measurement for the provided field level information
+                    measurement = new Measurement
+                    {
+                        ID = key.SignalID,
+                        Key = key,
+                        Adder = adder,
+                        Multiplier = multipler
+                    };
+
+                    // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
+                    try
+                    {
+                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            elem = item.Trim().Split(',');
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
 
-                            if (!MeasurementKey.TryParse(elem[0], Guid.Empty, out key))
+                            if (filteredRows.Length > 0)
                             {
-                                if (Guid.TryParse(item, out id))
-                                {
-                                    if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                                    {
-                                        DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
+                                DataRow row = filteredRows[0];
 
-                                        if (filteredRows.Length > 0)
-                                            MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
-                                    }
-                                    else
-                                    {
-                                        key = MeasurementKey.LookupBySignalID(id);
-                                    }
-                                }
-                                else
-                                {
-                                    // Attempt to update empty signal ID if available
-                                    if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                                    {
-                                        DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
+                                measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                measurement.TagName = row["PointTag"].ToNonNullString();
 
-                                        if (filteredRows.Length > 0)
-                                        {
-                                            key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
-                                        }
-                                    }
+                                // Attempt to update empty signal ID if available
+                                if (measurement.Key.SignalID == Guid.Empty)
+                                    measurement.Key.UpdateSignalID(measurement.ID);
 
-                                    if (key == default(MeasurementKey))
-                                    {
-                                        throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
-                                    }
-                                }
+                                // Manually specified adder and multiplier take precedence, but if none were specified,
+                                // then those defined in the meta-data are used instead
+                                if (elem.Length < 3)
+                                    measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
+
+                                if (elem.Length < 2)
+                                    measurement.Adder = double.Parse(row["Adder"].ToString());
                             }
-
-                            // Adder and multiplier may be optionally specified
-                            if (elem.Length > 1)
-                            {
-                                if (!double.TryParse(elem[1].Trim(), out adder))
-                                    adder = 0.0D;
-                            }
-                            else
-                            {
-                                adder = 0.0D;
-                            }
-
-                            if (elem.Length > 2)
-                            {
-                                if (!double.TryParse(elem[2].Trim(), out multipler))
-                                    multipler = 1.0D;
-                            }
-                            else
-                            {
-                                multipler = 1.0D;
-                            }
-
-                            // Create a new measurement for the provided field level information
-                            measurement = new Measurement
-                            {
-                                ID = key.SignalID,
-                                Key = key,
-                                Adder = adder,
-                                Multiplier = multipler
-                            };
-
-                            // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
-                            try
-                            {
-                                if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                                {
-                                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
-
-                                    if (filteredRows.Length > 0)
-                                    {
-                                        DataRow row = filteredRows[0];
-
-                                        measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                                        measurement.TagName = row["PointTag"].ToNonNullString();
-
-                                        // Attempt to update empty signal ID if available
-                                        if (measurement.Key.SignalID == Guid.Empty)
-                                            measurement.Key.UpdateSignalID(measurement.ID);
-
-                                        // Manually specified adder and multiplier take precedence, but if none were specified,
-                                        // then those defined in the meta-data are used instead
-                                        if (elem.Length < 3)
-                                            measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-
-                                        if (elem.Length < 2)
-                                            measurement.Adder = double.Parse(row["Adder"].ToString());
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                // Errors here are not catastrophic, this simply limits the available meta-data
-                                measurement.TagName = string.Empty;
-                            }
-
-                            measurements.Add(measurement);
                         }
                     }
+                    catch
+                    {
+                        // Errors here are not catastrophic, this simply limits the available meta-data
+                        measurement.TagName = string.Empty;
+                    }
+
+                    measurements.Add(measurement);
                 }
             }
 

@@ -227,6 +227,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_synchronizedSubscription;
         private bool m_useMillisecondResolution;
         private bool m_autoConnect;
+        private string m_metadataFilters;
         private string m_sharedSecret;
         private string m_authenticationID;
         private string m_localCertificate;
@@ -344,6 +345,29 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_autoSynchronizeMetadata = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets requested meta-data filter expressions to be applied by <see cref="DataPublisher"/> before meta-data is sent.
+        /// </summary>
+        /// <remarks>
+        /// Multiple meta-data filters, such filters for different data tables, should be separated by a semicolon. Specifying fields in the filter
+        /// expression that do not exist in the data publisher's current meta-data set could cause filter expressions to not be applied and possibly
+        /// result in no meta-data being received for the specified data table.
+        /// </remarks>
+        /// <example>
+        /// FILTER MeasurementDetail WHERE SignalType &lt;&gt; 'STAT'; FILTER PhasorDetail WHERE Phase = '+'
+        /// </example>
+        public string MetadataFilters
+        {
+            get
+            {
+                return m_metadataFilters;
+            }
+            set
+            {
+                m_metadataFilters = value;
             }
         }
 
@@ -998,6 +1022,10 @@ namespace GSF.TimeSeries.Transport
             // Check if user wants to request that publisher use millisecond resolution to conserve bandwidth
             if (settings.TryGetValue("useMillisecondResolution", out setting))
                 m_useMillisecondResolution = setting.ParseBoolean();
+
+            // Check if user has defined any meta-data filter expressions
+            if (settings.TryGetValue("metadataFilters", out setting))
+                m_metadataFilters = setting;
 
             // Define auto connect setting
             if (settings.TryGetValue("autoConnect", out setting))
@@ -1920,7 +1948,7 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Initiates a metadata refresh.", "Administrator", "Editor")]
         public virtual void RefreshMetadata()
         {
-            SendServerCommand(ServerCommand.MetaDataRefresh);
+            SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
         }
 
         /// <summary>
@@ -1949,10 +1977,34 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Sends a server command to the publisher connection with associated <paramref name="message"/> data.
+        /// </summary>
+        /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
+        /// <param name="message">String based command data to send to server.</param>
+        /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
+        public virtual bool SendServerCommand(ServerCommand commandCode, string message)
+        {
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
+                {
+                    byte[] bytes = m_encoding.GetBytes(message);
+
+                    buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
+                    buffer.Write(bytes, 4, bytes.Length);
+
+                    return SendServerCommand(commandCode, buffer.ToArray());
+                }
+            }
+
+            return SendServerCommand(commandCode);
+        }
+
+        /// <summary>
         /// Sends a server command to the publisher connection.
         /// </summary>
         /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
-        /// <param name="data">Command data to send.</param>
+        /// <param name="data">Optional command data to send.</param>
         /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
         public virtual bool SendServerCommand(ServerCommand commandCode, byte[] data = null)
         {
@@ -2472,7 +2524,7 @@ namespace GSF.TimeSeries.Transport
                             // meta-data refresh. API style connection should attach to server configuration changed
                             // event and request meta-data refresh to complete automated cycle.
                             if (m_autoConnect && m_autoSynchronizeMetadata)
-                                SendServerCommand(ServerCommand.MetaDataRefresh);
+                                SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
                             break;
                     }
                 }
@@ -2490,7 +2542,7 @@ namespace GSF.TimeSeries.Transport
 
             // Initiate meta-data refresh
             if (m_autoSynchronizeMetadata)
-                SendServerCommand(ServerCommand.MetaDataRefresh);
+                SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
         }
 
         private void SubscribeToOutputMeasurements(bool metaDataRefreshCompleted)
