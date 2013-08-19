@@ -689,7 +689,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             if (args.PropertyName == "CurrentItem")
             {
                 LoadPermissionsDataSet();
-                m_securityMode = !string.IsNullOrEmpty(CurrentItem.RemoteCertificateFile) ? SecurityMode.TLS : SecurityMode.Gateway;
+                m_securityMode = IsNewRecord || !string.IsNullOrEmpty(CurrentItem.RemoteCertificateFile) ? SecurityMode.TLS : SecurityMode.Gateway;
             }
         }
 
