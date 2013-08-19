@@ -3099,8 +3099,9 @@ namespace GSF.TimeSeries.Transport
                 throw new InvalidOperationException("Meta-data refresh has been disallowed by the DataPublisher.");
 
             Guid clientID = connection.ClientID;
-            Dictionary<string, string> filterExpressions = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            string message;
+            Dictionary<string, Tuple<string, string, int>> filterExpressions = new Dictionary<string, Tuple<string, string, int>>(StringComparer.InvariantCultureIgnoreCase);
+            string message, tableName, filterExpression, sortField;
+            int takeCount;
 
             // Attempt to parse out any subscriber provided meta-data filter expressions
             try
@@ -3114,15 +3115,13 @@ namespace GSF.TimeSeries.Transport
                     {
                         string metadataFilters = GetClientEncoding(clientID).GetString(buffer, startIndex, responseLength);
                         string[] expressions = metadataFilters.Split(';');
-                        string tableName, filterExpression, sortField;
-                        int takeCount;
 
                         // Go through each subscriber specified filter expressions
                         foreach (string expression in expressions)
                         {
                             // Attempt to parse filter expression and add it dictionary if successful
                             if (AdapterBase.ParseFilterExpression(expression, out tableName, out filterExpression, out sortField, out takeCount))
-                                filterExpressions.Add(tableName, filterExpression);
+                                filterExpressions.Add(tableName, Tuple.Create(filterExpression, sortField, takeCount));
                         }
                     }
                 }
@@ -3139,8 +3138,8 @@ namespace GSF.TimeSeries.Transport
                     IDbConnection dbConnection = adoDatabase.Connection;
                     DataSet metadata = new DataSet();
                     DataTable table;
-                    string filterExpression;
                     byte[] serializedMetadata;
+                    Tuple<string, string, int> filterParameters;
 
                     // Initialize active node ID
                     Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar(string.Format("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID)).ToString());
@@ -3162,6 +3161,9 @@ namespace GSF.TimeSeries.Transport
                         Match regexMatch = Regex.Match(tableExpression, @"FROM \w+");
                         table.TableName = regexMatch.Value.Split(' ')[1];
 
+                        sortField = "";
+                        takeCount = int.MaxValue;
+
                         // Build filter list
                         List<string> filters = new List<string>();
 
@@ -3174,8 +3176,12 @@ namespace GSF.TimeSeries.Transport
                         if (table.Columns.Contains("OriginalSource") && !(sendInternalMetadata && sendExternalMetadata))
                             filters.Add(string.Format("OriginalSource IS {0} NULL", sendExternalMetadata ? "NOT" : ""));
 
-                        if (filterExpressions.TryGetValue(table.TableName, out filterExpression))
-                            filters.Add(filterExpression);
+                        if (filterExpressions.TryGetValue(table.TableName, out filterParameters))
+                        {
+                            filters.Add(filterParameters.Item1);
+                            sortField = filterParameters.Item2;
+                            takeCount = filterParameters.Item3;
+                        }
 
                         // Determine whether we need to check subscriber for rights to the data
                         bool checkSubscriberRights = RequireAuthentication && table.Columns.Contains("SignalID");
@@ -3193,13 +3199,13 @@ namespace GSF.TimeSeries.Transport
                             // Make a copy of the table structure
                             metadata.Tables.Add(table.Clone());
 
-                            filteredRows = table.Select(string.Join(" AND ", filters));
+                            filteredRows = table.Select(string.Join(" AND ", filters), sortField);
 
                             // Reduce data to only what the subscriber has rights to
                             if (checkSubscriberRights)
                                 filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
 
-                            filteredRowList = filteredRows.ToList();
+                            filteredRowList = filteredRows.Take(takeCount).ToList();
 
                             if (filteredRowList.Count > 0)
                             {
