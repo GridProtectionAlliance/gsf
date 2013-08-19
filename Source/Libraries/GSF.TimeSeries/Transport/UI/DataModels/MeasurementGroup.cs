@@ -38,13 +38,14 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
     /// </summary>
     public class MeasurementGroup : DataModelBase
     {
-        #region[Members]
+        #region [ Members ]
 
         //Fields
         private Guid m_nodeID;
         private int m_id;
         private string m_name;
         private string m_description;
+        private string m_filterExpression;
         private DateTime m_createdOn;
         private string m_createdBy;
         private DateTime m_updatedOn;
@@ -54,7 +55,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
         #endregion
 
-        #region[properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the <see cref="MeasurementGroup"/> NodeID.
@@ -123,6 +124,22 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
             {
                 m_description = value;
                 OnPropertyChanged("Description");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementGroup"/> FilterExpression text.
+        /// </summary>
+        public string FilterExpression
+        {
+            get
+            {
+                return m_filterExpression;
+            }
+            set
+            {
+                m_filterExpression = value;
+                OnPropertyChanged("FilterExpression");
             }
         }
 
@@ -235,23 +252,27 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns>Collection of <see cref="MeasurementGroup"/>.</returns>
         public static ObservableCollection<MeasurementGroup> Load(AdoDataConnection database)
         {
+            ObservableCollection<MeasurementGroup> measurementGroupList;
+            DataTable measurementGroupTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                ObservableCollection<MeasurementGroup> measurementGroupList = new ObservableCollection<MeasurementGroup>();
-                DataTable measurementGroupTable = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT NodeID, ID, Name, Description FROM MeasurementGroup WHERE NodeID = {0} ORDER BY Name", "nodeID"), DefaultTimeout, database.CurrentNodeID());
+                measurementGroupList = new ObservableCollection<MeasurementGroup>();
+                query = database.ParameterizedQueryString("SELECT NodeID, ID, Name, Description, FilterExpression FROM MeasurementGroup WHERE NodeID = {0} ORDER BY Name", "nodeID");
+                measurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in measurementGroupTable.Rows)
                 {
                     measurementGroupList.Add(new MeasurementGroup
-                        {
+                    {
                         NodeID = database.Guid(row, "NodeID"),
                         ID = row.ConvertField<int>("ID"),
                         Name = row.Field<string>("Name"),
-                        Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
+                        Description = row.Field<object>("Description").ToNonNullString(),
+                        FilterExpression = row.Field<object>("FilterExpression").ToNonNullString(),
                         CurrentMeasurements = GetCurrentMeasurements(database, row.ConvertField<int>("ID")),
                         PossibleMeasurements = GetPossibleMeasurements(database, row.ConvertField<int>("ID"))
                     });
@@ -276,23 +297,26 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of <see cref="MeasurementGroup"/>s defined in the database.</returns>
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = true)
         {
+            Dictionary<int, string> measurementGroupList;
+            DataTable measurementGroupTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
+                measurementGroupList = new Dictionary<int, string>();
 
-                Dictionary<int, string> MeasurementGroupList = new Dictionary<int, string>();
                 if (isOptional)
-                    MeasurementGroupList.Add(0, "Select MeasurementGroup");
+                    measurementGroupList.Add(0, "Select MeasurementGroup");
 
-                string query = database.ParameterizedQueryString("SELECT ID, Name FROM MeasurementGroup WHERE NodeID = {0} ORDER BY SourceIndex", "nodeID");
-                DataTable MeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                query = database.ParameterizedQueryString("SELECT ID, Name FROM MeasurementGroup WHERE NodeID = {0} ORDER BY SourceIndex", "nodeID");
+                measurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
-                foreach (DataRow row in MeasurementGroupTable.Rows)
-                    MeasurementGroupList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
+                foreach (DataRow row in measurementGroupTable.Rows)
+                    measurementGroupList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
 
-                return MeasurementGroupList;
+                return measurementGroupList;
             }
             finally
             {
@@ -309,15 +333,17 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns><see cref="Dictionary{T1,T2}"/> containing SignalID and PointTag of <see cref="Measurement"/>s assigned to <see cref="MeasurementGroup"/>.</returns>
         public static Dictionary<Guid, string> GetCurrentMeasurements(AdoDataConnection database, int measurementGroupId)
         {
+            Dictionary<Guid, string> currentMeasurements;
+            DataTable currentMeasurementTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                Dictionary<Guid, string> currentMeasurements = new Dictionary<Guid, string>();
-                DataTable currentMeasurementTable = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT * FROM MeasurementGroupMeasDetail WHERE MeasurementGroupID = {0} ORDER BY PointID", "measurementGroupID"),
-                    DefaultTimeout, measurementGroupId);
+                currentMeasurements = new Dictionary<Guid, string>();
+                query = database.ParameterizedQueryString("SELECT * FROM MeasurementGroupMeasDetail WHERE MeasurementGroupID = {0} ORDER BY PointID", "measurementGroupID");
+                currentMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, measurementGroupId);
 
                 foreach (DataRow row in currentMeasurementTable.Rows)
                     currentMeasurements[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
@@ -357,6 +383,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
+
                 foreach (Guid id in measurementsToBeAdded)
                 {
                     query = database.ParameterizedQueryString("INSERT INTO MeasurementGroupMeasurement (NodeID, MeasurementGroupID, SignalID) VALUES ({0}, {1}, {2})", "nodeID", "measurementGroupID", "signalID");
@@ -387,6 +414,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
+
                 foreach (Guid id in measurementsToBeRemoved)
                 {
                     query = database.ParameterizedQueryString("DELETE FROM MeasurementGroupMeasurement WHERE MeasurementGroupID = {0} AND SignalID = {1}", "measurementGroupID", "signalID");
@@ -419,19 +447,19 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
                 if (measurementGroup.ID == 0)
                 {
-                    query = database.ParameterizedQueryString("INSERT INTO MeasurementGroup (NodeID, Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                        "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6})", "nodeID", "name", "description", "updatedBy", "updatedOn", "createdBy", "createdOn");
+                    query = database.ParameterizedQueryString("INSERT INTO MeasurementGroup (NodeID, Name, Description, FilterExpression, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})", "nodeID", "name", "description", "filterExpression", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), measurementGroup.Name, measurementGroup.Description.ToNotNull(),
-                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        measurementGroup.FilterExpression.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 }
                 else
                 {
-                    query = database.ParameterizedQueryString("UPDATE MeasurementGroup SET NodeID = {0}, Name = {1}, Description = {2}, " +
-                        "UpdatedBy = {3}, UpdatedOn = {4} WHERE ID = {5}", "nodeID", "name", "description", "updatedBy", "updatedOn", "id");
+                    query = database.ParameterizedQueryString("UPDATE MeasurementGroup SET NodeID = {0}, Name = {1}, Description = {2}, FilterExpression = {3}, " +
+                        "UpdatedBy = {4}, UpdatedOn = {5} WHERE ID = {6}", "nodeID", "name", "description", "filterExpression", "updatedBy", "updatedOn", "id");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), measurementGroup.Name,
-                        measurementGroup.Description.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), measurementGroup.ID);
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), measurementGroup.Name, measurementGroup.Description.ToNotNull(),
+                        measurementGroup.FilterExpression.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), measurementGroup.ID);
                 }
 
                 return "Measurement group information saved successfully";
@@ -476,7 +504,6 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         }
 
         #endregion
-
     }
 }
 

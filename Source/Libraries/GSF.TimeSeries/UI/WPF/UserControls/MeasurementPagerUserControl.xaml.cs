@@ -168,6 +168,22 @@ namespace GSF.TimeSeries.UI.UserControls
         }
 
         /// <summary>
+        /// Gets or sets the boolean flag which determines whether the
+        /// hotkey is enabled for displaying the advanced find popup.
+        /// </summary>
+        public bool AdvancedHotkeyIsEnabled
+        {
+            get
+            {
+                return (bool)this.GetValue(AdvancedHotkeyIsEnabledProperty);
+            }
+            set
+            {
+                this.SetValue(AdvancedHotkeyIsEnabledProperty, value);
+            }
+        }
+
+        /// <summary>
         /// Gets the collection of data grid columns to be displayed.
         /// </summary>
         public ObservableCollection<DataGridColumn> DataGridColumns
@@ -309,13 +325,23 @@ namespace GSF.TimeSeries.UI.UserControls
             }
         }
 
-        // Saves advanced find settings when the pager is unloaded
+        // Saves advanced find settings when the pager is unloaded.
         private void MeasurementPager_Unloaded(object sender, RoutedEventArgs e)
         {
             if (!DesignerProperties.GetIsInDesignMode(this))
             {
                 Application.Current.Exit -= Application_Exit;
                 m_dataContext.SaveSettings();
+            }
+        }
+
+        // Handles the hotkey for the advanced find popup.
+        private void MeasurementPagerUserControl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control && AdvancedHotkeyIsEnabled)
+            {
+                m_dataContext.AdvancedFindIsOpen = true;
+                e.Handled = true;
             }
         }
 
@@ -378,10 +404,13 @@ namespace GSF.TimeSeries.UI.UserControls
         }
 
         // Executes search on the pager when the user presses Enter.
-        private void TextBoxSearch_KeyDown(object sender, KeyEventArgs e)
+        private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
+            {
                 m_dataContext.Search();
+                e.Handled = true;
+            }
         }
 
         // Selects/unselects all the measurements on all pages.
@@ -548,6 +577,21 @@ namespace GSF.TimeSeries.UI.UserControls
                 Dispatcher.BeginInvoke(new Action(SortDataGrid));
                 OnCurrentPageChanged();
             }
+            else if (e.PropertyName == "AdvancedFindIsOpen")
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    TextBox searchTextBox = m_dataContext.AdvancedFindIsOpen
+                        ? AdvancedSearch.FindName("SearchTextBox") as TextBox
+                        : SearchTextBox;
+
+                    if ((object)searchTextBox != null)
+                    {
+                        searchTextBox.Focus();
+                        searchTextBox.SelectAll();
+                    }
+                }));
+            }
         }
 
         // Sorts the current page of the data grid.
@@ -640,6 +684,11 @@ namespace GSF.TimeSeries.UI.UserControls
         /// <see cref="DependencyProperty"/> for the <see cref="ShowPageSize"/> property.
         /// </summary>
         public static DependencyProperty ShowPageSizeProperty = DependencyProperty.Register("ShowPageSize", typeof(bool), typeof(MeasurementPagerUserControl), new PropertyMetadata(true));
+
+        /// <summary>
+        /// <see cref="DependencyProperty"/> for the <see cref="AdvancedHotkeyIsEnabled"/> property.
+        /// </summary>
+        public static DependencyProperty AdvancedHotkeyIsEnabledProperty = DependencyProperty.Register("AdvancedHotkeyIsEnabled", typeof(bool), typeof(MeasurementPagerUserControl), new PropertyMetadata(true));
 
         #endregion
     }

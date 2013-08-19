@@ -48,7 +48,7 @@
 
                 <StackPanel Grid.Row="0" Orientation="Horizontal">
                     <Label Content="Search text:" />
-                    <TextBox Text="{Binding Mode=TwoWay, Path=SearchText}" VerticalAlignment="Top" />
+                    <TextBox Name="SearchTextBox" Text="{Binding Mode=TwoWay, Path=SearchText}" VerticalAlignment="Top" />
                 </StackPanel>
 
                 <CheckBox Grid.Row="1" Content="Ignore Case" IsChecked="{Binding Mode=TwoWay, Path=IgnoreCase}" />

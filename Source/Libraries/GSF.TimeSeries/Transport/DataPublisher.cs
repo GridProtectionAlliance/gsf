@@ -1916,42 +1916,67 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                bool allowed = false;
-                DataRow[] explicitMeasurements;
-                DataRow[] implicitMeasurements;
+                const string FilterRegex = @"(ALLOW|DENY)\s+WHERE\s+([^;]*)";
+
+                DataRow subscriber;
+                DataRow[] subscriberMeasurementGroups;
+
+                bool? explicitlyAllowed;
+                bool? explicitlyAllowedByGroup;
+                bool? implicitlyAllowedByFilter;
 
                 // If authentication is not required,
                 // subscriber has rights to everything
                 if (!RequireAuthentication)
                     return true;
 
-                // If subscriber has been disabled or removed from the list of valid subscribers, they no longer have rights to any signals
-                if (!DataSource.Tables["Subscribers"].Select(string.Format("ID = '{0}' AND Enabled <> 0", subscriberID)).Any())
+                subscriber = DataSource.Tables["Subscribers"].Select(string.Format("ID = '{0}' AND Enabled <> 0", subscriberID)).FirstOrDefault();
+
+                // If subscriber has been disabled or removed
+                // from the list of valid subscribers,
+                // they no longer have rights to any signals
+                if ((object)subscriber == null)
                     return false;
 
                 // Look up explicitly defined individual measurements
-                explicitMeasurements = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID='{0}' AND SignalID='{1}'", subscriberID, signalID));
+                explicitlyAllowed = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID = '{0}' AND SignalID = '{1}'", subscriberID, signalID))
+                    .Select(measurement => (bool?)measurement["Allowed"].ToNonNullString("0").ParseBoolean())
+                    .OrderBy(allowed => allowed.GetValueOrDefault())
+                    .FirstOrDefault();
 
-                if (explicitMeasurements.Length > 0)
-                    return explicitMeasurements.All(row => row["Allowed"].ToNonNullString("0").ParseBoolean());
+                if (explicitlyAllowed.HasValue)
+                    return explicitlyAllowed.Value;
+
+                // Look up explicitly defined group based measurements
+                subscriberMeasurementGroups = DataSource.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID = '{0}'", subscriberID));
+
+                explicitlyAllowedByGroup = subscriberMeasurementGroups
+                    .Where(subscriberMeasurementGroup => DataSource.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID = '{0}' AND MeasurementGroupID = {1}", signalID, subscriberMeasurementGroup["MeasurementGroupID"])).Length > 0)
+                    .Select(subscriberMeasurementGroup => (bool?)subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean())
+                    .OrderBy(allowed => allowed.GetValueOrDefault())
+                    .FirstOrDefault();
+
+                if (explicitlyAllowedByGroup.HasValue)
+                    return explicitlyAllowedByGroup.Value;
+
+                // Look up implicitly defined filter based measurements
+                implicitlyAllowedByFilter = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), FilterRegex, RegexOptions.IgnoreCase)
+                    .Cast<Match>()
+                    .Where(match => DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}' AND ({1})", signalID, match.Groups[2].Value)).Length > 0)
+                    .Select(match => (bool?)(match.Groups[1].Value == "ALLOW"))
+                    .OrderBy(allowed => allowed.GetValueOrDefault())
+                    .FirstOrDefault();
+
+                if (implicitlyAllowedByFilter.HasValue)
+                    return implicitlyAllowedByFilter.Value;
 
                 // Look up implicitly defined group based measurements
-                foreach (DataRow subscriberMeasurementGroup in DataSource.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID='{0}'", subscriberID)))
-                {
-                    implicitMeasurements = DataSource.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID='{0}' AND MeasurementGroupID={1}", signalID, int.Parse(subscriberMeasurementGroup["MeasurementGroupID"].ToNonNullString("0"))));
-
-                    if (implicitMeasurements.Length > 0)
-                    {
-                        // If all implicit rules allow access, we can return true;
-                        // if even one rule denies access, return false
-                        if (subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean())
-                            allowed = true;
-                        else
-                            return false;
-                    }
-                }
-
-                return allowed;
+                return subscriberMeasurementGroups
+                    .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, DataSource.Tables["MeasurementGroups"].Select(string.Format("ID = {0}", subscriberMeasurementGroup["MeasurementGroupID"]))))
+                    .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseInputMeasurementKeys(DataSource, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
+                    .Select(tuple => tuple.Item1["Allowed"].ToNonNullString("0").ParseBoolean())
+                    .DefaultIfEmpty(false)
+                    .All(allowed => allowed);
             }
             catch (Exception ex)
             {
@@ -2655,6 +2680,7 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        // Determines whether the data in the data source has actually changed when receiving a new data source.
         private bool DataSourceChanged(DataSet newDataSource)
         {
             try

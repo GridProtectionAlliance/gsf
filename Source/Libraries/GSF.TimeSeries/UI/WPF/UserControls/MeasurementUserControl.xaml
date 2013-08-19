@@ -100,7 +100,7 @@
                     SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" HorizontalAlignment="Right"/>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <TextBox Text="{Binding Mode=TwoWay, Path=SearchText, UpdateSourceTrigger=PropertyChanged}" Width="150"/>
+            <TextBox Name="SearchTextBox" Text="{Binding Mode=TwoWay, Path=SearchText, UpdateSourceTrigger=PropertyChanged}" Width="150"/>
             <Button Content="Search" Command="{Binding Path=SearchCommand}" ToolTip="Search measurements" Margin="2" IsDefault="True"/>
             <Button Content="Advanced..." Command="{Binding Path=AdvancedFindCommand}" ToolTip="Open advanced find dialog" Margin="2"/>
         </StackPanel>

@@ -95,7 +95,10 @@ namespace GSF.TimeSeries.UI.UserControls
         private void MeasurementUserControl_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+            {
                 m_dataContext.AdvancedFindIsOpen = true;
+                e.Handled = true;
+            }
         }
 
         /// <summary>
@@ -108,7 +111,8 @@ namespace GSF.TimeSeries.UI.UserControls
             if (e.Key == Key.Delete)
             {
                 DataGrid dataGrid = sender as DataGrid;
-                if (dataGrid.SelectedItems.Count > 0)
+
+                if ((object)dataGrid != null && dataGrid.SelectedItems.Count > 0)
                 {
                     if (MessageBox.Show("Are you sure you want to delete " + dataGrid.SelectedItems.Count + " selected item(s)?", "Delete Selected Items", MessageBoxButton.YesNo) == MessageBoxResult.No)
                         e.Handled = true;
@@ -144,7 +148,24 @@ namespace GSF.TimeSeries.UI.UserControls
         private void ViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "ItemsSource")
+            {
                 Dispatcher.BeginInvoke(new Action(SortDataGrid));
+            }
+            else if (e.PropertyName == "AdvancedFindIsOpen")
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    TextBox searchTextBox = m_dataContext.AdvancedFindIsOpen
+                        ? AdvancedSearch.FindName("SearchTextBox") as TextBox
+                        : SearchTextBox;
+
+                    if ((object)searchTextBox != null)
+                    {
+                        searchTextBox.Focus();
+                        searchTextBox.SelectAll();
+                    }
+                }));
+            }
         }
 
         private void SortDataGrid()

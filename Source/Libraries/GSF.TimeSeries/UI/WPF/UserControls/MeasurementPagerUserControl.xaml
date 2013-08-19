@@ -6,7 +6,9 @@
              mc:Ignorable="d" 
              xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls"
              xmlns:tsf="clr-namespace:GSF.TimeSeries.UI"
-             d:DesignHeight="300" d:DesignWidth="500" Name="MeasurementPager" Loaded="MeasurementPager_Loaded" Unloaded="MeasurementPager_Unloaded">
+             d:DesignHeight="300" d:DesignWidth="500" Name="MeasurementPager"
+             Loaded="MeasurementPager_Loaded" Unloaded="MeasurementPager_Unloaded"
+             KeyDown="MeasurementPagerUserControl_KeyDown">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -21,7 +23,7 @@
             <Label DockPanel.Dock="Left" Name="SelectedMeasurementsLabel" Content="Selected: 0" Visibility="{Binding ElementName=MeasurementPager, Path=Selectable, Converter={StaticResource ObjectToVisibilityConverter}}" />
 
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="{Binding ElementName=MeasurementPager, Path=Searchable, Converter={StaticResource ObjectToVisibilityConverter}}">
-                <TextBox Text="{Binding Mode=TwoWay, Path=SearchText}" Width="150" KeyDown="TextBoxSearch_KeyDown" />
+                <TextBox Name="SearchTextBox" Text="{Binding Mode=TwoWay, Path=SearchText, UpdateSourceTrigger=PropertyChanged}" Width="150" KeyDown="SearchTextBox_KeyDown" />
                 <Button Content="Search" Command="{Binding Path=SearchCommand}" ToolTip="Search measurements" Margin="2" />
                 <Button Content="Advanced..." Command="{Binding Path=AdvancedFindCommand}" ToolTip="Opens advanced find dialog" Margin="2"/>
             </StackPanel>

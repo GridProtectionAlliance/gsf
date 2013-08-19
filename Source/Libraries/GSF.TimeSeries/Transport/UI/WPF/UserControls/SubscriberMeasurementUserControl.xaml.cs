@@ -116,6 +116,16 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 DeniedMeasurementsPager.ReloadDataGrid();
         }
 
+        private void OpenPopupButton_Click(object sender, RoutedEventArgs e)
+        {
+            AccessControlPrecedencePopup.IsOpen = true;
+        }
+
+        private void ClosePopupButton_Click(object sender, RoutedEventArgs e)
+        {
+            AccessControlPrecedencePopup.IsOpen = false;
+        }
+
         #endregion
     }
 }

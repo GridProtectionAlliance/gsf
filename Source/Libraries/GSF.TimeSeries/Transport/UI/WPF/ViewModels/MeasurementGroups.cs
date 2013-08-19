@@ -38,7 +38,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         #region [ Members ]
 
         // Fields
-        private string m_memberFilterExpression;
+        private bool m_firstLoad;
 
         #endregion
 
@@ -98,6 +98,19 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         {
             base.Clear();
             CurrentItem = ItemsSource[0];
+        }
+
+        /// <summary>
+        /// Loads the records for the associated <see cref="MeasurementGroup"/>.
+        /// </summary>
+        public override void Load()
+        {
+            base.Load();
+
+            if (!m_firstLoad && ItemsSource.Count > 1 && IsNewRecord)
+                CurrentItem = ItemsSource[1];
+
+            m_firstLoad = true;
         }
 
         /// <summary>

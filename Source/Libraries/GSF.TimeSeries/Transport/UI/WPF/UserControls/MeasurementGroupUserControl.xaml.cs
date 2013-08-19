@@ -53,16 +53,17 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         #region [ Methods ]
 
+        private void MemberMeasurementsPager_Loaded(object sender, RoutedEventArgs e)
+        {
+            ReloadMemberMeasurementsPager();
+        }
+
         private void DataContext_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            MeasurementGroup currentItem = m_dataContext.CurrentItem;
             string propertyName = e.PropertyName;
 
             if (propertyName == "CurrentItem")
-            {
-                MemberMeasurementsPager.FilterExpression = string.Format("SignalID IN (SELECT SignalID FROM MeasurementGroupMeasurement WHERE NodeID = '{0}' AND MeasurementGroupID = {1})", currentItem.NodeID.ToString().ToLower(), currentItem.ID);
-                MemberMeasurementsPager.ReloadDataGrid();
-            }
+                ReloadMemberMeasurementsPager();
         }
 
         private void AddMeasurementsButton_Click(object sender, RoutedEventArgs e)
@@ -77,6 +78,23 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             m_dataContext.RemoveMeasurement(MemberMeasurementsPager.SelectedMeasurements);
             MemberMeasurementsPager.ReloadDataGrid();
             MemberMeasurementsPager.ClearSelections();
+        }
+
+        private void ReloadMemberMeasurementsPager()
+        {
+            MeasurementGroup currentItem = m_dataContext.CurrentItem;
+            MemberMeasurementsPager.FilterExpression = string.Format("SignalID IN (SELECT SignalID FROM MeasurementGroupMeasurement WHERE NodeID = '{0}' AND MeasurementGroupID = {1})", currentItem.NodeID.ToString().ToLower(), currentItem.ID);
+            MemberMeasurementsPager.ReloadDataGrid();
+        }
+
+        private void OpenPopupButton_Click(object sender, RoutedEventArgs e)
+        {
+            AccessControlPrecedencePopup.IsOpen = true;
+        }
+
+        private void ClosePopupButton_Click(object sender, RoutedEventArgs e)
+        {
+            AccessControlPrecedencePopup.IsOpen = false;
         }
 
         #endregion

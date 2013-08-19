@@ -28,6 +28,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using GSF.Data;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.UI.DataModels;
@@ -46,6 +47,7 @@ namespace GSF.TimeSeries.UI.Editors
         private string m_parameterName;
         private string m_connectionString;
         private bool m_updatingSelectedMeasurements;
+        private DispatcherTimer m_dispatcherTimer;
 
         #endregion
 
@@ -73,6 +75,9 @@ namespace GSF.TimeSeries.UI.Editors
             m_adapter = adapter;
             m_parameterName = parameterName;
             m_connectionString = connectionString;
+            m_dispatcherTimer = new DispatcherTimer();
+            m_dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 1);
+            m_dispatcherTimer.Tick += DispatcherTimer_Tick;
         }
 
         #endregion
@@ -131,25 +136,32 @@ namespace GSF.TimeSeries.UI.Editors
         {
             if (!m_updatingSelectedMeasurements)
             {
-                try
-                {
-                    m_updatingSelectedMeasurements = true;
+                m_dispatcherTimer.Stop();
+                m_dispatcherTimer.Start();
+            }
+        }
 
-                    MeasurementPager.SelectedMeasurements.Clear();
+        private void DispatcherTimer_Tick(object sender, EventArgs eventArgs)
+        {
+            try
+            {
+                m_updatingSelectedMeasurements = true;
 
-                    foreach (Guid signalID in AdapterBase.ParseOutputMeasurementKeys(GetDataSource(), false, FilterExpressionTextBox.Text).Select(key => key.SignalID))
-                        MeasurementPager.SelectedMeasurements.Add(signalID);
-                }
-                catch
-                {
-                    MeasurementPager.SelectedMeasurements.Clear();
-                }
-                finally
-                {
-                    MeasurementPager.ReloadDataGrid();
-                    MeasurementPager.UpdateSelections();
-                    m_updatingSelectedMeasurements = false;
-                }
+                MeasurementPager.SelectedMeasurements.Clear();
+
+                foreach (Guid signalID in AdapterBase.ParseOutputMeasurementKeys(GetDataSource(), false, FilterExpressionTextBox.Text).Select(key => key.SignalID))
+                    MeasurementPager.SelectedMeasurements.Add(signalID);
+            }
+            catch
+            {
+                MeasurementPager.SelectedMeasurements.Clear();
+            }
+            finally
+            {
+                MeasurementPager.ReloadDataGrid();
+                MeasurementPager.UpdateSelections();
+                m_updatingSelectedMeasurements = false;
+                m_dispatcherTimer.Stop();
             }
         }
 

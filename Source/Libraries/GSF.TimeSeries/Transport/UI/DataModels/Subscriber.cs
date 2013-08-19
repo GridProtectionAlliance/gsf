@@ -46,7 +46,6 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         #region [ Members ]
 
         // Fields
-
         private Guid m_nodeID;
         private Guid m_id;
         private string m_acronym;
@@ -75,6 +74,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         // Fields below are used only for Subscriber Status screen.
         private string m_statusColor;
         private string m_version;
+        private string m_accessControlFilter;
 
         #endregion
 
@@ -378,6 +378,10 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the chain flags which can be ignored
+        /// when validating <see cref="Subscriber"/> identity.
+        /// </summary>
         public X509ChainStatusFlags? ValidChainFlags
         {
             get
@@ -388,6 +392,23 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
             {
                 m_validChainFlags = value;
                 OnPropertyChanged("ValidChainFlags");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the filter used to determine which signals
+        /// this <see cref="Subscriber"/> is allowed to subscribe to.
+        /// </summary>
+        public string AccessControlFilter
+        {
+            get
+            {
+                return m_accessControlFilter;
+            }
+            set
+            {
+                m_accessControlFilter = value;
+                OnPropertyChanged("AccessControlFilter");
             }
         }
 
@@ -482,29 +503,28 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns>Collection of <see cref="Subscriber"/>.</returns>
         public static ObservableCollection<Subscriber> Load(AdoDataConnection database)
         {
+            ObservableCollection<Subscriber> subscriberList;
+            DataTable subscriberTable;
             bool createdConnection = false;
+            string query;
+
+            SslPolicyErrors validPolicyErrors;
+            X509ChainStatusFlags validChainFlags;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
+                subscriberList = new ObservableCollection<Subscriber>();
 
-                ObservableCollection<Subscriber> subscriberList = new ObservableCollection<Subscriber>();
-                DataTable subscriberTable;
-                string query;
-
-
-                query = database.ParameterizedQueryString("SELECT ID, NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, " +
-                    "RemoteCertificateFile, ValidPolicyErrors, ValidChainFlags, Enabled FROM Subscriber WHERE NodeID = {0} ORDER BY Name", "nodeID");
+                query = database.ParameterizedQueryString("SELECT ID, NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, RemoteCertificateFile," +
+                    " ValidPolicyErrors, ValidChainFlags, AccessControlFilter, Enabled FROM Subscriber WHERE NodeID = {0} ORDER BY Name", "nodeID");
 
                 subscriberTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in subscriberTable.Rows)
                 {
-                    SslPolicyErrors validPolicyErrors;
-                    X509ChainStatusFlags validChainFlags;
-
                     subscriberList.Add(new Subscriber
-                        {
+                    {
                         ID = database.Guid(row, "ID"),
                         NodeID = database.Guid(row, "NodeID"),
                         Acronym = row.Field<string>("Acronym"),
@@ -515,6 +535,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                         RemoteCertificateFile = row.Field<string>("RemoteCertificateFile"),
                         ValidPolicyErrors = Enum.TryParse(row.Field<string>("ValidPolicyErrors"), out validPolicyErrors) ? validPolicyErrors : (SslPolicyErrors?)null,
                         ValidChainFlags = Enum.TryParse(row.Field<string>("ValidChainFlags"), out validChainFlags) ? validChainFlags : (X509ChainStatusFlags?)null,
+                        AccessControlFilter = row.Field<string>("AccessControlFilter"),
                         Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                         AllowedMeasurements = GetAllowedMeasurements(database, database.Guid(row, "ID")),
                         DeniedMeasurements = GetDeniedMeasurements(database, database.Guid(row, "ID")),
@@ -544,15 +565,17 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection of SignalID and PointTag of <see cref="Measurement"/>.</returns>
         public static Dictionary<Guid, string> GetAllowedMeasurements(AdoDataConnection database, Guid subscriberID)
         {
+            Dictionary<Guid, string> allowedMeasurements;
+            DataTable allowedMeasurementTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                Dictionary<Guid, string> allowedMeasurements = new Dictionary<Guid, string>();
-                string query = database.ParameterizedQueryString("SELECT SignalID, PointTag FROM SubscriberMeasurementDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY PointTag", "subscriberID", "allowed");
-                DataTable allowedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(true));
+                allowedMeasurements = new Dictionary<Guid, string>();
+                query = database.ParameterizedQueryString("SELECT SignalID, PointTag FROM SubscriberMeasurementDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY PointTag", "subscriberID", "allowed");
+                allowedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(true));
 
                 foreach (DataRow row in allowedMeasurementTable.Rows)
                     allowedMeasurements[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
@@ -574,15 +597,17 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection of SignalID and PointTag of <see cref="Measurement"/>.</returns>
         public static Dictionary<Guid, string> GetDeniedMeasurements(AdoDataConnection database, Guid subscriberID)
         {
+            Dictionary<Guid, string> deniedMeasurements;
+            DataTable deniedMeasurementTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                Dictionary<Guid, string> deniedMeasurements = new Dictionary<Guid, string>();
-                string query = database.ParameterizedQueryString("SELECT SignalID, PointTag FROM SubscriberMeasurementDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY PointTag", "subscriberID", "allowed");
-                DataTable deniedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(false));
+                deniedMeasurements = new Dictionary<Guid, string>();
+                query = database.ParameterizedQueryString("SELECT SignalID, PointTag FROM SubscriberMeasurementDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY PointTag", "subscriberID", "allowed");
+                deniedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(false));
 
                 foreach (DataRow row in deniedMeasurementTable.Rows)
                     deniedMeasurements[database.Guid(row, "SignalID")] = row.Field<string>("PointTag");
@@ -615,15 +640,17 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection of ID and Name of <see cref="MeasurementGroup"/>.</returns>
         public static Dictionary<int, string> GetAllowedMeasurementGroups(AdoDataConnection database, Guid subscriberID)
         {
+            Dictionary<int, string> allowedMeasurementGroups;
+            DataTable allowedMeasurementGroupTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                Dictionary<int, string> allowedMeasurementGroups = new Dictionary<int, string>();
-                string query = database.ParameterizedQueryString("SELECT MeasurementGroupID, MeasurementGroupName FROM SubscriberMeasGroupDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY MeasurementGroupName", "subscriberID", "allowed");
-                DataTable allowedMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(true));
+                allowedMeasurementGroups = new Dictionary<int, string>();
+                query = database.ParameterizedQueryString("SELECT MeasurementGroupID, MeasurementGroupName FROM SubscriberMeasGroupDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY MeasurementGroupName", "subscriberID", "allowed");
+                allowedMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(true));
 
                 foreach (DataRow row in allowedMeasurementGroupTable.Rows)
                     allowedMeasurementGroups[row.ConvertField<int>("MeasurementGroupID")] = row.Field<string>("MeasurementGroupName");
@@ -645,15 +672,17 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection of ID and Name of <see cref="MeasurementGroup"/>.</returns>
         public static Dictionary<int, string> GetDeniedMeasurementGroups(AdoDataConnection database, Guid subscriberID)
         {
+            Dictionary<int, string> deniedMeasurementGroups;
+            DataTable deniedMeasurementGroupTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                Dictionary<int, string> deniedMeasurementGroups = new Dictionary<int, string>();
-                string query = database.ParameterizedQueryString("SELECT MeasurementGroupID, MeasurementGroupName FROM SubscriberMeasGroupDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY MeasurementGroupName", "subscriberID", "allowed");
-                DataTable deniedMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(false));
+                deniedMeasurementGroups = new Dictionary<int, string>();
+                query = database.ParameterizedQueryString("SELECT MeasurementGroupID, MeasurementGroupName FROM SubscriberMeasGroupDetail WHERE SubscriberID = {0} AND Allowed = {1} ORDER BY MeasurementGroupName", "subscriberID", "allowed");
+                deniedMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID), database.Bool(false));
 
                 foreach (DataRow row in deniedMeasurementGroupTable.Rows)
                     deniedMeasurementGroups[row.ConvertField<int>("MeasurementGroupID")] = row.Field<string>("MeasurementGroupName");
@@ -675,16 +704,17 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns><see cref="Dictionary{T1,T2}"/> type collection of ID and Name of <see cref="MeasurementGroup"/>.</returns>
         public static Dictionary<int, string> GetAvailableMeasurementGroups(AdoDataConnection database, Guid subscriberID)
         {
+            Dictionary<int, string> availableMeasurementGroups;
+            DataTable availableMeasurementGroupTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                Dictionary<int, string> availableMeasurementGroups = new Dictionary<int, string>();
-                string query = database.ParameterizedQueryString("SELECT ID, Name FROM MeasurementGroup WHERE " +
-                    "ID NOT IN (SELECT MeasurementGroupID FROM SubscriberMeasurementGroup WHERE SubscriberID = {0}) ORDER BY Name", "subscriberID");
-                DataTable availableMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID));
+                availableMeasurementGroups = new Dictionary<int, string>();
+                query = database.ParameterizedQueryString("SELECT ID, Name FROM MeasurementGroup WHERE ID NOT IN (SELECT MeasurementGroupID FROM SubscriberMeasurementGroup WHERE SubscriberID = {0}) ORDER BY Name", "subscriberID");
+                availableMeasurementGroupTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID));
 
                 foreach (DataRow row in availableMeasurementGroupTable.Rows)
                     availableMeasurementGroups[row.ConvertField<int>("ID")] = row.Field<string>("Name");
@@ -846,19 +876,21 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of subscribers defined in the database.</returns>
         public static Dictionary<Guid, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
+            Dictionary<Guid, string> subscriberList;
+            DataTable subscriberTable;
             bool createdConnection = false;
+            string query;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                Dictionary<Guid, string> subscriberList = new Dictionary<Guid, string>();
+                subscriberList = new Dictionary<Guid, string>();
 
                 if (isOptional)
                     subscriberList.Add(Guid.Empty, "Select Subscriber");
 
-                string query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Subscriber WHERE Enabled = {0} AND NodeID = {1} ORDER BY Name", "enabled", "nodeID");
-                DataTable subscriberTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true), database.CurrentNodeID());
+                query = database.ParameterizedQueryString("SELECT ID, Acronym FROM Subscriber WHERE Enabled = {0} AND NodeID = {1} ORDER BY Name", "enabled", "nodeID");
+                subscriberTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true), database.CurrentNodeID());
 
                 foreach (DataRow row in subscriberTable.Rows)
                 {
@@ -896,24 +928,26 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
                 if (subscriber.ID == Guid.Empty)
                 {
                     query = database.ParameterizedQueryString("INSERT INTO Subscriber (NodeID, Acronym, Name, SharedSecret, AuthKey, ValidIPAddresses, RemoteCertificateFile, ValidPolicyErrors, ValidChainFlags, " +
-                                                              "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13})", "nodeID",
-                                                              "acronym", "name", "sharedSecret", "authKey", "validIPAddresses", "remoteCertificateFile", "validPolicyErrors", "validChainFlags", "enabled",
-                                                              "updatedBy", "updatedOn", "createdBy", "createdOn");
+                                                              "AccessControlFilter, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, " +
+                                                              "{13}, {14})", "nodeID", "acronym", "name", "sharedSecret", "authKey", "validIPAddresses", "remoteCertificateFile", "validPolicyErrors", "validChainFlags",
+                                                              "accessControlFilter", "enabled", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), subscriber.Acronym, subscriber.Name.ToNotNull(),
-                                                        subscriber.SharedSecret.ToNotNull(), subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.RemoteCertificateFile.ToNotNull(),
-                                                        validPolicyErrors.ToString(), validChainFlags.ToString(), database.Bool(subscriber.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.CurrentNodeID(), subscriber.Acronym, subscriber.Name.ToNotNull(), subscriber.SharedSecret.ToNotNull(),
+                                                        subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.RemoteCertificateFile.ToNotNull(), validPolicyErrors.ToString(),
+                                                        validChainFlags.ToString(), subscriber.AccessControlFilter.ToNotNull(), database.Bool(subscriber.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
                                                         CommonFunctions.CurrentUser, database.UtcNow());
                 }
                 else
                 {
                     query = database.ParameterizedQueryString("UPDATE Subscriber SET NodeID = {0}, Acronym = {1}, Name = {2}, SharedSecret = {3}, AuthKey = {4}, ValidIPAddresses = {5}, RemoteCertificateFile = {6}, " +
-                                                              "ValidPolicyErrors = {7}, ValidChainFlags = {8}, Enabled = {9}, UpdatedBy = {10}, UpdatedOn = {11} WHERE ID = {12}", "nodeID", "acronym", "name",
-                                                              "sharedSecret", "authKey", "validIPAddresses", "remoteCertificateFile", "validPolicyErrors", "validChainFlags", "enabled", "updatedBy", "updatedOn", "id");
+                                                              "ValidPolicyErrors = {7}, ValidChainFlags = {8}, AccessControlFilter = {9}, Enabled = {10}, UpdatedBy = {11}, UpdatedOn = {12} WHERE ID = {13}", "nodeID",
+                                                              "acronym", "name", "sharedSecret", "authKey", "validIPAddresses", "remoteCertificateFile", "validPolicyErrors", "validChainFlags", "accessControlFilter",
+                                                              "enabled", "updatedBy", "updatedOn", "id");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(subscriber.NodeID), subscriber.Acronym, subscriber.Name.ToNotNull(), subscriber.SharedSecret.ToNotNull(),
                                                         subscriber.AuthKey.ToNotNull(), subscriber.ValidIPAddresses.ToNotNull(), subscriber.RemoteCertificateFile.ToNotNull(), validPolicyErrors.ToString(),
-                                                        validChainFlags.ToString(), database.Bool(subscriber.Enabled), CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(subscriber.ID));
+                                                        validChainFlags.ToString(), subscriber.AccessControlFilter.ToNotNull(), database.Bool(subscriber.Enabled), CommonFunctions.CurrentUser, database.UtcNow(),
+                                                        database.Guid(subscriber.ID));
                 }
 
                 try
