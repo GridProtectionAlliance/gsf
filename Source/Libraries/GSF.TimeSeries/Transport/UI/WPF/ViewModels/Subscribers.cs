@@ -519,72 +519,88 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         /// <returns><c>true</c> if subscriber has rights to specified <paramref name="signalID"/>; otherwise <c>false</c>.</returns>
         public bool SubscriberHasRights(Guid signalID)
         {
-            try
+            // TODO: Abstract publisher ACL logic -- except subscriber enabled flag does not need to be checked
+            const string FilterRegex = @"(ALLOW|DENY)\s+WHERE\s+([^;]*)";
+
+            DataRow subscriber;
+            DataRow[] subscriberMeasurementGroups;
+
+            IEnumerable<bool> explicitAuthorizationFlags;
+            IEnumerable<bool> explicitGroupAuthorizationFlags;
+            IEnumerable<bool> implicitFilterAuthorizationFlags;
+
+            bool explicitlyAuthorized = false;
+            bool explicitlyAuthorizedByGroup = false;
+            bool implicitlyAuthorizedByFilter = false;
+
+            // This is different from the ACL logic used by the system --
+            // because we are only calculating effective permissions to aid with configuration,
+            // we do not care whether the Subscriber is enabled
+            subscriber = m_subscriberPermissionsDataSet.Tables["Subscribers"].Select(string.Format("ID = '{0}'", CurrentItem.ID)).FirstOrDefault();
+
+            // If subscriber has been disabled or removed
+            // from the list of valid subscribers,
+            // they no longer have rights to any signals
+            if ((object)subscriber == null)
+                return false;
+
+            // Look up explicitly defined individual measurements
+            explicitAuthorizationFlags = m_subscriberPermissionsDataSet.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID = '{0}' AND SignalID = '{1}'", CurrentItem.ID, signalID))
+                .Select(measurement => measurement["Allowed"].ToNonNullString("0").ParseBoolean());
+
+            foreach (bool flag in explicitAuthorizationFlags)
             {
-                // TODO: Abstract publisher ACL logic -- except enabled flag does not need to be checked
-                const string FilterRegex = @"(ALLOW|DENY)\s+WHERE\s+([^;]*)";
-
-                DataRow subscriber;
-                DataRow[] subscriberMeasurementGroups;
-
-                bool? explicitlyAllowed;
-                bool? explicitlyAllowedByGroup;
-                bool? implicitlyAllowedByFilter;
-
-                subscriber = m_subscriberPermissionsDataSet.Tables["Subscribers"].Select(string.Format("ID = '{0}'", CurrentItem.ID)).FirstOrDefault();
-
-                // If subscriber has been disabled or removed
-                // from the list of valid subscribers,
-                // they no longer have rights to any signals
-                if ((object)subscriber == null)
+                if (flag)
+                    explicitlyAuthorized = true;
+                else
                     return false;
-
-                // Look up explicitly defined individual measurements
-                explicitlyAllowed = m_subscriberPermissionsDataSet.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID = '{0}' AND SignalID = '{1}'", CurrentItem.ID, signalID))
-                    .Select(measurement => (bool?)measurement["Allowed"].ToNonNullString("0").ParseBoolean())
-                    .OrderBy(allowed => allowed.GetValueOrDefault())
-                    .FirstOrDefault();
-
-                if (explicitlyAllowed.HasValue)
-                    return explicitlyAllowed.Value;
-
-                // Look up explicitly defined group based measurements
-                subscriberMeasurementGroups = m_subscriberPermissionsDataSet.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID = '{0}'", CurrentItem.ID));
-
-                explicitlyAllowedByGroup = subscriberMeasurementGroups
-                    .Where(subscriberMeasurementGroup => m_subscriberPermissionsDataSet.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID = '{0}' AND MeasurementGroupID = {1}", signalID, subscriberMeasurementGroup["MeasurementGroupID"])).Length > 0)
-                    .Select(subscriberMeasurementGroup => (bool?)subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean())
-                    .OrderBy(allowed => allowed.GetValueOrDefault())
-                    .FirstOrDefault();
-
-                if (explicitlyAllowedByGroup.HasValue)
-                    return explicitlyAllowedByGroup.Value;
-
-                // Look up implicitly defined filter based measurements
-                implicitlyAllowedByFilter = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), FilterRegex, RegexOptions.IgnoreCase)
-                    .Cast<Match>()
-                    .Where(match => m_subscriberPermissionsDataSet.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}' AND ({1})", signalID, match.Groups[2].Value)).Length > 0)
-                    .Select(match => (bool?)(match.Groups[1].Value == "ALLOW"))
-                    .OrderBy(allowed => allowed.GetValueOrDefault())
-                    .FirstOrDefault();
-
-                if (implicitlyAllowedByFilter.HasValue)
-                    return implicitlyAllowedByFilter.Value;
-
-                // Look up implicitly defined group based measurements
-                return subscriberMeasurementGroups
-                    .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, m_subscriberPermissionsDataSet.Tables["MeasurementGroups"].Select(string.Format("ID = {0}", subscriberMeasurementGroup["MeasurementGroupID"]))))
-                    .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseInputMeasurementKeys(m_subscriberPermissionsDataSet, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
-                    .Select(tuple => tuple.Item1["Allowed"].ToNonNullString("0").ParseBoolean())
-                    .DefaultIfEmpty(false)
-                    .All(allowed => allowed);
             }
-            catch (Exception ex)
+
+            if (explicitlyAuthorized)
+                return true;
+
+            // Look up explicitly defined group based measurements
+            subscriberMeasurementGroups = m_subscriberPermissionsDataSet.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID = '{0}'", CurrentItem.ID));
+
+            explicitGroupAuthorizationFlags = subscriberMeasurementGroups
+                .Where(subscriberMeasurementGroup => m_subscriberPermissionsDataSet.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID = '{0}' AND MeasurementGroupID = {1}", signalID, subscriberMeasurementGroup["MeasurementGroupID"])).Length > 0)
+                .Select(subscriberMeasurementGroup => subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean());
+
+            foreach (bool flag in explicitGroupAuthorizationFlags)
             {
-                CommonFunctions.LogException(null, "Subscriber Effective Permissions", new InvalidOperationException(string.Format("Failed to determine subscriber rights for {0} due to exception: {1}", CurrentItem.Acronym, ex.Message), ex));
+                if (flag)
+                    explicitlyAuthorizedByGroup = true;
+                else
+                    return false;
             }
 
-            return false;
+            if (explicitlyAuthorizedByGroup)
+                return true;
+
+            // Look up implicitly defined filter based measurements
+            implicitFilterAuthorizationFlags = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), FilterRegex, RegexOptions.IgnoreCase)
+                .Cast<Match>()
+                .Where(match => m_subscriberPermissionsDataSet.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}' AND ({1})", signalID, match.Groups[2].Value)).Length > 0)
+                .Select(match => (match.Groups[1].Value == "ALLOW"));
+
+            foreach (bool flag in implicitFilterAuthorizationFlags)
+            {
+                if (flag)
+                    implicitlyAuthorizedByFilter = true;
+                else
+                    return false;
+            }
+
+            if (implicitlyAuthorizedByFilter)
+                return true;
+
+            // Look up implicitly defined group based measurements
+            return subscriberMeasurementGroups
+                .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, m_subscriberPermissionsDataSet.Tables["MeasurementGroups"].Select(string.Format("ID = {0}", subscriberMeasurementGroup["MeasurementGroupID"]))))
+                .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseInputMeasurementKeys(m_subscriberPermissionsDataSet, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
+                .Select(tuple => tuple.Item1["Allowed"].ToNonNullString("0").ParseBoolean())
+                .DefaultIfEmpty(false)
+                .All(allowed => allowed);
         }
 
         /// <summary>
@@ -795,10 +811,22 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         // Determines the effective permissions of each of the measurements in the current page
         private void UpdateEffectivePermissions()
         {
+            Dictionary<string, Exception> exceptions = new Dictionary<string, Exception>();
+
             foreach (DataModelMeasurement measurement in CurrentAvailableMeasurementsPage)
             {
-                measurement.Selected = SubscriberHasRights(measurement.SignalID);
+                try
+                {
+                    measurement.Selected = SubscriberHasRights(measurement.SignalID);
+                }
+                catch (Exception ex)
+                {
+                    exceptions[ex.Message] = ex;
+                }
             }
+
+            foreach (Exception exception in exceptions.Values)
+                CommonFunctions.LogException(null, "Subscriber Effective Permissions", exception);
         }
 
         // Loads the data set used to determine effective permissions

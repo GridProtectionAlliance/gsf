@@ -1921,9 +1921,13 @@ namespace GSF.TimeSeries.Transport
                 DataRow subscriber;
                 DataRow[] subscriberMeasurementGroups;
 
-                bool? explicitlyAllowed;
-                bool? explicitlyAllowedByGroup;
-                bool? implicitlyAllowedByFilter;
+                IEnumerable<bool> explicitAuthorizationFlags;
+                IEnumerable<bool> explicitGroupAuthorizationFlags;
+                IEnumerable<bool> implicitFilterAuthorizationFlags;
+
+                bool explicitlyAuthorized = false;
+                bool explicitlyAuthorizedByGroup = false;
+                bool implicitlyAuthorizedByFilter = false;
 
                 // If authentication is not required,
                 // subscriber has rights to everything
@@ -1939,36 +1943,54 @@ namespace GSF.TimeSeries.Transport
                     return false;
 
                 // Look up explicitly defined individual measurements
-                explicitlyAllowed = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID = '{0}' AND SignalID = '{1}'", subscriberID, signalID))
-                    .Select(measurement => (bool?)measurement["Allowed"].ToNonNullString("0").ParseBoolean())
-                    .OrderBy(allowed => allowed.GetValueOrDefault())
-                    .FirstOrDefault();
+                explicitAuthorizationFlags = DataSource.Tables["SubscriberMeasurements"].Select(string.Format("SubscriberID = '{0}' AND SignalID = '{1}'", subscriberID, signalID))
+                    .Select(measurement => measurement["Allowed"].ToNonNullString("0").ParseBoolean());
 
-                if (explicitlyAllowed.HasValue)
-                    return explicitlyAllowed.Value;
+                foreach (bool flag in explicitAuthorizationFlags)
+                {
+                    if (flag)
+                        explicitlyAuthorized = true;
+                    else
+                        return false;
+                }
+
+                if (explicitlyAuthorized)
+                    return true;
 
                 // Look up explicitly defined group based measurements
                 subscriberMeasurementGroups = DataSource.Tables["SubscriberMeasurementGroups"].Select(string.Format("SubscriberID = '{0}'", subscriberID));
 
-                explicitlyAllowedByGroup = subscriberMeasurementGroups
+                explicitGroupAuthorizationFlags = subscriberMeasurementGroups
                     .Where(subscriberMeasurementGroup => DataSource.Tables["MeasurementGroupMeasurements"].Select(string.Format("SignalID = '{0}' AND MeasurementGroupID = {1}", signalID, subscriberMeasurementGroup["MeasurementGroupID"])).Length > 0)
-                    .Select(subscriberMeasurementGroup => (bool?)subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean())
-                    .OrderBy(allowed => allowed.GetValueOrDefault())
-                    .FirstOrDefault();
+                    .Select(subscriberMeasurementGroup => subscriberMeasurementGroup["Allowed"].ToNonNullString("0").ParseBoolean());
 
-                if (explicitlyAllowedByGroup.HasValue)
-                    return explicitlyAllowedByGroup.Value;
+                foreach (bool flag in explicitGroupAuthorizationFlags)
+                {
+                    if (flag)
+                        explicitlyAuthorizedByGroup = true;
+                    else
+                        return false;
+                }
+
+                if (explicitlyAuthorizedByGroup)
+                    return true;
 
                 // Look up implicitly defined filter based measurements
-                implicitlyAllowedByFilter = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), FilterRegex, RegexOptions.IgnoreCase)
+                implicitFilterAuthorizationFlags = Regex.Matches(subscriber["AccessControlFilter"].ToNonNullString().ReplaceControlCharacters(), FilterRegex, RegexOptions.IgnoreCase)
                     .Cast<Match>()
                     .Where(match => DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}' AND ({1})", signalID, match.Groups[2].Value)).Length > 0)
-                    .Select(match => (bool?)(match.Groups[1].Value == "ALLOW"))
-                    .OrderBy(allowed => allowed.GetValueOrDefault())
-                    .FirstOrDefault();
+                    .Select(match => (match.Groups[1].Value == "ALLOW"));
 
-                if (implicitlyAllowedByFilter.HasValue)
-                    return implicitlyAllowedByFilter.Value;
+                foreach (bool flag in implicitFilterAuthorizationFlags)
+                {
+                    if (flag)
+                        implicitlyAuthorizedByFilter = true;
+                    else
+                        return false;
+                }
+
+                if (implicitlyAuthorizedByFilter)
+                    return true;
 
                 // Look up implicitly defined group based measurements
                 return subscriberMeasurementGroups
