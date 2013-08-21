@@ -530,8 +530,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private void ButtonEdit_Click(object sender, RoutedEventArgs e)
         {
             Device device = Device.GetDevice(null, "WHERE Acronym = '" + ((Button)sender).Tag + "'");
-            DeviceUserControl deviceUserControl = new DeviceUserControl(device);
-            CommonFunctions.LoadUserControl(deviceUserControl, "Manage Device Configuration");
+            CommonFunctions.LoadUserControl("Manage Device Configuration", typeof(DeviceUserControl), device);
         }
 
         private void ButtonMeasurement_Click(object sender, RoutedEventArgs e)
@@ -540,9 +539,10 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             if (measurement.DeviceID.HasValue)
             {
-                PhasorMeasurementUserControl phasorMeasurementUserControl = new PhasorMeasurementUserControl((int)measurement.DeviceID);
-                ((PhasorMeasurements)phasorMeasurementUserControl.DataContext).CurrentItem = measurement;
-                CommonFunctions.LoadUserControl(phasorMeasurementUserControl, "Manage Measurements for " + measurement.DeviceAcronym);
+                PhasorMeasurementUserControl phasorMeasurementUserControl = CommonFunctions.LoadUserControl("Manage Measurements for " + measurement.DeviceAcronym, typeof(PhasorMeasurementUserControl), (int)measurement.DeviceID) as PhasorMeasurementUserControl;
+
+                if (phasorMeasurementUserControl != null)
+                    ((PhasorMeasurements)phasorMeasurementUserControl.DataContext).CurrentItem = measurement;
             }
         }
 
@@ -824,7 +824,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             RetrieveSettingsFromIsolatedStorage();
             PopulateSettings();
             PopupSettings.IsOpen = false;
-            CommonFunctions.LoadUserControl(new InputStatusMonitorUserControl(), "Input Status &amp; Monitoring");
+            CommonFunctions.LoadUserControl("Input Status &amp; Monitoring", typeof(InputStatusMonitorUserControl));
         }
 
         private void ButtonSaveSettings_Click(object sender, RoutedEventArgs e)
@@ -853,7 +853,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             PopupSettings.IsOpen = false;
 
-            CommonFunctions.LoadUserControl(new InputStatusMonitorUserControl(), "Input Status Monitoring");
+            CommonFunctions.LoadUserControl("Input Status Monitoring", typeof(InputStatusMonitorUserControl));
         }
 
         private void PopulateSettings()

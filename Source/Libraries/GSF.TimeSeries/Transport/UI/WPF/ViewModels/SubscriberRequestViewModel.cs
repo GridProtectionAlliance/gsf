@@ -1084,7 +1084,6 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                 "localport={1}; transportprotocol=udp; commandChannel={{server={2}:{3}; interface=0.0.0.0}}; {4}";
 
             Device device;
-            DeviceUserControl deviceUserControl;
 
             SslPolicyErrors validPolicyErrors;
             X509ChainStatusFlags validChainFlags;
@@ -1138,8 +1137,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             }
 
             device = Device.GetDevice(null, "WHERE Acronym = '" + device.Acronym + "'");
-            deviceUserControl = new DeviceUserControl(device);
-            CommonFunctions.LoadUserControl(deviceUserControl, "Manage Device Configuration");
+            CommonFunctions.LoadUserControl("Manage Device Configuration", typeof(DeviceUserControl), device);
         }
 
         // Get the setting for the local certificate path

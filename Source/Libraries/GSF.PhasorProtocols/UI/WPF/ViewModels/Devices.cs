@@ -583,11 +583,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 if (ItemsPerPage == 0) // i.e. if user is on form page then go back to list page after save.
                 {
                     if (!m_stayOnConfigurationScreen)
-                    {
-                        DeviceListUserControl deviceListUserControl = new DeviceListUserControl();
-                        CommonFunctions.LoadUserControl(deviceListUserControl, "Browse Devices");
-                    }
-                    //m_stayOnConfigurationScreen = false;
+                        CommonFunctions.LoadUserControl("Browse Devices", typeof(DeviceListUserControl));
                 }
             }
             catch (Exception ex)
@@ -615,9 +611,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <param name="parameter">Parameter to use for the command provided by commandparameter from UI.</param>
         private void GoToEdit(object parameter)
         {
-            Device deviceToEdit = (Device)parameter;
-            DeviceUserControl deviceUserControl = new DeviceUserControl(deviceToEdit);
-            CommonFunctions.LoadUserControl(deviceUserControl, "Manage Device Configuration");
+            CommonFunctions.LoadUserControl("Manage Device Configuration", typeof(DeviceUserControl), (Device)parameter);
         }
 
         /// <summary>
@@ -643,15 +637,12 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             deviceToCopy.Enabled = false; // Always set enabled to false for copied device.
 
             // Go to edit screen.
-            DeviceUserControl deviceUserControl = new DeviceUserControl(deviceToCopy);
-            CommonFunctions.LoadUserControl(deviceUserControl, "Manage Device Configuration");
+            CommonFunctions.LoadUserControl("Manage Device Configuration", typeof(DeviceUserControl), deviceToCopy);
         }
 
         private void UpdateConfiguration(object parameter)
         {
-            Device device = (Device)parameter;
-            InputWizardUserControl inputWizardUserControl = new InputWizardUserControl(device);
-            CommonFunctions.LoadUserControl(inputWizardUserControl, "Input Device Configuration Wizard");
+            CommonFunctions.LoadUserControl("Input Device Configuration Wizard", typeof(InputWizardUserControl), (Device)parameter);
         }
 
         private bool DeviceExists(string acronym)
@@ -670,9 +661,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// </summary>
         private void GoToMeasurements()
         {
-            //GSF.PhasorProtocols.UI.DataModels.Device device = (GSF.PhasorProtocols.UI.DataModels.Device)parameter;
-            PhasorMeasurementUserControl measurementUserControl = new PhasorMeasurementUserControl(CurrentItem.ID);
-            CommonFunctions.LoadUserControl(measurementUserControl, "Manage Measurements for " + CurrentItem.Acronym);
+            CommonFunctions.LoadUserControl("Manage Measurements for " + CurrentItem.Acronym, typeof(PhasorMeasurementUserControl), CurrentItem.ID);
         }
 
         /// <summary>
@@ -680,9 +669,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// </summary>        
         private void GoToPhasors()
         {
-            //GSF.PhasorProtocols.UI.DataModels.Device device = (GSF.PhasorProtcols.UI.DataModels.Device)parameter;
-            PhasorUserControl phasorUserControl = new PhasorUserControl(CurrentItem.ID);
-            CommonFunctions.LoadUserControl(phasorUserControl, "Manage Phasors for " + CurrentItem.Acronym);
+            CommonFunctions.LoadUserControl("Manage Phasors for " + CurrentItem.Acronym, typeof(PhasorUserControl), CurrentItem.ID);
         }
 
         protected override void OnPropertyChanged(string propertyName)
@@ -819,8 +806,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 }
 
                 Device.NotifyService(null, CurrentItem.HistorianID);
-                DeviceListUserControl deviceListUserControl = new DeviceListUserControl();
-                CommonFunctions.LoadUserControl(deviceListUserControl, "Browse Devices");
+                CommonFunctions.LoadUserControl("Browse Devices", typeof(DeviceListUserControl));
             }
             catch (Exception ex)
             {

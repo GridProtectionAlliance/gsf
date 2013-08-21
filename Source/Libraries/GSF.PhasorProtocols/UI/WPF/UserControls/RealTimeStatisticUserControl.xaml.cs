@@ -102,7 +102,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString(), out m_statisticDataRefreshInterval);
                 TextBlockMeasurementRefreshInterval.Text = m_statisticDataRefreshInterval.ToString();
                 PopupSettings.IsOpen = false;
-                CommonFunctions.LoadUserControl(new RealTimeStatisticUserControl(), "Real-Time Stream Statistics");
+                CommonFunctions.LoadUserControl("Real-Time Stream Statistics", typeof(RealTimeStatisticUserControl));
             }
             else
             {
@@ -118,7 +118,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             TextBlockMeasurementRefreshInterval.Text = m_statisticDataRefreshInterval.ToString();
             TextBoxRefreshInterval.Text = m_statisticDataRefreshInterval.ToString();
             PopupSettings.IsOpen = false;
-            CommonFunctions.LoadUserControl(new RealTimeStatisticUserControl(), "Real-Time Stream Statistics");
+            CommonFunctions.LoadUserControl("Real-Time Stream Statistics", typeof(RealTimeStatisticUserControl));
         }
 
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)

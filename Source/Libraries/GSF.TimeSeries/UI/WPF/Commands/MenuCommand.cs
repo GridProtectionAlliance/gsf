@@ -153,13 +153,15 @@ namespace GSF.TimeSeries.UI.Commands
         /// </param>
         public void Execute(object parameter)
         {
-            Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_userControlAssembly));
-            UserControl userControl = Activator.CreateInstance(assembly.GetType(m_userControlPath)) as UserControl;
-
-            if (userControl != null)
-                CommonFunctions.LoadUserControl(userControl, m_description);
-            else
-                throw new InvalidOperationException("Failed to create user control " + m_userControlPath);
+            try
+            {
+                Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_userControlAssembly));
+                CommonFunctions.LoadUserControl(m_description, assembly.GetType(m_userControlPath));
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(string.Format("Failed to create user control {0}: {1}", m_userControlPath, ex.Message), ex);
+            }
         }
 
         /// <summary>

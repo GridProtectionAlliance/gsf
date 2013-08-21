@@ -387,10 +387,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private void GoToPhasors()
         {
             if (!m_mirrorMode)
-            {
-                OutputStreamDevicePhasorUserControl outputStreamDevicePhasorUserControl = new OutputStreamDevicePhasorUserControl(CurrentItem.ID);
-                CommonFunctions.LoadUserControl(outputStreamDevicePhasorUserControl, "Manage Phasors for " + CurrentItem.Acronym);
-            }
+                CommonFunctions.LoadUserControl("Manage Phasors for " + CurrentItem.Acronym, typeof(OutputStreamDevicePhasorUserControl), CurrentItem.ID);
         }
 
         /// <summary>
@@ -401,27 +398,20 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             if (!m_mirrorMode)
             {
                 OutputStream outputStream = OutputStream.GetOutputStream(null, " WHERE ID = " + m_outputStreamID);
-                OutputStreamCurrentDeviceUserControl outputStreamCurrentDeviceUserControl = new OutputStreamCurrentDeviceUserControl(m_outputStreamID, outputStream.Acronym);
-                CommonFunctions.LoadUserControl(outputStreamCurrentDeviceUserControl, "Manage Devices for " + outputStream.Acronym);
+                CommonFunctions.LoadUserControl("Manage Devices for " + outputStream.Acronym, typeof(OutputStreamCurrentDeviceUserControl), m_outputStreamID, outputStream.Acronym);
             }
         }
 
         private void GoToAnalogs()
         {
             if (!m_mirrorMode)
-            {
-                OutputStreamDeviceAnalogUserControl outputStreamDeviceAnalogUserControl = new OutputStreamDeviceAnalogUserControl(CurrentItem.ID);
-                CommonFunctions.LoadUserControl(outputStreamDeviceAnalogUserControl, "Manage Analogs for " + CurrentItem.Acronym);
-            }
+                CommonFunctions.LoadUserControl("Manage Analogs for " + CurrentItem.Acronym, typeof(OutputStreamDeviceAnalogUserControl), CurrentItem.ID);
         }
 
         private void GoToDigitals()
         {
             if (!m_mirrorMode)
-            {
-                OutputStreamDeviceDigitalUserControl outputStreamDeviceDigitalUserControl = new OutputStreamDeviceDigitalUserControl(CurrentItem.ID);
-                CommonFunctions.LoadUserControl(outputStreamDeviceDigitalUserControl, "Manage Digitals for " + CurrentItem.Acronym);
-            }
+                CommonFunctions.LoadUserControl("Manage Digitals for " + CurrentItem.Acronym, typeof(OutputStreamDeviceDigitalUserControl), CurrentItem.ID);
         }
 
         #endregion

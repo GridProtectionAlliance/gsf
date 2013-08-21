@@ -545,8 +545,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void GoToDevices(object parameter)
         {
-            OutputStreamDeviceUserControl outputStreamDeviceUserControl = new OutputStreamDeviceUserControl(CurrentItem.ID, MirrorMode);
-            CommonFunctions.LoadUserControl(outputStreamDeviceUserControl, "Manage Devices for " + CurrentItem.Acronym);
+            CommonFunctions.LoadUserControl("Manage Devices for " + CurrentItem.Acronym, typeof(OutputStreamDeviceUserControl), CurrentItem.ID, MirrorMode);
         }
 
         private void LaunchDeviceWizard(object parameter)
@@ -558,16 +557,13 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             else
             {
                 if (!MirrorMode)
-                {
-                    OutputStreamCurrentDeviceUserControl outputStreamCurrentDeviceUserControl = new OutputStreamCurrentDeviceUserControl(CurrentItem.ID, CurrentItem.Acronym);
-                    CommonFunctions.LoadUserControl(outputStreamCurrentDeviceUserControl, "Current Devices for " + CurrentItem.Acronym);
-                }
+                    CommonFunctions.LoadUserControl("Current Devices for " + CurrentItem.Acronym, typeof(OutputStreamCurrentDeviceUserControl), CurrentItem.ID, CurrentItem.Acronym);
             }
         }
+
         private void GoToMeasurements(object parameter)
         {
-            OutputStreamMeasurementUserControl outputStreamMeasurementUserControl = new OutputStreamMeasurementUserControl(CurrentItem.ID);
-            CommonFunctions.LoadUserControl(outputStreamMeasurementUserControl, "Manage Measurements for " + CurrentItem.Acronym);
+            CommonFunctions.LoadUserControl("Manage Measurements for " + CurrentItem.Acronym, typeof(OutputStreamMeasurementUserControl), CurrentItem.ID);
         }
 
         protected override void OnPropertyChanged(string propertyName)

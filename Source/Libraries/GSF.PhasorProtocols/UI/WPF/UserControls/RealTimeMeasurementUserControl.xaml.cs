@@ -109,8 +109,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private void ButtonEdit_Click(object sender, RoutedEventArgs e)
         {
             Device device = Device.GetDevice(null, "WHERE Acronym = '" + ((Button)sender).Tag + "'");
-            DeviceUserControl deviceUserControl = new DeviceUserControl(device);
-            CommonFunctions.LoadUserControl(deviceUserControl, "Manage Device Configuration");
+            CommonFunctions.LoadUserControl("Manage Device Configuration", typeof(DeviceUserControl), device);
         }
 
         private void ButtonDisplaySettings_Click(object sender, RoutedEventArgs e)
@@ -127,7 +126,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 IsolatedStorageManager.WriteToIsolatedStorage("RealtimeMeasurementsDataRefreshInterval", m_measurementsDataRefreshInterval);
                 int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("RealtimeMeasurementsDataRefreshInterval").ToString(), out m_measurementsDataRefreshInterval);
                 PopupSettings.IsOpen = false;
-                CommonFunctions.LoadUserControl(new RealTimeMeasurementUserControl(), "Real-Time Device Measurements");
+                CommonFunctions.LoadUserControl("Real-Time Device Measurements", typeof(RealTimeMeasurementUserControl));
             }
             else
             {
@@ -147,7 +146,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             IsolatedStorageManager.InitializeStorageForRealTimeMeasurements(true);
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("RealtimeMeasurementsDataRefreshInterval").ToString(), out m_measurementsDataRefreshInterval);
             PopupSettings.IsOpen = false;
-            CommonFunctions.LoadUserControl(new RealTimeMeasurementUserControl(), "Real-Time Device Measurements");
+            CommonFunctions.LoadUserControl("Real-Time Device Measurements", typeof(RealTimeMeasurementUserControl));
         }
 
         private void ButtonStatusFlagReference_Click(object sender, RoutedEventArgs e)

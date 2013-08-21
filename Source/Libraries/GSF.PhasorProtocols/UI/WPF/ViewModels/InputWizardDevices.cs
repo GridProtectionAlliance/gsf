@@ -1444,8 +1444,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         Device.NotifyService(m_pdcDevice);
                 }
 
-                DeviceListUserControl deviceListUserControl = new DeviceListUserControl();
-                CommonFunctions.LoadUserControl(deviceListUserControl, "Browse Devices");
+                CommonFunctions.LoadUserControl("Browse Devices", typeof(DeviceListUserControl));
 
                 m_disconnectedCurrentDevice = false;
                 m_currentDeviceRuntimeID = 0;

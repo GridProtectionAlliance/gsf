@@ -39,7 +39,6 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Security;
 using GSF.TimeSeries.UI.DataModels;
-using UIFrame = System.Windows.Controls.Frame;
 
 namespace GSF.TimeSeries.UI
 {
@@ -55,6 +54,11 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public const string DefaultSettingsCategory = "systemSettings";
 
+        /// <summary>
+        /// Defines the maximum number of pages to be stored in page history.
+        /// </summary>
+        public const int MaxPageHistory = 10;
+
         #endregion
 
         #region [ Static ]
@@ -67,6 +71,8 @@ namespace GSF.TimeSeries.UI
         private static string s_timeSeriesDataServiceUrl;
         private static WindowsServiceClient s_windowsServiceClient;
         private static bool s_retryServiceConnection;
+        private static LinkedList<Tuple<string, Type, object[]>> s_pageHistory;
+        private static LinkedListNode<Tuple<string, Type, object[]>> s_currentPage;
 
         // Static Properties
 
@@ -80,6 +86,28 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public static string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
 
+        /// <summary>
+        /// Gets the flag that indicates whether we can go forward to the next user control in history.
+        /// </summary>
+        public static bool CanGoForward
+        {
+            get
+            {
+                return ((object)s_currentPage != null) && ((object)s_currentPage.Next != null);
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag that indicates whether we can go back to the previous user control in history.
+        /// </summary>
+        public static bool CanGoBack
+        {
+            get
+            {
+                return ((object)s_currentPage != null) && ((object)s_currentPage.Previous != null);
+            }
+        }
+
         // Events
 
         /// <summary>
@@ -88,6 +116,16 @@ namespace GSF.TimeSeries.UI
         public static event EventHandler ServiceConnectionRefreshed = delegate
         {
         };
+
+        /// <summary>
+        /// Triggered when the flag that indicates whether we can move forward in page history changes.
+        /// </summary>
+        public static event EventHandler CanGoForwardChanged;
+
+        /// <summary>
+        /// Triggered when the flag that indicates whether we can move backward in page history changes.
+        /// </summary>
+        public static event EventHandler CanGoBackChanged;
 
         // Static Methods
 
@@ -820,31 +858,210 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Loads provided user control into the frame control inside main window.
         /// </summary>
-        /// <param name="userControl">User control to be loaded.</param>
         /// <param name="title">Title of the user control to be loaded.</param>
-        public static void LoadUserControl(object userControl, string title)
+        /// <param name="userControlType">The type of the user control to be loaded.</param>
+        /// <param name="constructorArgs">Parameters for the constructor of the user control.</param>
+        public static UserControl LoadUserControl(string title, Type userControlType, params object[] constructorArgs)
         {
-            UIElement frame = null;
-            UIElement groupBox = null;
-            GetFirstChild(Application.Current.MainWindow, typeof(UIFrame), ref frame);
-            GetFirstChild(Application.Current.MainWindow, typeof(GroupBox), ref groupBox);
+            Panel panel = Application.Current.MainWindow.FindName("UserControlPanel") as Panel;
+            UserControl userControl;
+            bool canGoForward;
+            bool canGoBack;
 
-            if (frame != null)
+            GroupBox groupBox;
+            Run run;
+            TextBlock txt;
+
+            if ((object)panel != null)
             {
-                Run run = new Run();
-                run.FontWeight = FontWeights.Bold;
-                run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
-                run.Text = title;
+                userControl = Activator.CreateInstance(userControlType, constructorArgs) as UserControl;
 
-                TextBlock txt = new TextBlock();
-                txt.Padding = new Thickness(5.0);
-                txt.Inlines.Add(run);
+                if ((object)userControl != null)
+                {
+                    // If no page history exists yet, create it
+                    if ((object)s_pageHistory == null)
+                        s_pageHistory = new LinkedList<Tuple<string, Type, object[]>>();
 
-                ((UIFrame)frame).Navigate(userControl, txt);
+                    // Display the user control
+                    panel.Children.Clear();
+                    panel.Children.Add(userControl);
 
-                if (groupBox != null)
-                    ((GroupBox)groupBox).Header = txt;
+                    if ((object)s_currentPage != null)
+                    {
+                        canGoForward = CanGoForward;
+                        canGoBack = CanGoBack;
+
+                        // Add the new page after the current
+                        s_pageHistory.AddAfter(s_currentPage, Tuple.Create(title, userControlType, constructorArgs));
+                        s_currentPage = s_currentPage.Next;
+
+                        // Truncate the list to the page that was just added
+                        while (s_pageHistory.Last != s_currentPage)
+                            s_pageHistory.RemoveLast();
+
+                        // Shorten the history to the maximum number of pages
+                        while (s_pageHistory.Count > MaxPageHistory)
+                            s_pageHistory.RemoveFirst();
+
+                        // Determine if flags to indicate whether
+                        // we can go forward or back have changed
+                        if (canGoForward)
+                            OnCanGoForwardChanged();
+
+                        if (!canGoBack)
+                            OnCanGoBackChanged();
+                    }
+                    else
+                    {
+                        // Add this page as the first page in history
+                        s_pageHistory.AddFirst(Tuple.Create(title, userControlType, constructorArgs));
+                        s_currentPage = s_pageHistory.First;
+                    }
+
+                    // Set the header on the group box to the title passed into this method
+                    groupBox = Application.Current.MainWindow.FindName("UserControlGroupBox") as GroupBox;
+
+                    if ((object)groupBox != null)
+                    {
+                        run = new Run();
+                        run.FontWeight = FontWeights.Bold;
+                        run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        run.Text = title;
+
+                        txt = new TextBlock();
+                        txt.Padding = new Thickness(5.0);
+                        txt.Inlines.Add(run);
+
+                        groupBox.Header = txt;
+                    }
+
+                    return userControl;
+                }
             }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Goes forward to the next user control in history.
+        /// </summary>
+        public static void GoForward()
+        {
+            Panel panel = Application.Current.MainWindow.FindName("UserControlPanel") as Panel;
+            UserControl userControl;
+            bool canGoBack;
+
+            GroupBox groupBox;
+            Run run;
+            TextBlock txt;
+
+            if (CanGoForward && (object)panel != null)
+            {
+                canGoBack = CanGoBack;
+
+                // Get the next page and instantiate the user control
+                s_currentPage = s_currentPage.Next;
+                userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
+
+                if ((object)userControl != null)
+                {
+                    // Display the user contro
+                    panel.Children.Clear();
+                    panel.Children.Add(userControl);
+
+                    // Determine if flags to indicate whether
+                    // we can go forward or back have changed
+                    if (!CanGoForward)
+                        OnCanGoForwardChanged();
+
+                    if (!canGoBack)
+                        OnCanGoBackChanged();
+
+                    // Set the header on the group box to the title of the user control
+                    groupBox = Application.Current.MainWindow.FindName("UserControlGroupBox") as GroupBox;
+
+                    if ((object)groupBox != null)
+                    {
+                        run = new Run();
+                        run.FontWeight = FontWeights.Bold;
+                        run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        run.Text = s_currentPage.Value.Item1;
+
+                        txt = new TextBlock();
+                        txt.Padding = new Thickness(5.0);
+                        txt.Inlines.Add(run);
+
+                        groupBox.Header = txt;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Goes back to the previous user control in history.
+        /// </summary>
+        public static void GoBack()
+        {
+            Panel panel = Application.Current.MainWindow.FindName("UserControlPanel") as Panel;
+            UserControl userControl;
+            bool canGoForward;
+
+            GroupBox groupBox;
+            Run run;
+            TextBlock txt;
+
+            if (CanGoBack && (object)panel != null)
+            {
+                canGoForward = CanGoForward;
+
+                // Get the previous page and instantiate the user control
+                s_currentPage = s_currentPage.Previous;
+                userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
+
+                if ((object)userControl != null)
+                {
+                    // Display the user control
+                    panel.Children.Clear();
+                    panel.Children.Add(userControl);
+
+                    // Determine if flags to indicate whether
+                    // we can go forward or back have changed
+                    if (!canGoForward)
+                        OnCanGoForwardChanged();
+
+                    if (!CanGoBack)
+                        OnCanGoBackChanged();
+
+                    // Set the header on the group box to the title of the user control
+                    groupBox = Application.Current.MainWindow.FindName("UserControlGroupBox") as GroupBox;
+
+                    if ((object)groupBox != null)
+                    {
+                        run = new Run();
+                        run.FontWeight = FontWeights.Bold;
+                        run.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
+                        run.Text = s_currentPage.Value.Item1;
+
+                        txt = new TextBlock();
+                        txt.Padding = new Thickness(5.0);
+                        txt.Inlines.Add(run);
+
+                        groupBox.Header = txt;
+                    }
+                }
+            }
+        }
+
+        private static void OnCanGoForwardChanged()
+        {
+            if ((object)CanGoForwardChanged != null)
+                CanGoForwardChanged(null, EventArgs.Empty);
+        }
+
+        private static void OnCanGoBackChanged()
+        {
+            if ((object)CanGoBackChanged != null)
+                CanGoBackChanged(null, EventArgs.Empty);
         }
 
         #endregion
