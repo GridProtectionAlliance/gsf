@@ -218,21 +218,21 @@ namespace GSF.TimeSeries
                 {
                     if (disposing)
                     {
-                        if (m_timer != null)
+                        if ((object)m_timer != null)
                         {
                             m_timer.Tick -= m_timer_Tick;
                             m_timer.Dispose();
                         }
                         m_timer = null;
 
-                        if (m_frameWaitHandleA != null)
+                        if ((object)m_frameWaitHandleA != null)
                         {
                             m_frameWaitHandleA.Set();
                             m_frameWaitHandleA.Dispose();
                         }
                         m_frameWaitHandleA = null;
 
-                        if (m_frameWaitHandleB != null)
+                        if ((object)m_frameWaitHandleB != null)
                         {
                             m_frameWaitHandleB.Set();
                             m_frameWaitHandleB.Dispose();
@@ -319,7 +319,7 @@ namespace GSF.TimeSeries
 
                             if (resync)
                             {
-                                if (m_timer != null)
+                                if ((object)m_timer != null)
                                 {
                                     m_timer.Stop();
                                     ThreadPool.QueueUserWorkItem(SynchronizeInputTimer);
@@ -338,7 +338,7 @@ namespace GSF.TimeSeries
 
                     if (releaseTimer)
                     {
-                        // Baseline timestamp to the top of the millisecond for frame publication
+                        // Baseline time-stamp to the top of the millisecond for frame publication
                         m_lastFrameTime = ticks - ticks % Ticks.PerMillisecond;
 
                         // Pulse all waiting threads toggling between ready handles
@@ -359,7 +359,8 @@ namespace GSF.TimeSeries
             }
             catch (Exception ex)
             {
-                ExceptionHandler(new InvalidOperationException("Exception thrown by precision input timer: " + ex.Message, ex));
+                if ((object)m_exceptionHandler != null)
+                    m_exceptionHandler(new InvalidOperationException("Exception thrown by precision input timer: " + ex.Message, ex));
             }
             finally
             {
@@ -384,7 +385,7 @@ namespace GSF.TimeSeries
             m_lastMissedWindowTime = 0;
             m_missedPublicationWindows = 0;
 
-            if (m_timer != null)
+            if ((object)m_timer != null)
                 m_timer.Start();
         }
 
@@ -440,11 +441,11 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Detatch from the <see cref="PrecisionInputTimer"/>.
+        /// Detach from the <see cref="PrecisionInputTimer"/>.
         /// </summary>
         /// <param name="timer">Timer instance to detach from.</param>
         /// <remarks>
-        /// Timer reference will be set to <c>null</c> after detatch.
+        /// Timer reference will be set to <c>null</c> after detach.
         /// </remarks>
         public static void Detach(ref PrecisionInputTimer timer)
         {
