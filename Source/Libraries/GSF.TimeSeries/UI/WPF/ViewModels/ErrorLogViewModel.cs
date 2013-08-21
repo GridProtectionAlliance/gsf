@@ -140,7 +140,17 @@ namespace GSF.TimeSeries.UI.ViewModels
             try
             {
                 if ((object)ItemsKeys == null)
+                {
                     ItemsKeys = ErrorLog.LoadKeys(null, SortMember, SortDirection);
+
+                    if ((object)SortSelector != null)
+                    {
+                        if (SortDirection == "ASC")
+                            ItemsKeys = ItemsKeys.OrderBy(SortSelector).ToList();
+                        else
+                            ItemsKeys = ItemsKeys.OrderByDescending(SortSelector).ToList();
+                    }
+                }
 
                 pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
                 ItemsSource = ErrorLog.Load(null, pageKeys);

@@ -521,7 +521,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable adapterTable;
                 string query;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 query = database.ParameterizedQueryString(string.Format("SELECT ID FROM Alarm WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
@@ -556,11 +556,13 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Alarm> alarmList = new ObservableCollection<Alarm>();
-                DataTable adapterTable;
                 string query;
                 string commaSeparatedKeys;
+
+                Alarm[] alarmList = null;
+                DataTable alarmTable;
                 object associatedMeasurementId;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -568,16 +570,18 @@ namespace GSF.TimeSeries.UI.DataModels
                     query = database.ParameterizedQueryString(string.Format("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, Description, Severity, Operation, " +
                         "SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled FROM Alarm WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
 
-                    adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    alarmTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    alarmList = new Alarm[alarmTable.Rows.Count];
 
-                    foreach (DataRow row in adapterTable.Rows)
+                    foreach (DataRow row in alarmTable.Rows)
                     {
+                        id = row.ConvertField<int>("ID");
                         associatedMeasurementId = row.Field<object>("AssociatedMeasurementID");
 
-                        alarmList.Add(new Alarm
+                        alarmList[keys.IndexOf(id)] = new Alarm()
                         {
                             NodeID = database.Guid(row, "NodeID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             TagName = row.Field<string>("TagName"),
                             SignalID = database.Guid(row, "SignalID"),
                             AssociatedMeasurementID = (associatedMeasurementId != null) ? Guid.Parse(associatedMeasurementId.ToString()) : (Guid?)null,
@@ -591,11 +595,11 @@ namespace GSF.TimeSeries.UI.DataModels
                             LoadOrder = row.ConvertField<int>("LoadOrder"),
                             Enabled = row.ConvertField<bool>("Enabled"),
                             CreateAssociatedMeasurement = (associatedMeasurementId != null)
-                        });
+                        };
                     }
                 }
 
-                return alarmList;
+                return new ObservableCollection<Alarm>(alarmList ?? new Alarm[0]);
             }
             finally
             {

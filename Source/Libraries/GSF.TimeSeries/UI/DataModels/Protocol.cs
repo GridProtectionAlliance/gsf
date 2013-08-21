@@ -221,8 +221,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in protocolTable.Rows)
                 {
-                    protocolList.Add(new Protocol
-                        {
+                    protocolList.Add(new Protocol()
+                    {
                         ID = row.ConvertField<int>("ID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),

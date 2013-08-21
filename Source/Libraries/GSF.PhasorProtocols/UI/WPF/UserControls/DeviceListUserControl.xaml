@@ -47,7 +47,7 @@
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
                 <!--<sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" CellStyle="{StaticResource CenterAlignCellStyle}" />-->
-                <sdk:DataGridTemplateColumn Header="" Width="*">
+                <sdk:DataGridTemplateColumn Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Phasors" 
@@ -56,7 +56,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="" Width="1.5*">
+                <sdk:DataGridTemplateColumn Width="1.5*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Measurements" 
@@ -65,7 +65,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="" Width="*">
+                <sdk:DataGridTemplateColumn Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

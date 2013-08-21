@@ -150,7 +150,17 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     throw new OperationCanceledException("Load was canceled.");
 
                 if ((object)ItemsKeys == null && m_deviceID > 0)
+                {
                     ItemsKeys = Phasor.LoadKeys(null, m_deviceID, SortMember, SortDirection);
+
+                    if ((object)SortSelector != null)
+                    {
+                        if (SortDirection == "ASC")
+                            ItemsKeys = ItemsKeys.OrderBy(SortSelector).ToList();
+                        else
+                            ItemsKeys = ItemsKeys.OrderByDescending(SortSelector).ToList();
+                    }
+                }
 
                 if ((object)ItemsKeys != null)
                     pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();

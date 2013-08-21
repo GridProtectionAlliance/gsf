@@ -349,7 +349,17 @@ namespace GSF.TimeSeries.UI.ViewModels
             try
             {
                 if ((object)ItemsKeys == null)
+                {
                     ItemsKeys = Adapter.LoadIDs(null, m_adapterType, SortMember, SortDirection);
+
+                    if ((object)SortSelector != null)
+                    {
+                        if (SortDirection == "ASC")
+                            ItemsKeys = ItemsKeys.OrderBy(SortSelector).ToList();
+                        else
+                            ItemsKeys = ItemsKeys.OrderByDescending(SortSelector).ToList();
+                    }
+                }
 
                 pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
                 ItemsSource = Adapter.Load(null, m_adapterType, pageKeys);

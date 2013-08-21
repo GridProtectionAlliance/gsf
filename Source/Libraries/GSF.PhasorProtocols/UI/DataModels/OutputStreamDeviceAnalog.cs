@@ -293,7 +293,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM OutputStreamDeviceAnalog WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause));
@@ -326,10 +326,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<OutputStreamDeviceAnalog> outputStreamDeviceAnalogList = new ObservableCollection<OutputStreamDeviceAnalog>();
-                DataTable outputStreamDeviceAnalogTable;
                 string query;
                 string commaSeparatedKeys;
+
+                OutputStreamDeviceAnalog[] outputStreamDeviceAnalogList = null;
+                DataTable outputStreamDeviceAnalogTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -337,24 +339,27 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     query = database.ParameterizedQueryString(string.Format("SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, ScalingValue, LoadOrder " +
                                         "FROM OutputStreamDeviceAnalog WHERE ID IN ({0})", commaSeparatedKeys));
                     outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    outputStreamDeviceAnalogList = new OutputStreamDeviceAnalog[outputStreamDeviceAnalogTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceAnalogTable.Rows)
                     {
-                        outputStreamDeviceAnalogList.Add(new OutputStreamDeviceAnalog
-                            {
+                        id = row.ConvertField<int>("ID");
+
+                        outputStreamDeviceAnalogList[keys.IndexOf(id)] = new OutputStreamDeviceAnalog()
+                        {
                             NodeID = database.Guid(row, "NodeID"),
                             OutputStreamDeviceID = row.ConvertField<int>("OutputStreamDeviceID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             Label = row.Field<string>("Label"),
                             Type = row.ConvertField<int>("Type"),
                             ScalingValue = row.ConvertField<int>("ScalingValue"),
                             LoadOrder = row.ConvertField<int>("LoadOrder"),
                             m_typeName = row.ConvertField<int>("Type") == 0 ? "Single point-on-wave" : row.ConvertField<int>("Type") == 1 ? "RMS of analog input" : "Peak of analog input"
-                        });
+                        };
                     }
                 }
 
-                return outputStreamDeviceAnalogList;
+                return new ObservableCollection<OutputStreamDeviceAnalog>(outputStreamDeviceAnalogList ?? new OutputStreamDeviceAnalog[0]);
             }
             finally
             {

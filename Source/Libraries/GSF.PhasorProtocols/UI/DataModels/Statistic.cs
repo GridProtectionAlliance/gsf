@@ -324,8 +324,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 foreach (DataRow row in statisticTable.Rows)
                 {
-                    statisticList.Add(new Statistic
-                        {
+                    statisticList.Add(new Statistic()
+                    {
                         Source = row.Field<string>("Source"),
                         SignalIndex = row.ConvertField<int>("SignalIndex"),
                         Name = row.Field<string>("Name"),

@@ -322,7 +322,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause));
@@ -355,10 +355,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<OutputStreamDevicePhasor> outputStreamDevicePhasorList = new ObservableCollection<OutputStreamDevicePhasor>();
-                DataTable outputStreamDevicePhasorTable;
                 string query;
                 string commaSeparatedKeys;
+
+                OutputStreamDevicePhasor[] outputStreamDevicePhasorList = null;
+                DataTable outputStreamDevicePhasorTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -367,14 +369,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                           "FROM OutputStreamDevicePhasor WHERE ID IN ({0})", commaSeparatedKeys));
 
                     outputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    outputStreamDevicePhasorList = new OutputStreamDevicePhasor[outputStreamDevicePhasorTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDevicePhasorTable.Rows)
                     {
-                        outputStreamDevicePhasorList.Add(new OutputStreamDevicePhasor
-                            {
+                        id = row.ConvertField<int>("ID");
+
+                        outputStreamDevicePhasorList[keys.IndexOf(id)] = new OutputStreamDevicePhasor()
+                        {
                             NodeID = database.Guid(row, "NodeID"),
                             OutputStreamDeviceID = row.ConvertField<int>("OutputStreamDeviceID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             Label = row.Field<string>("Label"),
                             Type = row.Field<string>("Type"),
                             Phase = row.Field<string>("Phase"),
@@ -384,11 +389,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                                                     row.Field<string>("Phase") == "0" ? "Zero Sequence" : row.Field<string>("Phase") == "A" ? "Phase A" :
                                                                     row.Field<string>("Phase") == "B" ? "Phase B" : "Phase C",
                             m_phasorType = row.Field<string>("Type") == "V" ? "Voltage" : "Current"
-                        });
+                        };
                     }
                 }
 
-                return outputStreamDevicePhasorList;
+                return new ObservableCollection<OutputStreamDevicePhasor>(outputStreamDevicePhasorList ?? new OutputStreamDevicePhasor[0]);
             }
             finally
             {

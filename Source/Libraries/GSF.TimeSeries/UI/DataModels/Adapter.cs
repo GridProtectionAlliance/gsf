@@ -371,7 +371,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable adapterTable;
                 string query;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 query = database.ParameterizedQueryString(string.Format("SELECT ID FROM {0} WHERE NodeID = {{0}} {1}", viewName, sortClause), "nodeID");
@@ -416,10 +416,12 @@ namespace GSF.TimeSeries.UI.DataModels
                 else
                     viewName = "CustomOutputAdapterDetail";
 
-                ObservableCollection<Adapter> adapterList = new ObservableCollection<Adapter>();
-                DataTable adapterTable;
                 string query;
                 string commaSeparatedKeys;
+
+                Adapter[] adapterList =  null;
+                DataTable adapterTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -428,13 +430,16 @@ namespace GSF.TimeSeries.UI.DataModels
                         "LoadOrder, Enabled, NodeName FROM {0} WHERE NodeID = {{0}} AND ID IN ({1})", viewName, commaSeparatedKeys), "nodeID");
 
                     adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    adapterList = new Adapter[adapterTable.Rows.Count];
 
                     foreach (DataRow row in adapterTable.Rows)
                     {
-                        adapterList.Add(new Adapter
-                            {
+                        id = row.ConvertField<int>("ID");
+
+                        adapterList[keys.IndexOf(id)] = new Adapter()
+                        {
                             NodeID = database.Guid(row, "NodeID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             AdapterName = row.Field<string>("AdapterName"),
                             AssemblyName = row.Field<string>("AssemblyName"),
                             TypeName = row.Field<string>("TypeName"),
@@ -443,11 +448,11 @@ namespace GSF.TimeSeries.UI.DataModels
                             Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                             NodeName = row.Field<string>("NodeName"),
                             Type = adapterType
-                        });
+                        };
                     }
                 }
 
-                return adapterList;
+                return new ObservableCollection<Adapter>(adapterList ?? new Adapter[0]);
             }
             finally
             {

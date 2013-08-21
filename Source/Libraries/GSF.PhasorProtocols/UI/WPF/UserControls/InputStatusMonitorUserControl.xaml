@@ -408,7 +408,7 @@
 
                     <sdk:DataGridTextColumn Header="Unit" IsReadOnly="True" Width="65" Binding="{tsfBinding:Column Path=EngineeringUnit}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
 
-                    <sdk:DataGridTemplateColumn Header="" Width="40">
+                    <sdk:DataGridTemplateColumn Width="40">
                         <sdk:DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button ToolTip="Remove Selected Measurement" Width="Auto" Padding="0" Click="ButtonRemove_Click">

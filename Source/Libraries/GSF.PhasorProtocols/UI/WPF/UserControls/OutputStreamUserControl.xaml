@@ -280,8 +280,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <!--<sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" CellStyle="{StaticResource CenterAlignCellStyle}"/>-->
-                <sdk:DataGridTemplateColumn Header="" Width="*">
+                <sdk:DataGridTemplateColumn Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Devices" Width="Auto"
@@ -289,7 +288,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="" Width="*">
+                <sdk:DataGridTemplateColumn Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Measurements" Width="Auto"
@@ -307,7 +306,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="" Width="*">
+                <sdk:DataGridTemplateColumn Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Device Wizard" Width="Auto"
@@ -324,7 +323,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="" Width="*">
+                <sdk:DataGridTemplateColumn Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

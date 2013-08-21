@@ -414,7 +414,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From OutputStreamDeviceDetail WHERE AdapterID = {1} {0}", sortClause, outputStreamID));
@@ -447,10 +447,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<OutputStreamDevice> outputStreamDeviceList = new ObservableCollection<OutputStreamDevice>();
-                DataTable outputStreamDeviceTable;
                 string query;
                 string commaSeparatedKeys;
+
+                OutputStreamDevice[] outputStreamDeviceList = null;
+                DataTable outputStreamDeviceTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -460,14 +462,17 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "FROM OutputStreamDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
 
                     outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    outputStreamDeviceList = new OutputStreamDevice[outputStreamDeviceTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceTable.Rows)
                     {
-                        outputStreamDeviceList.Add(new OutputStreamDevice
-                            {
+                        id = row.ConvertField<int>("ID");
+
+                        outputStreamDeviceList[keys.IndexOf(id)] = new OutputStreamDevice()
+                        {
                             NodeID = database.Guid(row, "NodeID"),
                             AdapterID = row.ConvertField<int>("AdapterID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             IDCode = row.ConvertField<int>("IDCode"),
                             Acronym = row.Field<string>("Acronym"),
                             BpaAcronym = row.Field<string>("BpaAcronym"),
@@ -479,11 +484,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             LoadOrder = row.ConvertField<int>("LoadOrder"),
                             Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                             m_virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
-                        });
+                        };
                     }
                 }
 
-                return outputStreamDeviceList;
+                return new ObservableCollection<OutputStreamDevice>(outputStreamDeviceList ?? new OutputStreamDevice[0]);
             }
             finally
             {

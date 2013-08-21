@@ -381,7 +381,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable historianTable;
                 string query;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 query = database.ParameterizedQueryString(string.Format("SELECT ID FROM HistorianDetail WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
@@ -415,10 +415,12 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
-                DataTable historianTable;
                 string query;
                 string commaSeparatedKeys;
+
+                Historian[] historianList = null;
+                DataTable historianTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -428,13 +430,16 @@ namespace GSF.TimeSeries.UI.DataModels
                         " FROM HistorianDetail WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
 
                     historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    historianList = new Historian[historianTable.Rows.Count];
 
                     foreach (DataRow row in historianTable.Rows)
                     {
-                        historianList.Add(new Historian
-                            {
+                        id = row.ConvertField<int>("ID");
+
+                        historianList[keys.IndexOf(id)] = new Historian()
+                        {
                             NodeID = database.Guid(row, "NodeID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),
                             AssemblyName = row.Field<string>("AssemblyName"),
@@ -446,11 +451,11 @@ namespace GSF.TimeSeries.UI.DataModels
                             Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
                             MeasurementReportingInterval = row.ConvertField<int>("MeasurementReportingInterval"),
                             m_nodeName = row.Field<string>("NodeName")
-                        });
+                        };
                     }
                 }
 
-                return historianList;
+                return new ObservableCollection<Historian>(historianList ?? new Historian[0]);
             }
             finally
             {

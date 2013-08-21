@@ -102,6 +102,11 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             }
         }
 
+        private void AuthorizedColumn_Click(object sender, RoutedEventArgs e)
+        {
+            AvailableMeasurementsPager.SortBy(signalID => m_dataContext.SubscriberHasRights(signalID));
+        }
+
         private void UpdateFilterExpressions()
         {
             Subscriber currentItem = m_dataContext.CurrentItem;

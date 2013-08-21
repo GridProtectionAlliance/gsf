@@ -85,7 +85,14 @@
                 <TextBlock Text="Available Measurements" HorizontalAlignment="Left" FontWeight="Bold"/>
                 <uc:MeasurementPagerUserControl Name="AvailableMeasurementsPager" ItemsPerPage="12" Selectable="True" Searchable="True" ShowPageSize="False" Width="395" Height="360" VerticalAlignment="Top" Margin="0" CurrentPageChanged="AvailableMeasurementsPager_CurrentPageChanged">
                     <uc:MeasurementPagerUserControl.DataGridColumns>
-                        <DataGridTemplateColumn Width="Auto">
+                        <DataGridTemplateColumn Header="" Width="Auto">
+                            <DataGridTemplateColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource DataGridColumnHeaderStyle}">
+                                    <Style.Setters>
+                                        <EventSetter Event="Click" Handler="AuthorizedColumn_Click" />
+                                    </Style.Setters>
+                                </Style>
+                            </DataGridTemplateColumn.HeaderStyle>
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Canvas>

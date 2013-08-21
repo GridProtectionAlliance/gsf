@@ -595,7 +595,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 string query;
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 if (!string.IsNullOrEmpty(filterExpression))
@@ -633,22 +633,27 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
-                DataTable measurementTable;
                 string query;
                 string commaSeparatedKeys;
+
+                Measurement[] measurementList = null;
+                DataTable measurementTable;
+                Guid signalID;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
                     query = string.Format("SELECT * FROM MeasurementDetail WHERE SignalID IN ({0})", commaSeparatedKeys);
                     measurementTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    measurementList = new Measurement[measurementTable.Rows.Count];
 
                     foreach (DataRow row in measurementTable.Rows)
                     {
-                        measurementList.Add(new Measurement(false)
+                        signalID = database.Guid(row, "SignalID");
+
+                        measurementList[keys.IndexOf(signalID)] = new Measurement(false)
                         {
-                            SignalID = database.Guid(row, "SignalID"),
+                            SignalID = signalID,
                             HistorianID = row.ConvertNullableField<int>("HistorianID"),
                             PointID = row.ConvertField<int>("PointID"),
                             DeviceID = row.ConvertNullableField<int>("DeviceID"),
@@ -674,11 +679,11 @@ namespace GSF.TimeSeries.UI.DataModels
                             m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
                             m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
                             Selected = false
-                        });
+                        };
                     }
                 }
 
-                return measurementList;
+                return new ObservableCollection<Measurement>(measurementList ?? new Measurement[0]);
             }
             finally
             {

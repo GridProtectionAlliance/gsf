@@ -589,7 +589,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From CalculatedMeasurementDetail {0}", sortClause));
@@ -614,7 +614,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>      
         /// <param name="keys"> Keys of the measurement to be loaded from  the database</param>
         /// <returns>Collection of <see cref="CalculatedMeasurement"/>.</returns>
-        public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database,IList<int> keys)
+        public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database, IList<int> keys)
         {
             bool createdConnection = false;
 
@@ -622,10 +622,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<CalculatedMeasurement> calculatedMeasurementList = new ObservableCollection<CalculatedMeasurement>();
-                DataTable calculatedMeasurementTable;
                 string query;
                 string commaSeparatedKeys;
+
+                CalculatedMeasurement[] calculatedMeasurementList = null;
+                DataTable calculatedMeasurementTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -637,13 +639,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "DownSamplingMethod, NodeName, PerformTimeReasonabilityCheck From CalculatedMeasurementDetail WHERE ID IN ({0}) AND NodeID = '{1}'", commaSeparatedKeys, database.CurrentNodeID());
 
                     calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    calculatedMeasurementList = new CalculatedMeasurement[calculatedMeasurementTable.Rows.Count];
 
                     foreach (DataRow row in calculatedMeasurementTable.Rows)
                     {
-                        calculatedMeasurementList.Add(new CalculatedMeasurement
-                            {
+                        id = row.ConvertField<int>("ID");
+
+                        calculatedMeasurementList[keys.IndexOf(id)] = new CalculatedMeasurement()
+                        {
                             NodeID = database.Guid(row, "NodeID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),
                             AssemblyName = row.Field<string>("AssemblyName"),
@@ -666,10 +671,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             DownsamplingMethod = row.Field<string>("DownSamplingMethod"),
                             m_nodeName = row.Field<string>("NodeName"),
                             PerformTimestampReasonabilityCheck = Convert.ToBoolean(row.Field<object>("PerformTimeReasonabilityCheck"))
-                        });
+                        };
                     }
                 }
-                return calculatedMeasurementList;
+
+                return new ObservableCollection<CalculatedMeasurement>(calculatedMeasurementList ?? new CalculatedMeasurement[0]);
             }
             finally
             {

@@ -244,7 +244,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 // check the query once again , Does it have to be details or somethng else
@@ -267,9 +267,9 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Loads <see cref="VendorDevice"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="Keys">Keys of the Measurement to be loaded from the database</param>
+        /// <param name="keys">Keys of the Measurement to be loaded from the database</param>
         /// <returns>Collection of <see cref="VendorDevice"/>.</returns>
-        public static ObservableCollection<VendorDevice> Load(AdoDataConnection database, IList<int> Keys)
+        public static ObservableCollection<VendorDevice> Load(AdoDataConnection database, IList<int> keys)
         {
             bool createdConnection = false;
 
@@ -277,33 +277,37 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<VendorDevice> vendorDeviceList = new ObservableCollection<VendorDevice>();
-                DataTable vendorDeviceTable;
                 string query;
                 string commaSeparatedKeys;
 
-                if ((object)Keys != null && Keys.Count > 0)
+                VendorDevice[] vendorDeviceList = null;
+                DataTable vendorDeviceTable;
+                int id;
+
+                if ((object)keys != null && keys.Count > 0)
                 {
-                    commaSeparatedKeys = Keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
+                    commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
                     query = string.Format("SELECT * FROM VendorDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
                     vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, query);
-
-                    //DataTable vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM VendorDeviceDetail ORDER BY Name");
+                    vendorDeviceList = new VendorDevice[vendorDeviceTable.Rows.Count];
 
                     foreach (DataRow row in vendorDeviceTable.Rows)
                     {
-                        vendorDeviceList.Add(new VendorDevice
-                            {
-                            ID = row.ConvertField<int>("ID"),
+                        id = row.ConvertField<int>("ID");
+
+                        vendorDeviceList[keys.IndexOf(id)] = new VendorDevice()
+                        {
+                            ID = id,
                             VendorID = row.ConvertField<int>("VendorID"),
                             Name = row.Field<string>("Name"),
                             Description = row.Field<string>("Description"),
                             URL = row.Field<string>("URL"),
                             m_vendorName = row.Field<string>("VendorName")
-                        });
+                        };
                     }
                 }
-                return vendorDeviceList;
+
+                return new ObservableCollection<VendorDevice>(vendorDeviceList ?? new VendorDevice[0]);
             }
             finally
             {

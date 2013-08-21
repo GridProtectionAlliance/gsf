@@ -275,7 +275,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From OutputStreamDeviceDigital WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause));
@@ -308,10 +308,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<OutputStreamDeviceDigital> outputStreamDeviceDigitalList = new ObservableCollection<OutputStreamDeviceDigital>();
-                DataTable outputStreamDeviceDigitalTable;
                 string query;
                 string commaSeparatedKeys;
+
+                OutputStreamDeviceDigital[] outputStreamDeviceDigitalList = null;
+                DataTable outputStreamDeviceDigitalTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -320,22 +322,25 @@ namespace GSF.PhasorProtocols.UI.DataModels
                              "FROM OutputStreamDeviceDigital WHERE ID IN ({0})", commaSeparatedKeys));
 
                     outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    outputStreamDeviceDigitalList = new OutputStreamDeviceDigital[outputStreamDeviceDigitalTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceDigitalTable.Rows)
                     {
-                        outputStreamDeviceDigitalList.Add(new OutputStreamDeviceDigital
-                            {
+                        id = row.ConvertField<int>("ID");
+
+                        outputStreamDeviceDigitalList[keys.IndexOf(id)] = new OutputStreamDeviceDigital()
+                        {
                             NodeID = database.Guid(row, "NodeID"),
                             OutputStreamDeviceID = row.ConvertField<int>("OutputStreamDeviceID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             Label = row.Field<string>("Label"),
                             MaskValue = row.ConvertField<int>("MaskValue"),
                             LoadOrder = row.ConvertField<int>("LoadOrder")
-                        });
+                        };
                     }
                 }
 
-                return outputStreamDeviceDigitalList;
+                return new ObservableCollection<OutputStreamDeviceDigital>(outputStreamDeviceDigitalList ?? new OutputStreamDeviceDigital[0]);
             }
             finally
             {

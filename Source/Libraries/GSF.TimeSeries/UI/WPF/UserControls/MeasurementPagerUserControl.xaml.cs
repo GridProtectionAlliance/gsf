@@ -65,6 +65,7 @@ namespace GSF.TimeSeries.UI.UserControls
         private readonly ObservableCollection<DataGridColumn> m_dataGridColumns;
         private bool m_overrideDefaultColumns;
 
+        private Func<Guid, object> m_sortKeySelector;
         private DataGridColumn m_sortColumn;
         private string m_sortMemberPath;
         private ListSortDirection m_sortDirection;
@@ -285,8 +286,36 @@ namespace GSF.TimeSeries.UI.UserControls
         /// </summary>
         public void ReloadDataGrid()
         {
+            bool search = ((object)m_dataContext.ItemsKeys != (object)m_dataContext.AllKeys);
+
             m_dataContext.ItemsKeys = null;
-            m_dataContext.Load();
+
+            if (search)
+                m_dataContext.Search();
+            else
+                m_dataContext.Load();
+        }
+
+        /// <summary>
+        /// Causes the data grid to be sorted by the values returned by the given key selector.
+        /// </summary>
+        /// <param name="keySelector">The function to transform measurement IDs to a key to sort by.</param>
+        public void SortBy(Func<Guid, object> keySelector)
+        {
+            if (m_sortKeySelector != keySelector)
+                m_sortDirection = ListSortDirection.Ascending;
+            else if (m_sortDirection == ListSortDirection.Descending)
+                m_sortDirection = ListSortDirection.Ascending;
+            else
+                m_sortDirection = ListSortDirection.Descending;
+
+            m_sortKeySelector = keySelector;
+            m_sortColumn = null;
+            m_sortMemberPath = null;
+            DataGridList.Items.SortDescriptions.Clear();
+            DataGridList.Items.Refresh();
+
+            m_dataContext.SortDataBy(keySelector, m_sortDirection);
         }
 
         /// <summary>
@@ -560,6 +589,7 @@ namespace GSF.TimeSeries.UI.UserControls
             else
                 m_sortDirection = ListSortDirection.Ascending;
 
+            m_sortKeySelector = null;
             m_sortColumn = e.Column;
             m_sortMemberPath = e.Column.SortMemberPath;
             m_dataContext.SortData(m_sortMemberPath, m_sortDirection);

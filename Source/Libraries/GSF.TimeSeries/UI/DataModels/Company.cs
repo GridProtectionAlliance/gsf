@@ -259,7 +259,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 string sortClause = string.Empty;
                 DataTable companyTable;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 companyTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM Company {0}", sortClause));
@@ -292,32 +292,37 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Company> companyList = new ObservableCollection<Company>();
-                DataTable companyTable;
                 string query;
                 string commaSeparatedKeys;
+
+                Company[] companyList = null;
+                DataTable companyTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
                     query = string.Format("SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder FROM Company WHERE ID IN ({0})", commaSeparatedKeys);
                     companyTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    companyList = new Company[companyTable.Rows.Count];
 
                     foreach (DataRow row in companyTable.Rows)
                     {
-                        companyList.Add(new Company
-                            {
-                            ID = row.ConvertField<int>("ID"),
+                        id = row.ConvertField<int>("ID");
+
+                        companyList[keys.IndexOf(id)] = new Company()
+                        {
+                            ID = id,
                             Acronym = row.Field<string>("Acronym"),
                             MapAcronym = row.Field<string>("MapAcronym"),
                             Name = row.Field<string>("Name"),
                             URL = row.Field<string>("URL"),
                             LoadOrder = row.ConvertField<int>("LoadOrder")
-                        });
+                        };
                     }
                 }
 
-                return companyList;
+                return new ObservableCollection<Company>(companyList ?? new Company[0]);
             }
             finally
             {

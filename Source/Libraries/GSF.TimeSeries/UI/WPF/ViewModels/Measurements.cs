@@ -142,7 +142,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             get
             {
-                return (CurrentItem.SignalID == null || CurrentItem.SignalID == Guid.Empty);
+                return (CurrentItem.SignalID == Guid.Empty);
             }
         }
 
@@ -319,8 +319,11 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
             set
             {
-                m_advancedFindIsOpen = value;
-                OnPropertyChanged("AdvancedFindIsOpen");
+                if (m_advancedFindIsOpen != value)
+                {
+                    m_advancedFindIsOpen = value;
+                    OnPropertyChanged("AdvancedFindIsOpen");
+                }
             }
         }
 
@@ -387,6 +390,15 @@ namespace GSF.TimeSeries.UI.ViewModels
                 if ((object)ItemsKeys == null)
                 {
                     ItemsKeys = DataModels.Measurement.LoadSignalIDs(null, FilterExpression, SortMember, SortDirection);
+
+                    if ((object)SortSelector != null)
+                    {
+                        if (SortDirection == "ASC")
+                            ItemsKeys = ItemsKeys.OrderBy(SortSelector).ToList();
+                        else
+                            ItemsKeys = ItemsKeys.OrderByDescending(SortSelector).ToList();
+                    }
+
                     AllKeys = ItemsKeys;
                 }
 
@@ -454,9 +466,31 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <param name="sortDirection">The direction in which to sort the data.</param>
         public override void SortData(string sortMember, ListSortDirection sortDirection)
         {
-            bool search = (ItemsKeys != AllKeys);
+            bool search = ((object)ItemsKeys != (object)AllKeys);
 
+            SortSelector = null;
             SortMember = sortMember;
+            SortDirection = (sortDirection == ListSortDirection.Descending) ? "DESC" : "ASC";
+            AllKeys = null;
+            ItemsKeys = null;
+
+            if (search)
+                Search();
+            else
+                Load();
+        }
+
+        /// <summary>
+        /// Sorts model data.
+        /// </summary>
+        /// <param name="sortSelector">Transform function for sorting.</param>
+        /// <param name="sortDirection">Ascending or descending.</param>
+        public override void SortDataBy(Func<Guid, object> sortSelector, ListSortDirection sortDirection)
+        {
+            bool search = ((object)ItemsKeys != (object)AllKeys);
+
+            SortSelector = sortSelector;
+            SortMember = string.Empty;
             SortDirection = (sortDirection == ListSortDirection.Descending) ? "DESC" : "ASC";
             AllKeys = null;
             ItemsKeys = null;
@@ -486,9 +520,9 @@ namespace GSF.TimeSeries.UI.ViewModels
             searchCategories = (string)IsolatedStorageManager.ReadFromIsolatedStorage("MeasurementSearchCategories") ?? string.Empty;
 
             SearchText = searchText;
-            IgnoreCase = !string.IsNullOrEmpty(ignoreCase) ? ignoreCase.ParseBoolean() : true;
-            UseWildcards = !string.IsNullOrEmpty(useWildcards) ? useWildcards.ParseBoolean() : true;
-            UseRegex = !string.IsNullOrEmpty(useRegex) ? useRegex.ParseBoolean() : false;
+            IgnoreCase = string.IsNullOrEmpty(ignoreCase) || ignoreCase.ParseBoolean();
+            UseWildcards = string.IsNullOrEmpty(useWildcards) || useWildcards.ParseBoolean();
+            UseRegex = !string.IsNullOrEmpty(useRegex) && useRegex.ParseBoolean();
             searchCategoriesSet = new HashSet<string>(searchCategories.Split(','));
 
             foreach (AdvancedSearchCategory category in SearchCategories)
@@ -556,7 +590,7 @@ namespace GSF.TimeSeries.UI.ViewModels
 
         private void SearchInBackground()
         {
-            const int searchGroupSize = 1000;
+            const int SearchGroupSize = 1000;
 
             IList<Guid> allKeys = AllKeys;
             IList<DataModels.Measurement> measurements;
@@ -571,17 +605,17 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 while (searchIndex < allKeys.Count && !m_cancelSearch)
                 {
-                    searchGroup = allKeys.Skip(searchIndex).Take(searchGroupSize).ToList();
+                    searchGroup = allKeys.Skip(searchIndex).Take(SearchGroupSize).ToList();
                     measurements = DataModels.Measurement.LoadFromKeys(null, searchGroup);
 
                     if ((object)sortProperty == null)
                         m_searcher.Add(measurements);
-                    else if (SortDirection == "ASC")
-                        m_searcher.Add(measurements.OrderBy(measurement => sortProperty.GetValue(measurement)));
+                    else if (sortDirection == "ASC")
+                        m_searcher.Add(measurements.OrderBy(sortProperty.GetValue));
                     else
-                        m_searcher.Add(measurements.OrderByDescending(measurement => sortProperty.GetValue(measurement)));
+                        m_searcher.Add(measurements.OrderByDescending(sortProperty.GetValue));
 
-                    searchIndex += searchGroupSize;
+                    searchIndex += SearchGroupSize;
                 }
 
                 if (m_cancelSearch)

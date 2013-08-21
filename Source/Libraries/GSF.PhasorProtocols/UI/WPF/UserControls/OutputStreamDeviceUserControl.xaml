@@ -141,7 +141,7 @@
                             </DataTemplate>
                         </sdk:DataGridTemplateColumn.CellTemplate>
                     </sdk:DataGridTemplateColumn>
-                    <sdk:DataGridTemplateColumn Header="" Width="*">
+                    <sdk:DataGridTemplateColumn Width="*">
                         <sdk:DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Phasors" Width="Auto"
@@ -158,7 +158,7 @@
                         </DataTemplate>
                         </sdk:DataGridTemplateColumn.CellTemplate>
                     </sdk:DataGridTemplateColumn>
-                    <sdk:DataGridTemplateColumn Header="" Width="*">
+                    <sdk:DataGridTemplateColumn Width="*">
                         <sdk:DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Analogs" Width="Auto"
@@ -174,10 +174,10 @@
                             </Button>
                         </DataTemplate>
                         </sdk:DataGridTemplateColumn.CellTemplate>
-                    </sdk:DataGridTemplateColumn>
-                    <sdk:DataGridTemplateColumn Header="" Width="*">
-                        <sdk:DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Width="*">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
                             <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Digitals" Width="Auto"
                                     Command="{tsfBinding:GridButtonCommand Path=DataContext.DigitalCommand}">
                                 <Button.Visibility>
@@ -190,9 +190,9 @@
                                 </Button.Visibility>
                             </Button>
                         </DataTemplate>
-                        </sdk:DataGridTemplateColumn.CellTemplate>
-                    </sdk:DataGridTemplateColumn>
-                </sdk:DataGrid.Columns>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
             </sdk:DataGrid>
 
         <uc:DataPagerUserControl Grid.Row="8" Grid.Column="0"  Grid.ColumnSpan="4" CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"

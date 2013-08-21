@@ -324,6 +324,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 base.Load();
 
                 StringBuilder sb = new StringBuilder();
+
                 foreach (KeyValuePair<Guid, StatisticMeasurement> measurement in RealTimeStatistic.StatisticMeasurements)
                 {
                     sb.Append(measurement.Key);
@@ -331,10 +332,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 }
 
                 m_allSignalIDs = sb.ToString();
+
                 if (m_allSignalIDs.Length > 0)
                     m_allSignalIDs = m_allSignalIDs.Substring(0, m_allSignalIDs.Length - 1);
-
-                //GetStatisticData();
             }
             catch (Exception ex)
             {
@@ -350,67 +350,6 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 }
             }
         }
-
-        //private void GetStatisticData()
-        //{
-        //    try
-        //    {
-        //        Dictionary<int, StatisticMeasurement> statisticMeasurementData = new Dictionary<int, StatisticMeasurement>();
-        //        HttpWebRequest request = WebRequest.Create(m_url) as HttpWebRequest;
-        //        using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
-        //        {
-        //            if (response.StatusCode == HttpStatusCode.OK)
-        //            {
-        //                StreamReader reader = new StreamReader(response.GetResponseStream());
-        //                XElement timeSeriesDataPoints = XElement.Parse(reader.ReadToEnd());
-
-
-        //                foreach (XElement element in timeSeriesDataPoints.Element("TimeSeriesDataPoints").Elements("TimeSeriesDataPoint"))
-        //                {
-        //                    StatisticMeasurement measurement;
-        //                    if (RealTimeStatistic.StatisticMeasurements.TryGetValue(Convert.ToInt32(element.Element("HistorianID").Value), out measurement))
-        //                    {
-        //                        DateTime sourceDateTime;
-        //                        string quality;
-        //                        if (DateTime.TryParseExact(element.Element("Time").Value, "yyyy-MM-dd HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out sourceDateTime) && DateTime.UtcNow.Subtract(sourceDateTime).TotalSeconds > 30)
-        //                            quality = "Unknown";
-        //                        else
-        //                            quality = element.Element("Quality").Value;
-
-        //                        measurement.Quality = quality;
-        //                        measurement.Value = string.Format(measurement.DisplayFormat, ConvertValueToType(element.Element("Value").Value, measurement.DataType));
-        //                        measurement.TimeTag = sourceDateTime.ToString("HH:mm:ss.fff");
-
-        //                        StreamStatistic streamStatistic;
-        //                        if (measurement.ConnectedState) //if measurement defines connection state.
-        //                        {
-        //                            if ((measurement.Source == "System" && RealTimeStatistic.SystemStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
-        //                                (measurement.Source == "InputStream" && RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
-        //                                (measurement.Source == "OutputStream" && RealTimeStatistic.OutputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)))
-        //                            {
-        //                                if (DateTime.TryParseExact(element.Element("Time").Value, "yyyy-MM-dd HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out sourceDateTime) && DateTime.UtcNow.Subtract(sourceDateTime).TotalSeconds > 30)
-        //                                    streamStatistic.StatusColor = "Gray";
-        //                                else if (Convert.ToBoolean(measurement.Value))
-        //                                    streamStatistic.StatusColor = "Green";
-        //                                else
-        //                                    streamStatistic.StatusColor = "Red";
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        if (ex.InnerException != null)
-        //            CommonFunctions.LogException(null, "Get Statistic Data ", ex.InnerException);
-        //        else
-        //            CommonFunctions.LogException(null, "Get Statistic Data ", ex);
-        //    }
-
-        //    LastRefresh = "Last Refresh: " + DateTime.Now.ToString("HH:mm:ss.fff");
-        //}
 
         private object ConvertValueToType(string xmlValue, string xmlDataType)
         {

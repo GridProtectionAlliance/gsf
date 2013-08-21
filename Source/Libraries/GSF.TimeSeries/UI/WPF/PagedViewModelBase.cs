@@ -102,6 +102,7 @@ namespace GSF.TimeSeries.UI
         private readonly DispatcherTimer m_timer;
         private readonly TextBlock m_statusTextBlock;
         private readonly TsfPopup m_statusPopup;
+        private Func<TPrimaryKey, object> m_sortSelector;
         private string m_sortMember;
         private string m_sortDirection;
 
@@ -581,6 +582,21 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
+        /// Gets or sets the function to transform the set of <see cref="ItemsKeys"/> for sorting.
+        /// </summary>
+        public Func<TPrimaryKey, object> SortSelector
+        {
+            get
+            {
+                return m_sortSelector;
+            }
+            set
+            {
+                m_sortSelector = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the member by which to sort the page.
         /// </summary>
         public string SortMember
@@ -691,6 +707,15 @@ namespace GSF.TimeSeries.UI
                 // Load keys if LoadKeys method exists in data model
                 if ((object)m_itemsKeys == null && (object)s_loadKeys != null)
                     m_itemsKeys = (IList<TPrimaryKey>)s_loadKeys.Invoke(this, new object[] { (AdoDataConnection)null, SortMember, SortDirection });
+
+                // Sort keys if a sort selector has been specified
+                if ((object)m_itemsKeys != null && (object)SortSelector != null)
+                {
+                    if (SortDirection == "ASC")
+                        m_itemsKeys = m_itemsKeys.OrderBy(SortSelector).ToList();
+                    else
+                        m_itemsKeys = m_itemsKeys.OrderByDescending(SortSelector).ToList();
+                }
 
                 // Extract a single page of keys
                 if ((object)m_itemsKeys != null)
@@ -1077,9 +1102,23 @@ namespace GSF.TimeSeries.UI
         /// <param name="sortDirection">Ascending or descending.</param>
         public virtual void SortData(string sortMemberPath, ListSortDirection sortDirection)
         {
+            SortSelector = null;
             SortMember = sortMemberPath;
             SortDirection = (sortDirection == ListSortDirection.Descending) ? "DESC" : "ASC";
             ItemsKeys = null;
+            Load();
+        }
+
+        /// <summary>
+        /// Sorts model data.
+        /// </summary>
+        /// <param name="sortSelector">Transform function for sorting.</param>
+        /// <param name="sortDirection">Ascending or descending.</param>
+        public virtual void SortDataBy(Func<TPrimaryKey, object> sortSelector, ListSortDirection sortDirection)
+        {
+            SortSelector = sortSelector;
+            SortMember = string.Empty;
+            SortDirection = (sortDirection == ListSortDirection.Descending) ? "DESC" : "ASC";
             Load();
         }
 

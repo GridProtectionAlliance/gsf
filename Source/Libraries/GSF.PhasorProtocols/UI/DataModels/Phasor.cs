@@ -331,7 +331,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 query = database.ParameterizedQueryString(string.Format("SELECT ID From PhasorDetail WHERE DeviceID = {{0}} {0}", sortClause), "deviceID");
@@ -365,10 +365,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Phasor> phasorList = new ObservableCollection<Phasor>();
-                DataTable phasorTable;
                 string query;
                 string commaSeparatedKeys;
+
+                Phasor[] phasorList = null;
+                DataTable phasorTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -376,23 +378,25 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     query = string.Format("SELECT ID, DeviceID, Label, Type, Phase, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor WHERE ID IN ({0})", commaSeparatedKeys);
 
                     phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    phasorList = new Phasor[phasorTable.Rows.Count];
 
                     foreach (DataRow row in phasorTable.Rows)
                     {
-                        phasorList.Add(new Phasor
-                            {
-                            ID = row.ConvertField<int>("ID"),
+                        id = row.ConvertField<int>("ID");
+
+                        phasorList[keys.IndexOf(id)] = new Phasor()
+                        {
+                            ID = id,
                             DeviceID = row.ConvertField<int>("DeviceID"),
                             Label = row.Field<string>("Label"),
                             Type = row.Field<string>("Type"),
                             Phase = row.Field<string>("Phase"),
-                            //DestinationPhasorID = row.ConvertField<int>("DestinationPhasorID"),
                             SourceIndex = row.ConvertField<int>("SourceIndex")
-                        });
+                        };
                     }
                 }
 
-                return phasorList;
+                return new ObservableCollection<Phasor>(phasorList ?? new Phasor[0]);
             }
             finally
             {

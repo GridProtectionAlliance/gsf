@@ -465,7 +465,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 string sortClause = string.Empty;
                 DataTable nodeTable;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 nodeTable = database.Connection.RetrieveData(database.AdapterType, string.Format("Select ID From NodeDetail {0}", sortClause));
@@ -499,10 +499,12 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Node> nodeList = new ObservableCollection<Node>();
-                DataTable nodeTable;
                 string query;
                 string commaSeparatedKeys;
+
+                Node[] nodeList = null;
+                DataTable nodeTable;
+                Guid id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -511,12 +513,15 @@ namespace GSF.TimeSeries.UI.DataModels
                         "MenuType, Master, LoadOrder, Enabled, CompanyName From NodeDetail WHERE ID IN ({0})", commaSeparatedKeys);
 
                     nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    nodeList = new Node[nodeTable.Rows.Count];
 
                     foreach (DataRow row in nodeTable.Rows)
                     {
-                        nodeList.Add(new Node
-                            {
-                            ID = database.Guid(row, "ID"),
+                        id = database.Guid(row, "ID");
+
+                        nodeList[keys.IndexOf(id)] = new Node()
+                        {
+                            ID = id,
                             Name = row.Field<string>("Name"),
                             CompanyID = row.ConvertNullableField<int>("CompanyID"),
                             Longitude = row.ConvertNullableField<decimal>("Longitude"),
@@ -529,15 +534,12 @@ namespace GSF.TimeSeries.UI.DataModels
                             Master = Convert.ToBoolean(row.Field<object>("Master")),
                             LoadOrder = row.ConvertField<int>("LoadOrder"),
                             Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                            //TimeSeriesDataServiceUrl = row.Field<string>("TimeSeriesDataServiceUrl"),
-                            //RemoteStatusServiceUrl = row.Field<string>("RemoteStatusServiceUrl"),
-                            //RealTimeStatisticServiceUrl = row.Field<string>("RealTimeStatisticServiceUrl"),
                             m_companyName = row.Field<string>("CompanyName")
-                        });
+                        };
                     }
                 }
 
-                return nodeList;
+                return new ObservableCollection<Node>(nodeList ?? new Node[0]);
             }
             finally
             {

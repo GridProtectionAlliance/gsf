@@ -222,8 +222,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in signalTypeTable.Rows)
                 {
-                    signalTypeList.Add(new SignalType
-                        {
+                    signalTypeList.Add(new SignalType()
+                    {
                         ID = row.ConvertField<int>("ID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),

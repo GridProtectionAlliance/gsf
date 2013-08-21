@@ -276,7 +276,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From OutputStreamMeasurementDetail where AdapterID = {0} {1}", outputStreamID, sortClause));
@@ -309,10 +309,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<OutputStreamMeasurement> outputStreamMeasurementList = new ObservableCollection<OutputStreamMeasurement>();
-                DataTable outputStreamMeasurementTable;
                 string query;
                 string commaSeparatedKeys;
+
+                OutputStreamMeasurement[] outputStreamMeasurementList = null;
+                DataTable outputStreamMeasurementTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
@@ -321,24 +323,27 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         "FROM OutputStreamMeasurementDetail WHERE ID IN ({0})", commaSeparatedKeys);
 
                     outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    outputStreamMeasurementList = new OutputStreamMeasurement[outputStreamMeasurementTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamMeasurementTable.Rows)
                     {
-                        outputStreamMeasurementList.Add(new OutputStreamMeasurement
-                            {
+                        id = row.ConvertField<int>("ID");
+
+                        outputStreamMeasurementList[keys.IndexOf(id)] = new OutputStreamMeasurement()
+                        {
                             NodeID = database.Guid(row, "NodeID"),
                             AdapterID = row.ConvertField<int>("AdapterID"),
-                            ID = row.ConvertField<int>("ID"),
+                            ID = id,
                             HistorianID = row["HistorianID"] == null ? (int?)null : row.ConvertField<int>("HistorianID"),
                             PointID = row.ConvertField<int>("PointID"),
                             SignalReference = row.Field<string>("SignalReference"),
                             m_sourcePointTag = row.Field<string>("SourcePointTag"),
                             m_historianAcronym = row.Field<string>("HistorianAcronym")
-                        });
+                        };
                     }
                 }
 
-                return outputStreamMeasurementList;
+                return new ObservableCollection<OutputStreamMeasurement>(outputStreamMeasurementList ?? new OutputStreamMeasurement[0]);
             }
             finally
             {

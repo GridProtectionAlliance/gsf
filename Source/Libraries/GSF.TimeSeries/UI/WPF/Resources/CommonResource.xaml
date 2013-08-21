@@ -288,6 +288,13 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="ToolTip" Value="Click to sort."/>
             </Trigger>
+            <Trigger Property="Content" Value="{x:Null}">
+                <Setter Property="ToolTip">
+                    <Setter.Value>
+                        <ToolTip Visibility="Hidden" />
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
         </Style.Triggers>
     </Style>
 

@@ -490,6 +490,14 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 {
                     ItemsKeys = Device.LoadKeys(null, 0, m_searchText, SortMember, SortDirection);
 
+                    if ((object)SortSelector != null)
+                    {
+                        if (SortDirection == "ASC")
+                            ItemsKeys = ItemsKeys.OrderBy(SortSelector).ToList();
+                        else
+                            ItemsKeys = ItemsKeys.OrderByDescending(SortSelector).ToList();
+                    }
+
                     if (string.IsNullOrEmpty(m_searchText))
                         AllKeys = ItemsKeys;
                 }

@@ -180,7 +180,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 string sortClause = string.Empty;
                 DataTable ErrorLogTable;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 ErrorLogTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM ErrorLog {0} ", sortClause));
@@ -213,32 +213,37 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<ErrorLog> ErrorLogList = new ObservableCollection<ErrorLog>();
-                DataTable ErrorLogTable;
                 string query;
                 string commaSeparatedKeys;
+
+                ErrorLog[] errorLogList = null;
+                DataTable errorLogTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
                     query = string.Format("SELECT ID, Source, Type, Message, Detail, CreatedOn  FROM ErrorLog WHERE ID IN ({0})", commaSeparatedKeys);
-                    ErrorLogTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    errorLogTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    errorLogList = new ErrorLog[errorLogTable.Rows.Count];
 
-                    foreach (DataRow row in ErrorLogTable.Rows)
+                    foreach (DataRow row in errorLogTable.Rows)
                     {
-                        ErrorLogList.Add(new ErrorLog
-                            {
-                            ID = row.ConvertField<int>("ID"),
+                        id = row.ConvertField<int>("ID");
+
+                        errorLogList[keys.IndexOf(id)] = new ErrorLog()
+                        {
+                            ID = id,
                             Source = row.Field<String>("Source"),
                             Type = row.Field<String>("Type"),
                             Message = row.Field<String>("Message"),
                             Detail = row.Field<String>("Detail"),
                             CreatedOn = row.Field<DateTime>("CreatedOn")
-                        });
+                        };
                     }
                 }
 
-                return ErrorLogList;
+                return new ObservableCollection<ErrorLog>(errorLogList ?? new ErrorLog[0]);
             }
             finally
             {

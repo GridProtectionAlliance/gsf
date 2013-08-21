@@ -523,7 +523,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
                 foreach (DataRow row in subscriberTable.Rows)
                 {
-                    subscriberList.Add(new Subscriber
+                    subscriberList.Add(new Subscriber()
                     {
                         ID = database.Guid(row, "ID"),
                         NodeID = database.Guid(row, "NodeID"),

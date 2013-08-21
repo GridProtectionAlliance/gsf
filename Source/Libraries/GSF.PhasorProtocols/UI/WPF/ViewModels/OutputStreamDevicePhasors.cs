@@ -176,7 +176,17 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 // Load keys if LoadKeys method exists in data model
                 if ((object)ItemsKeys == null)
+                {
                     ItemsKeys = OutputStreamDevicePhasor.LoadKeys(null, m_outputStreamDeviceID, SortMember, SortDirection);
+
+                    if ((object)SortSelector != null)
+                    {
+                        if (SortDirection == "ASC")
+                            ItemsKeys = ItemsKeys.OrderBy(SortSelector).ToList();
+                        else
+                            ItemsKeys = ItemsKeys.OrderByDescending(SortSelector).ToList();
+                    }
+                }
 
                 // Extract a single page of keys
                 pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();

@@ -757,7 +757,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 if (enabledOnly)
@@ -810,42 +810,44 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     outputStreamTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
 
                     outputStreamList = new ObservableCollection<OutputStream>(from item in outputStreamTable.AsEnumerable()
-                                                                              let type = Convert.ToInt32(item.Field<object>("Type")) + 1
+                                                                              let id = item.ConvertField<int>("ID")
+                                                                              let type = item.ConvertField<int>("Type") + 1
+                                                                              orderby keys.IndexOf(id)
                                                                               select new OutputStream
-                                                                                  {
+                                                                              {
                                                                                   NodeID = database.Guid(item, "NodeID"),
-                                                                                  ID = Convert.ToInt32(item.Field<object>("ID")),
+                                                                                  ID = id,
                                                                                   Acronym = item.Field<string>("Acronym"),
                                                                                   Name = item.Field<string>("Name"),
                                                                                   Type = type,
                                                                                   ConnectionString = item.Field<string>("ConnectionString"),
-                                                                                  IDCode = Convert.ToInt32(item.Field<object>("IDCode")),
+                                                                                  IDCode = item.ConvertField<int>("IDCode"),
                                                                                   CommandChannel = item.Field<string>("CommandChannel"),
                                                                                   DataChannel = item.Field<string>("DataChannel"),
                                                                                   AutoPublishConfigFrame = Convert.ToBoolean(item.Field<object>("AutoPublishConfigFrame")),
                                                                                   AutoStartDataChannel = Convert.ToBoolean(item.Field<object>("AutoStartDataChannel")),
-                                                                                  NominalFrequency = Convert.ToInt32(item.Field<object>("NominalFrequency")),
-                                                                                  FramesPerSecond = Convert.ToInt32(item.Field<object>("FramesPerSecond") ?? 30),
+                                                                                  NominalFrequency = item.ConvertField<int>("NominalFrequency"),
+                                                                                  FramesPerSecond = item.ConvertNullableField<int>("FramesPerSecond") ?? 30,
                                                                                   LagTime = item.ConvertField<double>("LagTime"),
                                                                                   LeadTime = item.ConvertField<double>("LeadTime"),
                                                                                   UseLocalClockAsRealTime = Convert.ToBoolean(item.Field<object>("UseLocalClockAsRealTime")),
                                                                                   AllowSortsByArrival = Convert.ToBoolean(item.Field<object>("AllowSortsByArrival")),
-                                                                                  LoadOrder = Convert.ToInt32(item.Field<object>("LoadOrder")),
+                                                                                  LoadOrder = item.ConvertField<int>("LoadOrder"),
                                                                                   Enabled = Convert.ToBoolean(item.Field<object>("Enabled")),
                                                                                   m_nodeName = item.Field<string>("NodeName"),
                                                                                   m_typeName = (type == 1) ? "IEEE C37.118" : (type == 2) ? "BPA" : "IEC 61850-90-5",
                                                                                   IgnoreBadTimeStamps = Convert.ToBoolean(item.Field<object>("IgnoreBadTimeStamps")),
-                                                                                  TimeResolution = Convert.ToInt32(item.Field<object>("TimeResolution")),
+                                                                                  TimeResolution = item.ConvertField<int>("TimeResolution"),
                                                                                   AllowPreemptivePublishing = Convert.ToBoolean(item.Field<object>("AllowPreemptivePublishing")),
                                                                                   DownSamplingMethod = item.Field<string>("DownsamplingMethod"),
                                                                                   DataFormat = item.Field<string>("DataFormat"),
                                                                                   CoordinateFormat = item.Field<string>("CoordinateFormat"),
-                                                                                  CurrentScalingValue = Convert.ToInt32(item.Field<object>("CurrentScalingValue")),
-                                                                                  VoltageScalingValue = Convert.ToInt32(item.Field<object>("VoltageScalingValue")),
-                                                                                  AnalogScalingValue = Convert.ToInt32(item.Field<object>("AnalogScalingValue")),
-                                                                                  DigitalMaskValue = Convert.ToInt32(item.Field<object>("DigitalMaskValue")),
+                                                                                  CurrentScalingValue = item.ConvertField<int>("CurrentScalingValue"),
+                                                                                  VoltageScalingValue = item.ConvertField<int>("VoltageScalingValue"),
+                                                                                  AnalogScalingValue = item.ConvertField<int>("AnalogScalingValue"),
+                                                                                  DigitalMaskValue = item.ConvertField<int>("DigitalMaskValue"),
                                                                                   PerformTimestampReasonabilityCheck = Convert.ToBoolean(item.Field<object>("PerformTimeReasonabilityCheck")),
-                                                                                  m_mirroringSourceDevice = GetMirroringSource(database, Convert.ToInt32(item.Field<object>("ID")))
+                                                                                  m_mirroringSourceDevice = GetMirroringSource(database, id)
                                                                               });
                     return outputStreamList;
 

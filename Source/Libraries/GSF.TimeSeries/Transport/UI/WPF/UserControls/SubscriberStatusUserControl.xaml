@@ -20,7 +20,7 @@
     <StackPanel>
         <sdk:DataGrid x:Name="DataGridSubscriberStatus" ItemsSource="{Binding CurrentPage}" VerticalAlignment="Center" Height="615" Width="820" VerticalScrollBarVisibility="Auto">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTemplateColumn Header="" Width="*" IsReadOnly="True">
+                <sdk:DataGridTemplateColumn Width="*" IsReadOnly="True">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{tsfBinding:Column Path=StatusColor, Converter={StaticResource StringToStatusColorConverter}}"/>

@@ -239,8 +239,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in securityGroupTable.Rows)
                 {
-                    securityGroupList.Add(new SecurityGroup
-                        {
+                    securityGroupList.Add(new SecurityGroup()
+                    {
                         ID = database.Guid(row, "ID"),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),

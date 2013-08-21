@@ -266,7 +266,7 @@ namespace GSF.TimeSeries.Transport.UI.DataModels
 
                 foreach (DataRow row in measurementGroupTable.Rows)
                 {
-                    measurementGroupList.Add(new MeasurementGroup
+                    measurementGroupList.Add(new MeasurementGroup()
                     {
                         NodeID = database.Guid(row, "NodeID"),
                         ID = row.ConvertField<int>("ID"),

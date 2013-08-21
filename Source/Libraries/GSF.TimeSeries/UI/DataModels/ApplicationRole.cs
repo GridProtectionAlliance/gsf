@@ -284,8 +284,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in applicationRoleTable.Rows)
                 {
-                    applicationRoleList.Add(new ApplicationRole
-                        {
+                    applicationRoleList.Add(new ApplicationRole()
+                    {
                         ID = database.Guid(row, "ID"),  //Guid.Parse(row.Field<object>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),

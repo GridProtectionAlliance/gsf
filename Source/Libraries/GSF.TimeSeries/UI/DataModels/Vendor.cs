@@ -256,7 +256,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 // check the query once again , Does it have to be details or somethng else
@@ -280,9 +280,9 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Loads <see cref="Vendor"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="Keys">Keys of the Measurement to be loaded from the database</param>
+        /// <param name="keys">Keys of the Measurement to be loaded from the database</param>
         /// <returns>Collection of <see cref="Vendor"/>.</returns>
-        public static ObservableCollection<Vendor> Load(AdoDataConnection database, IList<int> Keys)
+        public static ObservableCollection<Vendor> Load(AdoDataConnection database, IList<int> keys)
         {
             bool createdConnection = false;
 
@@ -290,35 +290,37 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Vendor> vendorList = new ObservableCollection<Vendor>();
-                DataTable vendorTable;
                 string query;
                 string commaSeparatedKeys;
 
-                if ((object)Keys != null && Keys.Count > 0)
-                {
-                    commaSeparatedKeys = Keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL " +
-                              "FROM VendorDetail WHERE ID IN ({0})", commaSeparatedKeys);
-                    vendorTable = database.Connection.RetrieveData(database.AdapterType, query);
+                Vendor[] vendorList = null;
+                DataTable vendorTable;
+                int id;
 
-                    //DataTable vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL " +
-                    //    "FROM VendorDetail ORDER BY Name");
+                if ((object)keys != null && keys.Count > 0)
+                {
+                    commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
+                    query = string.Format("SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL FROM VendorDetail WHERE ID IN ({0})", commaSeparatedKeys);
+                    vendorTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    vendorList = new Vendor[vendorTable.Rows.Count];
 
                     foreach (DataRow row in vendorTable.Rows)
                     {
-                        vendorList.Add(new Vendor
-                            {
-                            ID = row.ConvertField<int>("ID"),
+                        id = row.ConvertField<int>("ID");
+
+                        vendorList[keys.IndexOf(id)] = new Vendor()
+                        {
+                            ID = id,
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),
                             PhoneNumber = row.Field<string>("PhoneNumber"),
                             ContactEmail = row.Field<string>("ContactEmail"),
                             URL = row.Field<string>("URL")
-                        });
+                        };
                     }
                 }
-                return vendorList;
+
+                return new ObservableCollection<Vendor>(vendorList ?? new Vendor[0]);
             }
             finally
             {

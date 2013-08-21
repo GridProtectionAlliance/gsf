@@ -154,7 +154,17 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     throw new OperationCanceledException("Load was canceled.");
 
                 if ((object)ItemsKeys == null)
+                {
                     ItemsKeys = OutputStreamDeviceAnalog.LoadKeys(null, m_outputStreamDeviceID, SortMember, SortDirection);
+
+                    if ((object)SortSelector != null)
+                    {
+                        if (SortDirection == "ASC")
+                            ItemsKeys = ItemsKeys.OrderBy(SortSelector).ToList();
+                        else
+                            ItemsKeys = ItemsKeys.OrderByDescending(SortSelector).ToList();
+                    }
+                }
 
                 pageKeys = ItemsKeys.Skip((CurrentPageNumber - 1) * ItemsPerPage).Take(ItemsPerPage).ToList();
                 ItemsSource = OutputStreamDeviceAnalog.Load(null, pageKeys);

@@ -343,8 +343,8 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in userAccountTable.Rows)
                 {
-                    userAccountList.Add(new UserAccount
-                        {
+                    userAccountList.Add(new UserAccount()
+                    {
                         ID = database.Guid(row, "ID"),
                         Name = row.Field<string>("Name"),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),

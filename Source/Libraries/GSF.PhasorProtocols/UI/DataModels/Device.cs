@@ -970,7 +970,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     }
                 }
 
-                if (!string.IsNullOrEmpty(sortMember) || !string.IsNullOrEmpty(sortDirection))
+                if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
                 if (parentID > 0)
@@ -1038,71 +1038,76 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                ObservableCollection<Device> deviceList = new ObservableCollection<Device>();
-                DataTable deviceTable;
                 string query;
                 string commaSeparatedKeys;
+
+                Device[] deviceList = null;
+                DataTable deviceTable;
+                int id;
 
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
                     query = string.Format("SELECT * FROM DeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    deviceList = new Device[deviceTable.Rows.Count];
 
                     foreach (DataRow row in deviceTable.Rows)
                     {
-                        deviceList.Add(new Device
-                            {
-                                NodeID = database.Guid(row, "NodeID"),
-                                ID = row.ConvertField<int>("ID"),
-                                ParentID = row.ConvertNullableField<int>("ParentID"),
-                                UniqueID = database.Guid(row, "UniqueID"),
-                                Acronym = row.Field<string>("Acronym"),
-                                Name = row.Field<string>("Name"),
-                                IsConcentrator = Convert.ToBoolean(row.Field<object>("IsConcentrator")),
-                                CompanyID = row.ConvertNullableField<int>("CompanyID"),
-                                HistorianID = row.ConvertNullableField<int>("HistorianID"),
-                                AccessID = row.ConvertField<int>("AccessID"),
-                                VendorDeviceID = row.ConvertNullableField<int>("VendorDeviceID"),
-                                ProtocolID = row.ConvertNullableField<int>("ProtocolID"),
-                                Longitude = row.ConvertNullableField<decimal>("Longitude"),
-                                Latitude = row.ConvertNullableField<decimal>("Latitude"),
-                                InterconnectionID = row.ConvertNullableField<int>("InterconnectionID"),
-                                ConnectionString = ParseConnectionString(row.Field<string>("ConnectionString").ToNonNullString()),
-                                AlternateCommandChannel = ParseAlternateCommand(row.Field<string>("ConnectionString").ToNonNullString()),
-                                TimeZone = row.Field<string>("TimeZone"),
-                                FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
-                                TimeAdjustmentTicks = Convert.ToInt64(row.Field<object>("TimeAdjustmentTicks")),
-                                DataLossInterval = row.ConvertField<double>("DataLossInterval"),
-                                ContactList = row.Field<string>("ContactList"),
-                                MeasuredLines = row.ConvertNullableField<int>("MeasuredLines"),
-                                LoadOrder = row.ConvertField<int>("LoadOrder"),
-                                Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                                CreatedOn = row.Field<DateTime>("CreatedOn"),
-                                AllowedParsingExceptions = Convert.ToInt32(row.Field<object>("AllowedParsingExceptions")),
-                                ParsingExceptionWindow = row.ConvertField<double>("ParsingExceptionWindow"),
-                                DelayedConnectionInterval = row.ConvertField<double>("DelayedConnectionInterval"),
-                                AllowUseOfCachedConfiguration = Convert.ToBoolean(row.Field<object>("AllowUseOfCachedConfiguration")),
-                                AutoStartDataParsingSequence = Convert.ToBoolean(row.Field<object>("AutoStartDataParsingSequence")),
-                                SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
-                                MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
-                                ConnectOnDemand = Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
-                                m_companyName = row.Field<string>("CompanyName"),
-                                m_companyAcronym = row.Field<string>("CompanyAcronym"),
-                                m_historianAcronym = row.Field<string>("HistorianAcronym"),
-                                m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
-                                m_vendorAcronym = row.Field<string>("VendorAcronym"),
-                                m_protocolName = row.Field<string>("ProtocolName"),
-                                m_protocolCategory = row.Field<string>("Category"),
-                                m_interconnectionName = row.Field<string>("InterconnectionName"),
-                                m_nodeName = row.Field<string>("NodeName"),
-                                m_parentAcronym = row.Field<string>("ParentAcronym"),
-                                m_originalSource = row.Field<string>("OriginalSource")
-                            });
+                        id = row.ConvertField<int>("ID");
+
+                        deviceList[keys.IndexOf(id)] = new Device()
+                        {
+                            NodeID = database.Guid(row, "NodeID"),
+                            ID = id,
+                            ParentID = row.ConvertNullableField<int>("ParentID"),
+                            UniqueID = database.Guid(row, "UniqueID"),
+                            Acronym = row.Field<string>("Acronym"),
+                            Name = row.Field<string>("Name"),
+                            IsConcentrator = Convert.ToBoolean(row.Field<object>("IsConcentrator")),
+                            CompanyID = row.ConvertNullableField<int>("CompanyID"),
+                            HistorianID = row.ConvertNullableField<int>("HistorianID"),
+                            AccessID = row.ConvertField<int>("AccessID"),
+                            VendorDeviceID = row.ConvertNullableField<int>("VendorDeviceID"),
+                            ProtocolID = row.ConvertNullableField<int>("ProtocolID"),
+                            Longitude = row.ConvertNullableField<decimal>("Longitude"),
+                            Latitude = row.ConvertNullableField<decimal>("Latitude"),
+                            InterconnectionID = row.ConvertNullableField<int>("InterconnectionID"),
+                            ConnectionString = ParseConnectionString(row.Field<string>("ConnectionString").ToNonNullString()),
+                            AlternateCommandChannel = ParseAlternateCommand(row.Field<string>("ConnectionString").ToNonNullString()),
+                            TimeZone = row.Field<string>("TimeZone"),
+                            FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                            TimeAdjustmentTicks = Convert.ToInt64(row.Field<object>("TimeAdjustmentTicks")),
+                            DataLossInterval = row.ConvertField<double>("DataLossInterval"),
+                            ContactList = row.Field<string>("ContactList"),
+                            MeasuredLines = row.ConvertNullableField<int>("MeasuredLines"),
+                            LoadOrder = row.ConvertField<int>("LoadOrder"),
+                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                            CreatedOn = row.Field<DateTime>("CreatedOn"),
+                            AllowedParsingExceptions = Convert.ToInt32(row.Field<object>("AllowedParsingExceptions")),
+                            ParsingExceptionWindow = row.ConvertField<double>("ParsingExceptionWindow"),
+                            DelayedConnectionInterval = row.ConvertField<double>("DelayedConnectionInterval"),
+                            AllowUseOfCachedConfiguration = Convert.ToBoolean(row.Field<object>("AllowUseOfCachedConfiguration")),
+                            AutoStartDataParsingSequence = Convert.ToBoolean(row.Field<object>("AutoStartDataParsingSequence")),
+                            SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
+                            MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
+                            ConnectOnDemand = Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
+                            m_companyName = row.Field<string>("CompanyName"),
+                            m_companyAcronym = row.Field<string>("CompanyAcronym"),
+                            m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                            m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
+                            m_vendorAcronym = row.Field<string>("VendorAcronym"),
+                            m_protocolName = row.Field<string>("ProtocolName"),
+                            m_protocolCategory = row.Field<string>("Category"),
+                            m_interconnectionName = row.Field<string>("InterconnectionName"),
+                            m_nodeName = row.Field<string>("NodeName"),
+                            m_parentAcronym = row.Field<string>("ParentAcronym"),
+                            m_originalSource = row.Field<string>("OriginalSource")
+                        };
                     }
                 }
 
-                return deviceList;
+                return new ObservableCollection<Device>(deviceList ?? new Device[0]);
             }
             finally
             {
