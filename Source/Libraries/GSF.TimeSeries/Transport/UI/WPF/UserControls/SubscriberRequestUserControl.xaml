@@ -82,7 +82,7 @@
                 </Grid.ColumnDefinitions>
 
                 <Label Grid.Row="0" Grid.Column="0" Content="Acronym" />
-                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=SubscriberAcronym}" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Mode=TwoWay, Path=SubscriberAcronym}" CharacterCasing="Upper"/>
                 <Label Grid.Row="0" Grid.Column="2" Content="Name" />
                 <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding Mode=TwoWay, Path=SubscriberName}" />
 
