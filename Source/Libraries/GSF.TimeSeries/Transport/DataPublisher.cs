@@ -663,6 +663,13 @@ namespace GSF.TimeSeries.Transport
         private long m_lifetimeLatencyMeasurements;
         private long m_bufferBlockRetransmissions;
 
+        // For backwards compatibility.
+        // If a client requests metadata, but fails to define the type of
+        // metadata they would like to receive, we assume the client is
+        // using an old version of the protocol. These flags will define
+        // what type of metadata this type of client should actually receive.
+        private OperationalModes m_forceReceiveMetadataFlags;
+
         private bool m_disposed;
 
         #endregion
@@ -691,6 +698,7 @@ namespace GSF.TimeSeries.Transport
             m_allowMetadataRefresh = DefaultAllowMetadataRefresh;
             m_useBaseTimeOffsets = DefaultUseBaseTimeOffsets;
             m_metadataTables = DefaultMetadataTables;
+            m_forceReceiveMetadataFlags = OperationalModes.ReceiveInternalMetadata;
 
             m_routingTables = new RoutingTables();
             m_routingTables.ActionAdapters = this;
@@ -1380,6 +1388,10 @@ namespace GSF.TimeSeries.Transport
                 DependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
             else
                 DependencyTimeout = Ticks.PerSecond / 30L;
+
+            // Determine the type of metadata to force upon clients who do not specify
+            if (settings.TryGetValue("forceReceiveMetadataFlags", out setting) && Enum.TryParse(setting, true, out m_forceReceiveMetadataFlags))
+                m_forceReceiveMetadataFlags &= (OperationalModes.ReceiveInternalMetadata | OperationalModes.ReceiveExternalMetadata);
 
             if (settings.TryGetValue("cacheMeasurementKeys", out m_cacheMeasurementKeys))
             {
@@ -3168,7 +3180,14 @@ namespace GSF.TimeSeries.Transport
 
                     // Determine whether we're sending internal and external meta-data
                     bool sendExternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveExternalMetadata);
-                    bool sendInternalMetadata = !sendExternalMetadata || connection.OperationalModes.HasFlag(OperationalModes.ReceiveInternalMetadata);
+                    bool sendInternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveInternalMetadata);
+
+                    if (!sendExternalMetadata && !sendInternalMetadata)
+                    {
+                        // Force the client to receive metadata if they have specified that they don't want any
+                        sendExternalMetadata = m_forceReceiveMetadataFlags.HasFlag(OperationalModes.ReceiveExternalMetadata);
+                        sendInternalMetadata = m_forceReceiveMetadataFlags.HasFlag(OperationalModes.ReceiveInternalMetadata);
+                    }
 
                     // Copy key meta-data tables
                     foreach (string tableExpression in m_metadataTables.Split(';'))
