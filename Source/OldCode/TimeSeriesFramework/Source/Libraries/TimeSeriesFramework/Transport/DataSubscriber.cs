@@ -1926,7 +1926,7 @@ namespace TimeSeriesFramework.Transport
                                     uniqueIDs.Add(uniqueID);
 
                                     // We will synchronize metadata only if the source owns this device and it's not defined as a concentrator (these should normally be filtered by publisher - but we check just in case).
-                                    if (row.Field<object>("OriginalSource") == null && !row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
+                                    if (!row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                                     {
                                         // Define query to determine if this device is already defined (this should always be based on the unique device Guid)
                                         selectSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "deviceGuid");
@@ -2001,9 +2001,7 @@ namespace TimeSeriesFramework.Transport
                                         signalTypeIDs[signalTypeAcronym] = row.ConvertField<int>("ID");
                                 }
 
-                                measurementRows = metadata.Tables["MeasurementDetail"].Select("Internal <> 0");
-
-                                foreach (DataRow row in measurementRows)
+                                foreach (DataRow row in metadata.Tables["MeasurementDetail"].Rows)
                                 {
                                     // Get device and signal type acronyms
                                     deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
