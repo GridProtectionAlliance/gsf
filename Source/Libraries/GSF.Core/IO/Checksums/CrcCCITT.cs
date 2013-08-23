@@ -68,7 +68,6 @@ namespace GSF.IO.Checksums
         /// <summary>
         /// Returns the CRCCCITT data checksum computed so far.
         /// </summary>
-        [CLSCompliant(false)]
         public ushort Value
         {
             get

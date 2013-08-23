@@ -49,6 +49,8 @@ using Microsoft.Research.DynamicDataDisplay.Charts;
 using Microsoft.Research.DynamicDataDisplay.DataSources;
 using DataModelMeasurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
+#pragma warning disable 612,618
+
 namespace GSF.TimeSeries.Transport.UI.UserControls
 {
     /// <summary>

@@ -179,7 +179,6 @@ namespace GSF
         /// </summary>
         /// <returns>A 16-bit unsigned integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
         /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
-        [CLSCompliant(false)]
         public UInt16 ToUInt16()
         {
             ValidateBufferLength(TypeCode.UInt16, sizeof(UInt16));
@@ -205,7 +204,6 @@ namespace GSF
         /// </summary>
         /// <returns>A 24-bit unsigned integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
         /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
-        [CLSCompliant(false)]
         public UInt24 ToUInt24()
         {
             // There is no system type code for UInt24
@@ -231,7 +229,6 @@ namespace GSF
         /// </summary>
         /// <returns>A 32-bit unsigned integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
         /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
-        [CLSCompliant(false)]
         public UInt32 ToUInt32()
         {
             ValidateBufferLength(TypeCode.UInt32, sizeof(UInt32));
@@ -254,7 +251,6 @@ namespace GSF
         /// </summary>
         /// <returns>A 64-bit unsigned integer, accounting for <see cref="EndianOrder"/>,  converted from the <see cref="BinaryValueBase{TEndianOrder}.Buffer"/>.</returns>
         /// <exception cref="InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
-        [CLSCompliant(false)]
         public UInt64 ToUInt64()
         {
             ValidateBufferLength(TypeCode.UInt64, sizeof(UInt64));

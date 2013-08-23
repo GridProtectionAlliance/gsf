@@ -70,13 +70,10 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Web;
-using System.Windows.Forms;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
@@ -84,19 +81,23 @@ using GSF.Identity;
 using GSF.IO;
 using GSF.Net.Smtp;
 using GSF.Reflection;
-using GSF.Windows.Forms;
 using Timer = System.Timers.Timer;
 
 namespace GSF.ErrorManagement
 {
     /// <summary>
     /// Represents a logger that can be used for logging handled as well as unhandled exceptions across multiple 
-    /// application types (Windows Application, Console Application, Windows Service, Web Application, Web Service).
+    /// application types (Console Application, Windows Service, Web Application, Web Service).
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Adapted from exception handling code by Jeff Atwood of CodingHorror.com. Demo projects for handling unhandled
     /// exception in both windows and web environment by Jeff Atwood are available at The Code Project web site.
     /// See: http://www.codeproject.com/script/articles/list_articles.asp?userid=450027
+    /// </para>
+    /// <para>
+    /// Error logger with Windows Forms capabilities can be found in the GSF.Windows assembly.
+    /// </para>
     /// </remarks>
     /// <example>
     /// This example shows how to use the <see cref="ErrorLogger"/> component to log handled and unhandled exceptions:
@@ -116,7 +117,6 @@ namespace GSF.ErrorManagement
     ///         s_logger.LogToFile = true;                  // Log exception info to a file.
     ///         s_logger.LogToEmail = true;                 // Send exception info in an e-mail.
     ///         s_logger.LogToEventLog = true;              // Log exception info to the event log.
-    ///         s_logger.LogToScreenshot = true;            // Take a screenshot of desktop on exception.
     ///         s_logger.ContactEmail = "dev@email.com";    // Provide an e-mail address.
     ///         s_logger.HandleUnhandledException = true;   // Configure to handle unhandled exceptions.
     ///         s_logger.PersistSettings = true;            // Save settings to the config file.
@@ -180,11 +180,6 @@ namespace GSF.ErrorManagement
         /// Specifies the default value for the <see cref="LogToDatabase"/> property.
         /// </summary>
         public const bool DefaultLogToDatabase = false;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="LogToScreenshot"/> property.
-        /// </summary>
-        public const bool DefaultLogToScreenshot = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="LogUserInfo"/> property.
@@ -252,7 +247,6 @@ namespace GSF.ErrorManagement
         private bool m_logToEmail;
         private bool m_logToEventLog;
         private bool m_logToDatabase;
-        private bool m_logToScreenshot;
         private bool m_logUserInfo;
         private int m_databaseLogSize;
         private string m_smtpServer;
@@ -276,7 +270,6 @@ namespace GSF.ErrorManagement
         private bool m_logToEmailOK;
         private bool m_logToEventLogOK;
         private bool m_logToDatabaseOK;
-        private bool m_logToScreenshotOK;
         private bool m_disposed;
         private bool m_initialized;
         private bool m_suppressInteractiveLogging;
@@ -297,7 +290,6 @@ namespace GSF.ErrorManagement
             m_logToEmail = DefaultLogToEmail;
             m_logToEventLog = DefaultLogToEventLog;
             m_logToDatabase = DefaultLogToDatabase;
-            m_logToScreenshot = DefaultLogToScreenshot;
             m_logUserInfo = DefaultLogUserInfo;
             m_databaseLogSize = DefaultDatabaseLogSize;
             m_smtpServer = DefaultSmtpServer;
@@ -321,7 +313,6 @@ namespace GSF.ErrorManagement
 
             // Initialize all logger methods.
             m_loggers = new List<Action<Exception>>();
-            m_loggers.Add(ExceptionToScreenshot);
             m_loggers.Add(ExceptionToDatabase);
             m_loggers.Add(ExceptionToEventLog);
             m_loggers.Add(ExceptionToEmail);
@@ -439,28 +430,6 @@ namespace GSF.ErrorManagement
             set
             {
                 m_logToDatabase = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a screenshot of the user's desktop is to be taken
-        /// when an <see cref="Exception"/> is logged.
-        /// </summary>
-        /// <remarks>
-        /// This setting is ignored in Web Application and Web Service application types.
-        /// </remarks>
-        [Category("Logging"),
-        DefaultValue(DefaultLogToScreenshot),
-        Description("Indicates whether a screenshot of the user's desktop is to be taken when an Exception is logged.")]
-        public bool LogToScreenshot
-        {
-            get
-            {
-                return m_logToScreenshot;
-            }
-            set
-            {
-                m_logToScreenshot = value;
             }
         }
 
@@ -794,6 +763,22 @@ namespace GSF.ErrorManagement
         }
 
         /// <summary>
+        /// Gets or sets flag that controls if <see cref="Loggers"/> requiring interaction either directly or indirectly
+        /// when logging handled <see cref="Exception"/> using the <see cref="Log(Exception)"/> method are enabled.
+        /// </summary>
+        public bool SuppressInteractiveLogging
+        {
+            get
+            {
+                return m_suppressInteractiveLogging;
+            }
+            protected set
+            {
+                m_suppressInteractiveLogging = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the name of the currently executing application.
         /// </summary>
         [Browsable(false)]
@@ -874,7 +859,7 @@ namespace GSF.ErrorManagement
         /// Gets the descriptive status of the <see cref="ErrorLogger"/> object.
         /// </summary>
         [Browsable(false)]
-        public string Status
+        public virtual string Status
         {
             get
             {
@@ -894,9 +879,6 @@ namespace GSF.ErrorManagement
                 status.AppendLine();
                 status.Append("         Error to Database: ");
                 status.Append(m_logToDatabase ? "Enabled" : "Disabled");
-                status.AppendLine();
-                status.Append("       Error to Screenshot: ");
-                status.Append(m_logToScreenshot ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("         Database log size: ");
                 status.Append(m_databaseLogSize + " records");
@@ -1046,7 +1028,7 @@ namespace GSF.ErrorManagement
         /// property is set to true.
         /// </summary>
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public void SaveSettings()
+        public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
@@ -1063,7 +1045,6 @@ namespace GSF.ErrorManagement
                 settings["LogToEmail", true].Update(m_logToEmail);
                 settings["LogToEventLog", true].Update(m_logToEventLog);
                 settings["LogToDatabase", true].Update(m_logToDatabase);
-                settings["LogToScreenshot", true].Update(m_logToScreenshot);
                 settings["LogUserInfo", true].Update(m_logUserInfo);
                 settings["DatabaseLogSize", true].Update(m_databaseLogSize);
                 settings["SmtpServer", true].Update(m_smtpServer);
@@ -1082,7 +1063,7 @@ namespace GSF.ErrorManagement
         /// property is set to true.
         /// </summary>
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public void LoadSettings()
+        public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
@@ -1099,7 +1080,6 @@ namespace GSF.ErrorManagement
                 settings.Add("LogToEmail", m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
                 settings.Add("LogToEventLog", m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
                 settings.Add("LogToDatabase", m_logToDatabase, "True if an encountered exception is logged to the database; otherwise False.");
-                settings.Add("LogToScreenshot", m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
                 settings.Add("DatabaseLogSize", m_databaseLogSize, "Maximum exception log size to maintain when logging exceptions to the database.");
                 settings.Add("LogUserInfo", m_logUserInfo, "True if user information is to be logged along with exception information; otherwise False.");
                 settings.Add("SmtpServer", m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
@@ -1114,7 +1094,6 @@ namespace GSF.ErrorManagement
                 LogToEmail = settings["LogToEmail"].ValueAs(m_logToEmail);
                 LogToEventLog = settings["LogToEventLog"].ValueAs(m_logToEventLog);
                 LogToDatabase = settings["LogToDatabase"].ValueAs(m_logToDatabase);
-                LogToScreenshot = settings["LogToScreenshot"].ValueAs(m_logToScreenshot);
                 LogUserInfo = settings["LogUserInfo"].ValueAs(m_logUserInfo);
                 DatabaseLogSize = settings["DatabaseLogSize"].ValueAs(m_databaseLogSize);
                 SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
@@ -1190,41 +1169,34 @@ namespace GSF.ErrorManagement
         }
 
         /// <summary>
-        /// Disables <see cref="Loggers"/> that require interaction either directly or indirectly when logging 
-        /// handled <see cref="Exception"/> using the <see cref="Log(Exception)"/> method. All loggers are enabled
-        /// automatically after a handled <see cref="Exception"/> has been logged.
-        /// </summary>
-        public void SuppressInteractiveLogging()
-        {
-            m_suppressInteractiveLogging = true;
-        }
-
-        /// <summary>
         /// Registers the <see cref="ErrorLogger"/> object to handle unhandled <see cref="Exception"/> if the 
         /// <see cref="HandleUnhandledException"/> property is set to true.
         /// </summary>
-        protected virtual void Register()
+        /// <returns><c>true</c> if handlers were registered; otherwise <c>false</c>.</returns>
+        protected virtual bool Register()
         {
             if (m_handleUnhandledException && !Debugger.IsAttached)
             {
-                // For Windows Application.
-                Application.ThreadException += ThreadException;
-
-                // For Windows Service and Console Application.
                 AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
         /// Unregister the <see cref="ErrorLogger"/> object from handling unhandled <see cref="Exception"/>.
         /// </summary>
-        protected virtual void Unregister()
+        /// <returns><c>true</c> if handlers were unregistered; otherwise <c>false</c>.</returns>
+        protected virtual bool Unregister()
         {
             if (m_handleUnhandledException && !Debugger.IsAttached)
             {
-                Application.ThreadException -= ThreadException;
                 AppDomain.CurrentDomain.UnhandledException -= UnhandledException;
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -1256,17 +1228,7 @@ namespace GSF.ErrorManagement
         /// </summary>
         protected virtual void ExceptionToWindowsGui()
         {
-            // Use the ErrorDialog to show exception information.
-            ErrorDialog dialog = new ErrorDialog();
-
-            dialog.Text = string.Format(dialog.Text, ApplicationName, null);
-            dialog.PictureBoxIcon.Image = SystemIcons.Error.ToBitmap();
-            dialog.RichTextBoxError.Text = m_errorTextMethod();
-            dialog.RichTextBoxScope.Text = m_scopeTextMethod();
-            dialog.RichTextBoxAction.Text = m_actionTextMethod();
-            dialog.RichTextBoxMoreInfo.Text = m_moreInfoTextMethod();
-
-            dialog.ShowDialog();
+            throw new NotImplementedException("Exceptions for Windows Forms should be referenced from GSF.Windows.dll");
         }
 
         /// <summary>
@@ -1439,12 +1401,20 @@ namespace GSF.ErrorManagement
 
                 email.Subject = string.Format("Exception in {0} at {1}", ApplicationName, DateTime.Now.ToString());
                 email.Body = GetExceptionInfo(exception, m_logUserInfo);
-                email.Attachments = GetScreenshotFileName();
+                email.Attachments = GetEmailAttachments();
                 email.SmtpServer = m_smtpServer;
                 email.Send();
 
                 m_logToEmailOK = true;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the comma-separated or semicolon-separated list of file names to be attached to the <see cref="Mail"/> message.
+        /// </summary>
+        protected virtual string GetEmailAttachments()
+        {
+            return null;
         }
 
         /// <summary>
@@ -1594,26 +1564,6 @@ namespace GSF.ErrorManagement
         }
 
         /// <summary>
-        /// Takes a screenshot of the user's desktop when the <see cref="Exception"/> is encountered.
-        /// </summary>
-        /// <param name="exception"><see cref="Exception"/> that was encountered.</param>
-        protected virtual void ExceptionToScreenshot(Exception exception)
-        {
-            // Log if enabled.
-            if (m_logToScreenshot && (ApplicationType == ApplicationType.WindowsCui || ApplicationType == ApplicationType.WindowsGui))
-            {
-                m_logToScreenshotOK = false;
-
-                using (Bitmap screenshot = ScreenArea.Capture(ImageFormat.Png))
-                {
-                    screenshot.Save(GetScreenshotFileName());
-                }
-
-                m_logToScreenshotOK = true;
-            }
-        }
-
-        /// <summary>
         /// Raises the <see cref="LoggingException"/> event.
         /// </summary>
         /// <param name="exception"><see cref="Exception"/> to send to <see cref="LoggingException"/> event.</param>
@@ -1702,7 +1652,7 @@ namespace GSF.ErrorManagement
         /// <summary>
         /// Default <see cref="Delegate"/> for <see cref="MoreInfoTextMethod"/>.
         /// </summary>
-        private string GetMoreInfoText()
+        protected string GetMoreInfoText()
         {
             string bullet = string.Empty;
 
@@ -1722,25 +1672,6 @@ namespace GSF.ErrorManagement
             moreInfoText.Append("The following information about the error was automatically captured:");
             moreInfoText.AppendLine();
             moreInfoText.AppendLine();
-
-            if (m_logToScreenshot)
-            {
-                moreInfoText.AppendFormat(" {0} ", bullet);
-
-                if (m_logToScreenshotOK)
-                {
-                    moreInfoText.Append("a screenshot was taken of the desktop at:");
-                    moreInfoText.AppendLine();
-                    moreInfoText.Append("   ");
-                    moreInfoText.Append(GetScreenshotFileName());
-                }
-                else
-                {
-                    moreInfoText.Append("a screenshot could NOT be taken of the desktop.");
-                }
-
-                moreInfoText.AppendLine();
-            }
 
             if (m_logToEventLog)
             {
@@ -1776,6 +1707,11 @@ namespace GSF.ErrorManagement
                 moreInfoText.AppendLine();
             }
 
+            string extendedInfoText = GetExtendedMoreInfoText(bullet);
+
+            if (!string.IsNullOrWhiteSpace(extendedInfoText))
+                moreInfoText.Append(extendedInfoText);
+
             moreInfoText.AppendLine();
             moreInfoText.AppendLine();
             moreInfoText.Append("Detailed error information follows:");
@@ -1786,15 +1722,13 @@ namespace GSF.ErrorManagement
             return moreInfoText.ToString();
         }
 
-        private string GetScreenshotFileName()
+        /// <summary>
+        /// Allows other loggers to extend "more info text".
+        /// </summary>
+        /// <param name="bullet">Type of bullet to use for extended info text.</param>
+        protected virtual string GetExtendedMoreInfoText(string bullet)
         {
-            return FilePath.GetAbsolutePath(ApplicationName + ".ErrorState.png");
-        }
-
-        private void ThreadException(object sender, ThreadExceptionEventArgs e)
-        {
-            m_suppressInteractiveLogging = false;
-            Log(new Exception("ThreadException", e.Exception), m_exitOnUnhandledException);
+            return null;
         }
 
         private void UnhandledException(object sender, UnhandledExceptionEventArgs e)

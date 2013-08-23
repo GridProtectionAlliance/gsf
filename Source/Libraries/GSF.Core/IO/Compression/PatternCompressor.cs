@@ -309,7 +309,6 @@ namespace GSF.IO.Compression
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
         /// <returns>The size, in bytes, of the compressed value.</returns>
-        [CLSCompliant(false)]
         public unsafe int Compress(ulong value)
         {
             uint* pItem = (uint*)&value;
@@ -336,7 +335,6 @@ namespace GSF.IO.Compression
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
         /// <returns>The size, in bytes, of the compressed value.</returns>
-        [CLSCompliant(false)]
         public unsafe int Compress(uint value)
         {
             return Compress((byte*)&value);
@@ -357,7 +355,6 @@ namespace GSF.IO.Compression
         /// </summary>
         /// <param name="value">The value to be compressed.</param>
         /// <returns>The size, in bytes, of the compressed value.</returns>
-        [CLSCompliant(false)]
         public int Compress(ushort value)
         {
             return Compress((uint)value);

@@ -45,6 +45,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("GSF.Historian")]
 
 // Other configuration attributes.
-[assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: Guid("b058b8eb-e73e-414d-a5b2-461181db0de2")]

@@ -63,7 +63,6 @@
 
 #endregion
 
-using System;
 
 namespace GSF
 {
@@ -82,7 +81,6 @@ namespace GSF
         /// </remarks>
         /// <param name="unsignedInt">Unsigned short that is passed in to be converted to a signed short.</param>
         /// <returns>The converted short value.</returns>
-        [CLSCompliant(false)]
         public static short ToInt16(ushort unsignedInt)
         {
             //return BitConverter.ToInt16(BitConverter.GetBytes(unsignedInt), 0);
@@ -99,7 +97,6 @@ namespace GSF
         /// </remarks>
         /// <param name="unsignedInt">Unsigned UInt24 that is passed in to be converted to a signed Int24.</param>
         /// <returns>The Int24 value.</returns>
-        [CLSCompliant(false)]
         public static Int24 ToInt24(UInt24 unsignedInt)
         {
             return Int24.GetValue(UInt24.GetBytes(unsignedInt), 0);
@@ -112,7 +109,6 @@ namespace GSF
         /// </remarks>
         /// <param name="unsignedInt">Unsigned integer that is passed in to be converted to a signed Int32.</param>
         /// <returns>The int value.</returns>
-        [CLSCompliant(false)]
         public static int ToInt32(uint unsignedInt)
         {
             //return BitConverter.ToInt32(BitConverter.GetBytes(unsignedInt), 0);
@@ -129,7 +125,6 @@ namespace GSF
         /// </remarks>
         /// <param name="unsignedInt">Unsigned integer that is passed in to be converted to a long.</param>
         /// <returns>The long value.</returns>
-        [CLSCompliant(false)]
         public static long ToInt64(ulong unsignedInt)
         {
             //return BitConverter.ToInt64(BitConverter.GetBytes(unsignedInt), 0);
@@ -146,7 +141,6 @@ namespace GSF
         /// </remarks>
         /// <param name="signedInt">Signed integer that is passed in to be converted to an unsigned short.</param>
         /// <returns>The unsigned short value.</returns>
-        [CLSCompliant(false)]
         public static ushort ToUInt16(short signedInt)
         {
             //return BitConverter.ToUInt16(BitConverter.GetBytes(signedInt), 0);
@@ -163,7 +157,6 @@ namespace GSF
         /// </remarks>
         /// <param name="signedInt">Signed integer that is passed in to be converted to an unsigned integer.</param>
         /// <returns>The unsigned integer value.</returns>
-        [CLSCompliant(false)]
         public static UInt24 ToUInt24(Int24 signedInt)
         {
             return UInt24.GetValue(Int24.GetBytes(signedInt), 0);
@@ -176,7 +169,6 @@ namespace GSF
         /// </remarks>
         /// <param name="signedInt">Signed integer that is passed in to be converted to an unsigned integer.</param>
         /// <returns>The unsigned integer value.</returns>
-        [CLSCompliant(false)]
         public static uint ToUInt32(int signedInt)
         {
             //return BitConverter.ToUInt32(BitConverter.GetBytes(signedInt), 0);
@@ -193,7 +185,6 @@ namespace GSF
         /// </remarks>
         /// <param name="signedInt">Signed integer that is passed in to be converted to an unsigned long.</param>
         /// <returns>The unsigned long value.</returns>
-        [CLSCompliant(false)]
         public static ulong ToUInt64(long signedInt)
         {
             //return BitConverter.ToUInt64(BitConverter.GetBytes(signedInt), 0);

@@ -63,7 +63,6 @@ namespace GSF.IO.Checksums
         /// <summary>
         /// Returns the Adler-32 data checksum computed so far.
         /// </summary>
-        [CLSCompliant(false)]
         public uint Value
         {
             get

@@ -102,7 +102,6 @@
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -172,12 +171,6 @@
     <Compile Include="Drawing\NamespaceDoc.cs" />
     <Compile Include="EndianOrder.cs" />
     <Compile Include="EnumExtensions.cs" />
-    <Compile Include="ErrorManagement\ErrorDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ErrorManagement\ErrorDialog.Designer.cs">
-      <DependentUpon>ErrorDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="ErrorManagement\ErrorLogger.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -330,18 +323,9 @@
     <Compile Include="Validation\NonNullStringValidator.cs" />
     <Compile Include="Validation\NumericRangeValidator.cs" />
     <Compile Include="Validation\ValidationService.cs" />
-    <Compile Include="Windows\Forms\FormExtensions.cs" />
-    <Compile Include="Windows\Forms\NamespaceDoc.cs" />
-    <Compile Include="Windows\Forms\ScreenArea.cs" />
-    <Compile Include="Windows\NamespaceDoc.cs" />
     <Compile Include="Word.cs" />
     <Compile Include="Xml\NamespaceDoc.cs" />
     <Compile Include="Xml\XmlExtensions.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="ErrorManagement\ErrorDialog.resx">
-      <DependentUpon>ErrorDialog.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ErrorManagement\ErrorLogger.bmp" />

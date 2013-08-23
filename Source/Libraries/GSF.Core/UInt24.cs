@@ -90,7 +90,7 @@ namespace GSF
     /// unsigned integer.
     /// </para>
     /// </remarks>
-    [Serializable, CLSCompliant(false)]
+    [Serializable]
     public struct UInt24 : IComparable, IFormattable, IConvertible, IComparable<UInt24>, IComparable<UInt32>, IEquatable<UInt24>, IEquatable<UInt32>
     {
         #region [ Members ]

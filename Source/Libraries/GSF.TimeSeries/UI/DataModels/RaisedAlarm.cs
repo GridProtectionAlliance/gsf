@@ -38,7 +38,7 @@ namespace GSF.TimeSeries.UI.DataModels
         private string m_timeRaised;
         private string m_tagName;
         private string m_description;
-        private double m_value;
+        //private double m_value;
 
         private string m_severityText;
 

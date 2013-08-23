@@ -476,7 +476,6 @@ namespace GSF
         /// <returns>A 16-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
-        [CLSCompliant(false)]
         public ushort ToUInt16(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[2];
@@ -494,7 +493,6 @@ namespace GSF
         /// <returns>A 24-bit unsigned integer formed by three bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
-        [CLSCompliant(false)]
         public UInt24 ToUInt24(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[3];
@@ -512,7 +510,6 @@ namespace GSF
         /// <returns>A 32-bit unsigned integer formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
-        [CLSCompliant(false)]
         public uint ToUInt32(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[4];
@@ -530,7 +527,6 @@ namespace GSF
         /// <returns>A 64-bit unsigned integer formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
-        [CLSCompliant(false)]
         public ulong ToUInt64(byte[] value, int startIndex)
         {
             byte[] buffer = new byte[8];
@@ -686,7 +682,6 @@ namespace GSF
         /// </summary>
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 2.</returns>
-        [CLSCompliant(false)]
         public byte[] GetBytes(ushort value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
@@ -697,7 +692,6 @@ namespace GSF
         /// </summary>
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 3.</returns>
-        [CLSCompliant(false)]
         public byte[] GetBytes(UInt24 value)
         {
             return m_coerceByteOrder(UInt24.GetBytes(value));
@@ -708,7 +702,6 @@ namespace GSF
         /// </summary>
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 4.</returns>
-        [CLSCompliant(false)]
         public byte[] GetBytes(uint value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
@@ -719,7 +712,6 @@ namespace GSF
         /// </summary>
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 8.</returns>
-        [CLSCompliant(false)]
         public byte[] GetBytes(ulong value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
@@ -890,7 +882,6 @@ namespace GSF
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
-        [CLSCompliant(false)]
         public int CopyBytes(ushort value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
@@ -904,7 +895,6 @@ namespace GSF
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
-        [CLSCompliant(false)]
         public int CopyBytes(UInt24 value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(UInt24.GetBytes(value), 0, destinationArray, destinationIndex, 3);
@@ -918,7 +908,6 @@ namespace GSF
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
-        [CLSCompliant(false)]
         public int CopyBytes(uint value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
@@ -932,7 +921,6 @@ namespace GSF
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
-        [CLSCompliant(false)]
         public int CopyBytes(ulong value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);

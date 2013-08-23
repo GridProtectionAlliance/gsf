@@ -32,7 +32,6 @@ using System;
 namespace GSF.IO.Checksums
 {
     /// <summary>Calculates double-word length (32-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-    [CLSCompliant(false)]
     public sealed class Xor32
     {
         #region [ Members ]

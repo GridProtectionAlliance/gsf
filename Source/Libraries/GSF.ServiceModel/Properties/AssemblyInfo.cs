@@ -45,6 +45,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("GSF.ServiceModel")]
 
 // Other configuration attributes.
-[assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: Guid("57b04fab-3c0f-4d28-ad88-47e4222ebbe0")]

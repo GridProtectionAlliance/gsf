@@ -177,7 +177,6 @@ namespace GSF.Historian
         /// </summary>
         /// <param name="quality"><see cref="Quality"/> value to interpret.</param>
         /// <returns><see cref="MeasurementStateFlags"/> value from a <see cref="Quality"/> value.</returns>
-        [CLSCompliant(false)]
         public static MeasurementStateFlags MeasurementQuality(this Quality quality)
         {
             MeasurementStateFlags stateFlags = MeasurementStateFlags.Normal;
@@ -199,7 +198,6 @@ namespace GSF.Historian
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement"/> value to interpret.</param>
         /// <returns><see cref="Quality"/> value from a <see cref="IMeasurement"/> value.</returns>
-        [CLSCompliant(false)]
         public static Quality HistorianQuality(this IMeasurement measurement)
         {
             return measurement.IsDiscarded() ? Quality.DeletedFromProcessing : (measurement.ValueQualityIsGood() ? (measurement.TimestampQualityIsGood() ? Quality.Good : Quality.Old) : Quality.SuspectData);

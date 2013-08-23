@@ -74,13 +74,13 @@ namespace GSF.Collections
         /// <para>Used when creating a <see cref="ProcessDictionary{TKey,TValue}"/> to process one item at a time.</para>
         /// <para>Asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> will process individual items on multiple threads</para>
         /// </remarks>
-        public delegate void ProcessItemFunctionSignature(TKey key, TValue value);
+        public new delegate void ProcessItemFunctionSignature(TKey key, TValue value);
 
         /// <summary>
         /// Function signature that determines if a key and value can be currently processed.
         /// </summary>
-        /// <param name="key">key to be checked for processing availablity.</param>
-        /// <param name="value">value to be checked for processing availablity.</param>
+        /// <param name="key">key to be checked for processing availability.</param>
+        /// <param name="value">value to be checked for processing availability.</param>
         /// <returns>True, if key and value can be processed.</returns>
         /// <remarks>
         /// <para>Implementation of this function is optional. It will be assumed that an item can be processed if this
@@ -93,7 +93,7 @@ namespace GSF.Collections
         /// for processing must evaluate as "CanProcessItem = True" before any items are processed.
         /// </para>
         /// </remarks>
-        public delegate bool CanProcessItemFunctionSignature(TKey key, TValue value);
+        public new delegate bool CanProcessItemFunctionSignature(TKey key, TValue value);
 
         // Fields
         private ProcessItemFunctionSignature m_processItemFunction;

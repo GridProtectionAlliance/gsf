@@ -47,7 +47,6 @@ namespace GSF.Interop
     /// <summary>
     /// Defines common Windows API constants, enumerations, structures and functions.
     /// </summary>
-    [CLSCompliant(false)]
     public static class WindowsApi
     {
         /// <summary>
@@ -843,13 +842,13 @@ namespace GSF.Interop
         /// Win32 LookupAccountName function.
         /// </summary>
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true, PreserveSig = true)]
-        public static extern bool LookupAccountName(string lpSystemName, string lpAccountName, IntPtr psid, ref int cbsid, StringBuilder domainName, ref int cbdomainLength, ref int use); 
+        public static extern bool LookupAccountName(string lpSystemName, string lpAccountName, IntPtr psid, ref int cbsid, StringBuilder domainName, ref int cbdomainLength, ref int use);
 
         /// <summary>
         /// Win32 LsaOpenPolicy function.
         /// </summary>
         [DllImport("advapi32.dll", PreserveSig = true)]
-        public static extern uint LsaOpenPolicy(ref LSA_UNICODE_STRING SystemName, ref LSA_OBJECT_ATTRIBUTES ObjectAttributes, int DesiredAccess, out IntPtr PolicyHandle); 
+        public static extern uint LsaOpenPolicy(ref LSA_UNICODE_STRING SystemName, ref LSA_OBJECT_ATTRIBUTES ObjectAttributes, int DesiredAccess, out IntPtr PolicyHandle);
 
         /// <summary>
         /// Win32 LsaAddAccountRights function.

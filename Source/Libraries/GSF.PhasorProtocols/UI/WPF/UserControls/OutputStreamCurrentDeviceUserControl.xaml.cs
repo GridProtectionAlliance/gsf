@@ -30,7 +30,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using GSF.PhasorProtocols.UI.DataModels;
-using GSF.TimeSeries.UI;
 
 namespace GSF.PhasorProtocols.UI.UserControls
 {
@@ -45,7 +44,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private string m_outputStreamAcronym;
         private ObservableCollection<OutputStreamDevice> m_currentDevices;
         private ObservableCollection<Device> m_newDevices;
-        private TsfPopup popupSettings;
+        //private TsfPopup popupSettings;
 
         #endregion
 
@@ -118,8 +117,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     }
                 }
 
-                if (popupSettings != null)
-                    popupSettings.IsOpen = true;
+                //if (popupSettings != null)
+                //    popupSettings.IsOpen = true;
             }
             catch (Exception ex)
             {

@@ -47,15 +47,14 @@ using GSF.Web.Hosting;
 [assembly: AssemblyTitle("GSF.Web")]
 
 // Other configuration attributes.
-[assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: Guid("eebbee45-2987-4bbd-9cc1-ff6d4dcf55f7")]
 
-// Embedd server-side controls.
+// Embed server-side controls.
 [assembly: EmbeddedResourceFile("GSF.Web.Embedded.SecurityPortal.aspx", "GSF.Web.Embedded")]
 [assembly: EmbeddedResourceFile("GSF.Web.Embedded.SecurityService.svc", "GSF.Web.Embedded")]
 
-// Embedd resources used by embedded controls.
+// Embed resources used by embedded controls.
 [assembly: WebResource("GSF.Web.Embedded.Files.Help.pdf", "application/pdf")]
 [assembly: WebResource("GSF.Web.Embedded.Images.GSFLogo.png", "img/png")]
 [assembly: WebResource("GSF.Web.Embedded.Images.Help.png", "img/png")]

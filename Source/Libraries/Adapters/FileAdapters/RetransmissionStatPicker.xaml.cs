@@ -64,6 +64,9 @@ namespace FileAdapters
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets the retransmission view model statistic.
+        /// </summary>
         public RetransmissionStatViewModel ViewModel
         {
             get

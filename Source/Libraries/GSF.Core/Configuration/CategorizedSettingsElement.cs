@@ -476,7 +476,6 @@ namespace GSF.Configuration
         /// Gets the setting value as a signed byte.
         /// </summary>
         /// <returns>Value as signed byte.</returns>
-        [CLSCompliant(false)]
         public sbyte ValueAsSByte()
         {
             return ValueAsSByte(default(sbyte));
@@ -487,7 +486,6 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as signed byte.</returns>
-        [CLSCompliant(false)]
         public sbyte ValueAsSByte(sbyte defaultValue)
         {
             return ValueAs(defaultValue);
@@ -573,7 +571,6 @@ namespace GSF.Configuration
         /// Gets the setting value as an unsigned short.
         /// </summary>
         /// <returns>Value as unsigned short.</returns>
-        [CLSCompliant(false)]
         public ushort ValueAsUInt16()
         {
             return ValueAsUInt16(default(ushort));
@@ -584,7 +581,6 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as unsigned short.</returns>
-        [CLSCompliant(false)]
         public ushort ValueAsUInt16(ushort defaultValue)
         {
             return ValueAs(defaultValue);
@@ -594,7 +590,6 @@ namespace GSF.Configuration
         /// Gets the setting value as an unsigned int.
         /// </summary>
         /// <returns>Value as unsigned int.</returns>
-        [CLSCompliant(false)]
         public uint ValueAsUInt32()
         {
             return ValueAsUInt32(default(uint));
@@ -605,7 +600,6 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as unsigned int.</returns>
-        [CLSCompliant(false)]
         public uint ValueAsUInt32(uint defaultValue)
         {
             return ValueAs(defaultValue);
@@ -615,7 +609,6 @@ namespace GSF.Configuration
         /// Gets the setting value as an unsigned long.
         /// </summary>
         /// <returns>Value as unsigned long.</returns>
-        [CLSCompliant(false)]
         public ulong ValueAsUInt64()
         {
             return ValueAsUInt64(default(ulong));
@@ -626,7 +619,6 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="defaultValue">The default value to return if the setting value is empty.</param>
         /// <returns>Value as unsigned long.</returns>
-        [CLSCompliant(false)]
         public ulong ValueAsUInt64(ulong defaultValue)
         {
             return ValueAs(defaultValue);

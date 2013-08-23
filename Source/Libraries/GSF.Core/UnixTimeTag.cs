@@ -85,7 +85,6 @@ namespace GSF
         /// Creates a new <see cref="UnixTimeTag"/>, given number of seconds since 1/1/1970.
         /// </summary>
         /// <param name="seconds">Number of seconds since 1/1/1970.</param>
-        [CLSCompliant(false)]
         public UnixTimeTag(uint seconds)
             : base(UnixDateOffsetTicks, (double)seconds)
         {
@@ -123,6 +122,6 @@ namespace GSF
         // date to get the offset in ticks for later conversion.
         private static readonly long UnixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
 
-        #endregion        
+        #endregion
     }
 }

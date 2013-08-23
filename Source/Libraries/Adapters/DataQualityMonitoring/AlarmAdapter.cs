@@ -192,6 +192,9 @@ namespace DataQualityMonitoring
             }
         }
 
+        /// <summary>
+        /// Stops the <see cref="AlarmAdapter"/>.
+        /// </summary>		
         public override void Stop()
         {
             base.Stop();

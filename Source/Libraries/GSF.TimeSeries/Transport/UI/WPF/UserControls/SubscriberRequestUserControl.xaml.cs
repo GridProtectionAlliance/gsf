@@ -34,7 +34,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
     /// <summary>
     /// Interaction logic for SubscriberRequestUserControl.xaml
     /// </summary>
-    public partial class SubscriberRequestUserControl : UserControl
+    public partial class SubscriberRequestUserControl
     {
         #region [ Constructor ]
 
@@ -69,6 +69,15 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
             // Determine initial state of connectivity
             UpdateServiceConnectivity();
+        }
+
+        private void SubscriberRequestUserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            // Detach from service connected events
+            CommonFunctions.ServiceConnectionRefreshed -= CommonFunctions_ServiceConnectionRefreshed;
+
+            if ((object)ViewModel != null)
+                ViewModel.Dispose();
         }
 
         private void CommonFunctions_ServiceConnectionRefreshed(object sender, EventArgs eventArgs)
@@ -106,12 +115,6 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
                 Dispatcher.BeginInvoke(new Action(() => ViewModel.ConnectivityMessageVisibility = Visibility.Collapsed));
             }
-        }
-
-        private void SubscriberRequestUserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            // Detach from service connected events
-            CommonFunctions.ServiceConnectionRefreshed -= CommonFunctions_ServiceConnectionRefreshed;
         }
 
         private void SecurityModeRadioButton_Checked(object sender, RoutedEventArgs e)

@@ -25,7 +25,7 @@
 //
 //******************************************************************************************************
 
-namespace GSF.ErrorManagement
+namespace GSF.Windows.ErrorManagement
 {
     partial class ErrorDialog
     {

@@ -50,7 +50,7 @@ using Random = GSF.Security.Cryptography.Random;
 
 namespace GSF.TimeSeries.Transport.UI.ViewModels
 {
-    internal class SubscriberRequestViewModel : ViewModelBase
+    internal class SubscriberRequestViewModel : ViewModelBase, IDisposable
     {
         #region [ Members ]
 
@@ -64,6 +64,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private bool m_receiveInternalMetadata;
         private bool m_useUdpDataChannel;
         private int m_udpDataChannelPort;
+        private bool m_disposed;
 
         private string m_subscriberAcronym;
         private string m_subscriberName;
@@ -108,7 +109,17 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             m_receiveInternalMetadata = true;
             m_udpDataChannelPort = 6175;
             m_publisherPort = DefaultPort;
+            m_responseComplete = new AutoResetEvent(false);
+
             Load();
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="SubscriberRequestViewModel"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~SubscriberRequestViewModel()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -637,7 +648,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         }
 
         /// <summary>
-        /// Gets the command that is executed whent he user chooses to save adv
+        /// Gets the command that is executed went he user chooses to save adv
         /// </summary>
         public ICommand AdvancedTlsSettingsCloseCommand
         {
@@ -650,6 +661,44 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="SubscriberRequestViewModel"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="SubscriberRequestViewModel"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if ((object)m_responseComplete != null)
+                        {
+                            // Release any waiting threads before disposing wait handle
+                            m_responseComplete.Set();
+                            m_responseComplete.Dispose();
+                        }
+
+                        m_responseComplete = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
 
         private void Load()
         {

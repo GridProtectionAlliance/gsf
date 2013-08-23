@@ -45,6 +45,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("GSF.Communication")]
 
 // Other configuration attributes.
-[assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: Guid("fa2223ea-9782-49f1-8757-2a333a1633c2")]

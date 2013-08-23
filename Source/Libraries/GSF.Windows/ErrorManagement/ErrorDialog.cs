@@ -32,10 +32,10 @@ using System.Drawing;
 using System.Security;
 using System.Windows.Forms;
 
-namespace GSF.ErrorManagement
+namespace GSF.Windows.ErrorManagement
 {
     /// <summary>
-    /// Represents a dialog box that can be used to display detailed exception inmormation.
+    /// Represents a dialog box that can be used to display detailed exception information.
     /// </summary>
     /// <seealso cref="ErrorLogger"/>
     public partial class ErrorDialog : Form

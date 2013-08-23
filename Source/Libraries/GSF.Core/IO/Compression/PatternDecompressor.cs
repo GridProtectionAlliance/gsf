@@ -281,7 +281,6 @@ namespace GSF.IO.Compression
         /// Decompresses eight bytes of data and writes the data into a 64-bit unsigned integer.
         /// </summary>
         /// <param name="value">The 64-bit integer that the data is to be written to.</param>
-        [CLSCompliant(false)]
         public unsafe void Decompress(out ulong value)
         {
             fixed (ulong* pValue = &value)
@@ -308,7 +307,6 @@ namespace GSF.IO.Compression
         /// Decompresses four bytes of data and writes the data into a 32-bit unsigned integer.
         /// </summary>
         /// <param name="value">The 32-bit integer that the data is to be written to.</param>
-        [CLSCompliant(false)]
         public void Decompress(out uint value)
         {
             value = DecompressValue();
@@ -327,7 +325,6 @@ namespace GSF.IO.Compression
         /// Decompresses four bytes of data and writes the data into a 16-bit unsigned integer. The high-order bytes are discarded.
         /// </summary>
         /// <param name="value">The 16-bit integer that the data is to be written to.</param>
-        [CLSCompliant(false)]
         public void Decompress(out ushort value)
         {
             value = (ushort)DecompressValue();
@@ -696,6 +693,6 @@ namespace GSF.IO.Compression
 
         //    value.ParseBinaryImage(buffer, 0, binaryLength);
         //}
-        
+
     }
 }

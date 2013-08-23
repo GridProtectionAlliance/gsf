@@ -25,14 +25,12 @@
 //
 //******************************************************************************************************
 
-using System;
 
 namespace GSF
 {
     /// <summary>
     /// Represents functions and extensions related to 16-bit words, 32-bit double-words and 64-bit quad-words.
     /// </summary>
-    [CLSCompliant(false)]
     public static class Word
     {
         /// <summary>

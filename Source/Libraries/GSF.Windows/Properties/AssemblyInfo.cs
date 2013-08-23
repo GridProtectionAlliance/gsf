@@ -45,6 +45,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("GSF.Windows")]
 
 // Other configuration attributes.
-[assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: Guid("85dfc906-a5f5-41ff-9a40-230ded5cd69d")]

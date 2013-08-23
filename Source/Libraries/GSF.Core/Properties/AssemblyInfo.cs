@@ -46,7 +46,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("GSF.Core")]
 
 // Other configuration attributes.
-[assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: Guid("9448a8b5-35c1-4dc7-8c42-8712153ac08a")]
 [assembly: NeutralResourcesLanguage("en-US")]

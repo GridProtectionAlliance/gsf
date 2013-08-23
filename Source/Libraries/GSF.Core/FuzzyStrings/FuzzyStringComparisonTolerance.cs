@@ -23,11 +23,26 @@
 
 namespace GSF.FuzzyStrings
 {
+    /// <summary>
+    /// Fuzzy string comparison tolerances.
+    /// </summary>
     public enum FuzzyStringComparisonTolerance
     {
+        /// <summary>
+        /// Strong comparison tolerance.
+        /// </summary>
         Strong,
+        /// <summary>
+        /// Normal comparison tolerance.
+        /// </summary>
         Normal,
+        /// <summary>
+        /// Weak comparison tolerance.
+        /// </summary>
         Weak,
+        /// <summary>
+        /// Manual comparison tolerance.
+        /// </summary>
         Manual
     }
 }

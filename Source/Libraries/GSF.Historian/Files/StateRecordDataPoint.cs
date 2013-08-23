@@ -63,13 +63,11 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Specifies the bit-mask for <see cref="TimeZoneIndex"/> stored in <see cref="ArchiveDataPoint.Flags"/>.
         /// </summary>
-        [CLSCompliant(false)]
         protected const Bits TziMask = Bits.Bit05 | Bits.Bit06 | Bits.Bit07 | Bits.Bit08 | Bits.Bit09 | Bits.Bit10;
 
         /// <summary>
         /// Specifies the bit-mask for <see cref="DaylightSavingsTime"/> stored in <see cref="ArchiveDataPoint.Flags"/>.
         /// </summary>
-        [CLSCompliant(false)]
         protected const Bits DstMask = Bits.Bit11;
 
         #endregion

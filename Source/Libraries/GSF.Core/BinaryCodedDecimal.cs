@@ -69,7 +69,6 @@ namespace GSF
     /// <remarks>
     /// See <a href="http://en.wikipedia.org/wiki/Binary-coded_decimal">Binary-coded decimal</a> for details.
     /// </remarks>
-    [CLSCompliant(false)]
     public static class BinaryCodedDecimal
     {
         private const byte TenP1 = 10;          // 10 to the power of 1 (for one byte integer)
@@ -130,7 +129,7 @@ namespace GSF
 
             byte high = (byte)((value / TenP1) & 0x0F);
             byte low = (byte)((value % TenP1) & 0x0F);
-            
+
             return (byte)(low + (high << 4));
         }
 

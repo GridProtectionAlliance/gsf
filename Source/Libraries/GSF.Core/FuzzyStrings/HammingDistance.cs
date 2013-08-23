@@ -21,6 +21,9 @@
 //
 //******************************************************************************************************
 
+// TODO: Please add comments to these classes
+#pragma warning disable 1591
+
 namespace GSF.FuzzyStrings
 {
     public static partial class ComparisonMetrics
@@ -40,7 +43,10 @@ namespace GSF.FuzzyStrings
                 }
                 return distance;
             }
-            else { return 99999; }
+            else
+            {
+                return 99999;
+            }
         }
     }
 }

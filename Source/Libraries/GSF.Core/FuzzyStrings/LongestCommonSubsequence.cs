@@ -23,6 +23,9 @@
 
 using System;
 
+// TODO: Please add comments to these classes
+#pragma warning disable 1591
+
 namespace GSF.FuzzyStrings
 {
     public static partial class ComparisonMetrics
@@ -38,8 +41,14 @@ namespace GSF.FuzzyStrings
         {
             int[,] C = new int[source.Length + 1, target.Length + 1];
 
-            for (int i = 0; i < source.Length + 1; i++) { C[i, 0] = 0; }
-            for (int j = 0; j < target.Length + 1; j++) { C[0, j] = 0; }
+            for (int i = 0; i < source.Length + 1; i++)
+            {
+                C[i, 0] = 0;
+            }
+            for (int j = 0; j < target.Length + 1; j++)
+            {
+                C[0, j] = 0;
+            }
 
             for (int i = 1; i < source.Length + 1; i++)
             {

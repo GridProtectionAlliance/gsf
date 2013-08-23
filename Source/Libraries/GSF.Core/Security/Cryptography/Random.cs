@@ -183,7 +183,6 @@ namespace GSF.Security.Cryptography
         /// Generates a cryptographically strong unsigned 16-bit random integer.
         /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
-        [CLSCompliant(false)]
         public static ushort UInt16
         {
             get
@@ -203,7 +202,6 @@ namespace GSF.Security.Cryptography
         /// <param name="startNumber">A <see cref="ushort"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="ushort"/> that is the high end of our range.</param>
         /// <returns>A <see cref="ushort"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
-        [CLSCompliant(false)]
         public static ushort UInt16Between(ushort startNumber, ushort stopNumber)
         {
             if (stopNumber < startNumber)
@@ -247,7 +245,6 @@ namespace GSF.Security.Cryptography
         /// Generates a cryptographically strong unsigned 24-bit random integer.
         /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
-        [CLSCompliant(false)]
         public static UInt24 UInt24
         {
             get
@@ -267,7 +264,6 @@ namespace GSF.Security.Cryptography
         /// <param name="startNumber">A <see cref="UInt24"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="UInt24"/> that is the high end of our range.</param>
         /// <returns>A <see cref="UInt24"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
-        [CLSCompliant(false)]
         public static UInt24 Int24Between(UInt24 startNumber, UInt24 stopNumber)
         {
             if (stopNumber < startNumber)
@@ -311,7 +307,6 @@ namespace GSF.Security.Cryptography
         /// Generates a cryptographically strong unsigned 32-bit random integer.
         /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
-        [CLSCompliant(false)]
         public static uint UInt32
         {
             get
@@ -331,7 +326,6 @@ namespace GSF.Security.Cryptography
         /// <param name="startNumber">A <see cref="uint"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="uint"/> that is the high end of our range.</param>
         /// <returns>A <see cref="uint"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
-        [CLSCompliant(false)]
         public static uint UInt32Between(uint startNumber, uint stopNumber)
         {
             if (stopNumber < startNumber)
@@ -375,7 +369,6 @@ namespace GSF.Security.Cryptography
         /// Generates a cryptographically strong unsigned 64-bit random integer.
         /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
-        [CLSCompliant(false)]
         public static ulong UInt64
         {
             get
@@ -395,7 +388,6 @@ namespace GSF.Security.Cryptography
         /// <param name="startNumber">A <see cref="ulong"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="ulong"/> that is the high end of our range.</param>
         /// <returns>A <see cref="ulong"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
-        [CLSCompliant(false)]
         public static ulong UInt64Between(ulong startNumber, ulong stopNumber)
         {
             if (stopNumber < startNumber)

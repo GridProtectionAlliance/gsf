@@ -62,7 +62,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private RelayCommand m_updateConfigurationCommand;
         private RelayCommand m_configureConcentratorCommand;
         private string m_runtimeID;
-        private ObservableCollection<Device> m_devices;
+        //private ObservableCollection<Device> m_devices;
         private RelayCommand m_searchCommand;
         private RelayCommand m_showAllCommand;
         private bool m_stayOnConfigurationScreen;

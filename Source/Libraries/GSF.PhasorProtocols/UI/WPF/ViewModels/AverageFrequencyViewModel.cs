@@ -49,7 +49,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// Represents a mapping between a frequency input definition
         /// and an average frequency output definition.
         /// </summary>
-        public class IOMapping 
+        public class IOMapping
         {
             private string m_signalReference;
             private string m_inputKey;
@@ -160,6 +160,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         // Events
+
+        /// <summary>
+        /// Defines an event for when a property has changed in the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
         // Fields
@@ -197,6 +201,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets calculator names for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public ObservableCollection<string> CalculatorNames
         {
             get
@@ -210,6 +217,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the virtual device names for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public ObservableCollection<string> VirtualDeviceNames
         {
             get
@@ -223,6 +233,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the Input/Output mappings for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public ObservableCollection<IOMapping> IOMappings
         {
             get
@@ -236,6 +249,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the frequency measurements for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public ObservableCollection<FrequencyMeasurement> FrequencyMeasurements
         {
             get
@@ -249,6 +265,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the selected calculator name for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public string SelectedCalculatorName
         {
             get
@@ -262,6 +281,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the selected virtual device name for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public string SelectedVirtualDeviceName
         {
             get
@@ -276,6 +298,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the selected Input/Output mapping for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public IOMapping SelectedIOMapping
         {
             get
@@ -289,6 +314,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets or sets the selected frequency measurement for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public FrequencyMeasurement SelectedFrequencyMeasurement
         {
             get
@@ -302,6 +330,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets the add selected relay command for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public RelayCommand AddSelectedCommand
         {
             get
@@ -310,6 +341,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Gets the remove selected relay command for the <see cref="AverageFrequencyViewModel"/>.
+        /// </summary>
         public RelayCommand RemoveSelectedCommand
         {
             get
@@ -452,16 +486,16 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             outputMeasurement = new Measurement
                 {
-                HistorianID = inputMeasurement.HistorianID,
-                DeviceID = ((object)virtualDevice != null) ? virtualDevice.ID : (int?)null,
-                PointTag = string.Format("{0}_{1}", m_selectedCalculatorName, inputMeasurement.PointTag),
-                SignalTypeID = inputMeasurement.SignalTypeID,
-                SignalReference = string.Format("{0}-FQ", m_selectedVirtualDeviceName ?? m_selectedCalculatorName),
-                Description = string.Format("Average {0}", inputMeasurement.Description),
-                Internal = true,
-                Subscribed = false,
-                Enabled = true
-            };
+                    HistorianID = inputMeasurement.HistorianID,
+                    DeviceID = ((object)virtualDevice != null) ? virtualDevice.ID : (int?)null,
+                    PointTag = string.Format("{0}_{1}", m_selectedCalculatorName, inputMeasurement.PointTag),
+                    SignalTypeID = inputMeasurement.SignalTypeID,
+                    SignalReference = string.Format("{0}-FQ", m_selectedVirtualDeviceName ?? m_selectedCalculatorName),
+                    Description = string.Format("Average {0}", inputMeasurement.Description),
+                    Internal = true,
+                    Subscribed = false,
+                    Enabled = true
+                };
 
             Measurement.Save(null, outputMeasurement);
         }
@@ -648,9 +682,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             frequencyMeasurements = m_dataModel.Measurements
                 .Select(measurement => new FrequencyMeasurement
                     {
-                    SignalReference = measurement.SignalReference,
-                    Key = measurement.ID
-                });
+                        SignalReference = measurement.SignalReference,
+                        Key = measurement.ID
+                    });
 
             if ((object)m_ioMappings != null)
             {
@@ -673,10 +707,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             return new IOMapping
                 {
-                SignalReference = signalReference,
-                InputKey = inKey,
-                OutputKey = outKey
-            };
+                    SignalReference = signalReference,
+                    InputKey = inKey,
+                    OutputKey = outKey
+                };
         }
 
         // Confirms that the user wishes to modify the parent device of the

@@ -24,6 +24,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+// TODO: Please add comments to these classes
+#pragma warning disable 1591
+
 namespace GSF.FuzzyStrings
 {
     public static class Operations

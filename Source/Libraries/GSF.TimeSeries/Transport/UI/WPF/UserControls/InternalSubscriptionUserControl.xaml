@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
              xmlns:vm="clr-namespace:GSF.TimeSeries.Transport.UI.ViewModels"
-             Background="Transparent">
+             Background="Transparent" Unloaded="InternalSubscriptionUserControl_Unloaded">
 
     <UserControl.Resources>
         <ResourceDictionary>

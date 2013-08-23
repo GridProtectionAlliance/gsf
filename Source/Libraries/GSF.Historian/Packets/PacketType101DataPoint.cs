@@ -80,7 +80,6 @@ namespace GSF.Historian.Packets
         /// Initializes a new instance of the <see cref="PacketType101DataPoint"/> class.
         /// </summary>
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
-        [CLSCompliant(false)]
         public PacketType101DataPoint(IMeasurement measurement)
             : base(measurement)
         {

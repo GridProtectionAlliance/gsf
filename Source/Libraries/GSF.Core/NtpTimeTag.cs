@@ -91,7 +91,6 @@ namespace GSF
         /// </summary>
         /// <param name="seconds">Number of seconds since 1/1/1900.</param>
         /// <param name="fraction">Number of fractional seconds, in whole picoseconds.</param>
-        [CLSCompliant(false)]
         public NtpTimeTag(uint seconds, uint fraction)
             : base(GetBaseDateOffsetTicks(seconds), seconds + (fraction / (double)uint.MaxValue))
         {
@@ -101,7 +100,6 @@ namespace GSF
         /// Creates a new <see cref="NtpTimeTag"/>, given 64-bit NTP timestamp.
         /// </summary>
         /// <param name="timestamp">NTP timestamp containing number of seconds since 1/1/1900 in high-word and fractional seconds in low-word.</param>
-        [CLSCompliant(false)]
         public NtpTimeTag(ulong timestamp)
             : this(timestamp.HighDword(), timestamp.LowDword())
         {
@@ -136,7 +134,6 @@ namespace GSF
         /// <summary>
         /// Gets 64-bit NTP timestamp.
         /// </summary>
-        [CLSCompliant(false)]
         public ulong Timestamp
         {
             get
@@ -190,7 +187,6 @@ namespace GSF
         /// </summary>
         /// <param name="seconds">NTP seconds timestamp value.</param>
         /// <returns>Proper NTP offset.</returns>
-        [CLSCompliant(false)]
         protected static long GetBaseDateOffsetTicks(uint seconds)
         {
             if ((seconds & 0x80000000) > 0)
@@ -204,7 +200,6 @@ namespace GSF
         /// </summary>
         /// <param name="timestamp">Timestamp in <see cref="Ticks"/>.</param>
         /// <returns>Seconds in NTP from given <paramref name="timestamp"/>.</returns>
-        [CLSCompliant(false)]
         protected static ulong GetNTPTimestampFromTicks(Ticks timestamp)
         {
             timestamp -= GetBaseDateOffsetTicks(timestamp);

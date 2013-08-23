@@ -138,7 +138,7 @@ namespace GSF.Security
         /// Gets or sets the <see cref="LogEventFunctionSignature"/> to use for logging security events for the <see cref="SecurityProviderBase"/> implementation.
         /// </summary>
         /// <remarks>
-        /// Set <see cref="LogEvent"/> to <c>null</c> to use default handler, i.e., <see cref="EventLog.WriteEntry(string,string,EventLogEntryType,int)."/>.
+        /// Set <see cref="LogEvent"/> to <c>null</c> to use default handler, i.e., <see cref="EventLog.WriteEntry(string,string,EventLogEntryType,int)"/>.
         /// </remarks>
         LogEventFunctionSignature LogEvent
         {

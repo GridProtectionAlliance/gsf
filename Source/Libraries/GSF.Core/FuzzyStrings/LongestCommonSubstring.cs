@@ -24,13 +24,19 @@
 using System;
 using System.Text;
 
+// TODO: Please add comments to these classes
+#pragma warning disable 1591
+
 namespace GSF.FuzzyStrings
 {
     public static partial class ComparisonMetrics
     {
         public static string LongestCommonSubstring(this string source, string target)
         {
-            if (String.IsNullOrEmpty(source) || String.IsNullOrEmpty(target)) { return null; }
+            if (String.IsNullOrEmpty(source) || String.IsNullOrEmpty(target))
+            {
+                return null;
+            }
 
             int[,] L = new int[source.Length, target.Length];
             int maximumLength = 0;

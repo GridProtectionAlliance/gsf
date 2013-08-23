@@ -103,7 +103,6 @@ namespace GSF.IO.Checksums
         /// <summary>
         /// Returns the CRC-16 data checksum computed so far.
         /// </summary>
-        [CLSCompliant(false)]
         public ushort Value
         {
             get

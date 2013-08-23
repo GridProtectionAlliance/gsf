@@ -50,6 +50,8 @@ using Microsoft.Research.DynamicDataDisplay.Charts;
 using Microsoft.Research.DynamicDataDisplay.DataSources;
 using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
+#pragma warning disable 612,618
+
 namespace GSF.PhasorProtocols.UI.UserControls
 {
     /// <summary>

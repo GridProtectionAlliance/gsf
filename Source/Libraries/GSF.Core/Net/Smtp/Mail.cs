@@ -257,7 +257,7 @@ namespace GSF.Net.Smtp
         }
 
         /// <summary>
-        /// Gets or sets the comma-separated or semicolon-seperated list of file names to be attached to the <see cref="Mail"/> message.
+        /// Gets or sets the comma-separated or semicolon-separated list of file names to be attached to the <see cref="Mail"/> message.
         /// </summary>
         public string Attachments
         {

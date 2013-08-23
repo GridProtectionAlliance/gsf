@@ -37,7 +37,6 @@ using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.UserControls;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
-using GSF.PhasorProtocols.UI.DataModels;
 
 namespace GSF.PhasorProtocols.UI.ViewModels
 {

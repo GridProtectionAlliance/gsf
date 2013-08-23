@@ -45,6 +45,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("GSF.ServiceBus")]
 
 // Other configuration attributes.
-[assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: Guid("055544a1-be9e-4727-9946-173e3548d2e0")]

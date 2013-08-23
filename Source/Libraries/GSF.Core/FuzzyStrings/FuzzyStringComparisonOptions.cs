@@ -23,6 +23,9 @@
 
 using System;
 
+// TODO: Please add comments to these classes
+#pragma warning disable 1591
+
 namespace GSF.FuzzyStrings
 {
     [Flags]

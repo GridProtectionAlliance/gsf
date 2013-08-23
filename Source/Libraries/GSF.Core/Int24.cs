@@ -874,7 +874,6 @@ namespace GSF
         /// </summary>
         /// <param name="value">Int24 value that is converted.</param>
         /// <returns>Unsigned Short</returns>
-        [CLSCompliant(false)]
         public static explicit operator ushort(Int24 value)
         {
             return (ushort)((uint)value);
@@ -939,7 +938,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an unsigned integer.</param>
         /// <returns>Unsigned integer</returns>
-        [CLSCompliant(false)]
         public static implicit operator uint(Int24 value)
         {
             return ((IConvertible)value).ToUInt32(null);
@@ -960,7 +958,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="UInt64"/>.</param>
         /// <returns>An <see cref="UInt64"/> value.</returns>
-        [CLSCompliant(false)]
         public static implicit operator ulong(Int24 value)
         {
             return ((IConvertible)value).ToUInt64(null);

@@ -42,7 +42,7 @@ namespace GSF.Net.Security
         #endregion
 
         #region [ Constructors ]
-        
+
         /// <summary>
         /// Creates a new instance of the <see cref="SimplePolicyChecker"/> class.
         /// </summary>
@@ -102,6 +102,14 @@ namespace GSF.Net.Security
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Verifies the remote certificate used for authentication.
+        /// </summary>
+        /// <param name="sender">An object that contains state information for this validation.</param>
+        /// <param name="remoteCertificate">The certificate used to authenticate the remote party.</param>
+        /// <param name="chain">The chain of certificate authorities associated with the remote certificate.</param>
+        /// <param name="errors">One or more errors associated with the remote certificate.</param>
+        /// <returns>A flag that determines whether the specified certificate is accepted for authentication.</returns>
         public bool ValidateRemoteCertificate(object sender, X509Certificate remoteCertificate, X509Chain chain, SslPolicyErrors errors)
         {
             X509ChainStatusFlags chainFlags;

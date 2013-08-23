@@ -50,6 +50,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="assemblyName">The name of the assembly in which the editor type resides.</param>
         /// <param name="typeName">The full name of the type of the editor.</param>
+        /// <param name="connectionString">The connection string for the custom configuration screen.</param>
         public CustomConfigurationEditorAttribute(string assemblyName, string typeName, string connectionString = null)
         {
             m_assemblyName = assemblyName;
@@ -61,6 +62,7 @@ namespace GSF.TimeSeries.Adapters
         /// Creates a new instance of the <see cref="CustomConfigurationEditorAttribute"/> class.
         /// </summary>
         /// <param name="editorType">The type of the editor.</param>
+        /// <param name="connectionString">The connection string for the custom configuration screen.</param>
         public CustomConfigurationEditorAttribute(Type editorType, string connectionString = null)
         {
             m_editorType = editorType;

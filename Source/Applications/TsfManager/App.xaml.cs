@@ -26,7 +26,7 @@
 using System;
 using System.Security.Principal;
 using System.Windows;
-using GSF.ErrorManagement;
+using GSF.Windows.ErrorManagement;
 using GSF.Reflection;
 using GSF.TimeSeries.UI;
 

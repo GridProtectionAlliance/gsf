@@ -290,7 +290,7 @@ namespace GSF.Collections
         /// <summary>
         /// Function signature that determines if an item can be currently processed.
         /// </summary>
-        /// <param name="item">Item to be checked for processing availablity.</param>
+        /// <param name="item">Item to be checked for processing availability.</param>
         /// <returns>True, if item can be processed. The default is true.</returns>
         /// <remarks>
         /// <para>Implementation of this function is optional. It is assumed that an item can be processed if this

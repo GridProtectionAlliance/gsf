@@ -32,7 +32,6 @@ using System.Windows.Threading;
 using GSF.Data;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.TimeSeries.UI;
-using GSF.TimeSeries.UI.Commands;
 using DataModelMeasurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.TimeSeries.Transport.UI.ViewModels
@@ -45,8 +44,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         private Dictionary<int, string> m_deviceList;
         private ICollection<DataModelMeasurement> m_currentSubscribedMeasurementsPage;
         private readonly object m_subscribedMeasurementsLock;
-        private RelayCommand m_subscribeMeasurementCommand;
-        private RelayCommand m_unsubscribeMeasurementCommand;
+        //private RelayCommand m_subscribeMeasurementCommand;
+        //private RelayCommand m_unsubscribeMeasurementCommand;
         private KeyValuePair<int, string> m_currentDevice;
         private int m_currentDeviceID;
         private ObservableCollection<DataModelMeasurement> m_measurementsToBeSubscribed;

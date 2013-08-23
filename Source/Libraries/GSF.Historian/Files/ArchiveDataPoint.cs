@@ -76,13 +76,11 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Specifies the bit-mask for <see cref="Quality"/> stored in <see cref="Flags"/>.
         /// </summary>
-        [CLSCompliant(false)]
         protected const Bits QualityMask = Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03 | Bits.Bit04;
 
         /// <summary>
         /// Specifies the bit-mask for <see cref="TimeTag"/> milliseconds stored in <see cref="Flags"/>.
         /// </summary>
-        [CLSCompliant(false)]
         protected const Bits MillisecondMask = Bits.Bit05 | Bits.Bit06 | Bits.Bit07 | Bits.Bit08 | Bits.Bit09 | Bits.Bit10 | Bits.Bit11 | Bits.Bit12 | Bits.Bit13 | Bits.Bit14 | Bits.Bit15;
 
         // Fields
@@ -119,7 +117,6 @@ namespace GSF.Historian.Files
         /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class from a <see cref="IMeasurement"/> value.
         /// </summary>
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
-        [CLSCompliant(false)]
         public ArchiveDataPoint(IMeasurement measurement)
             : this(measurement, measurement.HistorianQuality())
         {
@@ -130,7 +127,6 @@ namespace GSF.Historian.Files
         /// </summary>
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
         /// <param name="quality">Specific <see cref="Quality"/> value to apply to new <see cref="ArchiveDataPoint"/>.</param>
-        [CLSCompliant(false)]
         public ArchiveDataPoint(IMeasurement measurement, Quality quality)
             : this((int)measurement.Key.ID)
         {

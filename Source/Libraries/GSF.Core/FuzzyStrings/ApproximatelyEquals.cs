@@ -25,10 +25,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+// TODO: Please add comments to these classes
+#pragma warning disable 1591
+
 namespace GSF.FuzzyStrings
 {
     public static partial class ComparisonMetrics
-    { 
+    {
         public static bool ApproximatelyEquals(this string source, string target, FuzzyStringComparisonOptions options, FuzzyStringComparisonTolerance tolerance)
         {
             List<double> comparisonResults = new List<double>();

@@ -412,7 +412,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="LittleBinaryValue"/> to convert to <see cref="UInt16"/>.</param>
         /// <returns>A <see cref="UInt16"/> representation of <see cref="LittleBinaryValue"/>.</returns>
-        [CLSCompliant(false)]
         public static implicit operator UInt16(LittleBinaryValue value)
         {
             return value.ToUInt16();
@@ -423,7 +422,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="UInt16"/> to convert to <see cref="LittleBinaryValue"/>.</param>
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="UInt16"/>.</returns>
-        [CLSCompliant(false)]
         public static implicit operator LittleBinaryValue(UInt16 value)
         {
             return new LittleBinaryValue(TypeCode.UInt16, s_endianOrder.GetBytes(value));
@@ -454,7 +452,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="LittleBinaryValue"/> to convert to <see cref="UInt24"/>.</param>
         /// <returns>A <see cref="UInt24"/> representation of <see cref="LittleBinaryValue"/>.</returns>
-        [CLSCompliant(false)]
         public static implicit operator UInt24(LittleBinaryValue value)
         {
             return value.ToUInt24();
@@ -465,7 +462,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="UInt24"/> to convert to <see cref="LittleBinaryValue"/>.</param>
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="UInt24"/>.</returns>
-        [CLSCompliant(false)]
         public static implicit operator LittleBinaryValue(UInt24 value)
         {
             return new LittleBinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
@@ -496,7 +492,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="LittleBinaryValue"/> to convert to <see cref="UInt32"/>.</param>
         /// <returns>A <see cref="UInt32"/> representation of <see cref="LittleBinaryValue"/>.</returns>
-        [CLSCompliant(false)]
         public static implicit operator UInt32(LittleBinaryValue value)
         {
             return value.ToUInt32();
@@ -507,7 +502,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="UInt32"/> to convert to <see cref="LittleBinaryValue"/>.</param>
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="UInt32"/>.</returns>
-        [CLSCompliant(false)]
         public static implicit operator LittleBinaryValue(UInt32 value)
         {
             return new LittleBinaryValue(TypeCode.UInt32, s_endianOrder.GetBytes(value));
@@ -538,7 +532,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="LittleBinaryValue"/> to convert to <see cref="UInt64"/>.</param>
         /// <returns>A <see cref="UInt64"/> representation of <see cref="LittleBinaryValue"/>.</returns>
-        [CLSCompliant(false)]
         public static implicit operator UInt64(LittleBinaryValue value)
         {
             return value.ToUInt64();
@@ -549,7 +542,6 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="UInt64"/> to convert to <see cref="LittleBinaryValue"/>.</param>
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="UInt64"/>.</returns>
-        [CLSCompliant(false)]
         public static implicit operator LittleBinaryValue(UInt64 value)
         {
             return new LittleBinaryValue(TypeCode.UInt64, s_endianOrder.GetBytes(value));

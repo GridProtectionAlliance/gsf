@@ -254,7 +254,6 @@ namespace GSF.Communication.Radius
         /// </summary>
         /// <param name="type">Type of the <see cref="RadiusPacketAttribute"/>.</param>
         /// <param name="value">32-bit unsigned integer value of the <see cref="RadiusPacketAttribute"/>.</param>
-        [CLSCompliant(false)]
         public RadiusPacketAttribute(AttributeType type, UInt32 value)
             : this(type, RadiusPacket.EndianOrder.GetBytes(value))
         {

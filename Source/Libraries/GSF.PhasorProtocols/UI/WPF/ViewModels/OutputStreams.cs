@@ -35,7 +35,6 @@ using GSF.PhasorProtocols.UI.UserControls;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
 using GSF.TimeSeries.UI.DataModels;
-using GSF.PhasorProtocols.UI.DataModels;
 
 namespace GSF.PhasorProtocols.UI.ViewModels
 {
@@ -429,37 +428,37 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 {
                     OutputStream newOutputStream = new OutputStream
                         {
-                        ID = 0, // Set it to zero so it will be inserted instead of updated.
-                        Enabled = false,
-                        Acronym = CurrentItem.Acronym,
-                        Name = "Copy of " + CurrentItem.Name,
-                        AllowPreemptivePublishing = CurrentItem.AllowPreemptivePublishing,
-                        AllowSortsByArrival = CurrentItem.AllowSortsByArrival,
-                        AnalogScalingValue = CurrentItem.AnalogScalingValue,
-                        AutoPublishConfigFrame = CurrentItem.AutoPublishConfigFrame,
-                        AutoStartDataChannel = CurrentItem.AutoStartDataChannel,
-                        CommandChannel = CurrentItem.CommandChannel,
-                        ConnectionString = CurrentItem.ConnectionString,
-                        CoordinateFormat = CurrentItem.CoordinateFormat,
-                        CurrentScalingValue = CurrentItem.CurrentScalingValue,
-                        DataChannel = CurrentItem.DataChannel,
-                        DataFormat = CurrentItem.DataFormat,
-                        DigitalMaskValue = CurrentItem.DigitalMaskValue,
-                        DownSamplingMethod = CurrentItem.DownSamplingMethod,
-                        FramesPerSecond = CurrentItem.FramesPerSecond,
-                        IDCode = CurrentItem.IDCode,
-                        IgnoreBadTimeStamps = CurrentItem.IgnoreBadTimeStamps,
-                        LagTime = CurrentItem.LagTime,
-                        LeadTime = CurrentItem.LeadTime,
-                        LoadOrder = CurrentItem.LoadOrder,
-                        NodeID = CurrentItem.NodeID,
-                        NominalFrequency = CurrentItem.NominalFrequency,
-                        PerformTimestampReasonabilityCheck = CurrentItem.PerformTimestampReasonabilityCheck,
-                        TimeResolution = CurrentItem.TimeResolution,
-                        Type = CurrentItem.Type,
-                        UseLocalClockAsRealTime = CurrentItem.UseLocalClockAsRealTime,
-                        VoltageScalingValue = CurrentItem.VoltageScalingValue
-                    };
+                            ID = 0, // Set it to zero so it will be inserted instead of updated.
+                            Enabled = false,
+                            Acronym = CurrentItem.Acronym,
+                            Name = "Copy of " + CurrentItem.Name,
+                            AllowPreemptivePublishing = CurrentItem.AllowPreemptivePublishing,
+                            AllowSortsByArrival = CurrentItem.AllowSortsByArrival,
+                            AnalogScalingValue = CurrentItem.AnalogScalingValue,
+                            AutoPublishConfigFrame = CurrentItem.AutoPublishConfigFrame,
+                            AutoStartDataChannel = CurrentItem.AutoStartDataChannel,
+                            CommandChannel = CurrentItem.CommandChannel,
+                            ConnectionString = CurrentItem.ConnectionString,
+                            CoordinateFormat = CurrentItem.CoordinateFormat,
+                            CurrentScalingValue = CurrentItem.CurrentScalingValue,
+                            DataChannel = CurrentItem.DataChannel,
+                            DataFormat = CurrentItem.DataFormat,
+                            DigitalMaskValue = CurrentItem.DigitalMaskValue,
+                            DownSamplingMethod = CurrentItem.DownSamplingMethod,
+                            FramesPerSecond = CurrentItem.FramesPerSecond,
+                            IDCode = CurrentItem.IDCode,
+                            IgnoreBadTimeStamps = CurrentItem.IgnoreBadTimeStamps,
+                            LagTime = CurrentItem.LagTime,
+                            LeadTime = CurrentItem.LeadTime,
+                            LoadOrder = CurrentItem.LoadOrder,
+                            NodeID = CurrentItem.NodeID,
+                            NominalFrequency = CurrentItem.NominalFrequency,
+                            PerformTimestampReasonabilityCheck = CurrentItem.PerformTimestampReasonabilityCheck,
+                            TimeResolution = CurrentItem.TimeResolution,
+                            Type = CurrentItem.Type,
+                            UseLocalClockAsRealTime = CurrentItem.UseLocalClockAsRealTime,
+                            VoltageScalingValue = CurrentItem.VoltageScalingValue
+                        };
 
                     string originalAcronym = newOutputStream.Acronym;
                     int i = 1;
