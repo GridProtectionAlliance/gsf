@@ -37,10 +37,12 @@
 //       Added new header and license agreement.
 //  02/11/2010 - Pinal C. Patel
 //       Added OS version to the system information being logged.
-//  03/27/2012 - prasanthgs
+//  03/27/2012 - Prasanth GS
 //       Exceptions logged through ErrorLogger are saved to backend db too.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  08/23/2013 - J. Ritchie Carroll
+//       Adjusted algorithm for database inserts and curtailment to be more friendly to DB engine.
 //
 //******************************************************************************************************
 
@@ -75,6 +77,7 @@ using System.Text;
 using System.Threading;
 using System.Web;
 using System.Windows.Forms;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Identity;
@@ -82,6 +85,7 @@ using GSF.IO;
 using GSF.Net.Smtp;
 using GSF.Reflection;
 using GSF.Windows.Forms;
+using Timer = System.Timers.Timer;
 
 namespace GSF.ErrorManagement
 {
@@ -153,11 +157,6 @@ namespace GSF.ErrorManagement
         // Constants
 
         /// <summary>
-        /// Specifies the default value for the <see cref="DefaultExceptionLogSize"/> property.
-        /// </summary>
-        private const int DefaultExceptionLogSize = 2000;
-
-        /// <summary>
         /// Specifies the default value for the <see cref="LogToUI"/> property.
         /// </summary>
         public const bool DefaultLogToUI = false;
@@ -191,6 +190,11 @@ namespace GSF.ErrorManagement
         /// Specifies the default value for the <see cref="LogUserInfo"/> property.
         /// </summary>
         public const bool DefaultLogUserInfo = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="DefaultDatabaseLogSize"/> property.
+        /// </summary>
+        private const int DefaultDatabaseLogSize = 2000;
 
         /// <summary>
         /// Specifies the default value for the <see cref="SmtpServer"/> property.
@@ -250,6 +254,7 @@ namespace GSF.ErrorManagement
         private bool m_logToDatabase;
         private bool m_logToScreenshot;
         private bool m_logUserInfo;
+        private int m_databaseLogSize;
         private string m_smtpServer;
         private string m_contactName;
         private string m_contactEmail;
@@ -275,6 +280,8 @@ namespace GSF.ErrorManagement
         private bool m_disposed;
         private bool m_initialized;
         private bool m_suppressInteractiveLogging;
+        private ProcessQueue<Tuple<string, string, string, string>> m_databaseErrorQueue;
+        private Timer m_tableSizeCurtailmentTimer;
 
         #endregion
 
@@ -292,6 +299,7 @@ namespace GSF.ErrorManagement
             m_logToDatabase = DefaultLogToDatabase;
             m_logToScreenshot = DefaultLogToScreenshot;
             m_logUserInfo = DefaultLogUserInfo;
+            m_databaseLogSize = DefaultDatabaseLogSize;
             m_smtpServer = DefaultSmtpServer;
             m_contactName = DefaultContactName;
             m_contactEmail = DefaultContactEmail;
@@ -300,14 +308,17 @@ namespace GSF.ErrorManagement
             m_settingsCategory = DefaultSettingsCategory;
             m_handleUnhandledException = DefaultHandleUnhandledException;
             m_exitOnUnhandledException = DefaultExitOnUnhandledException;
+
             // Initialize delegate methods.
             m_errorTextMethod = GetErrorText;
             m_scopeTextMethod = GetScopeText;
             m_actionTextMethod = GetActionText;
             m_moreInfoTextMethod = GetMoreInfoText;
+
             // Initialize the error log file.
             m_errorLog = new LogFile();
             m_errorLog.FileName = "ErrorLog.txt";
+
             // Initialize all logger methods.
             m_loggers = new List<Action<Exception>>();
             m_loggers.Add(ExceptionToScreenshot);
@@ -473,6 +484,24 @@ namespace GSF.ErrorManagement
         }
 
         /// <summary>
+        /// Gets or sets the maximum exception log size to maintain when logging exceptions to the database.
+        /// </summary>
+        [Category("Logging"),
+        DefaultValue(DefaultDatabaseLogSize),
+        Description("Defines the maximum exception log size to maintain when logging exceptions to the database.")]
+        public int DatabaseLogSize
+        {
+            get
+            {
+                return m_databaseLogSize;
+            }
+            set
+            {
+                m_databaseLogSize = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the SMTP server to be used for sending e-mail messages containing <see cref="Exception"/> 
         /// information to the <see cref="ContactEmail"/> address.
         /// </summary>
@@ -510,12 +539,12 @@ namespace GSF.ErrorManagement
         }
 
         /// <summary>
-        /// Gets or sets the e-mail address where e-mail messages contaning <see cref="Exception"/> information are 
+        /// Gets or sets the e-mail address where e-mail messages containing <see cref="Exception"/> information are 
         /// to be sent when the <see cref="LogToEmail"/> property is set to true.
         /// </summary>
         [Category("Settings"),
         DefaultValue(DefaultContactEmail),
-        Description("E-mail address where e-mail messages contaning Exception information are to be sent when the LogToEmail property is set to true.")]
+        Description("E-mail address where e-mail messages containing Exception information are to be sent when the LogToEmail property is set to true.")]
         public string ContactEmail
         {
             get
@@ -743,7 +772,7 @@ namespace GSF.ErrorManagement
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Delegate"/> that provides text contaning detailed information about the 
+        /// Gets or sets the <see cref="Delegate"/> that provides text containing detailed information about the 
         /// encountered <see cref="Exception"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
@@ -778,7 +807,7 @@ namespace GSF.ErrorManagement
                     case ApplicationType.WindowsGui:
                         return FilePath.GetFileNameWithoutExtension(AppDomain.CurrentDomain.FriendlyName);
                     case ApplicationType.Web:
-                        return HttpContext.Current.Request.ApplicationPath.Replace("/", "");
+                        return HttpContext.Current.Request.ApplicationPath.ToNonNullString("").Replace("/", "");
                     default:
                         return string.Empty;
                 }
@@ -869,6 +898,9 @@ namespace GSF.ErrorManagement
                 status.Append("       Error to Screenshot: ");
                 status.Append(m_logToScreenshot ? "Enabled" : "Disabled");
                 status.AppendLine();
+                status.Append("         Database log size: ");
+                status.Append(m_databaseLogSize + " records");
+                status.AppendLine();
                 status.Append("               Mail Server: ");
                 status.Append(!string.IsNullOrEmpty(m_smtpServer) ? m_smtpServer : "[Not Set]");
                 status.AppendLine();
@@ -898,6 +930,52 @@ namespace GSF.ErrorManagement
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ErrorLogger"/> object and optionally releases the 
+        /// managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    Unregister();
+
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+
+                        if ((object)m_errorLog != null)
+                            m_errorLog.Dispose();
+
+                        if ((object)m_tableSizeCurtailmentTimer != null)
+                        {
+                            m_tableSizeCurtailmentTimer.Elapsed -= m_tableSizeCurtailmentTimer_Elapsed;
+                            m_tableSizeCurtailmentTimer.Dispose();
+                            m_tableSizeCurtailmentTimer = null;
+                        }
+
+                        if ((object)m_databaseErrorQueue != null)
+                        {
+                            m_databaseErrorQueue.ProcessException -= m_databaseErrorQueue_ProcessException;
+                            m_databaseErrorQueue.Dispose();
+                        }
+                        m_databaseErrorQueue = null;
+                    }
+                }
+                finally
+                {
+                    m_enabled = false;          // Mark as disabled.
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
 
         /// <summary>
         /// Initializes the <see cref="ErrorLogger"/> object.
@@ -979,6 +1057,7 @@ namespace GSF.ErrorManagement
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
                 settings["LogToUI", true].Update(m_logToUI);
                 settings["LogToFile", true].Update(m_logToFile);
                 settings["LogToEmail", true].Update(m_logToEmail);
@@ -986,12 +1065,14 @@ namespace GSF.ErrorManagement
                 settings["LogToDatabase", true].Update(m_logToDatabase);
                 settings["LogToScreenshot", true].Update(m_logToScreenshot);
                 settings["LogUserInfo", true].Update(m_logUserInfo);
+                settings["DatabaseLogSize", true].Update(m_databaseLogSize);
                 settings["SmtpServer", true].Update(m_smtpServer);
                 settings["ContactName", true].Update(m_contactName);
                 settings["ContactEmail", true].Update(m_contactEmail);
                 settings["ContactPhone", true].Update(m_contactPhone);
                 settings["HandleUnhandledException", true].Update(m_handleUnhandledException);
                 settings["ExitOnUnhandledException", true].Update(m_exitOnUnhandledException);
+
                 config.Save();
             }
         }
@@ -1012,19 +1093,22 @@ namespace GSF.ErrorManagement
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
                 settings.Add("LogToUI", m_logToUI, "True if an encountered exception is to be logged to the User Interface; otherwise False.");
                 settings.Add("LogToFile", m_logToFile, "True if an encountered exception is to be logged to a file; otherwise False.");
                 settings.Add("LogToEmail", m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
                 settings.Add("LogToEventLog", m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
                 settings.Add("LogToDatabase", m_logToDatabase, "True if an encountered exception is logged to the database; otherwise False.");
                 settings.Add("LogToScreenshot", m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
+                settings.Add("DatabaseLogSize", m_databaseLogSize, "Maximum exception log size to maintain when logging exceptions to the database.");
                 settings.Add("LogUserInfo", m_logUserInfo, "True if user information is to be logged along with exception information; otherwise False.");
                 settings.Add("SmtpServer", m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
                 settings.Add("ContactName", m_contactName, "Name of the person that the end-user can contact when an exception is encountered.");
-                settings.Add("ContactEmail", m_contactEmail, "Comma-seperated list of recipient email addresses for the email message.");
+                settings.Add("ContactEmail", m_contactEmail, "Comma-separated list of recipient email addresses for the email message.");
                 settings.Add("ContactPhone", m_contactPhone, "Phone number of the person that the end-user can contact when an exception is encountered.");
                 settings.Add("HandleUnhandledException", m_handleUnhandledException, "True if unhandled exceptions are to be handled automatically; otherwise False.");
                 settings.Add("ExitOnUnhandledException", m_exitOnUnhandledException, "True if the application must exit when an unhandled exception is encountered; otherwise False.");
+
                 LogToUI = settings["LogToUI"].ValueAs(m_logToUI);
                 LogToFile = settings["LogToFile"].ValueAs(m_logToFile);
                 LogToEmail = settings["LogToEmail"].ValueAs(m_logToEmail);
@@ -1032,6 +1116,7 @@ namespace GSF.ErrorManagement
                 LogToDatabase = settings["LogToDatabase"].ValueAs(m_logToDatabase);
                 LogToScreenshot = settings["LogToScreenshot"].ValueAs(m_logToScreenshot);
                 LogUserInfo = settings["LogUserInfo"].ValueAs(m_logUserInfo);
+                DatabaseLogSize = settings["DatabaseLogSize"].ValueAs(m_databaseLogSize);
                 SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
                 ContactEmail = settings["ContactEmail"].ValueAs(m_contactEmail);
                 ContactName = settings["ContactName"].ValueAs(m_contactName);
@@ -1079,6 +1164,7 @@ namespace GSF.ErrorManagement
                     OnLoggingException(ex);
                 }
             }
+
             m_suppressInteractiveLogging = false;   // Enable interactive logging if disabled.
 
             // Exit the current application if specified.
@@ -1123,6 +1209,7 @@ namespace GSF.ErrorManagement
             {
                 // For Windows Application.
                 Application.ThreadException += ThreadException;
+
                 // For Windows Service and Console Application.
                 AppDomain.CurrentDomain.UnhandledException += UnhandledException;
             }
@@ -1171,6 +1258,7 @@ namespace GSF.ErrorManagement
         {
             // Use the ErrorDialog to show exception information.
             ErrorDialog dialog = new ErrorDialog();
+
             dialog.Text = string.Format(dialog.Text, ApplicationName, null);
             dialog.PictureBoxIcon.Image = SystemIcons.Error.ToBitmap();
             dialog.RichTextBoxError.Text = m_errorTextMethod();
@@ -1188,6 +1276,7 @@ namespace GSF.ErrorManagement
         {
             // Prepare the exception information.
             StringBuilder message = new StringBuilder();
+
             message.AppendFormat("{0} has encountered a problem", ApplicationName);
             message.AppendLine();
             message.AppendLine();
@@ -1223,6 +1312,7 @@ namespace GSF.ErrorManagement
         {
             // Prepare the exception information.
             StringBuilder html = new StringBuilder();
+
             html.Append("<HTML>");
             html.AppendLine();
             html.Append("<HEAD>");
@@ -1324,9 +1414,12 @@ namespace GSF.ErrorManagement
             if (m_logToFile)
             {
                 m_logToFileOK = false;
+
                 if (!m_errorLog.IsOpen)
                     m_errorLog.Open();
+
                 m_errorLog.WriteTimestampedLine(GetExceptionInfo(exception, m_logUserInfo));
+
                 m_logToFileOK = true;
             }
         }
@@ -1341,12 +1434,15 @@ namespace GSF.ErrorManagement
             if (m_logToEmail && !string.IsNullOrEmpty(m_contactEmail) && !m_suppressInteractiveLogging)
             {
                 m_logToEmailOK = false;
+
                 Mail email = new Mail(m_contactEmail, m_contactEmail);
+
                 email.Subject = string.Format("Exception in {0} at {1}", ApplicationName, DateTime.Now.ToString());
                 email.Body = GetExceptionInfo(exception, m_logUserInfo);
                 email.Attachments = GetScreenshotFileName();
                 email.SmtpServer = m_smtpServer;
                 email.Send();
+
                 m_logToEmailOK = true;
             }
         }
@@ -1361,7 +1457,9 @@ namespace GSF.ErrorManagement
             if (m_logToEventLog)
             {
                 m_logToEventLogOK = false;
+
                 EventLog.WriteEntry(ApplicationName, GetExceptionInfo(exception, m_logUserInfo), EventLogEntryType.Error);
+
                 m_logToEventLogOK = true;
             }
         }
@@ -1377,13 +1475,122 @@ namespace GSF.ErrorManagement
             {
                 m_logToDatabaseOK = false;
 
-                LogErrorToDatabase(exception.Source.ToNonNullNorEmptyString("No Source"),
-                            exception.Message.ToNonNullNorEmptyString("No Message"),
-                            GetExceptionInfo(exception, true),
-                            exception.GetType().FullName);
+                // Make sure a database processing queue exists to process items every two seconds
+                if ((object)m_databaseErrorQueue == null)
+                {
+                    m_databaseErrorQueue = ProcessQueue<Tuple<string, string, string, string>>.CreateSynchronousQueue(ProcessExceptionsToDatabase, 2.0D, 30, false, false);
+                    m_databaseErrorQueue.ProcessException += m_databaseErrorQueue_ProcessException;
+                    m_databaseErrorQueue.Start();
+                }
+
+                // Make sure table size curtailment timer exists to maintain error log table size
+                if ((object)m_tableSizeCurtailmentTimer == null)
+                {
+                    m_tableSizeCurtailmentTimer = new Timer();
+
+                    m_tableSizeCurtailmentTimer.AutoReset = false;
+                    m_tableSizeCurtailmentTimer.Interval = 15000;
+                    m_tableSizeCurtailmentTimer.Enabled = false;
+
+                    m_tableSizeCurtailmentTimer.Elapsed += m_tableSizeCurtailmentTimer_Elapsed;
+                }
+
+                // Queue up exception to be logged into the database - we only process database inserts once every two
+                // seconds in case there are many errors, this way database thrashing is kept to a minimum
+                m_databaseErrorQueue.Add(new Tuple<string, string, string, string>(
+                        exception.Source.ToNonNullNorEmptyString("No Source"),
+                        exception.GetType().FullName,
+                        exception.Message.ToNonNullNorEmptyString("No Message"),
+                        GetExceptionInfo(exception, true)));
 
                 m_logToDatabaseOK = true;
             }
+        }
+
+        // Handle logging of queued exceptions to database
+        private void ProcessExceptionsToDatabase(Tuple<string, string, string, string>[] exceptions)
+        {
+            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+            using (IDbCommand command = database.Connection.CreateCommand())
+            using (IDbTransaction transaction = database.Connection.BeginTransaction())
+            {
+                try
+                {
+                    string parameterizedQueryString = database.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Type, Message, Detail) VALUES ({0}, {1}, {2}, {3})", "source", "type", "message", "detail");
+
+                    // Associate all commands with a single transaction
+                    command.Transaction = transaction;
+
+                    // Insert new exceptions
+                    foreach (Tuple<string, string, string, string> exception in exceptions)
+                        command.ExecuteNonQuery(parameterizedQueryString, exception.Item1, exception.Item2, exception.Item3, exception.Item4);
+
+                    // Commit the transaction
+                    transaction.Commit();
+
+                    // Since we have now added records, kick off lazy timer to check error log size
+                    if ((object)m_tableSizeCurtailmentTimer != null && !m_tableSizeCurtailmentTimer.Enabled)
+                        m_tableSizeCurtailmentTimer.Start();
+                }
+                catch
+                {
+                    // Rollback transaction if there is an exception (e.g., thread is being aborted)
+                    transaction.Rollback();
+
+                    // Re-throw any captured exception, process queue will handle
+                    throw;
+                }
+            }
+        }
+
+        // Maintain log size
+        private void m_tableSizeCurtailmentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                using (IDbCommand command = database.Connection.CreateCommand())
+                using (IDbTransaction transaction = database.Connection.BeginTransaction())
+                {
+                    bool executingTransaction = false;
+
+                    try
+                    {
+                        // Get min and max IDs from error log
+                        int minID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT MIN(ID) FROM ErrorLog")));
+                        int maxID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT MAX(ID) FROM ErrorLog")));
+                        int errorLogSize = maxID - minID; // Roughly, assuming no manual deletions
+
+                        // When exception log is larger than desired size - delete roughly 25% of the records,
+                        // timeout for this action currently hard-coded to one minute
+                        if (errorLogSize >= m_databaseLogSize)
+                        {
+                            executingTransaction = true;
+                            command.Transaction = transaction;
+                            command.ExecuteNonQuery("DELETE FROM ErrorLog WHERE ID <= " + (int)(errorLogSize / 4 + minID), 60);
+                            transaction.Commit();
+                        }
+                    }
+                    catch
+                    {
+                        // Rollback any executing transaction if there is an exception
+                        if (executingTransaction)
+                            transaction.Rollback();
+
+                        // Re-throw any captured exception, outer try will handle
+                        throw;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnLoggingException(ex);
+            }
+        }
+
+        private void m_databaseErrorQueue_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnLoggingException(e.Argument);
         }
 
         /// <summary>
@@ -1393,14 +1600,15 @@ namespace GSF.ErrorManagement
         protected virtual void ExceptionToScreenshot(Exception exception)
         {
             // Log if enabled.
-            if (m_logToScreenshot &&
-                (ApplicationType == ApplicationType.WindowsCui || ApplicationType == ApplicationType.WindowsGui))
+            if (m_logToScreenshot && (ApplicationType == ApplicationType.WindowsCui || ApplicationType == ApplicationType.WindowsGui))
             {
                 m_logToScreenshotOK = false;
+
                 using (Bitmap screenshot = ScreenArea.Capture(ImageFormat.Png))
                 {
                     screenshot.Save(GetScreenshotFileName());
                 }
+
                 m_logToScreenshotOK = true;
             }
         }
@@ -1416,42 +1624,12 @@ namespace GSF.ErrorManagement
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="ErrorLogger"/> object and optionally releases the 
-        /// managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    Unregister();
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
-                        if ((object)m_errorLog != null)
-                            m_errorLog.Dispose();
-                    }
-                }
-                finally
-                {
-                    m_enabled = false;          // Mark as disabled.
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
-
-        /// <summary>
         /// Default <see cref="Delegate"/> for <see cref="ErrorTextMethod"/>.
         /// </summary>
         private string GetErrorText()
         {
             StringBuilder errorText = new StringBuilder();
+
             errorText.AppendFormat("An unexpected exception has occurred in {0}. ", ApplicationName);
             errorText.Append("This may be due to an inconsistent system state or a programming error.");
 
@@ -1464,6 +1642,7 @@ namespace GSF.ErrorManagement
         private string GetScopeText()
         {
             StringBuilder scopeText = new StringBuilder();
+
             switch (ApplicationType)
             {
                 case ApplicationType.WindowsCui:
@@ -1484,6 +1663,7 @@ namespace GSF.ErrorManagement
         private string GetActionText()
         {
             StringBuilder actionText = new StringBuilder();
+
             switch (ApplicationType)
             {
                 case ApplicationType.WindowsCui:
@@ -1494,25 +1674,25 @@ namespace GSF.ErrorManagement
                     actionText.AppendFormat("Close your browser, navigate back to the {0} website, and try repeating you last action. ", ApplicationName);
                     break;
             }
+
             actionText.Append("Try alternative methods of performing the same action. ");
 
             // Add information about the contact person if provided.
-            if (!string.IsNullOrEmpty(m_contactName) &&
-                (!string.IsNullOrEmpty(m_contactPhone) || !string.IsNullOrEmpty(m_contactPhone)))
+            if (!string.IsNullOrEmpty(m_contactName) && (!string.IsNullOrEmpty(m_contactPhone) || !string.IsNullOrEmpty(m_contactPhone)))
             {
                 actionText.AppendFormat("If you need immediate assistance, contact {0} ", m_contactName);
+
                 if (!string.IsNullOrEmpty(m_contactEmail))
                 {
                     actionText.AppendFormat("via email at {0}", m_contactEmail);
+
                     if (!string.IsNullOrEmpty(m_contactPhone))
-                    {
                         actionText.Append(" or ");
-                    }
                 }
+
                 if (!string.IsNullOrEmpty(m_contactPhone))
-                {
                     actionText.AppendFormat("via phone at {0}", m_contactPhone);
-                }
+
                 actionText.Append(".");
             }
 
@@ -1525,6 +1705,7 @@ namespace GSF.ErrorManagement
         private string GetMoreInfoText()
         {
             string bullet = string.Empty;
+
             switch (ApplicationType)
             {
                 case ApplicationType.WindowsCui:
@@ -1537,12 +1718,15 @@ namespace GSF.ErrorManagement
             }
 
             StringBuilder moreInfoText = new StringBuilder();
+
             moreInfoText.Append("The following information about the error was automatically captured:");
             moreInfoText.AppendLine();
             moreInfoText.AppendLine();
+
             if (m_logToScreenshot)
             {
                 moreInfoText.AppendFormat(" {0} ", bullet);
+
                 if (m_logToScreenshotOK)
                 {
                     moreInfoText.Append("a screenshot was taken of the desktop at:");
@@ -1554,66 +1738,44 @@ namespace GSF.ErrorManagement
                 {
                     moreInfoText.Append("a screenshot could NOT be taken of the desktop.");
                 }
+
                 moreInfoText.AppendLine();
             }
+
             if (m_logToEventLog)
             {
                 moreInfoText.AppendFormat(" {0} ", bullet);
-                if (m_logToEventLogOK)
-                {
-                    moreInfoText.Append("an event was written to the application log");
-                }
-                else
-                {
-                    moreInfoText.Append("an event could NOT be written to the application log");
-                }
+                moreInfoText.Append(m_logToEventLogOK ? "an event was written to the application log" : "an event could NOT be written to the application log");
                 moreInfoText.AppendLine();
             }
+
             if (m_logToFile)
             {
                 moreInfoText.AppendFormat(" {0} ", bullet);
-                if (m_logToFileOK)
-                {
-                    moreInfoText.Append("details were written to a text log at:");
-                }
-                else
-                {
-                    moreInfoText.Append("details could NOT be written to the text log at:");
-                }
+                moreInfoText.Append(m_logToFileOK ? "details were written to a text log at:" : "details could NOT be written to the text log at:");
                 moreInfoText.AppendLine();
                 moreInfoText.Append("   ");
                 moreInfoText.Append(m_errorLog.Name);
                 moreInfoText.AppendLine();
             }
+
             if (m_logToDatabase)
             {
                 moreInfoText.AppendFormat(" {0} ", bullet);
-                if (m_logToDatabaseOK)
-                {
-                    moreInfoText.Append("details were written to the database log");
-                }
-                else
-                {
-                    moreInfoText.Append("details could NOT be written to the database log");
-                }
+                moreInfoText.Append(m_logToDatabaseOK ? "details were queued to be written to the database log" : "details could NOT be queued to be written to the database log");
                 moreInfoText.AppendLine();
             }
+
             if (m_logToEmail)
             {
                 moreInfoText.AppendFormat(" {0} ", bullet);
-                if (m_logToEmailOK)
-                {
-                    moreInfoText.Append("an email has been sent to:");
-                }
-                else
-                {
-                    moreInfoText.Append("an email could NOT be sent to:");
-                }
+                moreInfoText.Append(m_logToEmailOK ? "an email has been sent to:" : "an email could NOT be sent to:");
                 moreInfoText.AppendLine();
                 moreInfoText.Append("   ");
                 moreInfoText.Append(m_contactEmail);
                 moreInfoText.AppendLine();
             }
+
             moreInfoText.AppendLine();
             moreInfoText.AppendLine();
             moreInfoText.Append("Detailed error information follows:");
@@ -1653,57 +1815,6 @@ namespace GSF.ErrorManagement
         // Static Methods
 
         /// <summary>
-        /// Deletes old <see cref="RestoreLogSize"/> record from database.
-        /// </summary>
-        /// <param name="dbConnection"><see cref="IDbConnection"/> to connection to database.</param>
-        private static void RestoreLogSize(IDbConnection dbConnection)
-        {
-            string query = string.Empty;
-            int minIDToDelete = 0;
-
-            try
-            {
-                while (Convert.ToInt32(dbConnection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM ErrorLog"))) >= DefaultExceptionLogSize)
-                {
-                    minIDToDelete = Convert.ToInt32(dbConnection.ExecuteScalar(string.Format("SELECT MIN(ID) FROM ErrorLog")));
-                    dbConnection.ExecuteNonQuery(string.Format("DELETE FROM ErrorLog WHERE ID = {0}", minIDToDelete));
-                }
-            }
-            catch
-            {
-                // Do nothing at this time.
-            }
-        }
-
-        /// <summary>
-        /// Logs information about an encountered exception to the backend datastore.
-        /// </summary>
-        /// <param name="source">Source of exception.</param>
-        /// <param name="message">Message section of the exception.</param>
-        /// <param name="detail">Detailed description of exception.</param>
-        /// <param name="type">Type of exception.</param>
-        public static void LogErrorToDatabase(String source, String message, String detail, String type)
-        {
-            try
-            {
-                string parameterizedQueryString;
-
-                using (AdoDataConnection dbConnection = new AdoDataConnection("systemSettings"))
-                {
-                    // Remove old entry for keeping table size limited to 2000.
-                    RestoreLogSize(dbConnection.Connection);
-
-                    parameterizedQueryString = dbConnection.ParameterizedQueryString("INSERT INTO ErrorLog (Source, Type, Message, Detail) VALUES ({0}, {1}, {2}, {3})", "source", "type", "message", "detail");
-                    dbConnection.Connection.ExecuteNonQuery(parameterizedQueryString, source, type, message, detail);
-                }
-            }
-            catch
-            {
-                // Do nothing, if exceptions are raised during error logging. 
-            }
-        }
-
-        /// <summary>
         /// Gets information about an <see cref="Exception"/> complete with system and application information.
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> whose information is to be retrieved.</param>
@@ -1712,6 +1823,7 @@ namespace GSF.ErrorManagement
         public static string GetExceptionInfo(Exception ex, bool includeUserInfo)
         {
             StringBuilder info = new StringBuilder();
+
             if ((object)ex.InnerException != null)
             {
                 // Sometimes the original exception is wrapped in a more relevant outer exception
@@ -1728,12 +1840,15 @@ namespace GSF.ErrorManagement
             // Get general system information.
             info.Append(GetSystemInfo(includeUserInfo));
             info.AppendLine();
+
             // Get general application information.
             info.Append(GetApplicationInfo());
             info.AppendLine();
+
             // Get general exception information.
             info.Append(GetExceptionGeneralInfo(ex));
             info.AppendLine();
+
             // Get the stack trace for the exception.
             info.Append("---- Stack Trace ----");
             info.AppendLine();
@@ -1751,18 +1866,22 @@ namespace GSF.ErrorManagement
         private static string GetSystemInfo(bool includeUserInfo)
         {
             StringBuilder info = new StringBuilder();
+
             info.AppendFormat("Date and Time:         {0}", DateTime.Now);
             info.AppendLine();
+
             switch (Common.GetApplicationType())
             {
                 case ApplicationType.WindowsCui:
                 case ApplicationType.WindowsGui:
+
                     info.AppendFormat("Machine Name:          {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0]);
                     info.AppendLine();
                     info.AppendFormat("Machine OS:            {0}", Environment.OSVersion.VersionString);
                     info.AppendLine();
+
                     if (includeUserInfo)
                     {
                         UserInfo currentUserInfo = UserInfo.CurrentUserInfo;
@@ -1775,6 +1894,7 @@ namespace GSF.ErrorManagement
                         info.AppendFormat("Current User Email:    {0}", currentUserInfo.Email);
                         info.AppendLine();
                     }
+
                     break;
                 case ApplicationType.Web:
 
@@ -1784,6 +1904,7 @@ namespace GSF.ErrorManagement
                     info.AppendLine();
                     info.AppendFormat("Server OS:             {0}", Environment.OSVersion.VersionString);
                     info.AppendLine();
+
                     if (includeUserInfo)
                     {
                         UserInfo remoteUserInfo = UserInfo.RemoteUserInfo;
@@ -1798,16 +1919,18 @@ namespace GSF.ErrorManagement
                         info.AppendFormat("Remote User Email:     {0}", remoteUserInfo.Email);
                         info.AppendLine();
                     }
+
                     info.AppendFormat("Remote Host:           {0}", HttpContext.Current.Request.ServerVariables["REMOTE_HOST"]);
                     info.AppendLine();
                     info.AppendFormat("Remote Address:        {0}", HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"]);
                     info.AppendLine();
                     info.AppendFormat("HTTP Agent:            {0}", HttpContext.Current.Request.ServerVariables["HTTP_USER_AGENT"]);
                     info.AppendLine();
-                    info.AppendFormat("HTTP Referer:          {0}", HttpContext.Current.Request.ServerVariables["HTTP_REFERER"]);
+                    info.AppendFormat("HTTP Referrer:         {0}", HttpContext.Current.Request.ServerVariables["HTTP_REFERER"]);
                     info.AppendLine();
                     info.AppendFormat("Web Page URL:          {0}", HttpContext.Current.Request.Url);
                     info.AppendLine();
+
                     break;
             }
 
@@ -1821,6 +1944,7 @@ namespace GSF.ErrorManagement
         private static string GetApplicationInfo()
         {
             Assembly parentAssembly = null;
+
             switch (Common.GetApplicationType())
             {
                 case ApplicationType.WindowsCui:
@@ -1838,6 +1962,7 @@ namespace GSF.ErrorManagement
 
             StringBuilder info = new StringBuilder();
             AssemblyInfo parentAssemblyInfo = new AssemblyInfo(parentAssembly);
+
             info.AppendFormat("Application Domain:    {0}", AppDomain.CurrentDomain.FriendlyName);
             info.AppendLine();
             info.AppendFormat("Assembly Codebase:     {0}", parentAssemblyInfo.CodeBase);
@@ -1862,12 +1987,14 @@ namespace GSF.ErrorManagement
         private static string GetExceptionGeneralInfo(Exception ex)
         {
             StringBuilder info = new StringBuilder();
+
             info.AppendFormat("Exception Source:      {0}", ex.Source);
             info.AppendLine();
             info.AppendFormat("Exception Type:        {0}", ex.GetType().FullName);
             info.AppendLine();
             info.AppendFormat("Exception Message:     {0}", ex.Message);
             info.AppendLine();
+
             if ((object)ex.TargetSite != null)
             {
                 info.AppendFormat("Exception Target Site: {0}", ex.TargetSite.Name);
@@ -1886,6 +2013,7 @@ namespace GSF.ErrorManagement
         {
             StringBuilder trace = new StringBuilder();
             StackTrace stack = new StackTrace(ex, true);
+
             for (int i = 0; i < stack.FrameCount; i++)
             {
                 StackFrame stackFrame = stack.GetFrame(i);
@@ -1893,20 +2021,23 @@ namespace GSF.ErrorManagement
                 string codeFileName = stackFrame.GetFileName();
 
                 // Build method name.
-                trace.AppendFormat("   {0}.{1}.{2}", method.DeclaringType.Namespace, method.DeclaringType.Name, method.Name);
+                if ((object)method.DeclaringType != null)
+                    trace.AppendFormat("   {0}.{1}.{2}", method.DeclaringType.Namespace, method.DeclaringType.Name, method.Name);
 
-                // Build method params.
+                // Build method parameters
                 trace.Append("(");
                 int parameterCount = 0;
+
                 foreach (ParameterInfo parameter in stackFrame.GetMethod().GetParameters())
                 {
                     parameterCount++;
+
                     if (parameterCount > 1)
-                    {
                         trace.Append(", ");
-                    }
+
                     trace.AppendFormat("{0} As {1}", parameter.Name, parameter.ParameterType.Name);
                 }
+
                 trace.Append(")");
                 trace.AppendLine();
 
@@ -1918,6 +2049,7 @@ namespace GSF.ErrorManagement
                     trace.Append(FilePath.GetFileName(codeFileName));
                     trace.AppendFormat(": Ln {0:#0000}", stackFrame.GetFileLineNumber());
                     trace.AppendFormat(", Col {0:#00}", stackFrame.GetFileColumnNumber());
+
                     // If IL is available, append IL location info.
                     if (stackFrame.GetILOffset() != StackFrame.OFFSET_UNKNOWN)
                     {
@@ -1927,14 +2059,12 @@ namespace GSF.ErrorManagement
                 else
                 {
                     ApplicationType appType = Common.GetApplicationType();
+
                     if (appType == ApplicationType.WindowsCui || appType == ApplicationType.WindowsGui)
-                    {
                         trace.Append(FilePath.GetFileName(Assembly.GetEntryAssembly().CodeBase));
-                    }
                     else
-                    {
                         trace.Append("(unknown file)");
-                    }
+
                     // Native code offset is always available.
                     trace.AppendFormat(": N {0:#00000}", stackFrame.GetNativeOffset());
                 }
