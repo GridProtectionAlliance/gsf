@@ -43,22 +43,25 @@ namespace PIAdapters
     {
         #region [ Members ]
 
+        // Constants
+        private const int QueryTimeSpan = 5;                        // Minutes of data to pull per query
+
         // Fields
-        private string m_userName;                                // username for PI connection string
-        private string m_password;                                // password for PI connection string
-        private string m_servername;                              // server name where PI connection should be established for connection string
-        private string m_tagFilter;                               // caching the string used to filter down to PI points that can be provided from this adapter
-        private PISDK.PISDK m_pisdk;                              // PI SDK object
-        private Server m_server;                                  // PI server from which this adapter connects to get data
-        private PointList m_points;                               // List of points this adapter queries from PI
-        private Dictionary<string, MeasurementKey> m_tagKeyMap;   // Provides quick look ups of openPDC keys by PI point tag
-        private List<IMeasurement> m_measurements;                // Queried measurements that are prepared to be published  
-        private int m_queryTimeSpan = 5;                          // Minutes of data to pull per query
-        private int m_processedMeasurements = 0;                  // Track number of measurements queried from PI for statistics
-        private DateTime m_publishTime = DateTime.MinValue;       // The timestamp that is currently being published
-        private DateTime m_queryTime = DateTime.MinValue;         // The timestamp that is currently being queried from PI
-        Thread m_dataThread;                                      // Thread to run queries
-        System.Timers.Timer m_publishTimer = null;                // Timer to publish data
+        private string m_userName;                                  // username for PI connection string
+        private string m_password;                                  // password for PI connection string
+        private string m_servername;                                // server name where PI connection should be established for connection string
+        private string m_tagFilter;                                 // caching the string used to filter down to PI points that can be provided from this adapter
+        private PISDK.PISDK m_pisdk;                                // PI SDK object
+        private Server m_server;                                    // PI server from which this adapter connects to get data
+        private PointList m_points;                                 // List of points this adapter queries from PI
+        private Dictionary<string, MeasurementKey> m_tagKeyMap;     // Provides quick look ups of openPDC keys by PI point tag
+        private List<IMeasurement> m_measurements;                  // Queried measurements that are prepared to be published  
+        private int m_processedMeasurements;                        // Track number of measurements queried from PI for statistics
+        private DateTime m_publishTime = DateTime.MinValue;         // The timestamp that is currently being published
+        private DateTime m_queryTime = DateTime.MinValue;           // The timestamp that is currently being queried from PI
+        private Thread m_dataThread;                                // Thread to run queries
+        private System.Timers.Timer m_publishTimer;                 // Timer to publish data
+        private bool m_disposed;
 
         #endregion
 
@@ -178,6 +181,54 @@ namespace PIAdapters
         #region [ Methods ]
 
         /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="PIPBInputAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        m_userName = null;
+                        m_password = null;
+                        m_servername = null;
+                        m_tagFilter = null;
+
+                        m_pisdk = null;
+                        m_server = null;
+                        m_points = null;
+                        m_tagKeyMap.Clear();
+                        m_tagKeyMap = null;
+                        m_measurements.Clear();
+                        m_measurements = null;
+
+                        if (m_dataThread != null)
+                        {
+                            m_dataThread.Abort();
+                            m_dataThread = null;
+                        }
+
+                        if (m_publishTimer != null)
+                        {
+                            m_publishTimer.Stop();
+                            m_publishTimer.Elapsed -= m_publishTimer_Tick;
+                            m_publishTimer.Dispose();
+                            m_publishTimer = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
+
+        /// <summary>
         /// Reads parameters from the connection string
         /// </summary>
         public override void Initialize()
@@ -187,20 +238,12 @@ namespace PIAdapters
             m_processedMeasurements = 0;
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
             if (!settings.TryGetValue("servername", out m_servername))
                 throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format server=myservername to the connection string.");
 
-            if (!settings.TryGetValue("username", out setting))
-                m_userName = setting;
-            else
-                m_userName = null;
-
-            if (!settings.TryGetValue("password", out setting))
-                m_password = setting;
-            else
-                m_password = null;
+            settings.TryGetValue("username", out m_userName);
+            settings.TryGetValue("password", out m_password);
 
             m_measurements = new List<IMeasurement>();
         }
@@ -279,7 +322,9 @@ namespace PIAdapters
                             where row["ID"].ToString().Split(':')[1] == key.ID.ToString() && row["PROTOCOL"].ToString() == "PI"
                             select new
                             {
-                                Key = key, AlternateTag = row["ALTERNATETAG"].ToString(), PointTag = row["POINTTAG"].ToString()
+                                Key = key,
+                                AlternateTag = row["ALTERNATETAG"].ToString(),
+                                PointTag = row["POINTTAG"].ToString()
                             };
 
                 StringBuilder whereClause = new StringBuilder();
@@ -369,7 +414,7 @@ namespace PIAdapters
             {
                 try
                 {
-                    DateTime endTime = currentTime.AddMinutes(m_queryTimeSpan);
+                    DateTime endTime = currentTime.AddMinutes(QueryTimeSpan);
 
                     List<IMeasurement> measToAdd = new List<IMeasurement>();
                     foreach (PIPoint point in m_points)
@@ -449,38 +494,6 @@ namespace PIAdapters
             catch (Exception ex)
             {
                 OnProcessException(ex);
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            m_userName = null;
-            m_password = null;
-            m_servername = null;
-            m_tagFilter = null;
-
-            m_pisdk = null;
-            m_server = null;
-            m_points = null;
-            m_tagKeyMap.Clear();
-            m_tagKeyMap = null;
-            m_measurements.Clear();
-            m_measurements = null;
-
-            if (m_dataThread != null)
-            {
-                m_dataThread.Abort();
-                m_dataThread = null;
-            }
-
-            if (m_publishTimer != null)
-            {
-                m_publishTimer.Stop();
-                m_publishTimer.Elapsed -= m_publishTimer_Tick;
-                m_publishTimer.Dispose();
-                m_publishTimer = null;
             }
         }
 

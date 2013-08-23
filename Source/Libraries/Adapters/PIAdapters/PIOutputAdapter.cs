@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using GSF;
 using GSF.TimeSeries;
@@ -54,12 +53,13 @@ namespace PIAdapters
         private Server m_server;                                             // PI server object for archiving data
         private ConcurrentDictionary<MeasurementKey, PIPoint> m_tagKeyMap;   // cache the mapping between openPDC measurements and PI points
         private int m_processedMeasurements;                                 // track the processed measurements
-        private object m_queuedMetadataRefreshPending;                       // sync object to prevent multiple metadata refreshes from occurring concurrently
-        private AutoResetEvent m_metadataRefreshComplete;                    // Auto reset event to flag when metadata refresh has completed
+        private readonly object m_queuedMetadataRefreshPending;              // sync object to prevent multiple metadata refreshes from occurring concurrently
+        private readonly AutoResetEvent m_metadataRefreshComplete;           // Auto reset event to flag when metadata refresh has completed
         private bool m_runMetadataSync;                                      // whether or not to automatically create/update PI points on the server
         private string m_piPointSource;                                      // Point source to set on PI points when automatically created by the adapter
         private string m_piPointClass;                                       // Point class to use for new PI points when automatically created by the adapter
         private bool m_bulkUpdate;                                           // flags whether the adapter will update each point in bulk or one update at a time
+        private bool m_disposed;
 
         #endregion
 
@@ -73,7 +73,6 @@ namespace PIAdapters
             m_connectTimeout = 30000;
             m_queuedMetadataRefreshPending = new object();
             m_metadataRefreshComplete = new AutoResetEvent(true);
-            //m_pi = new PISDK.PISDK();
             m_tagKeyMap = new ConcurrentDictionary<MeasurementKey, PIPoint>();
             m_processedMeasurements = 0;
             m_runMetadataSync = true;
@@ -238,6 +237,42 @@ namespace PIAdapters
         #region [ Methods ]
 
         /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="PIOutputAdapter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        m_pi = null;
+                        m_server = null;
+
+                        if (m_tagKeyMap != null)
+                        {
+                            m_tagKeyMap.Clear();
+                            m_tagKeyMap = null;
+                        }
+
+                        if ((object)m_metadataRefreshComplete != null)
+                        {
+                            m_metadataRefreshComplete.Set();
+                            m_metadataRefreshComplete.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
+
+        /// <summary>
         /// Initializes this <see cref="PIOutputAdapter"/>.
         /// </summary>
         public override void Initialize()
@@ -392,7 +427,6 @@ namespace PIAdapters
         {
             m_tagKeyMap.Clear();
             int mapped = 0;
-            StringBuilder filterstring = new StringBuilder();
 
             if (InputMeasurementKeys != null)
             {
@@ -405,16 +439,12 @@ namespace PIAdapters
                         if (!String.IsNullOrWhiteSpace(rows[0]["ALTERNATETAG"].ToString()))
                             tagname = rows[0]["ALTERNATETAG"].ToString();
 
-                        PointList points = null;
+                        PointList points;
 
                         // Two ways to find points here
                         // 1. if we are running metadata sync from the adapter, look for the signal ID in the exdesc field
                         // 2. if the pi points are being manually maintained, look for either the point tag or alternate tag in the actual pi point tag
-                        string filter = "";
-                        if (!m_runMetadataSync)
-                            filter = string.Format("TAG='{0}'", tagname);
-                        else
-                            filter = string.Format("EXDESC='{0}'", key.SignalID.ToString());
+                        string filter = !m_runMetadataSync ? string.Format("TAG='{0}'", tagname) : string.Format("EXDESC='{0}'", key.SignalID);
 
                         points = m_server.GetPoints(filter);
 
@@ -478,7 +508,7 @@ namespace PIAdapters
             }
         }
 
-        public void ExecuteMetadataRefresh(object state)
+        private void ExecuteMetadataRefresh(object state)
         {
             OnStatusMessage("Beginning metadata refresh...");
 
@@ -489,11 +519,10 @@ namespace PIAdapters
                 if (InputMeasurementKeys != null && InputMeasurementKeys.Any())
                 {
                     IPIPoints2 pts2 = (IPIPoints2)m_server.PIPoints;
-                    //NamedValues edits = new NamedValues();
-                    //PIErrors errors = new PIErrors();
                     PointList piPoints;
                     DataTable dtMeasurements = DataSource.Tables["ActiveMeasurements"];
                     DataRow[] rows;
+
                     foreach (MeasurementKey key in InputMeasurementKeys)
                     {
                         rows = dtMeasurements.Select(string.Format("SIGNALID='{0}'", key.SignalID));
@@ -501,31 +530,33 @@ namespace PIAdapters
                         if (rows.Any())
                         {
                             string tagname = rows[0]["POINTTAG"].ToString();
-                            if (!String.IsNullOrWhiteSpace(rows[0]["ALTERNATETAG"].ToString()))
+
+                            if (!string.IsNullOrWhiteSpace(rows[0]["ALTERNATETAG"].ToString()))
                                 tagname = rows[0]["ALTERNATETAG"].ToString();
 
-                            piPoints = m_server.GetPoints(string.Format("EXDESC='{0}'", rows[0]["SIGNALID"].ToString()));
+                            piPoints = m_server.GetPoints(string.Format("EXDESC='{0}'", rows[0]["SIGNALID"]));
 
                             if (piPoints.Count == 0)
                             {
-                                m_server.PIPoints.Add(rows[0]["POINTTAG"].ToString(), m_piPointClass, PointTypeConstants.pttypFloat32);
+                                m_server.PIPoints.Add(tagname, m_piPointClass, PointTypeConstants.pttypFloat32);
                             }
-                            else if (piPoints[1].Name != rows[0]["POINTTAG"].ToString())
+                            else if (piPoints[1].Name != tagname)
                             {
-                                pts2.Rename(piPoints[1].Name, rows[0]["POINTTAG"].ToString());
+                                pts2.Rename(piPoints[1].Name, tagname);
                             }
                             else
                             {
                                 foreach (PIPoint pt in piPoints)
                                 {
                                     if (pt.Name != rows[0]["POINTTAG"].ToString())
-                                        pts2.Rename(pt.Name, rows[0]["POINTTAG"].ToString());
+                                        pts2.Rename(pt.Name, tagname);
                                 }
                             }
 
-                            PIErrors errors = new PIErrors();
+                            PIErrors errors;
                             NamedValues edits = new NamedValues();
                             NamedValues edit = new NamedValues();
+
                             edit.Add("pointsource", m_piPointSource);
                             edit.Add("Descriptor", rows[0]["SIGNALREFERENCE"].ToString());
                             edit.Add("exdesc", rows[0]["SIGNALID"].ToString());
@@ -535,7 +566,7 @@ namespace PIAdapters
                                 edit.Add("engunits", rows[0]["ENGINEERINGUNITS"].ToString());
 
                             edits.Add(rows[0]["POINTTAG"].ToString(), edit);
-                            pts2.EditTags(edits, out errors, null);
+                            pts2.EditTags(edits, out errors);
 
                             if (errors.Count > 0)
                                 OnStatusMessage(errors[0].Description);
@@ -571,20 +602,6 @@ namespace PIAdapters
         public override string GetShortStatus(int maxLength)
         {
             return string.Format("Archived {0} measurements to PI.", m_processedMeasurements).CenterText(maxLength);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            m_pi = null;
-            m_server = null;
-
-            if (m_tagKeyMap != null)
-            {
-                m_tagKeyMap.Clear();
-                m_tagKeyMap = null;
-            }
         }
 
         #endregion
