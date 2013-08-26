@@ -113,7 +113,7 @@ namespace GSF.ServiceProcess
                 if (HostingEnvironment.ApplicationVirtualPath == "/")
                     m_clientName = HostingEnvironment.SiteName;
                 else
-                    m_clientName = HostingEnvironment.ApplicationVirtualPath.Trim('/');
+                    m_clientName = HostingEnvironment.ApplicationVirtualPath.ToNonNullString().Trim('/');
             }
             else
             {
@@ -130,8 +130,14 @@ namespace GSF.ServiceProcess
         /// </summary>
         public Guid ClientID
         {
-            get { return m_clientID; }
-            set { m_clientID = value; }
+            get
+            {
+                return m_clientID;
+            }
+            set
+            {
+                m_clientID = value;
+            }
         }
 
         /// <summary>
@@ -139,7 +145,10 @@ namespace GSF.ServiceProcess
         /// </summary>
         public ApplicationType ClientType
         {
-            get { return m_clientType; }
+            get
+            {
+                return m_clientType;
+            }
         }
 
         /// <summary>
@@ -147,7 +156,10 @@ namespace GSF.ServiceProcess
         /// </summary>
         public string ClientName
         {
-            get { return m_clientName; }
+            get
+            {
+                return m_clientName;
+            }
         }
 
         /// <summary>
@@ -155,7 +167,10 @@ namespace GSF.ServiceProcess
         /// </summary>
         public IPrincipal ClientUser
         {
-            get { return m_clientUser; }
+            get
+            {
+                return m_clientUser;
+            }
         }
 
         /// <summary>
@@ -163,7 +178,10 @@ namespace GSF.ServiceProcess
         /// </summary>
         public string ClientUserCredentials
         {
-            get { return m_clientUserCredentials; }
+            get
+            {
+                return m_clientUserCredentials;
+            }
         }
 
         /// <summary>
@@ -171,7 +189,10 @@ namespace GSF.ServiceProcess
         /// </summary>
         public string MachineName
         {
-            get { return m_machineName; }
+            get
+            {
+                return m_machineName;
+            }
         }
 
         /// <summary>
@@ -179,8 +200,14 @@ namespace GSF.ServiceProcess
         /// </summary>
         public DateTime ConnectedAt
         {
-            get { return m_connectedAt; }
-            set { m_connectedAt = value; }
+            get
+            {
+                return m_connectedAt;
+            }
+            set
+            {
+                m_connectedAt = value;
+            }
         }
 
         #endregion

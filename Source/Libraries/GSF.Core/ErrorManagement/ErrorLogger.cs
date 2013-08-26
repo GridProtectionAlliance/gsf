@@ -1806,30 +1806,6 @@ namespace GSF.ErrorManagement
 
             switch (Common.GetApplicationType())
             {
-                case ApplicationType.WindowsCui:
-                case ApplicationType.WindowsGui:
-
-                    info.AppendFormat("Machine Name:          {0}", Environment.MachineName);
-                    info.AppendLine();
-                    info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0]);
-                    info.AppendLine();
-                    info.AppendFormat("Machine OS:            {0}", Environment.OSVersion.VersionString);
-                    info.AppendLine();
-
-                    if (includeUserInfo)
-                    {
-                        UserInfo currentUserInfo = UserInfo.CurrentUserInfo;
-                        info.AppendFormat("Current User ID:       {0}", currentUserInfo.LoginID);
-                        info.AppendLine();
-                        info.AppendFormat("Current User Name:     {0}", currentUserInfo.FullName);
-                        info.AppendLine();
-                        info.AppendFormat("Current User Phone:    {0}", currentUserInfo.Telephone);
-                        info.AppendLine();
-                        info.AppendFormat("Current User Email:    {0}", currentUserInfo.Email);
-                        info.AppendLine();
-                    }
-
-                    break;
                 case ApplicationType.Web:
 
                     info.AppendFormat("Server Name:           {0}", Environment.MachineName);
@@ -1866,6 +1842,30 @@ namespace GSF.ErrorManagement
                     info.AppendLine();
 
                     break;
+
+                default:
+
+                    info.AppendFormat("Machine Name:          {0}", Environment.MachineName);
+                    info.AppendLine();
+                    info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0]);
+                    info.AppendLine();
+                    info.AppendFormat("Machine OS:            {0}", Environment.OSVersion.VersionString);
+                    info.AppendLine();
+
+                    if (includeUserInfo)
+                    {
+                        UserInfo currentUserInfo = UserInfo.CurrentUserInfo;
+                        info.AppendFormat("Current User ID:       {0}", currentUserInfo.LoginID);
+                        info.AppendLine();
+                        info.AppendFormat("Current User Name:     {0}", currentUserInfo.FullName);
+                        info.AppendLine();
+                        info.AppendFormat("Current User Phone:    {0}", currentUserInfo.Telephone);
+                        info.AppendLine();
+                        info.AppendFormat("Current User Email:    {0}", currentUserInfo.Email);
+                        info.AppendLine();
+                    }
+
+                    break;
             }
 
             return info.ToString();
@@ -1881,16 +1881,15 @@ namespace GSF.ErrorManagement
 
             switch (Common.GetApplicationType())
             {
-                case ApplicationType.WindowsCui:
-                case ApplicationType.WindowsGui:
-                    // For a windows application the entry assembly will be the executable.
-                    parentAssembly = Assembly.GetEntryAssembly();
-                    break;
                 case ApplicationType.Web:
                     // For a web site in .Net 2.0 we don't have an entry assembly. However, at this point the
                     // calling assembly will be consumer of this function (i.e. one of the web site DLLs).
                     // See: http://msdn.microsoft.com/msdnmag/issues/06/01/ExtremeASPNET/
                     parentAssembly = Assembly.GetCallingAssembly();
+                    break;
+                default:
+                    // For a windows application the entry assembly will be the executable.
+                    parentAssembly = Assembly.GetEntryAssembly();
                     break;
             }
 
@@ -1992,12 +1991,14 @@ namespace GSF.ErrorManagement
                 }
                 else
                 {
-                    ApplicationType appType = Common.GetApplicationType();
-
-                    if (appType == ApplicationType.WindowsCui || appType == ApplicationType.WindowsGui)
+                    try
+                    {
                         trace.Append(FilePath.GetFileName(Assembly.GetEntryAssembly().CodeBase));
-                    else
+                    }
+                    catch
+                    {
                         trace.Append("(unknown file)");
+                    }
 
                     // Native code offset is always available.
                     trace.AppendFormat(": N {0:#00000}", stackFrame.GetNativeOffset());

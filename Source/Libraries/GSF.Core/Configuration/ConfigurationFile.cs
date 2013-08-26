@@ -470,14 +470,13 @@ namespace GSF.Configuration
                     // yielded incorrect output resulting in the Configuration object not being initialized correctly.
                     switch (appType)
                     {
-                        case ApplicationType.WindowsCui:
-                        case ApplicationType.WindowsGui:
-                            configuration = ConfigurationManager.OpenExeConfiguration(TrimEnd(configFilePath, ".config").EnsureEnd(".exe"));
-                            break;
                         case ApplicationType.Web:
                             if (string.IsNullOrEmpty(configFilePath))
                                 configFilePath = HostingEnvironment.ApplicationVirtualPath;
                             configuration = WebConfigurationManager.OpenWebConfiguration(TrimEnd(configFilePath, "web.config"));
+                            break;
+                        default:
+                            configuration = ConfigurationManager.OpenExeConfiguration(TrimEnd(configFilePath, ".config").EnsureEnd(".exe"));
                             break;
                     }
                 }

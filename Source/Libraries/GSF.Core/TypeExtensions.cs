@@ -147,14 +147,13 @@ namespace GSF
                 switch (Common.GetApplicationType())
                 {
                     // The binaries directory is not specified.
-                    case ApplicationType.WindowsGui:
-                    case ApplicationType.WindowsCui:
-                        // Use application install directory for windows applications.
-                        binariesDirectory = FilePath.GetAbsolutePath("*.*");
-                        break;
                     case ApplicationType.Web:
                         // Use the bin directory for web applications.
                         binariesDirectory = FilePath.GetAbsolutePath("bin\\*.*");
+                        break;
+                    default:
+                        // Use application install directory for application.
+                        binariesDirectory = FilePath.GetAbsolutePath("*.*");
                         break;
                 }
             }
@@ -173,7 +172,7 @@ namespace GSF
                 {
                     // Load the assembly in the curent app domain.
                     asm = Assembly.LoadFrom(bin);
-                    
+
                     if (!validateReferences || asm.TryLoadAllReferences())
                     {
                         // Process only the public types in the assembly.

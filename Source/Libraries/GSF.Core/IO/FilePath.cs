@@ -59,8 +59,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web.Hosting;
 using GSF.Identity;
-using GSF.Interop;
 using GSF.Reflection;
+#if !MONO
+using GSF.Interop;
+#endif
 
 namespace GSF.IO
 {
@@ -92,11 +94,13 @@ namespace GSF.IO
 
         // Delegates
 
+#if !MONO
         [DllImport("mpr.dll", EntryPoint = "WNetAddConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int WNetAddConnection2(ref NETRESOURCE lpNetResource, string lpPassword, string lpUsername, int dwFlags);
 
         [DllImport("mpr.dll", EntryPoint = "WNetCancelConnection2W", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
         private static extern int WNetCancelConnection2(string lpName, int dwFlags, [MarshalAs(UnmanagedType.Bool)] bool fForce);
+#endif
 
         // Fields
 
@@ -320,7 +324,7 @@ namespace GSF.IO
             {
                 // Path wildcard pattern is used to specify the option to include subdirectories.
                 options = SearchOption.AllDirectories;
-                directory = directory.Remove(directory.LastIndexOf("*"));
+                directory = directory.Remove(directory.LastIndexOf("*", StringComparison.InvariantCultureIgnoreCase));
             }
 
             return Directory.GetFiles(directory, filePattern, options);
@@ -381,10 +385,8 @@ namespace GSF.IO
 
                 return filePath;
             }
-            else
-            {
-                throw new ArgumentNullException("filePath");
-            }
+
+            throw new ArgumentNullException("filePath");
         }
 
         /// <summary>
@@ -403,8 +405,7 @@ namespace GSF.IO
                     case ApplicationType.Web:
                         filePath = Path.Combine(HostingEnvironment.ApplicationPhysicalPath, filePath);
                         break;
-                    case ApplicationType.WindowsCui:
-                    case ApplicationType.WindowsGui:
+                    default:
                         filePath = Path.Combine(GetDirectoryName(AssemblyInfo.EntryAssembly.Location), filePath);
                         break;
                 }
@@ -430,38 +431,34 @@ namespace GSF.IO
         public static string GetApplicationDataFolder()
         {
             string rootFolder;
-            ApplicationType platform = Common.GetApplicationType();
-            if (platform == ApplicationType.Web)
-            {
-                // Treat web application special.
-                if (HostingEnvironment.ApplicationVirtualPath == "/")
-                    rootFolder = Path.Combine(Path.GetTempPath(), HostingEnvironment.SiteName);
-                else
-                    rootFolder = Path.Combine(Path.GetTempPath(), HostingEnvironment.ApplicationVirtualPath.Trim('/'));
 
-                // Create a user folder if ID is available.
-                string userID = UserInfo.RemoteUserID;
-                if (string.IsNullOrEmpty(userID))
-                {
+            switch (Common.GetApplicationType())
+            {
+                case ApplicationType.Web:
+                    // Treat web application special.
+                    if (HostingEnvironment.ApplicationVirtualPath == "/")
+                        rootFolder = Path.Combine(Path.GetTempPath(), HostingEnvironment.SiteName);
+                    else
+                        rootFolder = Path.Combine(Path.GetTempPath(), HostingEnvironment.ApplicationVirtualPath.ToNonNullString().Trim('/'));
+
+                    // Create a user folder if ID is available.
+                    string userID = UserInfo.RemoteUserID;
+
                     // ID is not available.
-                    return rootFolder;
-                }
-                else
-                {
+                    if (string.IsNullOrEmpty(userID))
+                        return rootFolder;
+
                     // Remove domain from ID.
                     if (!userID.Contains("\\"))
                         return Path.Combine(rootFolder, userID);
-                    else
-                        return Path.Combine(rootFolder, userID.Remove(0, userID.IndexOf('\\') + 1));
-                }
-            }
-            else
-            {
-                // Use entry assembly for everything else.
-                rootFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                if (string.IsNullOrEmpty(AssemblyInfo.EntryAssembly.Company))
-                    return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
-                else
+
+                    return Path.Combine(rootFolder, userID.Remove(0, userID.IndexOf('\\') + 1));
+                default:
+                    rootFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+                    if (string.IsNullOrEmpty(AssemblyInfo.EntryAssembly.Company))
+                        return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
+
                     return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Company + "\\" + AssemblyInfo.EntryAssembly.Name);
             }
         }
@@ -525,8 +522,8 @@ namespace GSF.IO
             // JRC: Changed this to the following more simple algorithm
             if (string.IsNullOrEmpty(filePath))
                 return "";
-            else
-                return filePath.Remove(0, Path.GetPathRoot(filePath).Length);
+
+            return filePath.Remove(0, Path.GetPathRoot(filePath).Length);
 
             #region [ Original Code ]
             //string result = filePath;
@@ -610,44 +607,33 @@ namespace GSF.IO
                         if (justExtension.Length > length - 8)
                             justExtension = justExtension.Substring(0, length - 8);
 
-                        double offset = (length - justExtension.Length - 3) / 2.0D;
+                        double offsetLen = (length - justExtension.Length - 3) / 2.0D;
 
-                        return trimName.Substring(0, (int)(Math.Ceiling(offset))) + "..." +
-                            trimName.Substring((int)Math.Round(trimName.Length - Math.Floor(offset) + 1.0D)) + justExtension;
+                        return trimName.Substring(0, (int)(Math.Ceiling(offsetLen))) + "..." +
+                            trimName.Substring((int)Math.Round(trimName.Length - Math.Floor(offsetLen) + 1.0D)) + justExtension;
                     }
-                    else
-                    {
-                        // We can not trim file names less than 8 with a "...", so we truncate long extension.
-                        return trimName + justExtension.Substring(0, length - trimName.Length);
-                    }
+
+                    // We can not trim file names less than 8 with a "...", so we truncate long extension.
+                    return trimName + justExtension.Substring(0, length - trimName.Length);
                 }
-                else if (justName.Length > length)
-                {
-                    // File name alone exceeds length. Recurses into function without path.
+
+                // File name alone exceeds length - recurses into function without path.
+                if (justName.Length > length)
                     return TrimFileName(justName, length);
-                }
-                else
-                {
-                    // File name contains path. Trims path before file name.
-                    string justFilePath = GetDirectoryName(fileName);
-                    int offset = length - justName.Length - 4;
 
-                    if (justFilePath.Length > offset && offset > 0)
-                    {
-                        return justFilePath.Substring(0, offset) + "...\\" + justName;
-                    }
-                    else
-                    {
-                        // Can not fit path. Trims file name.
-                        return TrimFileName(justName, length);
-                    }
-                }
+                // File name contains path. Trims path before file name.
+                string justFilePath = GetDirectoryName(fileName);
+                int offset = length - justName.Length - 4;
+
+                if (justFilePath.Length > offset && offset > 0)
+                    return justFilePath.Substring(0, offset) + "...\\" + justName;
+
+                // Can not fit path. Trims file name.
+                return TrimFileName(justName, length);
             }
-            else
-            {
-                // Full file name fits within requested length.
-                return fileName;
-            }
+
+            // Full file name fits within requested length.
+            return fileName;
         }
 
         /// <summary>
