@@ -23,7 +23,7 @@
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  11/27/2009 - Pinal C. Patel
-//       Fixed bug in the initialization of service contract name.
+//       Fixed issue in the initialization of service contract name.
 //  03/30/2010 - Pinal C. Patel
 //       Updated CanRead and CanWrite to not include Enabled in its evaluation.
 //  05/28/2010 - Pinal C. Patel
@@ -228,7 +228,7 @@ namespace GSF.ServiceModel
         protected SelfHostingService()
         {
             Type type = this.GetType();
-            m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.Split(',')[1].Trim();
+            m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.ToNonNullString().Split(',')[1].Trim();
             m_allowCrossDomainAccess = false;
             m_allowedDomainList = "*";
         }
@@ -513,7 +513,7 @@ namespace GSF.ServiceModel
         {
             // Regex matches:
             // [http | ftp][.<protocol>]://localhost[:<port>][/<path>]
-            string regex = @"(\w+\.*\w*\://)(?<host>\w+\:*\d*)";
+            const string regex = @"(\w+\.*\w*\://)(?<host>\w+\:*\d*)";
 
             // Look through all of the specified endpoints.
             foreach (string endpoint in m_endpoints.Split(';'))

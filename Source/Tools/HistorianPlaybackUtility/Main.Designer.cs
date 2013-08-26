@@ -175,7 +175,7 @@ namespace HistorianPlaybackUtility
             // 
             // InputSelectionContainer
             // 
-            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.InputSelectionContainer.Controls.Add(this.SearchPhraseClear);
             this.InputSelectionContainer.Controls.Add(this.SearchPhraseFind);
@@ -204,7 +204,6 @@ namespace HistorianPlaybackUtility
             this.SearchPhraseClear.Name = "SearchPhraseClear";
             this.SearchPhraseClear.Size = new System.Drawing.Size(32, 13);
             this.SearchPhraseClear.TabIndex = 4;
-            this.SearchPhraseClear.TabStop = true;
             this.SearchPhraseClear.Text = "Clear";
             this.SearchPhraseClear.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.SearchPhraseClear_LinkClicked);
             // 
@@ -216,7 +215,6 @@ namespace HistorianPlaybackUtility
             this.SearchPhraseFind.Name = "SearchPhraseFind";
             this.SearchPhraseFind.Size = new System.Drawing.Size(27, 13);
             this.SearchPhraseFind.TabIndex = 3;
-            this.SearchPhraseFind.TabStop = true;
             this.SearchPhraseFind.Text = "Find";
             this.SearchPhraseFind.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.SearchPhraseFind_LinkClicked);
             // 
@@ -228,7 +226,6 @@ namespace HistorianPlaybackUtility
             this.ArchiveLocationBrowse.Name = "ArchiveLocationBrowse";
             this.ArchiveLocationBrowse.Size = new System.Drawing.Size(42, 13);
             this.ArchiveLocationBrowse.TabIndex = 1;
-            this.ArchiveLocationBrowse.TabStop = true;
             this.ArchiveLocationBrowse.Text = "Browse";
             this.ArchiveLocationBrowse.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.ArchiveLocationBrowse_LinkClicked);
             // 
@@ -243,7 +240,7 @@ namespace HistorianPlaybackUtility
             // 
             // SearchPhraseInput
             // 
-            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchPhraseInput.Location = new System.Drawing.Point(6, 75);
             this.SearchPhraseInput.Name = "SearchPhraseInput";
@@ -265,7 +262,7 @@ namespace HistorianPlaybackUtility
             // 
             // ArchiveLocationInput
             // 
-            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ArchiveLocationInput.Location = new System.Drawing.Point(6, 33);
             this.ArchiveLocationInput.Name = "ArchiveLocationInput";
@@ -312,7 +309,7 @@ namespace HistorianPlaybackUtility
             // 
             // IDInput
             // 
-            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.IDInput.CheckOnClick = true;
             this.IDInput.FormattingEnabled = true;
@@ -324,7 +321,7 @@ namespace HistorianPlaybackUtility
             // 
             // OutputSelectionContainer
             // 
-            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputSelectionContainer.Controls.Add(this.OutputChannelTabs);
             this.OutputSelectionContainer.Controls.Add(this.ProcessingSpeedContainer);
@@ -341,7 +338,7 @@ namespace HistorianPlaybackUtility
             // 
             // OutputChannelTabs
             // 
-            this.OutputChannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.OutputChannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputChannelTabs.Controls.Add(this.TCPSettingsTab);
             this.OutputChannelTabs.Controls.Add(this.UDPSettingsTab);
@@ -702,7 +699,7 @@ namespace HistorianPlaybackUtility
             // 
             // OutputFormatContainer
             // 
-            this.OutputFormatContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.OutputFormatContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputFormatContainer.Controls.Add(this.OutputPlainTextDataFormat);
             this.OutputFormatContainer.Controls.Add(this.OutputPlainTextData);
@@ -714,7 +711,7 @@ namespace HistorianPlaybackUtility
             // 
             // OutputPlainTextDataFormat
             // 
-            this.OutputPlainTextDataFormat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.OutputPlainTextDataFormat.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputPlainTextDataFormat.Location = new System.Drawing.Point(21, 40);
             this.OutputPlainTextDataFormat.Name = "OutputPlainTextDataFormat";
@@ -758,8 +755,8 @@ namespace HistorianPlaybackUtility
             // 
             // MessagesContainer
             // 
-            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.MessagesContainer.Controls.Add(this.MessagesOutput);
             this.MessagesContainer.Location = new System.Drawing.Point(12, 3);

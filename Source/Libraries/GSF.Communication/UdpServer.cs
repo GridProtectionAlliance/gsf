@@ -51,6 +51,8 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
+using GSF.IO;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -61,8 +63,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.Configuration;
-using GSF.IO;
 
 namespace GSF.Communication
 {
@@ -902,7 +902,7 @@ namespace GSF.Communication
             UdpClientInfo clientInfo = null;
             TransportProvider<EndPoint> client = null;
             SocketAsyncEventArgs args;
-            ManualResetEventSlim handle;
+            //ManualResetEventSlim handle;
             int copyLength;
 
             try
@@ -910,7 +910,7 @@ namespace GSF.Communication
                 clientInfo = payload.ClientInfo;
                 client = clientInfo.Client;
                 args = clientInfo.SendArgs;
-                handle = payload.WaitHandle;
+                //handle = payload.WaitHandle;
                 args.UserToken = payload;
 
                 // Copy payload into send buffer.

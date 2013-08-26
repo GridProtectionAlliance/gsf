@@ -23,6 +23,12 @@
 //
 //******************************************************************************************************
 
+using GSF.Console;
+using GSF.Identity;
+using GSF.Net.Security;
+using GSF.Reflection;
+using GSF.Security;
+using GSF.ServiceProcess;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -33,12 +39,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using GSF.Console;
-using GSF.Identity;
-using GSF.Net.Security;
-using GSF.Reflection;
-using GSF.Security;
-using GSF.ServiceProcess;
 
 namespace GSF.TimeSeries
 {
@@ -320,13 +320,15 @@ namespace GSF.TimeSeries
             if (m_innerLoopActive)
             {
                 m_remotingClient.Enabled = false;
+#if !MONO
                 IntPtr hWnd = Process.GetCurrentProcess().MainWindowHandle;
                 NativeMethods.PostMessage(hWnd, WM_KEYDOWN, VK_RETURN, 0);
                 Thread.Sleep(500);
+#endif
             }
 
-            // Capture the username.
-            System.Console.Write("Enter username: ");
+            // Capture the user name.
+            System.Console.Write("Enter user name: ");
             username = System.Console.ReadLine();
 
             // Capture the password.
@@ -342,7 +344,7 @@ namespace GSF.TimeSeries
             userInfo.Initialize();
             m_remotingClient.NetworkCredential = new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString());
 
-            // Set the username on the client helper.
+            // Set the user name on the client helper.
             m_clientHelper.Username = username;
             m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
 

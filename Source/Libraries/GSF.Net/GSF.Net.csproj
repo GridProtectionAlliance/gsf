@@ -35,6 +35,16 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\Build\Output\Release\Libraries\GSF.Net.XML</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
+    <OutputPath>..\..\..\Build\Output\Mono\Libraries\</OutputPath>
+    <DefineConstants>TRACE;MONO</DefineConstants>
+    <DocumentationFile>..\..\..\Build\Output\Mono\Libraries\GSF.Net.XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />

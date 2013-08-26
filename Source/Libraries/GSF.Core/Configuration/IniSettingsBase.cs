@@ -33,7 +33,6 @@ using GSF.Interop;
 
 namespace GSF.Configuration
 {
-#if !MONO
     /// <summary>
     /// Represents the base class for application settings that are synchronized to an INI file.
     /// </summary>
@@ -319,5 +318,4 @@ namespace GSF.Configuration
 
         #endregion
     }
-#endif
 }

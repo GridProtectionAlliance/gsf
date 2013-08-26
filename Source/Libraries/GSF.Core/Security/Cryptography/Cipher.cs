@@ -43,7 +43,7 @@
 //       Modified key and initialization vector cache to be able to operate in a non-elevated mode.
 //  04/06/2011 - J. Ritchie Carroll
 //       Added FlushCache() method to wait for pending key/IV cache serializations for applications
-//       with a short lifecycle.
+//       with a short life-cycle.
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization and deserialization methods in GSF.Serialization class.
 //  06/10/2011 - Pinal C. Patel
@@ -63,16 +63,16 @@
 //
 //******************************************************************************************************
 
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.IO;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
-using GSF.Collections;
-using GSF.Configuration;
-using GSF.IO;
-using Microsoft.Win32;
 
 namespace GSF.Security.Cryptography
 {
@@ -141,7 +141,7 @@ namespace GSF.Security.Cryptography
             /// <summary>
             /// Gets a copy of the internal key and initialization vector table.
             /// </summary>
-            public Dictionary<string, byte[][]> KeyIVTable
+            private Dictionary<string, byte[][]> KeyIVTable
             {
                 get
                 {
@@ -357,7 +357,7 @@ namespace GSF.Security.Cryptography
                     serializedKeyIVTable = Serialization.Serialize(m_keyIVTable, SerializationFormat.Binary);
                 }
 
-                // File data is the serialized Key/IV cache, assigmnent will initiate auto-save if needed
+                // File data is the serialized Key/IV cache, assignment will initiate auto-save if needed
                 FileData = serializedKeyIVTable;
             }
 
@@ -430,12 +430,13 @@ namespace GSF.Security.Cryptography
         /// </summary>
         static Cipher()
         {
+            const string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
+            const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FIPSAlgorithmPolicy";
+
             KeyIVCache localKeyIVCache;
             string localCacheFileName = DefaultCacheFileName;
             double retryDelayInterval = DefaultRetryDelayInterval;
             int maximumRetryAttempts = DefaultMaximumRetryAttempts;
-            string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
-            string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FIPSAlgorithmPolicy";
 
             // Load cryptographic settings
             ConfigurationFile config = ConfigurationFile.Current;
@@ -454,7 +455,7 @@ namespace GSF.Security.Cryptography
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
             localKeyIVCache = new KeyIVCache
-                {
+            {
                 FileName = localCacheFileName,
                 RetryDelayInterval = retryDelayInterval,
                 MaximumRetryAttempts = maximumRetryAttempts,
@@ -462,9 +463,9 @@ namespace GSF.Security.Cryptography
 #if DNF45
                 ReloadOnChange = true,
 #else
-                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                    // automatic runtime reloading of key/iv data cached by another application.
-                    ReloadOnChange = false,
+                // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
+                // automatic runtime reloading of key/iv data cached by another application.
+                ReloadOnChange = false,
 #endif
                 AutoSave = false
             };
@@ -475,7 +476,18 @@ namespace GSF.Security.Cryptography
             try
             {
                 // Validate that user has write access to the local cryptographic cache folder
+#if MONO
+                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid().ToString() + ".tmp";
+
+                using (File.Create(tempFile))
+                {
+                }
+
+                if (File.Exists(tempFile))
+                    File.Delete(tempFile);
+#else
                 System.Security.AccessControl.DirectorySecurity ds = Directory.GetAccessControl(FilePath.GetDirectoryName(localCacheFileName));
+#endif
 
                 // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
                 s_keyIVCache = localKeyIVCache;
@@ -497,7 +509,7 @@ namespace GSF.Security.Cryptography
 
                 // Initialize primary cryptographic key and initialization vector cache within user folder
                 s_keyIVCache = new KeyIVCache
-                    {
+                {
                     FileName = userCacheFileName,
                     RetryDelayInterval = retryDelayInterval,
                     MaximumRetryAttempts = maximumRetryAttempts,
@@ -514,7 +526,7 @@ namespace GSF.Security.Cryptography
                 // Load initial keys
                 s_keyIVCache.Load();
 
-                // Merge new or updated keys, protected folder keys taking precendence over user keys
+                // Merge new or updated keys, protected folder keys taking precedence over user keys
                 s_keyIVCache.MergeRight(localKeyIVCache);
             }
         }
@@ -581,18 +593,18 @@ namespace GSF.Security.Cryptography
                 // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
                 commonKeyIVCache = new KeyIVCache
                     {
-                    FileName = commonCacheFileName,
-                    RetryDelayInterval = retryDelayInterval,
-                    MaximumRetryAttempts = maximumRetryAttempts,
-                    ManagedEncryption = s_managedEncryption,
-                    ReloadOnChange = false,
-                    AutoSave = false
-                };
+                        FileName = commonCacheFileName,
+                        RetryDelayInterval = retryDelayInterval,
+                        MaximumRetryAttempts = maximumRetryAttempts,
+                        ManagedEncryption = s_managedEncryption,
+                        ReloadOnChange = false,
+                        AutoSave = false
+                    };
 
                 // Load initial keys
                 commonKeyIVCache.Load();
 
-                // Merge new or updated keys, common cache folder keys taking precendence
+                // Merge new or updated keys, common cache folder keys taking precedence
                 s_keyIVCache.MergeRight(commonKeyIVCache);
             }
         }
@@ -835,7 +847,7 @@ namespace GSF.Security.Cryptography
                 outBuffer = inBuffer.BlockCopy(0, read).Encrypt(key, iv, strength);
 
                 // The destination encryption stream length does not have to be same as the input stream length, so we
-                // prepend the final size of each encrypted buffer onto the destination ouput stream so that we can
+                // prepend the final size of each encrypted buffer onto the destination output stream so that we can
                 // safely decrypt the stream in a "chunked" fashion later.
                 lengthBuffer = BitConverter.GetBytes(outBuffer.Length);
                 destination.Write(lengthBuffer, 0, lengthBuffer.Length);
@@ -1032,7 +1044,7 @@ namespace GSF.Security.Cryptography
 
             // When the source stream was encrypted, it was known that the encrypted stream length did not have to be same as
             // the input stream length. We prepended the final size of the each encrypted buffer onto the destination
-            // ouput stream (now the input stream to this function), so that we could safely decrypt the stream in a
+            // output stream (now the input stream to this function), so that we could safely decrypt the stream in a
             // "chunked" fashion, hence the following:
 
             // Reads the size of the next buffer from the stream.

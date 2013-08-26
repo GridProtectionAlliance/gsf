@@ -100,22 +100,25 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
+using GSF.IO;
+using Microsoft.Win32;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.DirectoryServices;
 using System.IO;
-using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
-using GSF.Configuration;
+
+#if !MONO
 using GSF.Interop;
-using GSF.IO;
-using Microsoft.Win32;
+using System.Collections;
+using System.Management;
+#endif
 
 namespace GSF.Identity
 {
@@ -1673,8 +1676,11 @@ namespace GSF.Identity
         /// </example>
         public static WindowsImpersonationContext ImpersonateUser(string domain, string username, string password)
         {
+#if MONO
+            return null;
+#else
             WindowsImpersonationContext impersonatedUser;
-#if !MONO
+
             IntPtr userTokenHandle = IntPtr.Zero;
             IntPtr duplicateTokenHandle = IntPtr.Zero;
 
@@ -1700,8 +1706,8 @@ namespace GSF.Identity
                     WindowsApi.CloseHandle(duplicateTokenHandle);
             }
 
-#endif
             return impersonatedUser;
+#endif
         }
 
         /// <summary>
@@ -1823,6 +1829,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not create local user.</exception>
         public static bool CreateLocalUser(string userName, string password, string userDescription = null)
         {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
             if ((object)userName == null)
                 throw new ArgumentNullException("userName");
 
@@ -1870,6 +1879,7 @@ namespace GSF.Identity
             }
 
             return false;
+#endif
         }
 
         /// <summary>
@@ -1882,6 +1892,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not change password for local user.</exception>
         public static void SetLocalUserPassword(string userName, string password)
         {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
             if ((object)userName == null)
                 throw new ArgumentNullException("userName");
 
@@ -1922,6 +1935,7 @@ namespace GSF.Identity
                         userEntry.Dispose();
                 }
             }
+#endif
         }
 
         /// <summary>
@@ -2015,6 +2029,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not create local group.</exception>
         public static bool CreateLocalGroup(string groupName, string groupDescription = null)
         {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
             if ((object)groupName == null)
                 throw new ArgumentNullException("groupName");
 
@@ -2058,6 +2075,7 @@ namespace GSF.Identity
             }
 
             return false;
+#endif
         }
 
         /// <summary>
@@ -2122,6 +2140,9 @@ namespace GSF.Identity
         /// </remarks>
         public static bool UserIsInLocalGroup(string groupName, string userName)
         {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
             if ((object)groupName == null)
                 throw new ArgumentNullException("groupName");
 
@@ -2194,6 +2215,7 @@ namespace GSF.Identity
             }
 
             return false;
+#endif
         }
 
         /// <summary>
@@ -2211,6 +2233,9 @@ namespace GSF.Identity
         /// </remarks>
         public static bool AddUserToLocalGroup(string groupName, string userName)
         {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
             if ((object)groupName == null)
                 throw new ArgumentNullException("groupName");
 
@@ -2286,6 +2311,7 @@ namespace GSF.Identity
                         userEntry.Dispose();
                 }
             }
+#endif
         }
 
         /// <summary>
@@ -2303,6 +2329,9 @@ namespace GSF.Identity
         /// </remarks>
         public static bool RemoveUserFromLocalGroup(string groupName, string userName)
         {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
             if ((object)groupName == null)
                 throw new ArgumentNullException("groupName");
 
@@ -2379,6 +2408,7 @@ namespace GSF.Identity
             }
 
             return false;
+#endif
         }
 
         #endregion

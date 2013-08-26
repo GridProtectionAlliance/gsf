@@ -47,19 +47,21 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
-using GSF.Configuration;
+#if !MONO
+using System.Net.Security;
+using System.Security.Authentication;
+#endif
 
 namespace GSF.Communication
 {
@@ -323,7 +325,12 @@ namespace GSF.Communication
             }
             set
             {
+#if MONO
+                if (value)
+                    throw new NotImplementedException("Not supported under Mono.");
+#else
                 m_integratedSecurity = value;
+#endif
             }
         }
 
@@ -575,6 +582,11 @@ namespace GSF.Communication
                 // Overwrite config file if integrated security exists in connection string.
                 if (m_configData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
                     m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
+
+#if MONO
+                // Force integrated security to be False under Mono since it's not supported
+                m_integratedSecurity = false;
+#endif
 
                 // Overwrite config file if max client connections exists in connection string.
                 if (m_configData.ContainsKey("maxClientConnections") && int.TryParse(m_configData["maxClientConnections"], out maxClientConnections))
@@ -886,7 +898,7 @@ namespace GSF.Communication
                 {
                     // We can proceed further with receiving data from the client.
                     clientInfo = new TcpClientInfo
-                        {
+                    {
                         Client = client,
                         SendArgs = FastObjectFactory<SocketAsyncEventArgs>.CreateObjectFunction(),
                         SendLock = new SpinLock(),
@@ -942,7 +954,7 @@ namespace GSF.Communication
             TcpClientInfo clientInfo = null;
             TransportProvider<Socket> client = null;
             SocketAsyncEventArgs args;
-            ManualResetEventSlim handle;
+            //ManualResetEventSlim handle;
             int copyLength;
 
             try
@@ -951,7 +963,7 @@ namespace GSF.Communication
                 client = clientInfo.Client;
                 args = clientInfo.SendArgs;
                 args.UserToken = payload;
-                handle = payload.WaitHandle;
+                //handle = payload.WaitHandle;
 
                 // Copy payload into send buffer.
                 copyLength = Math.Min(payload.Length, client.SendBufferSize);

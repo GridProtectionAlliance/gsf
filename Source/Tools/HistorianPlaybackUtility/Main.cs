@@ -25,7 +25,7 @@
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
 //  12/12/2010 - Pinal C. Patel
-//       Fixed a bug that was preventing all of the exported data from being written to output file.
+//       Fixed a issue that was preventing all of the exported data from being written to output file.
 //  11/08/2011 - J. Ritchie Carroll
 //       Added enhanced export formatting and time-sorted outputs.
 //  12/18/2011 - J. Ritchie Carroll
@@ -38,16 +38,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Windows.Forms;
 using GSF;
 using GSF.Communication;
 using GSF.Configuration;
@@ -58,6 +48,16 @@ using GSF.IO;
 using GSF.Parsing;
 using GSF.Reflection;
 using GSF.Windows.Forms;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.IO.Ports;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace HistorianPlaybackUtility
 {
@@ -132,7 +132,7 @@ namespace HistorianPlaybackUtility
             }
             else
             {
-                // No serial ports where found on this machineso the option for serial output will be removed
+                // No serial ports where found on this machine so the option for serial output will be removed
                 OutputChannelTabs.TabPages.Remove(SerialSettingsTab);
             }
 
@@ -235,10 +235,10 @@ namespace HistorianPlaybackUtility
 
                         this.BeginInvoke((ThreadStart)delegate
                             {
-                            StopProcessing.Visible = false;
-                            StartProcessing.Visible = true;
-                            SplitContainerTop.Enabled = true;
-                        });
+                                StopProcessing.Visible = false;
+                                StartProcessing.Visible = true;
+                                SplitContainerTop.Enabled = true;
+                            });
                     }
                 }
             }
@@ -283,7 +283,7 @@ namespace HistorianPlaybackUtility
                     IEnumerable<IDataPoint> data = m_archiveReader.ReadData(historianIDs, startTime, endTime);
 
                     int count = 0;
-                    byte[] buffer = null;
+                    byte[] buffer;
 
                     if (string.IsNullOrEmpty(dataFormat))
                     {
@@ -363,10 +363,10 @@ namespace HistorianPlaybackUtility
 
                         this.BeginInvoke((ThreadStart)delegate
                             {
-                            StopProcessing.Visible = false;
-                            StartProcessing.Visible = true;
-                            SplitContainerTop.Enabled = true;
-                        });
+                                StopProcessing.Visible = false;
+                                StartProcessing.Visible = true;
+                                SplitContainerTop.Enabled = true;
+                            });
                     }
                 }
             }
@@ -378,15 +378,15 @@ namespace HistorianPlaybackUtility
             {
                 this.Invoke((ThreadStart)delegate
                     {
-                    StringBuilder outputText = new StringBuilder();
+                        StringBuilder outputText = new StringBuilder();
 
-                    outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
-                    outputText.AppendFormat(message, args);
-                    outputText.Append("\r\n");
+                        outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
+                        outputText.AppendFormat(message, args);
+                        outputText.Append("\r\n");
 
-                    MessagesOutput.AppendText(outputText.ToString());
-                    Application.DoEvents();
-                });
+                        MessagesOutput.AppendText(outputText.ToString());
+                        Application.DoEvents();
+                    });
             }
         }
 
@@ -395,7 +395,6 @@ namespace HistorianPlaybackUtility
             bool valid = false;
             try
             {
-                byte[] buffer = null;
                 object[] args = new object[OutputPlainTextDataFormat.Text.Split('{').Where(value => !string.IsNullOrWhiteSpace(value)).Select(value => int.Parse(value.Split(':')[0])).Max() + 1];
                 ArchiveDataPoint sample = new ArchiveDataPoint(1);
 
@@ -404,7 +403,7 @@ namespace HistorianPlaybackUtility
                     args[i] = sample;
                 }
 
-                buffer = Encoding.ASCII.GetBytes(string.Format(OutputPlainTextDataFormat.Text, args));
+                Encoding.ASCII.GetBytes(string.Format(OutputPlainTextDataFormat.Text, args));
 
                 valid = true;
             }
@@ -549,8 +548,8 @@ namespace HistorianPlaybackUtility
             try
             {
                 // Search for points matching the search criteria.
-                int pointID = -1;
-                Metadata definition = null;
+                int pointID;
+                Metadata definition;
                 string searchPhrase = SearchPhraseInput.Text.ToLower();
                 int.TryParse(searchPhrase, out pointID);
 
@@ -651,65 +650,73 @@ namespace HistorianPlaybackUtility
                     case 2: // File
                         m_transmitClient = ClientBase.Create(string.Format("Protocol=File;File={0}", FileNameInput.Text));
                         if (!AppendToExisting.Checked)
-                            (m_transmitClient as FileClient).FileOpenMode = FileMode.Create;
+                        {
+                            FileClient client = m_transmitClient as FileClient;
+
+                            if ((object)client != null)
+                                client.FileOpenMode = FileMode.Create;
+                        }
                         break;
                     case 3: // Serial
                         m_transmitClient = ClientBase.Create(string.Format("Protocol=Serial;Port={0};BaudRate={1};Parity={2};StopBits={3};DataBits={4};DtrEnable={5};RtsEnable={6}", SerialPortInput.Text, SerialBaudRateInput.Text, SerialParityInput.Text, SerialStopBitsInput.Text, SerialDataBitsInput.Text, SerialDtrEnable.Checked, SerialRtsEnable.Checked));
                         break;
                 }
 
-                m_transmitClient.MaxConnectionAttempts = 10;
-                m_transmitClient.SendDataStart += m_transmitClient_SendDataStart;
-                m_transmitClient.SendDataComplete += m_transmitClient_SendDataComplete;
-                m_transmitClient.SendDataException += m_transmitClient_SendDataException;
-
-                ShowUpdateMessage("Client initialized.");
-
-                // Connect the newly created client.
-                ShowUpdateMessage("Connecting client...");
-
-                m_transmitClient.Connect();
-
-                if (m_transmitClient.CurrentState == ClientState.Connected)
+                if ((object)m_transmitClient != null)
                 {
-                    // Client connected successfully.
-                    ShowUpdateMessage("Client connected.");
+                    m_transmitClient.MaxConnectionAttempts = 10;
+                    m_transmitClient.SendDataStart += m_transmitClient_SendDataStart;
+                    m_transmitClient.SendDataComplete += m_transmitClient_SendDataComplete;
+                    m_transmitClient.SendDataException += m_transmitClient_SendDataException;
 
-                    // Queue all selected points for processing.
-                    StringBuilder selection = new StringBuilder();
-                    Metadata definition = null;
+                    ShowUpdateMessage("Client initialized.");
 
-                    for (int i = 0; i < IDInput.CheckedItems.Count; i++)
+                    // Connect the newly created client.
+                    ShowUpdateMessage("Connecting client...");
+
+                    m_transmitClient.Connect();
+
+                    if (m_transmitClient.CurrentState == ClientState.Connected)
                     {
-                        if (selection.Length > 0)
-                            selection.Append(',');
+                        // Client connected successfully.
+                        ShowUpdateMessage("Client connected.");
 
-                        definition = (Metadata)IDInput.CheckedItems[i];
-                        selection.Append(definition.PointID);
-                        metadata.Add(definition.PointID, definition);
-                    }
+                        // Queue all selected points for processing.
+                        StringBuilder selection = new StringBuilder();
+                        Metadata definition;
 
-                    state[0] = selection.ToString();
+                        for (int i = 0; i < IDInput.CheckedItems.Count; i++)
+                        {
+                            if (selection.Length > 0)
+                                selection.Append(',');
 
-                    if (ProcessDataInParallel.Checked)
-                    {
-                        ThreadPool.QueueUserWorkItem(Process, state.ToArray());
+                            definition = (Metadata)IDInput.CheckedItems[i];
+                            selection.Append(definition.PointID);
+                            metadata.Add(definition.PointID, definition);
+                        }
+
+                        state[0] = selection.ToString();
+
+                        if (ProcessDataInParallel.Checked)
+                        {
+                            ThreadPool.QueueUserWorkItem(Process, state.ToArray());
+                        }
+                        else
+                        {
+                            ThreadPool.QueueUserWorkItem(ProcessSequential, state.ToArray());
+                        }
+
+                        ConfigurationFile.Current.Settings.General["Selection", true].Value = selection.ToString();
+                        ConfigurationFile.Current.Save();
+
+                        StopProcessing.Visible = true;
+                        StartProcessing.Visible = false;
+                        SplitContainerTop.Enabled = false;
                     }
                     else
                     {
-                        ThreadPool.QueueUserWorkItem(ProcessSequential, state.ToArray());
+                        ShowUpdateMessage("Connection timeout.");
                     }
-
-                    ConfigurationFile.Current.Settings.General["Selection", true].Value = selection.ToString();
-                    ConfigurationFile.Current.Save();
-
-                    StopProcessing.Visible = true;
-                    StartProcessing.Visible = false;
-                    SplitContainerTop.Enabled = false;
-                }
-                else
-                {
-                    ShowUpdateMessage("Connection timeout.");
                 }
             }
             catch (Exception ex)

@@ -28,13 +28,15 @@
 //******************************************************************************************************
 
 using System;
+using System.ServiceModel;
+using System.ServiceModel.Activation;
+#if !MONO
 using System.Collections.Generic;
 using System.IdentityModel.Policy;
 using System.Net;
-using System.ServiceModel;
-using System.ServiceModel.Activation;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
+#endif
 
 namespace GSF.ServiceModel.Activation
 {
@@ -90,9 +92,9 @@ namespace GSF.ServiceModel.Activation
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether service metadata is to be published.
+        /// Gets or sets a boolean value that indicates whether service meta-data is to be published.
         /// </summary>
-        public bool PublishMetadata 
+        public bool PublishMetadata
         {
             get
             {
@@ -107,7 +109,7 @@ namespace GSF.ServiceModel.Activation
         /// <summary>
         /// Gets or sets a boolean value that indicates whether security on the service is to be disabled. 
         /// </summary>
-        public bool DisableSecurity 
+        public bool DisableSecurity
         {
             get
             {
@@ -131,21 +133,26 @@ namespace GSF.ServiceModel.Activation
         /// <returns>New <see cref="ServiceHost"/>.</returns>
         protected override ServiceHost CreateServiceHost(Type serviceType, Uri[] baseAddresses)
         {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
             // Check security requirement.
             bool integratedSecurity = (Service.GetAuthenticationSchemes(baseAddresses[0]) & AuthenticationSchemes.Anonymous) != AuthenticationSchemes.Anonymous;
 
             // Create service host.
             ServiceHost host = base.CreateServiceHost(serviceType, baseAddresses);
 
-            // Enable metadata publishing.
+            // Enable meta-data publishing.
             if (m_publishMetadata)
             {
                 ServiceMetadataBehavior metadataBehavior = host.Description.Behaviors.Find<ServiceMetadataBehavior>();
+
                 if (metadataBehavior == null)
                 {
                     metadataBehavior = new ServiceMetadataBehavior();
                     host.Description.Behaviors.Add(metadataBehavior);
                 }
+
                 metadataBehavior.HttpGetEnabled = true;
             }
 
@@ -153,19 +160,22 @@ namespace GSF.ServiceModel.Activation
             if (!m_disableSecurity)
             {
                 ServiceAuthorizationBehavior authorizationBehavior = host.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
+
                 if (authorizationBehavior == null)
                 {
                     authorizationBehavior = new ServiceAuthorizationBehavior();
                     host.Description.Behaviors.Add(authorizationBehavior);
                 }
+
                 authorizationBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
                 List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
                 policies.Add((IAuthorizationPolicy)Activator.CreateInstance(typeof(SecurityPolicy)));
                 authorizationBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
             }
 
-            // Create endpoint and configure security.
+            // Create endpoint and configure security. (Not supported on Mono)
             host.AddDefaultEndpoints();
+
             if (string.IsNullOrEmpty(m_protocol))
             {
                 // Use the default endpoint.
@@ -183,7 +193,7 @@ namespace GSF.ServiceModel.Activation
                         }
                         else
                         {
-                            // Disable sercurity.
+                            // Disable security.
                             basicBinding.Security.Mode = BasicHttpSecurityMode.None;
                             basicBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
                         }
@@ -198,6 +208,7 @@ namespace GSF.ServiceModel.Activation
                 Binding serviceBinding;
                 ServiceEndpoint serviceEndpoint;
                 serviceBinding = Service.CreateServiceBinding(ref m_protocol, integratedSecurity);
+
                 if (serviceBinding != null)
                 {
                     // Binding created for the endpoint.
@@ -211,14 +222,17 @@ namespace GSF.ServiceModel.Activation
                     if (serviceBinding is WebHttpBinding)
                     {
                         WebHttpBehavior restBehavior = new WebHttpBehavior();
-                        restBehavior.HelpEnabled = m_publishMetadata;
-
+                        //#if !MONO
+                        if (m_publishMetadata)
+                            restBehavior.HelpEnabled = true;
+                        //#endif
                         serviceEndpoint.Behaviors.Add(restBehavior);
                     }
                 }
             }
 
             return host;
+#endif
         }
 
         #endregion

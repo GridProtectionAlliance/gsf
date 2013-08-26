@@ -35,38 +35,47 @@
 //       Excluded class from Mono deployments due to P/Invoke requirements.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  08/25/2013 - J. Ritchie Carroll
+//       Made INI file work for both Mono and Windows based implementations.
 //
 //******************************************************************************************************
 
 using System;
+#if MONO
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+#else
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+#endif
 
-// TODO: Convert code to a pure C# implementation so that it's compatible with Mono
-// This is currently excluded from Mono builds since it uses P/Invoke calls to the native Win32 INI parsers,
-// however, there are serveral open source C# INI parsers that might be able to used instead, such as the
-// following: http://code.google.com/p/ini-parser/ or http://www.codeproject.com/KB/recipes/INI_Files.aspx.
-// Make sure to also unexclude GSF.Configuration.IniSettingsBase.cs once converted.
 namespace GSF.Interop
 {
-#if !MONO
     /// <summary>
     /// Represents a Windows INI style configuration file.
     /// </summary>
     public class IniFile
     {
-    #region [ Members ]
+        #region [ Members ]
 
         // Constants
+#if !MONO
         private const int BufferSize = 32768;
+#endif
 
         // Fields
         private string m_fileName;
 
+#if MONO
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> m_iniData;
+#endif
+
         #endregion
 
-    #region [ Constructors ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Creates a new <see cref="IniFile"/>.
@@ -84,11 +93,16 @@ namespace GSF.Interop
         public IniFile(string fileName)
         {
             m_fileName = fileName;
+
+#if MONO
+            m_iniData = new ConcurrentDictionary<string, ConcurrentDictionary<string, string>>(StringComparer.CurrentCultureIgnoreCase);
+            Load();
+#endif
         }
 
         #endregion
 
-    #region [ Properties ]
+        #region [ Properties ]
 
         /// <summary>
         /// File name of the INI file.
@@ -102,6 +116,9 @@ namespace GSF.Interop
             set
             {
                 m_fileName = value;
+#if MONO
+                Load();
+#endif
             }
         }
 
@@ -117,7 +134,10 @@ namespace GSF.Interop
         {
             get
             {
-                const int BufferSize = 4096;
+#if MONO
+                ConcurrentDictionary<string, string> iniSection = m_iniData.GetOrAdd(section, CreateNewSection);
+                return iniSection.GetOrAdd(entry, defaultValue);
+#else
                 StringBuilder buffer = new StringBuilder(BufferSize);
 
                 if ((object)defaultValue == null)
@@ -126,6 +146,7 @@ namespace GSF.Interop
                 GetPrivateProfileString(section, entry, defaultValue, buffer, BufferSize, m_fileName);
 
                 return RemoveComments(buffer.ToString());
+#endif
             }
         }
 
@@ -145,13 +166,19 @@ namespace GSF.Interop
             }
             set
             {
+#if MONO
+                ConcurrentDictionary<string, string> iniSection = m_iniData.GetOrAdd(section, CreateNewSection);
+                iniSection[entry] = value;
+                Save();
+#else
                 WritePrivateProfileString(section, entry, value, m_fileName);
+#endif
             }
         }
 
         #endregion
 
-    #region [ Methods ]
+        #region [ Methods ]
 
         /// <summary>
         /// Gets the value of the specified key.
@@ -194,6 +221,14 @@ namespace GSF.Interop
         /// <returns>Array of <see cref="string"/> keys from the specified section of the INI file.</returns>
         public string[] GetSectionKeys(string section)
         {
+#if MONO
+            ConcurrentDictionary<string, string> sectionEntries;
+
+            if (m_iniData.TryGetValue(section, out sectionEntries))
+                return sectionEntries.Keys.ToArray();
+
+            return new string[0];
+#else
             List<string> keys = new List<string>();
             byte[] buffer = new byte[BufferSize];
             int startIndex = 0;
@@ -221,6 +256,7 @@ namespace GSF.Interop
             }
 
             return keys.ToArray();
+#endif
         }
 
         /// <summary>
@@ -229,6 +265,9 @@ namespace GSF.Interop
         /// <returns>Array of <see cref="string"/> section names from the INI file.</returns>
         public string[] GetSectionNames()
         {
+#if MONO
+            return m_iniData.Keys.ToArray();
+#else
             List<string> sections = new List<string>();
             byte[] buffer = new byte[BufferSize];
             int startIndex = 0;
@@ -256,12 +295,94 @@ namespace GSF.Interop
             }
 
             return sections.ToArray();
+#endif
         }
+
+#if MONO
+        private void Load()
+        {
+            m_iniData.Clear();
+
+            if (!File.Exists(m_fileName))
+                return;
+
+            using (StreamReader reader = new StreamReader(m_fileName))
+            {
+                string line = reader.ReadLine();
+                ConcurrentDictionary<string, string> section = null;
+
+                while ((object)line != null)
+                {
+                    line = RemoveComments(line);
+
+                    if (line.Length > 0)
+                    {
+                        // Check for new section				
+                        int startBracketIndex = line.IndexOf('[');
+
+                        if (startBracketIndex == 0)
+                        {
+                            int endBracketIndex = line.IndexOf(']');
+
+                            if (endBracketIndex > 1)
+                            {
+                                string sectionName = line.Substring(startBracketIndex + 1, endBracketIndex - 1);
+
+                                if (!string.IsNullOrEmpty(sectionName))
+                                    section = m_iniData.GetOrAdd(sectionName, CreateNewSection);
+                            }
+                        }
+
+                        if ((object)section == null)
+                            throw new InvalidOperationException("INI file did not begin with a [section]");
+
+                        // Check for key/value pair
+                        int equalsIndex = line.IndexOf("=");
+
+                        if (equalsIndex > 0)
+                        {
+                            string key = line.Substring(0, equalsIndex).Trim();
+
+                            if (!string.IsNullOrEmpty(key))
+                                section[key] = line.Substring(equalsIndex + 1).Trim();
+                        }
+                    }
+
+                    line = reader.ReadLine();
+                }
+            }
+        }
+
+        private void Save()
+        {
+            // Saving INI file will strip comments - sorry :-(
+            using (StreamWriter writer = new StreamWriter(m_fileName))
+            {
+                foreach (KeyValuePair<string, ConcurrentDictionary<string, string>> section in m_iniData)
+                {
+                    writer.WriteLine("[{0}]", section.Key);
+
+                    foreach (KeyValuePair<string, string> entry in section.Value)
+                    {
+                        writer.WriteLine("{0} = {1}", entry.Key, entry.Value);
+                    }
+
+                    writer.WriteLine();
+                }
+            }
+        }
+
+        private ConcurrentDictionary<string, string> CreateNewSection(string sectionName)
+        {
+            return new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        }
+#endif
 
         #endregion
 
-    #region [ Static ]
+        #region [ Static ]
 
+#if !MONO
         // Static Methods
         [DllImport("kernel32", EntryPoint = "GetPrivateProfileString", BestFitMapping = false)]
         private static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
@@ -274,6 +395,7 @@ namespace GSF.Interop
 
         [DllImport("kernel32", EntryPoint = "GetPrivateProfileSectionNames", BestFitMapping = false)]
         private static extern int GetPrivateProfileSectionNames(byte[] lpszReturnBuffer, int nSize, string lpFileName);
+#endif
 
         // Remove any comments from key value string
         private static string RemoveComments(string keyValue)
@@ -291,5 +413,4 @@ namespace GSF.Interop
 
         #endregion
     }
-#endif
 }

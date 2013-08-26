@@ -59,7 +59,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\Build\Output\Release\Libraries\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;DNF45</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\Build\Output\Release\Libraries\GSF.Core.xml</DocumentationFile>
@@ -70,7 +70,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\Build\Output\Mono\Libraries\</OutputPath>
-    <DefineConstants>TRACE;MONO</DefineConstants>
+    <DefineConstants>TRACE;MONO;DNF45</DefineConstants>
     <DocumentationFile>..\..\..\Build\Output\Mono\Libraries\GSF.Core.xml</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>

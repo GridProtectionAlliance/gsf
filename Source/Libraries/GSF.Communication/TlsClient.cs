@@ -23,6 +23,9 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
+using GSF.IO;
+using GSF.Net.Security;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -36,9 +39,6 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.Configuration;
-using GSF.IO;
-using GSF.Net.Security;
 
 namespace GSF.Communication
 {
@@ -239,7 +239,12 @@ namespace GSF.Communication
             }
             set
             {
+#if MONO
+                if (value)
+                    throw new NotImplementedException("Not supported under Mono.");
+#else
                 m_integratedSecurity = value;
+#endif
             }
         }
 
@@ -701,6 +706,11 @@ namespace GSF.Communication
                         if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
                             m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
+#if MONO
+                        // Force integrated security to be False under Mono since it's not supported
+                        m_integratedSecurity = false;
+#endif
+
                         // Create client socket to establish presence
                         Socket socket = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
                         Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
@@ -806,7 +816,7 @@ namespace GSF.Communication
         {
             TlsClientPayload payload;
             TlsClientPayload dequeuedPayload;
-            ManualResetEventSlim handle = null;
+            ManualResetEventSlim handle;
             bool lockTaken = false;
 
             try
@@ -971,8 +981,6 @@ namespace GSF.Communication
         /// </summary>
         private void ProcessTlsAuthentication(IAsyncResult asyncResult)
         {
-            NegotiateStream negotiateStream;
-
             try
             {
                 // Finish authentication.
@@ -989,8 +997,10 @@ namespace GSF.Communication
 
                 if (m_integratedSecurity)
                 {
-                    negotiateStream = new NegotiateStream(m_sslClient.Provider, true);
+#if !MONO
+                    NegotiateStream negotiateStream = new NegotiateStream(m_sslClient.Provider, true);
                     negotiateStream.BeginAuthenticateAsClient(m_networkCredential ?? (NetworkCredential)CredentialCache.DefaultCredentials, string.Empty, ProcessIntegratedSecurityAuthentication, negotiateStream);
+#endif
                 }
                 else
                 {
@@ -1035,6 +1045,7 @@ namespace GSF.Communication
             }
         }
 
+#if !MONO
         private void ProcessIntegratedSecurityAuthentication(IAsyncResult asyncResult)
         {
             NegotiateStream negotiateStream = (NegotiateStream)asyncResult.AsyncState;
@@ -1095,6 +1106,7 @@ namespace GSF.Communication
                 negotiateStream.Dispose();
             }
         }
+#endif
 
         /// <summary>
         /// Sends a payload on the socket.
@@ -1154,32 +1166,35 @@ namespace GSF.Communication
             {
                 try
                 {
-                    payload.WaitHandle = null;
-
-                    // Return payload and wait handle to their respective object pools.
-                    ReusableObjectPool<TlsClientPayload>.Default.ReturnObject(payload);
-                    ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
-
-                    // Begin sending next client payload.
-                    if (m_sendQueue.TryDequeue(out payload))
+                    if ((object)payload != null)
                     {
-                        ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
-                    }
-                    else
-                    {
-                        try
+                        payload.WaitHandle = null;
+
+                        // Return payload and wait handle to their respective object pools.
+                        ReusableObjectPool<TlsClientPayload>.Default.ReturnObject(payload);
+                        ReusableObjectPool<ManualResetEventSlim>.Default.ReturnObject(handle);
+
+                        // Begin sending next client payload.
+                        if (m_sendQueue.TryDequeue(out payload))
                         {
-                            m_sendLock.Enter(ref lockTaken);
-
-                            if (m_sendQueue.TryDequeue(out payload))
-                                ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
-                            else
-                                Interlocked.Exchange(ref m_sending, 0);
+                            ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
                         }
-                        finally
+                        else
                         {
-                            if (lockTaken)
-                                m_sendLock.Exit();
+                            try
+                            {
+                                m_sendLock.Enter(ref lockTaken);
+
+                                if (m_sendQueue.TryDequeue(out payload))
+                                    ThreadPool.QueueUserWorkItem(state => SendPayload((TlsClientPayload)state), payload);
+                                else
+                                    Interlocked.Exchange(ref m_sending, 0);
+                            }
+                            finally
+                            {
+                                if (lockTaken)
+                                    m_sendLock.Exit();
+                            }
                         }
                     }
                 }
@@ -1209,7 +1224,7 @@ namespace GSF.Communication
             }
             else
             {
-                // Payload boundares are not to be preserved.
+                // Payload boundaries are not to be preserved.
                 m_sslClient.SetReceiveBuffer(ReceiveBufferSize);
                 ReceivePayloadUnawareAsync();
             }

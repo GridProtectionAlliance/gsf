@@ -380,6 +380,17 @@
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\..\..\Build\Output\Mono\Libraries\</OutputPath>
+    <RemoveIntegerChecks>true</RemoveIntegerChecks>
+    <DocumentationFile>..\..\..\Build\Output\Mono\Libraries\GSF.PhasorProtocols.xml</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>TVA.PhasorProtocols.ruleset</CodeAnalysisRuleSet>
+    <DefineConstants>MONO</DefineConstants>
+  </PropertyGroup>
   <Import Project="$(MSBuildBinPath)/Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

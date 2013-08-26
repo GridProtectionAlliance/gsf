@@ -54,18 +54,20 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.Configuration;
+#if !MONO
+using System.Net.Security;
+using System.Security.Authentication;
+#endif
 
 namespace GSF.Communication
 {
@@ -323,7 +325,12 @@ namespace GSF.Communication
             }
             set
             {
+#if MONO
+                if (value)
+                    throw new NotImplementedException("Not supported under Mono.");
+#else
                 m_integratedSecurity = value;
+#endif
             }
         }
 
@@ -605,6 +612,11 @@ namespace GSF.Communication
                         // Overwrite config file if integrated security exists in connection string
                         if (m_connectData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
                             m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
+
+#if MONO
+                        // Force integrated security to be False under Mono since it's not supported
+                        m_integratedSecurity = false;
+#endif
 
                         // Create client socket to establish presence
                         if (m_tcpClient.Provider == null)

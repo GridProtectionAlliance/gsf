@@ -43,13 +43,13 @@
 //
 //******************************************************************************************************
 
+using GSF.Reflection;
 using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web.Hosting;
-using GSF.Reflection;
 
 namespace GSF
 {
@@ -202,7 +202,7 @@ namespace GSF
         /// <returns>One of the <see cref="ApplicationType"/> values.</returns>
         public static ApplicationType GetApplicationType()
         {
-            if ((object)s_applicationType != null)
+            if (s_applicationType.HasValue)
                 return s_applicationType.Value;
 
             if ((object)HostingEnvironment.ApplicationVirtualPath != null)
@@ -256,7 +256,7 @@ namespace GSF
         /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
         public static string ToNonNullString<T>(this T value) where T : class
         {
-            return ((object)value == null || value == DBNull.Value ? "" : value.ToString());
+            return ((object)value == null || value is DBNull ? "" : value.ToString());
         }
 
         /// <summary>
@@ -272,7 +272,7 @@ namespace GSF
             if ((object)nonNullValue == null)
                 throw new ArgumentNullException("nonNullValue");
 
-            return ((object)value == null || value == DBNull.Value ? nonNullValue : value.ToString());
+            return ((object)value == null || value is DBNull ? nonNullValue : value.ToString());
         }
 
         // We handle strings as a special version of the ToNullNullString extension to handle documentation a little differently
@@ -300,7 +300,7 @@ namespace GSF
             if (string.IsNullOrEmpty(nonNullNorEmptyValue))
                 throw new ArgumentException("Must not be null or an empty string", "nonNullNorEmptyValue");
 
-            if ((object)value == null || value == DBNull.Value)
+            if ((object)value == null || value is DBNull)
                 return nonNullNorEmptyValue;
 
             string valueAsString = value.ToString();
@@ -321,7 +321,7 @@ namespace GSF
             if (string.IsNullOrWhiteSpace(nonNullNorWhiteSpaceValue))
                 throw new ArgumentException("Must not be null, an empty string or white space", "nonNullNorWhiteSpaceValue");
 
-            if ((object)value == null || value == DBNull.Value)
+            if ((object)value == null || value is DBNull)
                 return nonNullNorWhiteSpaceValue;
 
             string valueAsString = value.ToString();
@@ -406,7 +406,7 @@ namespace GSF
         /// <param name="item">Object to evaluate.</param>
         /// <returns>Result of evaluation as a <see cref="bool"/>.</returns>
         /// <remarks>
-        /// Native types default to zero, not null, therefore this can be used to evaulate if an item is its default (i.e., uninitialized) value.
+        /// Native types default to zero, not null, therefore this can be used to evaluate if an item is its default (i.e., uninitialized) value.
         /// </remarks>
         public static bool IsDefaultValue(object item)
         {
@@ -469,7 +469,7 @@ namespace GSF
                 return ((ValueType)item).Equals(Activator.CreateInstance(itemType));
             }
 
-            return ((object)item == null);
+            return false;
         }
 
         /// <summary>Determines if given item is a reference type.</summary>

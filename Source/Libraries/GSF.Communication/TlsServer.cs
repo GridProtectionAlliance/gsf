@@ -23,6 +23,9 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
+using GSF.IO;
+using GSF.Net.Security;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -36,9 +39,10 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Threading;
-using GSF.Configuration;
-using GSF.IO;
-using GSF.Net.Security;
+
+#if MONO
+#pragma warning disable 649
+#endif
 
 namespace GSF.Communication
 {
@@ -271,7 +275,12 @@ namespace GSF.Communication
             }
             set
             {
+#if MONO
+                if (value)
+                    throw new NotImplementedException("Not supported under Mono.");
+#else
                 m_integratedSecurity = value;
+#endif
             }
         }
 
@@ -724,6 +733,11 @@ namespace GSF.Communication
                 if (m_configData.TryGetValue("integratedSecurity", out integratedSecuritySetting))
                     m_integratedSecurity = integratedSecuritySetting.ParseBoolean();
 
+#if MONO
+                // Force integrated security to be False under Mono since it's not supported
+                m_integratedSecurity = false;
+#endif
+
                 // Bind server socket to local end-point and listen.
                 m_tlsServer = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp, m_ipStack, m_allowDualStackSocket);
                 m_tlsServer.Listen(1);
@@ -995,7 +1009,6 @@ namespace GSF.Communication
             TransportProvider<TlsSocket> client = (TransportProvider<TlsSocket>)asyncResult.AsyncState;
             IPEndPoint remoteEndPoint = client.Provider.Socket.RemoteEndPoint as IPEndPoint;
             SslStream stream = client.Provider.SslStream;
-            NegotiateStream negotiateStream;
 
             try
             {
@@ -1009,11 +1022,13 @@ namespace GSF.Communication
                     if (!stream.IsEncrypted)
                         throw new InvalidOperationException("Unable to encrypt data stream.");
                 }
-                
+
                 if (m_integratedSecurity)
                 {
-                    negotiateStream = new NegotiateStream(stream, true);
+#if !MONO
+                    NegotiateStream negotiateStream = new NegotiateStream(stream, true);
                     negotiateStream.BeginAuthenticateAsServer(ProcessIntegratedSecurityAuthentication, Tuple.Create(client, negotiateStream));
+#endif
                 }
                 else
                 {
@@ -1032,13 +1047,17 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Notify of the exception.
-                string clientAddress = remoteEndPoint.Address.ToString();
-                string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, CertificateChecker.ReasonForFailure ?? ex.Message);
-                OnClientConnectingException(new Exception(errorMessage, ex));
+                if ((object)remoteEndPoint != null)
+                {
+                    string clientAddress = remoteEndPoint.Address.ToString();
+                    string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, CertificateChecker.ReasonForFailure ?? ex.Message);
+                    OnClientConnectingException(new Exception(errorMessage, ex));
+                }
                 TerminateConnection(client, false);
             }
         }
 
+#if !MONO
         private void ProcessIntegratedSecurityAuthentication(IAsyncResult asyncResult)
         {
             Tuple<TransportProvider<TlsSocket>, NegotiateStream> state = (Tuple<TransportProvider<TlsSocket>, NegotiateStream>)asyncResult.AsyncState;
@@ -1077,9 +1096,12 @@ namespace GSF.Communication
             catch (Exception ex)
             {
                 // Notify of the exception.
-                string clientAddress = remoteEndPoint.Address.ToString();
-                string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, ex.Message);
-                OnClientConnectingException(new Exception(errorMessage, ex));
+                if ((object)remoteEndPoint != null)
+                {
+                    string clientAddress = remoteEndPoint.Address.ToString();
+                    string errorMessage = string.Format("Unable to authenticate connection to client [{0}]: {1}", clientAddress, ex.Message);
+                    OnClientConnectingException(new Exception(errorMessage, ex));
+                }
                 TerminateConnection(client, false);
             }
             finally
@@ -1087,6 +1109,7 @@ namespace GSF.Communication
                 negotiateStream.Dispose();
             }
         }
+#endif
 
         /// <summary>
         /// Asynchronous loop sends payloads on the socket.
@@ -1095,7 +1118,7 @@ namespace GSF.Communication
         {
             TlsClientInfo clientInfo = null;
             TransportProvider<TlsSocket> client = null;
-            ManualResetEventSlim handle;
+            //ManualResetEventSlim handle;
             byte[] data;
             int offset;
             int length;
@@ -1104,7 +1127,7 @@ namespace GSF.Communication
             {
                 clientInfo = payload.ClientInfo;
                 client = clientInfo.Client;
-                handle = payload.WaitHandle;
+                //handle = payload.WaitHandle;
                 data = payload.Data;
                 offset = payload.Offset;
                 length = payload.Length;

@@ -21,14 +21,14 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
 using GSF.Collections;
 using GSF.IO;
 using GSF.Security.Cryptography;
 using GSF.Threading;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
 
 namespace GSF.Security
 {
@@ -307,7 +307,7 @@ namespace GSF.Security
 
             // Initialize local user role cache (application may only have read-only access to this cache)
             localUserRoleCache = new UserRoleCache
-                {
+            {
                 FileName = localCacheFileName,
 #if DNF45
                 ReloadOnChange = true,
@@ -355,7 +355,7 @@ namespace GSF.Security
 
                 // Initialize primary cryptographic key and initialization vector cache within user folder
                 currentCache = new UserRoleCache
-                    {
+                {
                     FileName = userCacheFileName,
 #if DNF45
                     ReloadOnChange = true,
