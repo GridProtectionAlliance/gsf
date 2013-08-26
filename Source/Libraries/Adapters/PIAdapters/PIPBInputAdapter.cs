@@ -54,7 +54,7 @@ namespace PIAdapters
         private PISDK.PISDK m_pisdk;                                // PI SDK object
         private Server m_server;                                    // PI server from which this adapter connects to get data
         private PointList m_points;                                 // List of points this adapter queries from PI
-        private Dictionary<string, MeasurementKey> m_tagKeyMap;     // Provides quick look ups of openPDC keys by PI point tag
+        private Dictionary<string, MeasurementKey> m_tagKeyMap;     // Provides quick look ups of GSFSchema keys by PI point tag
         private List<IMeasurement> m_measurements;                  // Queried measurements that are prepared to be published  
         private int m_processedMeasurements;                        // Track number of measurements queried from PI for statistics
         private DateTime m_publishTime = DateTime.MinValue;         // The timestamp that is currently being published
@@ -249,7 +249,7 @@ namespace PIAdapters
         }
 
         /// <summary>
-        /// Returns a 1-line status for openPDC console
+        /// Returns a 1-line status for time-series host console
         /// </summary>
         /// <param name="maxLength">Maximum number of characters in the status</param>
         /// <returns>status message</returns>

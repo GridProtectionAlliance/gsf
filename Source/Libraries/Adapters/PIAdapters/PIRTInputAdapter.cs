@@ -38,7 +38,7 @@ using PISDK;
 namespace PIAdapters
 {
     /// <summary>
-    /// Uses PI event pipes to deliver real-time PI data to openPDC
+    /// Uses PI event pipes to deliver real-time PI data to GSF host
     /// </summary>
     [Description("PI : Reads real-time measurements from a PI server using PI SDK.")]
     public class PIRTInputAdapter : InputAdapterBase
@@ -49,7 +49,7 @@ namespace PIAdapters
         private readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0);  // Date used to calculated delta on timestamps from PI
 
         // Fields
-        private ConcurrentDictionary<string, MeasurementKey> m_tagKeyMap;     // Map PI tagnames to openPDC measurement keys
+        private ConcurrentDictionary<string, MeasurementKey> m_tagKeyMap;     // Map PI tagnames to GSFSchema measurement keys
         private string m_userName;                                            // Username for PI connection string
         private string m_password;                                            // Password for PI connection string
         private string m_servername;                                          // Server for PI connection string
@@ -389,7 +389,12 @@ namespace PIAdapters
             var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                         from key in Keys
                         where row["ID"].ToString().Split(':')[1] == key.ID.ToString()
-                        select new { Key = key, AlternateTag = row["ALTERNATETAG"].ToString(), PointTag = row["POINTTAG"].ToString() };
+                        select new
+                        {
+                            Key = key,
+                            AlternateTag = row["ALTERNATETAG"].ToString(),
+                            PointTag = row["POINTTAG"].ToString()
+                        };
 
             StringBuilder tagFilter = new StringBuilder();
             foreach (var row in query)
@@ -423,7 +428,10 @@ namespace PIAdapters
                     m_pipe = m_points.Data.EventPipe;
                     ((_DEventPipeEvents_Event)m_pipe).OnNewValue += (PISDK._DEventPipeEvents_OnNewValueEventHandler)PipeOnOnNewValue;
                 }
-                catch (ThreadAbortException) { throw; }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
                     useEventPipes = false; // try to run with polling instead of event pipes;

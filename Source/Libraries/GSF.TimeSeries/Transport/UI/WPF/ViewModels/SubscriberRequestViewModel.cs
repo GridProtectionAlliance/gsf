@@ -704,8 +704,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         {
             string companyAcronym;
 
-            // Try to populate defaults for subscriber acronym and name
-            // using company information from the openPDC configuration file
+            // Try to populate defaults for subscriber acronym and name using company information from the host application configuration file
             if (TryGetCompanyAcronym(out companyAcronym))
             {
                 SubscriberAcronym = companyAcronym;

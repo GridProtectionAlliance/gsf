@@ -51,7 +51,7 @@ namespace PIAdapters
         private int m_connectTimeout;                                        // PI connection timeout
         private PISDK.PISDK m_pi;                                            // PI SDK object
         private Server m_server;                                             // PI server object for archiving data
-        private ConcurrentDictionary<MeasurementKey, PIPoint> m_tagKeyMap;   // cache the mapping between openPDC measurements and PI points
+        private ConcurrentDictionary<MeasurementKey, PIPoint> m_tagKeyMap;   // cache the mapping between GSFSchema measurements and PI points
         private int m_processedMeasurements;                                 // track the processed measurements
         private readonly object m_queuedMetadataRefreshPending;              // sync object to prevent multiple metadata refreshes from occurring concurrently
         private readonly AutoResetEvent m_metadataRefreshComplete;           // Auto reset event to flag when metadata refresh has completed
@@ -421,7 +421,7 @@ namespace PIAdapters
         }
 
         /// <summary>
-        /// Resets the PI tag to MeasurementKey mapping for loading data into PI by finding PI points that match either the openPDC pointtag or alternatetag
+        /// Resets the PI tag to MeasurementKey mapping for loading data into PI by finding PI points that match either the GSFSchema pointtag or alternatetag
         /// </summary>
         public void MapKeysToPoints()
         {

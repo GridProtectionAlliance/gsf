@@ -160,6 +160,10 @@
   <ItemGroup>
     <None Include="Adapters\IaonAdapters.vsd" />
     <None Include="Adapters\IaonOverview.vsd" />
+    <Content Include="Data\SQLite\db-update.bat" />
+    <Content Include="Data\SQLite\GSFSchema-InitialDataSet.db" />
+    <Content Include="Data\SQLite\GSFSchema-SampleDataSet.db" />
+    <Content Include="Data\SQLite\GSFSchema.db" />
     <None Include="TimeSeriesFramework.ruleset" />
   </ItemGroup>
   <ItemGroup>
@@ -179,6 +183,25 @@
       <Project>{2e23e926-cf64-4607-bde1-1b2fc76f4919}</Project>
       <Name>GSF.ServiceProcess</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\DatabaseUpdateReadme.txt" />
+    <Content Include="Data\MySQL\AuditLog.sql" />
+    <Content Include="Data\MySQL\InitialDataSet.sql" />
+    <Content Include="Data\MySQL\GSFSchema.sql" />
+    <Content Include="Data\MySQL\SampleDataSet.sql" />
+    <Content Include="Data\Oracle\AuditLog.sql" />
+    <Content Include="Data\Oracle\InitialDataSet.sql" />
+    <Content Include="Data\Oracle\GSFSchema.sql" />
+    <Content Include="Data\Oracle\SampleDataSet.sql" />
+    <Content Include="Data\SQL Server\AuditLog.sql" />
+    <Content Include="Data\SQL Server\InitialDataSet.sql" />
+    <Content Include="Data\SQL Server\GSFSchema.sql" />
+    <Content Include="Data\SQL Server\SampleDataSet.sql" />
+    <Content Include="Data\SQLite\InitialDataSet.sql" />
+    <Content Include="Data\SQLite\GSFSchema.sql" />
+    <Content Include="Data\SQLite\SampleDataSet.sql" />
+    <Content Include="Data\SQLite\sqlite3.exe" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
