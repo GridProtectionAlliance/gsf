@@ -371,6 +371,7 @@ namespace TVA.Security
     /// </example>
     /// <seealso cref="SecurityIdentity"/>
     /// <seealso cref="SecurityPrincipal"/>
+    [Serializable()]
     public abstract class SecurityProviderBase : ISecurityProvider
     {
         #region [ Members ]
@@ -407,6 +408,7 @@ namespace TVA.Security
         // Fields
         private string m_applicationName;
         private string m_connectionString;
+        [NonSerialized()]
         private SecureString m_securePassword;
         private string m_authenticationFailureReason;
         private string m_settingsCategory;

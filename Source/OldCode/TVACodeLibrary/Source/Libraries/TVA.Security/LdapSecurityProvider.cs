@@ -328,6 +328,7 @@ namespace TVA.Security
     /// ]]>
     /// </code>
     /// </example>
+    [Serializable()]
     public class LdapSecurityProvider : SecurityProviderBase
     {
         #region [ Members ]
