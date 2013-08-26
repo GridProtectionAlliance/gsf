@@ -164,6 +164,7 @@
     <Content Include="Data\SQLite\GSFSchema-InitialDataSet.db" />
     <Content Include="Data\SQLite\GSFSchema-SampleDataSet.db" />
     <Content Include="Data\SQLite\GSFSchema.db" />
+    <None Include="PostBuildSetup.bat" />
     <None Include="TimeSeriesFramework.ruleset" />
   </ItemGroup>
   <ItemGroup>
@@ -204,6 +205,9 @@
     <Content Include="Data\SQLite\sqlite3.exe" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)Data" "$(ProjectDir)Data\*.*"</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
