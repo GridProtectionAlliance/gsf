@@ -1,5 +1,5 @@
 ::*******************************************************************************************************
-::  BuildBeta.bat - Gbtc
+::  BuildMono.bat - Gbtc
 ::
 ::  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
 ::
@@ -16,15 +16,11 @@
 ::
 ::  Code Modification History:
 ::  -----------------------------------------------------------------------------------------------------
-::  10/05/2009 - Pinal C. Patel
+::  08/26/2013 - J. Ritchie Carroll
 ::       Generated original version of source code.
-::  10/20/2009 - Pinal C. Patel
-::       Modified to force a build and suppress archives from being published to public locations.
-::  10/03/2010 - Pinal C. Patel
-::       Updated to use MSBuild 4.0.
 ::
 ::*******************************************************************************************************
 
 @ECHO OFF
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=GridSolutionsFramework.output
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=true /p:BuildFlavor=Mono /p:BuildDeployFolder=\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Mono\ /l:FileLogger,Microsoft.Build.Engine;logfile=GridSolutionsFrameworkMono.output
 PAUSE
