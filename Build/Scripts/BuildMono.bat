@@ -22,5 +22,5 @@
 ::*******************************************************************************************************
 
 @ECHO OFF
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=true;BuildFlavor=Mono;BuildDeployFolder=\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Mono\;BinariesArchiveFileName=GridSolutionsFramework.MonoBinaries.zip /l:FileLogger,Microsoft.Build.Engine;logfile=GridSolutionsFrameworkMono.output
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe GridSolutionsFramework.buildproj /p:ForceBuild=true;BuildFlavor=Mono;BuildDeployFolder=\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Mono\;BinariesArchiveFileName=\\GPAWEB\NightlyBuilds\GridSolutionsFramework\Mono\GridSolutionsFramework.MonoBinaries.zip /l:FileLogger,Microsoft.Build.Engine;logfile=GridSolutionsFrameworkMono.output
 PAUSE
