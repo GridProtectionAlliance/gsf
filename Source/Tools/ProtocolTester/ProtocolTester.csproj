@@ -58,7 +58,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <OutputPath>..\..\..\Build\Output\Release\Tools\HistorianView\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Release\Tools\ProtocolTester\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -84,7 +84,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
-    <OutputPath>..\..\..\Build\Output\Mono\Tools\HistorianView\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Mono\Tools\ProtocolTester\</OutputPath>
     <DefineConstants>TRACE;MONO</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
