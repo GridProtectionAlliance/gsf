@@ -59,6 +59,8 @@
 **  01/08/2011 - Pinal C. Patel
 **       Made TfsServer a must-override property.
 **       Allowed for customization of versioning scheme by consuming script.
+**  08/26/2013 - J. Ritchie Carroll
+**       Added flag "SkipVersioning" to allow bypass of versioning steps.
 **
 *******************************************************************************************************
 -->
@@ -117,6 +119,8 @@
     <SandcastleBuilder></SandcastleBuilder>
     <!-- Forces a build regardless of new changes since last build. -->
     <ForceBuild></ForceBuild>
+    <!-- Skips the versioning process and just executes build steps. -->
+    <SkipVersioning></SkipVersioning>
     <!-- Name of binaries archive file. -->
     <BinariesArchiveFileName></BinariesArchiveFileName>
     <!-- Name of installs archive file. -->
@@ -297,6 +301,7 @@
       <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
       <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
       <ForceBuild Condition="'$(SourceVersion)' != 'T'">true</ForceBuild>
+      <SkipVersioning Condition="'$(SkipVersioning)' == ''">false</SkipVersioning>
       <BinariesArchiveFileName Condition="'$(BinariesArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Binaries.zip</BinariesArchiveFileName>
       <InstallsArchiveFileName Condition="'$(InstallsArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Installs.zip</InstallsArchiveFileName>
       <BinariesArchiveWorkingDirectory Condition="'$(BinariesArchiveWorkingDirectory)' == ''">$(LocalFolder)\Archives\Binaries</BinariesArchiveWorkingDirectory>
@@ -364,7 +369,7 @@
 
   <Target Name="BeforeVersionSource"/>
 
-  <Target Name="CoreVersionSource" Condition="'$(SourceVersion)' == 'T' And '@(FilesToVersion)' != ''">
+  <Target Name="CoreVersionSource" Condition="'$(SourceVersion)' == 'T' And '@(FilesToVersion)' != '' And '$(SkipVersioning)' != 'true'">
     <!-- Update version number of the source code. -->
     <Message Text="Versioning source code..."/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
@@ -418,7 +423,7 @@
 
   <Target Name="BeforeLabelBuild"/>
 
-  <Target Name="CoreLabelBuild" Condition="'$(BuildLabel)' != ''">
+  <Target Name="CoreLabelBuild" Condition="'$(BuildLabel)' != '' And '$(SkipVersioning)' != 'true'">
     <!-- Apply label for the current build. -->
     <Message Text="Labeling build $(BuildLabel)..."/>
     <Exec Command="%22$(TfsClient)%22 label %22$(BuildLabel)%22 %22$(LocalFolder)%22 /comment:%22Label applied for build $(BuildLabel).%22 /recursive"/>
@@ -475,8 +480,8 @@
 
   <Target Name="CoreDeleteWorkspace">
     <!-- Checkin all of the pending changes. -->
-    <Message Text="Checking in pending changes..."/>
-    <Exec Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22" ContinueOnError="true"/>
+    <Message Text="Checking in pending changes..." Condition="'$(SkipVersioning)' != 'true'" />
+    <Exec Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22" ContinueOnError="true" Condition="'$(SkipVersioning)' != 'true'" />
     <!-- Delete the temporary build workpsace. -->
     <Message Text="Deleting temporary workspace..."/>
     <Exec Command="%22$(TfsClient)%22 workspace /delete /server:$(TfsServer) %22$(Workspace)%22" ContinueOnError="true"/>
@@ -486,8 +491,8 @@
 
   <Target Name="HandleBuildFailure">
     <!-- Handle any unexpected build errors. -->
-    <Message Text="Undoing pending changes..."/>
-    <Exec Command="%22$(TfsClient)%22 undo %22$(LocalFolder)%22 /recursive /noprompt" ContinueOnError="true"/>
+    <Message Text="Undoing pending changes..." Condition="'$(SkipVersioning)' != 'true'" />
+    <Exec Command="%22$(TfsClient)%22 undo %22$(LocalFolder)%22 /recursive /noprompt" ContinueOnError="true" Condition="'$(SkipVersioning)' != 'true'" />
     <CallTarget Targets="DeleteWorkspace"/>
     <Beep Duration="2000"/>
   </Target>
