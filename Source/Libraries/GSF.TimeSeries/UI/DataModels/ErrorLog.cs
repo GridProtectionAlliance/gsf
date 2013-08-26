@@ -93,7 +93,6 @@ namespace GSF.TimeSeries.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ErrorLog"/> Type.
         /// </summary>
-        [StringLength(200, ErrorMessage = "Error log type cannot exceed 200 characters.")]
         public string Type
         {
             get
@@ -111,7 +110,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="ErrorLog"/> Message.
         /// </summary>
         [Required(ErrorMessage = "Error log message is a required field, please provide value.")]
-        [StringLength(1024, ErrorMessage = "Error mog message cannot exceed 1024 characters.")]
+        [StringLength(1024, ErrorMessage = "Error log message cannot exceed 1024 characters.")]
         public string Message
         {
             get
