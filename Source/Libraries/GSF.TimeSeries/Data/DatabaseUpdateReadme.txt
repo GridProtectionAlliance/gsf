@@ -1,6 +1,15 @@
 Database Updates
 ---------------------------------------------------------------------------------------------
 
+WARNING! In general script modifications should not be made at the time-series host
+application level (e.g., SIEGate or openPDC) - these scripts will be overwritten during
+the automated Grid Solutions Framework dependency roll-down process. It is expected that
+changes to the primary schema will be made in GSF then rolled-down to all time-series
+implementations. Custom script modifications should go in an independent local script
+to be run after the initial schema setup.
+
+---------------------------------------------------------------------------------------------
+
 Updating the Grid Solutions Framework databases requires a number of steps, enumerated below.
 There are four different databases types supported: MySQL, Oracle, SQL Server, and SQLite.
 
