@@ -43,7 +43,7 @@ CREATE TABLE ErrorLog(
     CreatedOn DATE NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_ErrorLog_ID ON ErrorLog (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_ErrorLog_ID ON ErrorLog (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE ErrorLog ADD CONSTRAINT PK_ErrorLog PRIMARY KEY (ID);
 
@@ -60,9 +60,9 @@ CREATE TABLE Runtime(
     SourceTable VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Runtime_Source ON Runtime (SourceID ASC, SourceTable ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Runtime_Source ON Runtime (SourceID ASC, SourceTable ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_Runtime_ID ON Runtime (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Runtime_ID ON Runtime (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Runtime ADD CONSTRAINT PK_Runtime PRIMARY KEY (SourceID, SourceTable);
 
@@ -109,7 +109,7 @@ CREATE TABLE Company(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Company_ID ON Company (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Company_ID ON Company (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Company ADD CONSTRAINT PK_Company PRIMARY KEY (ID);
 
@@ -141,7 +141,7 @@ CREATE TABLE Vendor(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Vendor_ID ON Vendor (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Vendor_ID ON Vendor (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Vendor ADD CONSTRAINT PK_Vendor PRIMARY KEY (ID);
 
@@ -163,7 +163,7 @@ CREATE TABLE Protocol(
     LoadOrder NUMBER DEFAULT 0 NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Protocol_ID ON Protocol (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Protocol_ID ON Protocol (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Protocol ADD CONSTRAINT PK_Protocol PRIMARY KEY (ID);
 
@@ -184,7 +184,7 @@ CREATE TABLE SignalType(
     EngineeringUnits VARCHAR2(10) NULL
 );
 
-CREATE UNIQUE INDEX IX_SignalType_ID ON SignalType (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_SignalType_ID ON SignalType (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE SignalType ADD CONSTRAINT PK_SignalType PRIMARY KEY (ID);
 
@@ -202,7 +202,7 @@ CREATE TABLE Interconnection(
     LoadOrder NUMBER DEFAULT 0 NULL
 );
 
-CREATE UNIQUE INDEX IX_Interconnection_ID ON Interconnection (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Interconnection_ID ON Interconnection (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Interconnection ADD CONSTRAINT PK_Interconnection PRIMARY KEY (ID);
 
@@ -233,9 +233,9 @@ CREATE TABLE Node(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Node_ID ON Node (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Node_ID ON Node (ID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_Node_Name ON Node (Name ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Node_Name ON Node (Name ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Node ADD CONSTRAINT PK_Node PRIMARY KEY (ID);
 
@@ -269,7 +269,7 @@ CREATE TABLE OtherDevice(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_OtherDevice_ID ON OtherDevice (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_OtherDevice_ID ON OtherDevice (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE OtherDevice ADD CONSTRAINT PK_OtherDevice PRIMARY KEY (ID);
 
@@ -320,11 +320,11 @@ CREATE TABLE Device(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Device_ID ON Device (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Device_ID ON Device (ID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_Device_UniqueID ON Device (UniqueID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Device_UniqueID ON Device (UniqueID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_Device_NodeID_Acronym ON Device (NodeID ASC, Acronym ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Device_NodeID_Acronym ON Device (NodeID ASC, Acronym ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Device ADD CONSTRAINT PK_Device PRIMARY KEY (ID);
 
@@ -347,7 +347,7 @@ CREATE TABLE VendorDevice(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_VendorDevice_ID ON VendorDevice (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_VendorDevice_ID ON VendorDevice (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE VendorDevice ADD CONSTRAINT PK_VendorDevice PRIMARY KEY (ID);
 
@@ -371,7 +371,7 @@ CREATE TABLE OutputStreamDeviceDigital(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_OutStreamDevDigital_ID ON OutputStreamDeviceDigital (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_OutStreamDevDigital_ID ON OutputStreamDeviceDigital (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE OutputStreamDeviceDigital ADD CONSTRAINT PK_OutStreamDevDigital PRIMARY KEY (ID);
 
@@ -397,7 +397,7 @@ CREATE TABLE OutputStreamDevicePhasor(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_OutStreamDevPhasor ON OutputStreamDevicePhasor (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_OutStreamDevPhasor ON OutputStreamDevicePhasor (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE OutputStreamDevicePhasor ADD CONSTRAINT PK_OutStreamDevPhasor PRIMARY KEY (ID);
 
@@ -423,7 +423,7 @@ CREATE TABLE OutputStreamDeviceAnalog(
 );
 
 
-CREATE UNIQUE INDEX IX_OutStreamDevAnalog ON OutputStreamDeviceAnalog (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_OutStreamDevAnalog ON OutputStreamDeviceAnalog (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE OutputStreamDeviceAnalog ADD CONSTRAINT PK_OutStreamDevAnalog PRIMARY KEY (ID);
 
@@ -456,9 +456,9 @@ CREATE TABLE Measurement(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Measurement_SignalID ON Measurement (SignalID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Measurement_SignalID ON Measurement (SignalID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_Measurement_PointID ON Measurement (PointID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Measurement_PointID ON Measurement (PointID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Measurement ADD CONSTRAINT PK_Measurement PRIMARY KEY (SignalID);
 
@@ -513,9 +513,9 @@ CREATE TABLE Statistic(
     LoadOrder NUMBER DEFAULT 0 NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Statistic_ID ON Statistic (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Statistic_ID ON Statistic (ID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_Statistic_Source_SigIndex ON Statistic (Source ASC, SignalIndex ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Statistic_Source_SigIndex ON Statistic (Source ASC, SignalIndex ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Statistic ADD CONSTRAINT PK_Statistic PRIMARY KEY (ID);
 
@@ -539,7 +539,7 @@ CREATE TABLE OutputStreamMeasurement(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_OutputStreamMeasurement_ID ON OutputStreamMeasurement (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_OutputStreamMeasurement_ID ON OutputStreamMeasurement (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE OutputStreamMeasurement ADD CONSTRAINT PK_OutputStreamMeasurement PRIMARY KEY (ID);
 
@@ -570,7 +570,7 @@ CREATE TABLE OutputStreamDevice(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_OutputStreamDevice_ID ON OutputStreamDevice (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_OutputStreamDevice_ID ON OutputStreamDevice (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE OutputStreamDevice ADD CONSTRAINT PK_OutputStreamDevice PRIMARY KEY (ID);
 
@@ -595,7 +595,7 @@ CREATE TABLE Phasor(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Phasor_ID ON Phasor (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Phasor_ID ON Phasor (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Phasor ADD CONSTRAINT PK_Phasor PRIMARY KEY (ID);
 
@@ -636,7 +636,7 @@ CREATE TABLE CalculatedMeasurement(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_CalculatedMeasurement_ID ON CalculatedMeasurement (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_CalculatedMeasurement_ID ON CalculatedMeasurement (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE CalculatedMeasurement ADD CONSTRAINT PK_CalculatedMeasurement PRIMARY KEY (ID);
 
@@ -662,7 +662,7 @@ CREATE TABLE CustomActionAdapter(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_CustomActionAdapter_ID ON CustomActionAdapter (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_CustomActionAdapter_ID ON CustomActionAdapter (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE CustomActionAdapter ADD CONSTRAINT PK_CustomActionAdapter PRIMARY KEY (ID);
 
@@ -692,7 +692,7 @@ CREATE TABLE Historian(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Historian_ID ON Historian (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Historian_ID ON Historian (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Historian ADD CONSTRAINT PK_Historian PRIMARY KEY (ID);
 
@@ -718,7 +718,7 @@ CREATE TABLE CustomInputAdapter(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_CustomInputAdapter ON CustomInputAdapter (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_CustomInputAdapter ON CustomInputAdapter (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE CustomInputAdapter ADD CONSTRAINT PK_CustomInputAdapter PRIMARY KEY (ID);
 
@@ -766,9 +766,9 @@ CREATE TABLE OutputStream(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_OutputStream_ID ON OutputStream (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_OutputStream_ID ON OutputStream (ID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_OutputStream_NodeID_Acronym ON OutputStream (NodeID ASC, Acronym ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_OutputStream_NodeID_Acronym ON OutputStream (NodeID ASC, Acronym ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE OutputStream ADD CONSTRAINT PK_OutputStream PRIMARY KEY (ID);
 
@@ -800,9 +800,9 @@ CREATE TABLE Alarm(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Alarm_ID ON Alarm (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Alarm_ID ON Alarm (ID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_Alarm_TagName ON Alarm (TagName ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Alarm_TagName ON Alarm (TagName ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Alarm ADD CONSTRAINT PK_Alarm PRIMARY KEY (ID);
 
@@ -828,7 +828,7 @@ CREATE TABLE CustomOutputAdapter(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_CustomOutputAdapter_ID ON CustomOutputAdapter (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_CustomOutputAdapter_ID ON CustomOutputAdapter (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE CustomOutputAdapter ADD CONSTRAINT PK_CustomOutputAdapter PRIMARY KEY (ID);
 
@@ -847,7 +847,7 @@ CREATE TABLE AccessLog (
     CreatedOn DATE NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_AccessLog_ID ON AccessLog (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_AccessLog_ID ON AccessLog (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE AccessLog ADD CONSTRAINT PK_AccessLog PRIMARY KEY (ID);
 
@@ -876,9 +876,9 @@ CREATE TABLE UserAccount (
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_UserAccount_ID ON UserAccount (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_UserAccount_ID ON UserAccount (ID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_UserAccount_Name ON UserAccount (Name ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_UserAccount_Name ON UserAccount (Name ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE UserAccount ADD CONSTRAINT PK_UserAccount PRIMARY KEY (ID);
 
@@ -892,7 +892,7 @@ CREATE TABLE SecurityGroup (
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_SecurityGroup_ID ON SecurityGroup (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_SecurityGroup_ID ON SecurityGroup (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE SecurityGroup ADD CONSTRAINT PK_SecurityGroup PRIMARY KEY (ID);
 
@@ -907,7 +907,7 @@ CREATE TABLE ApplicationRole (
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_ApplicationRole ON ApplicationRole (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_ApplicationRole ON ApplicationRole (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE ApplicationRole ADD CONSTRAINT PK_ApplicationRole PRIMARY KEY (ID);
 
@@ -934,10 +934,10 @@ CREATE TABLE Subscriber (
     SharedSecret VARCHAR2(200) NULL,
     AuthKey VARCHAR2(4000) NULL,
     ValidIPAddresses VARCHAR2(4000) NULL,
-	RemoteCertificateFile VARCHAR2(500) NULL,
-	ValidPolicyErrors VARCHAR2(200) NULL,
-	ValidChainFlags VARCHAR2(500) NULL,
-	AccessControlFilter VARCHAR2(4000) NULL,
+    RemoteCertificateFile VARCHAR2(500) NULL,
+    ValidPolicyErrors VARCHAR2(200) NULL,
+    ValidChainFlags VARCHAR2(500) NULL,
+    AccessControlFilter VARCHAR2(4000) NULL,
     Enabled NUMBER DEFAULT 0 NOT NULL,
     CreatedOn DATE NOT NULL,
     CreatedBy VARCHAR2(200) NOT NULL,
@@ -945,9 +945,9 @@ CREATE TABLE Subscriber (
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_Subscriber_NodeID_ID ON Subscriber (NodeID ASC, ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Subscriber_NodeID_ID ON Subscriber (NodeID ASC, ID ASC) TABLESPACE GSFSchema_INDEX;
 
-CREATE UNIQUE INDEX IX_Subscriber_NodeID_Acronym ON Subscriber (NodeID ASC, Acronym ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_Subscriber_NodeID_Acronym ON Subscriber (NodeID ASC, Acronym ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE Subscriber ADD CONSTRAINT PK_Subscriber PRIMARY KEY (NodeID, ID);
 
@@ -962,7 +962,7 @@ CREATE TABLE SubscriberMeasurement(
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_SubscriberMeasurement ON SubscriberMeasurement (NodeID ASC, SubscriberID ASC, SignalID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_SubscriberMeasurement ON SubscriberMeasurement (NodeID ASC, SubscriberID ASC, SignalID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE SubscriberMeasurement ADD CONSTRAINT PK_SubscriberMeasurement PRIMARY KEY (NodeID, SubscriberID, SignalID);
 
@@ -977,7 +977,7 @@ CREATE TABLE SubscriberMeasurementGroup (
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_SubscriberMeasurementGroup ON SubscriberMeasurementGroup (NodeID ASC, SubscriberID ASC, MeasurementGroupID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_SubscriberMeasurementGroup ON SubscriberMeasurementGroup (NodeID ASC, SubscriberID ASC, MeasurementGroupID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE SubscriberMeasurementGroup ADD CONSTRAINT PK_SubscriberMeasurementGroup PRIMARY KEY (NodeID, SubscriberID, MeasurementGroupID);
 
@@ -986,14 +986,14 @@ CREATE TABLE MeasurementGroup (
     ID NUMBER NOT NULL,
     Name VARCHAR2(200) NOT NULL,
     Description VARCHAR2(4000),
-	FilterExpression VARCHAR2(4000),
+    FilterExpression VARCHAR2(4000),
     CreatedOn DATE NOT NULL,
     CreatedBy VARCHAR2(200) NOT NULL,
     UpdatedOn DATE NOT NULL,
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_MeasurementGroup_ID ON MeasurementGroup (ID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_MeasurementGroup_ID ON MeasurementGroup (ID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE MeasurementGroup ADD CONSTRAINT PK_MeasurementGroup PRIMARY KEY (ID);
 
@@ -1014,7 +1014,7 @@ CREATE TABLE MeasurementGroupMeasurement (
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_MeasurementGroupMeasurement ON MeasurementGroupMeasurement (NodeID ASC, MeasurementGroupID ASC, SignalID ASC) TABLESPACE OPDC_INDEX;
+CREATE UNIQUE INDEX IX_MeasurementGroupMeasurement ON MeasurementGroupMeasurement (NodeID ASC, MeasurementGroupID ASC, SignalID ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE MeasurementGroupMeasurement ADD CONSTRAINT PK_MeasurementGroupMeasurement PRIMARY KEY (NodeID, MeasurementGroupID, SignalID);
 
@@ -1331,7 +1331,7 @@ FROM Company RIGHT OUTER JOIN
     Historian ON Measurement.HistorianID = Historian.ID LEFT OUTER JOIN
     Runtime ON Device.ID = Runtime.SourceID AND Runtime.SourceTable = 'Device' LEFT OUTER JOIN
     Runtime RuntimeP ON RuntimeP.SourceID = Device.ParentID AND RuntimeP.SourceTable = 'Device'
-	CROSS JOIN Node
+    CROSS JOIN Node
 WHERE (Device.Enabled <> 0 OR Device.Enabled IS NULL) AND (Measurement.Enabled <> 0)
 UNION ALL
 SELECT NodeID, SourceNodeID, Source || ':' || PointID AS ID, SignalID, PointTag,
@@ -1747,9 +1747,9 @@ END;
 /
 
 CREATE TRIGGER Device_InsertDefault BEFORE INSERT ON Device FOR EACH ROW BEGIN
-	IF :NEW.UniqueID IS NULL THEN
-		SELECT NEW_GUID() INTO :NEW.UniqueID FROM dual;
-	END IF;
+    IF :NEW.UniqueID IS NULL THEN
+        SELECT NEW_GUID() INTO :NEW.UniqueID FROM dual;
+    END IF;
 
     SELECT USER INTO :NEW.CreatedBy FROM dual;
     SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
@@ -1767,7 +1767,7 @@ END;
 /
 
 CREATE TRIGGER Subscriber_InsertDefault BEFORE INSERT ON Subscriber FOR EACH ROW BEGIN
-	SELECT NEW_GUID() INTO :NEW.ID FROM dual;
+    SELECT NEW_GUID() INTO :NEW.ID FROM dual;
     SELECT USER INTO :NEW.CreatedBy FROM dual;
     SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
     SELECT USER INTO :NEW.UpdatedBy FROM dual;
@@ -1858,10 +1858,10 @@ END;
 /
 
 CREATE TRIGGER Alarm_InsertDefault BEFORE INSERT ON Alarm FOR EACH ROW BEGIN
-	SELECT USER INTO :NEW.CreatedBy FROM dual;
-	SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-	SELECT USER INTO :NEW.UpdatedBy FROM dual;
-	SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    SELECT USER INTO :NEW.CreatedBy FROM dual;
+    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
 END;
 /
 

@@ -642,10 +642,10 @@ CREATE TABLE Subscriber (
     SharedSecret VARCHAR(200) NULL,
     AuthKey TEXT NULL,
     ValidIPAddresses TEXT NULL,
-	RemoteCertificateFile VARCHAR(500) NULL,
-	ValidPolicyErrors VARCHAR(200) NULL,
-	ValidChainFlags VARCHAR(500) NULL,
-	AccessControlFilter TEXT NULL,
+    RemoteCertificateFile VARCHAR(500) NULL,
+    ValidPolicyErrors VARCHAR(200) NULL,
+    ValidChainFlags VARCHAR(500) NULL,
+    AccessControlFilter TEXT NULL,
     Enabled TINYINT NOT NULL DEFAULT 0,
     CreatedOn DATETIME NOT NULL DEFAULT N'0000-00-00 00:00:00',
     CreatedBy VARCHAR(200) NOT NULL DEFAULT N'',
@@ -684,7 +684,7 @@ CREATE TABLE MeasurementGroup (
     ID INT AUTO_INCREMENT NOT NULL,
     Name VARCHAR(200) NOT NULL,
     Description TEXT NULL,
-	FilterExpression TEXT NULL,
+    FilterExpression TEXT NULL,
     CreatedOn DATETIME NOT NULL DEFAULT N'0000-00-00 00:00:00',
     CreatedBy VARCHAR(200) NOT NULL DEFAULT N'',
     UpdatedOn DATETIME NOT NULL DEFAULT N'0000-00-00 00:00:00',
@@ -987,7 +987,7 @@ FROM Company RIGHT OUTER JOIN
     Historian ON Measurement.HistorianID = Historian.ID LEFT OUTER JOIN
     Runtime ON Device.ID = Runtime.SourceID AND Runtime.SourceTable = N'Device' LEFT OUTER JOIN
     Runtime AS RuntimeP ON RuntimeP.SourceID = Device.ParentID AND RuntimeP.SourceTable = N'Device'
-	CROSS JOIN Node
+    CROSS JOIN Node
 WHERE (Device.Enabled <> 0 OR Device.Enabled IS NULL) AND (Measurement.Enabled <> 0)
 UNION ALL
 SELECT NodeID, SourceNodeID, CONCAT_WS(':', Source, CAST(PointID AS CHAR)) AS ID, SignalID, PointTag,
