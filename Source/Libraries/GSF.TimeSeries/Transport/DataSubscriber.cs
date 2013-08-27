@@ -1094,7 +1094,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.PayloadAware = true;
                 commandChannel.PersistSettings = false;
                 commandChannel.MaxConnectionAttempts = 1;
-                commandChannel.CertificateFile = FilePath.GetAbsolutePath(ConfigurationFile.Current.Settings["systemSettings"]["LocalCertificate"].Value);
+                commandChannel.CertificateFile = FilePath.GetAbsolutePath(m_localCertificate);
                 commandChannel.CertificateChecker = certificateChecker;
                 commandChannel.ReceiveBufferSize = bufferSize;
                 commandChannel.SendBufferSize = bufferSize;
@@ -1126,7 +1126,7 @@ namespace GSF.TimeSeries.Transport
             if ((object)localCertificateElement != null)
                 localCertificate = localCertificateElement.Value;
 
-            if ((object)localCertificate == null || !File.Exists(localCertificate))
+            if ((object)localCertificate == null || !File.Exists(FilePath.GetAbsolutePath(localCertificate)))
                 throw new InvalidOperationException("Unable to find local certificate. Local certificate file must exist when using TLS security mode.");
 
             return localCertificate;
