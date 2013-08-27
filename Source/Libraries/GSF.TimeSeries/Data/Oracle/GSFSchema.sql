@@ -28,7 +28,7 @@
 -- The following statements are used to create a tablespace, user, and schema.
 -- Be sure to change the password.
 -- CREATE TABLESPACE GSFSchema_TS DATAFILE 'GSFSchema.dbf' SIZE 20M AUTOEXTEND ON;
--- CREATE TABLESPACE OPDC_INDEX DATAFILE 'opdc_index.dbf' SIZE 20M AUTOEXTEND ON;
+-- CREATE TABLESPACE GSFSchema_INDEX DATAFILE 'GSFSchema_index.dbf' SIZE 20M AUTOEXTEND ON;
 -- CREATE USER GSFSchema IDENTIFIED BY MyPassword DEFAULT TABLESPACE GSFSchema_TS;
 -- GRANT UNLIMITED TABLESPACE TO GSFSchema;
 -- GRANT CREATE SESSION TO GSFSchema;

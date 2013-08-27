@@ -2642,7 +2642,7 @@ namespace GSF.TimeSeries.Transport
                         // Open the configuration database using settings found in the config file
                         using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                         using (IDbCommand command = database.Connection.CreateCommand())
-                        using (IDbTransaction transaction = database.Connection.BeginTransaction())
+                        using (IDbTransaction transaction = database.Connection.BeginTransaction(IsolationLevel.ReadUncommitted))
                         {
                             try
                             {

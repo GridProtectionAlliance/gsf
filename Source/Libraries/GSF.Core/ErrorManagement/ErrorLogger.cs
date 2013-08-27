@@ -1520,7 +1520,7 @@ namespace GSF.ErrorManagement
             {
                 using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                 using (IDbCommand command = database.Connection.CreateCommand())
-                using (IDbTransaction transaction = database.Connection.BeginTransaction())
+                using (IDbTransaction transaction = database.Connection.BeginTransaction(IsolationLevel.ReadUncommitted))
                 {
                     bool executingTransaction = false;
 
