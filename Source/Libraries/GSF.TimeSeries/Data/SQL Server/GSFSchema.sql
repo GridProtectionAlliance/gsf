@@ -1,5 +1,5 @@
--- =============================================================================
---  GSFSchema Data Structures for SQL Server
+--  ----------------------------------------------------------------------------------------------------
+--  GSFSchema Data Structures for SQL Server - Gbtc
 --
 --  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
 --
@@ -25,7 +25,7 @@
 --  04/12/2012 - prasanthgs
 --       Reworked as per the comments of codeplex reviewers.
 --       Added new field Type to ErrorLog table. Removed ExceptionLog table.
--- =============================================================================
+--  ----------------------------------------------------------------------------------------------------
 
 USE [master]
 GO
