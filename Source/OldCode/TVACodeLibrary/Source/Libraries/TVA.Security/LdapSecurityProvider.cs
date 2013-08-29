@@ -359,6 +359,7 @@ namespace TVA.Security
         private bool m_enableOfflineCaching;
         private double m_cacheRetryDelayInterval;
         private int m_cacheMaximumRetryAttempts;
+        [NonSerialized()]
         private WindowsPrincipal m_windowsPrincipal;
 
         #endregion
