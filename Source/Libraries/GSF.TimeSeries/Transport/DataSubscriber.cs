@@ -26,6 +26,16 @@
 //
 //******************************************************************************************************
 
+using GSF.Collections;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,16 +50,6 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using System.Xml;
-using GSF.Collections;
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Reflection;
-using GSF.Security.Cryptography;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
@@ -238,7 +238,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_includeTime;
         private bool m_autoSynchronizeMetadata;
         private int m_metadataSynchronizationTimeout;
-        private object m_receivedMetadataLock;
+        private readonly object m_receivedMetadataLock;
         private DataSet m_receivedMetadata;
         private DataSet m_synchronizedMetadata;
         private OperationalModes m_operationalModes;
@@ -2642,7 +2642,7 @@ namespace GSF.TimeSeries.Transport
                         // Open the configuration database using settings found in the config file
                         using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                         using (IDbCommand command = database.Connection.CreateCommand())
-                        using (IDbTransaction transaction = database.Connection.BeginTransaction(IsolationLevel.ReadUncommitted))
+                        using (IDbTransaction transaction = database.Connection.BeginTransaction(database.DefaultIsloationLevel()))
                         {
                             try
                             {

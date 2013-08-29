@@ -27,13 +27,13 @@
 //
 //******************************************************************************************************
 
+using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using GSF.Configuration;
 
 namespace GSF.Data
 {
@@ -499,6 +499,18 @@ namespace GSF.Data
                 return DateTime.UtcNow.ToOADate();
 
             return DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Gets the default <see cref="IsolationLevel"/> for the connected <see cref=" AdoDataConnection"/> database type.
+        /// </summary>
+        /// <returns>Default <see cref="IsolationLevel"/> for the connected <see cref=" AdoDataConnection"/> database type.</returns>
+        public IsolationLevel DefaultIsloationLevel()
+        {
+            if (IsSQLServer)
+                return IsolationLevel.ReadUncommitted;
+
+            return IsolationLevel.Unspecified;
         }
 
         /// <summary>
