@@ -121,6 +121,7 @@ CREATE TABLE [dbo].[ErrorLog](
       [ID] ASC
 )WITH (IGNORE_DUP_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
+GO
 
 CREATE TABLE [dbo].[Runtime](
     [ID] [int] IDENTITY(1,1) NOT NULL,
@@ -2359,85 +2360,81 @@ ON UPDATE CASCADE
 ON DELETE CASCADE
 GO
 
-/*
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
 
-CREATE PROCEDURE [GetFormattedMeasurements]
-    @measurementSql NVARCHAR(max),
-    @includeAdjustments BIT,
-    @measurements NVARCHAR(max) OUTPUT
-AS
-    -- Fill the table variable with the rows for your result set
-    DECLARE @measurementID INT
-    DECLARE @archiveSource NVARCHAR(50)
-    DECLARE @adder FLOAT
-    DECLARE @multiplier FLOAT
+--CREATE PROCEDURE [GetFormattedMeasurements]
+--    @measurementSql NVARCHAR(max),
+--    @includeAdjustments BIT,
+--    @measurements NVARCHAR(max) OUTPUT
+--AS
+--    -- Fill the table variable with the rows for your result set
+--    DECLARE @measurementID INT
+--    DECLARE @archiveSource NVARCHAR(50)
+--    DECLARE @adder FLOAT
+--    DECLARE @multiplier FLOAT
 
-    SET @measurements = ''
+--    SET @measurements = ''
 
-    CREATE TABLE #temp
-    (
-        [MeasurementID] INT,
-        [ArchiveSource] NVARCHAR(50),
-        [Adder] FLOAT,
-        [Multiplier] FLOAT
-    )
+--    CREATE TABLE #temp
+--    (
+--        [MeasurementID] INT,
+--        [ArchiveSource] NVARCHAR(50),
+--        [Adder] FLOAT,
+--        [Multiplier] FLOAT
+--    )
 
-    INSERT INTO #temp EXEC sp_executesql @measurementSql
+--    INSERT INTO #temp EXEC sp_executesql @measurementSql
 
-    DECLARE SelectedMeasurements CURSOR LOCAL FAST_FORWARD FOR SELECT * FROM #temp
-    OPEN SelectedMeasurements
+--    DECLARE SelectedMeasurements CURSOR LOCAL FAST_FORWARD FOR SELECT * FROM #temp
+--    OPEN SelectedMeasurements
 
-    -- Get first row from measurements SQL
-    FETCH NEXT FROM SelectedMeasurements INTO @measurementID, @archiveSource, @adder, @multiplier
+--    -- Get first row from measurements SQL
+--    FETCH NEXT FROM SelectedMeasurements INTO @measurementID, @archiveSource, @adder, @multiplier
 
-    -- Step through selected measurements
-    WHILE @@FETCH_STATUS = 0
-    BEGIN		
-        IF LEN(@measurements) > 0
-            SET @measurements = @measurements + ';'
+--    -- Step through selected measurements
+--    WHILE @@FETCH_STATUS = 0
+--    BEGIN		
+--        IF LEN(@measurements) > 0
+--            SET @measurements = @measurements + ';'
 
-        IF @includeAdjustments <> 0 AND (@adder <> 0.0 OR @multiplier <> 1.0)
-            SET @measurements = @measurements + @archiveSource + ':' + @measurementID + ',' + @adder + ',' + @multiplier
-        ELSE
-            SET @measurements = @measurements + @archiveSource + ':' + @measurementID
+--        IF @includeAdjustments <> 0 AND (@adder <> 0.0 OR @multiplier <> 1.0)
+--            SET @measurements = @measurements + @archiveSource + ':' + @measurementID + ',' + @adder + ',' + @multiplier
+--        ELSE
+--            SET @measurements = @measurements + @archiveSource + ':' + @measurementID
         
-        -- Get next row from measurements SQL
-        FETCH NEXT FROM SelectedMeasurements INTO @measurementID, @archiveSource, @adder, @multiplier
-    END
+--        -- Get next row from measurements SQL
+--        FETCH NEXT FROM SelectedMeasurements INTO @measurementID, @archiveSource, @adder, @multiplier
+--    END
 
-    CLOSE SelectedMeasurements
-    DEALLOCATE SelectedMeasurements
+--    CLOSE SelectedMeasurements
+--    DEALLOCATE SelectedMeasurements
 
-    DROP TABLE #temp
+--    DROP TABLE #temp
 
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE FUNCTION [FormatMeasurements] (@measurementSql NVARCHAR(max), @includeAdjustments BIT)
-RETURNS NVARCHAR(max) 
-AS
-BEGIN
-    DECLARE @measurements NVARCHAR(max) 
+--GO
+--SET ANSI_NULLS ON
+--GO
+--SET QUOTED_IDENTIFIER ON
+--GO
+--CREATE FUNCTION [FormatMeasurements] (@measurementSql NVARCHAR(max), @includeAdjustments BIT)
+--RETURNS NVARCHAR(max) 
+--AS
+--BEGIN
+--    DECLARE @measurements NVARCHAR(max) 
 
-    SET @measurements = ''
+--    SET @measurements = ''
 
-    EXEC GetFormattedMeasurements @measurementSql, @includeAdjustments, @measurements
+--    EXEC GetFormattedMeasurements @measurementSql, @includeAdjustments, @measurements
 
-    IF LEN(@measurements) > 0
-        SET @measurements = '{' + @measurements + '}'
-    ELSE
-        SET @measurements = NULL
+--    IF LEN(@measurements) > 0
+--        SET @measurements = '{' + @measurements + '}'
+--    ELSE
+--        SET @measurements = NULL
         
-    RETURN @measurements
-END
+--    RETURN @measurements
+--END
 
-GO
-*/
-
+--GO
