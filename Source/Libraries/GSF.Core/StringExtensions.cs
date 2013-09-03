@@ -267,13 +267,11 @@ namespace GSF
         /// </remarks>
         public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter = ';', char keyValueDelimeter = '=', char startValueDelimeter = '{', char endValueDelimeter = '}')
         {
-            // <pex>
             if ((object)pairs == null)
                 throw new ArgumentNullException("pairs");
-            // </pex>
 
             char[] delimiters = { parameterDelimeter, keyValueDelimeter };
-            StringBuilder result = new StringBuilder();
+            List<string> values = new List<string>();
             string value;
 
             foreach (string key in pairs.Keys)
@@ -283,10 +281,10 @@ namespace GSF
                 if (value.IndexOfAny(delimiters) >= 0)
                     value = startValueDelimeter + value + endValueDelimeter;
 
-                result.AppendFormat("{0}{1}{2}{3}", key, keyValueDelimeter, value, parameterDelimeter);
+                values.Add(string.Format("{0}{1}{2}", key, keyValueDelimeter, value));
             }
 
-            return result.ToString();
+            return string.Join(parameterDelimeter + " ", values);
         }
 
         /// <summary>
