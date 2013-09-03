@@ -53,34 +53,35 @@ GO
 INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, SignalReference, Description, Enabled) VALUES(1, 1, 'TVA_TESTDEVICE-LAGO:ABBIH', 2, 5, 'TESTDEVICE-PA5', 'Test Device ABB-521 Lagoon Creek Positive Sequence Current Phase Angle', 1)
 GO
 
---UPDATE Measurement SET SignalID='7aaf0a8f-3a4f-4c43-ab43-ed9d1e64a255' WHERE PointTag='TVA_TESTDEVICE:ABBS'
---GO
---UPDATE Measurement SET SignalID='93673c68-d59d-4926-b7e9-e7678f9f66b4' WHERE PointTag='TVA_TESTDEVICE:ABBF'
---GO
---UPDATE Measurement SET SignalID='65ac9cf6-ae33-4ece-91b6-bb79343855d5' WHERE PointTag='TVA_TESTDEVICE:ABBD1'
---GO
---UPDATE Measurement SET SignalID='3647f729-d0ed-4f79-85ad-dae2149cd432' WHERE PointTag='TVA_TESTDEVICE:ABBDF'
---GO
---UPDATE Measurement SET SignalID='069c5e29-f78a-46f6-9dff-c92cb4f69371' WHERE PointTag='TVA_TESTDEVICE-BUS1:ABBV'
---GO
---UPDATE Measurement SET SignalID='25355a7b-2a9d-4ef2-99ba-4dd791461379' WHERE PointTag='TVA_TESTDEVICE-BUS1:ABBVH'
---GO
---UPDATE Measurement SET SignalID='ee130f0f-8c94-414f-b081-9551ffb73753' WHERE PointTag='TVA_TESTDEVICE-BUS2:ABBV'
---GO
---UPDATE Measurement SET SignalID='96cb33be-f7e4-4dfe-a20a-50976aa507fd' WHERE PointTag='TVA_TESTDEVICE-BUS2:ABBVH'
---GO
---UPDATE Measurement SET SignalID='34172112-0565-4ad7-b314-f0876d978751' WHERE PointTag='TVA_TESTDEVICE-CORD:ABBI'
---GO
---UPDATE Measurement SET SignalID='70e72607-dbbc-458b-9c66-5fd32b447a03' WHERE PointTag='TVA_TESTDEVICE-CORD:ABBIH'
---GO
---UPDATE Measurement SET SignalID='28bbb1fc-3434-48d3-87a8-bf5024c089d5' WHERE PointTag='TVA_TESTDEVICE-DELL:ABBI'
---GO
---UPDATE Measurement SET SignalID='c635e906-8bfb-486d-901e-46c8e07afdc3' WHERE PointTag='TVA_TESTDEVICE-DELL:ABBIH'
---GO
---UPDATE Measurement SET SignalID='ed6def67-54c4-4e74-af95-c95fa6915fbc' WHERE PointTag='TVA_TESTDEVICE-LAGO:ABBI'
---GO
---UPDATE Measurement SET SignalID='bcd7aa41-32f1-4d3c-96d5-9e1da2c9469e' WHERE PointTag='TVA_TESTDEVICE-LAGO:ABBIH'
---GO
+-- Use common signal ID's for sample data
+--*UPDATE Measurement SET SignalID='7aaf0a8f-3a4f-4c43-ab43-ed9d1e64a255' WHERE PointTag='TVA_TESTDEVICE:ABBS'
+--*GO
+--*UPDATE Measurement SET SignalID='93673c68-d59d-4926-b7e9-e7678f9f66b4' WHERE PointTag='TVA_TESTDEVICE:ABBF'
+--*GO
+--*UPDATE Measurement SET SignalID='65ac9cf6-ae33-4ece-91b6-bb79343855d5' WHERE PointTag='TVA_TESTDEVICE:ABBD1'
+--*GO
+--*UPDATE Measurement SET SignalID='3647f729-d0ed-4f79-85ad-dae2149cd432' WHERE PointTag='TVA_TESTDEVICE:ABBDF'
+--*GO
+--*UPDATE Measurement SET SignalID='069c5e29-f78a-46f6-9dff-c92cb4f69371' WHERE PointTag='TVA_TESTDEVICE-BUS1:ABBV'
+--*GO
+--*UPDATE Measurement SET SignalID='25355a7b-2a9d-4ef2-99ba-4dd791461379' WHERE PointTag='TVA_TESTDEVICE-BUS1:ABBVH'
+--*GO
+--*UPDATE Measurement SET SignalID='ee130f0f-8c94-414f-b081-9551ffb73753' WHERE PointTag='TVA_TESTDEVICE-BUS2:ABBV'
+--*GO
+--*UPDATE Measurement SET SignalID='96cb33be-f7e4-4dfe-a20a-50976aa507fd' WHERE PointTag='TVA_TESTDEVICE-BUS2:ABBVH'
+--*GO
+--*UPDATE Measurement SET SignalID='34172112-0565-4ad7-b314-f0876d978751' WHERE PointTag='TVA_TESTDEVICE-CORD:ABBI'
+--*GO
+--*UPDATE Measurement SET SignalID='70e72607-dbbc-458b-9c66-5fd32b447a03' WHERE PointTag='TVA_TESTDEVICE-CORD:ABBIH'
+--*GO
+--*UPDATE Measurement SET SignalID='28bbb1fc-3434-48d3-87a8-bf5024c089d5' WHERE PointTag='TVA_TESTDEVICE-DELL:ABBI'
+--*GO
+--*UPDATE Measurement SET SignalID='c635e906-8bfb-486d-901e-46c8e07afdc3' WHERE PointTag='TVA_TESTDEVICE-DELL:ABBIH'
+--*GO
+--*UPDATE Measurement SET SignalID='ed6def67-54c4-4e74-af95-c95fa6915fbc' WHERE PointTag='TVA_TESTDEVICE-LAGO:ABBI'
+--*GO
+--*UPDATE Measurement SET SignalID='bcd7aa41-32f1-4d3c-96d5-9e1da2c9469e' WHERE PointTag='TVA_TESTDEVICE-LAGO:ABBIH'
+--*GO
 
 INSERT INTO OutputStream(NodeID, Acronym, Name, Type, ConnectionString, DataChannel, CommandChannel, IDCode, AutoPublishConfigFrame, AutoStartDataChannel, NominalFrequency, FramesPerSecond, LagTime, LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled) VALUES('e7a5235d-cb6f-4864-a96e-a8686f36e599', 'TESTSTREAM', 'Test Stream', 0, '', 'Port=-1;Clients=localhost:8800', 'Port=8900', 235, 0, 1, 60, 30, 0.001, 2, 0, 1, 0, 1)
 GO
