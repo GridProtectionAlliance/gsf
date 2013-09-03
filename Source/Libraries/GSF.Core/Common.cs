@@ -43,13 +43,13 @@
 //
 //******************************************************************************************************
 
-using GSF.Reflection;
 using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web.Hosting;
+using GSF.Reflection;
 
 namespace GSF
 {
@@ -205,7 +205,7 @@ namespace GSF
             if (s_applicationType.HasValue)
                 return s_applicationType.Value;
 
-            if ((object)HostingEnvironment.ApplicationVirtualPath != null)
+            if (HostingEnvironment.IsHosted)
             {
                 s_applicationType = ApplicationType.Web;
             }
