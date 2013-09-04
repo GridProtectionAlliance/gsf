@@ -69,14 +69,6 @@
 // Define this constant to enable a raw data export for debugging - do not leave this on for deployed builds
 #undef RawDataCapture
 
-using GSF.Communication;
-using GSF.IO;
-using GSF.Parsing;
-using GSF.PhasorProtocols.IeeeC37_118;
-using GSF.PhasorProtocols.Macrodyne;
-using GSF.PhasorProtocols.SelFastMessage;
-using GSF.TimeSeries;
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -87,6 +79,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
+using GSF.Communication;
+using GSF.IO;
+using GSF.Parsing;
+using GSF.PhasorProtocols.IeeeC37_118;
+using GSF.PhasorProtocols.Macrodyne;
+using GSF.PhasorProtocols.SelFastMessage;
+using GSF.TimeSeries;
+using GSF.Units;
 using CommandFrame = GSF.PhasorProtocols.IeeeC37_118.CommandFrame;
 using ConnectionParameters = GSF.PhasorProtocols.BpaPdcStream.ConnectionParameters;
 using FrameParser = GSF.PhasorProtocols.IeeeC37_118.FrameParser;
@@ -2772,6 +2772,34 @@ namespace GSF.PhasorProtocols
                 Stop();
                 OnConnectionException(new InvalidOperationException(string.Format("{0} in \"{1}\"", ex.Message, m_connectionString), ex), 1);
             }
+        }
+
+        /// <summary>
+        /// Attempts to initialize the protocol specific frame parser.
+        /// </summary>
+        /// <returns><c>true</c> if frame parser was successfully initialized; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// Starting the multi-protocol frame parser will automatically initialize the frame parsers so calling
+        /// this method then will be unnecessary, however, if you are using this class just to edit custom
+        /// connection parameters then initializing the will be necessary.
+        /// </remarks>
+        public bool TryInitializeFrameParser()
+        {
+            bool success = true;
+
+            try
+            {
+                if ((object)m_frameParser != null)
+                    Stop();
+
+                InitializeFrameParser(m_connectionString.ParseKeyValuePairs());
+            }
+            catch
+            {
+                success = false;
+            }
+
+            return success;
         }
 
         /// <summary>
