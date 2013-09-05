@@ -89,6 +89,16 @@
 //
 //******************************************************************************************************
 
+using GSF.Collections;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Diagnostics;
+using GSF.ErrorManagement;
+using GSF.IO;
+using GSF.Reflection;
+using GSF.Scheduling;
+using GSF.Security;
+using GSF.Security.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -102,16 +112,6 @@ using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
-using GSF.Collections;
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Diagnostics;
-using GSF.ErrorManagement;
-using GSF.IO;
-using GSF.Reflection;
-using GSF.Scheduling;
-using GSF.Security;
-using GSF.Security.Cryptography;
 
 namespace GSF.ServiceProcess
 {
@@ -308,14 +308,14 @@ namespace GSF.ServiceProcess
         public event EventHandler<EventArgs<Guid, ClientRequest>> ReceivedClientRequest;
 
         /// <summary>
-        /// Occurs when the state of a defiend <see cref="ServiceProcess"/> changes.
+        /// Occurs when the state of a defined <see cref="ServiceProcess"/> changes.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="ServiceProcess.Name"/>.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="ServiceProcess.CurrentState"/>
         /// </remarks>
         [Category("Process"),
-        Description("Occurs when the state of a defiend ServiceProcess changes.")]
+        Description("Occurs when the state of a defined ServiceProcess changes.")]
         public event EventHandler<EventArgs<string, ServiceProcessState>> ProcessStateChanged;
 
         // Fields
@@ -409,7 +409,7 @@ namespace GSF.ServiceProcess
         public ServiceHelper(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -512,12 +512,9 @@ namespace GSF.ServiceProcess
             }
             set
             {
-                if (value <= 0.0D)
-                    m_healthMonitorInterval = DefaultHealthMonitorInterval;
-                else
-                    m_healthMonitorInterval = value;
+                m_healthMonitorInterval = value <= 0.0D ? DefaultHealthMonitorInterval : value;
 
-                if (m_performanceMonitor != null)
+                if ((object)m_performanceMonitor != null)
                     m_performanceMonitor.SamplingInterval = m_healthMonitorInterval * 1000.0D;
             }
         }
@@ -669,7 +666,7 @@ namespace GSF.ServiceProcess
             }
             set
             {
-                if (m_remotingServer != null)
+                if ((object)m_remotingServer != null)
                 {
                     // Detach events from any existing instance
                     m_remotingServer.ClientConnectingException -= RemotingServer_ClientConnectingException;
@@ -679,13 +676,13 @@ namespace GSF.ServiceProcess
 
                 m_remotingServer = value;
 
-                if (m_remotingServer != null)
-                {
-                    // Attach events to new instance
-                    m_remotingServer.ClientConnectingException += RemotingServer_ClientConnectingException;
-                    m_remotingServer.ClientDisconnected += RemotingServer_ClientDisconnected;
-                    m_remotingServer.ReceiveClientDataComplete += RemotingServer_ReceiveClientDataComplete;
-                }
+                if ((object)m_remotingServer == null)
+                    return;
+
+                // Attach events to new instance
+                m_remotingServer.ClientConnectingException += RemotingServer_ClientConnectingException;
+                m_remotingServer.ClientDisconnected += RemotingServer_ClientDisconnected;
+                m_remotingServer.ReceiveClientDataComplete += RemotingServer_ReceiveClientDataComplete;
             }
         }
 
@@ -753,17 +750,19 @@ namespace GSF.ServiceProcess
                     // Re-enable all service components.
                     bool state;
                     ISupportLifecycle typedComponent;
+
                     lock (m_serviceComponents)
                     {
                         foreach (object component in m_serviceComponents)
                         {
                             typedComponent = component as ISupportLifecycle;
-                            if (typedComponent != null)
-                            {
-                                // Restore previous state.
-                                if (m_componentEnabledStates.TryGetValue(typedComponent, out state))
-                                    typedComponent.Enabled = state;
-                            }
+
+                            if ((object)typedComponent == null)
+                                continue;
+
+                            // Restore previous state.
+                            if (m_componentEnabledStates.TryGetValue(typedComponent, out state))
+                                typedComponent.Enabled = state;
                         }
                     }
                 }
@@ -777,12 +776,13 @@ namespace GSF.ServiceProcess
                         foreach (object component in m_serviceComponents)
                         {
                             typedComponent = component as ISupportLifecycle;
-                            if (typedComponent != null)
-                            {
-                                // Save current state.
-                                m_componentEnabledStates.Add(typedComponent, typedComponent.Enabled);
-                                typedComponent.Enabled = false;
-                            }
+
+                            if ((object)typedComponent == null)
+                                continue;
+
+                            // Save current state.
+                            m_componentEnabledStates.Add(typedComponent, typedComponent.Enabled);
+                            typedComponent.Enabled = false;
                         }
                     }
                 }
@@ -877,7 +877,7 @@ namespace GSF.ServiceProcess
         {
             get
             {
-                if (m_parentService == null)
+                if ((object)m_parentService == null)
                     return m_settingsCategory;
 
                 return m_parentService.ServiceName;
@@ -895,7 +895,7 @@ namespace GSF.ServiceProcess
                 StringBuilder status = new StringBuilder();
 
                 // Show the uptime for the windows service.
-                if (m_remotingServer != null)
+                if ((object)m_remotingServer != null)
                 {
                     status.AppendFormat("System Uptime: {0}", m_remotingServer.RunTime.ToString());
                     status.AppendLine();
@@ -906,20 +906,23 @@ namespace GSF.ServiceProcess
                 status.AppendFormat("Status of components used by {0}:", Name);
                 status.AppendLine();
                 status.AppendLine();
+
                 IProvideStatus typedComponent;
+
                 lock (m_serviceComponents)
                 {
                     foreach (object component in m_serviceComponents)
                     {
                         typedComponent = component as IProvideStatus;
-                        if (typedComponent != null)
-                        {
-                            // This component provides status information.                       
-                            status.AppendFormat("Status of {0}:", typedComponent.Name);
-                            status.AppendLine();
-                            status.Append(typedComponent.Status);
-                            status.AppendLine();
-                        }
+
+                        if ((object)typedComponent == null)
+                            continue;
+
+                        // This component provides status information.                       
+                        status.AppendFormat("Status of {0}:", typedComponent.Name);
+                        status.AppendLine();
+                        status.Append(typedComponent.Status);
+                        status.AppendLine();
                     }
                 }
 
@@ -940,11 +943,11 @@ namespace GSF.ServiceProcess
         /// </remarks>
         public void Initialize()
         {
-            if (!m_initialized)
-            {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
-            }
+            if (m_initialized)
+                return;
+
+            LoadSettings();         // Load settings from the config file.
+            m_initialized = true;   // Initialize only once.
         }
 
         /// <summary>
@@ -980,16 +983,16 @@ namespace GSF.ServiceProcess
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
-            if (!DesignMode)
+            if (DesignMode)
+                return;
+
+            try
             {
-                try
-                {
-                    Initialize();
-                }
-                catch
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
+                Initialize();
+            }
+            catch
+            {
+                // Prevent the IDE from crashing when component is in design mode.
             }
         }
 
@@ -999,26 +1002,26 @@ namespace GSF.ServiceProcess
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!m_persistSettings)
+                return;
 
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["LogStatusUpdates", true].Update(m_logStatusUpdates);
-                settings["MaxStatusUpdatesLength", true].Update(m_maxStatusUpdatesLength);
-                settings["MaxStatusUpdatesFrequency", true].Update(m_maxStatusUpdatesFrequency);
-                settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth);
-                settings["HealthMonitorInterval", true].Update(m_healthMonitorInterval);
-                settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit);
-                settings["SupportTelnetSessions", true].Update(m_supportTelnetSessions);
-                settings["SupportSystemCommands", true].Update(m_supportSystemCommands);
-                settings["SecureRemoteInteractions", true].Update(m_secureRemoteInteractions);
-                config.Save();
-            }
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(m_settingsCategory))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            settings["LogStatusUpdates", true].Update(m_logStatusUpdates);
+            settings["MaxStatusUpdatesLength", true].Update(m_maxStatusUpdatesLength);
+            settings["MaxStatusUpdatesFrequency", true].Update(m_maxStatusUpdatesFrequency);
+            settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth);
+            settings["HealthMonitorInterval", true].Update(m_healthMonitorInterval);
+            settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit);
+            settings["SupportTelnetSessions", true].Update(m_supportTelnetSessions);
+            settings["SupportSystemCommands", true].Update(m_supportSystemCommands);
+            settings["SecureRemoteInteractions", true].Update(m_secureRemoteInteractions);
+            config.Save();
         }
 
         /// <summary>
@@ -1029,17 +1032,19 @@ namespace GSF.ServiceProcess
         public void SaveSettings(bool includeServiceComponents)
         {
             SaveSettings();
-            if (includeServiceComponents)
+
+            if (!includeServiceComponents)
+                return;
+
+            IPersistSettings typedComponent;
+            lock (m_serviceComponents)
             {
-                IPersistSettings typedComponent;
-                lock (m_serviceComponents)
+                foreach (object component in m_serviceComponents)
                 {
-                    foreach (object component in m_serviceComponents)
-                    {
-                        typedComponent = component as IPersistSettings;
-                        if (typedComponent != null)
-                            typedComponent.SaveSettings();
-                    }
+                    typedComponent = component as IPersistSettings;
+
+                    if ((object)typedComponent != null)
+                        typedComponent.SaveSettings();
                 }
             }
         }
@@ -1050,39 +1055,39 @@ namespace GSF.ServiceProcess
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!m_persistSettings)
+                return;
 
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(m_settingsCategory))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
-                settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
-                settings.Add("MaxStatusUpdatesLength", m_maxStatusUpdatesLength, "Maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.");
-                settings.Add("MaxStatusUpdatesFrequency", m_maxStatusUpdatesFrequency, "Maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.");
-                settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
-                settings.Add("HealthMonitorInterval", m_healthMonitorInterval, "The interval, in seconds, over which to sample the performance montitor for health statistics.");
-                settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
-                settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
-                settings.Add("SupportSystemCommands", m_supportSystemCommands, "True to enable system-level access (-system switch) via the build-in commands; otherwise False.");
-                settings.Add("SecureRemoteInteractions", m_secureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
-                if (settings["TelnetSessionPassword"] != null)
-                    m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
+            settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
+            settings.Add("MaxStatusUpdatesLength", m_maxStatusUpdatesLength, "Maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.");
+            settings.Add("MaxStatusUpdatesFrequency", m_maxStatusUpdatesFrequency, "Maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.");
+            settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
+            settings.Add("HealthMonitorInterval", m_healthMonitorInterval, "The interval, in seconds, over which to sample the performance monitor for health statistics.");
+            settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
+            settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
+            settings.Add("SupportSystemCommands", m_supportSystemCommands, "True to enable system-level access (-system switch) via the build-in commands; otherwise False.");
+            settings.Add("SecureRemoteInteractions", m_secureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
 
-                LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
-                MaxStatusUpdatesLength = settings["MaxStatusUpdatesLength"].ValueAs(m_maxStatusUpdatesLength);
-                MaxStatusUpdatesFrequency = settings["MaxStatusUpdatesFrequency"].ValueAs(m_maxStatusUpdatesFrequency);
-                MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
-                HealthMonitorInterval = settings["HealthMonitorInterval"].ValueAs(m_healthMonitorInterval);
-                RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
-                SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
-                SupportSystemCommands = settings["SupportSystemCommands"].ValueAs(m_supportSystemCommands);
-                SecureRemoteInteractions = settings["SecureRemoteInteractions"].ValueAs(m_secureRemoteInteractions);
-            }
+            if ((object)settings["TelnetSessionPassword"] != null)
+                m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
+
+            LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
+            MaxStatusUpdatesLength = settings["MaxStatusUpdatesLength"].ValueAs(m_maxStatusUpdatesLength);
+            MaxStatusUpdatesFrequency = settings["MaxStatusUpdatesFrequency"].ValueAs(m_maxStatusUpdatesFrequency);
+            MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
+            HealthMonitorInterval = settings["HealthMonitorInterval"].ValueAs(m_healthMonitorInterval);
+            RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
+            SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
+            SupportSystemCommands = settings["SupportSystemCommands"].ValueAs(m_supportSystemCommands);
+            SecureRemoteInteractions = settings["SecureRemoteInteractions"].ValueAs(m_secureRemoteInteractions);
         }
 
         /// <summary>
@@ -1092,17 +1097,20 @@ namespace GSF.ServiceProcess
         public void LoadSettings(bool includeServiceComponents)
         {
             LoadSettings();
-            if (includeServiceComponents)
+
+            if (!includeServiceComponents)
+                return;
+
+            IPersistSettings typedComponent;
+
+            lock (m_serviceComponents)
             {
-                IPersistSettings typedComponent;
-                lock (m_serviceComponents)
+                foreach (object component in m_serviceComponents)
                 {
-                    foreach (object component in m_serviceComponents)
-                    {
-                        typedComponent = component as IPersistSettings;
-                        if (typedComponent != null)
-                            typedComponent.LoadSettings();
-                    }
+                    typedComponent = component as IPersistSettings;
+
+                    if ((object)typedComponent != null)
+                        typedComponent.LoadSettings();
                 }
             }
         }
@@ -1115,10 +1123,10 @@ namespace GSF.ServiceProcess
         public void OnStart(string[] args)
         {
             // Ensure required components are present.
-            if (m_parentService == null)
+            if ((object)m_parentService == null)
                 throw new InvalidOperationException("ParentService property of ServiceHelper component is not set");
 
-            if (m_remotingServer == null)
+            if ((object)m_remotingServer == null)
                 throw new InvalidOperationException("RemotingServer property of ServiceHelper component is not set");
 
             OnServiceStarting(args);
@@ -1146,9 +1154,7 @@ namespace GSF.ServiceProcess
 
                 // Enable telnet support if requested.
                 if (m_supportTelnetSessions)
-                {
                     m_clientRequestHandlers.Add(new ClientRequestHandler("Telnet", "Allows for a telnet session to the service server", RemoteTelnetSession, false));
-                }
 
                 // Enable health monitoring if requested.
                 if (m_monitorServiceHealth)
@@ -1203,7 +1209,7 @@ namespace GSF.ServiceProcess
             // Abort any processes that may be currently executing.
             foreach (ServiceProcess process in m_processes)
             {
-                if (process != null)
+                if ((object)process != null)
                     process.Abort();
             }
 
@@ -1338,7 +1344,7 @@ namespace GSF.ServiceProcess
                 ServiceResponse response = new ServiceResponse(responseType, message);
 
                 // Add any specified attachment to the service response
-                if (attachment != null)
+                if ((object)attachment != null)
                     response.Attachments.Add(attachment);
 
                 // Add original command arguments as an attachment
@@ -1425,20 +1431,20 @@ namespace GSF.ServiceProcess
         public bool AddProcess(Action<string, object[]> processExecutionMethod, string processName, object[] processArguments)
         {
             processName = processName.Trim();
-            if (FindProcess(processName) == null)
+
+            if ((object)FindProcess(processName) != null)
+                return false;
+
+            ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
+
+            process.StateChanged += Process_StateChanged;
+
+            lock (m_processes)
             {
-                ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
-                process.StateChanged += Process_StateChanged;
-
-                lock (m_processes)
-                {
-                    m_processes.Add(process);
-                }
-
-                return true;
+                m_processes.Add(process);
             }
 
-            return false;
+            return true;
         }
 
         /// <summary>
@@ -1449,18 +1455,18 @@ namespace GSF.ServiceProcess
         public bool RemoveProcess(string processName)
         {
             ServiceProcess process = FindProcess(processName.Trim());
-            if (process != null)
-            {
-                process.StateChanged -= Process_StateChanged;
-                lock (m_processes)
-                {
-                    m_processes.Remove(process);
-                }
 
-                return true;
+            if ((object)process == null)
+                return false;
+
+            process.StateChanged -= Process_StateChanged;
+
+            lock (m_processes)
+            {
+                m_processes.Remove(process);
             }
 
-            return false;
+            return true;
         }
 
         /// <summary>
@@ -1525,29 +1531,26 @@ namespace GSF.ServiceProcess
         public bool ScheduleProcess(string processName, string scheduleRule, bool updateExistingSchedule)
         {
             processName = processName.Trim();
-            if (FindProcess(processName) != null)
-            {
-                // The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
-                Schedule existingSchedule = m_processScheduler.FindSchedule(processName);
 
-                if (existingSchedule != null)
-                {
-                    // Update the process schedule if it is already exists.
-                    if (updateExistingSchedule)
-                    {
-                        existingSchedule.Rule = scheduleRule;
-                        return true;
-                    }
-                }
-                else
-                {
-                    // Schedule the process if it is not scheduled already.
-                    m_processScheduler.Schedules.Add(new Schedule(processName, scheduleRule));
-                    return true;
-                }
+            if (FindProcess(processName) == null)
+                return false;
+
+            // The specified process exists, so we'll schedule it, or update its schedule if it is scheduled already.
+            Schedule existingSchedule = m_processScheduler.FindSchedule(processName);
+
+            if ((object)existingSchedule != null)
+            {
+                // Update the process schedule if it is already exists.
+                if (!updateExistingSchedule)
+                    return false;
+
+                existingSchedule.Rule = scheduleRule;
+                return true;
             }
 
-            return false;
+            // Schedule the process if it is not scheduled already.
+            m_processScheduler.Schedules.Add(new Schedule(processName, scheduleRule));
+            return true;
         }
 
         /// <summary>
@@ -1606,7 +1609,7 @@ namespace GSF.ServiceProcess
         protected virtual void OnServiceStarting(string[] args)
         {
             // Notify service event consumers of pending service start
-            if (ServiceStarting != null)
+            if ((object)ServiceStarting != null)
                 ServiceStarting(this, new EventArgs<string[]>(args));
         }
 
@@ -1619,7 +1622,7 @@ namespace GSF.ServiceProcess
             SendServiceStateChangedResponse(ServiceState.Started);
 
             // Notify service event consumers that service has started
-            if (ServiceStarted != null)
+            if ((object)ServiceStarted != null)
                 ServiceStarted(this, EventArgs.Empty);
         }
 
@@ -1629,7 +1632,7 @@ namespace GSF.ServiceProcess
         protected virtual void OnServiceStopping()
         {
             // Notify service event consumers of pending service stop
-            if (ServiceStopping != null)
+            if ((object)ServiceStopping != null)
                 ServiceStopping(this, EventArgs.Empty);
 
             // Notify all remote clients of service stop
@@ -1642,7 +1645,7 @@ namespace GSF.ServiceProcess
         protected virtual void OnServiceStopped()
         {
             // Notify service event consumers that service has stopped
-            if (ServiceStopped != null)
+            if ((object)ServiceStopped != null)
                 ServiceStopped(this, EventArgs.Empty);
         }
 
@@ -1652,7 +1655,7 @@ namespace GSF.ServiceProcess
         protected virtual void OnServicePausing()
         {
             // Notify service event consumers of pending service stop
-            if (ServicePausing != null)
+            if ((object)ServicePausing != null)
                 ServicePausing(this, EventArgs.Empty);
 
             // Notify all remote clients of service pause
@@ -1665,7 +1668,7 @@ namespace GSF.ServiceProcess
         protected virtual void OnServicePaused()
         {
             // Notify service event consumers that service has been paused
-            if (ServicePaused != null)
+            if ((object)ServicePaused != null)
                 ServicePaused(this, EventArgs.Empty);
         }
 
@@ -1675,7 +1678,7 @@ namespace GSF.ServiceProcess
         protected virtual void OnServiceResuming()
         {
             // Notify service event consumers of pending service resume
-            if (ServiceResuming != null)
+            if ((object)ServiceResuming != null)
                 ServiceResuming(this, EventArgs.Empty);
         }
 
@@ -1688,7 +1691,7 @@ namespace GSF.ServiceProcess
             SendServiceStateChangedResponse(ServiceState.Resumed);
 
             // Notify service event consumers that service has been resumed
-            if (ServiceResumed != null)
+            if ((object)ServiceResumed != null)
                 ServiceResumed(this, EventArgs.Empty);
         }
 
@@ -1701,7 +1704,7 @@ namespace GSF.ServiceProcess
             SendServiceStateChangedResponse(ServiceState.Shutdown);
 
             // Notify service event consumers that service has shutdown
-            if (SystemShutdown != null)
+            if ((object)SystemShutdown != null)
                 SystemShutdown(this, EventArgs.Empty);
         }
 
@@ -1712,7 +1715,7 @@ namespace GSF.ServiceProcess
         /// <param name="requestSender">The <see cref="ClientInfo"/> object of the <paramref name="request"/> sender.</param>
         protected virtual void OnReceivedClientRequest(ClientRequest request, ClientInfo requestSender)
         {
-            if (ReceivedClientRequest != null)
+            if ((object)ReceivedClientRequest != null)
                 ReceivedClientRequest(this, new EventArgs<Guid, ClientRequest>(requestSender.ClientID, request));
         }
 
@@ -1724,7 +1727,7 @@ namespace GSF.ServiceProcess
         protected virtual void OnProcessStateChanged(string processName, ServiceProcessState processState)
         {
             // Notify all service event consumer of change in process state
-            if (ProcessStateChanged != null)
+            if ((object)ProcessStateChanged != null)
                 ProcessStateChanged(this, new EventArgs<string, ServiceProcessState>(processName, processState));
 
             // Notify all remote clients of change in process state
@@ -1737,81 +1740,81 @@ namespace GSF.ServiceProcess
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            try
             {
-                try
+                // This will be done regardless of whether the object is finalized or disposed.
+                if (!disposing)
+                    return;
+
+                // This will be done only when the object is disposed by calling Dispose().
+                SaveSettings();
+
+                if ((object)m_statusLog != null)
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
+                    m_statusLog.LogException -= StatusLog_LogException;
+                    m_statusLog.Dispose();
+                }
+
+                if ((object)m_processScheduler != null)
+                {
+                    m_processScheduler.ScheduleDue -= Scheduler_ScheduleDue;
+                    m_processScheduler.Dispose();
+                }
+
+                if ((object)m_errorLogger != null)
+                {
+                    m_errorLogger.LoggingException -= ErrorLogger_LoggingException;
+                    m_errorLogger.Dispose();
+                }
+
+                if ((object)m_performanceMonitor != null)
+                {
+                    m_performanceMonitor.Dispose();
+                }
+
+                if ((object)m_remoteCommandProcess != null)
+                {
+                    m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
+                    m_remoteCommandProcess.OutputDataReceived -= RemoteCommandProcess_OutputDataReceived;
+
+                    if (!m_remoteCommandProcess.HasExited)
+                        m_remoteCommandProcess.Kill();
+
+                    m_remoteCommandProcess.Dispose();
+                }
+
+                if ((object)m_statusUpdateQueue != null)
+                {
+                    m_statusUpdateQueue.ProcessException -= StatusUpdateQueue_ProcessException;
+                    m_statusUpdateQueue.Flush();
+                    m_statusUpdateQueue.Dispose();
+                }
+
+                // Service processes are created and owned by remoting server, so we dispose them
+                if ((object)m_processes != null)
+                {
+                    lock (m_processes)
                     {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
-                        if (m_statusLog != null)
+                        foreach (ServiceProcess process in m_processes)
                         {
-                            m_statusLog.LogException -= StatusLog_LogException;
-                            m_statusLog.Dispose();
+                            process.StateChanged -= Process_StateChanged;
+                            process.Dispose();
                         }
 
-                        if (m_processScheduler != null)
-                        {
-                            m_processScheduler.ScheduleDue -= Scheduler_ScheduleDue;
-                            m_processScheduler.Dispose();
-                        }
-
-                        if (m_errorLogger != null)
-                        {
-                            m_errorLogger.LoggingException -= ErrorLogger_LoggingException;
-                            m_errorLogger.Dispose();
-                        }
-
-                        if (m_performanceMonitor != null)
-                        {
-                            m_performanceMonitor.Dispose();
-                        }
-
-                        if (m_remoteCommandProcess != null)
-                        {
-                            m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
-                            m_remoteCommandProcess.OutputDataReceived -= RemoteCommandProcess_OutputDataReceived;
-
-                            if (!m_remoteCommandProcess.HasExited)
-                                m_remoteCommandProcess.Kill();
-
-                            m_remoteCommandProcess.Dispose();
-                        }
-
-                        if (m_statusUpdateQueue != null)
-                        {
-                            m_statusUpdateQueue.ProcessException -= StatusUpdateQueue_ProcessException;
-                            m_statusUpdateQueue.Flush();
-                            m_statusUpdateQueue.Dispose();
-                        }
-
-                        // Service processes are created and owned by remoting server, so we dispose them
-                        if (m_processes != null)
-                        {
-                            lock (m_processes)
-                            {
-                                foreach (ServiceProcess process in m_processes)
-                                {
-                                    process.StateChanged -= Process_StateChanged;
-                                    process.Dispose();
-                                }
-
-                                m_processes.Clear();
-                            }
-                        }
-
-                        // Detach any remoting server events, we don't own this component so we don't dispose it
-                        RemotingServer = null;
+                        m_processes.Clear();
                     }
                 }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+
+                // Detach any remoting server events, we don't own this component so we don't dispose it
+                RemotingServer = null;
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -1822,7 +1825,7 @@ namespace GSF.ServiceProcess
                 Thread.CurrentPrincipal = client.ClientUser;
 
             // Retrieve previously initialized security provider of the remote client's user.
-            if (SecurityProviderCache.CurrentProvider == null)
+            if ((object)SecurityProviderCache.CurrentProvider == null)
                 SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             // Initialize security provider for the remote client's user from specified credentials.
@@ -1928,7 +1931,7 @@ namespace GSF.ServiceProcess
             ServiceProcess process = sender as ServiceProcess;
 
             if ((object)process == null)
-                return; // Avoiding Null Derefenrence Exception
+                return; // Avoiding Null reference exception
 
             OnProcessStateChanged(process.Name, process.CurrentState);
         }
@@ -1970,28 +1973,28 @@ namespace GSF.ServiceProcess
         {
             ClientInfo disconnectedClient = FindConnectedClient(e.Argument);
 
-            if (disconnectedClient != null)
-            {
-                if (e.Argument == m_remoteCommandClientID)
-                {
-                    try
-                    {
-                        RemoteTelnetSession(new ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
-                    }
-                    catch (Exception ex)
-                    {
-                        // We'll encounter an exception because we'll try to update the status of the client that had the
-                        // remote command session open and this will fail since the client is disconnected.
-                        m_errorLogger.Log(ex);
-                    }
-                }
+            if ((object)disconnectedClient == null)
+                return;
 
-                lock (m_remoteClients)
+            if (e.Argument == m_remoteCommandClientID)
+            {
+                try
                 {
-                    m_remoteClients.Remove(disconnectedClient);
+                    RemoteTelnetSession(new ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
                 }
-                UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
+                catch (Exception ex)
+                {
+                    // We'll encounter an exception because we'll try to update the status of the client that had the
+                    // remote command session open and this will fail since the client is disconnected.
+                    m_errorLogger.Log(ex);
+                }
             }
+
+            lock (m_remoteClients)
+            {
+                m_remoteClients.Remove(disconnectedClient);
+            }
+            UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
         }
 
         private delegate bool TryGetClientPrincipal(Guid clientID, out WindowsPrincipal clientPrincipal);
@@ -2004,7 +2007,7 @@ namespace GSF.ServiceProcess
             TryGetClientPrincipal tryGetClientPrincipal = null;
             WindowsPrincipal clientPrincipal;
 
-            if (requestSender == null)
+            if ((object)requestSender == null)
             {
                 // First message from a remote client should be its info.
                 ClientInfo client;
@@ -2013,7 +2016,7 @@ namespace GSF.ServiceProcess
 
                 try
                 {
-                    if (client != null)
+                    if ((object)client != null)
                     {
                         client.ClientID = e.Argument1;
                         client.ConnectedAt = DateTime.Now;
@@ -2037,7 +2040,7 @@ namespace GSF.ServiceProcess
                         }
 
                         // Engage security for the remote client connection if configured.
-                        if (!m_secureRemoteInteractions || (m_secureRemoteInteractions && VerifySecurity(client)))
+                        if (!m_secureRemoteInteractions || VerifySecurity(client))
                         {
                             lock (m_remoteClients)
                             {
@@ -2063,9 +2066,13 @@ namespace GSF.ServiceProcess
                     try
                     {
                         SendResponse(e.Argument1, new ServiceResponse("AuthenticationFailure"), false);
-                        m_remotingServer.DisconnectOne(e.Argument1);
 
-                        UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
+                        if ((object)m_remotingServer != null)
+                            m_remotingServer.DisconnectOne(e.Argument1);
+
+                        if ((object)client != null)
+                            UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
+
                         m_errorLogger.Log(ex);
                     }
                     catch
@@ -2075,10 +2082,11 @@ namespace GSF.ServiceProcess
             }
             else
             {
-                // All subsequest messages from a remote client would be requests.
+                // All subsequent messages from a remote client would be requests.
                 ClientRequest request;
                 Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out request);
-                if (request != null)
+
+                if ((object)request != null)
                 {
                     try
                     {
@@ -2105,7 +2113,8 @@ namespace GSF.ServiceProcess
                             OnReceivedClientRequest(request, requestSender);
 
                             ClientRequestHandler requestHandler = FindClientRequestHandler(request.Command);
-                            if (requestHandler != null)
+
+                            if ((object)requestHandler != null)
                             {
                                 // Request handler exists.
                                 requestHandler.HandlerMethod(requestInfo);
@@ -2287,25 +2296,22 @@ namespace GSF.ServiceProcess
                     foreach (object component in m_serviceComponents)
                     {
                         typedComponent = component as IPersistSettings;
-                        if (typedComponent != null)
+
+                        if ((object)typedComponent == null)
+                            continue;
+
+                        foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[typedComponent.SettingsCategory].Cast<CategorizedSettingsElement>().Where(setting => !setting.Encrypted))
                         {
-                            foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[typedComponent.SettingsCategory])
-                            {
-                                // Skip encrypted settings for security purpose.
-                                if (setting.Encrypted)
-                                    continue;
+                            responseMessage.AppendLine();
+                            responseMessage.Append(typedComponent.SettingsCategory.PadRight(20));
+                            responseMessage.Append(' ');
+                            responseMessage.Append(setting.Name.PadRight(25));
+                            responseMessage.Append(' ');
 
-                                responseMessage.AppendLine();
-                                responseMessage.Append(typedComponent.SettingsCategory.PadRight(20));
-                                responseMessage.Append(' ');
-                                responseMessage.Append(setting.Name.PadRight(25));
-                                responseMessage.Append(' ');
-
-                                if (!string.IsNullOrEmpty(setting.Value))
-                                    responseMessage.Append(setting.Value.PadRight(30));
-                                else
-                                    responseMessage.Append("[Not Set]".PadRight(30));
-                            }
+                            if (!string.IsNullOrEmpty(setting.Value))
+                                responseMessage.Append(setting.Value.PadRight(30));
+                            else
+                                responseMessage.Append("[Not Set]".PadRight(30));
                         }
                     }
                 }
@@ -2655,13 +2661,13 @@ namespace GSF.ServiceProcess
                 {
                     foreach (ClientRequestHandler handler in m_clientRequestHandlers)
                     {
-                        if (handler.IsAdvertised || showAdvancedHelp)
-                        {
-                            responseMessage.AppendLine();
-                            responseMessage.Append(handler.Command.PadRight(20));
-                            responseMessage.Append(' ');
-                            responseMessage.Append(handler.CommandDescription.PadRight(55));
-                        }
+                        if (!handler.IsAdvertised && !showAdvancedHelp)
+                            continue;
+
+                        responseMessage.AppendLine();
+                        responseMessage.Append(handler.Command.PadRight(20));
+                        responseMessage.Append(' ');
+                        responseMessage.Append(handler.CommandDescription.PadRight(55));
                     }
                 }
                 responseMessage.AppendLine();
@@ -2705,7 +2711,7 @@ namespace GSF.ServiceProcess
                 string message;
                 bool success;
 
-                if (m_performanceMonitor != null)
+                if ((object)m_performanceMonitor != null)
                 {
                     try
                     {
@@ -2766,11 +2772,11 @@ namespace GSF.ServiceProcess
                 try
                 {
                     // Dispose existing performance monitor
-                    if (m_performanceMonitor != null)
+                    if ((object)m_performanceMonitor != null)
                         m_performanceMonitor.Dispose();
 
                     // Recreate the performance monitor
-                    m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D, true);
+                    m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D);
 
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "System health monitor successfully reset.\r\n\r\n");
                 }
@@ -2885,13 +2891,13 @@ namespace GSF.ServiceProcess
                     foreach (object component in m_serviceComponents)
                     {
                         typedComponent = component as IPersistSettings;
-                        if ((object)typedComponent != null &&
-                            string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
-                        {
-                            typedComponent.LoadSettings();
-                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
-                            return;
-                        }
+
+                        if ((object)typedComponent == null || string.Compare(categoryName, typedComponent.SettingsCategory, true) != 0)
+                            continue;
+
+                        typedComponent.LoadSettings();
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
+                        return;
                     }
                 }
 
@@ -2955,77 +2961,78 @@ namespace GSF.ServiceProcess
                     foreach (object component in m_serviceComponents)
                     {
                         typedComponent = component as IPersistSettings;
-                        if (typedComponent != null &&
-                            string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
+
+                        if ((object)typedComponent == null || string.Compare(categoryName, typedComponent.SettingsCategory, true) != 0)
+                            continue;
+
+                        ConfigurationFile config = ConfigurationFile.Current;
+                        CategorizedSettingsElementCollection settings = config.Settings[categoryName];
+                        CategorizedSettingsElement setting = settings[settingName];
+
+                        if (addSetting)
                         {
-                            ConfigurationFile config = ConfigurationFile.Current;
-                            CategorizedSettingsElementCollection settings = config.Settings[categoryName];
-                            CategorizedSettingsElement setting = settings[settingName];
-                            if (addSetting)
+                            // Add new setting.
+                            if ((object)setting == null)
                             {
-                                // Add new setting.
-                                if (setting == null)
-                                {
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
-                                    settings.Add(settingName, settingValue);
-                                    config.Save();
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
-                                }
-                                else
-                                {
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
-                                    return;
-                                }
-                            }
-                            else if (deleteSetting)
-                            {
-                                // Delete existing setting.
-                                if (setting != null)
-                                {
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
-                                    settings.Remove(setting);
-                                    config.Save();
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
-                                }
-                                else
-                                {
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
-                                    return;
-                                }
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                settings.Add(settingName, settingValue);
+                                config.Save();
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                             }
                             else
                             {
-                                // Update existing setting.
-                                if (setting != null)
-                                {
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
-                                    setting.Value = settingValue;
-                                    config.Save();
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
-                                }
-                                else
-                                {
-                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
-                                    return;
-                                }
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
+                                return;
                             }
-
-                            if (reloadSettings)
-                            {
-                                // The user has requested to reload settings for all the components.
-                                requestInfo.Request = ClientRequest.Parse(string.Format("ReloadSettings {0}", categoryName));
-                                ReloadSettings(requestInfo);
-                            }
-
-                            if (listSettings)
-                            {
-                                // The user has requested to list all of the queryable settings.
-                                requestInfo.Request = ClientRequest.Parse("Settings");
-                                ShowSettings(requestInfo);
-                            }
-
-                            return;
                         }
+                        else if (deleteSetting)
+                        {
+                            // Delete existing setting.
+                            if ((object)setting != null)
+                            {
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                settings.Remove(setting);
+                                config.Save();
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                            }
+                            else
+                            {
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            // Update existing setting.
+                            if ((object)setting != null)
+                            {
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                setting.Value = settingValue;
+                                config.Save();
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                            }
+                            else
+                            {
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                return;
+                            }
+                        }
+
+                        if (reloadSettings)
+                        {
+                            // The user has requested to reload settings for all the components.
+                            requestInfo.Request = ClientRequest.Parse(string.Format("ReloadSettings {0}", categoryName));
+                            ReloadSettings(requestInfo);
+                        }
+
+                        if (!listSettings)
+                            return;
+
+                        // The user has requested to list all of the queryable settings.
+                        requestInfo.Request = ClientRequest.Parse("Settings");
+                        ShowSettings(requestInfo);
+
+                        return;
                     }
                 }
 
@@ -3095,7 +3102,7 @@ namespace GSF.ServiceProcess
                         UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
                         Process startedProcess = Process.Start(processName, processArgs);
 
-                        if (startedProcess != null)
+                        if ((object)startedProcess != null)
                             UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started system process \"{0}\".\r\n\r\n", processName);
                         else
                             UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\".\r\n\r\n", processName);
@@ -3110,11 +3117,13 @@ namespace GSF.ServiceProcess
                 {
                     // Start service process.
                     ServiceProcess processToStart = FindProcess(processName);
-                    if (processToStart != null)
+
+                    if ((object)processToStart != null)
                     {
                         if (processToStart.CurrentState != ServiceProcessState.Processing)
                         {
                             UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start service process \"{0}\"...\r\n\r\n", processName);
+
                             if (string.IsNullOrEmpty(processArgs))
                             {
                                 processToStart.Start();
@@ -3123,10 +3132,14 @@ namespace GSF.ServiceProcess
                             {
                                 // Prepare the arguments.
                                 string[] splitArgs = processArgs.Split(',');
-                                Array.ForEach(splitArgs, (string arg) => arg.Trim());
+
+                                for (int i = 0; i < splitArgs.Length; i++)
+                                {
+                                    splitArgs[i] = splitArgs[i].Trim();
+                                }
 
                                 // Start the service process.
-                                processToStart.Start(splitArgs);
+                                processToStart.Start(splitArgs.Cast<object>().ToArray());
                             }
                             UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started service process \"{0}\".\r\n\r\n", processName);
                         }
@@ -3141,11 +3154,11 @@ namespace GSF.ServiceProcess
                     }
                 }
 
-                if (listProcesses)
-                {
-                    requestInfo.Request = ClientRequest.Parse(string.Format("Processes {0}", systemProcess ? "-system" : ""));
-                    ShowProcesses(requestInfo);
-                }
+                if (!listProcesses)
+                    return;
+
+                requestInfo.Request = ClientRequest.Parse(string.Format("Processes {0}", systemProcess ? "-system" : ""));
+                ShowProcesses(requestInfo);
             }
         }
 
@@ -3196,10 +3209,9 @@ namespace GSF.ServiceProcess
                 {
                     // Abort system process.
                     Process processToAbort = null;
+
                     if (string.Compare(processName, "Me", true) == 0)
-                    {
                         processName = Process.GetCurrentProcess().ProcessName;
-                    }
 
                     foreach (Process process in Process.GetProcessesByName(processName))
                     {
@@ -3208,7 +3220,7 @@ namespace GSF.ServiceProcess
                         break;
                     }
 
-                    if (processToAbort == null)
+                    if ((object)processToAbort == null)
                     {
                         int processID;
 
@@ -3219,7 +3231,7 @@ namespace GSF.ServiceProcess
                         }
                     }
 
-                    if (processToAbort != null)
+                    if ((object)processToAbort != null)
                     {
                         try
                         {
@@ -3249,7 +3261,8 @@ namespace GSF.ServiceProcess
                 {
                     // Abort service process.
                     ServiceProcess processToAbort = FindProcess(processName);
-                    if (processToAbort != null)
+
+                    if ((object)processToAbort != null)
                     {
                         if (processToAbort.CurrentState == ServiceProcessState.Processing)
                         {
@@ -3268,11 +3281,11 @@ namespace GSF.ServiceProcess
                     }
                 }
 
-                if (listProcesses)
-                {
-                    requestInfo.Request = ClientRequest.Parse(string.Format("Processes {0}", systemProcess ? "-system" : ""));
-                    ShowProcesses(requestInfo);
-                }
+                if (!listProcesses)
+                    return;
+
+                requestInfo.Request = ClientRequest.Parse(string.Format("Processes {0}", systemProcess ? "-system" : ""));
+                ShowProcesses(requestInfo);
             }
         }
 
@@ -3378,11 +3391,11 @@ namespace GSF.ServiceProcess
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to schedule process \"{0}\". {1}\r\n\r\n", processName, ex.Message);
                 }
 
-                if (listSchedules)
-                {
-                    requestInfo.Request = ClientRequest.Parse("Schedules");
-                    ShowSchedules(requestInfo);
-                }
+                if (!listSchedules)
+                    return;
+
+                requestInfo.Request = ClientRequest.Parse("Schedules");
+                ShowSchedules(requestInfo);
             }
         }
 
@@ -3423,7 +3436,7 @@ namespace GSF.ServiceProcess
 
                 Schedule scheduleToRemove = m_processScheduler.FindSchedule(processName);
 
-                if (scheduleToRemove != null)
+                if ((object)scheduleToRemove != null)
                 {
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to unschedule process \"{0}\"...\r\n\r\n", processName);
                     m_processScheduler.Schedules.Remove(scheduleToRemove);
@@ -3440,11 +3453,11 @@ namespace GSF.ServiceProcess
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to unschedule process \"{0}\". Process is not scheduled.\r\n\r\n", processName);
                 }
 
-                if (listSchedules)
-                {
-                    requestInfo.Request = ClientRequest.Parse("Schedules");
-                    ShowSchedules(requestInfo);
-                }
+                if (!listSchedules)
+                    return;
+
+                requestInfo.Request = ClientRequest.Parse("Schedules");
+                ShowSchedules(requestInfo);
             }
         }
 
@@ -3482,11 +3495,11 @@ namespace GSF.ServiceProcess
                 m_processScheduler.SaveSettings();
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully saved process schedules to the config file.\r\n\r\n");
 
-                if (listSchedules)
-                {
-                    requestInfo.Request = ClientRequest.Parse("Schedules");
-                    ShowSchedules(requestInfo);
-                }
+                if (!listSchedules)
+                    return;
+
+                requestInfo.Request = ClientRequest.Parse("Schedules");
+                ShowSchedules(requestInfo);
             }
         }
 
@@ -3524,11 +3537,11 @@ namespace GSF.ServiceProcess
                 m_processScheduler.LoadSettings();
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded process schedules from the config file.\r\n\r\n");
 
-                if (listSchedules)
-                {
-                    requestInfo.Request = ClientRequest.Parse("Schedules");
-                    ShowSchedules(requestInfo);
-                }
+                if (!listSchedules)
+                    return;
+
+                requestInfo.Request = ClientRequest.Parse("Schedules");
+                ShowSchedules(requestInfo);
             }
         }
 
@@ -3564,7 +3577,7 @@ namespace GSF.ServiceProcess
                 AssemblyInfo serviceAssembly = AssemblyInfo.EntryAssembly;
                 string serviceName;
 
-                if (m_parentService != null && !string.IsNullOrWhiteSpace(m_parentService.ServiceName))
+                if ((object)m_parentService != null && !string.IsNullOrWhiteSpace(m_parentService.ServiceName))
                     serviceName = m_parentService.ServiceName;
                 else
                     serviceName = AppDomain.CurrentDomain.FriendlyName;
@@ -3617,8 +3630,8 @@ namespace GSF.ServiceProcess
                 // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
                 //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
                 // Total system runtime: xx days yy hours zz minutes ii seconds
-                if (m_remotingServer != null)
-                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
+                if ((object)m_remotingServer != null)
+                    message = string.Format(" Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime);
                 else
                     message = string.Format("Current system time: {0}, {1} UTC", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
@@ -3632,7 +3645,7 @@ namespace GSF.ServiceProcess
 
         private void RemoteTelnetSession(ClientRequestInfo requestinfo)
         {
-            if (m_remoteCommandProcess == null && requestinfo.Request.Arguments.ContainsHelpRequest)
+            if ((object)m_remoteCommandProcess == null && requestinfo.Request.Arguments.ContainsHelpRequest)
             {
                 StringBuilder helpMessage = new StringBuilder();
 
@@ -3664,7 +3677,7 @@ namespace GSF.ServiceProcess
                 bool connectSession = requestinfo.Request.Arguments.Exists("connect");
                 bool disconnectSession = requestinfo.Request.Arguments.Exists("disconnect");
 
-                if (m_remoteCommandProcess == null && connectSession && !string.IsNullOrEmpty(requestinfo.Request.Arguments["connect"]))
+                if ((object)m_remoteCommandProcess == null && connectSession && !string.IsNullOrEmpty(requestinfo.Request.Arguments["connect"]))
                 {
                     // User wants to establish a remote command session.
                     string password = requestinfo.Request.Arguments["connect"];
@@ -3694,7 +3707,7 @@ namespace GSF.ServiceProcess
                         UpdateStatus(requestinfo.Sender.ClientID, UpdateType.Alarm, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
                     }
                 }
-                else if (string.Compare(requestinfo.Request.Command, "Telnet", true) == 0 && m_remoteCommandProcess != null && disconnectSession)
+                else if (string.Compare(requestinfo.Request.Command, "Telnet", true) == 0 && (object)m_remoteCommandProcess != null && disconnectSession)
                 {
                     // User wants to terminate an established remote command session.                   
                     m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
@@ -3711,7 +3724,7 @@ namespace GSF.ServiceProcess
 
                     UpdateStatus(UpdateType.Information, "Remote command session terminated - status updates are resumed.\r\n\r\n");
                 }
-                else if (m_remoteCommandProcess != null)
+                else if ((object)m_remoteCommandProcess != null)
                 {
                     // User has entered commands that must be redirected to the established command session.
                     string input = requestinfo.Request.Command + " " + requestinfo.Request.Arguments;
