@@ -1988,7 +1988,7 @@ namespace PhasorProtocolAdapters
         private void m_dataChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException(string.Format("Exception occurred while connecting client to data channel: {0}", ex.Message), ex));
+            OnProcessException(new InvalidOperationException(string.Format("Exception occurred while client attempting to connect to data channel: {0}", ex.Message), ex));
         }
 
         private void m_dataChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
@@ -2054,7 +2054,7 @@ namespace PhasorProtocolAdapters
         private void m_commandChannel_ClientConnectingException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException(string.Format("Socket exception occurred while attempting to client to command channel: {0}", ex.Message), ex));
+            OnProcessException(new InvalidOperationException(string.Format("Socket exception occurred while client attempting to connect to command channel: {0}", ex.Message), ex));
         }
 
         private void m_commandChannel_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)

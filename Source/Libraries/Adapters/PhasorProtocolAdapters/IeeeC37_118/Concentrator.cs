@@ -244,7 +244,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                                 status.AppendFormat(" Auto-publish config frame: {0}\r\n", AutoPublishConfigurationFrame);
                                 status.AppendFormat("   Auto-start data channel: {0}\r\n", AutoStartDataChannel);
                                 status.AppendFormat("       Data stream ID code: {0}\r\n", IDCode);
-                                status.AppendFormat("       Dervied system time: {0} UTC\r\n", ((DateTime)RealTime).ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                                status.AppendFormat("       Derived system time: {0} UTC\r\n", ((DateTime)RealTime).ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                                 HeaderFrame headerFrame = new HeaderFrame(status.ToString());
                                 commandChannel.SendToAsync(clientID, headerFrame.BinaryImage, 0, headerFrame.BinaryLength);
