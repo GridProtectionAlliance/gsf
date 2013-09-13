@@ -281,7 +281,7 @@
     <Error Condition="'$(TfsServer)' == ''" Text="TfsServer property must be set."/>
     <PropertyGroup>
       <ServerFolder Condition="'$(ServerFolder)' == ''">$/$(ProjectName)/Main</ServerFolder>
-      <LocalFolder Condition="'$(LocalFolder)' == ''">$(TEMP)\MSBuild\$(ProjectName)</LocalFolder>
+      <LocalFolder Condition="'$(LocalFolder)' == ''">$([System.IO.Path]::GetFullPath('$(TEMP)\MSBuild\$(ProjectName)'))</LocalFolder>
       <BuildFlavor Condition="'$(BuildFlavor)' == ''">Release</BuildFlavor>
       <BuildTarget Condition="'$(BuildTarget)' == ''">Any CPU</BuildTarget>
       <BuildOutputFolder Condition="'$(BuildOutputFolder)' == ''">$(LocalFolder)\Build\Output\$(BuildFlavor)</BuildOutputFolder>
