@@ -1022,7 +1022,7 @@ namespace HistorianView
             {
                 line.Append(record.Name);
                 line.Append(' ');
-                line.Append(record.Description);
+                line.Append(record.Description.Replace(',', '-'));
                 line.Append(',');
             }
 
