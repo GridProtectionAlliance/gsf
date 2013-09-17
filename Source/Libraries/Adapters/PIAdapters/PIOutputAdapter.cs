@@ -308,7 +308,7 @@ namespace PIAdapters
             if (settings.TryGetValue("PIPointSource", out setting))
                 m_piPointSource = setting;
             else
-                m_piPointSource = "TSF";
+                m_piPointSource = "GSF";
 
             if (settings.TryGetValue("PIPointClass", out setting))
                 m_piPointClass = setting;
@@ -415,6 +415,7 @@ namespace PIAdapters
                             MapKeysToPoints();
 
                         m_tagKeyMap[measurement.Key].Data.UpdateValue(measurement.AdjustedValue, new DateTime(measurement.Timestamp).ToLocalTime());
+                        m_processedMeasurements++;
                     }
                 }
             }
@@ -432,12 +433,15 @@ namespace PIAdapters
             {
                 foreach (MeasurementKey key in InputMeasurementKeys)
                 {
-                    DataRow[] rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SIGNALID='{0}'", key.SignalID));
+                    DataRow[] rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID='{0}'", key.SignalID));
+
                     if (rows.Length > 0)
                     {
-                        string tagname = rows[0]["POINTTAG"].ToString();
-                        if (!String.IsNullOrWhiteSpace(rows[0]["ALTERNATETAG"].ToString()))
-                            tagname = rows[0]["ALTERNATETAG"].ToString();
+                        string tagname = rows[0]["PointTag"].ToString();
+
+                        // Use alternate tag if one is defined
+                        if (!string.IsNullOrWhiteSpace(rows[0]["AlternateTag"].ToString()) && string.Compare(rows[0]["AlternateTag"].ToString(), "DIGI", true) != 0)
+                            tagname = rows[0]["AlternateTag"].ToString();
 
                         PointList points;
 
@@ -520,21 +524,22 @@ namespace PIAdapters
                 {
                     IPIPoints2 pts2 = (IPIPoints2)m_server.PIPoints;
                     PointList piPoints;
-                    DataTable dtMeasurements = DataSource.Tables["ActiveMeasurements"];
+                    DataTable measurements = DataSource.Tables["ActiveMeasurements"];
                     DataRow[] rows;
 
                     foreach (MeasurementKey key in InputMeasurementKeys)
                     {
-                        rows = dtMeasurements.Select(string.Format("SIGNALID='{0}'", key.SignalID));
+                        rows = measurements.Select(string.Format("SignalID='{0}'", key.SignalID));
 
                         if (rows.Any())
                         {
-                            string tagname = rows[0]["POINTTAG"].ToString();
+                            string tagname = rows[0]["PointTag"].ToString();
 
-                            if (!string.IsNullOrWhiteSpace(rows[0]["ALTERNATETAG"].ToString()))
-                                tagname = rows[0]["ALTERNATETAG"].ToString();
+                            // Use alternate tag if one is defined
+                            if (!string.IsNullOrWhiteSpace(rows[0]["AlternateTag"].ToString()) && string.Compare(rows[0]["AlternateTag"].ToString(), "DIGI", true) != 0)
+                                tagname = rows[0]["AlternateTag"].ToString();
 
-                            piPoints = m_server.GetPoints(string.Format("EXDESC='{0}'", rows[0]["SIGNALID"]));
+                            piPoints = m_server.GetPoints(string.Format("EXDESC='{0}'", rows[0]["SignalID"]));
 
                             if (piPoints.Count == 0)
                             {
@@ -548,7 +553,7 @@ namespace PIAdapters
                             {
                                 foreach (PIPoint pt in piPoints)
                                 {
-                                    if (pt.Name != rows[0]["POINTTAG"].ToString())
+                                    if (pt.Name != rows[0]["PointTag"].ToString())
                                         pts2.Rename(pt.Name, tagname);
                                 }
                             }
@@ -558,14 +563,15 @@ namespace PIAdapters
                             NamedValues edit = new NamedValues();
 
                             edit.Add("pointsource", m_piPointSource);
-                            edit.Add("Descriptor", rows[0]["SIGNALREFERENCE"].ToString());
-                            edit.Add("exdesc", rows[0]["SIGNALID"].ToString());
-                            edit.Add("sourcetag", rows[0]["POINTTAG"].ToString());
+                            edit.Add("Descriptor", rows[0]["Description"].ToString());
+                            edit.Add("exdesc", rows[0]["SignalID"].ToString());
+                            edit.Add("sourcetag", rows[0]["PointTag"].ToString());
 
-                            if (dtMeasurements.Columns.Contains("ENGINEERINGUNITS")) // engineering units is a new field for this view -- handle the case that its not there
-                                edit.Add("engunits", rows[0]["ENGINEERINGUNITS"].ToString());
+                            // TODO: Add this field to the ActiveMeasurement view
+                            if (measurements.Columns.Contains("EngineeringUnits")) // engineering units is a new field for this view -- handle the case that its not there
+                                edit.Add("engunits", rows[0]["EngineeringUnits"].ToString());
 
-                            edits.Add(rows[0]["POINTTAG"].ToString(), edit);
+                            edits.Add(rows[0]["PointTag"].ToString(), edit);
                             pts2.EditTags(edits, out errors);
 
                             if (errors.Count > 0)
@@ -575,7 +581,7 @@ namespace PIAdapters
                 }
                 else
                 {
-                    OnStatusMessage("PI Historian is not configured with any input measurements. Therefore, metadata sync will not do work.");
+                    OnStatusMessage("OSI-PI historian output adapter is not configured to receive any input measurements - metadata refresh cancelled.");
                 }
             }
             catch (ThreadAbortException)
