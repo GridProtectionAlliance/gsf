@@ -2780,21 +2780,24 @@ namespace GSF.TimeSeries
             {
                 // Send actionable response
                 m_serviceHelper.SendActionableResponse(requestInfo, success, attachment, status, args);
-                string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
-                string arguments = requestInfo.Request.Arguments.ToString();
-                string message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")");
-
-                if (status != null)
-                {
-                    if (args.Length == 0)
-                        message += " - " + status;
-                    else
-                        message += " - " + string.Format(status, args);
-                }
 
                 // Log details of client request as well as response
                 if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
+                {
+                    string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
+                    string arguments = requestInfo.Request.Arguments.ToString();
+                    string message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")");
+
+                    if (status != null)
+                    {
+                        if (args.Length == 0)
+                            message += " - " + status;
+                        else
+                            message += " - " + string.Format(status, args);
+                    }
+
                     m_serviceHelper.StatusLog.WriteTimestampedLine(message);
+                }
             }
             catch (Exception ex)
             {
