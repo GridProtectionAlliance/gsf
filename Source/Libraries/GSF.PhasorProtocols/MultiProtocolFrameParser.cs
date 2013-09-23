@@ -87,9 +87,6 @@ using GSF.PhasorProtocols.Macrodyne;
 using GSF.PhasorProtocols.SelFastMessage;
 using GSF.TimeSeries;
 using GSF.Units;
-using CommandFrame = GSF.PhasorProtocols.IeeeC37_118.CommandFrame;
-using ConnectionParameters = GSF.PhasorProtocols.BpaPdcStream.ConnectionParameters;
-using FrameParser = GSF.PhasorProtocols.IeeeC37_118.FrameParser;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
 using UdpClient = GSF.Communication.UdpClient;
@@ -366,7 +363,6 @@ namespace GSF.PhasorProtocols
                 }
                 set
                 {
-                    throw new NotImplementedException();
                 }
             }
 
@@ -399,7 +395,6 @@ namespace GSF.PhasorProtocols
                 }
                 set
                 {
-                    throw new NotImplementedException();
                 }
             }
 
@@ -484,6 +479,7 @@ namespace GSF.PhasorProtocols
                 }
                 set
                 {
+                    // value parameter not used here intentionally
                     if ((object)m_tcpServer != null)
                         m_tcpServer.Enabled = true;
                 }
@@ -1026,7 +1022,6 @@ namespace GSF.PhasorProtocols
                 }
                 set
                 {
-                    throw new NotImplementedException();
                 }
             }
 
@@ -1058,7 +1053,6 @@ namespace GSF.PhasorProtocols
                 }
                 set
                 {
-                    throw new NotImplementedException();
                 }
             }
 
@@ -1842,7 +1836,7 @@ namespace GSF.PhasorProtocols
                 switch (value)
                 {
                     case PhasorProtocol.BpaPdcStream:
-                        m_connectionParameters = new ConnectionParameters();
+                        m_connectionParameters = new BpaPdcStream.ConnectionParameters();
                         break;
                     case PhasorProtocol.FNet:
                         m_connectionParameters = new FNet.ConnectionParameters();
@@ -2815,10 +2809,14 @@ namespace GSF.PhasorProtocols
             {
                 case PhasorProtocol.IeeeC37_118V2:
                 case PhasorProtocol.IeeeC37_118V1:
-                    m_frameParser = new FrameParser(DraftRevision.Draft7);
-                    break;
                 case PhasorProtocol.IeeeC37_118D6:
-                    m_frameParser = new FrameParser(DraftRevision.Draft6);
+                    // Check settings collection for a "trust header length" parameter
+                    if (!settings.TryGetValue("trustHeaderLength", out setting) || string.IsNullOrWhiteSpace(setting))
+                        setting = "true";
+
+                    IeeeC37_118.FrameParser frameParser = new IeeeC37_118.FrameParser(m_phasorProtocol == PhasorProtocol.IeeeC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Draft7);
+                    frameParser.TrustHeaderLength = setting.ParseBoolean();
+                    m_frameParser = frameParser;
                     break;
                 case PhasorProtocol.Ieee1344:
                     m_frameParser = new Ieee1344.FrameParser();
@@ -2852,7 +2850,7 @@ namespace GSF.PhasorProtocols
                     m_frameParser = new BpaPdcStream.FrameParser();
 
                     // Check for BPA PDCstream protocol specific parameters in connection string
-                    ConnectionParameters bpaPdcParameters = m_connectionParameters as ConnectionParameters;
+                    BpaPdcStream.ConnectionParameters bpaPdcParameters = m_connectionParameters as BpaPdcStream.ConnectionParameters;
 
                     if ((object)bpaPdcParameters != null)
                     {
@@ -3295,7 +3293,7 @@ namespace GSF.PhasorProtocols
                         case PhasorProtocol.IeeeC37_118V2:
                         case PhasorProtocol.IeeeC37_118V1:
                         case PhasorProtocol.IeeeC37_118D6:
-                            commandFrame = new CommandFrame(m_deviceID, command, 1);
+                            commandFrame = new IeeeC37_118.CommandFrame(m_deviceID, command, 1);
                             break;
                         case PhasorProtocol.Ieee1344:
                             commandFrame = new Ieee1344.CommandFrame(m_deviceID, command);

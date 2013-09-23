@@ -170,7 +170,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
 
                 if (m_frameHeader != null)
                 {
-                    State = m_frameHeader.State as IDataFrameParsingState;
+                    State = m_frameHeader.State as DataFrameParsingState;
                     base.Timestamp = m_frameHeader.Timestamp;
                 }
             }
@@ -186,6 +186,21 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             set
             {
                 CommonHeader = value as CommonFrameHeader;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="DataFrame"/>.
+        /// </summary>
+        public new DataFrameParsingState State
+        {
+            get
+            {
+                return base.State as DataFrameParsingState;
+            }
+            set
+            {
+                base.State = value;
             }
         }
 
@@ -314,8 +329,16 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         /// </remarks>
         public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            base.ParseBinaryImage(buffer, startIndex, length);
-            return State.ParsedBinaryLength;
+            // Determine, based on flag coming through from parser, if we trust the header length
+            TrustHeaderLength = State.TrustHeaderLength;
+
+            if (TrustHeaderLength)
+            {
+                base.ParseBinaryImage(buffer, startIndex, length);
+                return State.ParsedBinaryLength;
+            }
+
+            return base.ParseBinaryImage(buffer, startIndex, length);
         }
 
         /// <summary>

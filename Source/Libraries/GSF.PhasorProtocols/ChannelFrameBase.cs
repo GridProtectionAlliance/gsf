@@ -55,17 +55,18 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private ushort m_idCode;                                                    // Numeric identifier of this frame of data (e.g., ID code of the PDC)
-        private readonly IChannelCellCollection<T> m_cells;                                  // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
-        private Ticks m_timestamp;                                                  // Time, represented as 100-nanosecond ticks, of this frame of data
-        private Ticks m_receivedTimestamp;                                          // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
-        private Ticks m_publishedTimestamp;                                         // Time, represented as 100-nanosecond ticks, of frame published (post process)
-        private int m_parsedBinaryLength;                                           // Binary length of frame as provided from parsed header
-        private SourceChannel m_source;
-        private bool m_published;                                                   // Determines if this frame of data has been published (IFrame.Published)
-        private int m_sortedMeasurements;                                           // Total measurements published into this frame        (IFrame.SortedMeasurements)
-        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements;  // Collection of measurements published by this frame  (IFrame.Measurements)
-        private IMeasurement m_lastSortedMeasurement;                               // Last measurement sorted into this frame             (IFrame.LastSortedMeasurement)
+        private ushort m_idCode;                                                            // Numeric identifier of this frame of data (e.g., ID code of the PDC)
+        private readonly IChannelCellCollection<T> m_cells;                                 // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
+        private Ticks m_timestamp;                                                          // Time, represented as 100-nanosecond ticks, of this frame of data
+        private Ticks m_receivedTimestamp;                                                  // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
+        private Ticks m_publishedTimestamp;                                                 // Time, represented as 100-nanosecond ticks, of frame published (post process)
+        private int m_parsedBinaryLength;                                                   // Binary length of frame as provided from parsed header
+        private SourceChannel m_source;                                                     // Defines source channel (e.g., data or command) for channel frame
+        private bool m_trustHeaderLength;                                                   // Determines if parsed header lengths should be trusted (normally true)
+        private bool m_published;                                                           // Determines if this frame of data has been published (IFrame.Published)
+        private int m_sortedMeasurements;                                                   // Total measurements published into this frame        (IFrame.SortedMeasurements)
+        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements; // Collection of measurements published by this frame  (IFrame.Measurements)
+        private IMeasurement m_lastSortedMeasurement;                                       // Last measurement sorted into this frame             (IFrame.LastSortedMeasurement)
 
         #endregion
 
@@ -83,6 +84,7 @@ namespace GSF.PhasorProtocols
             m_cells = cells;
             m_timestamp = timestamp;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
+            m_trustHeaderLength = true;
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
             m_sortedMeasurements = -1;
         }
@@ -99,6 +101,7 @@ namespace GSF.PhasorProtocols
             m_cells = (IChannelCellCollection<T>)info.GetValue("cells", typeof(IChannelCellCollection<T>));
             m_timestamp = info.GetInt64("timestamp");
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
+            m_trustHeaderLength = true;
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
             m_sortedMeasurements = -1;
         }
@@ -286,7 +289,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets ot sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="ChannelFrameBase{T}"/>.
+        /// Gets or sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
         /// <remarks>
         /// This value is used to help monitor slow moving measurements that are being sorted into the <see cref="ChannelFrameBase{T}"/>.
@@ -351,8 +354,8 @@ namespace GSF.PhasorProtocols
                 // instead of the calculated length...
                 if (m_parsedBinaryLength > 0)
                     return m_parsedBinaryLength;
-                else
-                    return 2 + base.BinaryLength;
+
+                return 2 + base.BinaryLength;
             }
         }
 
@@ -377,6 +380,21 @@ namespace GSF.PhasorProtocols
                 AppendChecksum(buffer, index);
 
                 return buffer;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
+        /// </summary>
+        protected internal bool TrustHeaderLength
+        {
+            get
+            {
+                return m_trustHeaderLength;
+            }
+            set
+            {
+                m_trustHeaderLength = value;
             }
         }
 
@@ -438,6 +456,7 @@ namespace GSF.PhasorProtocols
                 baseAttributes.Add("Published", Published.ToString());
                 baseAttributes.Add("Ticks", ((long)Timestamp).ToString());
                 baseAttributes.Add("Timestamp", ((DateTime)Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                baseAttributes.Add("Trusting Header Length", TrustHeaderLength.ToString());
 
                 return baseAttributes;
             }
@@ -473,11 +492,17 @@ namespace GSF.PhasorProtocols
                 throw new CrcException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
             }
 
-            // Normally one would expect image size returned should match parsed image size - but it's possible that these may
-            // differ, so we assume the parsed length header length is better of the two values
-            base.ParseBinaryImage(buffer, startIndex, length);
+            if (m_trustHeaderLength)
+            {
+                // Normally one would expect image size returned should match parsed image size - but it's possible that these may
+                // differ, so we assume the parsed length header length is better of the two values
+                base.ParseBinaryImage(buffer, startIndex, length);
 
-            return State.ParsedBinaryLength;
+                return State.ParsedBinaryLength;
+            }
+
+            // Include 2 bytes for CRC in returned parsed length
+            return base.ParseBinaryImage(buffer, startIndex, length) + 2;
         }
 
         /// <summary>
@@ -529,7 +554,7 @@ namespace GSF.PhasorProtocols
         /// <param name="buffer">Buffer image on which to append checksum.</param>
         /// <param name="startIndex">Index into <paramref name="buffer"/> where checksum should be appended.</param>
         /// <remarks>
-        /// Default implementation encodes checksum in big-endian order and expects buffer size large enough to accomodate
+        /// Default implementation encodes checksum in big-endian order and expects buffer size large enough to accommodate
         /// 2-byte checksum representation. Override method if protocol expectations are different.
         /// </remarks>
         protected virtual void AppendChecksum(byte[] buffer, int startIndex)

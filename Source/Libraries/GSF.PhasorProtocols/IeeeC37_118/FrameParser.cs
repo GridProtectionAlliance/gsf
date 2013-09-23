@@ -89,6 +89,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         // Fields
         private DraftRevision m_draftRevision;
         private ConfigurationFrame2 m_configurationFrame2;
+        private bool m_trustHeaderLength;
         private bool m_configurationChangeHandled;
         private long m_unexpectedCommandFrames;
 
@@ -106,6 +107,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             base.ProtocolSyncBytes = new[] { PhasorProtocols.Common.SyncByte };
 
             m_draftRevision = draftRevision;
+            m_trustHeaderLength = true;
         }
 
         #endregion
@@ -147,6 +149,21 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
+        /// </summary>
+        public bool TrustHeaderLength
+        {
+            get
+            {
+                return m_trustHeaderLength;
+            }
+            set
+            {
+                m_trustHeaderLength = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the IEEE C37.118 resolution of fractional timestamps of the current <see cref="ConfigurationFrame"/>, if one has been parsed.
         /// </summary>
         public uint Timebase
@@ -155,8 +172,8 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             {
                 if (m_configurationFrame2 == null)
                     return 0;
-                else
-                    return m_configurationFrame2.Timebase;
+
+                return m_configurationFrame2.Timebase;
             }
         }
 
@@ -189,6 +206,9 @@ namespace GSF.PhasorProtocols.IeeeC37_118
                 status.Append(" Unexpected command frames: ");
                 status.Append(m_unexpectedCommandFrames);
                 status.AppendLine();
+                status.Append("    Trusting header length: ");
+                status.Append(m_trustHeaderLength);
+                status.AppendLine();
                 status.Append(base.Status);
 
                 return status.ToString();
@@ -218,8 +238,6 @@ namespace GSF.PhasorProtocols.IeeeC37_118
                     break;
                 case DraftRevision.Draft8:
                     base.Start(new[] { typeof(DataFrame), typeof(ConfigurationFrame1), typeof(ConfigurationFrame2), typeof(ConfigurationFrame3), typeof(HeaderFrame) });
-                    break;
-                default:
                     break;
             }
         }
@@ -267,7 +285,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
                     {
                         case FrameType.DataFrame:
                             // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame2, DataCell.CreateNewCell);
+                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame2, DataCell.CreateNewCell, m_trustHeaderLength);
                             break;
                         case FrameType.ConfigurationFrame1:
                         case FrameType.ConfigurationFrame2:
