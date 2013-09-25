@@ -5,13 +5,55 @@
 Grid Solutions Framework (http://gsf.codeplex.com/)
 Copyright © 2012, The Grid Protection Alliance
 
-This product includes software developed at the
-Grid Protection Alliance (http://www.gridprotectionalliance.org/)
+This product includes software developed at the Grid Protection Alliance
+(http://www.gridprotectionalliance.org/)
 
-Portions of this software were developed at the
-Tennessee Valley Authority (http://www.tva.gov/)
+Portions of this software were developed at the Tennessee Valley Authority (http://www.tva.gov/).
+Code licensed using the TVA Open Source Agreement, full text below.
 
-PQDIF components of this software were developed under contract to the
+Portions of this software, where noted in the source file header, were implemented using source code
+that was licensed using the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0.
+This includes, but may not be limited to, the following:
+
+* GSF.ASN1 project derived from BinaryNotes (http://bnotes.sourceforge.net):
+		Copyright 2006-2011 Abdulla Abdurakhmanov (abdulla@latestbit.com)
+		Original sources are available at www.latestbit.com
+
+* Dnp3Adapters project uses code from the Automatak DNP3 library (http://dnp3.github.io/):
+		Copyright (c) 2010, 2011 Green Energy Corp.
+		Copyright (c) 2013 Automatak LLC
+
+Portions of this software, where noted in the source file header, were implemented using source code
+that was licensed using the Microsoft Public License (Ms-PL): http://www.opensource.org/licenses/ms-pl.
+This includes, but may not be limited to, the following:
+
+* WaveSubscriptionDemo project derived from NAudioWpfDemo app in NAudio (http://naudio.codeplex.com/):
+		Copyright (c) Mark Heath 2008
+
+Portions of this software, where noted in the source file header, were derived from articles
+found on the Code Project (http://www.codeproject.com). Derived code used under the
+Code Project Open License (CPOL), Version 1.02: http://www.codeproject.com/info/cpol10.aspx.
+This includes, but may not be limited to, the following:
+
+* GSF.Net.Ftp project derived from article "Application for uploading modified Files to a FTP Server": 
+	http://www.codeproject.com/Articles/2886/Application-for-uploading-modified-Files-to-a-FTP
+	Authors: Uwe Keim and Alex Kwok
+
+* GSF.ErrorManagement classes derived from article "User Friendly ASP.NET Exception Handling":
+	http://www.codeproject.com/Articles/8049/User-Friendly-ASP-NET-Exception-Handling
+	Author: Jeff Atwood
+
+* GSF.InstallerActions project derived from article "A ServiceInstaller Extension That Enables Recovery
+	and Autostart Configuration":
+	http://www.codeproject.com/Articles/6164/A-ServiceInstaller-Extension-That-Enables-Recovery
+	Author: Neil Baliga
+
+* GSF.PrecisionTimer class derived from article "The Multimedia Timer for the .NET Framework":
+	http://www.codeproject.com/Articles/5501/The-Multimedia-Timer-for-the-NET-Framework
+	Author: Leslie Sanford
+	Additionally licensed under the MIT License: http://opensource.org/licenses/mit-license.php
+
+The PQDIF components of this software were developed under contract to the
 Electric Power Research Institute (http://www.epri.com/)
 
 =========================================================================================================

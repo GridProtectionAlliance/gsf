@@ -17,7 +17,9 @@
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
 //  04/08/2013 - Stephen C. Wills
-//       Generated original version of source code.
+//       Generated original version of source code. Portions of code derived from Code Project article:
+//       http://www.codeproject.com/Articles/6164/A-ServiceInstaller-Extension-That-Enables-Recovery
+//       written by Neil Baliga
 //
 //******************************************************************************************************
 
@@ -303,6 +305,10 @@ namespace GSF.InstallerActions
 
         #region [ Interop ]
 
+        // Interop code below derived from Code Project article:
+        // http://www.codeproject.com/Articles/6164/A-ServiceInstaller-Extension-That-Enables-Recovery
+        // written by Neil Baliga
+
         private const int SC_MANAGER_ALL_ACCESS = 0xF003F;
         private const int SERVICE_ALL_ACCESS = 0xF01FF;
         private const int SERVICE_CONFIG_FAILURE_ACTIONS = 0x2;
@@ -562,7 +568,7 @@ namespace GSF.InstallerActions
                 }
 
                 // Free SID
-                WindowsApi.FreeSid(sid); 
+                WindowsApi.FreeSid(sid);
             }
         }
 
