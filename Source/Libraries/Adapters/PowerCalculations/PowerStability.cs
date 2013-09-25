@@ -36,6 +36,7 @@ using System.Linq;
 using System.Text;
 using GSF.Collections;
 using GSF.NumericalAnalysis;
+using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;

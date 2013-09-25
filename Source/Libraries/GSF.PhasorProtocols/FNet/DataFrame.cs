@@ -31,7 +31,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IDataFrame"/> that can be sent or received.

@@ -35,7 +35,7 @@ using System.Text;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IDataFrame"/> that can be sent or received.
@@ -149,7 +149,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return BpaPdcStream.FrameType.DataFrame;
+                return BPAPDCstream.FrameType.DataFrame;
             }
         }
 

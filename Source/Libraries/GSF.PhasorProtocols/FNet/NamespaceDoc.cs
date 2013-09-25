@@ -25,7 +25,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Contains an implementation of the phasor classes used to parse or generate a stream of data in the F-NET device format.

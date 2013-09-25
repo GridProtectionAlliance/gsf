@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IConfigurationCell"/> that can be sent or received.

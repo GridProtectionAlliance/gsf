@@ -29,7 +29,7 @@ using System;
 using System.Text;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Represents the common header for a F-NET frame of data.

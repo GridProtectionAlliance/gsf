@@ -29,7 +29,7 @@ using System;
 using System.Runtime.Serialization;
 using GSF.Units;
 
-namespace GSF.PhasorProtocols.Ieee1344
+namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IPhasorValue"/>.

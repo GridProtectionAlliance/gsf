@@ -27,7 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IDataCell"/> that can be sent or received.
@@ -49,7 +49,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             State = new DataCellParsingState(
                 configurationCell,
                 PhasorValue.CreateNewValue,
-                Iec61850_90_5.FrequencyValue.CreateNewValue,
+                IEC61850_90_5.FrequencyValue.CreateNewValue,
                 AnalogValue.CreateNewValue,
                 DigitalValue.CreateNewValue);
         }

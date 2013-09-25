@@ -29,7 +29,7 @@
 
 using System;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     #region [ Enumerations ]
 

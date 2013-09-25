@@ -154,23 +154,23 @@ namespace GSF.PhasorProtocols
         {
             switch (protocol)
             {
-                case PhasorProtocol.IeeeC37_118V2:
+                case PhasorProtocol.IEEEC37_118V2:
                     return "IEEE C37.118.2-2011";
-                case PhasorProtocol.IeeeC37_118V1:
+                case PhasorProtocol.IEEEC37_118V1:
                     return "IEEE C37.118-2005";
-                case PhasorProtocol.IeeeC37_118D6:
+                case PhasorProtocol.IEEEC37_118D6:
                     return "IEEE C37.118 Draft 6";
-                case PhasorProtocol.Ieee1344:
+                case PhasorProtocol.IEEE1344:
                     return "IEEE 1344-1995";
-                case PhasorProtocol.BpaPdcStream:
+                case PhasorProtocol.BPAPDCstream:
                     return "BPA PDCstream";
-                case PhasorProtocol.FNet:
+                case PhasorProtocol.FNET:
                     return "UTK F-NET";
                 case PhasorProtocol.SelFastMessage:
                     return "SEL Fast Message";
                 case PhasorProtocol.Macrodyne:
                     return "Macrodyne";
-                case PhasorProtocol.Iec61850_90_5:
+                case PhasorProtocol.IEC61850_90_5:
                     return "IEC 61850-90-5";
                 default:
                     return protocol.ToString().Replace('_', '.').ToUpper();

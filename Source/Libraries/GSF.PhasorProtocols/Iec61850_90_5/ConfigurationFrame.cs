@@ -31,7 +31,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
@@ -110,7 +110,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         }
 
         /// <summary>
-        /// Gets the <see cref="Iec61850_90_5.DraftRevision"/> of this <see cref="ConfigurationFrame"/>.
+        /// Gets the <see cref="IEC61850_90_5.DraftRevision"/> of this <see cref="ConfigurationFrame"/>.
         /// </summary>
         public virtual DraftRevision DraftRevision
         {
@@ -127,7 +127,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return Iec61850_90_5.FrameType.ConfigurationFrame;
+                return IEC61850_90_5.FrameType.ConfigurationFrame;
             }
         }
 

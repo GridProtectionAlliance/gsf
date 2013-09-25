@@ -25,7 +25,7 @@
 //
 //******************************************************************************************************
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Represents the BPA PDCstream protocol implementation of the parsing state used by a <see cref="DataFrame"/>.

@@ -27,7 +27,7 @@
 
 using System;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     #region [ Enumerations ]
 

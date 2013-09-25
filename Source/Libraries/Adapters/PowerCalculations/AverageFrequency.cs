@@ -32,6 +32,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
+using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using PhasorProtocolAdapters;
 

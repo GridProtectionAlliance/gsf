@@ -29,7 +29,7 @@ using System;
 using System.Text;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Represents a frame parser for a F-NET text based data stream that returns parsed data via events.

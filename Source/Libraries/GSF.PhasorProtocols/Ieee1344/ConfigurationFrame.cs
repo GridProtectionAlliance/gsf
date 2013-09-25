@@ -32,7 +32,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.Ieee1344
+namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
@@ -196,7 +196,7 @@ namespace GSF.PhasorProtocols.Ieee1344
         {
             get
             {
-                return Ieee1344.FrameType.ConfigurationFrame;
+                return IEEE1344.FrameType.ConfigurationFrame;
             }
         }
 

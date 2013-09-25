@@ -27,7 +27,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     #region [ Enumerations ]
 

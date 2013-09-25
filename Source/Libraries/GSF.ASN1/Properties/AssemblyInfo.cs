@@ -40,7 +40,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.ASN1")]
-[assembly: AssemblyDescription("Library for using Abstract Syntax Notation One (ASN.1) encoded data streams.")]
+[assembly: AssemblyDescription("Library for encoding and decoding Abstract Syntax Notation One (ASN.1) ISO 8824/8825 formatted data structures.")]
 [assembly: AssemblyTitle("GSF.ASN1")]
 
 // Other configuration attributes.

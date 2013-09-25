@@ -29,7 +29,7 @@ using System;
 using System.Runtime.Serialization;
 using GSF.Units;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IPhasorValue"/>.

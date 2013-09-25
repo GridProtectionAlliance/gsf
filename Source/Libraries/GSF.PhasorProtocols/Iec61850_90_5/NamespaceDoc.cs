@@ -25,7 +25,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Contains an implementation of the phasor classes used to parse or generate a stream of data in the IEC 61850-90-5-2005 standard format.

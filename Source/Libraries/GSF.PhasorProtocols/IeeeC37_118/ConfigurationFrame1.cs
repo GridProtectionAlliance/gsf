@@ -32,7 +32,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/>, type 1, that can be sent or received.
@@ -110,7 +110,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame1"/>.
+        /// Gets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame1"/>.
         /// </summary>
         public virtual DraftRevision DraftRevision
         {
@@ -127,7 +127,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return IeeeC37_118.FrameType.ConfigurationFrame1;
+                return IEEEC37_118.FrameType.ConfigurationFrame1;
             }
         }
 

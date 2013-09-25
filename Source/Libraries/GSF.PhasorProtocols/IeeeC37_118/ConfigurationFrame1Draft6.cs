@@ -30,7 +30,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 draft 6 implementation of a <see cref="IConfigurationFrame"/>, type 1, that can be sent or received.
@@ -81,7 +81,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame1Draft6"/>.
+        /// Gets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="ConfigurationFrame1Draft6"/>.
         /// </summary>
         public override DraftRevision DraftRevision
         {

@@ -33,7 +33,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IDigitalDefinition"/>.
@@ -203,7 +203,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="DigitalDefinition"/>.
+        /// Gets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="DigitalDefinition"/>.
         /// </summary>
         public DraftRevision DraftRevision
         {

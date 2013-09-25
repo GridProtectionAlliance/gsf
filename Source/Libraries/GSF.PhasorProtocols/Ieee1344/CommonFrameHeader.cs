@@ -33,7 +33,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.Ieee1344
+namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
     /// Represents the common header for all IEEE 1344 frames of data.
@@ -96,7 +96,7 @@ namespace GSF.PhasorProtocols.Ieee1344
             NtpTimeTag timetag = new NtpTimeTag(secondOfCentury, 0);
 
             // Data frames have subsecond time information, so we add this fraction of time to current seconds value
-            if (TypeID == Ieee1344.FrameType.DataFrame && configurationFrame != null)
+            if (TypeID == IEEE1344.FrameType.DataFrame && configurationFrame != null)
                 timetag.Value += SampleCount / Math.Truncate((double)Common.MaximumSampleCount / (double)configurationFrame.Period) / (double)configurationFrame.FrameRate;
 
             // Cache timestamp value
@@ -263,11 +263,11 @@ namespace GSF.PhasorProtocols.Ieee1344
                 // Translate IEEE 1344 specific frame type to fundamental frame type
                 switch (TypeID)
                 {
-                    case Ieee1344.FrameType.DataFrame:
+                    case IEEE1344.FrameType.DataFrame:
                         return FundamentalFrameType.DataFrame;
-                    case Ieee1344.FrameType.ConfigurationFrame:
+                    case IEEE1344.FrameType.ConfigurationFrame:
                         return FundamentalFrameType.ConfigurationFrame;
-                    case Ieee1344.FrameType.HeaderFrame:
+                    case IEEE1344.FrameType.HeaderFrame:
                         return FundamentalFrameType.HeaderFrame;
                     default:
                         return FundamentalFrameType.Undetermined;

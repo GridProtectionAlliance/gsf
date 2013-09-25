@@ -32,7 +32,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using GSF.Units;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IDataCell"/> that can be sent or received.

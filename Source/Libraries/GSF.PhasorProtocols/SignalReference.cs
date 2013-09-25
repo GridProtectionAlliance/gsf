@@ -39,8 +39,8 @@ namespace GSF.PhasorProtocols
     /// within a frame of data (see <see cref="SignalReference"/>).
     /// </para>
     /// <para>
-    /// This contrasts with the SignalType enumeration defined in the PhasorProtocolAdapters assembly which
-    /// further defines an explicit type for a signal (e.g., a voltage or current angle).
+    /// Contrast this to the <see cref="SignalType"/> enumeration which further defines an
+    /// explicit type for a signal (e.g., a voltage or current type for an angle).
     /// </para>
     /// </remarks>
     [Serializable]
@@ -90,6 +90,75 @@ namespace GSF.PhasorProtocols
         /// Undetermined signal type.
         /// </summary>
         Unknown
+    }
+
+    /// <summary>
+    /// Signal type enumeration.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The signal type represents the explicit type of a signal that a value represents.
+    /// </para>
+    /// <para>
+    /// Contrast this to the <see cref="SignalKind"/> enumeration which only defines an
+    /// abstract type for a signal (e.g., simply a phase or an angle).
+    /// </para>
+    /// </remarks>
+    [Serializable]
+    public enum SignalType
+    {
+        /// <summary>
+        /// Current phase magnitude.
+        /// </summary>
+        IPHM = 1,
+        /// <summary>
+        /// Current phase angle.
+        /// </summary>
+        IPHA = 2,
+        /// <summary>
+        /// Voltage phase magnitude.
+        /// </summary>
+        VPHM = 3,
+        /// <summary>
+        /// Voltage phase angle.
+        /// </summary>
+        VPHA = 4,
+        /// <summary>
+        /// Frequency.
+        /// </summary>
+        FREQ = 5,
+        /// <summary>
+        /// Frequency delta (dF/dt).
+        /// </summary>
+        DFDT = 6,
+        /// <summary>
+        /// Analog value.
+        /// </summary>
+        ALOG = 7,
+        /// <summary>
+        /// Status flags.
+        /// </summary>
+        FLAG = 8,
+        /// <summary>
+        /// Digital value.
+        /// </summary>
+        DIGI = 9,
+        /// <summary>
+        /// Calculated value.
+        /// </summary>
+        CALC = 10,
+        /// <summary>
+        /// Statistical value.
+        /// </summary>
+        STAT = 11,
+        /// <summary>
+        /// Alarm value.
+        /// </summary>
+        ALRM = 12,
+        /// <summary>
+        /// Undefined signal.
+        /// </summary>
+        NONE = -1
     }
 
     #endregion

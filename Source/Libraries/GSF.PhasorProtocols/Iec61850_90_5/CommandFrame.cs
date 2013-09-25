@@ -29,7 +29,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="ICommandFrame"/> that can be sent or received.
@@ -71,7 +71,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
 
             m_frameHeader = new CommonFrameHeader(null, false, false, false, true, true, AngleFormat.Degrees, buffer, startIndex, 0);
 
-            if (m_frameHeader.TypeID != Iec61850_90_5.FrameType.CommandFrame)
+            if (m_frameHeader.TypeID != IEC61850_90_5.FrameType.CommandFrame)
                 throw new InvalidOperationException("Binary image does not represent an IEC 61850-90-5 command frame");
 
             if (length < m_frameHeader.FrameLength)
@@ -130,7 +130,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             {
                 // Make sure frame header exists
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(Iec61850_90_5.FrameType.CommandFrame, base.IDCode, base.Timestamp);
+                    m_frameHeader = new CommonFrameHeader(IEC61850_90_5.FrameType.CommandFrame, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
             }

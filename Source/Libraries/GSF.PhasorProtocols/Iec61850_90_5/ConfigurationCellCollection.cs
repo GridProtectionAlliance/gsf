@@ -26,7 +26,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents a IEC 61850-90-5 implementation of a collection of <see cref="IConfigurationCell"/> objects.

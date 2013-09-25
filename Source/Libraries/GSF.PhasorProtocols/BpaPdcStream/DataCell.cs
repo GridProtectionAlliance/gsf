@@ -32,7 +32,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IDataCell"/> that can be sent or received.
@@ -65,7 +65,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             State = new DataCellParsingState(
                 configurationCell,
                 PhasorValue.CreateNewValue,
-                BpaPdcStream.FrequencyValue.CreateNewValue,
+                BPAPDCstream.FrequencyValue.CreateNewValue,
                 AnalogValue.CreateNewValue,
                 DigitalValue.CreateNewValue);
         }
@@ -211,7 +211,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets or sets <see cref="BpaPdcStream.FormatFlags"/> from <see cref="ConfigurationCell"/> associated with this <see cref="DataCell"/>.
+        /// Gets or sets <see cref="BPAPDCstream.FormatFlags"/> from <see cref="ConfigurationCell"/> associated with this <see cref="DataCell"/>.
         /// </summary>
         public FormatFlags FormatFlags
         {

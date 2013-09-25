@@ -33,7 +33,7 @@ using System.Security.Cryptography;
 using GSF.IO;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IDataFrame"/> that can be sent or received.
@@ -195,7 +195,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         {
             get
             {
-                return Iec61850_90_5.FrameType.DataFrame;
+                return IEC61850_90_5.FrameType.DataFrame;
             }
         }
 

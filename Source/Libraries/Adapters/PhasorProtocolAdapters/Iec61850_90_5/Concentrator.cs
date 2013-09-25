@@ -28,7 +28,7 @@ using System.Threading;
 using GSF;
 using GSF.Communication;
 using GSF.PhasorProtocols;
-using GSF.PhasorProtocols.Iec61850_90_5;
+using GSF.PhasorProtocols.IEC61850_90_5;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using DigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
@@ -129,7 +129,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
             if (settings.TryGetValue("timebase", out setting))
                 m_timeBase = uint.Parse(setting);
             else
-                m_timeBase = GSF.PhasorProtocols.Iec61850_90_5.Common.Timebase;
+                m_timeBase = GSF.PhasorProtocols.IEC61850_90_5.Common.Timebase;
 
             // Load optional parameters
             if (settings.TryGetValue("validateIDCode", out setting))
@@ -359,7 +359,7 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
                     else
                         maskValue = 0U;
 
-                    newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.Iec61850_90_5.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
+                    newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IEC61850_90_5.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
 
                 // Add new PMU configuration (cell) to protocol specific configuration frame

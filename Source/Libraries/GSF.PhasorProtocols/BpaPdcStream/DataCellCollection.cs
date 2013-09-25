@@ -28,7 +28,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Represents a BPA PDCstream implementation of a collection of <see cref="IDataCell"/> objects.

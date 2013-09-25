@@ -29,7 +29,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Represents the extra connection parameters required for a connection to a F-NET device.

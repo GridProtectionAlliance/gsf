@@ -36,7 +36,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using GSF.Communication;
 using GSF.Data;
-using GSF.PhasorProtocols.BpaPdcStream;
+using GSF.PhasorProtocols.BPAPDCstream;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.Modal;
 using GSF.PhasorProtocols.UI.UserControls;
@@ -765,13 +765,13 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         {
                             switch (connectionSettings.PhasorProtocol)
                             {
-                                case PhasorProtocol.BpaPdcStream:
+                                case PhasorProtocol.BPAPDCstream:
                                     ConnectionParameters bpaParameters = connectionSettings.ConnectionParameters as ConnectionParameters;
                                     if ((object)bpaParameters != null)
                                         ConnectionString += "; iniFileName=" + bpaParameters.ConfigurationFileName + "; refreshConfigFileOnChange=" + bpaParameters.RefreshConfigurationFileOnChange + "; parseWordCountFromByte=" + bpaParameters.ParseWordCountFromByte;
                                     break;
-                                case PhasorProtocol.FNet:
-                                    FNet.ConnectionParameters fnetParameters = connectionSettings.ConnectionParameters as FNet.ConnectionParameters;
+                                case PhasorProtocol.FNET:
+                                    FNET.ConnectionParameters fnetParameters = connectionSettings.ConnectionParameters as FNET.ConnectionParameters;
                                     if ((object)fnetParameters != null)
                                         ConnectionString += "; timeOffset=" + fnetParameters.TimeOffset + "; stationName=" + fnetParameters.StationName + "; frameRate=" + fnetParameters.FrameRate + "; nominalFrequency=" + (int)fnetParameters.NominalFrequency;
                                     break;
@@ -781,8 +781,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                         ConnectionString += "; messagePeriod=" + selParameters.MessagePeriod;
                                     AccessID = 0;
                                     break;
-                                case PhasorProtocol.Iec61850_90_5:
-                                    Iec61850_90_5.ConnectionParameters iecParameters = connectionSettings.ConnectionParameters as Iec61850_90_5.ConnectionParameters;
+                                case PhasorProtocol.IEC61850_90_5:
+                                    IEC61850_90_5.ConnectionParameters iecParameters = connectionSettings.ConnectionParameters as IEC61850_90_5.ConnectionParameters;
                                     if ((object)iecParameters != null)
                                         ConnectionString += "; useETRConfiguration=" + iecParameters.UseETRConfiguration + "; guessConfiguration=" + iecParameters.GuessConfiguration + "; parseRedundantASDUs=" + iecParameters.ParseRedundantASDUs + "; ignoreSignatureValidationFailures=" + iecParameters.IgnoreSignatureValidationFailures + "; ignoreSampleSizeValidationFailures=" + iecParameters.IgnoreSampleSizeValidationFailures;
                                     break;

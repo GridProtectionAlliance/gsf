@@ -25,7 +25,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Contains an implementation of the phasor classes used to parse or generate a stream of data in the IEEE C37.118-2005 standard format.

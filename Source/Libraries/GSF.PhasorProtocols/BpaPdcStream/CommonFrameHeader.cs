@@ -33,7 +33,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Represents the common header for all BPA PDCstream frames of data.
@@ -118,7 +118,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
                         uint headerLength;
 
                         // Read full DST header
-                        m_packetNumber = (byte)BpaPdcStream.FrameType.ConfigurationFrame;
+                        m_packetNumber = (byte)BPAPDCstream.FrameType.ConfigurationFrame;
                         m_fileType = (FileType)buffer[startIndex + 2];
                         m_fileVersion = (FileVersion)buffer[startIndex + 3];
                         m_sourceID = Encoding.ASCII.GetString(buffer, startIndex + 4, 4);
@@ -172,7 +172,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
                     // Must assume this is a data row if there are no sync bytes
                     CommonFrameHeader configFrameHeader;
 
-                    m_packetNumber = (byte)BpaPdcStream.FrameType.DataFrame;
+                    m_packetNumber = (byte)BPAPDCstream.FrameType.DataFrame;
                     m_rowFlags = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
 
                     if (configFrame != null)
@@ -288,7 +288,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return (m_packetNumber == 0 ? BpaPdcStream.FrameType.ConfigurationFrame : BpaPdcStream.FrameType.DataFrame);
+                return (m_packetNumber == 0 ? BPAPDCstream.FrameType.ConfigurationFrame : BPAPDCstream.FrameType.DataFrame);
             }
         }
 
@@ -690,9 +690,9 @@ namespace GSF.PhasorProtocols.BpaPdcStream
                 // Translate BPA PDCstream specific frame type to fundamental frame type
                 switch (TypeID)
                 {
-                    case BpaPdcStream.FrameType.DataFrame:
+                    case BPAPDCstream.FrameType.DataFrame:
                         return FundamentalFrameType.DataFrame;
-                    case BpaPdcStream.FrameType.ConfigurationFrame:
+                    case BPAPDCstream.FrameType.ConfigurationFrame:
                         return FundamentalFrameType.ConfigurationFrame;
                     default:
                         return FundamentalFrameType.Undetermined;

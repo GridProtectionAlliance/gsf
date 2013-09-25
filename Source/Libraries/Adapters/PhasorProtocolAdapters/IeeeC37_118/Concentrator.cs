@@ -37,14 +37,14 @@ using GSF;
 using GSF.Communication;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
-using GSF.PhasorProtocols.IeeeC37_118;
+using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using AnalogDefinition = GSF.PhasorProtocols.IeeeC37_118.AnalogDefinition;
-using ConfigurationCell = GSF.PhasorProtocols.IeeeC37_118.ConfigurationCell;
+using AnalogDefinition = GSF.PhasorProtocols.IEEEC37_118.AnalogDefinition;
+using ConfigurationCell = GSF.PhasorProtocols.IEEEC37_118.ConfigurationCell;
 using DigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
-using FrequencyDefinition = GSF.PhasorProtocols.IeeeC37_118.FrequencyDefinition;
-using PhasorDefinition = GSF.PhasorProtocols.IeeeC37_118.PhasorDefinition;
+using FrequencyDefinition = GSF.PhasorProtocols.IEEEC37_118.FrequencyDefinition;
+using PhasorDefinition = GSF.PhasorProtocols.IEEEC37_118.PhasorDefinition;
 
 namespace PhasorProtocolAdapters.IeeeC37_118
 {
@@ -347,7 +347,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                     else
                         maskValue = 0U;
 
-                    newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IeeeC37_118.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
+                    newCell.DigitalDefinitions.Add(new GSF.PhasorProtocols.IEEEC37_118.DigitalDefinition(newCell, digitalDefinition.Label, maskValue.LowWord(), maskValue.HighWord()));
                 }
 
                 // Add new PMU configuration (cell) to protocol specific configuration frame

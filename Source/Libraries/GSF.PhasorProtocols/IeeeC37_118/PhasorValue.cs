@@ -29,7 +29,7 @@ using System;
 using System.Runtime.Serialization;
 using GSF.Units;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IPhasorValue"/>.

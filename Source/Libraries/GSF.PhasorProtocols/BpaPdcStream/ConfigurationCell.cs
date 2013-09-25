@@ -34,7 +34,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
@@ -68,7 +68,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
                 PhasorDefinition.CreateNewDefinition,
-                BpaPdcStream.FrequencyDefinition.CreateNewDefinition,
+                BPAPDCstream.FrequencyDefinition.CreateNewDefinition,
                 AnalogDefinition.CreateNewDefinition,
                 DigitalDefinition.CreateNewDefinition);
         }

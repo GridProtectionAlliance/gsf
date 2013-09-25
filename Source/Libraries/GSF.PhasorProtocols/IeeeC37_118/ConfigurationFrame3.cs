@@ -28,7 +28,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationFrame"/>, type 3, that can be sent or received.
@@ -102,7 +102,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         {
             get
             {
-                return IeeeC37_118.FrameType.ConfigurationFrame3;
+                return IEEEC37_118.FrameType.ConfigurationFrame3;
             }
         }
 

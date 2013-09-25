@@ -34,7 +34,7 @@ using System.Threading;
 using GSF;
 using GSF.IO;
 using GSF.PhasorProtocols;
-using GSF.PhasorProtocols.BpaPdcStream;
+using GSF.PhasorProtocols.BPAPDCstream;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -152,7 +152,7 @@ namespace PhasorProtocolAdapters.BpaPdcStream
             {
                 using (StreamWriter iniFile = File.CreateText(m_iniFileName))
                 {
-                    iniFile.Write(GSF.PhasorProtocols.BpaPdcStream.ConfigurationFrame.GetIniFileImage(baseConfigurationFrame));
+                    iniFile.Write(GSF.PhasorProtocols.BPAPDCstream.ConfigurationFrame.GetIniFileImage(baseConfigurationFrame));
                 }
             }
 

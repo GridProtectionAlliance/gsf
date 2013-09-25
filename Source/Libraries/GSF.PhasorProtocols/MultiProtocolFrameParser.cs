@@ -82,7 +82,7 @@ using System.Timers;
 using GSF.Communication;
 using GSF.IO;
 using GSF.Parsing;
-using GSF.PhasorProtocols.IeeeC37_118;
+using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.PhasorProtocols.Macrodyne;
 using GSF.PhasorProtocols.SelFastMessage;
 using GSF.TimeSeries;
@@ -107,27 +107,27 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// IEEE C37.118.2-2011 protocol.
         /// </summary>
-        IeeeC37_118V2,
+        IEEEC37_118V2,
         /// <summary>
         /// IEEE C37.118-2005 protocol.
         /// </summary>
-        IeeeC37_118V1,
+        IEEEC37_118V1,
         /// <summary>
         /// IEEE C37.118, draft 6 protocol.
         /// </summary>
-        IeeeC37_118D6,
+        IEEEC37_118D6,
         /// <summary>
         /// IEEE 1344-1995 protocol.
         /// </summary>
-        Ieee1344,
+        IEEE1344,
         /// <summary>
         /// BPA PDCstream protocol.
         /// </summary>
-        BpaPdcStream,
+        BPAPDCstream,
         /// <summary>
-        /// Virgina Tech F-NET protocol.
+        /// UTK F-NET protocol.
         /// </summary>
-        FNet,
+        FNET,
         /// <summary>
         /// SEL Fast Message protocol.
         /// </summary>
@@ -139,7 +139,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// IEC 61850-90-5 protocol.
         /// </summary>
-        Iec61850_90_5
+        IEC61850_90_5
     }
 
     #endregion
@@ -1791,7 +1791,7 @@ namespace GSF.PhasorProtocols
             m_rateCalcTimer = new Timer();
             m_streamStopDataHandle = new ManualResetEventSlim(false);
 
-            m_phasorProtocol = PhasorProtocol.IeeeC37_118V1;
+            m_phasorProtocol = PhasorProtocol.IEEEC37_118V1;
             m_transportProtocol = TransportProtocol.Tcp;
 
             // Set default frame rate, this calculates milliseconds for each frame
@@ -1835,17 +1835,17 @@ namespace GSF.PhasorProtocols
                 // Setup protocol specific connection parameters, for those protocols that have them...
                 switch (value)
                 {
-                    case PhasorProtocol.BpaPdcStream:
-                        m_connectionParameters = new BpaPdcStream.ConnectionParameters();
+                    case PhasorProtocol.BPAPDCstream:
+                        m_connectionParameters = new BPAPDCstream.ConnectionParameters();
                         break;
-                    case PhasorProtocol.FNet:
-                        m_connectionParameters = new FNet.ConnectionParameters();
+                    case PhasorProtocol.FNET:
+                        m_connectionParameters = new FNET.ConnectionParameters();
                         break;
                     case PhasorProtocol.SelFastMessage:
                         m_connectionParameters = new SelFastMessage.ConnectionParameters();
                         break;
-                    case PhasorProtocol.Iec61850_90_5:
-                        m_connectionParameters = new Iec61850_90_5.ConnectionParameters();
+                    case PhasorProtocol.IEC61850_90_5:
+                        m_connectionParameters = new IEC61850_90_5.ConnectionParameters();
                         break;
                     case PhasorProtocol.Macrodyne:
                         m_connectionParameters = new Macrodyne.ConnectionParameters();
@@ -2236,10 +2236,10 @@ namespace GSF.PhasorProtocols
         {
             get
             {
-                return (m_phasorProtocol == PhasorProtocol.IeeeC37_118V2 ||
-                        m_phasorProtocol == PhasorProtocol.IeeeC37_118V1 ||
-                        m_phasorProtocol == PhasorProtocol.IeeeC37_118D6 ||
-                        m_phasorProtocol == PhasorProtocol.Ieee1344);
+                return (m_phasorProtocol == PhasorProtocol.IEEEC37_118V2 ||
+                        m_phasorProtocol == PhasorProtocol.IEEEC37_118V1 ||
+                        m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ||
+                        m_phasorProtocol == PhasorProtocol.IEEE1344);
             }
         }
 
@@ -2807,25 +2807,25 @@ namespace GSF.PhasorProtocols
             // Instantiate protocol specific frame parser
             switch (m_phasorProtocol)
             {
-                case PhasorProtocol.IeeeC37_118V2:
-                case PhasorProtocol.IeeeC37_118V1:
-                case PhasorProtocol.IeeeC37_118D6:
+                case PhasorProtocol.IEEEC37_118V2:
+                case PhasorProtocol.IEEEC37_118V1:
+                case PhasorProtocol.IEEEC37_118D6:
                     // Check settings collection for a "trust header length" parameter
                     if (!settings.TryGetValue("trustHeaderLength", out setting) || string.IsNullOrWhiteSpace(setting))
                         setting = "true";
 
-                    IeeeC37_118.FrameParser frameParser = new IeeeC37_118.FrameParser(m_phasorProtocol == PhasorProtocol.IeeeC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Draft7);
+                    IEEEC37_118.FrameParser frameParser = new IEEEC37_118.FrameParser(m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Draft7);
                     frameParser.TrustHeaderLength = setting.ParseBoolean();
                     m_frameParser = frameParser;
                     break;
-                case PhasorProtocol.Ieee1344:
-                    m_frameParser = new Ieee1344.FrameParser();
+                case PhasorProtocol.IEEE1344:
+                    m_frameParser = new IEEE1344.FrameParser();
                     break;
-                case PhasorProtocol.Iec61850_90_5:
-                    m_frameParser = new Iec61850_90_5.FrameParser();
+                case PhasorProtocol.IEC61850_90_5:
+                    m_frameParser = new IEC61850_90_5.FrameParser();
 
                     // Check for IEC 61850-90-5 protocol specific parameters in connection string
-                    Iec61850_90_5.ConnectionParameters iecParameters = m_connectionParameters as Iec61850_90_5.ConnectionParameters;
+                    IEC61850_90_5.ConnectionParameters iecParameters = m_connectionParameters as IEC61850_90_5.ConnectionParameters;
 
                     if ((object)iecParameters != null)
                     {
@@ -2846,11 +2846,11 @@ namespace GSF.PhasorProtocols
                     }
 
                     break;
-                case PhasorProtocol.BpaPdcStream:
-                    m_frameParser = new BpaPdcStream.FrameParser();
+                case PhasorProtocol.BPAPDCstream:
+                    m_frameParser = new BPAPDCstream.FrameParser();
 
                     // Check for BPA PDCstream protocol specific parameters in connection string
-                    BpaPdcStream.ConnectionParameters bpaPdcParameters = m_connectionParameters as BpaPdcStream.ConnectionParameters;
+                    BPAPDCstream.ConnectionParameters bpaPdcParameters = m_connectionParameters as BPAPDCstream.ConnectionParameters;
 
                     if ((object)bpaPdcParameters != null)
                     {
@@ -2870,11 +2870,11 @@ namespace GSF.PhasorProtocols
                             bpaPdcParameters.UsePhasorDataFileFormat = setting.ParseBoolean();
                     }
                     break;
-                case PhasorProtocol.FNet:
-                    m_frameParser = new FNet.FrameParser();
+                case PhasorProtocol.FNET:
+                    m_frameParser = new FNET.FrameParser();
 
                     // Check for F-NET protocol specific parameters in connection string
-                    FNet.ConnectionParameters fnetParameters = m_connectionParameters as FNet.ConnectionParameters;
+                    FNET.ConnectionParameters fnetParameters = m_connectionParameters as FNET.ConnectionParameters;
 
                     if ((object)fnetParameters != null)
                     {
@@ -3290,16 +3290,16 @@ namespace GSF.PhasorProtocols
                     // Only the IEEE, SEL Fast Message and Macrodyne protocols support commands
                     switch (m_phasorProtocol)
                     {
-                        case PhasorProtocol.IeeeC37_118V2:
-                        case PhasorProtocol.IeeeC37_118V1:
-                        case PhasorProtocol.IeeeC37_118D6:
-                            commandFrame = new IeeeC37_118.CommandFrame(m_deviceID, command, 1);
+                        case PhasorProtocol.IEEEC37_118V2:
+                        case PhasorProtocol.IEEEC37_118V1:
+                        case PhasorProtocol.IEEEC37_118D6:
+                            commandFrame = new IEEEC37_118.CommandFrame(m_deviceID, command, 1);
                             break;
-                        case PhasorProtocol.Ieee1344:
-                            commandFrame = new Ieee1344.CommandFrame(m_deviceID, command);
+                        case PhasorProtocol.IEEE1344:
+                            commandFrame = new IEEE1344.CommandFrame(m_deviceID, command);
                             break;
-                        case PhasorProtocol.Iec61850_90_5:
-                            commandFrame = new Iec61850_90_5.CommandFrame(m_deviceID, command, 1);
+                        case PhasorProtocol.IEC61850_90_5:
+                            commandFrame = new IEC61850_90_5.CommandFrame(m_deviceID, command, 1);
                             break;
                         case PhasorProtocol.SelFastMessage:
                             // Get defined message period
@@ -3473,7 +3473,7 @@ namespace GSF.PhasorProtocols
         private bool DeriveCommandSupport()
         {
             // Command support is based on phasor protocol, transport protocol and connection style
-            if (IsIEEEProtocol || m_phasorProtocol == PhasorProtocol.Iec61850_90_5 || m_phasorProtocol == PhasorProtocol.SelFastMessage || m_phasorProtocol == PhasorProtocol.Macrodyne)
+            if (IsIEEEProtocol || m_phasorProtocol == PhasorProtocol.IEC61850_90_5 || m_phasorProtocol == PhasorProtocol.SelFastMessage || m_phasorProtocol == PhasorProtocol.Macrodyne)
             {
                 // IEEE protocols using TCP or Serial connection support device commands
                 if (m_transportProtocol == TransportProtocol.Tcp || m_transportProtocol == TransportProtocol.Serial)
@@ -3520,7 +3520,7 @@ namespace GSF.PhasorProtocols
             try
             {
                 // Attempt to stop real-time data, waiting a maximum of three seconds for this activity
-                if (!m_skipDisableRealTimeData && m_phasorProtocol != PhasorProtocol.Iec61850_90_5)
+                if (!m_skipDisableRealTimeData && m_phasorProtocol != PhasorProtocol.IEC61850_90_5)
                 {
                     m_streamStopDataHandle.Reset();
                     ThreadPool.QueueUserWorkItem(AttemptToStopRealTimeData);
@@ -4037,7 +4037,7 @@ namespace GSF.PhasorProtocols
         {
             // We automatically request enabling of real-time data upon reception of config frame if requested. Note that SEL Fast Message will
             // have already been enabled at this point so we don't duplicate request for enabling real-time data stream
-            if ((object)m_configurationFrame == null && m_deviceSupportsCommands && m_autoStartDataParsingSequence && m_phasorProtocol != PhasorProtocol.SelFastMessage && m_phasorProtocol != PhasorProtocol.Iec61850_90_5)
+            if ((object)m_configurationFrame == null && m_deviceSupportsCommands && m_autoStartDataParsingSequence && m_phasorProtocol != PhasorProtocol.SelFastMessage && m_phasorProtocol != PhasorProtocol.IEC61850_90_5)
                 SendDeviceCommand(DeviceCommand.EnableRealTimeData);
 
             m_configurationFrame = e.Argument;

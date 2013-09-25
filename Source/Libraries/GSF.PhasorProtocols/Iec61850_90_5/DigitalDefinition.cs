@@ -29,7 +29,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IDigitalDefinition"/>.
@@ -199,7 +199,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
         }
 
         /// <summary>
-        /// Gets the <see cref="Iec61850_90_5.DraftRevision"/> of this <see cref="DigitalDefinition"/>.
+        /// Gets the <see cref="IEC61850_90_5.DraftRevision"/> of this <see cref="DigitalDefinition"/>.
         /// </summary>
         public DraftRevision DraftRevision
         {

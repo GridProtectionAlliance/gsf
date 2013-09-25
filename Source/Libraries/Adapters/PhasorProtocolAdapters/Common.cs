@@ -32,6 +32,7 @@
 //******************************************************************************************************
 
 using GSF;
+using GSF.PhasorProtocols;
 
 namespace PhasorProtocolAdapters
 {

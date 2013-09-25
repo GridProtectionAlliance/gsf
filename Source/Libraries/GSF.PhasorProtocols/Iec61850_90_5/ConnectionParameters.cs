@@ -27,7 +27,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents the extra connection parameters available for a connection to an IEC 61850-90-5 stream.

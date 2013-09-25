@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.Ieee1344
+namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
@@ -58,7 +58,7 @@ namespace GSF.PhasorProtocols.Ieee1344
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
                 PhasorDefinition.CreateNewDefinition,
-                Ieee1344.FrequencyDefinition.CreateNewDefinition,
+                IEEE1344.FrequencyDefinition.CreateNewDefinition,
                 null, // IEEE 1344 doesn't define analogs
                 DigitalDefinition.CreateNewDefinition);
         }

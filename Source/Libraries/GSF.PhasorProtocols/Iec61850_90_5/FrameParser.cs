@@ -27,7 +27,7 @@ using System;
 using System.Text;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents a frame parser for an IEC 61850-90-5 binary data stream and returns parsed data via events.
@@ -211,12 +211,12 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
                 }
                 else
                 {
-                    m_useETRConfiguration = Iec61850_90_5.ConnectionParameters.DefaultUseETRConfiguration;
-                    m_guessConfiguration = Iec61850_90_5.ConnectionParameters.DefaultGuessConfiguration;
-                    m_parseRedundantASDUs = Iec61850_90_5.ConnectionParameters.DefaultParseRedundantASDUs;
-                    m_ignoreSignatureValidationFailures = Iec61850_90_5.ConnectionParameters.DefaultIgnoreSignatureValidationFailures;
-                    m_ignoreSampleSizeValidationFailures = Iec61850_90_5.ConnectionParameters.DefaultIgnoreSampleSizeValidationFailures;
-                    m_phasorAngleFormat = (AngleFormat)Enum.Parse(typeof(AngleFormat), Iec61850_90_5.ConnectionParameters.DefaultPhasorAngleFormat, true);
+                    m_useETRConfiguration = IEC61850_90_5.ConnectionParameters.DefaultUseETRConfiguration;
+                    m_guessConfiguration = IEC61850_90_5.ConnectionParameters.DefaultGuessConfiguration;
+                    m_parseRedundantASDUs = IEC61850_90_5.ConnectionParameters.DefaultParseRedundantASDUs;
+                    m_ignoreSignatureValidationFailures = IEC61850_90_5.ConnectionParameters.DefaultIgnoreSignatureValidationFailures;
+                    m_ignoreSampleSizeValidationFailures = IEC61850_90_5.ConnectionParameters.DefaultIgnoreSampleSizeValidationFailures;
+                    m_phasorAngleFormat = (AngleFormat)Enum.Parse(typeof(AngleFormat), IEC61850_90_5.ConnectionParameters.DefaultPhasorAngleFormat, true);
                 }
             }
         }

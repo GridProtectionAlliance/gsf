@@ -28,7 +28,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.FNet
+namespace GSF.PhasorProtocols.FNET
 {
     /// <summary>
     /// Represents a F-NET implementation of a collection of <see cref="IConfigurationCell"/> objects.

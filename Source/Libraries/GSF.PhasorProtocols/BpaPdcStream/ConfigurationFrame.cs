@@ -38,7 +38,7 @@ using GSF.IO.Checksums;
 using GSF.Parsing;
 using GSF.Reflection;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.
@@ -196,7 +196,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return BpaPdcStream.FrameType.ConfigurationFrame;
+                return BPAPDCstream.FrameType.ConfigurationFrame;
             }
         }
 
@@ -249,7 +249,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets or sets the BPA PDCstream protocol <see cref="BpaPdcStream.StreamType"/>, i.e., legacy or compact, of this <see cref="ConfigurationFrame"/>.
+        /// Gets or sets the BPA PDCstream protocol <see cref="BPAPDCstream.StreamType"/>, i.e., legacy or compact, of this <see cref="ConfigurationFrame"/>.
         /// </summary>
         public StreamType StreamType
         {
@@ -264,7 +264,7 @@ namespace GSF.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="BpaPdcStream.RevisionNumber"/> of this <see cref="ConfigurationFrame"/>.
+        /// Gets or sets the <see cref="BPAPDCstream.RevisionNumber"/> of this <see cref="ConfigurationFrame"/>.
         /// </summary>
         public RevisionNumber RevisionNumber
         {

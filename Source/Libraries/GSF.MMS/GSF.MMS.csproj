@@ -1,0 +1,459 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{74B3264B-4740-4C2F-9DCB-373FDCD3A848}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>GSF.MMS</RootNamespace>
+    <AssemblyName>GSF.MMS</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\GSF.MMS.XML</DocumentationFile>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\GSF.MMS.XML</DocumentationFile>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
+    <OutputPath>..\..\..\Build\Output\Mono\Libraries\</OutputPath>
+    <DefineConstants>TRACE;MONO</DefineConstants>
+    <DocumentationFile>..\..\..\Build\Output\Mono\Libraries\GSF.MMS.XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AccessCondition.cs" />
+    <Compile Include="AccessResult.cs" />
+    <Compile Include="Access_Control_List_instance.cs" />
+    <Compile Include="AcknowledgeEventNotification_Request.cs" />
+    <Compile Include="AcknowledgeEventNotification_Response.cs" />
+    <Compile Include="AddEventConditionListReference_Error.cs" />
+    <Compile Include="AddEventConditionListReference_Request.cs" />
+    <Compile Include="AddEventConditionListReference_Response.cs" />
+    <Compile Include="AdditionalCBBOptions.cs" />
+    <Compile Include="AdditionalService_Error.cs" />
+    <Compile Include="AdditionalService_Request.cs" />
+    <Compile Include="AdditionalService_Response.cs" />
+    <Compile Include="AdditionalSupportOptions.cs" />
+    <Compile Include="Address.cs" />
+    <Compile Include="AddToUnitControl_Request.cs" />
+    <Compile Include="AddToUnitControl_Response.cs" />
+    <Compile Include="AE_invocation_identifier.cs" />
+    <Compile Include="AE_qualifier.cs" />
+    <Compile Include="AlarmAckRule.cs" />
+    <Compile Include="AlarmEnrollmentSummary.cs" />
+    <Compile Include="AlarmSummary.cs" />
+    <Compile Include="AlterEventConditionListMonitoring_Request.cs" />
+    <Compile Include="AlterEventConditionListMonitoring_Response.cs" />
+    <Compile Include="AlterEventConditionMonitoring_Request.cs" />
+    <Compile Include="AlterEventConditionMonitoring_Response.cs" />
+    <Compile Include="AlterEventEnrollment_Request.cs" />
+    <Compile Include="AlterEventEnrollment_Response.cs" />
+    <Compile Include="AlternateAccess.cs" />
+    <Compile Include="AlternateAccessSelection.cs" />
+    <Compile Include="AlterProgramInvocationAttributes_Request.cs" />
+    <Compile Include="AlterProgramInvocationAttributes_Response.cs" />
+    <Compile Include="ApplicationReference.cs" />
+    <Compile Include="AP_invocation_identifier.cs" />
+    <Compile Include="AP_title.cs" />
+    <Compile Include="AttachToEventCondition.cs" />
+    <Compile Include="AttachToSemaphore.cs" />
+    <Compile Include="Authentication_value.cs" />
+    <Compile Include="Cancel_ErrorPDU.cs" />
+    <Compile Include="Cancel_RequestPDU.cs" />
+    <Compile Include="Cancel_ResponsePDU.cs" />
+    <Compile Include="ChangeAccessControl_Error.cs" />
+    <Compile Include="ChangeAccessControl_Request.cs" />
+    <Compile Include="ChangeAccessControl_Response.cs" />
+    <Compile Include="Conclude_ErrorPDU.cs" />
+    <Compile Include="Conclude_RequestPDU.cs" />
+    <Compile Include="Conclude_ResponsePDU.cs" />
+    <Compile Include="ConfirmedServiceRequest.cs" />
+    <Compile Include="ConfirmedServiceResponse.cs" />
+    <Compile Include="Confirmed_ErrorPDU.cs" />
+    <Compile Include="Confirmed_RequestPDU.cs" />
+    <Compile Include="Confirmed_ResponsePDU.cs" />
+    <Compile Include="ControlElement.cs" />
+    <Compile Include="Control_State.cs" />
+    <Compile Include="CreateJournal_Request.cs" />
+    <Compile Include="CreateJournal_Response.cs" />
+    <Compile Include="CreateProgramInvocation_Request.cs" />
+    <Compile Include="CreateProgramInvocation_Response.cs" />
+    <Compile Include="CreateUnitControl_Request.cs" />
+    <Compile Include="CreateUnitControl_Response.cs" />
+    <Compile Include="CS_AlterEventConditionMonitoring_Request.cs" />
+    <Compile Include="CS_AlterEventEnrollment_Request.cs" />
+    <Compile Include="CS_CreateProgramInvocation_Request.cs" />
+    <Compile Include="CS_DefineEventCondition_Request.cs" />
+    <Compile Include="CS_DefineEventEnrollment_Request.cs" />
+    <Compile Include="CS_EventNotification.cs" />
+    <Compile Include="CS_GetEventConditionAttributes_Response.cs" />
+    <Compile Include="CS_GetProgramInvocationAttributes_Response.cs" />
+    <Compile Include="CS_Resume_Request.cs" />
+    <Compile Include="CS_Start_Request.cs" />
+    <Compile Include="CS_Status_Response.cs" />
+    <Compile Include="Data.cs" />
+    <Compile Include="DataAccessError.cs" />
+    <Compile Include="DataParameters.cs" />
+    <Compile Include="Data_Exchange_instance.cs" />
+    <Compile Include="DefineAccessControlList_Request.cs" />
+    <Compile Include="DefineAccessControlList_Response.cs" />
+    <Compile Include="DefineEventAction_Request.cs" />
+    <Compile Include="DefineEventAction_Response.cs" />
+    <Compile Include="DefineEventConditionList_Error.cs" />
+    <Compile Include="DefineEventConditionList_Request.cs" />
+    <Compile Include="DefineEventConditionList_Response.cs" />
+    <Compile Include="DefineEventCondition_Request.cs" />
+    <Compile Include="DefineEventCondition_Response.cs" />
+    <Compile Include="DefineEventEnrollment_Error.cs" />
+    <Compile Include="DefineEventEnrollment_Request.cs" />
+    <Compile Include="DefineEventEnrollment_Response.cs" />
+    <Compile Include="DefineNamedType_Request.cs" />
+    <Compile Include="DefineNamedType_Response.cs" />
+    <Compile Include="DefineNamedVariableList_Request.cs" />
+    <Compile Include="DefineNamedVariableList_Response.cs" />
+    <Compile Include="DefineNamedVariable_Request.cs" />
+    <Compile Include="DefineNamedVariable_Response.cs" />
+    <Compile Include="DefineScatteredAccess_Request.cs" />
+    <Compile Include="DefineScatteredAccess_Response.cs" />
+    <Compile Include="DefineSemaphore_Request.cs" />
+    <Compile Include="DefineSemaphore_Response.cs" />
+    <Compile Include="DeleteAccessControlList_Request.cs" />
+    <Compile Include="DeleteAccessControlList_Response.cs" />
+    <Compile Include="DeleteDomain_Request.cs" />
+    <Compile Include="DeleteDomain_Response.cs" />
+    <Compile Include="DeleteEventAction_Request.cs" />
+    <Compile Include="DeleteEventAction_Response.cs" />
+    <Compile Include="DeleteEventConditionList_Request.cs" />
+    <Compile Include="DeleteEventConditionList_Response.cs" />
+    <Compile Include="DeleteEventCondition_Request.cs" />
+    <Compile Include="DeleteEventCondition_Response.cs" />
+    <Compile Include="DeleteEventEnrollment_Request.cs" />
+    <Compile Include="DeleteEventEnrollment_Response.cs" />
+    <Compile Include="DeleteJournal_Request.cs" />
+    <Compile Include="DeleteJournal_Response.cs" />
+    <Compile Include="DeleteNamedType_Error.cs" />
+    <Compile Include="DeleteNamedType_Request.cs" />
+    <Compile Include="DeleteNamedType_Response.cs" />
+    <Compile Include="DeleteNamedVariableList_Error.cs" />
+    <Compile Include="DeleteNamedVariableList_Request.cs" />
+    <Compile Include="DeleteNamedVariableList_Response.cs" />
+    <Compile Include="DeleteProgramInvocation_Request.cs" />
+    <Compile Include="DeleteProgramInvocation_Response.cs" />
+    <Compile Include="DeleteSemaphore_Request.cs" />
+    <Compile Include="DeleteSemaphore_Response.cs" />
+    <Compile Include="DeleteUnitControl_Error.cs" />
+    <Compile Include="DeleteUnitControl_Request.cs" />
+    <Compile Include="DeleteUnitControl_Response.cs" />
+    <Compile Include="DeleteVariableAccess_Error.cs" />
+    <Compile Include="DeleteVariableAccess_Request.cs" />
+    <Compile Include="DeleteVariableAccess_Response.cs" />
+    <Compile Include="DirectoryEntry.cs" />
+    <Compile Include="DomainManagementParameters.cs" />
+    <Compile Include="DomainState.cs" />
+    <Compile Include="Domain_instance.cs" />
+    <Compile Include="DownloadSegment_Request.cs" />
+    <Compile Include="DownloadSegment_Response.cs" />
+    <Compile Include="EC_Class.cs" />
+    <Compile Include="EC_State.cs" />
+    <Compile Include="EEAttributes.cs" />
+    <Compile Include="EE_Class.cs" />
+    <Compile Include="EE_Duration.cs" />
+    <Compile Include="EE_State.cs" />
+    <Compile Include="EntryContent.cs" />
+    <Compile Include="EN_Additional_Detail.cs" />
+    <Compile Include="ErrorParameters.cs" />
+    <Compile Include="EventConditionStatus.cs" />
+    <Compile Include="EventNotification.cs" />
+    <Compile Include="EventTime.cs" />
+    <Compile Include="Event_Action_instance.cs" />
+    <Compile Include="Event_Condition_instance.cs" />
+    <Compile Include="Event_Condition_List_instance.cs" />
+    <Compile Include="Event_Enrollment_instance.cs" />
+    <Compile Include="ExchangeData_Request.cs" />
+    <Compile Include="ExchangeData_Response.cs" />
+    <Compile Include="ExtendedStatus.cs" />
+    <Compile Include="FileAttributes.cs" />
+    <Compile Include="FileClose_Request.cs" />
+    <Compile Include="FileClose_Response.cs" />
+    <Compile Include="FileDelete_Request.cs" />
+    <Compile Include="FileDelete_Response.cs" />
+    <Compile Include="FileDirectory_Request.cs" />
+    <Compile Include="FileDirectory_Response.cs" />
+    <Compile Include="FileManagementParameters.cs" />
+    <Compile Include="FileName.cs" />
+    <Compile Include="FileOpen_Request.cs" />
+    <Compile Include="FileOpen_Response.cs" />
+    <Compile Include="FileRead_Request.cs" />
+    <Compile Include="FileRead_Response.cs" />
+    <Compile Include="FileRename_Error.cs" />
+    <Compile Include="FileRename_Request.cs" />
+    <Compile Include="FileRename_Response.cs" />
+    <Compile Include="FloatingPoint.cs" />
+    <Compile Include="GeneralManagementParameters.cs" />
+    <Compile Include="GetAccessControlListAttributes_Request.cs" />
+    <Compile Include="GetAccessControlListAttributes_Response.cs" />
+    <Compile Include="GetAlarmEnrollmentSummary_Request.cs" />
+    <Compile Include="GetAlarmEnrollmentSummary_Response.cs" />
+    <Compile Include="GetAlarmSummary_Request.cs" />
+    <Compile Include="GetAlarmSummary_Response.cs" />
+    <Compile Include="GetCapabilityList_Request.cs" />
+    <Compile Include="GetCapabilityList_Response.cs" />
+    <Compile Include="GetDataExchangeAttributes_Request.cs" />
+    <Compile Include="GetDataExchangeAttributes_Response.cs" />
+    <Compile Include="GetDomainAttributes_Request.cs" />
+    <Compile Include="GetDomainAttributes_Response.cs" />
+    <Compile Include="GetEventActionAttributes_Request.cs" />
+    <Compile Include="GetEventActionAttributes_Response.cs" />
+    <Compile Include="GetEventConditionAttributes_Request.cs" />
+    <Compile Include="GetEventConditionAttributes_Response.cs" />
+    <Compile Include="GetEventConditionListAttributes_Request.cs" />
+    <Compile Include="GetEventConditionListAttributes_Response.cs" />
+    <Compile Include="GetEventEnrollmentAttributes_Request.cs" />
+    <Compile Include="GetEventEnrollmentAttributes_Response.cs" />
+    <Compile Include="GetNamedTypeAttributes_Request.cs" />
+    <Compile Include="GetNamedTypeAttributes_Response.cs" />
+    <Compile Include="GetNamedVariableListAttributes_Request.cs" />
+    <Compile Include="GetNamedVariableListAttributes_Response.cs" />
+    <Compile Include="GetNameList_Request.cs" />
+    <Compile Include="GetNameList_Response.cs" />
+    <Compile Include="GetProgramInvocationAttributes_Request.cs" />
+    <Compile Include="GetProgramInvocationAttributes_Response.cs" />
+    <Compile Include="GetScatteredAccessAttributes_Request.cs" />
+    <Compile Include="GetScatteredAccessAttributes_Response.cs" />
+    <Compile Include="GetUnitControlAttributes_Request.cs" />
+    <Compile Include="GetUnitControlAttributes_Response.cs" />
+    <Compile Include="GetVariableAccessAttributes_Request.cs" />
+    <Compile Include="GetVariableAccessAttributes_Response.cs" />
+    <Compile Include="Identifier.cs" />
+    <Compile Include="Identify_Request.cs" />
+    <Compile Include="Identify_Response.cs" />
+    <Compile Include="InformationReport.cs" />
+    <Compile Include="InitializeJournal_Request.cs" />
+    <Compile Include="InitializeJournal_Response.cs" />
+    <Compile Include="InitiateDownloadSequence_Request.cs" />
+    <Compile Include="InitiateDownloadSequence_Response.cs" />
+    <Compile Include="InitiateUnitControlLoad_Request.cs" />
+    <Compile Include="InitiateUnitControlLoad_Response.cs" />
+    <Compile Include="InitiateUnitControl_Error.cs" />
+    <Compile Include="InitiateUploadSequence_Request.cs" />
+    <Compile Include="InitiateUploadSequence_Response.cs" />
+    <Compile Include="Initiate_ErrorPDU.cs" />
+    <Compile Include="Initiate_RequestPDU.cs" />
+    <Compile Include="Initiate_ResponsePDU.cs" />
+    <Compile Include="Input_Request.cs" />
+    <Compile Include="Input_Response.cs" />
+    <Compile Include="Integer16.cs" />
+    <Compile Include="Integer32.cs" />
+    <Compile Include="Integer8.cs" />
+    <Compile Include="ISO_9506_MMS_1.cs" />
+    <Compile Include="JournalEntry.cs" />
+    <Compile Include="Journal_Entry_instance.cs" />
+    <Compile Include="Journal_instance.cs" />
+    <Compile Include="Journal_Variable.cs" />
+    <Compile Include="Kill_Request.cs" />
+    <Compile Include="Kill_Response.cs" />
+    <Compile Include="LoadData.cs" />
+    <Compile Include="LoadDomainContent_Request.cs" />
+    <Compile Include="LoadDomainContent_Response.cs" />
+    <Compile Include="LoadUnitControlFromFile_Error.cs" />
+    <Compile Include="LoadUnitControlFromFile_Request.cs" />
+    <Compile Include="LoadUnitControlFromFile_Response.cs" />
+    <Compile Include="LogicalStatus.cs" />
+    <Compile Include="MMS255String.cs" />
+    <Compile Include="MMSpdu.cs" />
+    <Compile Include="MMSString.cs" />
+    <Compile Include="Modifier.cs" />
+    <Compile Include="ModifierStep.cs" />
+    <Compile Include="Named_Type_instance.cs" />
+    <Compile Include="Named_Variable_instance.cs" />
+    <Compile Include="Named_Variable_List_instance.cs" />
+    <Compile Include="ObjectClass.cs" />
+    <Compile Include="ObjectName.cs" />
+    <Compile Include="ObtainFile_Error.cs" />
+    <Compile Include="ObtainFile_Request.cs" />
+    <Compile Include="ObtainFile_Response.cs" />
+    <Compile Include="OperationState.cs" />
+    <Compile Include="OperatorCommunicationParameters.cs" />
+    <Compile Include="Operator_Station_instance.cs" />
+    <Compile Include="Output_Request.cs" />
+    <Compile Include="Output_Response.cs" />
+    <Compile Include="ParameterSupportOptions.cs" />
+    <Compile Include="PhysicalStatus.cs" />
+    <Compile Include="Priority.cs" />
+    <Compile Include="ProgramInvocationManagementParameters.cs" />
+    <Compile Include="ProgramInvocationState.cs" />
+    <Compile Include="Program_Invocation_instance.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReadJournal_Request.cs" />
+    <Compile Include="ReadJournal_Response.cs" />
+    <Compile Include="Read_Request.cs" />
+    <Compile Include="Read_Response.cs" />
+    <Compile Include="ReconfigureProgramInvocation_Request.cs" />
+    <Compile Include="ReconfigureProgramInvocation_Response.cs" />
+    <Compile Include="RejectPDU.cs" />
+    <Compile Include="RelinquishControl_Request.cs" />
+    <Compile Include="RelinquishControl_Response.cs" />
+    <Compile Include="RemoveEventConditionListReference_Error.cs" />
+    <Compile Include="RemoveEventConditionListReference_Request.cs" />
+    <Compile Include="RemoveEventConditionListReference_Response.cs" />
+    <Compile Include="RemoveFromUnitControl_Request.cs" />
+    <Compile Include="RemoveFromUnitControl_Response.cs" />
+    <Compile Include="Rename_Request.cs" />
+    <Compile Include="Rename_Response.cs" />
+    <Compile Include="ReportAccessControlledObjects_Request.cs" />
+    <Compile Include="ReportAccessControlledObjects_Response.cs" />
+    <Compile Include="ReportEventActionStatus_Request.cs" />
+    <Compile Include="ReportEventActionStatus_Response.cs" />
+    <Compile Include="ReportEventConditionListStatus_Request.cs" />
+    <Compile Include="ReportEventConditionListStatus_Response.cs" />
+    <Compile Include="ReportEventConditionStatus_Request.cs" />
+    <Compile Include="ReportEventConditionStatus_Response.cs" />
+    <Compile Include="ReportEventEnrollmentStatus_Request.cs" />
+    <Compile Include="ReportEventEnrollmentStatus_Response.cs" />
+    <Compile Include="ReportJournalStatus_Request.cs" />
+    <Compile Include="ReportJournalStatus_Response.cs" />
+    <Compile Include="ReportPoolSemaphoreStatus_Request.cs" />
+    <Compile Include="ReportPoolSemaphoreStatus_Response.cs" />
+    <Compile Include="ReportSemaphoreEntryStatus_Request.cs" />
+    <Compile Include="ReportSemaphoreEntryStatus_Response.cs" />
+    <Compile Include="ReportSemaphoreStatus_Request.cs" />
+    <Compile Include="ReportSemaphoreStatus_Response.cs" />
+    <Compile Include="RequestDomainDownload_Request.cs" />
+    <Compile Include="RequestDomainDownload_Response.cs" />
+    <Compile Include="RequestDomainUpload_Request.cs" />
+    <Compile Include="RequestDomainUpload_Response.cs" />
+    <Compile Include="Request_Detail.cs" />
+    <Compile Include="Reset_Error.cs" />
+    <Compile Include="Reset_Request.cs" />
+    <Compile Include="Reset_Response.cs" />
+    <Compile Include="Response_Detail.cs" />
+    <Compile Include="Resume_Error.cs" />
+    <Compile Include="Resume_Request.cs" />
+    <Compile Include="Resume_Response.cs" />
+    <Compile Include="Running_Mode.cs" />
+    <Compile Include="ScatteredAccessDescription.cs" />
+    <Compile Include="SCI_Information.cs" />
+    <Compile Include="Select_Request.cs" />
+    <Compile Include="Select_Response.cs" />
+    <Compile Include="SemaphoreEntry.cs" />
+    <Compile Include="SemaphoreManagementParameters.cs" />
+    <Compile Include="Semaphore_instance.cs" />
+    <Compile Include="ServiceError.cs" />
+    <Compile Include="ServiceSupportOptions.cs" />
+    <Compile Include="Service_and_Parameter_CBBs.cs" />
+    <Compile Include="Severity.cs" />
+    <Compile Include="StartCount.cs" />
+    <Compile Include="StartUnitControl_Error.cs" />
+    <Compile Include="StartUnitControl_Request.cs" />
+    <Compile Include="StartUnitControl_Response.cs" />
+    <Compile Include="Start_Error.cs" />
+    <Compile Include="Start_Request.cs" />
+    <Compile Include="Start_Response.cs" />
+    <Compile Include="StatusResponse.cs" />
+    <Compile Include="Status_Request.cs" />
+    <Compile Include="Status_Response.cs" />
+    <Compile Include="StopUnitControl_Error.cs" />
+    <Compile Include="StopUnitControl_Request.cs" />
+    <Compile Include="StopUnitControl_Response.cs" />
+    <Compile Include="Stop_Error.cs" />
+    <Compile Include="Stop_Request.cs" />
+    <Compile Include="Stop_Response.cs" />
+    <Compile Include="StoreDomainContent_Request.cs" />
+    <Compile Include="StoreDomainContent_Response.cs" />
+    <Compile Include="StoreUnitControlToFile_Request.cs" />
+    <Compile Include="StoreUnitControlToFile_Response.cs" />
+    <Compile Include="TakeControl_Request.cs" />
+    <Compile Include="TakeControl_Response.cs" />
+    <Compile Include="TerminateDownloadSequence_Request.cs" />
+    <Compile Include="TerminateDownloadSequence_Response.cs" />
+    <Compile Include="TerminateUploadSequence_Request.cs" />
+    <Compile Include="TerminateUploadSequence_Response.cs" />
+    <Compile Include="TimeOfDay.cs" />
+    <Compile Include="Transitions.cs" />
+    <Compile Include="TriggerEvent_Request.cs" />
+    <Compile Include="TriggerEvent_Response.cs" />
+    <Compile Include="TypeDescription.cs" />
+    <Compile Include="TypeSpecification.cs" />
+    <Compile Include="ULState.cs" />
+    <Compile Include="UnconfirmedService.cs" />
+    <Compile Include="Unconfirmed_Detail.cs" />
+    <Compile Include="Unconfirmed_PDU.cs" />
+    <Compile Include="UnitControlLoadSegment_Request.cs" />
+    <Compile Include="UnitControlLoadSegment_Response.cs" />
+    <Compile Include="UnitControlUpload_Request.cs" />
+    <Compile Include="UnitControlUpload_Response.cs" />
+    <Compile Include="Unit_Control_instance.cs" />
+    <Compile Include="Unnamed_Variable_instance.cs" />
+    <Compile Include="Unsigned16.cs" />
+    <Compile Include="Unsigned32.cs" />
+    <Compile Include="Unsigned8.cs" />
+    <Compile Include="UnsolicitedStatus.cs" />
+    <Compile Include="UploadSegment_Request.cs" />
+    <Compile Include="UploadSegment_Response.cs" />
+    <Compile Include="UtcTime.cs" />
+    <Compile Include="VariableAccessParameters.cs" />
+    <Compile Include="VariableAccessSpecification.cs" />
+    <Compile Include="VariableSpecification.cs" />
+    <Compile Include="Variable_List_Item_instance.cs" />
+    <Compile Include="VMDReset_Request.cs" />
+    <Compile Include="VMDReset_Response.cs" />
+    <Compile Include="VMDState.cs" />
+    <Compile Include="VMDStop_Request.cs" />
+    <Compile Include="VMDStop_Response.cs" />
+    <Compile Include="VMDSupportParameters.cs" />
+    <Compile Include="VMD_File.cs" />
+    <Compile Include="WriteJournal_Request.cs" />
+    <Compile Include="WriteJournal_Response.cs" />
+    <Compile Include="Write_Request.cs" />
+    <Compile Include="Write_Response.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GSF.ASN1\GSF.ASN1.csproj">
+      <Project>{b3fba8d6-7c89-4fe9-8e90-f617604a7c3c}</Project>
+      <Name>GSF.ASN1</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="IEC60870_6\" />
+    <Folder Include="IEC61850\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

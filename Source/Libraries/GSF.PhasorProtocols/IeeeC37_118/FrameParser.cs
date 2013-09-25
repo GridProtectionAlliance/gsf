@@ -29,7 +29,7 @@ using System;
 using System.Text;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents a frame parser for an IEEE C37.118 binary data stream and returns parsed data via events.
@@ -100,7 +100,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Creates a new <see cref="FrameParser"/> from specified parameters.
         /// </summary>
-        /// <param name="draftRevision">The <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.</param>
+        /// <param name="draftRevision">The <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.</param>
         public FrameParser(DraftRevision draftRevision)
         {
             // Initialize protocol synchronization bytes for this frame parser
@@ -134,7 +134,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="IeeeC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.
+        /// Gets or sets the <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.
         /// </summary>
         public DraftRevision DraftRevision
         {

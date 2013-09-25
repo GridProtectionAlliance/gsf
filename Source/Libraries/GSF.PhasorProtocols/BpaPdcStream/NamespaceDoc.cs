@@ -25,7 +25,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Contains an implementation of the phasor classes used to parse or generate a stream of data in the BPA PDCstream format.

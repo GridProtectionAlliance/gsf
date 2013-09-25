@@ -31,7 +31,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="ICommandFrame"/> that can be sent or received.
@@ -73,7 +73,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
 
             m_frameHeader = new CommonFrameHeader(null, buffer, startIndex);
 
-            if (m_frameHeader.TypeID != IeeeC37_118.FrameType.CommandFrame)
+            if (m_frameHeader.TypeID != IEEEC37_118.FrameType.CommandFrame)
                 throw new InvalidOperationException("Binary image does not represent an IEEE C37.118 command frame");
 
             if (length < m_frameHeader.FrameLength)
@@ -132,7 +132,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             {
                 // Make sure frame header exists
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(IeeeC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp);
+                    m_frameHeader = new CommonFrameHeader(IEEEC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
             }

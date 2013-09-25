@@ -35,6 +35,7 @@ using System.Threading;
 using GSF;
 using GSF.Collections;
 using GSF.IO;
+using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;

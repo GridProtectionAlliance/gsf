@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
@@ -57,7 +57,7 @@ namespace GSF.PhasorProtocols.IeeeC37_118
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
                 PhasorDefinition.CreateNewDefinition,
-                IeeeC37_118.FrequencyDefinition.CreateNewDefinition,
+                IEEEC37_118.FrequencyDefinition.CreateNewDefinition,
                 AnalogDefinition.CreateNewDefinition,
                 DigitalDefinition.CreateNewDefinition);
         }

@@ -28,7 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.Iec61850_90_5
+namespace GSF.PhasorProtocols.IEC61850_90_5
 {
     /// <summary>
     /// Represents the IEC 61850-90-5 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
@@ -55,7 +55,7 @@ namespace GSF.PhasorProtocols.Iec61850_90_5
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
                 PhasorDefinition.CreateNewDefinition,
-                Iec61850_90_5.FrequencyDefinition.CreateNewDefinition,
+                IEC61850_90_5.FrequencyDefinition.CreateNewDefinition,
                 AnalogDefinition.CreateNewDefinition,
                 DigitalDefinition.CreateNewDefinition);
         }

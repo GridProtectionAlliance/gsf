@@ -28,7 +28,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents a IEEE C37.118 implementation of a collection of <see cref="IConfigurationCell"/> objects.

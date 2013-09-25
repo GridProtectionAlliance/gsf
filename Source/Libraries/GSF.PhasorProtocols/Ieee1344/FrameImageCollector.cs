@@ -31,7 +31,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
-namespace GSF.PhasorProtocols.Ieee1344
+namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
     /// Collects frame images until a full IEEE 1344 frame has been received.

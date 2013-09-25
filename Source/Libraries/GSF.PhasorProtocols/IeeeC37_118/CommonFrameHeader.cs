@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.IeeeC37_118
+namespace GSF.PhasorProtocols.IEEEC37_118
 {
     /// <summary>
     /// Represents the common header for all IEEE C37.118 frames of data.
@@ -88,8 +88,8 @@ namespace GSF.PhasorProtocols.IeeeC37_118
                 throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in IEEE C37.118 frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
             // Strip out frame type and version information...
-            m_frameType = (FrameType)buffer[startIndex + 1] & ~IeeeC37_118.FrameType.VersionNumberMask;
-            m_version = (byte)(buffer[startIndex + 1] & (byte)IeeeC37_118.FrameType.VersionNumberMask);
+            m_frameType = (FrameType)buffer[startIndex + 1] & ~IEEEC37_118.FrameType.VersionNumberMask;
+            m_version = (byte)(buffer[startIndex + 1] & (byte)IEEEC37_118.FrameType.VersionNumberMask);
 
             m_frameLength = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 2);
             m_idCode = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
@@ -351,15 +351,15 @@ namespace GSF.PhasorProtocols.IeeeC37_118
                 // Translate IEEE C37.118 specific frame type to fundamental frame type
                 switch (m_frameType)
                 {
-                    case IeeeC37_118.FrameType.DataFrame:
+                    case IEEEC37_118.FrameType.DataFrame:
                         return FundamentalFrameType.DataFrame;
-                    case IeeeC37_118.FrameType.ConfigurationFrame1:
-                    case IeeeC37_118.FrameType.ConfigurationFrame2:
-                    case IeeeC37_118.FrameType.ConfigurationFrame3:
+                    case IEEEC37_118.FrameType.ConfigurationFrame1:
+                    case IEEEC37_118.FrameType.ConfigurationFrame2:
+                    case IEEEC37_118.FrameType.ConfigurationFrame3:
                         return FundamentalFrameType.ConfigurationFrame;
-                    case IeeeC37_118.FrameType.HeaderFrame:
+                    case IEEEC37_118.FrameType.HeaderFrame:
                         return FundamentalFrameType.HeaderFrame;
-                    case IeeeC37_118.FrameType.CommandFrame:
+                    case IEEEC37_118.FrameType.CommandFrame:
                         return FundamentalFrameType.CommandFrame;
                     default:
                         return FundamentalFrameType.Undetermined;

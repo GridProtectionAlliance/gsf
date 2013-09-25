@@ -41,6 +41,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using GSF.Collections;
+using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using PhasorProtocolAdapters;
 

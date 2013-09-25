@@ -28,7 +28,7 @@
 using System;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.Ieee1344
+namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
     /// Represents a frame parser for an IEEE 1344 binary data stream that returns parsed data via events.

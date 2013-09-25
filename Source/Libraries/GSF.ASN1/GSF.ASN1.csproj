@@ -50,11 +50,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\ASN1Any.cs" />
@@ -75,6 +70,8 @@
     <Compile Include="Attributes\ASN1Sequence.cs" />
     <Compile Include="Attributes\ASN1SequenceOf.cs" />
     <Compile Include="Attributes\ASN1String.cs" />
+    <Compile Include="Attributes\ASN1_MMSDataArray.cs" />
+    <Compile Include="Attributes\ASN1_MMSDataStructure.cs" />
     <Compile Include="Attributes\Constraints\ASN1PatternConstraint.cs" />
     <Compile Include="Attributes\Constraints\ASN1SignedNumberConstraint.cs" />
     <Compile Include="Attributes\Constraints\ASN1SizeConstraint.cs" />

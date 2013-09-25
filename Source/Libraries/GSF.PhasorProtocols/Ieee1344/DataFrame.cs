@@ -32,7 +32,7 @@ using System.Runtime.Serialization;
 using GSF.IO.Checksums;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.Ieee1344
+namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IDataFrame"/> that can be sent or received.
@@ -165,7 +165,7 @@ namespace GSF.PhasorProtocols.Ieee1344
         {
             get
             {
-                return Ieee1344.FrameType.DataFrame;
+                return IEEE1344.FrameType.DataFrame;
             }
         }
 

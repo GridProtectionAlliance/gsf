@@ -34,7 +34,7 @@ using System.Text;
 using GSF.IO;
 using GSF.Parsing;
 
-namespace GSF.PhasorProtocols.BpaPdcStream
+namespace GSF.PhasorProtocols.BPAPDCstream
 {
     /// <summary>
     /// Represents a frame parser for a BPA PDCstream binary data stream and returns parsed data via events.

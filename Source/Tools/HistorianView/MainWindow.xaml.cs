@@ -40,14 +40,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml;
-using Comtrade;
 using GSF.Collections;
+using GSF.COMTRADE;
 using GSF.Configuration;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
+using GSF.PhasorProtocols;
 using Microsoft.Win32;
-using PhasorProtocolAdapters;
 
 namespace HistorianView
 {

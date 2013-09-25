@@ -28,7 +28,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace GSF.PhasorProtocols.Ieee1344
+namespace GSF.PhasorProtocols.IEEE1344
 {
     /// <summary>
     /// Represents a IEEE 1344 implementation of a collection of <see cref="IConfigurationCell"/> objects.
