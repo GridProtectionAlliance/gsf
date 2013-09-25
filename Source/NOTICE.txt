@@ -3,9 +3,9 @@
 =========================================================================================================
 
 Grid Solutions Framework (http://gsf.codeplex.com/)
-Copyright © 2012, The Grid Protection Alliance
+Copyright © 2012-2013, Grid Protection Alliance, Inc.
 
-This product includes software developed at the Grid Protection Alliance
+This product includes software developed at the Grid Protection Alliance, Inc.
 (http://www.gridprotectionalliance.org/)
 
 Portions of this software were developed at the Tennessee Valley Authority (http://www.tva.gov/).
