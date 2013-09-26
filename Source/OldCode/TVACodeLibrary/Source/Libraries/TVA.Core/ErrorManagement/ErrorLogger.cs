@@ -1955,7 +1955,7 @@ namespace TVA.ErrorManagement
         /// </summary>
         /// <param name="includeUserInfo">true if user information is to be include; otherwise false.</param>
         /// <returns>System information in text.</returns>
-        private static string GetSystemInfo(bool includeUserInfo)
+        public static string GetSystemInfo(bool includeUserInfo)
         {
             StringBuilder info = new StringBuilder();
             info.AppendFormat("Date and Time:         {0}", DateTime.Now);
@@ -2025,7 +2025,7 @@ namespace TVA.ErrorManagement
         /// Gets information about the current application.
         /// </summary>
         /// <returns>Application information in text.</returns>
-        private static string GetApplicationInfo()
+        public static string GetApplicationInfo()
         {
             Assembly parentAssembly = null;
             switch (Common.GetApplicationType())
@@ -2066,7 +2066,7 @@ namespace TVA.ErrorManagement
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> whose common information is to be retrieved.</param>
         /// <returns>Common <see cref="Exception"/> information in text.</returns>
-        private static string GetExceptionGeneralInfo(Exception ex)
+        public static string GetExceptionGeneralInfo(Exception ex)
         {
             StringBuilder info = new StringBuilder();
             info.AppendFormat("Exception Source:      {0}", ex.Source);
@@ -2089,7 +2089,7 @@ namespace TVA.ErrorManagement
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> whose stack trace information is to be retrieved.</param>
         /// <returns><see cref="Exception"/> stack trace in text.</returns>
-        private static string GetExceptionStackTrace(Exception ex)
+        public static string GetExceptionStackTrace(Exception ex)
         {
             StringBuilder trace = new StringBuilder();
             StackTrace stack = new StackTrace(ex, true);
