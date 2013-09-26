@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="FileExporter.cs" />
     <Compile Include="FileImporter.cs" />
+    <Compile Include="MetricImporter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

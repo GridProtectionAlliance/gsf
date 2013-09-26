@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  FileImporter.cs - Gbtc
+//  MetricImporter.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,10 +16,10 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/26/2012 - J. Ritchie Carroll
+//  11/15/2012 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/13/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  09/26/2013 - Stephen C. Wills
+//       Migrated from VS2010 branch.
 //
 //******************************************************************************************************
 
@@ -27,27 +27,24 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Timers;
 using GSF;
 using GSF.Collections;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using Timer = System.Timers.Timer;
 
 namespace EpriExport
 {
     /// <summary>
-    /// Represents an input adapter that reads measurements from an EPRI export file.
+    /// Represents an input adapter that reads metrics from an EPRI export file.
     /// </summary>
-    [Description("EPRI: reads measurements from an EPRI export file.")]
-    public class FileImporter : InputAdapterBase
+    [Description("EPRI: reads metrics from an EPRI export file.")]
+    public class MetricImporter : InputAdapterBase
     {
         #region [ Members ]
 
@@ -62,7 +59,7 @@ namespace EpriExport
         private int m_measurementsPerInterval;
         private int m_skipRows;
         private bool m_simulateTimestamp;
-        private Timer m_looseTimer;
+        private System.Timers.Timer m_looseTimer;
         private PrecisionInputTimer m_precisionTimer;
         private FileSystemWatcher m_fileSystemWatcher;
         private AsyncQueue<string> m_fileProcessQueue;
@@ -75,9 +72,9 @@ namespace EpriExport
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FileImporter"/> class.
+        /// Initializes a new instance of the <see cref="MetricImporter"/> class.
         /// </summary>
-        public FileImporter()
+        public MetricImporter()
         {
             m_fileProcessQueue = new AsyncQueue<string>();
             m_fileProcessQueue.ProcessItemFunction = ProcessFile;
@@ -87,8 +84,8 @@ namespace EpriExport
             m_columnMappings = new Dictionary<int, IMeasurement>();
 
             m_inputInterval = 5.0D;
-            m_measurementsPerInterval = 13;
-            m_skipRows = 2;
+            m_measurementsPerInterval = 5;
+            m_skipRows = 4;
             m_timestampFormat = "dd-MMM-yyyy HH:mm:ss.fff";
 
             // Set minimum timer resolution to one millisecond to improve timer accuracy
@@ -103,8 +100,7 @@ namespace EpriExport
         /// Gets or sets the import path for EPRI CSV files from which measurements will be read.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the import path for EPRI CSV files from which measurements will be read."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.FolderBrowserEditor")]
+        Description("Define the import path for EPRI CSV files from which measurements will be read.")]
         public string ImportPath
         {
             get
@@ -140,7 +136,7 @@ namespace EpriExport
         /// </summary>
         [ConnectionStringParameter,
         Description("Define the number of lines to skip in the source file before the header line is encountered."),
-        DefaultValue(2)]
+        DefaultValue(4)]
         public int SkipRows
         {
             get
@@ -191,7 +187,7 @@ namespace EpriExport
             set
             {
                 // Note that a 1-ms timer and debug mode don't mix, so the high-resolution timer is disabled while debugging
-                if (value && (object)m_precisionTimer == null && !Debugger.IsAttached)
+                if (value && (object)m_precisionTimer == null && !System.Diagnostics.Debugger.IsAttached)
                     m_precisionTimer = PrecisionInputTimer.Attach((int)(1000.0D / m_inputInterval), OnProcessException);
                 else if (!value && m_precisionTimer != null)
                     PrecisionInputTimer.Detach(ref m_precisionTimer);
@@ -202,8 +198,8 @@ namespace EpriExport
         /// Gets or sets the number of measurements that are read from the CSV file in each frame.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the number of measurements that are read from the CSV file in each frame."),
-        DefaultValue(13)]
+        Description("Define the number of metric measurements that are read from the CSV file in each frame."),
+        DefaultValue(5)]
         public int MeasurementsPerInterval
         {
             get
@@ -236,10 +232,10 @@ namespace EpriExport
         }
 
         /// <summary>
-        /// Defines the column mappings must defined: e.g., 0=Timestamp; 1=PPA:12; 2=PPA13.
+        /// Defines the column mappings must defined: e.g., 1=Timestamp; 2=PPA:12; 3=PPA13.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Defines the column mappings must defined: e.g., \"0=Timestamp; 1=PPA:12; 2=PPA13\"."),
+        Description("Defines the column mappings must defined: e.g., \"1=Timestamp; 2=PPA:12; 3=PPA13\"."),
         DefaultValue("")]
         public int ColumnMappings
         {
@@ -248,7 +244,7 @@ namespace EpriExport
         }
 
         /// <summary>
-        /// Gets a flag that determines if this <see cref="FileImporter"/>
+        /// Gets a flag that determines if this <see cref="MetricImporter"/>
         /// uses an asynchronous connection.
         /// </summary>
         protected override bool UseAsyncConnect
@@ -260,7 +256,7 @@ namespace EpriExport
         }
 
         /// <summary>
-        /// Returns the detailed status of this <see cref="FileImporter"/>.
+        /// Returns the detailed status of this <see cref="MetricImporter"/>.
         /// </summary>
         public override string Status
         {
@@ -317,7 +313,7 @@ namespace EpriExport
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="FileImporter"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="MetricImporter"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
@@ -372,7 +368,7 @@ namespace EpriExport
         }
 
         /// <summary>
-        /// Initializes this <see cref="FileImporter"/>.
+        /// Initializes this <see cref="MetricImporter"/>.
         /// </summary>
         public override void Initialize()
         {
@@ -386,7 +382,7 @@ namespace EpriExport
             if (settings.TryGetValue("importPath", out setting))
                 m_importPath = setting;
             else
-                throw new InvalidOperationException("No import path was specified for EPRI file importer - this is a required setting.");
+                throw new InvalidOperationException("No import path was specified for EPRI metric importer - this is a required setting.");
 
             if (settings.TryGetValue("inputInterval", out setting))
                 m_inputInterval = double.Parse(setting);
@@ -414,7 +410,7 @@ namespace EpriExport
             UseHighResolutionInputTimer = setting.ParseBoolean();
 
             if (!UseHighResolutionInputTimer)
-                m_looseTimer = new Timer();
+                m_looseTimer = new System.Timers.Timer();
 
             // Load column mappings:
             if (settings.TryGetValue("columnMappings", out setting))
@@ -429,7 +425,7 @@ namespace EpriExport
                 }
 
                 if (!m_simulateTimestamp && !columnMappings.Values.Contains("Timestamp", StringComparer.InvariantCultureIgnoreCase))
-                    throw new InvalidOperationException("One of the column mappings must be defined as a \"Timestamp\": e.g., columnMappings={0=Timestamp; 1=PPA:12; 2=PPA13}.");
+                    throw new InvalidOperationException("One of the column mappings must be defined as a \"Timestamp\": e.g., columnMappings={1=Timestamp; 2=PPA:12; 3=PPA13}.");
 
                 // In transverse mode, maximum measurements per interval is set to maximum columns in input file
                 m_measurementsPerInterval = columnMappings.Keys.Max();
@@ -484,8 +480,8 @@ namespace EpriExport
                 int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", true) == 0).Key;
 
                 // Reserve a column mapping for timestamp value
-                IMeasurement timestampMeasurement = new Measurement
-                    {
+                IMeasurement timestampMeasurement = new Measurement()
+                {
                     TagName = "Timestamp"
                 };
 
@@ -503,13 +499,13 @@ namespace EpriExport
                 m_looseTimer.Elapsed += m_looseTimer_Elapsed;
             }
 
-            m_fileSystemWatcher = new FileSystemWatcher(m_importPath, "EPRI-VS-Output-*.csv");
+            m_fileSystemWatcher = new FileSystemWatcher(m_importPath, "EPRI-VS-Metrics-*.csv");
             m_fileSystemWatcher.Created += m_fileSystemWatcher_Created;
             m_fileSystemWatcher.Renamed += m_fileSystemWatcher_Renamed;
         }
 
         /// <summary>
-        /// Attempts to connect to this <see cref="FileImporter"/>.
+        /// Attempts to connect to this <see cref="MetricImporter"/>.
         /// </summary>
         protected override void AttemptConnection()
         {
@@ -530,7 +526,7 @@ namespace EpriExport
         }
 
         /// <summary>
-        /// Attempts to disconnect from this <see cref="FileImporter"/>.
+        /// Attempts to disconnect from this <see cref="MetricImporter"/>.
         /// </summary>
         protected override void AttemptDisconnection()
         {
@@ -541,13 +537,13 @@ namespace EpriExport
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="FileImporter"/>.
+        /// Gets a short one-line status of this <see cref="MetricImporter"/>.
         /// </summary>
         /// <param name="maxLength">Maximum length of the status message.</param>
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} measurements read from CSV file.", ProcessedMeasurements).CenterText(maxLength);
+            return string.Format("{0} metrics read from CSV file.", ProcessedMeasurements).CenterText(maxLength);
         }
 
         private void m_fileSystemWatcher_Created(object sender, FileSystemEventArgs e)
@@ -566,7 +562,7 @@ namespace EpriExport
                 return;
 
             m_fileName = fileName;
-            OnStatusMessage("Processing EPRI file \"{0}\"...", m_fileName);
+            OnStatusMessage("Processing EPRI metrics file \"{0}\"...", m_fileName);
 
             FilePath.WaitForReadLock(m_fileName);
             m_fileStream = new StreamReader(m_fileName);
@@ -616,7 +612,7 @@ namespace EpriExport
                 m_fileStream.Dispose();
             }
 
-            OnStatusMessage("Completed processing of EPRI file \"{0}\".", m_fileName);
+            OnStatusMessage("Completed processing of metrics EPRI file \"{0}\".", m_fileName);
 
             ThreadPool.QueueUserWorkItem(DeleteFile, m_fileName);
 
@@ -650,7 +646,7 @@ namespace EpriExport
             CloseFile();
         }
 
-        private void m_looseTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private void m_looseTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             if (!Enabled || !ReadNextRecord(DateTime.UtcNow.Ticks))
                 CloseFile();
@@ -711,7 +707,7 @@ namespace EpriExport
 
                     if (m_simulateTimestamp)
                         measurement.Timestamp = currentTime;
-                    else if (m_columns.ContainsKey("Timestamp"))
+                    else
                         measurement.Timestamp = fileTime;
 
                     newMeasurements.Add(measurement);
