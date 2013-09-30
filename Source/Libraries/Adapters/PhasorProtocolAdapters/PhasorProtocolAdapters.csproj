@@ -58,7 +58,6 @@
   <ItemGroup>
     <Compile Include="BpaPdcStream\Concentrator.cs" />
     <Compile Include="CalculatedMeasurementBase.cs" />
-    <Compile Include="Common.cs" />
     <Compile Include="CommonPhasorServices.cs" />
     <Compile Include="ConfigurationErrorFrame.cs" />
     <Compile Include="Iec61850_90_5\Concentrator.cs" />

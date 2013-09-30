@@ -346,6 +346,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             startIndex += CommonFrameHeader.FixedLength;
 
             m_timebase = EndianOrder.BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
+            CommonHeader.Timebase = m_timebase;
             State.CellCount = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
 
             return FixedHeaderLength;

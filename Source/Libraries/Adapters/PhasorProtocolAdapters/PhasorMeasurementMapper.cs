@@ -1347,7 +1347,7 @@ namespace PhasorProtocolAdapters
 
                         // Create a measurement with a reference associated with this adapter
                         definedMeasurement = new Measurement
-                            {
+                		{
                             ID = signalID,
                             Key = MeasurementKey.Parse(row["ID"].ToString(), signalID),
                             TagName = signalReference,
@@ -1994,7 +1994,7 @@ namespace PhasorProtocolAdapters
                 if ((object)m_missingDataMonitor == null)
                 {
                     m_missingDataMonitor = new MissingDataMonitor
-                        {
+                    {
                         LagTime = m_lagTime,
                         LeadTime = m_leadTime,
                         FramesPerSecond = m_frameParser.DefinedFrameRate,

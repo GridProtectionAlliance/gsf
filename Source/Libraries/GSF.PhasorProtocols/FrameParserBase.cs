@@ -53,9 +53,6 @@ namespace GSF.PhasorProtocols
     {
         #region [ Members ]
 
-        // Constants
-        private const int ProcessWaitTimeout = 1000;
-
         // Events
 
         // Derived classes will typically also expose events to provide instances to the protocol specific final derived channel frames
@@ -339,7 +336,7 @@ namespace GSF.PhasorProtocols
                 if ((object)m_frameImageQueue == null)
                 {
                     m_frameImageQueue = new AsyncQueue<EventArgs<FundamentalFrameType, byte[], int, int>>
-                        {
+                    {
                         ProcessItemFunction = frameImage => ReceivedFrameBufferImage(this, frameImage)
                     };
 

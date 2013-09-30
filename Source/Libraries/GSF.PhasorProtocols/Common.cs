@@ -44,14 +44,14 @@ namespace GSF.PhasorProtocols
     public static class Common
     {
         /// <summary>
-        /// Typical data stream synchrnonization byte.
+        /// Typical data stream synchronization byte.
         /// </summary>
         public const byte SyncByte = 0xAA;
 
         /// <summary>
         /// Undefined measurement key.
         /// </summary>
-        internal static MeasurementKey UndefinedKey = new MeasurementKey(Guid.Empty, uint.MaxValue, "__");
+        internal static MeasurementKey UndefinedKey = new MeasurementKey(Guid.Empty, UInt32.MaxValue, "__");
 
         /// <summary>
         /// This is a common optimized block copy function for binary data.
@@ -95,7 +95,7 @@ namespace GSF.PhasorProtocols
         /// <returns>Deserialized <see cref="IConfigurationFrame"/>.</returns>
         public static IConfigurationFrame DeserializeConfigurationFrame(string configFileName)
         {
-            IConfigurationFrame configFrame = null;
+            IConfigurationFrame configFrame;
             FileStream configFile = null;
 
             try
@@ -119,7 +119,7 @@ namespace GSF.PhasorProtocols
         /// <returns>Deserialized <see cref="IConfigurationFrame"/>.</returns>
         public static IConfigurationFrame DeserializeConfigurationFrame(Stream configStream)
         {
-            IConfigurationFrame configFrame = null;
+            IConfigurationFrame configFrame;
             SoapFormatter xmlSerializer = new SoapFormatter();
 
             xmlSerializer.AssemblyFormat = FormatterAssemblyStyle.Simple;
@@ -174,6 +174,42 @@ namespace GSF.PhasorProtocols
                     return "IEC 61850-90-5";
                 default:
                     return protocol.ToString().Replace('_', '.').ToUpper();
+            }
+        }
+
+        /// <summary>
+        /// Returns display friendly signal type name.
+        /// </summary>
+        /// <param name="signalType"><see cref="SignalType"/> to return display name for.</param>
+        /// <returns>Friendly protocol display name for specified <paramref name="signalType"/>.</returns>
+        public static string GetFormattedSignalTypeName(this SignalType signalType)
+        {
+            switch (signalType)
+            {
+                case SignalType.IPHM:
+                    return "Current phase magnitude";
+                case SignalType.IPHA:
+                    return "Current phase angle";
+                case SignalType.VPHM:
+                    return "Voltage phase magnitude";
+                case SignalType.VPHA:
+                    return "Voltage phase angle";
+                case SignalType.FREQ:
+                    return "Frequency";
+                case SignalType.DFDT:
+                    return "Frequency delta (dF/dt)";
+                case SignalType.ALOG:
+                    return "Analog";
+                case SignalType.FLAG:
+                    return "Status flags";
+                case SignalType.DIGI:
+                    return "Digital";
+                case SignalType.CALC:
+                    return "Calculated";
+                case SignalType.NONE:
+                    return "Undefined";
+                default:
+                    return signalType.ToString().ToTitleCase();
             }
         }
     }
