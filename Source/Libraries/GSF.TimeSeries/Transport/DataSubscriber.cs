@@ -26,16 +26,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Reflection;
-using GSF.Security.Cryptography;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -50,6 +40,16 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using System.Xml;
+using GSF.Collections;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
@@ -2782,11 +2782,24 @@ namespace GSF.TimeSeries.Transport
                                     else
                                         measurementRows = new DataRow[0];
 
+                                    // Older versions of GEP did not include the PhasorSourceIndex field, so this is treated as optional
+                                    bool phasorSourceIndexFieldExists = metadata.Tables["MeasurementDetail"].Columns.Contains("PhasorSourceIndex");
+                                    object phasorSourceIndex = DBNull.Value;
+
                                     foreach (DataRow row in measurementRows)
                                     {
                                         // Get device and signal type acronyms
                                         deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
                                         signalTypeAcronym = row.Field<string>("SignalAcronym") ?? string.Empty;
+
+                                        // Get phasor source index if field is defined
+                                        if (phasorSourceIndexFieldExists)
+                                        {
+                                            // Using ConvertNullableField extension since publisher could use SQLite database in which case
+                                            // all integers would arrive in data set as longs and need to be converted back to integers
+                                            int? index = row.ConvertNullableField<int>("PhasorSourceIndex");
+                                            phasorSourceIndex = index.HasValue ? (object)index.Value : (object)DBNull.Value;
+                                        }
 
                                         // Make sure we have an associated device and signal type already defined for the measurement
                                         if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym) && !string.IsNullOrWhiteSpace(signalTypeAcronym) && signalTypeIDs.ContainsKey(signalTypeAcronym))
@@ -2794,7 +2807,7 @@ namespace GSF.TimeSeries.Transport
                                             // Prefix the tag name with the "updated" device name
                                             deviceID = deviceIDs[deviceAcronym];
                                             string pointTag = sourcePrefix + row.Field<string>("PointTag");
-                                            Guid signalID = Guid.Parse(row.Field<object>("SignalID").ToString()); // adoDatabase.Guid(row, "SignalID");  // row.Field<Guid>("SignalID");
+                                            Guid signalID = Guid.Parse(row.Field<object>("SignalID").ToString());
 
                                             // Track unique measurement signal Guids in this meta-data session, we'll need to remove any old associated measurements that no longer exist
                                             signalIDs.Add(signalID);
@@ -2807,8 +2820,8 @@ namespace GSF.TimeSeries.Transport
                                                 string alternateTag = Guid.NewGuid().ToString();
 
                                                 // Insert new measurement record
-                                                insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, HistorianID, PointTag, AlternateTag, SignalTypeID, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, 0, 1)", "deviceID", "historianID", "pointTag", "alternateTag", "signalTypeID", "signalReference", "description", "internal");
-                                                command.ExecuteNonQuery(insertSql, m_metadataSynchronizationTimeout, deviceID, historianID, pointTag, alternateTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
+                                                insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, HistorianID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, 0, 1)", "deviceID", "historianID", "pointTag", "alternateTag", "signalTypeID", "signalReference", "description", "internal");
+                                                command.ExecuteNonQuery(insertSql, m_metadataSynchronizationTimeout, deviceID, historianID, pointTag, alternateTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
 
                                                 // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
                                                 // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
@@ -2818,8 +2831,8 @@ namespace GSF.TimeSeries.Transport
                                             else
                                             {
                                                 // Update existing measurement record. Note that this update assumes that measurements will remain associated with a static source device.
-                                                updateSql = database.ParameterizedQueryString("UPDATE Measurement SET HistorianID = {0}, PointTag = {1}, SignalTypeID = {2}, SignalReference = {3}, Description = {4}, Internal = {5} WHERE SignalID = {6}", "historianID", "pointTag", "signalTypeID", "signalReference", "description", "internal", "signalID");
-                                                command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, historianID, pointTag, signalTypeIDs[signalTypeAcronym], sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
+                                                updateSql = database.ParameterizedQueryString("UPDATE Measurement SET HistorianID = {0}, PointTag = {1}, SignalTypeID = {2}, PhasorSourceIndex = {3}, SignalReference = {4}, Description = {5}, Internal = {6} WHERE SignalID = {7}", "historianID", "pointTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal", "signalID");
+                                                command.ExecuteNonQuery(updateSql, m_metadataSynchronizationTimeout, historianID, pointTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
                                             }
                                         }
                                     }

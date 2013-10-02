@@ -33,14 +33,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Security.Cryptography;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -59,6 +51,14 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
 using System.Xml;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Security.Cryptography;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
@@ -606,7 +606,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public const string DefaultMetadataTables =
             "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE IsConcentrator = 0;" +
-            "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail;" +
+            "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PhasorSourceIndex, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail;" +
             "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
 
         /// <summary>
@@ -1804,10 +1804,13 @@ namespace GSF.TimeSeries.Transport
                 {
                     m_clientNotifications.Clear();
 
-                    foreach (DataRow row in DataSource.Tables["Subscribers"].Rows)
+                    if (DataSource.Tables.Contains("Subscribers"))
                     {
-                        if (Guid.TryParse(row["ID"].ToNonNullString(), out subscriberID))
-                            m_clientNotifications.Add(subscriberID, new Dictionary<int, string>());
+                        foreach (DataRow row in DataSource.Tables["Subscribers"].Rows)
+                        {
+                            if (Guid.TryParse(row["ID"].ToNonNullString(), out subscriberID))
+                                m_clientNotifications.Add(subscriberID, new Dictionary<int, string>());
+                        }
                     }
 
                     DeserializeClientNotifications();

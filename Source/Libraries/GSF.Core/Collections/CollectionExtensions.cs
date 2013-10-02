@@ -165,7 +165,10 @@ namespace GSF.Collections
         {
             T majority = defaultValue;
 
-            if ((object)source != null && source.Count() > 1)
+            if ((object)source == null)
+                return majority;
+
+            if (source.Count() > 1)
             {
                 Dictionary<T, int> itemCounts = new Dictionary<T, int>();
                 int count;
@@ -179,7 +182,9 @@ namespace GSF.Collections
                         itemCounts[item] = count;
                     }
                     else
+                    {
                         itemCounts.Add(item, 1);
+                    }
                 }
 
                 // Find the largest number of items in the list
@@ -190,7 +195,9 @@ namespace GSF.Collections
                     majority = maxItem.Key;
             }
             else
+            {
                 majority = source.FirstOrDefault();
+            }
 
             return majority;
         }
@@ -217,7 +224,10 @@ namespace GSF.Collections
         {
             T minority = defaultValue;
 
-            if ((object)source != null && source.Count() > 1)
+            if ((object)source == null)
+                return minority;
+
+            if (source.Count() > 1)
             {
                 Dictionary<T, int> itemCounts = new Dictionary<T, int>();
                 int count;
@@ -231,7 +241,9 @@ namespace GSF.Collections
                         itemCounts[item] = count;
                     }
                     else
+                    {
                         itemCounts.Add(item, 1);
+                    }
                 }
 
                 // Find the smallest number of items in the list
@@ -239,7 +251,9 @@ namespace GSF.Collections
                 minority = minItem.Key;
             }
             else
+            {
                 minority = source.FirstOrDefault();
+            }
 
             return minority;
         }
@@ -360,6 +374,7 @@ namespace GSF.Collections
             if (enumerator.MoveNext())
             {
                 minItem = enumerator.Current;
+
                 while (enumerator.MoveNext())
                 {
                     if (comparer(enumerator.Current, minItem) < 0)
@@ -394,6 +409,7 @@ namespace GSF.Collections
             if (enumerator.MoveNext())
             {
                 maxItem = enumerator.Current;
+
                 while (enumerator.MoveNext())
                 {
                     if (comparer(enumerator.Current, maxItem) > 0)
@@ -411,7 +427,7 @@ namespace GSF.Collections
         /// <returns>Returns a generic type.</returns>
         public static TSource Max<TSource>(this IEnumerable<TSource> source, IComparer<TSource> comparer)
         {
-            return source.Max<TSource>(comparer.Compare);
+            return source.Max(comparer.Compare);
         }
 
         /// <summary>Converts an enumeration to a string, using the default delimiter ("|") that can later be
@@ -421,7 +437,7 @@ namespace GSF.Collections
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by the '|' character.</returns>
         public static string ToDelimitedString<TSource>(this IEnumerable<TSource> source)
         {
-            return source.ToDelimitedString<TSource>('|');
+            return source.ToDelimitedString('|');
         }
 
         /// <summary>Converts an enumeration to a string that can later be converted back to a list using
@@ -464,6 +480,7 @@ namespace GSF.Collections
             {
                 if (delimetedString.Length > 0)
                     delimetedString.Append(delimiter);
+
                 delimetedString.Append(item);
             }
 
@@ -528,7 +545,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Rearranges all the elements in the list into a random order.
+        /// Rearranges all the elements in the list into a highly-random order.
         /// </summary>
         /// <typeparam name="TSource">The generic type of the list.</typeparam>
         /// <param name="source">The input list of generic types to scramble.</param>
