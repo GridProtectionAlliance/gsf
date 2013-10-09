@@ -200,6 +200,11 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public const int DefaultMetadataSynchronizationTimeout = 0;
 
+        /// <summary>
+        /// Defines the default value for the <see cref="UseTransactionForMetadata"/> property.
+        /// </summary>
+        public const bool DefaultUseTransactionForMetadata = true;
+
         // Fields
         private IClient m_commandChannel;
         private UdpClient m_dataChannel;
@@ -237,6 +242,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_internal;
         private bool m_includeTime;
         private bool m_autoSynchronizeMetadata;
+        private bool m_useTransactionForMetadata;
         private int m_metadataSynchronizationTimeout;
         private readonly object m_receivedMetadataLock;
         private DataSet m_receivedMetadata;
@@ -277,6 +283,7 @@ namespace GSF.TimeSeries.Transport
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
+            m_useTransactionForMetadata = DefaultUseTransactionForMetadata;
             DataLossInterval = 10.0D;
 
             m_bufferBlockCache = new List<BufferBlockMeasurement>();
@@ -676,6 +683,21 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if metadata synchronization should be performed within a transaction.
+        /// </summary>
+        public bool UseTransactionForMetadata
+        {
+            get
+            {
+                return m_useTransactionForMetadata;
+            }
+            set
+            {
+                m_useTransactionForMetadata = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the status of this <see cref="DataSubscriber"/>.
         /// </summary>
         /// <remarks>
@@ -1018,6 +1040,10 @@ namespace GSF.TimeSeries.Transport
             // Check if user has defined a metadata synchronization timeout
             if (settings.TryGetValue("metadataSynchronizationTimeout", out setting) && int.TryParse(setting, out metadataSynchronizationTimeout))
                 m_metadataSynchronizationTimeout = metadataSynchronizationTimeout;
+
+            // Check if user has defined a flag for using a transaction during metadata synchronization
+            if (settings.TryGetValue("useTransactionForMetadata", out setting))
+                m_useTransactionForMetadata = setting.ParseBoolean();
 
             // Check if user wants to request that publisher use millisecond resolution to conserve bandwidth
             if (settings.TryGetValue("useMillisecondResolution", out setting))
@@ -2642,11 +2668,16 @@ namespace GSF.TimeSeries.Transport
                         // Open the configuration database using settings found in the config file
                         using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
                         using (IDbCommand command = database.Connection.CreateCommand())
-                        using (IDbTransaction transaction = database.Connection.BeginTransaction(database.DefaultIsloationLevel()))
                         {
+                            IDbTransaction transaction = null;
+
+                            if (m_useTransactionForMetadata)
+                                transaction = database.Connection.BeginTransaction(database.DefaultIsloationLevel());
+
                             try
                             {
-                                command.Transaction = transaction;
+                                if ((object)transaction != null)
+                                    command.Transaction = transaction;
 
                                 // Query the actual record ID based on the known run-time ID for this subscriber device
                                 int parentID = Convert.ToInt32(command.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device'", ID), m_metadataSynchronizationTimeout));
@@ -2900,23 +2931,33 @@ namespace GSF.TimeSeries.Transport
                                     }
                                 }
 
-                                transaction.Commit();
+                                if ((object)transaction != null)
+                                    transaction.Commit();
+
                                 m_synchronizedMetadata = metadata;
                             }
                             catch (Exception ex)
                             {
                                 OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
 
-                                try
+                                if ((object)transaction != null)
                                 {
-                                    transaction.Rollback();
-                                }
-                                catch (Exception rollbackException)
-                                {
-                                    OnProcessException(new InvalidOperationException("Failed to roll back database transaction due to exception: " + rollbackException.Message, rollbackException));
+                                    try
+                                    {
+                                        transaction.Rollback();
+                                    }
+                                    catch (Exception rollbackException)
+                                    {
+                                        OnProcessException(new InvalidOperationException("Failed to roll back database transaction due to exception: " + rollbackException.Message, rollbackException));
+                                    }
                                 }
 
                                 return;
+                            }
+                            finally
+                            {
+                                if ((object)transaction != null)
+                                    transaction.Dispose();
                             }
                         }
 
