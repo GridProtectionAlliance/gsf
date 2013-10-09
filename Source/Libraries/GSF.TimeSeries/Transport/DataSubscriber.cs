@@ -2017,7 +2017,7 @@ namespace GSF.TimeSeries.Transport
                     byte[] bytes = m_encoding.GetBytes(message);
 
                     buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
-                    buffer.Write(bytes, 4, bytes.Length);
+                    buffer.Write(bytes, 0, bytes.Length);
 
                     return SendServerCommand(commandCode, buffer.ToArray());
                 }
