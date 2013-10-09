@@ -2851,7 +2851,7 @@ namespace GSF.TimeSeries.Transport
                                                 string alternateTag = Guid.NewGuid().ToString();
 
                                                 // Insert new measurement record
-                                                insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, HistorianID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, 0, 1)", "deviceID", "historianID", "pointTag", "alternateTag", "signalTypeID", "signalReference", "description", "internal");
+                                                insertSql = database.ParameterizedQueryString("INSERT INTO Measurement (DeviceID, HistorianID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Description, Internal, Subscribed, Enabled) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, 0, 1)", "deviceID", "historianID", "pointTag", "alternateTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal");
                                                 command.ExecuteNonQuery(insertSql, m_metadataSynchronizationTimeout, deviceID, historianID, pointTag, alternateTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
 
                                                 // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
