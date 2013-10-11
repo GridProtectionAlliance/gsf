@@ -4,6 +4,7 @@
 // Any modifications to this file will be lost upon recompilation of the source ASN.1. 
 //
 
+using System.Runtime.CompilerServices;
 using GSF.ASN1;
 using GSF.ASN1.Attributes;
 using GSF.ASN1.Attributes.Constraints;
@@ -12,6 +13,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
+    [CompilerGenerated]
     [ASN1PreparedElement]
     [ASN1BoxedType(Name = "ExtendedStatus")]
     public class ExtendedStatus : IASN1PreparedElement

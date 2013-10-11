@@ -4,6 +4,7 @@
 // Any modifications to this file will be lost upon recompilation of the source ASN.1. 
 //
 
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using GSF.ASN1;
 using GSF.ASN1.Attributes;
@@ -11,6 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
+    [CompilerGenerated]
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "FileDirectory_Response", IsSet = false)]
     public class FileDirectory_Response : IASN1PreparedElement

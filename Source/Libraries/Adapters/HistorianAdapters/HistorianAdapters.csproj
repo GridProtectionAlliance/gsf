@@ -48,7 +48,7 @@
     <DebugType>full</DebugType>
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
-    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\..\Build\Output\Debug\Libraries\</OutputPath>
+    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DocumentationFile>$(OutputPath)\HistorianAdapters.XML</DocumentationFile>
     <NOWARN>
     </NOWARN>
@@ -61,7 +61,7 @@
     <DefineDebug>false</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
-    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\..\Build\Output\Release\Libraries\</OutputPath>
+    <OutputPath Condition=" '$(OutputPath)' == '' ">..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DocumentationFile>$(OutputPath)\HistorianAdapters.XML</DocumentationFile>
     <NOWARN>
     </NOWARN>
@@ -70,13 +70,43 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <DefineTrace>true</DefineTrace>
-    <OutputPath>..\..\..\..\Build\Output\Mono\Libraries\</OutputPath>
-    <DocumentationFile>..\..\..\..\Build\Output\Mono\Libraries\\HistorianAdapters.XML</DocumentationFile>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DocumentationFile>..\..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <DefineConstants>MONO</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DefineConstants>DEBUG</DefineConstants>
+    <DocumentationFile>..\..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DocumentationFile>..\..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|x86'">
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DefineConstants>MONO</DefineConstants>
+    <DocumentationFile>..\..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

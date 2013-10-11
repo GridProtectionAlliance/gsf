@@ -4,6 +4,7 @@
 // Any modifications to this file will be lost upon recompilation of the source ASN.1. 
 //
 
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using GSF.ASN1;
 using GSF.ASN1.Attributes;
@@ -12,6 +13,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
+    [CompilerGenerated]
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Semaphore_instance", IsSet = false)]
     public class Semaphore_instance : IASN1PreparedElement
@@ -265,8 +267,10 @@ namespace GSF.MMS.Model
                 {
                     public enum EnumType
                     {
-                        [ASN1EnumItem(Name = "token", HasTag = true, Tag = 0)] token,
-                        [ASN1EnumItem(Name = "pool", HasTag = true, Tag = 1)] pool,
+                        [ASN1EnumItem(Name = "token", HasTag = true, Tag = 0)]
+                        token,
+                        [ASN1EnumItem(Name = "pool", HasTag = true, Tag = 1)]
+                        pool,
                     }
 
                     private static IASN1PreparedElementData preparedData = CoderFactory.getInstance().newPreparedElementData(typeof(ClassEnumType));

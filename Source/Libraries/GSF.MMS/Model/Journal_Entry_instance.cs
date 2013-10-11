@@ -4,6 +4,7 @@
 // Any modifications to this file will be lost upon recompilation of the source ASN.1. 
 //
 
+using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using GSF.ASN1;
 using GSF.ASN1.Attributes;
@@ -11,6 +12,7 @@ using GSF.ASN1.Coders;
 
 namespace GSF.MMS.Model
 {
+    [CompilerGenerated]
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Journal_Entry_instance", IsSet = false)]
     public class Journal_Entry_instance : IASN1PreparedElement
@@ -246,9 +248,12 @@ namespace GSF.MMS.Model
         {
             public enum EnumType
             {
-                [ASN1EnumItem(Name = "annotation", HasTag = true, Tag = 0)] annotation,
-                [ASN1EnumItem(Name = "event-data", HasTag = true, Tag = 1)] event_data,
-                [ASN1EnumItem(Name = "data", HasTag = true, Tag = 2)] data,
+                [ASN1EnumItem(Name = "annotation", HasTag = true, Tag = 0)]
+                annotation,
+                [ASN1EnumItem(Name = "event-data", HasTag = true, Tag = 1)]
+                event_data,
+                [ASN1EnumItem(Name = "data", HasTag = true, Tag = 2)]
+                data,
             }
 
             private static IASN1PreparedElementData preparedData = CoderFactory.getInstance().newPreparedElementData(typeof(InformationTypeEnumType));

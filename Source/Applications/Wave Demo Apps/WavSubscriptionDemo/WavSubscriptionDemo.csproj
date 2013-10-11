@@ -26,7 +26,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Debug\Applications\WavSubscriptionDemo\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Applications\WavSubscriptionDemo\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -36,7 +36,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Release\Applications\WavSubscriptionDemo\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Applications\WavSubscriptionDemo\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

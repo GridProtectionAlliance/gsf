@@ -4,6 +4,7 @@
 // Any modifications to this file will be lost upon recompilation of the source ASN.1. 
 //
 
+using System.Runtime.CompilerServices;
 using GSF.ASN1;
 using GSF.ASN1.Attributes;
 using GSF.ASN1.Coders;
@@ -11,6 +12,7 @@ using GSF.ASN1.Types;
 
 namespace GSF.MMS.Model
 {
+    [CompilerGenerated]
     [ASN1PreparedElement]
     [ASN1Sequence(Name = "Operator_Station_instance", IsSet = false)]
     public class Operator_Station_instance : IASN1PreparedElement
@@ -199,9 +201,12 @@ namespace GSF.MMS.Model
                 {
                     public enum EnumType
                     {
-                        [ASN1EnumItem(Name = "entry", HasTag = true, Tag = 0)] entry,
-                        [ASN1EnumItem(Name = "display", HasTag = true, Tag = 1)] display,
-                        [ASN1EnumItem(Name = "entry-display", HasTag = true, Tag = 2)] entry_display,
+                        [ASN1EnumItem(Name = "entry", HasTag = true, Tag = 0)]
+                        entry,
+                        [ASN1EnumItem(Name = "display", HasTag = true, Tag = 1)]
+                        display,
+                        [ASN1EnumItem(Name = "entry-display", HasTag = true, Tag = 2)]
+                        entry_display,
                     }
 
                     private static IASN1PreparedElementData preparedData = CoderFactory.getInstance().newPreparedElementData(typeof(StationTypeEnumType));
