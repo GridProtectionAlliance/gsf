@@ -61,7 +61,7 @@ namespace GSF.Configuration
             /// <summary>
             /// The name of the property as it appears in the connection string.
             /// </summary>
-            public string Name;
+            public string[] Names;
             
             /// <summary>
             /// The default value of the property if its value
@@ -87,9 +87,15 @@ namespace GSF.Configuration
                 Type converterType;
 
                 PropertyInfo = propertyInfo;
-                Name = propertyInfo.TryGetAttribute(out settingNameAttribute) ? settingNameAttribute.Name : propertyInfo.Name;
                 Required = !propertyInfo.TryGetAttribute(out defaultValueAttribute);
                 DefaultValue = !Required ? defaultValueAttribute.Value : null;
+
+                Names = propertyInfo.GetCustomAttributes(typeof(SettingNameAttribute))
+                    .Cast<SettingNameAttribute>()
+                    .Select(attribute => attribute.Name)
+                    .Where(name => (object)name != null)
+                    .Concat(new string[] { propertyInfo.Name })
+                    .ToArray();
 
                 if (propertyInfo.TryGetAttribute(out typeConverterAttribute))
                 {
@@ -286,7 +292,7 @@ namespace GSF.Configuration
             settings = connectionStringProperties
                 .Select(property => Tuple.Create(property, property.PropertyInfo.GetValue(settingsObject)))
                 .Where(tuple => tuple.Item2 != null && (m_explicitlySpecifyDefaults || !tuple.Item2.Equals(tuple.Item1.DefaultValue)))
-                .ToDictionary(tuple => tuple.Item1.Name, tuple => ConvertToString(tuple.Item2, tuple.Item1), StringComparer.CurrentCultureIgnoreCase);
+                .ToDictionary(tuple => tuple.Item1.Names.First(), tuple => ConvertToString(tuple.Item2, tuple.Item1), StringComparer.CurrentCultureIgnoreCase);
 
             // Convert the dictionary to a connection string and return the result
             return settings.JoinKeyValuePairs(m_parameterDelimiter, m_keyValueDelimiter, m_startValueDelimiter, m_endValueDelimiter);
@@ -303,6 +309,7 @@ namespace GSF.Configuration
         {
             ConnectionStringProperty[] connectionStringProperties;
             Dictionary<string, string> settings;
+            string key;
             string value;
 
             // Null objects don't have properties
@@ -321,12 +328,15 @@ namespace GSF.Configuration
 
             foreach (ConnectionStringProperty property in connectionStringProperties)
             {
-                if (settings.TryGetValue(property.Name, out value))
+                value = string.Empty;
+                key = property.Names.FirstOrDefault(name => settings.TryGetValue(name, out value));
+
+                if ((object)key != null)
                     property.PropertyInfo.SetValue(settingsObject, ConvertToPropertyType(value, property));
-                else if (!property.Required)
+                if (!property.Required)
                     property.PropertyInfo.SetValue(settingsObject, property.DefaultValue);
                 else
-                    throw new ArgumentException("Unable to parse required connection string parameter because it does not exist in the connection string.", property.Name);
+                    throw new ArgumentException("Unable to parse required connection string parameter because it does not exist in the connection string.", property.Names.First());
             }
         }
 
