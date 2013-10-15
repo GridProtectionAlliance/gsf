@@ -39,6 +39,68 @@ namespace GSF.Configuration
     {
         #region [ Members ]
 
+        // Nested Types
+
+        /// <summary>
+        /// Stores reflected information from a <see cref="PropertyInfo"/>
+        /// object used to parse connection strings.
+        /// </summary>
+        protected class ConnectionStringProperty
+        {
+            /// <summary>
+            /// The <see cref="PropertyInfo"/> object.
+            /// </summary>
+            public PropertyInfo PropertyInfo;
+
+            /// <summary>
+            /// The type converter used to convert the value
+            /// of this property to and from a string.
+            /// </summary>
+            public TypeConverter Converter;
+
+            /// <summary>
+            /// The name of the property as it appears in the connection string.
+            /// </summary>
+            public string Name;
+            
+            /// <summary>
+            /// The default value of the property if its value
+            /// is not explicitly specified in the connection string.
+            /// </summary>
+            public object DefaultValue;
+
+            /// <summary>
+            /// Indicates whether or not the property is required
+            /// to be explicitly defined in the connection string.
+            /// </summary>
+            public bool Required;
+
+            /// <summary>
+            /// Creates a new instance of the <see cref="ConnectionStringProperty"/> class.
+            /// </summary>
+            /// <param name="propertyInfo">The <see cref="PropertyInfo"/> object.</param>
+            public ConnectionStringProperty(PropertyInfo propertyInfo)
+            {
+                SettingNameAttribute settingNameAttribute;
+                DefaultValueAttribute defaultValueAttribute;
+                TypeConverterAttribute typeConverterAttribute;
+                Type converterType;
+
+                PropertyInfo = propertyInfo;
+                Name = propertyInfo.TryGetAttribute(out settingNameAttribute) ? settingNameAttribute.Name : propertyInfo.Name;
+                Required = !propertyInfo.TryGetAttribute(out defaultValueAttribute);
+                DefaultValue = !Required ? defaultValueAttribute.Value : null;
+
+                if (propertyInfo.TryGetAttribute(out typeConverterAttribute))
+                {
+                    converterType = Type.GetType(typeConverterAttribute.ConverterTypeName);
+
+                    if ((object)converterType != null)
+                        Converter = (TypeConverter)Activator.CreateInstance(converterType);
+                }
+            }
+        }
+
         // Constants
 
         /// <summary>
@@ -62,6 +124,11 @@ namespace GSF.Configuration
         public const char DefaultEndValueDelimiter = '}';
 
         /// <summary>
+        /// Default value for the <see cref="ExplicitlySpecifyDefaults"/> property.
+        /// </summary>
+        public const bool DefaultExplicitlySpecifyDefaults = false;
+
+        /// <summary>
         /// Default value for the <see cref="SerializeUnspecifiedProperties"/> property.
         /// </summary>
         public const bool DefaultSerializeUnspecifiedProperties = true;
@@ -71,6 +138,7 @@ namespace GSF.Configuration
         private char m_keyValueDelimiter;
         private char m_startValueDelimiter;
         private char m_endValueDelimiter;
+        private bool m_explicitlySpecifyDefaults;
         private bool m_serializeUnspecifiedProperties;
 
         #endregion
@@ -160,7 +228,25 @@ namespace GSF.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the flag that determines whether to include
+        /// Gets or sets the flag that determines whether to explicitly
+        /// specify parameter values that match their defaults when
+        /// serializing settings to a connection string.
+        /// </summary>
+        public bool ExplicitlySpecifyDefaults
+        {
+            get
+            {
+                return m_explicitlySpecifyDefaults;
+            }
+            set
+            {
+                m_explicitlySpecifyDefaults = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether to include properties which are not
+        /// annotated with the <see cref="SerializeSettingAttribute"/> in the connection string.
         /// </summary>
         public bool SerializeUnspecifiedProperties
         {
@@ -185,7 +271,7 @@ namespace GSF.Configuration
         /// <returns>A connection string containing the serialized properties.</returns>
         public virtual string ComposeConnectionString(object settingsObject)
         {
-            PropertyInfo[] connectionStringProperties;
+            ConnectionStringProperty[] connectionStringProperties;
             Dictionary<string, string> settings;
 
             // Null objects don't have properties
@@ -198,9 +284,9 @@ namespace GSF.Configuration
             // Create a dictionary of key-value pairs which
             // can easily be converted to a connection string
             settings = connectionStringProperties
-                .Select(property => Tuple.Create(GetSettingName(property), property.GetValue(settingsObject)))
-                .Where(tuple => tuple.Item2 != null)
-                .ToDictionary(tuple => tuple.Item1, tuple => Common.TypeConvertToString(tuple.Item2), StringComparer.CurrentCultureIgnoreCase);
+                .Select(property => Tuple.Create(property, property.PropertyInfo.GetValue(settingsObject)))
+                .Where(tuple => tuple.Item2 != null && (m_explicitlySpecifyDefaults || !tuple.Item2.Equals(tuple.Item1.DefaultValue)))
+                .ToDictionary(tuple => tuple.Item1.Name, tuple => ConvertToString(tuple.Item2, tuple.Item1), StringComparer.CurrentCultureIgnoreCase);
 
             // Convert the dictionary to a connection string and return the result
             return settings.JoinKeyValuePairs(m_parameterDelimiter, m_keyValueDelimiter, m_startValueDelimiter, m_endValueDelimiter);
@@ -215,10 +301,8 @@ namespace GSF.Configuration
         /// <exception cref="ArgumentException">A required connection string parameter cannot be found in the connection string.</exception>
         public virtual void ParseConnectionString(string connectionString, object settingsObject)
         {
-            PropertyInfo[] connectionStringProperties;
-            DefaultValueAttribute defaultValueAttribute;
+            ConnectionStringProperty[] connectionStringProperties;
             Dictionary<string, string> settings;
-            string key;
             string value;
 
             // Null objects don't have properties
@@ -235,20 +319,14 @@ namespace GSF.Configuration
             // Parse the connection string into a dictionary of key-value pairs for easy lookups
             settings = connectionString.ParseKeyValuePairs(m_parameterDelimiter, m_keyValueDelimiter, m_startValueDelimiter, m_endValueDelimiter);
 
-            foreach (PropertyInfo property in connectionStringProperties)
+            foreach (ConnectionStringProperty property in connectionStringProperties)
             {
-                // Connection string parameters may not match property names
-                key = GetSettingName(property);
-
-                // If the value exists in the connection string, set the property value to that;
-                // If it does not exist in the connection string, set the property to its default value;
-                // If it does not have a default value, it is a required parameter and an exception must be thrown
-                if (settings.TryGetValue(key, out value))
-                    property.SetValue(settingsObject, value.ConvertToType<object>(property.PropertyType));
-                else if (property.TryGetAttribute(out defaultValueAttribute))
-                    property.SetValue(settingsObject, defaultValueAttribute.Value);
+                if (settings.TryGetValue(property.Name, out value))
+                    property.PropertyInfo.SetValue(settingsObject, ConvertToPropertyType(value, property));
+                else if (!property.Required)
+                    property.PropertyInfo.SetValue(settingsObject, property.DefaultValue);
                 else
-                    throw new ArgumentException("Unable to parse required connection string parameter because it does not exist in the connection string.", key);
+                    throw new ArgumentException("Unable to parse required connection string parameter because it does not exist in the connection string.", property.Name);
             }
         }
 
@@ -257,7 +335,7 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="settingsObjectType">The type of the settings object used to look up properties via reflection.</param>
         /// <returns>The set of properties which are part of the connection string.</returns>
-        protected virtual PropertyInfo[] GetConnectionStringProperties(Type settingsObjectType)
+        protected virtual ConnectionStringProperty[] GetConnectionStringProperties(Type settingsObjectType)
         {
             return m_serializeUnspecifiedProperties
                 ? s_allPropertiesLookup.GetOrAdd(settingsObjectType, s_allPropertiesFactory)
@@ -265,14 +343,29 @@ namespace GSF.Configuration
         }
 
         /// <summary>
-        /// Gets the name of the connection string setting for the given property.
+        /// Converts the given string value to the type of the given property.
         /// </summary>
-        /// <param name="property">The property whose setting name is to be looked up.</param>
-        /// <returns>The setting name of the given property.</returns>
-        protected virtual string GetSettingName(PropertyInfo property)
+        /// <param name="value">The string value to be converted.</param>
+        /// <param name="property">The property used to determine what type to convert to.</param>
+        /// <returns>The given string converted to the type of the given property.</returns>
+        protected virtual object ConvertToPropertyType(string value, ConnectionStringProperty property)
         {
-            SettingNameAttribute settingNameAttribute;
-            return property.TryGetAttribute(out settingNameAttribute) ? settingNameAttribute.Name : property.Name;
+            return ((object)property.Converter != null)
+                ? property.Converter.ConvertFromString(value)
+                : value.ConvertToType<object>(property.PropertyInfo.PropertyType);
+        }
+
+        /// <summary>
+        /// Converts the given object to a string.
+        /// </summary>
+        /// <param name="obj">The object to be converted.</param>
+        /// <param name="property">The property which defines the type of the object.</param>
+        /// <returns>The object converted to a string.</returns>
+        protected virtual string ConvertToString(object obj, ConnectionStringProperty property)
+        {
+            return ((object)property.Converter != null)
+                ? property.Converter.ConvertToString(obj)
+                : Common.TypeConvertToString(obj);
         }
 
         #endregion
@@ -280,24 +373,26 @@ namespace GSF.Configuration
         #region [ Static ]
 
         // Static Fields
-        private static ConcurrentDictionary<Type, PropertyInfo[]> s_allPropertiesLookup = new ConcurrentDictionary<Type, PropertyInfo[]>();
-        private static ConcurrentDictionary<Type, PropertyInfo[]> s_explicitPropertiesLookup = new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private static ConcurrentDictionary<Type, ConnectionStringProperty[]> s_allPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
+        private static ConcurrentDictionary<Type, ConnectionStringProperty[]> s_explicitPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
 
-        private static Func<Type, PropertyInfo[]> s_allPropertiesFactory = t =>
+        private static Func<Type, ConnectionStringProperty[]> s_allPropertiesFactory = t =>
         {
             SerializeSettingAttribute attribute;
 
             return t.GetProperties()
                 .Where(property => !property.TryGetAttribute(out attribute) || attribute.Serialize)
+                .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
         };
 
-        private static Func<Type, PropertyInfo[]> s_explicitPropertiesFactory = t =>
+        private static Func<Type, ConnectionStringProperty[]> s_explicitPropertiesFactory = t =>
         {
             SerializeSettingAttribute attribute;
 
             return t.GetProperties()
                 .Where(property => property.TryGetAttribute(out attribute) && attribute.Serialize)
+                .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
         };
 
@@ -342,7 +437,7 @@ namespace GSF.Configuration
         /// </summary>
         /// <param name="settingsObjectType">The type of the settings object used to look up properties via reflection.</param>
         /// <returns>The set of properties which are part of the connection string.</returns>
-        protected override PropertyInfo[] GetConnectionStringProperties(Type settingsObjectType)
+        protected override ConnectionStringProperty[] GetConnectionStringProperties(Type settingsObjectType)
         {
             return s_connectionStringPropertiesLookup.GetOrAdd(settingsObjectType, s_valueFactory);
         }
@@ -352,14 +447,15 @@ namespace GSF.Configuration
         #region [ Static ]
 
         // Static Fields
-        private static ConcurrentDictionary<Type, PropertyInfo[]> s_connectionStringPropertiesLookup = new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private static ConcurrentDictionary<Type, ConnectionStringProperty[]> s_connectionStringPropertiesLookup = new ConcurrentDictionary<Type, ConnectionStringProperty[]>();
 
-        private static Func<Type, PropertyInfo[]> s_valueFactory = t =>
+        private static Func<Type, ConnectionStringProperty[]> s_valueFactory = t =>
         {
             TParameterAttribute attribute;
 
             return t.GetProperties()
                 .Where(property => property.TryGetAttribute(out attribute))
+                .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
         };
 

@@ -185,7 +185,7 @@ namespace GSF
         /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
         /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
         /// </remarks>
-        public static T ConvertToType<T>(this string value, Type type, CultureInfo culture = null)
+        public static T ConvertToType<T>(this string value, Type type, CultureInfo culture)
         {
             // Don't proceed further if string is empty.
             if (string.IsNullOrEmpty(value))
