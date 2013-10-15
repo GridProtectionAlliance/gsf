@@ -26,6 +26,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Linq;
 
 namespace GSF.Configuration
 {
@@ -44,7 +45,7 @@ namespace GSF.Configuration
         #region [ Members ]
 
         // Fields
-        private readonly string m_name;
+        private readonly string[] m_names;
 
         #endregion
 
@@ -53,10 +54,10 @@ namespace GSF.Configuration
         /// <summary>
         /// Creates a new <see cref="SettingNameAttribute"/> with the specified <paramref name="name"/> value.
         /// </summary>
-        /// <param name="name">Assigns name used to serialize setting into config file.</param>
-        public SettingNameAttribute(string name)
+        /// <param name="names">Assigns name(s) used to serialize setting into config file.</param>
+        public SettingNameAttribute(params string[] names)
         {
-            m_name = name;
+            m_names = names;
         }
 
         #endregion
@@ -70,7 +71,18 @@ namespace GSF.Configuration
         {
             get
             {
-                return m_name;
+                return m_names.First();
+            }
+        }
+
+        /// <summary>
+        /// Gets the names used to serialize field or property into config file.
+        /// </summary>
+        public string[] Names
+        {
+            get
+            {
+                return m_names;
             }
         }
 

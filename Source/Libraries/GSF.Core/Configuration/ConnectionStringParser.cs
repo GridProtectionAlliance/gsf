@@ -87,15 +87,9 @@ namespace GSF.Configuration
                 Type converterType;
 
                 PropertyInfo = propertyInfo;
+                Names = propertyInfo.TryGetAttribute(out settingNameAttribute) ? settingNameAttribute.Names : new string[] { propertyInfo.Name };
                 Required = !propertyInfo.TryGetAttribute(out defaultValueAttribute);
                 DefaultValue = !Required ? defaultValueAttribute.Value : null;
-
-                Names = propertyInfo.GetCustomAttributes(typeof(SettingNameAttribute))
-                    .Cast<SettingNameAttribute>()
-                    .Select(attribute => attribute.Name)
-                    .Where(name => (object)name != null)
-                    .Concat(new string[] { propertyInfo.Name })
-                    .ToArray();
 
                 if (propertyInfo.TryGetAttribute(out typeConverterAttribute))
                 {
