@@ -185,6 +185,7 @@
     <Compile Include="Configuration\CategorizedSettingsElementCollection.cs" />
     <Compile Include="Configuration\CategorizedSettingsSection.cs" />
     <Compile Include="Configuration\ConfigurationFile.cs" />
+    <Compile Include="Configuration\ConnectionStringParser.cs" />
     <Compile Include="Configuration\EncryptSettingAttribute.cs" />
     <Compile Include="Configuration\IniSettingsBase.cs" />
     <Compile Include="Configuration\IPersistSettings.cs" />

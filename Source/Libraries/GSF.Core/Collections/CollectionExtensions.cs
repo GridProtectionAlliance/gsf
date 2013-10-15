@@ -122,6 +122,69 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+        /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+        /// <param name="dictionary">The dictionary to add the key/value pair to if the key does not already exist.</param>
+        /// <param name="key">The key to be added to the dictionary if it does not already exist.</param>
+        /// <param name="valueFactory">The function used to generate a value for the key.</param>
+        /// <returns>The value of the key in the dictionary.</returns>
+        public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueFactory)
+        {
+            TValue value;
+            return dictionary.TryGetValue(key, out value) ? value : valueFactory(key);
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+        /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+        /// <param name="dictionary">The dictionary to add the key/value pair to if the key does not already exist.</param>
+        /// <param name="key">The key to be added to the dictionary if it does not already exist.</param>
+        /// <param name="value">The value to assign to the key if the key does not already exist.</param>
+        /// <returns>The value of the key in the dictionary.</returns>
+        public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+        {
+            TValue tryGetValue;
+            return dictionary.TryGetValue(key, out tryGetValue) ? tryGetValue : value;
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist,
+        /// or updates a key/value pair in the <see cref="IDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+        /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+        /// <param name="dictionary">The dictionary to add the key/value pair to if the key does not already exist.</param>
+        /// <param name="key">The key to be added or updated.</param>
+        /// <param name="valueFactory">The function used to generate a value for the key.</param>
+        /// <returns>The value of the key in the dictionary after updating.</returns>
+        public static TValue AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueFactory)
+        {
+            TValue value = valueFactory(key);
+            dictionary[key] = value;
+            return value;
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist,
+        /// or updates a key/value pair in the <see cref="IDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
+        /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
+        /// <param name="dictionary">The dictionary to add the key/value pair to if the key does not already exist.</param>
+        /// <param name="key">The key to be added or updated.</param>
+        /// <param name="value">The value to be assigned to the key.</param>
+        /// <returns>The value of the key in the dictionary after updating.</returns>
+        public static TValue AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+        {
+            dictionary[key] = value;
+            return value;
+        }
+
+        /// <summary>
         /// Returns <c>true</c> if any item in <see cref="BitArray"/> is equal to <paramref name="value"/>.
         /// </summary>
         /// <param name="source">Source <see cref="BitArray"/>.</param>
