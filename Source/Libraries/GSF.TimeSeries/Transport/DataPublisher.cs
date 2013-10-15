@@ -605,8 +605,8 @@ namespace GSF.TimeSeries.Transport
         /// Default value for <see cref="MetadataTables"/>.
         /// </summary>
         public const string DefaultMetadataTables =
-            "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, ParentAcronym, ProtocolName, FramesPerSecond, Enabled FROM DeviceDetail WHERE IsConcentrator = 0;" +
-            "SELECT Internal, DeviceAcronym, DeviceName, SignalAcronym, ID, SignalID, PhasorSourceIndex, PointTag, SignalReference, Description, Enabled FROM MeasurementDetail;" +
+            "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, AccessID, ParentAcronym, ProtocolName, FramesPerSecond, CompanyAcronym, VendorAcronym, VendorDeviceName, Longitude, Latitude, InterconnectionName, ContactList, Enabled FROM DeviceDetail WHERE IsConcentrator = 0;" +
+            "SELECT DeviceAcronym, ID, SignalID, PointTag, SignalReference, SignalAcronym, PhasorSourceIndex, Description, Internal, Enabled FROM MeasurementDetail;" +
             "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
 
         /// <summary>
@@ -3222,7 +3222,7 @@ namespace GSF.TimeSeries.Transport
 
                         if (filterExpressions.TryGetValue(table.TableName, out filterParameters))
                         {
-                            filters.Add(filterParameters.Item1);
+                            filters.Add("(" + filterParameters.Item1 + ")");
                             sortField = filterParameters.Item2;
                             takeCount = filterParameters.Item3;
                         }
