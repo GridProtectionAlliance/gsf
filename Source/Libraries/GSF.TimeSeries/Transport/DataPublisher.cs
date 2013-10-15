@@ -3135,14 +3135,19 @@ namespace GSF.TimeSeries.Transport
             if (!m_allowMetadataRefresh)
                 throw new InvalidOperationException("Meta-data refresh has been disallowed by the DataPublisher.");
 
+            OnStatusMessage("Received meta-data refresh request from {0}, preparing response...", connection.ConnectionID);
+
             Guid clientID = connection.ClientID;
             Dictionary<string, Tuple<string, string, int>> filterExpressions = new Dictionary<string, Tuple<string, string, int>>(StringComparer.InvariantCultureIgnoreCase);
             string message, tableName, filterExpression, sortField;
             int takeCount;
+            Ticks startTime = DateTime.UtcNow.Ticks;
 
             // Attempt to parse out any subscriber provided meta-data filter expressions
             try
             {
+                // Note that these client provided meta-data filter expressions are applied post SQL data retrieval to the limited-capability 
+                // DataTable.Select() function against an in-memory DataSet and therefore are not subject to SQL injection attacks
                 if (length > 4)
                 {
                     int responseLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
@@ -3243,12 +3248,14 @@ namespace GSF.TimeSeries.Transport
                             // Make a copy of the table structure
                             metadata.Tables.Add(table.Clone());
 
+                            // Filter in-memory data table down to desired rows
                             filteredRows = table.Select(string.Join(" AND ", filters), sortField);
 
                             // Reduce data to only what the subscriber has rights to
                             if (checkSubscriberRights)
                                 filteredRows = filteredRows.Where(row => SubscriberHasRights(connection.SubscriberID, adoDatabase.Guid(row, "SignalID")));
 
+                            // Apply any maximum row count that user may have specified
                             filteredRowList = filteredRows.Take(takeCount).ToList();
 
                             if (filteredRowList.Count > 0)
@@ -3271,6 +3278,8 @@ namespace GSF.TimeSeries.Transport
                             }
                         }
                     }
+
+                    // TODO: Although protected against unprovided tables and columns, this post-analysis operation is schema specific. This may need to be moved to an external function and executed via delegate to allow this kind of work for other schemas.
 
                     // Do some post analysis on the meta-data to be delivered to the client, e.g., if a device exists with no associated measurements - don't send the device.
                     if (metadata.Tables.Contains("MeasurementDetail") && metadata.Tables["MeasurementDetail"].Columns.Contains("DeviceAcronym") && metadata.Tables.Contains("DeviceDetail") && metadata.Tables["DeviceDetail"].Columns.Contains("Acronym"))
@@ -3305,6 +3314,19 @@ namespace GSF.TimeSeries.Transport
                     }
 
                     serializedMetadata = SerializeMetadata(clientID, metadata);
+
+                    long rowCount = metadata.Tables.Cast<DataTable>().Select(dataTable => (long)dataTable.Rows.Count).Sum();
+
+                    if (rowCount > 0)
+                    {
+                        double elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
+                        OnStatusMessage("{0:N0} records spanning {1:N0} tables of meta-data prepared in {2}, sending response to {3}...", rowCount, metadata.Tables.Count, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds", connection.ConnectionID);
+                    }
+                    else
+                    {
+                        OnStatusMessage("No meta-data is available, sending an empty response to {0}...", connection.ConnectionID);
+                    }
+
                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.MetaDataRefresh, serializedMetadata);
                 }
             }
