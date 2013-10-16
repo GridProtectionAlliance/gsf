@@ -43,6 +43,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
@@ -523,12 +524,22 @@ namespace GSF.Configuration
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, BindingFlags isGetOrSet)
         {
-            // Make sure only non-indexer properties are used for settings
-            ExecuteActionForMembers(property =>
+            bool get = isGetOrSet.HasFlag(BindingFlags.GetProperty);
+            bool set = isGetOrSet.HasFlag(BindingFlags.SetProperty);
+
+            Action<PropertyInfo> memberAction = property =>
             {
                 if (property.GetIndexParameters().Length == 0)
                     propertyAction(property);
-            }, this.GetType().GetProperties(m_memberAccessBindingFlags | isGetOrSet));
+            };
+
+            PropertyInfo[] properties = this.GetType()
+                .GetProperties(m_memberAccessBindingFlags)
+                .Where(property => (!get || property.CanRead) && (!set || property.CanWrite))
+                .ToArray();
+
+            // Make sure only non-indexer properties are used for settings
+            ExecuteActionForMembers(memberAction, properties);
         }
 
         // Execute specified action over specified memembers

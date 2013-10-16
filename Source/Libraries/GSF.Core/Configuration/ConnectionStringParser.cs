@@ -384,7 +384,8 @@ namespace GSF.Configuration
         {
             SerializeSettingAttribute attribute;
 
-            return t.GetProperties()
+            return t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.CanRead && property.CanWrite)
                 .Where(property => !property.TryGetAttribute(out attribute) || attribute.Serialize)
                 .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
@@ -394,7 +395,8 @@ namespace GSF.Configuration
         {
             SerializeSettingAttribute attribute;
 
-            return t.GetProperties()
+            return t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.CanRead && property.CanWrite)
                 .Where(property => property.TryGetAttribute(out attribute) && attribute.Serialize)
                 .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
@@ -457,7 +459,8 @@ namespace GSF.Configuration
         {
             TParameterAttribute attribute;
 
-            return t.GetProperties()
+            return t.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.CanRead && property.CanWrite)
                 .Where(property => property.TryGetAttribute(out attribute))
                 .Select(property => new ConnectionStringProperty(property))
                 .ToArray();
