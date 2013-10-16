@@ -2705,7 +2705,7 @@ namespace GSF.TimeSeries.Transport
 
                         // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
                         if (m_nodeID == Guid.Empty)
-                            m_nodeID = Guid.Parse(command.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0}", ID), m_metadataSynchronizationTimeout).ToString());
+                            m_nodeID = Guid.Parse(command.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0}", (int)ID), m_metadataSynchronizationTimeout).ToString());
 
                         // Determine the protocol record auto-inc ID value for the gateway transport protocol (GEP) - this value is also cached since it shouldn't change for the lifetime of this class
                         if (m_gatewayProtocolID == 0)
@@ -2778,7 +2778,7 @@ namespace GSF.TimeSeries.Transport
                             bool interconnectionNameFieldExists = deviceDetailColumns.Contains("InterconnectionName");
 
                             // Older versions of GEP did not include the AccessID field, so this is treated as optional
-                            object accessID = DBNull.Value;
+                            int accessID = 0;
 
                             foreach (DataRow row in deviceRows)
                             {
@@ -2791,12 +2791,7 @@ namespace GSF.TimeSeries.Transport
                                 if (!row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                                 {
                                     if (accessIDFieldExists)
-                                    {
-                                        // Using ConvertNullableField extension since publisher could use SQLite database in which case
-                                        // all integers would arrive in data set as longs and need to be converted back to integers
-                                        int? id = row.ConvertNullableField<int>("accessID");
-                                        accessID = id.HasValue ? (object)id.Value : (object)DBNull.Value;
-                                    }
+                                        accessID = (int)row.Field<long>("AccessID");
 
                                     // Get longitude and latitude values if they are defined
                                     longitude = 0M;
@@ -2877,21 +2872,17 @@ namespace GSF.TimeSeries.Transport
                                 // Sort unique ID list so that binary search can be used for quick lookups
                                 uniqueIDs.Sort();
 
-                                // Query all the unique guid-based ID's for all device records associated with the parent device
-                                IDataReader reader = command.ExecuteReader(queryUniqueDeviceIDsSql, m_metadataSynchronizationTimeout, parentID);
+                                DataTable deviceUniqueIDs = command.RetrieveData(database.AdapterType, queryUniqueDeviceIDsSql, m_metadataSynchronizationTimeout, parentID);
                                 Guid uniqueID;
 
-                                // Walk through each database record and see if the device exists in the provided meta-data
-                                while (reader.Read())
+                                foreach (DataRow deviceRow in deviceUniqueIDs.Rows)
                                 {
-                                    uniqueID = reader.GetGuid(0);
+                                    uniqueID = database.Guid(deviceRow, "UniqueID");
 
                                     // Remove any devices in the database that are associated with the parent device and do not exist in the meta-data
                                     if (uniqueIDs.BinarySearch(uniqueID) < 0)
-                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, uniqueID);
+                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, uniqueID);                                    
                                 }
-
-                                reader.Close();
                                 UpdateSyncProgress();
                             }
                         }
@@ -3008,13 +2999,13 @@ namespace GSF.TimeSeries.Transport
                                 signalIDs.Sort();
 
                                 // Query all the guid-based signal ID's for all measurement records associated with the parent device using run-time ID
-                                IDataReader reader = command.ExecuteReader(queryMeasurementSignalIDsSql, m_metadataSynchronizationTimeout, ID);
+                                DataTable measurementSignalIDs = command.RetrieveData(database.AdapterType, queryMeasurementSignalIDsSql, m_metadataSynchronizationTimeout, (int)ID);
                                 Guid signalID;
 
                                 // Walk through each database record and see if the measurement exists in the provided meta-data
-                                while (reader.Read())
+                                foreach (DataRow measurementRow in measurementSignalIDs.Rows)
                                 {
-                                    signalID = reader.GetGuid(0);
+                                    signalID = database.Guid(measurementRow, "SignalID");
 
                                     // Remove any measurements in the database that are associated with received devices and do not exist in the meta-data
                                     if (signalIDs.BinarySearch(signalID) < 0)
@@ -3030,7 +3021,6 @@ namespace GSF.TimeSeries.Transport
                                     }
                                 }
 
-                                reader.Close();
                                 UpdateSyncProgress();
                             }
                         }
