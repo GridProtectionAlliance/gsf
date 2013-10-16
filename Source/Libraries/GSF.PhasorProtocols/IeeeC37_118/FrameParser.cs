@@ -89,7 +89,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Fields
         private DraftRevision m_draftRevision;
         private ConfigurationFrame2 m_configurationFrame2;
-        private bool m_trustHeaderLength;
         private bool m_configurationChangeHandled;
         private long m_unexpectedCommandFrames;
 
@@ -98,16 +97,18 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="FrameParser"/> from specified parameters.
+        /// Creates a new <see cref="FrameParser"/>.
         /// </summary>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="draftRevision">The <see cref="IEEEC37_118.DraftRevision"/> of this <see cref="FrameParser"/>.</param>
-        public FrameParser(DraftRevision draftRevision)
+        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, DraftRevision draftRevision = DraftRevision.Draft7)
+            : base(checkSumValidationFrameTypes, trustHeaderLength)
         {
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new[] { PhasorProtocols.Common.SyncByte };
 
             m_draftRevision = draftRevision;
-            m_trustHeaderLength = true;
         }
 
         #endregion
@@ -145,21 +146,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 m_draftRevision = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
-        /// </summary>
-        public bool TrustHeaderLength
-        {
-            get
-            {
-                return m_trustHeaderLength;
-            }
-            set
-            {
-                m_trustHeaderLength = value;
             }
         }
 
@@ -205,9 +191,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 status.AppendLine();
                 status.Append(" Unexpected command frames: ");
                 status.Append(m_unexpectedCommandFrames);
-                status.AppendLine();
-                status.Append("    Trusting header length: ");
-                status.Append(m_trustHeaderLength);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -285,19 +268,19 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     {
                         case FrameType.DataFrame:
                             // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame2, DataCell.CreateNewCell, m_trustHeaderLength);
+                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame2, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
                             break;
                         case FrameType.ConfigurationFrame1:
                         case FrameType.ConfigurationFrame2:
                             // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell);
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
                             break;
                         case FrameType.ConfigurationFrame3:
-                            // parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell3.CreateNewCell);
+                            // parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell3.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
                             break;
                         case FrameType.HeaderFrame:
                             // Assign header frame parsing state
-                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength);
+                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength, TrustHeaderLength, ValidateHeaderFrameCheckSum);
                             break;
                     }
 

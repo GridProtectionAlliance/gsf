@@ -188,7 +188,6 @@
     <Compile Include="IDataFrameParsingState.cs" />
     <Compile Include="IDigitalDefinition.cs" />
     <Compile Include="IDigitalValue.cs" />
-    <Compile Include="IEEEC37_118\DataFrameParsingState.cs" />
     <Compile Include="IFrameParser.cs" />
     <Compile Include="IFrequencyDefinition.cs" />
     <Compile Include="IFrequencyValue.cs" />

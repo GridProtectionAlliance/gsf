@@ -1737,6 +1737,8 @@ namespace GSF.PhasorProtocols
         private PrecisionInputTimer m_inputTimer;
         private Timer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
+        private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
+        private bool m_trustHeaderLength;
         private long m_dataStreamStartTime;
         private bool m_keepCommandChannelOpen;
         private bool m_autoRepeatCapturedPlayback;
@@ -1787,6 +1789,8 @@ namespace GSF.PhasorProtocols
             m_autoStartDataParsingSequence = DefaultAutoStartDataParsingSequence;
             m_allowedParsingExceptions = DefaultAllowedParsingExceptions;
             m_parsingExceptionWindow = DefaultParsingExceptionWindow;
+            m_checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames;
+            m_trustHeaderLength = true;
             m_keepCommandChannelOpen = true;
             m_rateCalcTimer = new Timer();
             m_streamStopDataHandle = new ManualResetEventSlim(false);
@@ -1909,6 +1913,15 @@ namespace GSF.PhasorProtocols
 
                 if (settings.TryGetValue("bufferSize", out setting) && int.TryParse(setting, out bufferSize) && bufferSize >= 1)
                     BufferSize = bufferSize;
+
+                if (settings.TryGetValue("checkSumValidationFrameTypes", out setting))
+                {
+                    if (!Enum.TryParse(setting, true, out m_checkSumValidationFrameTypes))
+                        m_checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames;
+                }
+
+                if (settings.TryGetValue("trustHeaderLength", out setting))
+                    m_trustHeaderLength = setting.ParseBoolean();
 
                 m_deviceSupportsCommands = DeriveCommandSupport();
             }
@@ -2207,6 +2220,42 @@ namespace GSF.PhasorProtocols
                 // Pass new config frame onto appropriate parser, casting into appropriate protocol if needed...
                 if ((object)m_frameParser != null)
                     m_frameParser.ConfigurationFrame = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flags that determine if check-sums for specified frames should be validated.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that this will normally be set to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
+        /// </remarks>
+        public CheckSumValidationFrameTypes CheckSumValidationFrameTypes
+        {
+            get
+            {
+                return m_checkSumValidationFrameTypes;
+            }
+            set
+            {
+                m_checkSumValidationFrameTypes = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that this will normally be left as <c>true</c>.
+        /// </remarks>
+        public bool TrustHeaderLength
+        {
+            get
+            {
+                return m_trustHeaderLength;
+            }
+            set
+            {
+                m_trustHeaderLength = value;
             }
         }
 
@@ -2810,19 +2859,13 @@ namespace GSF.PhasorProtocols
                 case PhasorProtocol.IEEEC37_118V2:
                 case PhasorProtocol.IEEEC37_118V1:
                 case PhasorProtocol.IEEEC37_118D6:
-                    // Check settings collection for a "trust header length" parameter
-                    if (!settings.TryGetValue("trustHeaderLength", out setting) || string.IsNullOrWhiteSpace(setting))
-                        setting = "true";
-
-                    IEEEC37_118.FrameParser frameParser = new IEEEC37_118.FrameParser(m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Draft7);
-                    frameParser.TrustHeaderLength = setting.ParseBoolean();
-                    m_frameParser = frameParser;
+                    m_frameParser = new IEEEC37_118.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength, m_phasorProtocol == PhasorProtocol.IEEEC37_118D6 ? DraftRevision.Draft6 : DraftRevision.Draft7);
                     break;
                 case PhasorProtocol.IEEE1344:
-                    m_frameParser = new IEEE1344.FrameParser();
+                    m_frameParser = new IEEE1344.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
                     break;
                 case PhasorProtocol.IEC61850_90_5:
-                    m_frameParser = new IEC61850_90_5.FrameParser();
+                    m_frameParser = new IEC61850_90_5.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
 
                     // Check for IEC 61850-90-5 protocol specific parameters in connection string
                     IEC61850_90_5.ConnectionParameters iecParameters = m_connectionParameters as IEC61850_90_5.ConnectionParameters;
@@ -2847,7 +2890,7 @@ namespace GSF.PhasorProtocols
 
                     break;
                 case PhasorProtocol.BPAPDCstream:
-                    m_frameParser = new BPAPDCstream.FrameParser();
+                    m_frameParser = new BPAPDCstream.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
 
                     // Check for BPA PDCstream protocol specific parameters in connection string
                     BPAPDCstream.ConnectionParameters bpaPdcParameters = m_connectionParameters as BPAPDCstream.ConnectionParameters;
@@ -2871,7 +2914,7 @@ namespace GSF.PhasorProtocols
                     }
                     break;
                 case PhasorProtocol.FNET:
-                    m_frameParser = new FNET.FrameParser();
+                    m_frameParser = new FNET.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
 
                     // Check for F-NET protocol specific parameters in connection string
                     FNET.ConnectionParameters fnetParameters = m_connectionParameters as FNET.ConnectionParameters;
@@ -2892,7 +2935,7 @@ namespace GSF.PhasorProtocols
                     }
                     break;
                 case PhasorProtocol.SelFastMessage:
-                    m_frameParser = new SelFastMessage.FrameParser();
+                    m_frameParser = new SelFastMessage.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
 
                     // Check for SEL Fast Message protocol specific parameters in connection string
                     SelFastMessage.ConnectionParameters selParameters = m_connectionParameters as SelFastMessage.ConnectionParameters;
@@ -2904,7 +2947,7 @@ namespace GSF.PhasorProtocols
                     }
                     break;
                 case PhasorProtocol.Macrodyne:
-                    m_frameParser = new Macrodyne.FrameParser();
+                    m_frameParser = new Macrodyne.FrameParser(m_checkSumValidationFrameTypes, m_trustHeaderLength);
 
                     // Check for Macrodyne protocol specific parameters in connection string
                     Macrodyne.ConnectionParameters macrodyneParameters = m_connectionParameters as Macrodyne.ConnectionParameters;

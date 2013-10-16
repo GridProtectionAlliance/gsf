@@ -86,23 +86,17 @@ namespace GSF.PhasorProtocols.Macrodyne
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="FrameParser"/>.
-        /// </summary>
-        public FrameParser()
-        {
-            m_protocolVersion = ProtocolVersion.M;
-            m_syncLock = new object();
-        }
-
-        /// <summary>
         /// Creates a new <see cref="FrameParser"/> from specified parameters.
         /// </summary>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="protocolVersion">The protocol version that the parser should use.</param>
         /// <param name="configurationFileName">The optional external Macrodyne configuration in BPA PDCstream INI file based format.</param>
         /// <param name="deviceLabel">The INI section device label to use.</param>
-        public FrameParser(ProtocolVersion protocolVersion, string configurationFileName, string deviceLabel)
-            : this()
+        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, ProtocolVersion protocolVersion = ProtocolVersion.M, string configurationFileName = null, string deviceLabel = null)
+            : base(checkSumValidationFrameTypes, trustHeaderLength)
         {
+            m_syncLock = new object();
             m_protocolVersion = protocolVersion;
             m_deviceLabel = deviceLabel;
             ConfigurationFileName = configurationFileName;
@@ -344,15 +338,15 @@ namespace GSF.PhasorProtocols.Macrodyne
                     {
                         case FrameType.DataFrame:
                             // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell);
+                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
                             break;
                         case FrameType.HeaderFrame:
                             // Assign header frame parsing state
-                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength);
+                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength, TrustHeaderLength, ValidateHeaderFrameCheckSum);
                             break;
                         case FrameType.ConfigurationFrame:
                             // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, m_headerFrame, ConfigurationCell.CreateNewCell);
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, m_headerFrame, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
                             break;
                     }
 

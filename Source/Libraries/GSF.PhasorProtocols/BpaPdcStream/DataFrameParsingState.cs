@@ -47,8 +47,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <param name="parsedBinaryLength">Binary length of the <see cref="IDataFrame"/> being parsed.</param>
         /// <param name="configurationFrame">Reference to the <see cref="IConfigurationFrame"/> associated with the <see cref="IDataFrame"/> being parsed.</param>
         /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="IDataCell"/> instances.</param>
-        public DataFrameParsingState(int parsedBinaryLength, IConfigurationFrame configurationFrame, CreateNewCellFunction<IDataCell> createNewCellFunction)
-            : base(parsedBinaryLength, configurationFrame, createNewCellFunction)
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        /// <param name="validateCheckSum">Determines if frame's check-sum should be validated.</param>
+        public DataFrameParsingState(int parsedBinaryLength, IConfigurationFrame configurationFrame, CreateNewCellFunction<IDataCell> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
+            : base(parsedBinaryLength, configurationFrame, createNewCellFunction, trustHeaderLength, validateCheckSum)
         {
         }
 

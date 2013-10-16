@@ -80,7 +80,7 @@ namespace GSF.PhasorProtocols
     /// integrated into measurement concentration (see <see cref="ConcentratorBase"/>).
     /// </para>
     /// </remarks>
-    public interface IChannelFrame : IChannel, IFrame, IComparable, ISerializable
+    public interface IChannelFrame : IChannel, IFrame, ISerializable
     {
         // We keep this IChannelFrame as a simple non-generic interface to prevent complex circular type definitions
         // that would be caused by a strongly-typed "parent" reference in IChannelCell. The parent reference is
@@ -90,22 +90,35 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="FundamentalFrameType"/> for this <see cref="IChannelFrame"/>.
         /// </summary>
-        FundamentalFrameType FrameType { get; }
+        FundamentalFrameType FrameType
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the simple reference to the collection of cells for this <see cref="IChannelFrame"/>.
         /// </summary>
-        object Cells { get; }
+        object Cells
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets or sets the ID code of this <see cref="IChannelFrame"/>.
         /// </summary>
-        ushort IDCode { get; set; }
+        ushort IDCode
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets UNIX based time representation of the ticks of this <see cref="IChannelFrame"/>.
         /// </summary>
-        UnixTimeTag TimeTag { get; }
+        UnixTimeTag TimeTag
+        {
+            get;
+        }
     }
 
     /// <summary>
@@ -122,11 +135,18 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the strongly-typed reference to the collection of cells for this <see cref="IChannelFrame{T}"/>.
         /// </summary>
-        new IChannelCellCollection<T> Cells { get; }
+        new IChannelCellCollection<T> Cells
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets or sets the parsing state for this <see cref="IChannelFrame{T}"/>.
         /// </summary>
-        new IChannelFrameParsingState<T> State { get; set; }
-   }
+        new IChannelFrameParsingState<T> State
+        {
+            get;
+            set;
+        }
+    }
 }

@@ -45,8 +45,10 @@ namespace GSF.PhasorProtocols.Macrodyne
         /// <param name="parsedBinaryLength">Binary length of the <see cref="ConfigurationFrame"/> being parsed.</param>
         /// <param name="headerFrame">Previously parsed header frame that contains needed station name.</param>
         /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="ConfigurationCell"/> instances.</param>
-        public ConfigurationFrameParsingState(int parsedBinaryLength, HeaderFrame headerFrame, CreateNewCellFunction<IConfigurationCell> createNewCellFunction)
-            : base(parsedBinaryLength, createNewCellFunction, 1)
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        /// <param name="validateCheckSum">Determines if frame's check-sum should be validated.</param>
+        public ConfigurationFrameParsingState(int parsedBinaryLength, HeaderFrame headerFrame, CreateNewCellFunction<IConfigurationCell> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
+            : base(parsedBinaryLength, createNewCellFunction, trustHeaderLength, validateCheckSum, 1)
         {
             m_headerFrame = headerFrame;
         }

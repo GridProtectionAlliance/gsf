@@ -41,8 +41,10 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <param name="parsedBinaryLength">Binary length of the <see cref="ICommandFrame"/> being parsed.</param>
         /// <param name="dataLength">Length of data in <see cref="ICommandFrame"/> being parsed (i.e., number of cells).</param>
-        public CommandFrameParsingState(int parsedBinaryLength, int dataLength)
-            : base(parsedBinaryLength, CommandCell.CreateNewCell)
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        /// <param name="validateCheckSum">Determines if frame's check-sum should be validated.</param>
+        public CommandFrameParsingState(int parsedBinaryLength, int dataLength, bool trustHeaderLength, bool validateCheckSum)
+            : base(parsedBinaryLength, CommandCell.CreateNewCell, trustHeaderLength, validateCheckSum)
         {
             CellCount = dataLength;
         }

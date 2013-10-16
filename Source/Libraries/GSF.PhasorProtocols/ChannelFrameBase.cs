@@ -63,6 +63,7 @@ namespace GSF.PhasorProtocols
         private int m_parsedBinaryLength;                                                   // Binary length of frame as provided from parsed header
         private SourceChannel m_source;                                                     // Defines source channel (e.g., data or command) for channel frame
         private bool m_trustHeaderLength;                                                   // Determines if parsed header lengths should be trusted (normally true)
+        private bool m_validateCheckSum;                                                    // Allows bypass of check-sum validation if devices are behaving badly
         private bool m_published;                                                           // Determines if this frame of data has been published (IFrame.Published)
         private int m_sortedMeasurements;                                                   // Total measurements published into this frame        (IFrame.SortedMeasurements)
         private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements; // Collection of measurements published by this frame  (IFrame.Measurements)
@@ -85,6 +86,7 @@ namespace GSF.PhasorProtocols
             m_timestamp = timestamp;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_trustHeaderLength = true;
+            m_validateCheckSum = true;
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
             m_sortedMeasurements = -1;
         }
@@ -102,6 +104,7 @@ namespace GSF.PhasorProtocols
             m_timestamp = info.GetInt64("timestamp");
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_trustHeaderLength = true;
+            m_validateCheckSum = true;
             m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
             m_sortedMeasurements = -1;
         }
@@ -285,6 +288,8 @@ namespace GSF.PhasorProtocols
             set
             {
                 base.State = value;
+                TrustHeaderLength = value.TrustHeaderLength;
+                ValidateCheckSum = value.ValidateCheckSum;
             }
         }
 
@@ -386,7 +391,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
         /// </summary>
-        protected internal bool TrustHeaderLength
+        public virtual bool TrustHeaderLength
         {
             get
             {
@@ -395,6 +400,21 @@ namespace GSF.PhasorProtocols
             set
             {
                 m_trustHeaderLength = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if frame's check-sum should be validated - this should normally be left as <c>true</c>.
+        /// </summary>
+        public virtual bool ValidateCheckSum
+        {
+            get
+            {
+                return m_validateCheckSum;
+            }
+            set
+            {
+                m_validateCheckSum = value;
             }
         }
 
@@ -429,7 +449,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the parsed binary length derived from the parsing state, if any.
         /// </summary>
-        protected virtual int ParsedBinaryLength
+        protected int ParsedBinaryLength
         {
             get
             {
@@ -457,6 +477,7 @@ namespace GSF.PhasorProtocols
                 baseAttributes.Add("Ticks", ((long)Timestamp).ToString());
                 baseAttributes.Add("Timestamp", ((DateTime)Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 baseAttributes.Add("Trusting Header Length", TrustHeaderLength.ToString());
+                baseAttributes.Add("Validating Check-sum", ValidateCheckSum.ToString());
 
                 return baseAttributes;
             }
@@ -492,10 +513,11 @@ namespace GSF.PhasorProtocols
                 throw new CrcException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
             }
 
-            if (m_trustHeaderLength)
+            if (TrustHeaderLength)
             {
                 // Normally one would expect image size returned should match parsed image size - but it's possible that these may
-                // differ, so we assume the parsed length header length is better of the two values
+                // differ, so we assume the parsed length header length is better of the two values. This can accommodate the case
+                // where some devices add padding to the end of the frame.
                 base.ParseBinaryImage(buffer, startIndex, length);
 
                 return State.ParsedBinaryLength;
@@ -544,8 +566,13 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         protected virtual bool ChecksumIsValid(byte[] buffer, int startIndex)
         {
-            int sumLength = BinaryLength - 2;
-            return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
+            if (ValidateCheckSum)
+            {
+                int sumLength = BinaryLength - 2;
+                return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
+            }
+
+            return true;
         }
 
         /// <summary>

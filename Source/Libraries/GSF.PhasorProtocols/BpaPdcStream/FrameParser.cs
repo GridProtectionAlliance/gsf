@@ -82,20 +82,16 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <summary>
         /// Creates a new <see cref="FrameParser"/>.
         /// </summary>
-        public FrameParser()
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
+        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, string configurationFileName = null)
+            : base(checkSumValidationFrameTypes, trustHeaderLength)
         {
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new[] { PhasorProtocols.Common.SyncByte };
             m_syncLock = new object();
-        }
 
-        /// <summary>
-        /// Creates a new <see cref="FrameParser"/> from specified parameters.
-        /// </summary>
-        /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
-        public FrameParser(string configurationFileName)
-            : this()
-        {
             m_configurationFileName = configurationFileName;
         }
 
@@ -349,11 +345,11 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     {
                         case FrameType.DataFrame:
                             // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell);
+                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
                             break;
                         case FrameType.ConfigurationFrame:
                             // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFileName, ConfigurationCell.CreateNewCell);
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFileName, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
                             break;
                     }
 

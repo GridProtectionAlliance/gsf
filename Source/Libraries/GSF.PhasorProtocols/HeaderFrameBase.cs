@@ -115,7 +115,7 @@ namespace GSF.PhasorProtocols
             set
             {
                 Cells.Clear();
-                State = new HeaderFrameParsingState(0, value.Length);
+                State = new HeaderFrameParsingState(0, value.Length, true, true);
                 ParseBodyImage(Encoding.ASCII.GetBytes(value), 0, value.Length);
             }
         }

@@ -1070,7 +1070,16 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             ConfigurationFrame = configFrame;
 
             // Update the frame level parsing state
-            DataFrameParsingState parsingState = new DataFrameParsingState(CommonHeader.FrameLength, configFrame, DataCell.CreateNewCell);
+            bool trustHeaderLength = true;
+            bool validateCheckSum = true;
+
+            if ((object)State != null)
+            {
+                trustHeaderLength = State.TrustHeaderLength;
+                validateCheckSum = State.ValidateCheckSum;
+            }
+
+            DataFrameParsingState parsingState = new DataFrameParsingState(CommonHeader.FrameLength, configFrame, DataCell.CreateNewCell, trustHeaderLength, validateCheckSum);
             CommonHeader.State = parsingState;
             State = parsingState;
 

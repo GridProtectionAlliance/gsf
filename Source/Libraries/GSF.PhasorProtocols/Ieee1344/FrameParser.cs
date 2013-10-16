@@ -84,6 +84,20 @@ namespace GSF.PhasorProtocols.IEEE1344
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="FrameParser"/>.
+        /// </summary>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true)
+            : base(checkSumValidationFrameTypes, trustHeaderLength)
+        {
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -175,18 +189,18 @@ namespace GSF.PhasorProtocols.IEEE1344
                     {
                         case FrameType.DataFrame:
                             // Assign data frame parsing state
-                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell);
+                            parsedFrameHeader.State = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
                             break;
                         case FrameType.ConfigurationFrame:
                             // Assign configuration frame parsing state (note that IEEE 1344 only supports a single device, hence 1 cell)
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, 1);
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum, 1);
 
                             // Cumulate configuration frame images...
                             CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_configurationFrameImages);
                             break;
                         case FrameType.HeaderFrame:
                             // Assign header frame parsing state
-                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength);
+                            parsedFrameHeader.State = new HeaderFrameParsingState(parsedFrameHeader.FrameLength, parsedFrameHeader.DataLength, TrustHeaderLength, ValidateHeaderFrameCheckSum);
 
                             // Cumulate header frame images...
                             CumulateFrameImage(parsedFrameHeader, buffer, offset, ref m_headerFrameImages);

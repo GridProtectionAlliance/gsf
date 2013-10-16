@@ -41,8 +41,10 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <param name="parsedBinaryLength">Binary length of the <see cref="IConfigurationFrame"/> being parsed.</param>
         /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="IConfigurationCell"/> instances.</param>
-        public ConfigurationFrameParsingState(int parsedBinaryLength, CreateNewCellFunction<IConfigurationCell> createNewCellFunction)
-            : base(parsedBinaryLength, createNewCellFunction)
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        /// <param name="validateCheckSum">Determines if frame's check-sum should be validated.</param>
+        public ConfigurationFrameParsingState(int parsedBinaryLength, CreateNewCellFunction<IConfigurationCell> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
+            : base(parsedBinaryLength, createNewCellFunction, trustHeaderLength, validateCheckSum)
         {
         }
 
@@ -51,9 +53,11 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <param name="parsedBinaryLength">Binary length of the <see cref="IConfigurationFrame"/> being parsed.</param>
         /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="IConfigurationCell"/> instances.</param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        /// <param name="validateCheckSum">Determines if frame's check-sum should be validated.</param>
         /// <param name="cellCount">Number of cells that exist in the frame to be parsed.</param>
-        public ConfigurationFrameParsingState(int parsedBinaryLength, CreateNewCellFunction<IConfigurationCell> createNewCellFunction, int cellCount)
-            : base(parsedBinaryLength, createNewCellFunction)
+        public ConfigurationFrameParsingState(int parsedBinaryLength, CreateNewCellFunction<IConfigurationCell> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum, int cellCount)
+            : base(parsedBinaryLength, createNewCellFunction, trustHeaderLength, validateCheckSum)
         {
             CellCount = cellCount;
         }

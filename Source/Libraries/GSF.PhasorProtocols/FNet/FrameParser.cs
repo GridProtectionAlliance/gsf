@@ -73,20 +73,14 @@ namespace GSF.PhasorProtocols.FNET
         /// <summary>
         /// Creates a new <see cref="FrameParser"/>.
         /// </summary>
-        public FrameParser()
-            : this(Common.DefaultFrameRate, Common.DefaultNominalFrequency, Common.DefaultTimeOffset, Common.DefaultStationName)
-        {
-            // FNet devices default to 10 frames per second, 60Hz and 11 second time offset
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="FrameParser"/> from specified parameters.
-        /// </summary>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame"/>.</param>
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of this <see cref="ConfigurationFrame"/>.</param>
         /// <param name="timeOffset">The time offset of F-NET device in <see cref="Ticks"/>.</param>
         /// <param name="stationName">The station name of the F-NET device.</param>
-        public FrameParser(ushort frameRate, LineFrequency nominalFrequency, Ticks timeOffset, string stationName)
+        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, ushort frameRate = Common.DefaultFrameRate, LineFrequency nominalFrequency = Common.DefaultNominalFrequency, long timeOffset = Common.DefaultTimeOffset, string stationName = Common.DefaultStationName)
+            : base(checkSumValidationFrameTypes, trustHeaderLength)
         {
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new[] { Common.StartByte };
@@ -326,7 +320,7 @@ namespace GSF.PhasorProtocols.FNET
                     if (m_configurationFrame != null)
                     {
                         // Assign common header and data frame parsing state
-                        parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell);
+                        parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
 
                         // Expose the frame buffer image in case client needs this data for any reason
                         OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, parsedLength);

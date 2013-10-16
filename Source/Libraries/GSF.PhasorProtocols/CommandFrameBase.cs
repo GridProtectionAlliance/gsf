@@ -140,7 +140,7 @@ namespace GSF.PhasorProtocols
             set
             {
                 Cells.Clear();
-                State = new CommandFrameParsingState(0, value.Length);
+                State = new CommandFrameParsingState(0, value.Length, true, true);
                 ParseBodyImage(value, 0, value.Length);
             }
         }

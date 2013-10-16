@@ -42,6 +42,8 @@ namespace GSF.PhasorProtocols
         // Fields
         private int m_cellCount;
         private readonly CreateNewCellFunction<T> m_createNewCellFunction;
+        private bool m_trustHeaderLength;
+        private bool m_validateCheckSum;
 
         #endregion
 
@@ -52,10 +54,14 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <param name="parsedBinaryLength">Binary length of the <see cref="IChannelFrame"/> being parsed.</param>
         /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="IChannelCell"/> instances.</param>
-        protected ChannelFrameParsingStateBase(int parsedBinaryLength, CreateNewCellFunction<T> createNewCellFunction)
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        /// <param name="validateCheckSum">Determines if frame's check-sum should be validated.</param>
+        protected ChannelFrameParsingStateBase(int parsedBinaryLength, CreateNewCellFunction<T> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
         {
             base.ParsedBinaryLength = parsedBinaryLength;
             m_createNewCellFunction = createNewCellFunction;
+            m_trustHeaderLength = trustHeaderLength;
+            m_validateCheckSum = validateCheckSum;
         }
 
         #endregion
@@ -85,6 +91,42 @@ namespace GSF.PhasorProtocols
             set
             {
                 m_cellCount = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that this will normally be left as <c>true</c>.
+        /// </remarks>
+        public virtual bool TrustHeaderLength
+        {
+            get
+            {
+                return m_trustHeaderLength;
+            }
+            set
+            {
+                m_trustHeaderLength = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if frame's check-sum should be validated.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that this will normally be left as <c>true</c>.
+        /// </remarks>
+        public virtual bool ValidateCheckSum
+        {
+            get
+            {
+                return m_validateCheckSum;
+            }
+            set
+            {
+                m_validateCheckSum = value;
             }
         }
 

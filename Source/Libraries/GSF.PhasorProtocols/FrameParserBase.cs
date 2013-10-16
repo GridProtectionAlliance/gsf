@@ -133,6 +133,8 @@ namespace GSF.PhasorProtocols
         // Fields
         private IConnectionParameters m_connectionParameters;
         private AsyncQueue<EventArgs<FundamentalFrameType, byte[], int, int>> m_frameImageQueue;
+        private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
+        private bool m_trustHeaderLength;
         private bool m_disposed;
 
         #endregion
@@ -142,12 +144,17 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="FrameParserBase{TypeIndentifier}"/>.
         /// </summary>
-        protected FrameParserBase()
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        protected FrameParserBase(CheckSumValidationFrameTypes checkSumValidationFrameTypes, bool trustHeaderLength)
         {
             // We attach to base class DataParsed event to automatically redirect and cast channel frames to their specific output events
             base.DataParsed += base_DataParsed;
             base.DuplicateTypeHandlerEncountered += base_DuplicateTypeHandlerEncountered;
             base.OutputTypeNotFound += base_OutputTypeNotFound;
+
+            m_checkSumValidationFrameTypes = checkSumValidationFrameTypes;
+            m_trustHeaderLength = trustHeaderLength;
         }
 
         #endregion
@@ -201,6 +208,86 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets flags that determine if check-sums for specified frames should be validated.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that this will normally be set to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
+        /// </remarks>
+        public CheckSumValidationFrameTypes CheckSumValidationFrameTypes
+        {
+            get
+            {
+                return m_checkSumValidationFrameTypes;
+            }
+            set
+            {
+                m_checkSumValidationFrameTypes = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if configuration frames are selected for check-sum validation.
+        /// </summary>
+        protected bool ValidateConfigurationFrameCheckSum
+        {
+            get
+            {
+                return (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.ConfigurationFrame) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if data frames are selected for check-sum validation.
+        /// </summary>
+        protected bool ValidateDataFrameCheckSum
+        {
+            get
+            {
+                return (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if header frames are selected for check-sum validation.
+        /// </summary>
+        protected bool ValidateHeaderFrameCheckSum
+        {
+            get
+            {
+                return (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.HeaderFrame) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag based on <see cref="CheckSumValidationFrameTypes"/> property that determines if command frames are selected for check-sum validation.
+        /// </summary>
+        protected bool ValidateCommandFrameCheckSum
+        {
+            get
+            {
+                return (m_checkSumValidationFrameTypes & CheckSumValidationFrameTypes.DataFrame) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that this will normally be left as <c>true</c>
+        /// </remarks>
+        public bool TrustHeaderLength
+        {
+            get
+            {
+                return m_trustHeaderLength;
+            }
+            set
+            {
+                m_trustHeaderLength = value;
+            }
+        }
+
+        /// <summary>
         /// Gets current descriptive status of the <see cref="FrameParserBase{TypeIndentifier}"/>.
         /// </summary>
         public override string Status
@@ -230,6 +317,13 @@ namespace GSF.PhasorProtocols
                     status.Append(ConfigurationFrame.FrameRate);
                     status.AppendLine();
                 }
+
+                status.Append("    Trusting header length: ");
+                status.Append(m_trustHeaderLength);
+                status.AppendLine();
+                status.Append("Check-sum validation types: ");
+                status.Append(m_checkSumValidationFrameTypes);
+                status.AppendLine();
 
                 return status.ToString();
             }
@@ -366,6 +460,7 @@ namespace GSF.PhasorProtocols
         /// <param name="frame"><see cref="IChannelFrame"/> that was parsed by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> that implements protocol specific common frame header interface.</param>
         protected virtual void OnReceivedChannelFrame(IChannelFrame frame)
         {
+            // Process frame types in order or likely occurrence
             if ((object)frame != null)
             {
                 IDataFrame dataFrame = frame as IDataFrame;
@@ -419,11 +514,11 @@ namespace GSF.PhasorProtocols
         /// <param name="frameType">Unknown frame ID.</param>
         protected virtual void OnUnknownFrameTypeEncountered(TFrameIdentifier frameType)
         {
-            OnParsingException(new InvalidOperationException(string.Format("WARNING: Encountered an undefined frame type identfier \"{0}\". Output was not parsed.", frameType)));
+            OnParsingException(new InvalidOperationException(string.Format("WARNING: Encountered an undefined frame type identifier \"{0}\". Output was not parsed.", frameType)));
         }
 
         // Handle reception of data from base class event "DataParsed". Note that by attaching to base class event instead of overriding
-        // OnDataParsed event raiser we allow frame implementations to control whether or not publication happens from a new threadpool
+        // OnDataParsed event raiser we allow frame implementations to control whether or not publication happens from a new thread pool
         // thread or from existing parsing thread by simply overriding the AllowQueuedPublication boolean property. Normally configuration
         // frames are published as soon as they are parsed to make sure needed parsing information is available as quickly as possible.
         // All other frames are queued for processing by default to allow for better processor distribution of mapping/routing work load.
@@ -444,7 +539,7 @@ namespace GSF.PhasorProtocols
         private void base_DuplicateTypeHandlerEncountered(object sender, EventArgs<Type, TFrameIdentifier> e)
         {
             // This exception will only occur on start up and is a result of not defining unique frame identifiers for the base types
-            OnParsingException(new InvalidOperationException(string.Format("WARNING: Duplicate frame type identfier \"{0}\" encountered for parsing type {1} during initialization. Only the first defined type for this identifier will ever be parsed.", e.Argument2, e.Argument1.FullName)));
+            OnParsingException(new InvalidOperationException(string.Format("WARNING: Duplicate frame type identifier \"{0}\" encountered for parsing type {1} during initialization. Only the first defined type for this identifier will ever be parsed.", e.Argument2, e.Argument1.FullName)));
         }
 
         #endregion

@@ -68,18 +68,13 @@ namespace GSF.PhasorProtocols.SelFastMessage
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="FrameParser"/>.
-        /// </summary>
-        public FrameParser()
-            : this(MessagePeriod.DefaultRate)
-        {
-        }
-
-        /// <summary>
         /// Creates a new <see cref="FrameParser"/> from specified parameters.
         /// </summary>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
         /// <param name="messagePeriod">The desired <see cref="SelFastMessage.MessagePeriod"/> for SEL device connection.</param>
-        public FrameParser(MessagePeriod messagePeriod)
+        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, MessagePeriod messagePeriod = MessagePeriod.DefaultRate)
+            : base(checkSumValidationFrameTypes, trustHeaderLength)
         {
             // Initialize protocol synchronization bytes for this frame parser
             base.ProtocolSyncBytes = new[] { Common.HeaderByte1, Common.HeaderByte2 };
@@ -238,7 +233,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
                     if (m_configurationFrame != null)
                     {
                         // Assign common header and data frame parsing state
-                        parsedFrameHeader.State = new DataFrameParsingState(frameLength, m_configurationFrame, DataCell.CreateNewCell);
+                        parsedFrameHeader.State = new DataFrameParsingState(frameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
 
                         // Expose the frame buffer image in case client needs this data for any reason
                         OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, frameLength);

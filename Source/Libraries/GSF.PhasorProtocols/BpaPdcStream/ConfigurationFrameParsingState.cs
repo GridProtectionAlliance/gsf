@@ -47,8 +47,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         /// <param name="parsedBinaryLength">Binary length of the <see cref="ConfigurationFrame"/> being parsed.</param>
         /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
         /// <param name="createNewCellFunction">Reference to delegate to create new <see cref="ConfigurationCell"/> instances.</param>
-        public ConfigurationFrameParsingState(int parsedBinaryLength, string configurationFileName, CreateNewCellFunction<IConfigurationCell> createNewCellFunction)
-            : base(parsedBinaryLength, createNewCellFunction)
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        /// <param name="validateCheckSum">Determines if frame's check-sum should be validated.</param>
+        public ConfigurationFrameParsingState(int parsedBinaryLength, string configurationFileName, CreateNewCellFunction<IConfigurationCell> createNewCellFunction, bool trustHeaderLength, bool validateCheckSum)
+            : base(parsedBinaryLength, createNewCellFunction, trustHeaderLength, validateCheckSum)
         {
             m_configurationFileName = configurationFileName;
         }

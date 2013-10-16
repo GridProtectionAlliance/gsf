@@ -52,6 +52,38 @@ namespace GSF.PhasorProtocols
         Other
     }
 
+    /// <summary>
+    /// Check-sum validation frame-type flags.
+    /// </summary>
+    [Serializable, Flags]
+    public enum CheckSumValidationFrameTypes : byte
+    {
+        /// <summary>
+        /// Include no frame types for check-sum validation.
+        /// </summary>
+        NoFrames = (byte)Bits.Nil,
+        /// <summary>
+        /// Include configuration frame for check-sum validation.
+        /// </summary>
+        ConfigurationFrame = (byte)Bits.Bit00,
+        /// <summary>
+        /// Include data frame for check-sum validation.
+        /// </summary>
+        DataFrame = (byte)Bits.Bit01,
+        /// <summary>
+        /// Include header frame for check-sum validation.
+        /// </summary>
+        HeaderFrame = (byte)Bits.Bit02,
+        /// <summary>
+        /// Include command frame for check-sum validation.
+        /// </summary>
+        CommandFrame = (byte)Bits.Bit03,
+        /// <summary>
+        /// Include all frame types for check-sum validation.
+        /// </summary>
+        AllFrames = 0xFF
+    }
+
     #endregion
 
     /// <summary>
@@ -197,14 +229,28 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Start the streaming data parser.
+        /// Gets or sets flags that determine if check-sums for specified frames should be validated.
         /// </summary>
-        void Start();
+        /// <remarks>
+        /// It is expected that this will normally be set to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/>.
+        /// </remarks>
+        CheckSumValidationFrameTypes CheckSumValidationFrameTypes
+        {
+            get;
+            set;
+        }
 
         /// <summary>
-        /// Stops the streaming data parser.
+        /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
         /// </summary>
-        void Stop();
+        /// <remarks>
+        /// It is expected that this will normally be left as <c>true</c>.
+        /// </remarks>
+        bool TrustHeaderLength
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the data parser is currently enabled.
@@ -214,6 +260,16 @@ namespace GSF.PhasorProtocols
             get;
             set;
         }
+
+        /// <summary>
+        /// Start the streaming data parser.
+        /// </summary>
+        void Start();
+
+        /// <summary>
+        /// Stops the streaming data parser.
+        /// </summary>
+        void Stop();
 
         /// <summary>
         /// Writes a sequence of bytes onto the <see cref="IBinaryImageParser"/> stream for parsing.

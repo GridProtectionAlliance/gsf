@@ -81,6 +81,20 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
         #endregion
 
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="FrameParser"/>.
+        /// </summary>
+        /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="GSF.PhasorProtocols.CheckSumValidationFrameTypes.AllFrames"/></param>
+        /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
+        public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true)
+            : base(checkSumValidationFrameTypes, trustHeaderLength)
+        {
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -281,7 +295,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     {
                         case FrameType.DataFrame:
                             // Assign data frame parsing state                            
-                            DataFrameParsingState parsingState = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell);
+                            DataFrameParsingState parsingState = new DataFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum);
 
                             // Assume one device if no configuration frame is available
                             if (m_configurationFrame == null)
@@ -291,7 +305,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             break;
                         case FrameType.ConfigurationFrame:
                             // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell);
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell, TrustHeaderLength, ValidateConfigurationFrameCheckSum);
                             break;
                     }
 

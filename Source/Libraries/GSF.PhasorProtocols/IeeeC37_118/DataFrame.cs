@@ -190,21 +190,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
-        /// Gets or sets the parsing state for the this <see cref="DataFrame"/>.
-        /// </summary>
-        public new DataFrameParsingState State
-        {
-            get
-            {
-                return base.State as DataFrameParsingState;
-            }
-            set
-            {
-                base.State = value;
-            }
-        }
-
-        /// <summary>
         /// Gets the IEEE C37.118 protocol version of this <see cref="DataFrame"/> as specified by the associated <see cref="ConfigurationFrame"/>.
         /// </summary>
         public byte Version
@@ -314,31 +299,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             // We already parsed the frame header, so we just skip past it...
             return CommonFrameHeader.FixedLength;
-        }
-
-        /// <summary>
-        /// Parses the binary image.
-        /// </summary>
-        /// <param name="buffer">Binary image to parse.</param>
-        /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
-        /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        /// <remarks>
-        /// This method is overridden to ensure that the return value is the frame length
-        /// defined in the header of the frame rather than the number of bytes parsed.
-        /// </remarks>
-        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
-        {
-            // Determine, based on flag coming through from parser, if we trust the header length
-            TrustHeaderLength = State.TrustHeaderLength;
-
-            if (TrustHeaderLength)
-            {
-                base.ParseBinaryImage(buffer, startIndex, length);
-                return State.ParsedBinaryLength;
-            }
-
-            return base.ParseBinaryImage(buffer, startIndex, length);
         }
 
         /// <summary>

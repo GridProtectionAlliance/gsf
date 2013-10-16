@@ -62,5 +62,29 @@ namespace GSF.PhasorProtocols
             get;
             set;
         }
+
+        /// <summary>
+        /// Gets or sets flag that determines if header lengths should be trusted over parsed byte count.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that this will normally be left as <c>true</c>.
+        /// </remarks>
+        bool TrustHeaderLength
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if frame's check-sum should be validated.
+        /// </summary>
+        /// <remarks>
+        /// It is expected that this will normally be left as <c>true</c>.
+        /// </remarks>
+        bool ValidateCheckSum
+        {
+            get;
+            set;
+        }
     }
 }
