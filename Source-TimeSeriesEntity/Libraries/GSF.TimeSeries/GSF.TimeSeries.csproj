@@ -111,7 +111,7 @@
     <Compile Include="InstallerBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ITimeSeriesValue.cs" />
+    <Compile Include="ITimeSeriesEntity.cs" />
     <Compile Include="Measurement.cs" />
     <Compile Include="MeasurementKey.cs" />
     <Compile Include="NamespaceDoc.cs" />
@@ -140,8 +140,9 @@
     <Compile Include="Statistics\StatisticsEngine.cs" />
     <Compile Include="Statistics\StatisticValueState.cs" />
     <Compile Include="Statistics\StatisticValueStateCache.cs" />
+    <Compile Include="TimeSeriesEntityBase.cs" />
     <Compile Include="TimeSeriesStartupOperations.cs" />
-    <Compile Include="BufferBlockMeasurement.cs" />
+    <Compile Include="TimeSeriesBuffer.cs" />
     <Compile Include="Transport\ClientConnection.cs" />
     <Compile Include="Transport\Common.cs" />
     <Compile Include="Transport\DataPublisher.cs" />
@@ -153,7 +154,6 @@
       <DependentUpon>DebugHostBase.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Transport\IBinaryMeasurement.cs" />
     <Compile Include="Transport\SerializableMeasurement.cs" />
     <Compile Include="ServiceClientBase.cs">
       <SubType>Component</SubType>

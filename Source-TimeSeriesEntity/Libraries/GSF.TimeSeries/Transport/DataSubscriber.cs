@@ -250,7 +250,7 @@ namespace GSF.TimeSeries.Transport
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
 
-        private readonly List<BufferBlockMeasurement> m_bufferBlockCache;
+        private readonly List<TimeSeriesBuffer> m_bufferBlockCache;
         private uint m_expectedBufferBlockSequenceNumber;
 
         private long m_lifetimeMeasurements;
@@ -291,7 +291,7 @@ namespace GSF.TimeSeries.Transport
             m_useTransactionForMetadata = DefaultUseTransactionForMetadata;
             DataLossInterval = 10.0D;
 
-            m_bufferBlockCache = new List<BufferBlockMeasurement>();
+            m_bufferBlockCache = new List<TimeSeriesBuffer>();
         }
 
         #endregion
@@ -2389,7 +2389,7 @@ namespace GSF.TimeSeries.Transport
                             // Buffer block received - wrap as a buffer block measurement and expose back to consumer
                             uint sequenceNumber = EndianOrder.BigEndian.ToUInt32(buffer, responseIndex);
                             int cacheIndex = (int)(sequenceNumber - m_expectedBufferBlockSequenceNumber);
-                            BufferBlockMeasurement bufferBlockMeasurement;
+                            TimeSeriesBuffer timeSeriesBuffer;
                             Tuple<Guid, string, uint> measurementKey;
                             ushort signalIndex;
 
@@ -2406,7 +2406,7 @@ namespace GSF.TimeSeries.Transport
                                     throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + signalIndex);
 
                                 // Skip the sequence number and signal index when creating the buffer block measurement
-                                bufferBlockMeasurement = new BufferBlockMeasurement(buffer, responseIndex + 6, responseLength - 6)
+                                timeSeriesBuffer = new TimeSeriesBuffer(buffer, responseIndex + 6, responseLength - 6)
                                 {
                                     ID = measurementKey.Item1,
                                     Key = new MeasurementKey(measurementKey.Item1, measurementKey.Item3, measurementKey.Item2)
@@ -2419,7 +2419,7 @@ namespace GSF.TimeSeries.Transport
                                     int i;
 
                                     // Add the buffer block measurement to the list of measurements to be published
-                                    bufferBlockMeasurements.Add(bufferBlockMeasurement);
+                                    bufferBlockMeasurements.Add(timeSeriesBuffer);
                                     m_expectedBufferBlockSequenceNumber++;
 
                                     // Add cached buffer block measurements to the list of measurements to be published
@@ -2447,7 +2447,7 @@ namespace GSF.TimeSeries.Transport
                                         m_bufferBlockCache.Add(null);
 
                                     // Insert this buffer block into the proper location in the list
-                                    m_bufferBlockCache[cacheIndex] = bufferBlockMeasurement;
+                                    m_bufferBlockCache[cacheIndex] = timeSeriesBuffer;
                                 }
                             }
 
@@ -2791,7 +2791,7 @@ namespace GSF.TimeSeries.Transport
                                 if (!row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                                 {
                                     if (accessIDFieldExists)
-                                        accessID = row.ConvertField<int>("AccessID");
+                                        accessID = (int)row.Field<long>("AccessID");
 
                                     // Get longitude and latitude values if they are defined
                                     longitude = 0M;

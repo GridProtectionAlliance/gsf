@@ -20,25 +20,23 @@
 //       Generated original version of source code.
 //  04/14/2011 - J. Ritchie Carroll
 //       Added received and published timestamps for measurements.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  10/16/2013 - Stephen C. Wills
+//       Redefined the IMeasurement interface to IMeasurement<T> to allow for measurements with values
+//       of different types.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// Method signature for function used to apply a value filter over a sequence of <see cref="IMeasurement"/> values.
+    /// Method signature for function used to apply a downsampling filter over a sequence of <see cref="IMeasurement{T}"/> values.
     /// </summary>
-    /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to apply filter.</param>
-    /// <returns>Result of filter applied to sequence of <see cref="IMeasurement"/> values.</returns>
-    public delegate double MeasurementValueFilterFunction(IEnumerable<IMeasurement> source);
+    /// <param name="source">Sequence of <see cref="IMeasurement{T}"/> values over which to apply filter.</param>
+    /// <returns>Result of filter applied to sequence of <see cref="IMeasurement{T}"/> values.</returns>
+    public delegate T TimeSeriesFilterFunction<T>(IEnumerable<T> source) where T : ITimeSeriesEntity;
 
     #region [ Enumerations ]
 
@@ -190,124 +188,39 @@ namespace GSF.TimeSeries
     /// <remarks>
     /// This interface abstractly represents a measured value at an exact time interval.
     /// </remarks>
-    public interface IMeasurement : ITimeSeriesValue<double>, IEquatable<ITimeSeriesValue>, IComparable<ITimeSeriesValue>, IComparable
+    public interface IMeasurement<out T> : ITimeSeriesEntity
     {
         /// <summary>
-        /// Gets or sets the primary key of this <see cref="IMeasurement"/>.
-        /// </summary>
-        MeasurementKey Key
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the text based tag name of this <see cref="IMeasurement"/>.
-        /// </summary>
-        string TagName
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets the adjusted numeric value of this <see cref="IMeasurement"/>, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
-        /// </summary>
-        /// <remarks>
-        /// <para>Implementers need to account for <see cref="Adder"/> and <see cref="Multiplier"/> in return value, e.g.:<br/>
-        /// <c>return <see cref="ITimeSeriesValue{T}.Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>
-        /// </para>
-        /// </remarks>
-        double AdjustedValue
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Defines an offset to add to the <see cref="IMeasurement"/> value.
-        /// </summary>
-        /// <remarks>
-        /// Implementers should make sure this value defaults to zero.
-        /// </remarks>
-        double Adder
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Defines a multiplicative offset to apply to the <see cref="IMeasurement"/> value.
-        /// </summary>
-        /// <remarks>
-        /// Implementers should make sure this value defaults to one.
-        /// </remarks>
-        double Multiplier
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="IMeasurement"/>.
+        /// Gets <see cref="MeasurementStateFlags"/> associated with this <see cref="IMeasurement{T}"/>.
         /// </summary>
         MeasurementStateFlags StateFlags
         {
             get;
-            set;
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was received (i.e., created).
+        /// Gets the raw value of this <see cref="IMeasurement{T}"/>.
         /// </summary>
-        /// <remarks>
-        /// <para>Implementers should set this timestamp to be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        Ticks ReceivedTimestamp
+        T Value
         {
             get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was published (post-processing).
-        /// </summary>
-        /// <remarks>
-        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-        /// </remarks>
-        Ticks PublishedTimestamp
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        MeasurementValueFilterFunction MeasurementValueFilter
-        {
-            get;
-            set;
         }
     }
 
     /// <summary>
-    /// Defines static extension functions for <see cref="IMeasurement"/> implementations.
+    /// Defines static extension functions for <see cref="IMeasurement{T}"/> implementations.
     /// </summary>
     /// <remarks>
     /// These helper functions map to the previously defined corresponding properties to help with the transition of <see cref="MeasurementStateFlags"/>.
     /// </remarks>
-    public static class IMeasurementExtensions
+    public static class MeasurementExtensions
     {
-        private static readonly ConcurrentDictionary<string, int> s_signalTypeIDs = new ConcurrentDictionary<string, int>();
-        private static readonly ConcurrentDictionary<Guid, int> s_signalTypeIDCache = new ConcurrentDictionary<Guid, int>();
-
         /// <summary>
         /// Returns <c>true</c> if <see cref="MeasurementStateFlags.BadData"/> is not set.
         /// </summary>
-        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <param name="measurement"><see cref="IMeasurement{T}"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="MeasurementStateFlags.BadData"/> is not set.</returns>
-        public static bool ValueQualityIsGood(this IMeasurement measurement)
+        public static bool ValueQualityIsGood<T>(this IMeasurement<T> measurement)
         {
             return (measurement.StateFlags & MeasurementStateFlags.BadData) == 0;
         }
@@ -315,9 +228,9 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Returns <c>true</c> if <see cref="MeasurementStateFlags.BadTime"/> is not set.
         /// </summary>
-        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <param name="measurement"><see cref="IMeasurement{T}"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="MeasurementStateFlags.BadTime"/> is not set.</returns>
-        public static bool TimestampQualityIsGood(this IMeasurement measurement)
+        public static bool TimestampQualityIsGood<T>(this IMeasurement<T> measurement)
         {
             return (measurement.StateFlags & MeasurementStateFlags.BadTime) == 0;
         }
@@ -325,9 +238,9 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Returns <c>true</c> if <see cref="MeasurementStateFlags.DiscardedValue"/> is set.
         /// </summary>
-        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <param name="measurement"><see cref="IMeasurement{T}"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="MeasurementStateFlags.DiscardedValue"/> is not set.</returns>
-        public static bool IsDiscarded(this IMeasurement measurement)
+        public static bool IsDiscarded<T>(this IMeasurement<T> measurement)
         {
             return (measurement.StateFlags & MeasurementStateFlags.DiscardedValue) > 0;
         }
@@ -335,64 +248,11 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Returns <c>true</c> if <see cref="MeasurementStateFlags.CalcuatedValue"/> is set.
         /// </summary>
-        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
+        /// <param name="measurement"><see cref="IMeasurement{T}"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="MeasurementStateFlags.CalcuatedValue"/> is not set.</returns>
-        public static bool IsCalculated(this IMeasurement measurement)
+        public static bool IsCalculated<T>(this IMeasurement<T> measurement)
         {
             return (measurement.StateFlags & MeasurementStateFlags.CalcuatedValue) > 0;
-        }
-
-        /// <summary>
-        /// Returns the measurement ID if defined, otherwise the run-time signal ID associated with the measurement key.
-        /// </summary>
-        /// <param name="measurement"><see cref="IMeasurement"/> instance to test.</param>
-        /// <returns>Measurement ID if defined, otherwise the run-time signal ID associated with the measurement key.</returns>
-        public static Guid RuntimeSignalID(this IMeasurement measurement)
-        {
-            if (measurement.ID == Guid.Empty)
-                return measurement.Key.SignalID;
-
-            return measurement.ID;
-        }
-
-        /// <summary>
-        /// Returns the <see cref="MeasurementKey"/> values of a <see cref="IMeasurement"/> enumeration.
-        /// </summary>
-        /// <param name="measurements"><see cref="IMeasurement"/> enumeration to convert.</param>
-        /// <returns><see cref="MeasurementKey"/> values of the <see cref="IMeasurement"/> enumeration.</returns>
-        public static MeasurementKey[] MeasurementKeys(this IEnumerable<IMeasurement> measurements)
-        {
-            if (measurements == null)
-                return new MeasurementKey[0];
-
-            return measurements.Select(m => m.Key).ToArray();
-        }
-
-        /// <summary>
-        /// Gets a unique (run-time only) signal type ID for the given <paramref name="measurement"/> useful for sorting.
-        /// </summary>
-        /// <param name="measurement"><see cref="IMeasurement"/> to obtain signal type for.</param>
-        /// <param name="dataSource"><see cref="DataSet"/> that contains measurement metadata.</param>
-        /// <returns>Unique (run-time only) signal type ID for the given <paramref name="measurement"/>.</returns>
-        public static int GetSignalType(this IMeasurement measurement, DataSet dataSource)
-        {
-            // This uses string hash code over something like item count + 1 to generate a unique run-time ID of the signal type since chances of a hash code collision
-            // over a small set of signal types is much smaller than the possibility of duplicates due to possible race conditions when using item count + 1
-            return s_signalTypeIDCache.GetOrAdd(measurement.ID, signalID => s_signalTypeIDs.GetOrAdd(LookupSignalType(signalID, dataSource), signalType => signalType.GetHashCode()));
-        }
-
-        // Lookup signal type for given measurement ID
-        private static string LookupSignalType(Guid signalID, DataSet dataSource)
-        {
-            try
-            {
-                DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", signalID.ToString()));
-                return filteredRows.Length > 0 ? filteredRows[0]["SignalType"].ToString().ToUpper().Trim() : "NONE";
-            }
-            catch
-            {
-                return "NONE";
-            }
         }
     }
 }

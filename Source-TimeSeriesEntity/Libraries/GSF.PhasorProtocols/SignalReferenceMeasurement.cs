@@ -21,7 +21,7 @@
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  12/17/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//       Added generic type to handle values other than double.
 //
 //******************************************************************************************************
 
@@ -31,14 +31,14 @@ using GSF.TimeSeries;
 namespace GSF.PhasorProtocols
 {
     /// <summary>
-    /// Represents an <see cref="IMeasurement"/> wrapper that is associated with a <see cref="SignalReference"/>.
+    /// Represents an <see cref="IMeasurement{T}"/> wrapper that is associated with a <see cref="SignalReference"/>.
     /// </summary>
-    public class SignalReferenceMeasurement : IMeasurement
+    public class SignalReferenceMeasurement<T> : IMeasurement<T>
     {
         #region [ Members ]
 
         // Fields
-        private readonly IMeasurement m_measurement;
+        private readonly IMeasurement<T> m_measurement;
         private readonly SignalReference m_signalReference;
 
         #endregion
@@ -46,11 +46,11 @@ namespace GSF.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Constructs a new <see cref="SignalReferenceMeasurement"/> from the specified parameters.
+        /// Constructs a new <see cref="SignalReferenceMeasurement{T}"/> from the specified parameters.
         /// </summary>
-        /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
+        /// <param name="measurement">Source <see cref="IMeasurement{T}"/> value.</param>
         /// <param name="signalReference">Associated <see cref="SignalReference"/>.</param>
-        public SignalReferenceMeasurement(IMeasurement measurement, SignalReference signalReference)
+        public SignalReferenceMeasurement(IMeasurement<T> measurement, SignalReference signalReference)
         {
             m_measurement = measurement;
             m_signalReference = signalReference;
@@ -61,34 +61,7 @@ namespace GSF.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="SignalReference"/> associated with this <see cref="SignalReferenceMeasurement"/>.
-        /// </summary>
-        public SignalReference SignalReference
-        {
-            get
-            {
-                return m_signalReference;
-            }
-        }
-
-
-        /// <summary>
-        /// Gets the primary key (a <see cref="MeasurementKey"/>, of this <see cref="SignalReferenceMeasurement"/>.
-        /// </summary>
-        public MeasurementKey Key
-        {
-            get
-            {
-                return m_measurement.Key;
-            }
-            set
-            {
-                m_measurement.Key = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="SignalReferenceMeasurement"/>, if available.
+        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="SignalReferenceMeasurement{T}"/>, if available.
         /// </summary>
         public Guid ID
         {
@@ -96,105 +69,10 @@ namespace GSF.PhasorProtocols
             {
                 return m_measurement.ID;
             }
-            set
-            {
-                m_measurement.ID = value;
-            }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="SignalReferenceMeasurement"/>.
-        /// </summary>
-        public MeasurementStateFlags StateFlags
-        {
-            get
-            {
-                return m_measurement.StateFlags;
-            }
-            set
-            {
-                m_measurement.StateFlags = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the text based tag name of this <see cref="SignalReferenceMeasurement"/>.
-        /// </summary>
-        public string TagName
-        {
-            get
-            {
-                return m_measurement.TagName;
-            }
-            set
-            {
-                m_measurement.TagName = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the raw measurement value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
-        /// </summary>
-        /// <returns>Raw value of this <see cref="SignalReferenceMeasurement"/> (i.e., value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).</returns>
-        public double Value
-        {
-            get
-            {
-                return m_measurement.Value;
-            }
-            set
-            {
-                m_measurement.Value = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
-        /// </summary>
-        /// <remarks>
-        /// Note that returned value will be offset by <see cref="Adder"/> and <see cref="Multiplier"/>.
-        /// </remarks>
-        /// <returns><see cref="Value"/> offset by <see cref="Adder"/> and <see cref="Multiplier"/> (i.e., <c><see cref="Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>).</returns>
-        public double AdjustedValue
-        {
-            get
-            {
-                return m_measurement.AdjustedValue;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets an offset to add to the measurement value. This defaults to 0.0.
-        /// </summary>
-        public double Adder
-        {
-            get
-            {
-                return m_measurement.Adder;
-            }
-            set
-            {
-                m_measurement.Adder = value;
-            }
-        }
-
-        /// <summary>
-        /// Defines a mulplicative offset to apply to the measurement value. This defaults to 1.0.
-        /// </summary>
-        public double Multiplier
-        {
-            get
-            {
-                return m_measurement.Multiplier;
-            }
-            set
-            {
-                m_measurement.Multiplier = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="SignalReferenceMeasurement"/>.
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="SignalReferenceMeasurement{T}"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
@@ -205,114 +83,39 @@ namespace GSF.PhasorProtocols
             {
                 return m_measurement.Timestamp;
             }
-            set
-            {
-                m_measurement.Timestamp = value;
-            }
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="SignalReferenceMeasurement"/> was received (i.e., created).
+        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="SignalReferenceMeasurement{T}"/>.
         /// </summary>
-        /// <remarks>
-        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        public Ticks ReceivedTimestamp
+        public MeasurementStateFlags StateFlags
         {
             get
             {
-                return m_measurement.ReceivedTimestamp;
-            }
-            set
-            {
-                m_measurement.ReceivedTimestamp = value;
+                return m_measurement.StateFlags;
             }
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="SignalReferenceMeasurement"/> was published (post-processing).
+        /// Gets the raw value of this <see cref="SignalReferenceMeasurement{T}"/>.
         /// </summary>
-        /// <remarks>
-        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-        /// </remarks>
-        public Ticks PublishedTimestamp
+        public T Value
         {
             get
             {
-                return m_measurement.PublishedTimestamp;
-            }
-            set
-            {
-                m_measurement.PublishedTimestamp = value;
+                return m_measurement.Value;
             }
         }
 
         /// <summary>
-        /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// Gets the <see cref="SignalReference"/> associated with this <see cref="SignalReferenceMeasurement{T}"/>.
         /// </summary>
-        public MeasurementValueFilterFunction MeasurementValueFilter
+        public SignalReference SignalReference
         {
             get
             {
-                return m_measurement.MeasurementValueFilter;
+                return m_signalReference;
             }
-            set
-            {
-                m_measurement.MeasurementValueFilter = value;
-            }
-        }
-
-        BigBinaryValue ITimeSeriesValue.Value
-        {
-            get
-            {
-                return ((ITimeSeriesValue)m_measurement).Value;
-            }
-            set
-            {
-                ((ITimeSeriesValue)m_measurement).Value = value;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Determines whether the specified <see cref="ITimeSeriesValue"/> is equal to the current <see cref="SignalReferenceMeasurement"/>.
-        /// </summary>
-        /// <param name="other">The <see cref="ITimeSeriesValue"/> to compare with the current <see cref="SignalReferenceMeasurement"/>.</param>
-        /// <returns>
-        /// true if the specified <see cref="ITimeSeriesValue"/> is equal to the current <see cref="SignalReferenceMeasurement"/>;
-        /// otherwise, false.
-        /// </returns>
-        public bool Equals(ITimeSeriesValue other)
-        {
-            return m_measurement.Equals(other);
-        }
-
-        /// <summary>
-        /// Compares the <see cref="SignalReferenceMeasurement"/> with the specified <see cref="Object"/>.
-        /// </summary>
-        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="SignalReferenceMeasurement"/>.</param>
-        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IMeasurement"/>.</exception>
-        /// <remarks>Measurement implementations should compare by hash code.</remarks>
-        public int CompareTo(object obj)
-        {
-            return m_measurement.CompareTo(obj);
-        }
-
-        /// <summary>
-        /// Compares the <see cref="SignalReferenceMeasurement"/> with an <see cref="ITimeSeriesValue"/>.
-        /// </summary>
-        /// <param name="other">The <see cref="ITimeSeriesValue"/> to compare with the current <see cref="SignalReferenceMeasurement"/>.</param>
-        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        /// <remarks>Measurement implementations should compare by hash code.</remarks>
-        public int CompareTo(ITimeSeriesValue other)
-        {
-            return m_measurement.CompareTo(other);
         }
 
         #endregion

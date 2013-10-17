@@ -20,8 +20,10 @@
 //       Generated original version of source code.
 //  06/07/2011 - J. Ritchie Carroll
 //       Implemented binary image issue fix as found and proposed by Luc Cezard.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  10/17/2013 - Stephen C. Wills
+//       Removed SerializableMeasurement from the ITimeSeriesEntity hierarchy, which is read-only by
+//       design, so that the CompactMeasurement can read/write for deserialization. ToMeasurement()
+//       method was provided to allow for simple conversion to immutable time-series measurements.
 //
 //******************************************************************************************************
 
@@ -32,7 +34,7 @@ using GSF.Parsing;
 namespace GSF.TimeSeries.Transport
 {
     /// <summary>
-    /// Represents a <see cref="IMeasurement"/> that can be serialized.
+    /// Represents a measurement that can be serialized.
     /// </summary>
     /// <remarks>
     /// This measurement implementation is serialized through <see cref="ISupportBinaryImage"/>
@@ -40,7 +42,7 @@ namespace GSF.TimeSeries.Transport
     /// at their full resolution and no attempt is made to optimize the binary image for
     /// purposes of size reduction.
     /// </remarks>
-    public class SerializableMeasurement : Measurement, IBinaryMeasurement
+    public class SerializableMeasurement : ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -52,6 +54,17 @@ namespace GSF.TimeSeries.Transport
         public const int FixedLength = 64;
 
         // Fields
+        private Guid m_id;
+        private Ticks m_timestamp;
+        private MeasurementStateFlags m_stateFlags;
+        private double m_value;
+
+        private string m_source;
+        private uint m_pointID;
+        private string m_tagName;
+        private double m_adder;
+        private double m_multiplier;
+
         private readonly Encoding m_encoding;
 
         #endregion
@@ -71,25 +84,163 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Creates a new <see cref="SerializableMeasurement"/> from an existing <see cref="IMeasurement"/> value.
+        /// Creates a new <see cref="SerializableMeasurement"/> from an existing <see cref="IMeasurement{Double}"/> value.
         /// </summary>
-        /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
+        /// <param name="measurement">Source <see cref="IMeasurement{Double}"/> value.</param>
         /// <param name="encoding">Character encoding used to convert strings to binary.</param>
-        public SerializableMeasurement(IMeasurement measurement, Encoding encoding)
+        public SerializableMeasurement(IMeasurement<double> measurement, Encoding encoding)
             : this(encoding)
         {
             ID = measurement.ID;
-            Key = measurement.Key;
-            Value = measurement.Value;
-            Adder = measurement.Adder;
-            Multiplier = measurement.Multiplier;
             Timestamp = measurement.Timestamp;
             StateFlags = measurement.StateFlags;
+            Value = measurement.Value;
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is the fundamental identifier of the measurement.
+        /// </remarks>
+        public Guid ID
+        {
+            get
+            {
+                return m_id;
+            }
+            set
+            {
+                m_id = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public Ticks Timestamp
+        {
+            get
+            {
+                return m_timestamp;
+            }
+            set
+            {
+                m_timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        public MeasurementStateFlags StateFlags
+        {
+            get
+            {
+                return m_stateFlags;
+            }
+            set
+            {
+                m_stateFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the raw value of this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        public double Value
+        {
+            get
+            {
+                return m_value;
+            }
+            set
+            {
+                m_value = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the source of this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        public string Source
+        {
+            get
+            {
+                return m_source;
+            }
+            set
+            {
+                m_source = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the integer point ID of this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        public uint PointID
+        {
+            get
+            {
+                return m_pointID;
+            }
+            set
+            {
+                m_pointID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the human-readable tag name of this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        public string TagName
+        {
+            get
+            {
+                return m_tagName;
+            }
+            set
+            {
+                m_tagName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the adder applied to the value of this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        public double Adder
+        {
+            get
+            {
+                return m_adder;
+            }
+            set
+            {
+                m_adder = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the multiplier applied to the value of this <see cref="SerializableMeasurement"/>.
+        /// </summary>
+        public double Multiplier
+        {
+            get
+            {
+                return m_multiplier;
+            }
+            set
+            {
+                m_multiplier = value;
+            }
+        }
 
         /// <summary>
         /// Gets the length of the <see cref="SerializableMeasurement"/>.
@@ -98,8 +249,8 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                int sourceLength = m_encoding.GetByteCount(Key.Source.ToNonNullString());
-                int tagLength = m_encoding.GetByteCount(TagName.ToNonNullString());
+                int sourceLength = m_encoding.GetByteCount(m_source.ToNonNullString());
+                int tagLength = m_encoding.GetByteCount(m_tagName.ToNonNullString());
                 return FixedLength + sourceLength + tagLength;
             }
         }
@@ -133,7 +284,7 @@ namespace GSF.TimeSeries.Transport
             string keySource = "";
 
             // Decode key ID
-            keyID = EndianOrder.BigEndian.ToUInt32(buffer, index);
+            m_pointID = EndianOrder.BigEndian.ToUInt32(buffer, index);
             index += 4;
 
             // Decode key source string length
@@ -143,16 +294,13 @@ namespace GSF.TimeSeries.Transport
             // Decode key source string
             if (size > 0)
             {
-                keySource = m_encoding.GetString(buffer, index, size);
+                m_source = m_encoding.GetString(buffer, index, size);
                 index += size;
             }
 
             // Decode signal ID
-            ID = EndianOrder.BigEndian.ToGuid(buffer, index);
+            m_id = EndianOrder.BigEndian.ToGuid(buffer, index);
             index += 16;
-
-            // Apply parsed key changes
-            Key = new MeasurementKey(ID, keyID, keySource);
 
             // Decode tag name string length
             size = EndianOrder.BigEndian.ToInt32(buffer, index);
@@ -161,30 +309,30 @@ namespace GSF.TimeSeries.Transport
             // Decode tag name string
             if (size > 0)
             {
-                TagName = m_encoding.GetString(buffer, index, size);
+                m_tagName = m_encoding.GetString(buffer, index, size);
                 index += size;
             }
             else
-                TagName = null;
+                m_tagName = null;
 
             // Decode value
-            Value = EndianOrder.BigEndian.ToDouble(buffer, index);
+            m_value = EndianOrder.BigEndian.ToDouble(buffer, index);
             index += 8;
 
             // Decode adder
-            Adder = EndianOrder.BigEndian.ToDouble(buffer, index);
+            m_adder = EndianOrder.BigEndian.ToDouble(buffer, index);
             index += 8;
 
             // Decode multiplier
-            Multiplier = EndianOrder.BigEndian.ToDouble(buffer, index);
+            m_multiplier = EndianOrder.BigEndian.ToDouble(buffer, index);
             index += 8;
 
             // Decode timestamp
-            Timestamp = EndianOrder.BigEndian.ToInt64(buffer, index);
+            m_timestamp = EndianOrder.BigEndian.ToInt64(buffer, index);
             index += 8;
 
             // Decode state flags
-            StateFlags = (MeasurementStateFlags)EndianOrder.BigEndian.ToUInt32(buffer, index);
+            m_stateFlags = (MeasurementStateFlags)EndianOrder.BigEndian.ToUInt32(buffer, index);
             index += 4;
 
             return (index - startIndex);
@@ -230,11 +378,11 @@ namespace GSF.TimeSeries.Transport
 
             byte[] bytes;
             int size, index = startIndex;
-            string source = Key.Source.ToNonNullString();
-            string tagName = TagName.ToNonNullString();
+            string source = m_source.ToNonNullString();
+            string tagName = m_tagName.ToNonNullString();
 
             // Encode key ID
-            EndianOrder.BigEndian.CopyBytes(Key.ID, buffer, index);
+            EndianOrder.BigEndian.CopyBytes(m_pointID, buffer, index);
             index += 4;
 
             // Encode key source string length
@@ -251,7 +399,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Encode signal ID
-            EndianOrder.BigEndian.CopyBytes(ID, buffer, index);
+            EndianOrder.BigEndian.CopyBytes(m_id, buffer, index);
             index += 16;
 
             // Encode tag name string length
@@ -268,25 +416,34 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Encode value
-            EndianOrder.BigEndian.CopyBytes(Value, buffer, index);
+            EndianOrder.BigEndian.CopyBytes(m_value, buffer, index);
             index += 8;
 
             // Encode adder
-            EndianOrder.BigEndian.CopyBytes(Adder, buffer, index);
+            EndianOrder.BigEndian.CopyBytes(m_adder, buffer, index);
             index += 8;
 
             // Encode multiplier
-            EndianOrder.BigEndian.CopyBytes(Multiplier, buffer, index);
+            EndianOrder.BigEndian.CopyBytes(m_multiplier, buffer, index);
             index += 8;
 
             // Encode timestamp
-            EndianOrder.BigEndian.CopyBytes((long)Timestamp, buffer, index);
+            EndianOrder.BigEndian.CopyBytes((long)m_timestamp, buffer, index);
             index += 8;
 
             // Encode state flags
-            EndianOrder.BigEndian.CopyBytes((uint)StateFlags, buffer, index);
+            EndianOrder.BigEndian.CopyBytes((uint)m_stateFlags, buffer, index);
 
             return length;
+        }
+
+        /// <summary>
+        /// Converts the <see cref="SerializableMeasurement"/> to <see cref="IMeasurement{Double}"/>.
+        /// </summary>
+        /// <returns>This measurement converted to <see cref="IMeasurement{Double}"/>.</returns>
+        public IMeasurement<double> ToMeasurement()
+        {
+            return new Measurement<double>(m_id, m_timestamp, m_stateFlags, m_value);
         }
 
         #endregion

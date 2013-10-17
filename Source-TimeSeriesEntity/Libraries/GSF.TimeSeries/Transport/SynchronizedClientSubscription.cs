@@ -519,7 +519,7 @@ namespace GSF.TimeSeries.Transport
             bool usePayloadCompression = m_usePayloadCompression;
             bool useCompactMeasurementFormat = m_useCompactMeasurementFormat || usePayloadCompression;
             long frameLevelTimestamp = frame.Timestamp;
-            BufferBlockMeasurement bufferBlockMeasurement;
+            TimeSeriesBuffer timeSeriesBuffer;
             IBinaryMeasurement binaryMeasurement;
             byte[] bufferBlock;
             int binaryLength;
@@ -529,9 +529,9 @@ namespace GSF.TimeSeries.Transport
 
             foreach (IMeasurement measurement in frame.Measurements.Values)
             {
-                bufferBlockMeasurement = measurement as BufferBlockMeasurement;
+                timeSeriesBuffer = measurement as TimeSeriesBuffer;
 
-                if ((object)bufferBlockMeasurement != null)
+                if ((object)timeSeriesBuffer != null)
                 {
                     // Still sending buffer block measurements to client; we are expecting
                     // confirmations which will indicate whether retransmission is necessary,
@@ -540,14 +540,14 @@ namespace GSF.TimeSeries.Transport
 
                     // Handle buffer block measurements as a special case - this can be any kind of data,
                     // measurement subscriber will need to know how to interpret buffer
-                    bufferBlock = new byte[4 + bufferBlockMeasurement.Length];
+                    bufferBlock = new byte[4 + timeSeriesBuffer.Length];
 
                     // Prepend sequence number
                     EndianOrder.BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
                     m_bufferBlockSequenceNumber++;
 
                     // Append measurement data and send
-                    Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 4, bufferBlockMeasurement.Length);
+                    Buffer.BlockCopy(timeSeriesBuffer.Buffer, 0, bufferBlock, 4, timeSeriesBuffer.Length);
                     m_parent.SendClientResponse(m_workingBuffer, m_clientID, ServerResponse.BufferBlock, ServerCommand.Subscribe, bufferBlock);
 
                     lock (m_bufferBlockCacheLock)

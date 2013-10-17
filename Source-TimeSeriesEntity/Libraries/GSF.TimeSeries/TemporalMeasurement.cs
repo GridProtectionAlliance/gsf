@@ -18,8 +18,10 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  10/17/2013 - Stephen C. Wills
+//       Added generic type to handle values other than double, necessitating a change in functionality.
+//       The GetTemporalStateFlags() method will now return MeasurementStateFlags to indicate whether
+//       the timestamp of the temporal measurement has fallen out of range.
 //
 //******************************************************************************************************
 
@@ -30,7 +32,7 @@ namespace GSF.TimeSeries
     /// <summary>
     /// Represents a time constrained measured value.
     /// </summary>
-    public class TemporalMeasurement : Measurement
+    public class TemporalMeasurement<T> : Measurement<T>
     {
         #region [ Members ]
 
@@ -43,42 +45,37 @@ namespace GSF.TimeSeries
         #region [ Constructors ]
 
         /// <summary>
-        /// Constructs a new <see cref="TemporalMeasurement"/> given the specified parameters.
+        /// Constructs a new <see cref="TemporalMeasurement{T}"/> given the specified parameters.
         /// </summary>
+        /// <param name="id">The fundamental identifier of the <see cref="TemporalMeasurement{T}"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in ticks, of the data represented by this <see cref="Measurement{T}"/>.</param>
+        /// <param name="stateFlags">The <see cref="MeasurementStateFlags"/> associated with this <see cref="Measurement{T}"/>.</param>
+        /// <param name="value">The raw value of this <see cref="TemporalMeasurement{T}"/>.</param>
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
-        public TemporalMeasurement(double lagTime, double leadTime)
-            : this(null, lagTime, leadTime)
+        public TemporalMeasurement(Guid id, Ticks timestamp, MeasurementStateFlags stateFlags, T value, double lagTime, double leadTime)
+            : base(id, timestamp, stateFlags, value)
         {
-        }
-
-        /// <summary>
-        /// Constructs a new <see cref="TemporalMeasurement"/> given the specified parameters.
-        /// </summary>
-        /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
-        /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
-        /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
-        public TemporalMeasurement(IMeasurement measurement, double lagTime, double leadTime)
-        {
-            if (measurement != null)
-            {
-                ID = measurement.ID;
-                Key = measurement.Key;
-                Value = measurement.Value;
-                Adder = measurement.Adder;
-                Multiplier = measurement.Multiplier;
-                Timestamp = measurement.Timestamp;
-                StateFlags = measurement.StateFlags;
-            }
-
-            if (lagTime <= 0)
+            if (lagTime <= 0.0)
                 throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
 
-            if (leadTime <= 0)
+            if (leadTime <= 0.0)
                 throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
             m_lagTime = lagTime;
             m_leadTime = leadTime;
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="TemporalMeasurement{T}"/> given the specified parameters.
+        /// </summary>
+        /// <param name="measurement">Source <see cref="IMeasurement{T}"/> value.</param>
+        /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
+        /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
+        /// <exception cref="NullReferenceException"><paramref name="measurement"/> is null</exception>
+        public TemporalMeasurement(IMeasurement<T> measurement, double lagTime, double leadTime)
+            : this(measurement.ID, measurement.Timestamp, measurement.StateFlags, measurement.Value, lagTime, leadTime)
+        {
         }
 
         #endregion
@@ -97,13 +94,6 @@ namespace GSF.TimeSeries
             {
                 return m_lagTime;
             }
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
-
-                m_lagTime = value;
-            }
         }
 
         /// <summary>Allowed future time deviation tolerance in seconds (can be sub-second).</summary>
@@ -118,62 +108,22 @@ namespace GSF.TimeSeries
             {
                 return m_leadTime;
             }
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one");
-
-                m_leadTime = value;
-            }
         }
 
         #endregion
 
         #region [ Methods ]
 
-        /// <summary>Gets numeric adjusted value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.</summary>
-        /// <remarks>
-        /// <para>Operation will return NaN if ticks are outside of time deviation tolerances.</para>
-        /// <para>Note that returned value will be offset by adder and multiplier.</para>
-        /// </remarks>
-        /// <param name="timestamp">Timestamp used to constrain <see cref="TemporalMeasurement"/> (typically set to real-time, i.e. "now").</param>
-        /// <returns>Value offset by adder and multiplier (i.e., Value * Multiplier + Adder).</returns>
-        public double GetAdjustedValue(Ticks timestamp)
+        /// <summary>
+        /// Gets the <see cref="IMeasurement{T}.StateFlags"/> of this <see cref="TemporalMeasurement{T}"/>,
+        /// adding the <see cref="MeasurementStateFlags.BadTime"/> flag if the timestamp is not valid based
+        /// on the <see cref="LagTime"/> and <see cref="LeadTime"/>.
+        /// </summary>
+        /// <param name="currentTime">Timestamp used to constrain <see cref="TemporalMeasurement{T}"/> (typically set to real-time, i.e. "now").</param>
+        /// <returns>State flags validated against the current time, lag time, and lead time.</returns>
+        public MeasurementStateFlags GetTemporalStateFlags(Ticks currentTime)
         {
-            // We only return a measurement value that is up-to-date...
-            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? base.AdjustedValue : double.NaN;
-        }
-
-        /// <summary>Gets numeric value of this <see cref="TemporalMeasurement"/>, constrained within specified ticks.</summary>
-        /// <remarks>
-        /// <para>Operation will return NaN if ticks are outside of time deviation tolerances.</para>
-        /// </remarks>
-        /// <param name="timestamp">Timestamp, in ticks, used to constrain <see cref="TemporalMeasurement"/> (typically set to real-time, i.e. "now").</param>
-        /// <returns>Raw value of this measurement (i.e., value that is not offset by adder and multiplier).</returns>
-        public double GetValue(Ticks timestamp)
-        {
-            // We only return a measurement value that is up-to-date...
-            return Timestamp.TimeIsValid(timestamp, m_lagTime, m_leadTime) ? base.Value : double.NaN;
-        }
-
-        /// <summary>Sets numeric value and timestamp, as ticks, of this <see cref="TemporalMeasurement"/>.</summary>
-        /// <remarks>
-        /// <para>Operation will only store a value that is newer than the cached value.</para>
-        /// </remarks>
-        /// <param name="timestamp">New timestamp, in ticks, for <see cref="TemporalMeasurement"/>.</param>
-        /// <param name="value">New value for <see cref="TemporalMeasurement"/>, only stored if <paramref name="timestamp"/> are newer than current <see cref="Ticks"/>.</param>
-        /// <returns><c>true</c> if value was updated; otherwise <c>false</c>.</returns>
-        public bool SetValue(Ticks timestamp, double value)
-        {
-            // We only store a value that is is newer than the current value
-            if (timestamp > Timestamp)
-            {
-                base.Value = value;
-                Timestamp = timestamp;
-                return true;
-            }
-
-            return false;
+            return Timestamp.TimeIsValid(currentTime, m_lagTime, m_leadTime) ? StateFlags : (StateFlags | MeasurementStateFlags.BadTime);
         }
 
         #endregion

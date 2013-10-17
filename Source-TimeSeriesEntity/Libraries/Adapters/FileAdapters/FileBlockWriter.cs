@@ -160,19 +160,19 @@ namespace FileAdapters
         /// </summary>
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            BufferBlockMeasurement bufferBlockMeasurement;
+            TimeSeriesBuffer timeSeriesBuffer;
 
             foreach (IMeasurement measurement in measurements)
             {
-                bufferBlockMeasurement = measurement as BufferBlockMeasurement;
+                timeSeriesBuffer = measurement as TimeSeriesBuffer;
 
                 // Only buffer block measurements can be processed
-                if ((object)bufferBlockMeasurement != null)
-                    ProcessBufferBlockMeasurement(bufferBlockMeasurement);
+                if ((object)timeSeriesBuffer != null)
+                    ProcessBufferBlockMeasurement(timeSeriesBuffer);
             }
         }
 
-        private void ProcessBufferBlockMeasurement(BufferBlockMeasurement measurement)
+        private void ProcessBufferBlockMeasurement(TimeSeriesBuffer measurement)
         {
             byte[] bufferBlock = measurement.Buffer;
             int index = 1;

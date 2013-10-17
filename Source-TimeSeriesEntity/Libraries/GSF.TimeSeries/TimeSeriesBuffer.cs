@@ -18,6 +18,10 @@
 //  ----------------------------------------------------------------------------------------------------
 //  01/17/2013 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  10/17/2013 - Stephen C. Wills
+//       Redefined BufferBlockMeasurement to TimeSeriesBuffer, taking advantage of the new
+//       TimeSeriesEntity hierarchy to eliminate the meaningless Value and StateFlags properties.
+//       Also modified to properly implement IDisposable.
 //
 //******************************************************************************************************
 
@@ -26,39 +30,31 @@ using System;
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// Represents a byte buffer that can be transported through the system as a <see cref="IMeasurement"/>.
+    /// Represents a byte buffer that can be transported through the system as a <see cref="ITimeSeriesEntity"/>.
     /// </summary>
-    public class BufferBlockMeasurement : Measurement
+    public class TimeSeriesBuffer : TimeSeriesEntityBase, IDisposable
     {
         #region [ Members ]
 
         // Members
         private byte[] m_buffer;
         private readonly int m_length;
+        private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="BufferBlockMeasurement"/>.
-        /// </summary>
-        public BufferBlockMeasurement()
-        {
-            // Value of measurement should be indeterminate since this a buffer
-            base.Value = double.NaN;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="BufferBlockMeasurement"/> from an existing buffer.
+        /// Creates a new <see cref="TimeSeriesBuffer"/> from an existing buffer.
         /// </summary>
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
         /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
         /// </exception>
-        public BufferBlockMeasurement(byte[] buffer, int startIndex, int length)
-            : this()
+        public TimeSeriesBuffer(Guid id, Ticks timestamp, byte[] buffer, int startIndex, int length)
+            : base(id, timestamp)
         {
             // Validate buffer parameters
             buffer.ValidateParameters(startIndex, length);
@@ -73,11 +69,11 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Finalizer for <see cref="BufferBlockMeasurement"/>.
+        /// Releases the unmanaged resources before the <see cref="TimeSeriesBuffer"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~BufferBlockMeasurement()
+        ~TimeSeriesBuffer()
         {
-            ReturnBufferToPool(true);
+            Dispose(false);
         }
 
         #endregion
@@ -103,7 +99,7 @@ namespace GSF.TimeSeries
         /// Set <see cref="Buffer"/> property to <c>null</c> when operations on buffer are complete
         /// to return buffer to pool and unregister measurement instance from the finalizer queue.
         /// If measurement has multiple destinations, it is recommended that queue and notify be
-        /// implemented so that final user of <see cref="BufferBlockMeasurement"/> instance can
+        /// implemented so that final user of <see cref="TimeSeriesBuffer"/> instance can
         /// return buffer back to the buffer pool.
         /// </para>
         /// </remarks>
@@ -112,13 +108,6 @@ namespace GSF.TimeSeries
             get
             {
                 return m_buffer;
-            }
-            set
-            {
-                if ((object)value == null)
-                    ReturnBufferToPool();
-                else
-                    throw new InvalidOperationException("Cannot override internal buffer. Set property to null to return buffer to pool.");
             }
         }
 
@@ -137,16 +126,35 @@ namespace GSF.TimeSeries
 
         #region [ Methods ]
 
-        // Return local buffer back to the buffer pool
-        private void ReturnBufferToPool(bool destructorCall = false)
+        /// <summary>
+        /// Releases all the resources used by the <see cref="TimeSeriesBuffer"/> object.
+        /// </summary>
+        public void Dispose()
         {
-            if (!destructorCall)
-                GC.SuppressFinalize(this);
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            if ((object)m_buffer != null)
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="TimeSeriesBuffer"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
             {
-                BufferPool.ReturnBuffer(m_buffer);
-                m_buffer = null;
+                try
+                {
+                    if ((object)m_buffer != null)
+                    {
+                        BufferPool.ReturnBuffer(m_buffer);
+                        m_buffer = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
             }
         }
 

@@ -630,64 +630,6 @@ namespace GSF.PhasorProtocols
         // typically come from (i.e., the IDataCell's values) - the only value the cell itself has
         // to offer is the "CommonStatusFlags" property, which we expose below...
 
-        BigBinaryValue ITimeSeriesValue.Value
-        {
-            get
-            {
-                return CommonStatusFlags;
-            }
-            set
-            {
-                switch (value.TypeCode)
-                {
-                    case TypeCode.Byte:
-                        CommonStatusFlags = (uint)(Byte)value;
-                        break;
-                    case TypeCode.SByte:
-                        CommonStatusFlags = (uint)(SByte)value;
-                        break;
-                    case TypeCode.Int16:
-                        CommonStatusFlags = (uint)(Int16)value;
-                        break;
-                    case TypeCode.UInt16:
-                        CommonStatusFlags = (UInt16)value;
-                        break;
-                    case TypeCode.Int32:
-                        CommonStatusFlags = (uint)(Int32)value;
-                        break;
-                    case TypeCode.UInt32:
-                        CommonStatusFlags = (UInt32)value;
-                        break;
-                    case TypeCode.Int64:
-                        CommonStatusFlags = (uint)(Int64)value;
-                        break;
-                    case TypeCode.UInt64:
-                        CommonStatusFlags = (uint)(UInt64)value;
-                        break;
-                    case TypeCode.Single:
-                        CommonStatusFlags = (uint)(Single)value;
-                        break;
-                    case TypeCode.Double:
-                        CommonStatusFlags = (uint)(Double)value;
-                        break;
-                    //case TypeCode.Boolean:
-                    //    break;
-                    //case TypeCode.Char:
-                    //    break;
-                    //case TypeCode.DateTime:
-                    //    break;
-                    //case TypeCode.Decimal:
-                    //    break;
-                    //case TypeCode.String:
-                    //    m_value = double.Parse(value);
-                    //    break;
-                    default:
-                        CommonStatusFlags = value;
-                        break;
-                }
-            }
-        }
-
         double ITimeSeriesValue<double>.Value
         {
             get

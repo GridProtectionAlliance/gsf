@@ -249,7 +249,7 @@ namespace GSF.PhasorProtocols
                 // Convert phase angles to the -180 degrees to 180 degrees range
                 if (m_parent is PhasorValueBase && m_valueIndex == (int)CompositePhasorValue.Angle)
                     adjustedValue = Angle.FromDegrees(adjustedValue).ToRange(-Math.PI, false).ToDegrees();
-                    
+
                 return adjustedValue;
             }
         }
@@ -320,18 +320,6 @@ namespace GSF.PhasorProtocols
             set
             {
                 m_measurementValueFilter = value;
-            }
-        }
-
-        BigBinaryValue ITimeSeriesValue.Value
-        {
-            get
-            {
-                return Value;
-            }
-            set
-            {
-                throw new NotImplementedException("Cannot update derived phasor measurement, composite values are read-only");
             }
         }
 

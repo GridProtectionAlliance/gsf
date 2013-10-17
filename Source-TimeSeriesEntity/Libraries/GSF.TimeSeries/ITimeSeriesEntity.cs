@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  IBinaryMeasurement.cs - Gbtc
+//  ITimeSeriesValue.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,19 +16,43 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/06/2013 - J. Ritchie Carroll
+//  06/29/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  10/16/2013 - Stephen C. Wills
+//       Renamed from ITimeSeriesValue to ITimeSeriesEntity and generalized the interface to include
+//       "entities" which do not have a singular "value".
 //
 //******************************************************************************************************
 
-using GSF.Parsing;
+using System;
 
-namespace GSF.TimeSeries.Transport
+namespace GSF.TimeSeries
 {
     /// <summary>
-    /// Defines a <see cref="IMeasurement"/> that supports <see cref="ISupportBinaryImage"/>.
+    /// Represents the fundamental binary value interface for a time-series value.
     /// </summary>
-    public interface IBinaryMeasurement : IMeasurement, ISupportBinaryImage
+    public interface ITimeSeriesEntity
     {
+        /// <summary>
+        /// Gets the <see cref="Guid"/> based signal ID of this <see cref="ITimeSeriesEntity"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is the fundamental identifier of the <see cref="ITimeSeriesEntity"/>.
+        /// </remarks>
+        Guid ID
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets exact timestamp, in ticks, of the data represented by this <see cref="ITimeSeriesEntity"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        Ticks Timestamp
+        {
+            get;
+        }
     }
 }

@@ -22,8 +22,10 @@
 //       Added runtime size optimizations.
 //  06/07/2011 - J. Ritchie Carroll
 //       Implemented initialize issue fix as found and proposed by Luc Cezard.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  10/17/2013 - Stephen C. Wills
+//       Removed CompactMeasurement from the ITimeSeriesEntity hierarchy, which is read-only by design,
+//       so that the CompactMeasurement can read/write for deserialization. ToMeasurement() method was
+//       provided to allow for simple conversion to immutable time-series measurements.
 //
 //******************************************************************************************************
 
@@ -158,7 +160,7 @@ namespace GSF.TimeSeries.Transport
     #endregion
 
     /// <summary>
-    /// Represents a <see cref="IMeasurement"/> that can be serialized with minimal size.
+    /// Represents a measurement that can be serialized with minimal size.
     /// </summary>
     /// <remarks>
     /// This measurement implementation is serialized through <see cref="ISupportBinaryImage"/>
@@ -166,7 +168,7 @@ namespace GSF.TimeSeries.Transport
     /// serialized and every attempt is made to optimize the binary image for purposes of size
     /// reduction.
     /// </remarks>
-    public class CompactMeasurement : Measurement, IBinaryMeasurement
+    public class CompactMeasurement : ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -178,6 +180,11 @@ namespace GSF.TimeSeries.Transport
         public const int FixedLength = 7;
 
         // Members
+        private Guid m_id;
+        private Ticks m_timestamp;
+        private MeasurementStateFlags m_stateFlags;
+        private double m_value;
+
         private readonly SignalIndexCache m_signalIndexCache;
         private readonly bool m_includeTime;
         private readonly long[] m_baseTimeOffsets;
@@ -213,23 +220,20 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Creates a new <see cref="CompactMeasurement"/> from an existing <see cref="IMeasurement"/> value.
+        /// Creates a new <see cref="CompactMeasurement"/> from an existing <see cref="IMeasurement{Double}"/> value.
         /// </summary>
-        /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
+        /// <param name="measurement">Source <see cref="IMeasurement{Double}"/> value.</param>
         /// <param name="signalIndexCache">Signal index cache used to serialize or deserialize runtime information.</param>
         /// <param name="includeTime">Set to <c>true</c> to include time in serialized packet; otherwise <c>false</c>.</param>
         /// <param name="baseTimeOffsets">Base time offset array - set to <c>null</c> to use full fidelity measurement time.</param>
         /// <param name="timeIndex">Time index to use for base offset.</param>
         /// <param name="useMillisecondResolution">Flag that determines if millisecond resolution is in use for this serialization.</param>
-        public CompactMeasurement(IMeasurement measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0, bool useMillisecondResolution = false)
+        public CompactMeasurement(IMeasurement<double> measurement, SignalIndexCache signalIndexCache, bool includeTime = true, long[] baseTimeOffsets = null, int timeIndex = 0, bool useMillisecondResolution = false)
         {
             ID = measurement.ID;
-            Key = measurement.Key;
-            Value = measurement.Value;
-            Adder = measurement.Adder;
-            Multiplier = measurement.Multiplier;
             Timestamp = measurement.Timestamp;
             StateFlags = measurement.StateFlags;
+            Value = measurement.Value;
 
             m_signalIndexCache = signalIndexCache;
             m_includeTime = includeTime;
@@ -247,6 +251,72 @@ namespace GSF.TimeSeries.Transport
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="CompactMeasurement"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is the fundamental identifier of the measurement.
+        /// </remarks>
+        public Guid ID
+        {
+            get
+            {
+                return m_id;
+            }
+            set
+            {
+                m_id = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="CompactMeasurement"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public Ticks Timestamp
+        {
+            get
+            {
+                return m_timestamp;
+            }
+            set
+            {
+                m_timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="CompactMeasurement"/>.
+        /// </summary>
+        public MeasurementStateFlags StateFlags
+        {
+            get
+            {
+                return m_stateFlags;
+            }
+            set
+            {
+                m_stateFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the raw value of this <see cref="CompactMeasurement"/>.
+        /// </summary>
+        public double Value
+        {
+            get
+            {
+                return m_value;
+            }
+            set
+            {
+                m_value = value;
+            }
+        }
 
         /// <summary>
         /// Gets flag that determines if time is serialized into measurement binary image.
@@ -372,10 +442,7 @@ namespace GSF.TimeSeries.Transport
                 Tuple<Guid, string, uint> tuple;
 
                 if (m_signalIndexCache.Reference.TryGetValue(value, out tuple))
-                {
                     ID = tuple.Item1;
-                    Key = new MeasurementKey(tuple.Item1, tuple.Item3, tuple.Item2);
-                }
                 else
                     throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + value);
             }
@@ -491,7 +558,7 @@ namespace GSF.TimeSeries.Transport
             startIndex += EndianOrder.BigEndian.CopyBytes(RuntimeID, buffer, startIndex);
 
             // Encode adjusted value (accounts for adder and multiplier)
-            startIndex += EndianOrder.BigEndian.CopyBytes((float)AdjustedValue, buffer, startIndex);
+            startIndex += EndianOrder.BigEndian.CopyBytes((float)Value, buffer, startIndex);
 
             if (m_includeTime)
             {
@@ -516,6 +583,15 @@ namespace GSF.TimeSeries.Transport
             }
 
             return length;
+        }
+
+        /// <summary>
+        /// Converts the <see cref="CompactMeasurement"/> to <see cref="IMeasurement{Double}"/>.
+        /// </summary>
+        /// <returns>This measurement converted to <see cref="IMeasurement{Double}"/>.</returns>
+        public IMeasurement<double> ToMeasurement()
+        {
+            return new Measurement<double>(m_id, m_timestamp, m_stateFlags, m_value);
         }
 
         #endregion
@@ -584,7 +660,7 @@ namespace GSF.TimeSeries.Transport
                 for (int i = 0; i < measurementCount; i++)
                 {
                     // Encode using adjusted value (accounts for adder and multiplier)
-                    index += NativeEndianOrder.Default.CopyBytes((float)measurements[i].AdjustedValue, buffer, index);
+                    index += NativeEndianOrder.Default.CopyBytes((float)measurements[i].Value, buffer, index);
                 }
 
                 if (includeTime)
