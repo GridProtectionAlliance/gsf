@@ -423,38 +423,45 @@ namespace GSF.Diagnostics
         /// </summary>
         public void Sample()
         {
-            if ((object)m_counter != null)
+            try
             {
-                float currentSample = m_counter.NextValue();
-
-                // Update counter sample set
-                m_samples.Add(currentSample);
-
-                // Maintain counter samples rolling window size
-                while (m_samples.Count > m_samplingWindow)
+                if ((object)m_counter != null)
                 {
-                    m_samples.RemoveAt(0);
-                }
+                    float currentSample = m_counter.NextValue();
 
-                // Track lifetime maximum value
-                if (currentSample > m_lifetimeMaximum)
-                    m_lifetimeMaximum = currentSample;
+                    // Update counter sample set
+                    m_samples.Add(currentSample);
 
-                // Track lifetime average components
-                checked
-                {
-                    try
+                    // Maintain counter samples rolling window size
+                    while (m_samples.Count > m_samplingWindow)
                     {
-                        m_lifetimeSampleCount++;
-                        m_lifetimeTotal += (decimal)currentSample;
+                        m_samples.RemoveAt(0);
                     }
-                    catch (OverflowException)
+
+                    // Track lifetime maximum value
+                    if (currentSample > m_lifetimeMaximum)
+                        m_lifetimeMaximum = currentSample;
+
+                    // Track lifetime average components
+                    checked
                     {
-                        // If we overflow lifetime total, we restart total with current sample
-                        m_lifetimeSampleCount = 1;
-                        m_lifetimeTotal = (decimal)currentSample;
+                        try
+                        {
+                            m_lifetimeSampleCount++;
+                            m_lifetimeTotal += (decimal)currentSample;
+                        }
+                        catch (OverflowException)
+                        {
+                            // If we overflow lifetime total, we restart total with current sample
+                            m_lifetimeSampleCount = 1;
+                            m_lifetimeTotal = (decimal)currentSample;
+                        }
                     }
                 }
+            }
+            catch
+            {
+                // Not failing if counters cannot be sampled
             }
         }
 

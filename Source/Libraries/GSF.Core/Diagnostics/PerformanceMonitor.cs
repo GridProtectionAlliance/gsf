@@ -194,9 +194,6 @@ namespace GSF.Diagnostics
                     AddCounter("IPv6", "Datagrams Sent/sec", "", "IPv6 Outgoing Rate", "Datagrams / sec", 1);
                     AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
                 }
-
-                // Perform initial sample for counters since in case timer interval is large
-                SampleCounters();
             }
 
             m_samplingTimer = new Timer(samplingInterval);
@@ -729,7 +726,7 @@ namespace GSF.Diagnostics
                         workerThreads.RawValue = maximumWorkerThreads - availableWorkerThreads;
                         completionPortThreads.RawValue = maximumCompletionPortThreads - availableCompletionPortThreads;
                     }
-                }                
+                }
 
                 foreach (PerformanceCounter counter in m_counters)
                 {
