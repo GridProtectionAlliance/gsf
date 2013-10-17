@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+
+<MasterConfiguration xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <client>
+
+    <address>127.0.0.1</address>
+
+    <port>0</port>
+
+    <retryMs>0</retryMs>
+
+    <level>LEV_EVENT</level>
+
+  </client>
+
+  <master>
+
+    <master>
+
+      <fragSize>2048</fragSize>
+
+      <allowTimeSync>true</allowTimeSync>
+
+      <doUnsolOnStartup>false</doUnsolOnStartup>
+
+      <enableUnsol>true</enableUnsol>
+
+      <unsolClassMask>14</unsolClassMask>
+
+      <integrityRate>5000</integrityRate>
+
+      <taskRetryRate>5000</taskRetryRate>
+
+      <scans />
+
+    </master>
+
+    <app>
+
+      <rspTimeout>5000</rspTimeout>
+
+      <numRetry>0</numRetry>
+
+      <fragSize>2048</fragSize>
+
+    </app>
+
+    <link>
+
+      <isMaster>true</isMaster>
+
+      <useConfirms>false</useConfirms>
+
+      <numRetry>0</numRetry>
+
+      <localAddr>1</localAddr>
+
+      <remoteAddr>1024</remoteAddr>
+
+      <timeout>1000</timeout>
+
+    </link>
+
+  </master>
+
+</MasterConfiguration>

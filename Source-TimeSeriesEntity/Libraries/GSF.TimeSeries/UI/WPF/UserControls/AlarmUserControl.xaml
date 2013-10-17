@@ -1,0 +1,151 @@
+﻿<UserControl x:Class="GSF.TimeSeries.UI.UserControls.AlarmUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:tsf="clr-namespace:GSF.TimeSeries.UI"
+             xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls"
+             xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical">
+
+        <StackPanel.Resources>
+            <CollectionViewSource Source="{Binding Path=SeverityList}" x:Key="SeverityList"/>
+            <CollectionViewSource Source="{Binding Path=OperationList}" x:Key="OperationList"/>
+        </StackPanel.Resources>
+
+        <tsf:TsfPopup x:Name="MeasurementPagerPopup" Placement="Center" Width="500" Height="500" Topmost="False" Visibility="Collapsed">
+            <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
+                <StackPanel Orientation="Vertical" Margin="5">
+                    <uc:MeasurementPagerUserControl x:Name="MeasurementPager" ItemsPerPage="18" Searchable="True">
+                        <uc:MeasurementPagerUserControl.DataGridColumns>
+                            <sdk:DataGridTextColumn Header="ID" Width="2*" Binding="{Binding ID}" IsReadOnly="True">
+                                <DataGridTextColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="ToolTip" Value="{Binding SignalReference}" />
+                                    </Style>
+                                </DataGridTextColumn.CellStyle>
+                            </sdk:DataGridTextColumn>
+                            <sdk:DataGridTextColumn Header="Description" Width="9*" Binding="{Binding Description}" IsReadOnly="True">
+                                <DataGridTextColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="ToolTip" Value="{Binding Description}" />
+                                    </Style>
+                                </DataGridTextColumn.CellStyle>
+                            </sdk:DataGridTextColumn>
+                        </uc:MeasurementPagerUserControl.DataGridColumns>
+                    </uc:MeasurementPagerUserControl>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Close" Width="Auto" Click="ButtonCancel_Click" Margin="5"/>
+                        <Button Content="Select" Width="Auto" Click="ButtonSelectMeasurement_Click" Margin="5"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </tsf:TsfPopup>
+
+        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5,5,0,5" DataContext="{tsfBinding:Column Path=CurrentItem}" DataContextChanged="GridDetailView_DataContextChanged">
+            <Grid.BindingGroup>
+                <BindingGroup Name="input"/>
+            </Grid.BindingGroup>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Tag Name" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="0" Grid.Column="1" CharacterCasing="Upper" Text="{tsfBinding:Column Path=TagName}" Width="{StaticResource ItemSize}" />
+
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
+              <TextBlock Text="Signal" Style="{StaticResource RequiredLabel}" />
+              <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Orientation="Horizontal">
+                <TextBlock Name="SignalLabel" Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorLevel=1, AncestorType=UserControl}, Path=DataContext.SelectedMeasurementLabel}" />
+                <Button Width="Auto" HorizontalAlignment="Left" Content=". . ." Click="MeasurementPagerButton_Click" />
+            </StackPanel>
+
+            <TextBlock Text="Operation" Grid.Row="2" Grid.Column="0" />
+            <ComboBox Name="OperationBox"  Grid.Row="2" Grid.Column="1" ItemsSource="{Binding Source={StaticResource OperationList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=Operation, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource OperationList}}" />
+
+            <TextBlock Text="Alarm Point" Grid.Row="2" Grid.Column="2" />
+            <TextBox Name="SetPointBox" Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=SetPoint}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=SetPointEnabled}" />
+
+            <TextBlock Text="Tolerance" Grid.Row="3" Grid.Column="2" />
+            <TextBox Name="ToleranceBox" Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=Tolerance}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=ToleranceEnabled}" />
+
+            <TextBlock Text="Delay" Grid.Row="4" Grid.Column="0" />
+            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                <TextBox Name="DelayBox" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=Delay}" Width="{StaticResource XSmallItemSize}" Margin="5,5,0,5" TextAlignment="Right" IsEnabled="{Binding Path=DelayEnabled}" />
+                <TextBlock Text="seconds" Margin="2,5,5,5" />
+            </StackPanel>
+
+            <TextBlock Name="HysteresisBox" Text="Hysteresis" Grid.Row="4" Grid.Column="2" />
+            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column UpdateSourceTrigger=LostFocus, Path=Hysteresis}" Width="{StaticResource XSmallItemSize}" TextAlignment="Right" IsEnabled="{Binding Path=HysteresisEnabled}" />
+
+            <TextBlock Text="Description" Grid.Row="5" Grid.Column="0" VerticalAlignment="Top" />
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" />
+
+            <TextBlock Text="Severity" Grid.Row="5" Grid.Column="2" />
+            <ComboBox Grid.Row="5" Grid.Column="3" ItemsSource="{Binding Source={StaticResource SeverityList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=Severity, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SeverityList}}"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="6" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" Width="35" />
+
+            <CheckBox Content="Enabled" Grid.Row="6" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+
+            <CheckBox Content="Create Associated Measurement" Grid.Row="7" Grid.Column="3" Margin="5,15,5,5" IsChecked="{tsfBinding:Column Path=CreateAssociatedMeasurement}" />
+        </Grid>
+
+        <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
+                SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
+
+        <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
+                      Sorting="DataGrid_Sorting" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTextColumn Header="TagName" Width="*" Binding="{tsfBinding:Column Path=TagName}" />
+                <sdk:DataGridTextColumn Header="Operation" Width="*" Binding="{tsfBinding:Column Path=OperationDescription}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Severity" Width="*" Binding="{tsfBinding:Column Path=SeverityName}" IsReadOnly="True" />
+                <sdk:DataGridTextColumn Header="Description" Width="2*" Binding="{tsfBinding:Column Path=Description}" />
+                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" />
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+
+        <uc:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+                                 FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
+                                 NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
+    </StackPanel>
+</UserControl>

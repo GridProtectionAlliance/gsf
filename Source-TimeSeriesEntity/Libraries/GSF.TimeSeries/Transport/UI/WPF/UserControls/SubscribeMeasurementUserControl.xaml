@@ -1,0 +1,102 @@
+﻿<UserControl x:Class="GSF.TimeSeries.Transport.UI.UserControls.SubscribeMeasurementUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls;assembly=GSF.TimeSeries.UI.WPF"
+             xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel x:Name="StackPanelSubscribeMeasurements" Orientation="Vertical">
+
+        <StackPanel.Resources>
+
+            <Style TargetType="ListBox">
+                <Setter Property="Width" Value="225" />
+                <Setter Property="SelectionMode" Value="Multiple"/>
+                <Setter Property="Height" Value="560" />
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+            </Style>
+
+            <Style TargetType="Grid">
+                <Setter Property="Margin" Value="5,0,5,0"/>
+            </Style>
+
+        </StackPanel.Resources>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+
+            <TextBlock Text="Select Device"/>
+            <ComboBox ItemsSource="{tsfBinding:Column Path=DataContext.DeviceList, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" 
+                      SelectedItem="{tsfBinding:Column Path=DataContext.CurrentDevice, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" DisplayMemberPath="Value" Width="250"/>            
+
+        </StackPanel>
+
+        <Grid>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Subscribed Measurements" HorizontalAlignment="Left" FontWeight="Bold" VerticalAlignment="Top"/>
+            <uc:MeasurementPagerUserControl Name="SubscribedMeasurementsPager" Grid.Column="0" Grid.Row="1" ItemsPerPage="25" FilterExpression="Subscribed &lt;&gt; 0" Selectable="True" Searchable="True" ShowPageSize="False" Width="400" Height="580" VerticalAlignment="Top" HorizontalAlignment="Right" CurrentPageChanged="SubscribedMeasurementsPager_CurrentPageChanged">
+                <uc:MeasurementPagerUserControl.DataGridColumns>
+                    <DataGridTemplateColumn Width="Auto">
+                        <sdk:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{StaticResource GreenRadialGradientBrush}" Visibility="{Binding Path=Selected, Converter={StaticResource ObjectToVisibilityConverter}}" ToolTip="Authorized"/>
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Width="60" Header="ID" Binding="{Binding ID}" ToolTipService.IsEnabled="True" >
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                                <Setter Property="ToolTip" Value="{Binding ID}" />
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Width="200" Header="Point Tag" Binding="{Binding Path=PointTag, Converter={StaticResource PointTagConverter}}" ToolTipService.IsEnabled="True" >
+                        <DataGridTextColumn.CellStyle>
+                            <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                                <Setter Property="ToolTip" Value="{Binding PointTag}" />
+                            </Style>
+                        </DataGridTextColumn.CellStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Width="Auto" Header="Description" Binding="{Binding Description}" />
+                </uc:MeasurementPagerUserControl.DataGridColumns>
+            </uc:MeasurementPagerUserControl>
+
+            <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Content="&gt;&gt;" ToolTip="Unsubscribe Measurements" Width="Auto" Margin="2" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}, Path=DataContext.CanSave}" Click="RemoveSubscribedMeasurementsButton_Click"/>
+                <Button Content="&lt;&lt;" ToolTip="Subscribe Measurements" Width="Auto" Margin="2" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}, Path=DataContext.CanSave}" Click="AddSubscribedMeasurementsButton_Click"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Grid.Row="0">
+                <TextBlock Grid.Column="2" Grid.Row="0" Text="Available Measurements" HorizontalAlignment="Left" FontWeight="Bold" VerticalAlignment="Top"/>
+                <CheckBox Name="DisplayInternalCheckBox" Content="Display internal" Margin="0" Click="DisplayInternalCheckBox_Click" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}, Path=DataContext.CanSave}" />
+                
+            </StackPanel>
+            <uc:MeasurementPagerUserControl Grid.Column="2" Grid.Row="1" Name="AvailableMeasurementsPager" ItemsPerPage="25" FilterExpression="Internal = 0" Selectable="True" Searchable="True" ShowPageSize="False" Width="400" Height="580" VerticalAlignment="Top" HorizontalAlignment="Right" />
+        </Grid>
+
+    </StackPanel>
+
+</UserControl>

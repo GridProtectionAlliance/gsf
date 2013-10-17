@@ -1,0 +1,267 @@
+﻿<UserControl x:Class="GSF.TimeSeries.Transport.UI.UserControls.SubscriberMeasurementUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="675" d:DesignWidth="850"
+             xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls;assembly=GSF.TimeSeries.UI.WPF"
+             xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
+             xmlns:ui="clr-namespace:GSF.TimeSeries.UI;assembly=GSF.TimeSeries.UI.WPF"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel x:Name="StackPanelManageSubscriberMeasurements" Orientation="Vertical">
+        <StackPanel.Resources>
+            <Style TargetType="ListBox">
+                <Setter Property="Width" Value="225" />
+                <Setter Property="SelectionMode" Value="Multiple"/>
+                <Setter Property="Height" Value="160" />
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+            </Style>
+
+            <Style TargetType="Grid">
+                <Setter Property="Margin" Value="5,0,5,0"/>
+            </Style>
+        </StackPanel.Resources>
+
+        <Grid DataContext="{tsfBinding:Column Path=CurrentItem}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Subscriber"/>
+                    <ComboBox DataContext="{Binding ElementName=StackPanelManageSubscriberMeasurements, Path=DataContext}" ItemsSource="{tsfBinding:Column Path=ItemsSource}" SelectedItem="{tsfBinding:Column Path=CurrentItem}" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}" Width="250">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{tsfBinding:Column Path=Name}" TextAlignment="Left" Padding="1" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <TabControl Margin="0,30,0,0">
+                    <TabItem Name="AllowedTab" Header="Allowed">
+                        <StackPanel>
+                            <TextBlock Text="Allowed Measurements" HorizontalAlignment="Left" FontWeight="Bold"/>
+                            <uc:MeasurementPagerUserControl Name="AllowedMeasurementsPager" ItemsPerPage="12" Selectable="True" Searchable="True" ShowPageSize="False" Width="395" Height="360" VerticalAlignment="Top" Margin="0" />
+                        </StackPanel>
+                    </TabItem>
+                    <TabItem Name="DeniedTab" Header="Denied">
+                        <StackPanel>
+                            <TextBlock Text="Denied Measurements" HorizontalAlignment="Left" FontWeight="Bold"/>
+                            <uc:MeasurementPagerUserControl Name="DeniedMeasurementsPager" ItemsPerPage="12" Selectable="True" Searchable="True" ShowPageSize="False" Width="395" Height="360" VerticalAlignment="Top" Margin="0" />
+                        </StackPanel>
+                    </TabItem>
+                </TabControl>
+            </StackPanel>
+
+            <StackPanel Orientation="Vertical" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Content="&gt;&gt;" ToolTip="Remove Measurements" Width="Auto" Margin="2" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}, Path=DataContext.CanSave}" Click="RemoveMeasurementsButton_Click"/>
+                <Button Content="&lt;&lt;" ToolTip="Add Measurements" Width="Auto" Margin="2" IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}, Path=DataContext.CanSave}" Click="AddMeasurementsButton_Click"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="3">
+                <Grid>
+                    <TextBlock Text="Access Control Filter:" Margin="5,5,5,0" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
+                    <Button Content="Access Control Precedence" Width="Auto" HorizontalAlignment="Right" VerticalAlignment="Center" Template="{StaticResource HyperlinkStyleButtonTemplate}" Click="OpenPopupButton_Click" />
+                </Grid>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Width="{StaticResource XXLargeItemSize}" Height="{StaticResource XXSmallItemSize}" Text="{Binding Mode=TwoWay, Path=AccessControlFilter}" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" />
+                    <Button Height="30" Margin="5" Content="Save" VerticalAlignment="Top" Command="{Binding ElementName=StackPanelManageSubscriberMeasurements, Path=DataContext.SaveCommand}" />
+                </StackPanel>
+                
+                <TextBlock Text="Available Measurements" HorizontalAlignment="Left" FontWeight="Bold"/>
+                <uc:MeasurementPagerUserControl Name="AvailableMeasurementsPager" ItemsPerPage="12" Selectable="True" Searchable="True" ShowPageSize="False" Width="395" Height="360" VerticalAlignment="Top" Margin="0" CurrentPageChanged="AvailableMeasurementsPager_CurrentPageChanged">
+                    <uc:MeasurementPagerUserControl.DataGridColumns>
+                        <DataGridTemplateColumn Header="" Width="Auto">
+                            <DataGridTemplateColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource DataGridColumnHeaderStyle}">
+                                    <Style.Setters>
+                                        <EventSetter Event="Click" Handler="AuthorizedColumn_Click" />
+                                    </Style.Setters>
+                                </Style>
+                            </DataGridTemplateColumn.HeaderStyle>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Canvas>
+                                        <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{StaticResource GreenRadialGradientBrush}" Visibility="{Binding Path=Selected, Converter={StaticResource ObjectToVisibilityConverter}}" ToolTip="Authorized" Canvas.ZIndex="1" />
+                                        <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{StaticResource RedRadialGradientBrush}" ToolTip="Unauthorized" Canvas.ZIndex="0" />
+                                    </Canvas>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Width="60" Header="ID" Binding="{Binding ID}" ToolTipService.IsEnabled="True" >
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                                    <Setter Property="ToolTip" Value="{Binding ID}" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Width="200" Header="Point Tag" Binding="{Binding Path=PointTag, Converter={StaticResource PointTagConverter}}" ToolTipService.IsEnabled="True" >
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                                    <Setter Property="ToolTip" Value="{Binding PointTag}" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Width="Auto" Header="Description" Binding="{Binding Description}" />
+                    </uc:MeasurementPagerUserControl.DataGridColumns>
+                </uc:MeasurementPagerUserControl>
+            </StackPanel>
+        </Grid>
+
+        <Grid Margin="0,0,0,10" DataContext="{tsfBinding:Column Path=CurrentItem}" HorizontalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Allowed Measurement Groups" HorizontalAlignment="Left" FontWeight="Bold"/>
+            <TextBlock Grid.Column="2" Grid.Row="0" Text="Available Measurement Groups" HorizontalAlignment="Left" FontWeight="Bold"/>
+            <TextBlock Grid.Column="4" Grid.Row="0" Text="Denied Measurement Groups" HorizontalAlignment="Left" FontWeight="Bold"/>
+
+            <ListBox x:Name="ListBoxAllowedGroups" Height="125" ItemsSource="{tsfBinding:Column Path=AllowedMeasurementGroups}" Grid.Row="1" Grid.Column="0" SelectionMode="Extended">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Margin="0" Padding="0" HorizontalAlignment="Left" TextAlignment="Left" Text="{Binding Value}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            
+            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Content="&gt;&gt;" Command="{Binding Path=DataContext.RemoveAllowedMeasurementGroupCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" 
+                       CommandParameter="{Binding ElementName=ListBoxAllowedGroups, Path=SelectedItems}" ToolTip="Remove Allowed Measurement Groups" Width="Auto" Margin="2"/>
+                <Button Content="&lt;&lt;" Command="{Binding Path=DataContext.AddAllowedMeasurementGroupCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" 
+                       CommandParameter="{Binding ElementName=ListBoxAvailableGroups, Path=SelectedItems}" ToolTip="Add Allowed Measurement Groups" Width="Auto" Margin="2"/>
+            </StackPanel>
+
+            <ListBox x:Name="ListBoxAvailableGroups" Height="125" ItemsSource="{tsfBinding:Column Path=AvailableMeasurementGroups}" Grid.Row="1" Grid.Column="2" SelectionMode="Extended">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Margin="0" Padding="0" HorizontalAlignment="Left" TextAlignment="Left" Text="{Binding Value}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            
+            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="3" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Content="&gt;&gt;" Command="{Binding Path=DataContext.AddDeniedMeasurementGroupCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" 
+                       CommandParameter="{Binding ElementName=ListBoxAvailableGroups, Path=SelectedItems}" ToolTip="Add Denied Measurement Groups" Width="Auto" Margin="2"/>
+                <Button Content="&lt;&lt;" Command="{Binding Path=DataContext.RemoveDeniedMeasurementGroupCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" 
+                       CommandParameter="{Binding ElementName=ListBoxDeniedGroups, Path=SelectedItems}" ToolTip="Remove Denied Measurement Groups" Width="Auto" Margin="2"/>
+            </StackPanel>
+
+            <ListBox x:Name="ListBoxDeniedGroups" Height="125" ItemsSource="{tsfBinding:Column Path=DeniedMeasurementGroups}" Grid.Row="1" Grid.Column="4" SelectionMode="Extended">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Margin="0" Padding="0" HorizontalAlignment="Left" TextAlignment="Left" Text="{Binding Value}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+        <ui:TsfPopup Name="AccessControlPrecedencePopup" Placement="Center" Topmost="False" IsOpen="False">
+            <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
+                <StackPanel>
+                    <Button Width="Auto" HorizontalAlignment="Right" Click="ClosePopupButton_Click">
+                        <Button.Template>
+                            <ControlTemplate>
+                                <TextBlock Margin="0" Padding="5" HorizontalAlignment="Center" TextAlignment="Center" FontFamily="Global Sans Serif" FontSize="14" Text="X" Cursor="Hand" />
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <Grid Margin="15">
+                        <Grid.Resources>
+                            <Style TargetType="TextBlock">
+                                <Style.Setters>
+                                    <Setter Property="Margin" Value="5" />
+                                    <Setter Property="HorizontalAlignment" Value="Center" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="TextAlignment" Value="Center" />
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                </Style.Setters>
+                            </Style>
+                        </Grid.Resources>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="300" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" FontWeight="Bold" Text="Precedence" />
+                        <TextBlock Grid.Row="0" Grid.Column="2" FontWeight="Bold" Text="Access Control Type" />
+                        <TextBlock Grid.Row="0" Grid.Column="3" FontWeight="Bold" Text="Description" />
+                        <TextBlock Grid.Row="0" Grid.Column="4" FontWeight="Bold" Text="Example" />
+
+                        <Grid Grid.Row="1" Grid.Column="0" Grid.RowSpan="4" Margin="0,15">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Center" />
+                            <Path Grid.Row="1" Grid.Column="0" Data="M0,0 L5,10 L10,0Z" Stroke="Black" Fill="Black" StrokeThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <TextBlock Grid.Row="1" Grid.Column="1">1</TextBlock>
+                        <TextBlock Grid.Row="2" Grid.Column="1">2</TextBlock>
+                        <TextBlock Grid.Row="3" Grid.Column="1">3</TextBlock>
+                        <TextBlock Grid.Row="4" Grid.Column="1">4</TextBlock>
+
+                        <TextBlock Grid.Row="1" Grid.Column="2">Explicit</TextBlock>
+                        <TextBlock Grid.Row="2" Grid.Column="2">Group Explicit</TextBlock>
+                        <TextBlock Grid.Row="3" Grid.Column="2">Filter Implicit</TextBlock>
+                        <TextBlock Grid.Row="4" Grid.Column="2">Group Implicit</TextBlock>
+
+                        <TextBlock Grid.Row="1" Grid.Column="3">Rights are applied directly to signals via measurement pick lists.</TextBlock>
+                        <TextBlock Grid.Row="2" Grid.Column="3">Rights are applied by allowing or denying a group of measurements which were explicitly added to the group via measurement pick lists.</TextBlock>
+                        <TextBlock Grid.Row="3" Grid.Column="3">Rights are applied using an access control filter applied directly to the subscriber.</TextBlock>
+                        <TextBlock Grid.Row="4" Grid.Column="3">Rights are applied by allowing or denying a group of measurements which were implicitly added to the group via a filter expression.</TextBlock>
+
+                        <TextBlock Grid.Row="3" Grid.Column="4">
+                            ALLOW WHERE SignalType = 'FREQ';<LineBreak />
+                            ALLOW WHERE SignalType = 'DFDT';<LineBreak />
+                            DENY WHERE Company = 'GPA'
+                        </TextBlock>
+                        <TextBlock Grid.Row="4" Grid.Column="4">
+                            FILTER ActiveMeasurements<LineBreak />
+                            WHERE SignalType = 'FREQ'
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </ui:TsfPopup>
+    </StackPanel>
+    
+</UserControl>

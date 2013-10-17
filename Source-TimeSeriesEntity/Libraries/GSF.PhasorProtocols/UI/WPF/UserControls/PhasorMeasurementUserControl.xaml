@@ -1,0 +1,224 @@
+﻿<UserControl x:Class="GSF.PhasorProtocols.UI.UserControls.PhasorMeasurementUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="650" d:DesignWidth="850"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls;assembly=GSF.TimeSeries.UI.WPF"
+             xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
+             xmlns:tsf="clr-namespace:GSF.TimeSeries.UI;assembly=GSF.TimeSeries.UI.WPF"
+             Background="Transparent" Loaded="PhasorMeasurementUserControl_Loaded" Unloaded="PhasorMeasurementUserControl_Unloaded" KeyDown="PhasorMeasurementUserControl_KeyDown">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical">
+        <StackPanel.Resources>
+            <CollectionViewSource Source="{Binding Path=HistorianLookupList}" x:Key="HistorianLookupList"/>
+            <CollectionViewSource Source="{Binding Path=DeviceLookupList}" x:Key="DeviceLookupList"/>
+            <CollectionViewSource Source="{Binding Path=SignalTypeLookupList}" x:Key="SignalTypeLookupList"/>
+        </StackPanel.Resources>
+
+        <!--<Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}">
+            <Grid.BindingGroup >
+                <BindingGroup Name="input"/>
+            </Grid.BindingGroup>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Historian"/>
+            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Source={StaticResource HistorianLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=HistorianID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource HistorianLookupList}}"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Device"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Signal Type"/>
+            <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Source={StaticResource SignalTypeLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=SignalTypeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SignalTypeLookupList}}"/>
+            <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Point Tag" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=PointTag}" CharacterCasing="Upper"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Alternate Tag"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=AlternateTag}"/>
+            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Signal Reference" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="2" Grid.Column="3" Text="{tsfBinding:Column Path=SignalReference}" CharacterCasing="Upper"/>
+
+            <TextBlock Text="Phasor Source" Grid.Row="3" Grid.Column="0"/>
+            <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding Source={StaticResource PhasorLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=PhasorSourceIndex, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource PhasorLookupList}}"/>
+            <TextBlock Grid.Row="3" Grid.Column="2" Text="Description"/>
+            <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Description}"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Adder" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Adder}"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Multiplier" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=Multiplier}"/>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1">
+                <CheckBox Content="Internal" IsChecked="{tsfBinding:Column Path=Internal}"/>
+                <CheckBox Content="Subscribed" IsChecked="{tsfBinding:Column Path=Subscribed}"/>
+            </StackPanel>
+            <CheckBox Content="Enabled" Grid.Row="5" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+        </Grid>-->
+
+        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}" DataContextChanged="GridDetailView_DataContextChanged">
+            <Grid.BindingGroup >
+                <BindingGroup Name="input"/>
+            </Grid.BindingGroup>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!--First Row-->
+            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Point Tag" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=PointTag}" CharacterCasing="Upper"/>
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Device"/>
+            <ComboBox Grid.Row="0" Grid.Column="3" ItemsSource="{Binding Source={StaticResource DeviceLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=DeviceID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource DeviceLookupList}}"/>
+
+            <!--Second Row-->
+            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock Text="Signal Reference" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=SignalReference}" CharacterCasing="Upper"/>
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="Measurement Type"/>
+            <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Source={StaticResource SignalTypeLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=SignalTypeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource SignalTypeLookupList}}"/>
+
+            <!--Third Row-->
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Alternate Tag"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=AlternateTag}"/>
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="Historian"/>
+            <ComboBox Grid.Row="2" Grid.Column="3" ItemsSource="{Binding Source={StaticResource HistorianLookupList}}" DisplayMemberPath="Value" SelectedItem="{tsfBinding:Column Path=HistorianID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource HistorianLookupList}}"/>
+
+            <!--Fourth Row-->
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Description"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Text="{tsfBinding:Column Path=Description}" Width="525"/>
+            
+
+            <!--Fifth Row-->
+            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Adder" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=Adder}" Width="{StaticResource SmallItemSize}"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2">
+                <CheckBox Content="Internal" IsChecked="{tsfBinding:Column Path=Internal}"/>
+                <CheckBox Content="Subscribed" IsChecked="{tsfBinding:Column Path=Subscribed}"/>
+                <CheckBox Content="Enabled" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+            </StackPanel>
+
+            <!--Sixth Row-->
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Multiplier" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=Multiplier}" Width="{StaticResource SmallItemSize}"/>
+            <TextBlock Grid.Row="5" Grid.Column="2" Text="Measurement GUID"/>
+            <TextBox Grid.Row="5" Grid.Column="3" Text="{Binding Path=SignalID}" TextAlignment="Left" IsReadOnly="True" BorderThickness="0" Margin="5,5,0,5" Width="{StaticResource XLargeItemSize}" />
+        </Grid>
+
+        <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
+                SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBox Name="SearchTextBox" Text="{Binding Mode=TwoWay, Path=SearchText, UpdateSourceTrigger=PropertyChanged}" Width="150"/>
+            <Button Content="Search" Command="{Binding Path=SearchCommand}" ToolTip="Search measurements" Margin="2" IsDefault="True"/>
+            <Button Content="Advanced..." Command="{Binding Path=AdvancedFindCommand}" ToolTip="Open advanced find dialog" Margin="2"/>
+        </StackPanel>
+        
+        <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
+                      Sorting="DataGrid_Sorting" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}" CellEditEnding="DataGrid_CellEditEnding">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTextColumn Header="ID" Width="*" Binding="{Binding Path=ID}" ToolTipService.ToolTip="{Binding Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" IsReadOnly="True"/>
+                <!--<sdk:DataGridTextColumn Header="Point Tag" Width="2*" Binding="{tsfBinding:Column Path=PointTag}" CellStyle="{StaticResource CenterAlignCellStyle}" />-->
+                <sdk:DataGridTextColumn Header="Description" Width="4*" Binding="{tsfBinding:Column Path=Description}" />
+                <sdk:DataGridCheckBoxColumn Header="Internal" Width="*" Binding="{tsfBinding:Column Path=Internal}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
+                <sdk:DataGridCheckBoxColumn Header="Subscribed" Width="*" Binding="{tsfBinding:Column Path=Subscribed}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
+                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+
+        <uc:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+                                 FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
+                                 NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
+
+        <tsf:TsfPopup x:Name="AdvancedFindPopup" Placement="Center" Width="500" Height="350" Topmost="False" Visibility="Collapsed" IsOpen="{Binding AdvancedFindIsOpen}">
+            <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <uc:AdvancedSearchUserControl Grid.Row="0" x:Name="AdvancedSearch" SearchText="{Binding Mode=TwoWay, Path=SearchText}" IgnoreCase="{Binding Mode=TwoWay, Path=IgnoreCase}" UseWildcards="{Binding Mode=TwoWay, Path=UseWildcards}" UseRegex="{Binding Mode=TwoWay, Path=UseRegex}">
+                        <uc:AdvancedSearchUserControl.Categories>
+                            <uc:AdvancedSearchCategory Name="CompanyAcronym" />
+                            <uc:AdvancedSearchCategory Name="CompanyName" />
+                            <uc:AdvancedSearchCategory Name="Description" />
+                            <uc:AdvancedSearchCategory Name="DeviceAcronym" />
+                            <uc:AdvancedSearchCategory Name="HistorianAcronym" />
+                            <uc:AdvancedSearchCategory Name="ID" />
+                            <uc:AdvancedSearchCategory Name="PhasorLabel" />
+                            <uc:AdvancedSearchCategory Name="PointTag" />
+                            <uc:AdvancedSearchCategory Name="SignalAcronym" />
+                            <uc:AdvancedSearchCategory Name="SignalID" />
+                            <uc:AdvancedSearchCategory Name="SignalName" />
+                            <uc:AdvancedSearchCategory Name="SignalReference" />
+                            <uc:AdvancedSearchCategory Name="SignalSuffix" />
+                        </uc:AdvancedSearchUserControl.Categories>
+                    </uc:AdvancedSearchUserControl>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Search" Command="{Binding SearchCommand}" Width="Auto" Margin="5" IsDefault="True" />
+                        <Button Content="Cancel" Command="{Binding CloseAdvancedFindCommand}" Width="Auto" Margin="5" IsCancel="True" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </tsf:TsfPopup>
+    </StackPanel>
+</UserControl>

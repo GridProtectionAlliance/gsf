@@ -1,0 +1,153 @@
+﻿<UserControl x:Class="GSF.PhasorProtocols.UI.UserControls.CalculatedMeasurementUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls;assembly=GSF.TimeSeries.UI.WPF"
+             xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical">
+        <StackPanel.Resources>
+            <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
+            <CollectionViewSource Source="{Binding Path=DownsamplingMethodLookupList}" x:Key="DownsamplingMethodLookupList"/>
+        </StackPanel.Resources>
+
+        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}" DataContextChanged="GridDetailView_DataContextChanged">
+            <Grid.BindingGroup >
+                <BindingGroup Name="input"/>
+            </Grid.BindingGroup>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Name" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=Name}" MaxLength="50"/>
+            
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Acronym" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=Acronym}" CharacterCasing="Upper" MaxLength="100" />
+
+            <TextBlock Text="Connection String" Grid.Row="1" Grid.Column="0" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=ConnectionString}" />
+
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Assembly Name" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=AssemblyName}"/>            
+            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Type Name" Grid.Row="2" Grid.Column="0" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=TypeName}" />
+
+            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Text="{tsfBinding:Column Path=LoadOrder}" Grid.Row="2" Grid.Column="3" Width="35" />
+
+            <TextBlock Text="Config Section" Grid.Row="3" Grid.Column="0"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=ConfigSection}"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Min Measurements" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=MinimumMeasurementsToUse}" Width="{StaticResource XXSmallItemSize}" />
+            <TextBlock Text="Input Measurements" Grid.Row="4" Grid.Column="0" VerticalAlignment="Top" />
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=InputMeasurements}" Height="50" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+            <TextBlock Text="Output Measurements" Grid.Row="4" Grid.Column="2" VerticalAlignment="Top" />
+            <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=OutputMeasurements}" Height="50" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Lag Time" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=LagTime}" Width="{StaticResource XSmallItemSize}" />
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="2" HorizontalAlignment="Right" Height="32" VerticalAlignment="Top">
+                <TextBlock Text="Lead Time" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
+            </StackPanel>
+            <TextBox Grid.Row="5" Grid.Column="3" Text="{tsfBinding:Column Path=LeadTime}" Width="{StaticResource XSmallItemSize}"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Frames Per Second" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Text="{tsfBinding:Column Path=FramesPerSecond}" Grid.Row="6" Grid.Column="1" Width="35" />
+            <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Time Resolution" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBox Text="{tsfBinding:Column Path=TimeResolution}" Grid.Row="6" Grid.Column="3" Width="{StaticResource XSmallItemSize}" />
+            <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Downsampling Method" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <ComboBox Grid.Row="7" Grid.Column="1"  ItemsSource="{Binding Source={StaticResource DownsamplingMethodLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=DownsamplingMethod, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource DownsamplingMethodLookupList}}"/>
+            
+            <CheckBox Content="Use Local Clock As Real-Time" Grid.Row="8" Grid.Column="1" IsChecked="{tsfBinding:Column Path=UseLocalClockAsRealTime}"/>
+            <CheckBox Content="Allow Sorts By Arrival" Grid.Row="8" Grid.Column="3" IsChecked="{tsfBinding:Column Path=AllowSortsByArrival}"/>
+            <CheckBox Content="Ignore Bad Timestamps" Grid.Row="9" Grid.Column="1" IsChecked="{tsfBinding:Column Path=IgnoreBadTimestamps}"/>
+            <CheckBox Content="Allow Preemeptive Publishing" Grid.Row="9" Grid.Column="3" IsChecked="{tsfBinding:Column Path=AllowPreemptivePublishing}"/>
+            <CheckBox Content="Perform Timestamp Reasonability Check" Grid.Row="10" Grid.Column="1" IsChecked="{tsfBinding:Column Path=PerformTimestampReasonabilityCheck}"/>
+            <CheckBox Content="Enabled" Grid.Row="10" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>
+           
+            <TextBlock Text="Runtime ID" Grid.Row="11" Grid.Column="0" />
+            <StackPanel Orientation="Horizontal" Grid.Row="11" Grid.Column="1">
+                <TextBlock Text="{tsfBinding:Column Path=DataContext.RuntimeID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
+                <Button Content="Initialize" Command="{Binding Path=DataContext.InitializeCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" 
+                        IsEnabled="{Binding Path=DataContext.IsNewRecord, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}, Converter={StaticResource NotConverter}}"/>
+            </StackPanel>
+        </Grid>
+
+        <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
+                SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
+
+        <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown"
+                      Sorting="DataGrid_Sorting" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTextColumn Header="Acronym" Width="*" Binding="{tsfBinding:Column Path=Acronym}"/>
+                <sdk:DataGridTextColumn Header="Assembly Name" Width="*" Binding="{tsfBinding:Column Path=AssemblyName}" />
+                <sdk:DataGridTextColumn Header="Type Name" Width="2*" Binding="{tsfBinding:Column Path=TypeName}" />
+                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" />
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+
+        <uc:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+                                 FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
+                                 NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
+    </StackPanel>
+    
+</UserControl>
