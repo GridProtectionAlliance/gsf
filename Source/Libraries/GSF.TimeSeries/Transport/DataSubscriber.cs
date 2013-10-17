@@ -2791,7 +2791,7 @@ namespace GSF.TimeSeries.Transport
                                 if (!row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
                                 {
                                     if (accessIDFieldExists)
-                                        accessID = (int)row.Field<long>("AccessID");
+                                        accessID = row.ConvertField<int>("AccessID");
 
                                     // Get longitude and latitude values if they are defined
                                     longitude = 0M;
@@ -2881,7 +2881,7 @@ namespace GSF.TimeSeries.Transport
 
                                     // Remove any devices in the database that are associated with the parent device and do not exist in the meta-data
                                     if (uniqueIDs.BinarySearch(uniqueID) < 0)
-                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, uniqueID);                                    
+                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, uniqueID);
                                 }
                                 UpdateSyncProgress();
                             }
