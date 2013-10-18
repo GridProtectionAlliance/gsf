@@ -58,7 +58,7 @@ namespace GSF.PhasorProtocols
     /// For example, a <see cref="IDataCell"/> could be defined as a PMU within a <see cref="IDataFrame"/> that contains
     /// multiple PMU's coming from a PDC.
     /// </remarks>
-    public interface IDataCell : IChannelCell, IMeasurement
+    public interface IDataCell : IChannelCell
     {
         /// <summary>
         /// Gets reference to parent <see cref="IDataFrame"/> of this <see cref="IDataCell"/>.
