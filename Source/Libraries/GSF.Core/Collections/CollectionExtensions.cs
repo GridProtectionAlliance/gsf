@@ -133,7 +133,14 @@ namespace GSF.Collections
         public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueFactory)
         {
             TValue value;
-            return dictionary.TryGetValue(key, out value) ? value : valueFactory(key);
+
+            if (!dictionary.TryGetValue(key, out value))
+            {
+                value = valueFactory(key);
+                dictionary.Add(key, value);
+            }
+
+            return value;
         }
 
         /// <summary>
@@ -148,7 +155,14 @@ namespace GSF.Collections
         public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
         {
             TValue tryGetValue;
-            return dictionary.TryGetValue(key, out tryGetValue) ? tryGetValue : value;
+
+            if (!dictionary.TryGetValue(key, out tryGetValue))
+            {
+                tryGetValue = value;
+                dictionary.Add(key, tryGetValue);
+            }
+
+            return tryGetValue;
         }
 
         /// <summary>
