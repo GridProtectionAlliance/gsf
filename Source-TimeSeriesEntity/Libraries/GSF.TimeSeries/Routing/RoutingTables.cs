@@ -32,8 +32,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using GSF.Collections;
+using GSF.TimeSeries.Adapters;
 
-namespace GSF.TimeSeries.Adapters
+namespace GSF.TimeSeries.Routing
 {
     /// <summary>
     /// Represents the routing tables for the Iaon adapters.
@@ -41,6 +42,15 @@ namespace GSF.TimeSeries.Adapters
     public class RoutingTables : IDisposable
     {
         #region [ Members ]
+
+        // Nested Types
+        private class GlobalCache
+        {
+            public Dictionary<Guid, ICollection<IAdapter>> DestinationsLookup;
+            public Dictionary<IAdapter, ICollection<SignalRoute>> AdapterRoutesLookup;
+            public List<IAdapter> BroadcastAdapters;
+            public int CacheVersion;
+        }
 
         // Events
 
@@ -64,9 +74,8 @@ namespace GSF.TimeSeries.Adapters
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
-        private Dictionary<Guid, ISet<IAdapter>> m_measurementRoutes;
-        private List<IAdapter> m_broadcastRoutes;
-        private ReaderWriterLockSlim m_adapterRoutesCacheLock;
+
+        private volatile GlobalCache m_globalCache;
         private AutoResetEvent m_calculationComplete;
         private readonly object m_queuedCalculationPending;
 
@@ -81,7 +90,6 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public RoutingTables()
         {
-            m_adapterRoutesCacheLock = new ReaderWriterLockSlim();
             m_calculationComplete = new AutoResetEvent(true);
             m_queuedCalculationPending = new object();
         }
@@ -168,16 +176,10 @@ namespace GSF.TimeSeries.Adapters
                 {
                     if (disposing)
                     {
-                        m_measurementRoutes = null;
-                        m_broadcastRoutes = null;
+                        m_globalCache = null;
                         m_inputAdapters = null;
                         m_actionAdapters = null;
                         m_outputAdapters = null;
-
-                        if ((object)m_adapterRoutesCacheLock != null)
-                            m_adapterRoutesCacheLock.Dispose();
-
-                        m_adapterRoutesCacheLock = null;
 
                         if ((object)m_calculationComplete != null)
                         {
@@ -294,87 +296,87 @@ namespace GSF.TimeSeries.Adapters
             try
             {
                 // Pre-calculate internal routes to improve performance
-                Dictionary<Guid, ISet<IAdapter>> measurementRoutes = new Dictionary<Guid, ISet<IAdapter>>();
-                List<IAdapter> broadcastRoutes = new List<IAdapter>();
-                ISet<IAdapter> adapters;
+                IEnumerable<IAdapter> adapterCollection;
+
+                Dictionary<Guid, ICollection<IAdapter>> destinationsLookup = new Dictionary<Guid, ICollection<IAdapter>>();
+                Dictionary<IAdapter, ICollection<SignalRoute>> routesLookup = new Dictionary<IAdapter, ICollection<SignalRoute>>();
+                Dictionary<Type, ICollection<SignalRoute>> routesLookupTemplates = new Dictionary<Type, ICollection<SignalRoute>>();
+                List<IAdapter> broadcastAdapters = new List<IAdapter>();
+
+                Func<Type, ICollection<SignalRoute>> templateFactory;
+                ICollection<IAdapter> destinations;
+                ICollection<SignalRoute> routes;
 
                 MeasurementKey[] measurementKeys;
+                Type adapterType;
 
-                if ((object)actionAdapterCollection != null)
+                // Factory method for creating templates for routes that can be looked up by adapter
+                // type so that reflection only needs to be performed once per adapter type
+                // TODO: Use an attribute or something to allow adapter writers to define what their processing functions should be
+                templateFactory = type => type.GetMethods()
+                    .Where(method => method.Name == "QueueEntriesForProcessing")
+                    .Select(method => new SignalRoute(method))
+                    .Where(route => (object)route.ListType != null)
+                    .ToList();
+
+                // Create a collection containing the action and output adapters together
+                if ((object)actionAdapterCollection != null && (object)outputAdapterCollection != null)
+                    adapterCollection = actionAdapterCollection.AsEnumerable<IAdapter>().Concat(outputAdapterCollection);
+                else if ((object)actionAdapterCollection != null)
+                    adapterCollection = actionAdapterCollection;
+                else if ((object)outputAdapterCollection != null)
+                    adapterCollection = outputAdapterCollection;
+                else
+                    adapterCollection = Enumerable.Empty<IAdapter>();
+
+                // Calculate possible routes for each action and output adapter
+                foreach (IAdapter adapter in adapterCollection)
                 {
-                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                    // Make sure adapter is initialized before calculating route
+                    if (adapter.Initialized)
                     {
-                        // Make sure adapter is initialized before calculating route
-                        if (actionAdapter.Initialized)
+                        measurementKeys = adapter.InputMeasurementKeys;
+                        adapterType = adapter.GetType();
+
+                        if ((object)measurementKeys != null)
                         {
-                            measurementKeys = actionAdapter.InputMeasurementKeys;
-
-                            if ((object)measurementKeys != null)
+                            // Add this adapter as a destination to each
+                            // measurement defined in its input measurement keys
+                            foreach (MeasurementKey key in measurementKeys)
                             {
-                                foreach (MeasurementKey key in measurementKeys)
-                                {
-                                    if (!measurementRoutes.TryGetValue(key.SignalID, out adapters))
-                                    {
-                                        adapters = new HashSet<IAdapter>();
-                                        measurementRoutes.Add(key.SignalID, adapters);
-                                    }
-
-                                    adapters.Add(actionAdapter);
-                                }
-                            }
-                            else
-                            {
-                                broadcastRoutes.Add(actionAdapter);
+                                destinations = destinationsLookup.GetOrAdd(key.SignalID, signalID => new List<IAdapter>());
+                                destinations.Add(adapter);
                             }
                         }
+                        else
+                        {
+                            // InputMeasurementKeys is null, therefore this adapter
+                            // requests a broadcast of all measurements in the system
+                            broadcastAdapters.Add(adapter);
+                        }
+
+                        // Determine which methods defined on the adapter type qualify as routes and store those in a lookup table
+                        routes = routesLookupTemplates.GetOrAdd(adapterType, templateFactory)
+                            .Select(route => new SignalRoute(route, adapter))
+                            .ToList();
+
+                        routesLookup.Add(adapter, routes);
                     }
                 }
 
-                if ((object)outputAdapterCollection != null)
+                // Add the broadcast adapters to all existing routes since
+                // they will be receiving all measurements in the system
+                foreach (ICollection<IAdapter> signalDestinations in destinationsLookup.Values)
+                    broadcastAdapters.ForEach(adapter => signalDestinations.Add(adapter));
+
+                // Update global lookup tables for routing
+                m_globalCache = new GlobalCache()
                 {
-                    foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
-                    {
-                        // Make sure adapter is initialized before calculating route
-                        if (outputAdapter.Initialized)
-                        {
-                            measurementKeys = outputAdapter.InputMeasurementKeys;
-
-                            if ((object)measurementKeys != null)
-                            {
-                                foreach (MeasurementKey key in measurementKeys)
-                                {
-                                    if (!measurementRoutes.TryGetValue(key.SignalID, out adapters))
-                                    {
-                                        adapters = new HashSet<IAdapter>();
-                                        measurementRoutes.Add(key.SignalID, adapters);
-                                    }
-
-                                    adapters.Add(outputAdapter);
-                                }
-                            }
-                            else
-                            {
-                                broadcastRoutes.Add(outputAdapter);
-                            }
-                        }
-                    }
-                }
-
-                foreach (HashSet<IAdapter> route in measurementRoutes.Values)
-                    broadcastRoutes.ForEach(adapter => route.Add(adapter));
-
-                // Synchronously update adapter routing cache
-                m_adapterRoutesCacheLock.EnterWriteLock();
-
-                try
-                {
-                    m_measurementRoutes = measurementRoutes;
-                    m_broadcastRoutes = broadcastRoutes;
-                }
-                finally
-                {
-                    m_adapterRoutesCacheLock.ExitWriteLock();
-                }
+                    DestinationsLookup = destinationsLookup,
+                    AdapterRoutesLookup = routesLookup,
+                    BroadcastAdapters = broadcastAdapters,
+                    CacheVersion = m_globalCache.CacheVersion + 1
+                };
 
                 // Start or stop any connect on demand adapters
                 HandleConnectOnDemandAdapters((MeasurementKey[])state, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
@@ -387,7 +389,7 @@ namespace GSF.TimeSeries.Adapters
                 if ((object)outputAdapterCollection != null)
                     destinationCount += outputAdapterCollection.Length;
 
-                routeCount = measurementRoutes.Count;
+                routeCount = routesLookup.Count;
 
                 OnStatusMessage("Calculated {0} route{1} for {2} destination{3} in {4}.", routeCount, (routeCount == 1) ? "" : "s", destinationCount, (destinationCount == 1) ? "" : "s", elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
             }
@@ -408,67 +410,72 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Event handler for distributing new measurements in a routed fashion.
+        /// Event handler for distributing new time-series entities in a routed fashion.
         /// </summary>
-        /// <param name="sender">Event source reference to adapter that generated new measurements.</param>
-        /// <param name="e">Event arguments containing a collection of new measurements.</param>
+        /// <param name="sender">Event source reference to adapter that generated new time-series entities.</param>
+        /// <param name="localCache">Event arguments containing a collection of new time-series entities.</param>
         /// <remarks>
-        /// Time-series framework uses this handler to directly route new measurements to the action and output adapters.
+        /// Time-series framework uses this handler to directly route new time-series entities to the action and output adapters.
         /// </remarks>
-        public virtual void RoutedMeasurementsHandler(object sender, EventArgs<ICollection<ITimeSeriesEntity>> e)
+        public virtual void RoutingEventHandler(object sender, RoutingEventArgs localCache)
         {
-            RoutedMeasurementsHandler(e.Argument);
-        }
+            HashSet<SignalRoute> activeRoutes = new HashSet<SignalRoute>();
+            ICollection<SignalRoute> signalRoutes;
 
-        /// <summary>
-        /// Method for distributing new measurements in a routed fashion.
-        /// </summary>
-        /// <param name="newMeasurements">Collection of new measurements.</param>
-        /// <remarks>
-        /// Time-series framework uses this handler to directly route new measurements to the action and output adapters.
-        /// </remarks>
-        public virtual void RoutedMeasurementsHandler(IEnumerable<ITimeSeriesEntity> newMeasurements)
-        {
-            if ((object)m_measurementRoutes == null)
-                return;
-
-            Dictionary<IAdapter, List<ITimeSeriesEntity>> adapterMeasurementsLookup = new Dictionary<IAdapter, List<ITimeSeriesEntity>>();
-            List<Guid> broadcastIDs = null;
-
-            List<ITimeSeriesEntity> measurements;
-            ISet<IAdapter> adapters;
-            Guid signalID;
-
-            m_adapterRoutesCacheLock.EnterReadLock();
+            GlobalCache globalCache = m_globalCache;
 
             try
             {
-                // Loop through each new measurement and look for destination routes
-                foreach (ITimeSeriesEntity measurement in newMeasurements)
+                // Always make sure the local cache
+                // is initialized and up-to-date
+                localCache.Initialize(globalCache.CacheVersion);
+
+                foreach (ITimeSeriesEntity timeSeriesEntity in localCache.TimeSeriesEntities)
                 {
-                    signalID = measurement.ID;
-
-                    // Get the set of adapters to which this measurement is routed
-                    if (!m_measurementRoutes.TryGetValue(signalID, out adapters))
+                    if (!localCache.SignalRoutesLookup.TryGetValue(timeSeriesEntity.ID, out signalRoutes))
                     {
-                        if ((object)broadcastIDs == null)
-                            broadcastIDs = new List<Guid>();
-
-                        broadcastIDs.Add(signalID);
-                        continue;
+                        // Use the global cache to find the signal
+                        // routes, and store them in the local cache
+                        signalRoutes = FindAndCacheSignalRoutes(timeSeriesEntity, globalCache, localCache);
                     }
 
-                    // Search for dependencies in each adapter receiving this measurement
-                    foreach (IAdapter adapter in adapters)
+                    foreach (SignalRoute signalRoute in signalRoutes)
                     {
-                        // Dependencies are not receiving this measurement, so add this measurement to the list
-                        if (!adapterMeasurementsLookup.TryGetValue(adapter, out measurements))
+                        try
                         {
-                            measurements = new List<ITimeSeriesEntity>();
-                            adapterMeasurementsLookup.Add(adapter, measurements);
-                        }
+                            // Add the time-series entity to the
+                            // list of entities to be processed
+                            signalRoute.List.Add(timeSeriesEntity);
 
-                        measurements.Add(measurement);
+                            // Add this route to the set of active routes so
+                            // we know to invoke its processing method later
+                            activeRoutes.Add(signalRoute);
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            // ArgumentException occurs when a type that is not compatible with the list is added to the list.
+                            // This can occur if the adapter producing this measurement changes the type of the measurement at runtime.
+                            // Rather than allowing this behavior, doing additional lookups, and incurring slowdowns in the routing tables,
+                            // this behavior is discouraged by cutting that signal off and refusing to route it to the adapters.
+                            string message = string.Format("Type change detected! Dumping all routes for [{0}].", timeSeriesEntity.ID);
+                            OnProcessException(new InvalidOperationException(message, ex));
+                            localCache.SignalRoutesLookup[timeSeriesEntity.ID].Clear();
+                        }
+                    }
+                }
+
+                // Invoke the processing method for each active route,
+                // and also clear the list of entities to prepare for
+                // the next routing event
+                foreach (SignalRoute activeRoute in activeRoutes)
+                {
+                    try
+                    {
+                        activeRoute.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception routing data to adapter [{0}]: {1}", activeRoute.Adapter.Name, ex.Message), ex));
                     }
                 }
             }
@@ -476,69 +483,111 @@ namespace GSF.TimeSeries.Adapters
             {
                 OnProcessException(new InvalidOperationException(string.Format("Error occurred in routed measurements handler: {0}", ex.Message), ex));
             }
-            finally
-            {
-                m_adapterRoutesCacheLock.ExitReadLock();
-            }
-
-            // Add broadcast routes for measurements which did not previously have routes
-            if ((object)broadcastIDs != null)
-            {
-                m_adapterRoutesCacheLock.EnterWriteLock();
-
-                try
-                {
-                    foreach (Guid broadcastID in broadcastIDs)
-                        m_measurementRoutes[broadcastID] = new HashSet<IAdapter>(m_broadcastRoutes);
-                }
-                finally
-                {
-                    m_adapterRoutesCacheLock.ExitWriteLock();
-                }
-            }
-
-            // Send independent measurements
-            foreach (KeyValuePair<IAdapter, List<ITimeSeriesEntity>> pair in adapterMeasurementsLookup)
-            {
-                try
-                {
-                    QueueMeasurementsForProcessing(pair.Key, pair.Value);
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception queuing data to adapter [{0}]: {1}", pair.Key.Name, ex.Message), ex));
-                }
-            }
-        }
-
-        private void QueueMeasurementsForProcessing(IAdapter adapter, IEnumerable<ITimeSeriesEntity> measurements)
-        {
-            IActionAdapter actionAdapter;
-
-            if (adapter.Enabled)
-            {
-                actionAdapter = adapter as IActionAdapter;
-
-                if ((object)actionAdapter != null)
-                    actionAdapter.QueueMeasurementsForProcessing(measurements);
-                else
-                    ((IOutputAdapter)adapter).QueueMeasurementsForProcessing(measurements);
-            }
         }
 
         /// <summary>
-        /// Event handler for distributing new measurements in a broadcast fashion.
+        /// Event handler for distributing new time-series entities in a broadcast fashion.
         /// </summary>
-        /// <param name="sender">Event source reference to adapter that generated new measurements.</param>
-        /// <param name="e">Event arguments containing a collection of new measurements.</param>
+        /// <param name="sender">Event source reference to adapter that generated new time-series entities.</param>
+        /// <param name="e">Event arguments containing a collection of new time-series entities.</param>
         /// <remarks>
-        /// Time-series framework uses this handler to route new measurements to the action and output adapters; adapter will handle filtering.
+        /// Time-series framework uses this handler to route new time-series entities to the action and output adapters; adapter will handle filtering.
         /// </remarks>
-        public virtual void BroadcastMeasurementsHandler(object sender, EventArgs<ICollection<ITimeSeriesEntity>> e)
+        public virtual void BroadcastEventHandler(object sender, RoutingEventArgs e)
         {
-            ICollection<ITimeSeriesEntity> newMeasurements = e.Argument;
-            m_actionAdapters.QueueMeasurementsForProcessing(newMeasurements);
-            m_outputAdapters.QueueMeasurementsForProcessing(newMeasurements);
+            // TODO: Decide if this is still useful
+        }
+
+        private ICollection<SignalRoute> FindAndCacheSignalRoutes(ITimeSeriesEntity timeSeriesEntity, GlobalCache globalCache, RoutingEventArgs localCache)
+        {
+            List<SignalRoute> signalRoutes = new List<SignalRoute>();
+            Type timeSeriesEntityType = timeSeriesEntity.GetType();
+
+            ICollection<IAdapter> destinations;
+            ICollection<SignalRoute> localAdapterRoutes;
+            ICollection<SignalRoute> globalAdapterRoutes;
+            List<SignalRoute> matchingRoutes;
+
+            if (!globalCache.DestinationsLookup.TryGetValue(timeSeriesEntity.ID, out destinations))
+                destinations = globalCache.BroadcastAdapters;
+
+            foreach (IAdapter destination in destinations)
+            {
+                // Check the local cache for routes first
+                localAdapterRoutes = localCache.AdapterRoutes.GetOrAdd(destination, adapter => new List<SignalRoute>());
+
+                // Get routes where the signal type is compatible with this time-series entity
+                matchingRoutes = localAdapterRoutes
+                    .Where(route => !route.ProcessingMethod.IsGenericMethod)
+                    .Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType))
+                    .ToList();
+
+                // Fall back on generic routes where the signal type is compatible
+                if (matchingRoutes.Count == 0)
+                {
+                    matchingRoutes = localAdapterRoutes
+                        .Where(route => route.ProcessingMethod.IsGenericMethod)
+                        .Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType))
+                        .ToList();
+                }
+
+                if (matchingRoutes.Count == 0 && globalCache.AdapterRoutesLookup.TryGetValue(destination, out globalAdapterRoutes))
+                {
+                    // Get global routes where the signal type is compatible with this time-series entity
+                    matchingRoutes = globalAdapterRoutes.Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType)).ToList();
+
+                    if (matchingRoutes.Count == 0)
+                    {
+                        // If all else fails, attempt to create a matching generic method
+                        matchingRoutes = globalAdapterRoutes
+                            .Select(route => route.MakeGenericSignalRoute(timeSeriesEntityType))
+                            .Where(route => (object)route != null)
+                            .ToList();
+                    }
+
+                    if (matchingRoutes.Count > 0)
+                    {
+                        // Add the global routes that were found to the local cache
+                        foreach (SignalRoute route in matchingRoutes)
+                            localAdapterRoutes.Add(new SignalRoute(route));
+                    }
+                }
+
+                if (matchingRoutes.Count != 0)
+                {
+                    // In the case of multiple matches, get routes with the most defined signal types, where it is not compatible with any other type in the list
+                    matchingRoutes = matchingRoutes.Where(r1 => !matchingRoutes.Any(r2 => r1 != r2 && r1.SignalType.IsAssignableFrom(r2.SignalType))).ToList();
+
+                    // There should only be one route, except in the
+                    // case of ambiguous matches or no matches
+                    if (matchingRoutes.Count == 1)
+                    {
+                        signalRoutes.Add(matchingRoutes[0]);
+                    }
+                    else
+                    {
+                        const string Message = "WARNING: When locating routes for signal [{0}] going to adapter [{1}]," +
+                            " multiple processing methods were found that could handle the signal's type, and the" +
+                            " system was unable to resolve the ambiguity. The signal will not be processed by this" +
+                            " adapter. The adapter will likely need to be fixed to resolve the ambiguity.";
+
+                        OnStatusMessage(Message, timeSeriesEntity.ID, destination.Name);
+                    }
+                }
+                else
+                {
+                    const string Message = "WARNING: When locating routes for signal [{0}] going to adapter [{1}]," +
+                        " no processing methods were found that could handle the signal's type. The signal will" +
+                        " not be processed by this adapter. This is likely a configuration error.";
+
+                    OnStatusMessage(Message, timeSeriesEntity.ID, destination.Name);
+                }
+            }
+
+            // Store these routes in the local cache
+            localCache.SignalRoutesLookup.Add(timeSeriesEntity.ID, signalRoutes);
+
+            return signalRoutes;
         }
 
         /// <summary>

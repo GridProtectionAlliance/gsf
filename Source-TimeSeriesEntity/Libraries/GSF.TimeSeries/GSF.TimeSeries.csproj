@@ -100,7 +100,8 @@
     <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
     <Compile Include="Adapters\CustomConfigurationEditorAttribute.cs" />
     <Compile Include="Adapters\IaonSession.cs" />
-    <Compile Include="Adapters\RoutingTables.cs" />
+    <Compile Include="Routing\RoutingEventArgs.cs" />
+    <Compile Include="Routing\RoutingTables.cs" />
     <Compile Include="Alarm.cs" />
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Frame.cs" />
@@ -134,6 +135,7 @@
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="PrecisionInputTimer.cs" />
+    <Compile Include="Routing\SignalRoute.cs" />
     <Compile Include="Statistics\GatewayStatistics.cs" />
     <Compile Include="Statistics\PerformanceStatistics.cs" />
     <Compile Include="Statistics\Statistic.cs" />

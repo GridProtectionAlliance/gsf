@@ -58,6 +58,7 @@ using GSF.IO;
 using GSF.Net.Security;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Routing;
 using GSF.TimeSeries.Statistics;
 using Timer = System.Timers.Timer;
 
@@ -1477,7 +1478,7 @@ namespace GSF.TimeSeries.Transport
             if (this.ProcessMeasurementFilter)
                 base.QueueMeasurementsForProcessing(measurements);
             else
-                m_routingTables.RoutedMeasurementsHandler(measurements);
+                m_routingTables.RoutingEventHandler(measurements);
 
             measurementCount = measurements.Count();
             m_lifetimeMeasurements += measurementCount;
