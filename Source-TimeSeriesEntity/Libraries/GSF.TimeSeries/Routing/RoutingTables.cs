@@ -22,8 +22,9 @@
 //       Added code to handle connect on demand adapters (i.e., where AutoStart = false).
 //  02/11/2013 - Stephen C. Wills
 //       Added code to handle queue and notify for adapter synchronization.
-//  10/17/2013 - Stephen C. Wills
-//       Removed queue and notify and modified the routing tables to handle ITimeSeriesEntities.
+//  10/23/2013 - Stephen C. Wills
+//       Removed queue and notify and modified the routing tables to support the new mechanism for
+//       defining processing methods for time-series entities in adapters.
 //
 //******************************************************************************************************
 
