@@ -36,6 +36,15 @@
 //
 //******************************************************************************************************
 
+using GSF;
+using GSF.Communication;
+using GSF.Parsing;
+using GSF.PhasorProtocols;
+using GSF.PhasorProtocols.Anonymous;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
+using GSF.Units;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -47,15 +56,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Timers;
-using GSF;
-using GSF.Communication;
-using GSF.Parsing;
-using GSF.PhasorProtocols;
-using GSF.PhasorProtocols.Anonymous;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
-using GSF.Units;
 using Timer = System.Timers.Timer;
 
 namespace PhasorProtocolAdapters
@@ -661,7 +661,7 @@ namespace PhasorProtocolAdapters
                 status.AppendLine();
                 status.AppendFormat("       Data stream ID code: {0}", m_idCode);
                 status.AppendLine();
-                status.AppendFormat("         Nomimal frequency: {0}Hz", (int)m_nominalFrequency);
+                status.AppendFormat("         Nominal frequency: {0}Hz", (int)m_nominalFrequency);
                 status.AppendLine();
                 status.AppendFormat("               Data format: {0}", m_dataFormat);
                 status.AppendLine();
@@ -684,9 +684,9 @@ namespace PhasorProtocolAdapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("       Digital normal mask: {0} (big endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(m_digitalMaskValue.LowWord())));
+                status.AppendFormat("       Digital normal mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(m_digitalMaskValue.LowWord())));
                 status.AppendLine();
-                status.AppendFormat(" Digital valid inputs mask: {0} (big endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(m_digitalMaskValue.HighWord())));
+                status.AppendFormat(" Digital valid inputs mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(m_digitalMaskValue.HighWord())));
                 status.AppendLine();
 
                 if (m_dataChannel != null)
@@ -978,7 +978,7 @@ namespace PhasorProtocolAdapters
         public override void Initialize()
         {
             base.Initialize();
-            string errorMessage = "{0} is missing from Settings - Example: IDCode=235; dataChannel={{Port=0; Clients=localhost:8800}}";
+            const string errorMessage = "{0} is missing from Settings - Example: IDCode=235; dataChannel={{Port=0; Clients=localhost:8800}}";
 
             Dictionary<string, string> settings = Settings;
             string setting, dataChannel, commandChannel;
@@ -1561,7 +1561,7 @@ namespace PhasorProtocolAdapters
 
                 // So that we can accurately track the total measurements that were sorted into this frame,
                 // we also assign measurement to frame's measurement dictionary - this is important since
-                // in downsampling scenarios more than one of the same measurement can be sorted into a frame
+                // in down-sampling scenarios more than one of the same measurement can be sorted into a frame
                 // but this only needs to be counted as "one" sort so that when preemptive publishing is
                 // enabled you can compare expected measurements to sorted measurements...
                 measurements[measurement.Key] = measurement;
@@ -1573,7 +1573,7 @@ namespace PhasorProtocolAdapters
             if ((object)signalMeasurement == null && measurement != null)
                 OnProcessException(new InvalidCastException(string.Format("Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{0}\"", measurement.GetType().Name)));
 
-            if (dataFrame == null && frame != null)
+            if ((object)dataFrame == null)
                 OnProcessException(new InvalidCastException(string.Format("During measurement assignment, incoming frame was not a phasor data concentration frame, expected a type derived from \"IDataFrame\" but received a \"{0}\"", frame.GetType().Name)));
         }
 
