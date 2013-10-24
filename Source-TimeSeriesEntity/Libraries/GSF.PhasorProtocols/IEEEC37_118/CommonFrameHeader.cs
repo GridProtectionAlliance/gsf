@@ -25,10 +25,10 @@
 //
 //******************************************************************************************************
 
+using GSF.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using GSF.Parsing;
 
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
@@ -56,6 +56,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         private uint m_timebase;
         private uint m_timeQualityFlags;
         private IChannelParsingState m_state;
+        private readonly decimal m_frameRate;
+        private readonly decimal m_ticksPerFrame;
 
         #endregion
 
@@ -100,12 +102,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // Without timebase, the best timestamp you can get is down to the whole second
             m_timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
 
-            if (configurationFrame != null)
+            if ((object)configurationFrame != null)
             {
                 // If config frame is available, frames have enough information for sub-second time resolution
                 m_timebase = configurationFrame.Timebase;
                 decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)m_timebase;
                 m_timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);
+                m_frameRate = (decimal)configurationFrame.FrameRate;
+                m_ticksPerFrame = configurationFrame.TicksPerFrame;
             }
 
             m_timeQualityFlags = fractionOfSecond & Common.TimeQualityFlagsMask;
@@ -265,7 +269,22 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             get
             {
-                return (UInt24)((decimal)m_timestamp.DistanceBeyondSecond() / (decimal)Ticks.PerSecond * (decimal)m_timebase);
+                // Fall back on original calculation method if ticks-per-frame or frame rate are not defined (e.g., generating FRACSEC for config frame)
+                if (m_ticksPerFrame == 0 || m_frameRate == 0)
+                    return (UInt24)((decimal)m_timestamp.DistanceBeyondSecond() / (decimal)Ticks.PerSecond * (decimal)m_timebase);
+
+                // Maximum fractional second resolution for Ticks is 10,000,000 but for a 24-bit integer maximum resolution is 16,777,215
+                // so we use a higher resolution division operation using a decimal to calculate fractional seconds more accurately
+                decimal ticksBeyondSecond, frameIndex;
+
+                // Remove the seconds from ticks
+                ticksBeyondSecond = (decimal)m_timestamp.DistanceBeyondSecond();
+
+                // Calculate a frame index between 0 and m_framesPerSecond - 1, corresponding to ticks rounded down to the nearest frame
+                frameIndex = ticksBeyondSecond / m_ticksPerFrame;
+
+                // Calculate a very high-resolution fractional second for frame at this index
+                return (UInt24)(frameIndex * (decimal)m_timebase / m_frameRate);
             }
         }
 
@@ -325,7 +344,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             }
         }
 
-        // Gets or sets any additional state information - satifies ICommonHeader<FrameType>.State interface property
+        // Gets or sets any additional state information - satisfies ICommonHeader<FrameType>.State interface property
         object ICommonHeader<FrameType>.State
         {
             get

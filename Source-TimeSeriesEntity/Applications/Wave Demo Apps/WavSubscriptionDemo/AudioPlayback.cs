@@ -264,7 +264,7 @@ namespace NAudioWpfDemo
                 if (deviceTable != null)
                 {
                     string sampleRate = deviceTable.Rows.Cast<DataRow>()
-                        .Single(row => row["Name"].ToNonNullString() == songName)["FramesPerSecond"].ToNonNullString();
+                        .Single(row => row["Acronym"].ToNonNullString() == songName)["FramesPerSecond"].ToNonNullString();
 
                     if (!string.IsNullOrEmpty(sampleRate))
                         m_sampleRate = int.Parse(sampleRate);
@@ -274,7 +274,7 @@ namespace NAudioWpfDemo
                 if (measurementTable != null)
                 {
                     IEnumerable<DataRow> measurementRows = measurementTable.Rows.Cast<DataRow>()
-                        .Where(row => row["DeviceName"].ToNonNullString() == songName)
+                        .Where(row => row["DeviceAcronym"].ToNonNullString() == songName)
                         .Where(row => row["SignalAcronym"].ToNonNullString() == "ALOG" || row["SignalAcronym"].ToNonNullString() == "VPHM")
                         .Where(row => row["Enabled"].ToNonNullString().ParseBoolean())
                         .OrderBy(row => row["ID"].ToNonNullString());
@@ -454,11 +454,11 @@ namespace NAudioWpfDemo
             if (m_timeoutTimer != null && m_dataSubscriber != null)
             {
                 m_timeoutTimer.Stop();
+
                 m_dataSubscriber.SendServerCommand(ServerCommand.MetaDataRefresh);
 
                 //if (EnableEncryption)
                 //    m_dataSubscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
-
                 m_timeoutTimer.Start();
             }
         }
@@ -489,7 +489,7 @@ namespace NAudioWpfDemo
             {
                 songs = deviceTable.Rows.Cast<DataRow>()
                     .Where(row => row["Enabled"].ToNonNullString("0").ParseBoolean())
-                    .Select(row => row["Name"].ToNonNullString()).ToList();
+                    .Select(row => row["Acronym"].ToNonNullString()).ToList();
 
                 //.Where(row => row["ProtocolName"].ToNonNullString() == "Wave Form Input Adapter")
 
@@ -564,7 +564,7 @@ namespace NAudioWpfDemo
             Timer timeoutTimer = new Timer();
 
             timeoutTimer.AutoReset = false;
-            timeoutTimer.Interval = 10000.0;
+            timeoutTimer.Interval = 15000.0;
             timeoutTimer.Elapsed += TimeoutTimer_Elapsed;
 
             return timeoutTimer;

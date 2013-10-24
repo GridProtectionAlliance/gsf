@@ -29,10 +29,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 using GSF;
 using GSF.Communication;
 using GSF.PhasorProtocols;
@@ -40,6 +36,10 @@ using GSF.PhasorProtocols.Anonymous;
 using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 using AnalogDefinition = GSF.PhasorProtocols.IEEEC37_118.AnalogDefinition;
 using ConfigurationCell = GSF.PhasorProtocols.IEEEC37_118.ConfigurationCell;
 using DigitalDefinition = GSF.PhasorProtocols.Anonymous.DigitalDefinition;
@@ -153,11 +153,8 @@ namespace PhasorProtocolAdapters.IeeeC37_118
             // Create a new IEEE C37.118 configuration frame 2 using base configuration
             ConfigurationFrame2 configurationFrame = CreateConfigurationFrame(baseConfigurationFrame, m_timeBase, base.NominalFrequency);
 
-            bool configurationChanged = false;
-
             // After system has started any subsequent changes in configuration get indicated in the outgoing data stream
-            if (m_configurationFrame != null)
-                configurationChanged = true;
+            bool configurationChanged = (object)m_configurationFrame != null;
 
             // Cache new IEEE C7.118 for later use
             Interlocked.Exchange(ref m_configurationFrame, configurationFrame);

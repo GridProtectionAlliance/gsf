@@ -65,7 +65,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void DataContext_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "CurrentItem")
+            if (e.PropertyName == "CurrentItem" || e.PropertyName == "CurrentDevice")
                 UpdateAvailableFilterExpression();
         }
 

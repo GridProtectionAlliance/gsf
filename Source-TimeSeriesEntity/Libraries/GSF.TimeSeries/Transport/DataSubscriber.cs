@@ -26,6 +26,16 @@
 //
 //******************************************************************************************************
 
+using GSF.Collections;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,16 +50,6 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using System.Xml;
-using GSF.Collections;
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Reflection;
-using GSF.Security.Cryptography;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
@@ -3449,7 +3449,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Raises the <see cref="MetaDataReceived"/> event.
         /// </summary>
-        /// <param name="meta-data">Meta-data <see cref="DataSet"/> instance to send to client subscription.</param>
+        /// <param name="metadata">Meta-data <see cref="DataSet"/> instance to send to client subscription.</param>
         protected void OnMetaDataReceived(DataSet metadata)
         {
             try
