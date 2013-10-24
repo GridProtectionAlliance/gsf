@@ -205,6 +205,13 @@ namespace GSF.TimeSeries
         {
             get;
         }
+
+        /// <summary>
+        /// Creates a copy of the this <see cref="IMeasurement{T}"/> using new state flags.
+        /// </summary>
+        /// <param name="stateFlags">New <see cref="MeasurementStateFlags"/></param>
+        /// <returns>A copy of the <see cref="IMeasurement{T}"/> object.</returns>
+        IMeasurement<T> Alter(MeasurementStateFlags stateFlags);
     }
 
     /// <summary>

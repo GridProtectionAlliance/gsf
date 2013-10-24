@@ -39,8 +39,8 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private MeasurementStateFlags m_stateFlags;
-        private T m_value;
+        private readonly MeasurementStateFlags m_stateFlags;
+        private readonly T m_value;
 
         #endregion
 
@@ -100,11 +100,11 @@ namespace GSF.TimeSeries
         #region [ Methods ]
 
         /// <summary>
-        /// Creates a copy of the specified measurement using a new state flags.
+        /// Creates a copy of the specified measurement using new state flags.
         /// </summary>
         /// <param name="stateFlags">New <see cref="MeasurementStateFlags"/></param>
-        /// <returns>A copy of the <see cref="Measurement{T}"/> object.</returns>
-        public Measurement<T> Alter(MeasurementStateFlags stateFlags)
+        /// <returns>A copy of the <see cref="IMeasurement{T}"/> object.</returns>
+        public IMeasurement<T> Alter(MeasurementStateFlags stateFlags)
         {
             return new Measurement<T>(ID, Timestamp, stateFlags, Value);
         }

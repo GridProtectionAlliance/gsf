@@ -25,13 +25,16 @@ using System;
 
 namespace GSF.TimeSeries
 {
+    /// <summary>
+    /// Represents the fundamental base class for any time-series entity.
+    /// </summary>
     public abstract class TimeSeriesEntityBase : ITimeSeriesEntity
     {
         #region [ Members ]
 
         // Fields
-        private Guid m_id;
-        private Ticks m_timestamp;
+        private readonly Guid m_id;
+        private readonly Ticks m_timestamp;
 
         #endregion
 

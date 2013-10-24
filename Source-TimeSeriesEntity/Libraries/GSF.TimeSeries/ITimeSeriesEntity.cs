@@ -29,7 +29,7 @@ using System;
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// Represents the fundamental binary value interface for a time-series value.
+    /// Represents the fundamental interface for any time-series interface.
     /// </summary>
     public interface ITimeSeriesEntity
     {
