@@ -258,7 +258,7 @@ namespace GSF.TimeSeries.Routing
             IOutputAdapter[] outputAdapterCollection = null;
             bool retry = true;
 
-            OnStatusMessage("Starting measurement route calculation...");
+            OnStatusMessage("Starting routing tables calculation...");
 
             // Attempt to cache input, action, and output adapters for routing table calculation.
             // This could fail if another thread modifies the collections while caching is in
@@ -321,14 +321,8 @@ namespace GSF.TimeSeries.Routing
                     .ToList();
 
                 // Create a collection containing the action and output adapters together
-                if ((object)actionAdapterCollection != null && (object)outputAdapterCollection != null)
-                    adapterCollection = actionAdapterCollection.AsEnumerable<IAdapter>().Concat(outputAdapterCollection);
-                else if ((object)actionAdapterCollection != null)
-                    adapterCollection = actionAdapterCollection;
-                else if ((object)outputAdapterCollection != null)
-                    adapterCollection = outputAdapterCollection;
-                else
-                    adapterCollection = Enumerable.Empty<IAdapter>();
+                adapterCollection = (actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
+                    .Concat(outputAdapterCollection ?? Enumerable.Empty<IAdapter>());
 
                 // Calculate possible routes for each action and output adapter
                 foreach (IAdapter adapter in adapterCollection)
@@ -342,7 +336,7 @@ namespace GSF.TimeSeries.Routing
                         if ((object)measurementKeys != null)
                         {
                             // Add this adapter as a destination to each
-                            // measurement defined in its input measurement keys
+                            // signal defined in its input measurement keys
                             foreach (MeasurementKey key in measurementKeys)
                             {
                                 destinations = destinationsLookup.GetOrAdd(key.SignalID, signalID => new List<IAdapter>());
@@ -352,7 +346,7 @@ namespace GSF.TimeSeries.Routing
                         else
                         {
                             // InputMeasurementKeys is null, therefore this adapter
-                            // requests a broadcast of all measurements in the system
+                            // requests a broadcast of all signals in the system
                             broadcastAdapters.Add(adapter);
                         }
 
@@ -366,7 +360,7 @@ namespace GSF.TimeSeries.Routing
                 }
 
                 // Add the broadcast adapters to all existing routes since
-                // they will be receiving all measurements in the system
+                // they will be receiving all signals in the system
                 foreach (ICollection<IAdapter> signalDestinations in destinationsLookup.Values)
                     broadcastAdapters.ForEach(adapter => signalDestinations.Add(adapter));
 
@@ -376,7 +370,7 @@ namespace GSF.TimeSeries.Routing
                     DestinationsLookup = destinationsLookup,
                     AdapterRoutesLookup = routesLookup,
                     BroadcastAdapters = broadcastAdapters,
-                    CacheVersion = m_globalCache.CacheVersion + 1
+                    CacheVersion = ((object)m_globalCache != null) ? m_globalCache.CacheVersion + 1 : 0
                 };
 
                 // Start or stop any connect on demand adapters
@@ -455,7 +449,7 @@ namespace GSF.TimeSeries.Routing
                         catch (ArgumentException ex)
                         {
                             // ArgumentException occurs when a type that is not compatible with the list is added to the list.
-                            // This can occur if the adapter producing this measurement changes the type of the measurement at runtime.
+                            // This can occur if the adapter producing this signal changes the type of the signal at runtime.
                             // Rather than allowing this behavior, doing additional lookups, and incurring slowdowns in the routing tables,
                             // this behavior is discouraged by cutting that signal off and refusing to route it to the adapters.
                             string message = string.Format("Type change detected! Dumping all routes for [{0}].", timeSeriesEntity.ID);
@@ -482,7 +476,7 @@ namespace GSF.TimeSeries.Routing
             }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Error occurred in routed measurements handler: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception occurred in time-series routing event handler: {0}", ex.Message), ex));
             }
         }
 
@@ -506,8 +500,17 @@ namespace GSF.TimeSeries.Routing
 
             ICollection<IAdapter> destinations;
             ICollection<SignalRoute> localAdapterRoutes;
-            ICollection<SignalRoute> globalAdapterRoutes;
             List<SignalRoute> matchingRoutes;
+            List<SignalRoute> genericRoutes;
+
+            Func<IAdapter, ICollection<SignalRoute>> adapterRoutesFactory = adapter =>
+            {
+                ICollection<SignalRoute> adapterRoutes;
+
+                return globalCache.AdapterRoutesLookup.TryGetValue(adapter, out adapterRoutes)
+                    ? adapterRoutes.Select(route => new SignalRoute(route)).ToList()
+                    : new List<SignalRoute>();
+            };
 
             if (!globalCache.DestinationsLookup.TryGetValue(timeSeriesEntity.ID, out destinations))
                 destinations = globalCache.BroadcastAdapters;
@@ -515,52 +518,58 @@ namespace GSF.TimeSeries.Routing
             foreach (IAdapter destination in destinations)
             {
                 // Check the local cache for routes first
-                localAdapterRoutes = localCache.AdapterRoutes.GetOrAdd(destination, adapter => new List<SignalRoute>());
+                localAdapterRoutes = localCache.AdapterRoutes.GetOrAdd(destination, adapterRoutesFactory);
 
-                // Get routes where the signal type is compatible with this time-series entity
+                // If there is a route that matches exactly with this time-series
+                // entity, then we are guaranteed there can be no better match
                 matchingRoutes = localAdapterRoutes
-                    .Where(route => !route.ProcessingMethod.IsGenericMethod)
-                    .Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType))
+                    .Where(route => route.SignalType == timeSeriesEntityType)
                     .ToList();
 
-                // Fall back on generic routes where the signal type is compatible
                 if (matchingRoutes.Count == 0)
                 {
+                    // Attempt to create matching generic routes
+                    genericRoutes = localAdapterRoutes
+                        .Select(route => route.MakeGenericSignalRoute(timeSeriesEntityType))
+                        .Where(genericRoute => (object)genericRoute != null)
+                        .Where(genericRoute => localAdapterRoutes.All(route => route.SignalType != genericRoute.SignalType))
+                        .ToList();
+
+                    // Add all created routes to the local cache
+                    foreach (SignalRoute genericRoute in genericRoutes)
+                        localAdapterRoutes.Add(genericRoute);
+
+                    // Get routes where the signal type is compatible with this time-series entity
                     matchingRoutes = localAdapterRoutes
-                        .Where(route => route.ProcessingMethod.IsGenericMethod)
                         .Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType))
                         .ToList();
                 }
 
-                if (matchingRoutes.Count == 0 && globalCache.AdapterRoutesLookup.TryGetValue(destination, out globalAdapterRoutes))
+                // We should have found at least one route unless there
+                // are no routes defined to handle the signal's type
+                if (matchingRoutes.Count > 0)
                 {
-                    // Get global routes where the signal type is compatible with this time-series entity
-                    matchingRoutes = globalAdapterRoutes.Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType)).ToList();
-
-                    if (matchingRoutes.Count == 0)
+                    // In the case of multiple matches, get routes with
+                    // the most defined signal types, where it is not
+                    // compatible with any other type in the list
+                    if (matchingRoutes.Count > 1)
                     {
-                        // If all else fails, attempt to create a matching generic method
-                        matchingRoutes = globalAdapterRoutes
-                            .Select(route => route.MakeGenericSignalRoute(timeSeriesEntityType))
-                            .Where(route => (object)route != null)
+                        matchingRoutes = matchingRoutes
+                            .Where(r1 => !matchingRoutes.Any(r2 => r1 != r2 && r1.SignalType.IsAssignableFrom(r2.SignalType)))
                             .ToList();
                     }
 
-                    if (matchingRoutes.Count > 0)
+                    // If we still have multiple matches,
+                    // try throwing out the generic routes
+                    if (matchingRoutes.Count > 1)
                     {
-                        // Add the global routes that were found to the local cache
-                        foreach (SignalRoute route in matchingRoutes)
-                            localAdapterRoutes.Add(new SignalRoute(route));
+                        matchingRoutes = matchingRoutes
+                            .Where(route => !route.ProcessingMethod.IsGenericMethod)
+                            .ToList();
                     }
-                }
 
-                if (matchingRoutes.Count != 0)
-                {
-                    // In the case of multiple matches, get routes with the most defined signal types, where it is not compatible with any other type in the list
-                    matchingRoutes = matchingRoutes.Where(r1 => !matchingRoutes.Any(r2 => r1 != r2 && r1.SignalType.IsAssignableFrom(r2.SignalType))).ToList();
-
-                    // There should only be one route, except in the
-                    // case of ambiguous matches or no matches
+                    // There should only be one route,
+                    // except in the case of ambiguous matches
                     if (matchingRoutes.Count == 1)
                     {
                         signalRoutes.Add(matchingRoutes[0]);
@@ -642,7 +651,7 @@ namespace GSF.TimeSeries.Routing
         }
 
         /// <summary>
-        /// Starts or stops connect on demand adapters based on current state of demanded input or output measurements.
+        /// Starts or stops connect on demand adapters based on current state of demanded input or output signals.
         /// </summary>
         /// <param name="inputMeasurementKeysRestriction">Input measurement keys restriction.</param>
         /// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
