@@ -53,7 +53,7 @@ namespace ProtocolTester
         protected override void PublishFrame(IFrame frame, int index)
         {
             if (m_writeLogs)
-                m_exportFile.WriteLine(frame.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff") + string.Concat(frame.Measurements.Values.Select(measurement => "," + measurement.AdjustedValue.ToString())));
+                m_exportFile.WriteLine(frame.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff") + string.Concat(frame.Entities.Values.Select(measurement => "," + measurement.AdjustedValue.ToString())));
         }
     }
 }

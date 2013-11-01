@@ -166,7 +166,7 @@ namespace COMTRADEAdapters
                 m_deviceID = setting;
 
             // We enable tracking of latest measurements so we can use these values if points are missing
-            TrackLatestMeasurements = true;
+            TrackLatestEntities = true;
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace COMTRADEAdapters
         protected override void PublishFrame(IFrame frame, int index)
         {
             Ticks timestamp = frame.Timestamp;
-            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
 
             if (measurements.Count > 0)
             {

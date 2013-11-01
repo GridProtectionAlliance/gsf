@@ -1344,7 +1344,7 @@ namespace PhasorProtocolAdapters
 
             // Assign action adapter input measurement keys - this assigns the expected measurements per frame needed
             // by the concentration engine for preemptive publication 
-            InputMeasurementKeys = m_signalReferences.Keys.ToArray();
+            InputSignals = m_signalReferences.Keys.ToArray();
 
             // Allow for spaces in output stream device names if a replacement character has been defined for spaces
             if (m_replaceWithSpaceChar != Char.MinValue)
@@ -1483,7 +1483,7 @@ namespace PhasorProtocolAdapters
             }
 
             if (inputMeasurements.Count > 0)
-                SortMeasurements(inputMeasurements);
+                SortEntities(inputMeasurements);
         }
 
         /// <summary>
@@ -1500,7 +1500,7 @@ namespace PhasorProtocolAdapters
         /// </remarks>
         protected override void AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
         {
-            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
 
             // Make sure the measurement is a "SignalReferenceMeasurement" (it should be)
             SignalReferenceMeasurement signalMeasurement = measurement as SignalReferenceMeasurement;
@@ -1659,7 +1659,7 @@ namespace PhasorProtocolAdapters
                 m_lifetimeLatencyMeasurements++;
 
                 // Track measurement count and throughput statistics
-                int measurementCount = frame.Measurements.Count;
+                int measurementCount = frame.Entities.Count;
                 m_lifetimeMeasurements += measurementCount;
                 UpdateMeasurementsPerSecond(measurementCount);
             }

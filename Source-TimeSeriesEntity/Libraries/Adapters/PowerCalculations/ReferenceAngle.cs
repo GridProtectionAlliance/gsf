@@ -138,7 +138,7 @@ namespace PowerCalculations
             m_lastAngles = new Dictionary<MeasurementKey, double>();
             m_unwrapOffsets = new Dictionary<MeasurementKey, double>();
             m_latestCalculatedAngles = new List<double>();
-            m_phaseResetAngle = MinimumMeasurementsToUse * 360.0D;
+            m_phaseResetAngle = MinimumSignalsToUse * 360.0D;
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace PowerCalculations
             angleTotal = 0.0D;
 
             // Attempt to get minimum needed reporting set of composite angles used to calculate reference angle
-            if (TryGetMinimumNeededMeasurements(frame, ref m_measurements))
+            if (TryGetMinimumNeededEntities(frame, ref m_measurements))
             {
                 // See if data set has changed since last run
                 if (m_lastAngles.Count > 0 && m_lastAngles.Count == m_measurements.Length)
@@ -274,7 +274,7 @@ namespace PowerCalculations
             calculatedMeasurement.Value = angleAverage;
 
             // Expose calculated value
-            OnNewMeasurements(new IMeasurement[] { calculatedMeasurement });
+            OnNewEntities(new IMeasurement[] { calculatedMeasurement });
 
             // Add calculated reference angle to latest angle queue as backup in case needed
             // minimum number of angles are not available

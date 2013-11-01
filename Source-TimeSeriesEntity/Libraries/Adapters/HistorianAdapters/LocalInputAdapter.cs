@@ -458,11 +458,11 @@ namespace HistorianAdapters
         // Kick start read process for historian
         private void StartDataReader(object state)
         {
-            MeasurementKey[] requestedKeys = SupportsTemporalProcessing ? RequestedOutputMeasurementKeys : OutputMeasurements.MeasurementKeys().ToArray();
+            MeasurementKey[] requestedKeys = SupportsTemporalProcessing ? RequestedOutputSignals : OutputSignals.MeasurementKeys().ToArray();
 
             if (Enabled && m_archiveFile != null && requestedKeys != null && requestedKeys.Length > 0)
             {
-                IEnumerable<int> historianIDs = requestedKeys.Select(key => unchecked((int)key.ID));
+                IEnumerable<int> historianIDs = requestedKeys.Select(key => unchecked((int)key.PointID));
                 m_publicationTime = 0;
 
                 // Start data read from historian
@@ -563,7 +563,7 @@ namespace HistorianAdapters
 
             // Publish all measurements for this time interval
             if (measurements.Count > 0)
-                OnNewMeasurements(measurements);
+                OnNewEntities(measurements);
         }
 
         private void m_archiveFile_DataReadException(object sender, EventArgs<Exception> e)

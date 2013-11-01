@@ -22,55 +22,23 @@
 //       Added received and published timestamps for measurements.
 //  05/11/2011 - J. Ritchie Carroll
 //       Changed IFrame to require a concurrent dictionary.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  10/31/2013 - Stephen C. Wills
+//       Simplified IFrame to the basic form of timestamp and values.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// Abstract frame interface representing a collection of measurements at an exact moment in time.
+    /// Abstract frame interface representing a collection of time-series entities at an exact moment in time.
     /// </summary>
     public interface IFrame : IEquatable<IFrame>, IComparable<IFrame>, IComparable
     {
         /// <summary>
-        /// Keyed measurements in this <see cref="IFrame"/>.
-        /// </summary>
-        /// <remarks>
-        /// Represents a concurrent dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
-        /// </remarks>
-        ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements
-        {
-            get;
-        }
-
-        /// <summary>
-        /// Gets or sets published state of this <see cref="IFrame"/> (pre-processing).
-        /// </summary>
-        bool Published
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets total number of measurements that have been sorted into this <see cref="IFrame"/>.
-        /// </summary>
-        /// <remarks>
-        /// If this property has not been assigned a value, implementers should return measurement count.
-        /// </remarks>
-        int SortedMeasurements
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IFrame"/>.
+        /// Gets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
@@ -78,46 +46,17 @@ namespace GSF.TimeSeries
         Ticks Timestamp
         {
             get;
-            set;
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was received (i.e., created).
+        /// Keyed time-series entities in this <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
-        /// <para>Implementers should set this timestamp to be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// Represents a dictionary of time-series entities, keyed by signal ID.
         /// </remarks>
-        Ticks ReceivedTimestamp
+        IDictionary<Guid, ITimeSeriesEntity> Entities
         {
             get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was published (post-processing).
-        /// </summary>
-        /// <remarks>
-        /// <para>Implementers should update all associated <see cref="IMeasurement.PublishedTimestamp"/> values when setting this property.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        Ticks PublishedTimestamp
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="IFrame"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>This value is used to help monitor slow moving measurements that are being sorted into the <see cref="IFrame"/>.</para>
-        /// <para>Implementers need only track the value.</para>
-        /// </remarks>
-        IMeasurement LastSortedMeasurement
-        {
-            get;
-            set;
         }
     }
 }

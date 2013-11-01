@@ -18,8 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
@@ -47,7 +47,7 @@ namespace GSF.TimeSeries.Adapters
         #region [ Members ]
 
         // Constants
-        private const int DefaultMeasurementReportingInterval = 100000;
+        private const int DefaultEntityReportingInterval = 100000;
 
         /// <summary>
         /// Default initialization timeout.
@@ -55,14 +55,6 @@ namespace GSF.TimeSeries.Adapters
         public const int DefaultInitializationTimeout = 15000;
 
         // Events
-
-        /// <summary>
-        /// Notifies dependent adapters that this adapter has finished processing a measurement.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
-        /// </remarks>
-        public event EventHandler<EventArgs<IMeasurement>> Notify;
 
         /// <summary>
         /// Provides status messages to consumer.
@@ -81,19 +73,27 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
+        /// Event is raised when <see cref="InputSignals"/> are updated.
         /// </summary>
-        public event EventHandler InputMeasurementKeysUpdated;
+        public event EventHandler InputSignalsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputMeasurements"/> are updated.
+        /// Event is raised when <see cref="OutputSignals"/> are updated.
         /// </summary>
-        public event EventHandler OutputMeasurementsUpdated;
+        public event EventHandler OutputSignalsUpdated;
 
         /// <summary>
         /// Event is raised when adapter is aware of a configuration change.
         /// </summary>
         public event EventHandler ConfigurationChanged;
+
+        /// <summary>
+        /// This event is raised if there are any time-series entities being discarded during processing.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="ITimeSeriesEntity"/> objects that are being discarded during processing.
+        /// </remarks>
+        public event EventHandler<EventArgs<IEnumerable<ITimeSeriesEntity>>> EntitiesDiscarded;
 
         /// <summary>
         /// Event is raised when <see cref="AdapterBase"/> is disposed.
@@ -107,22 +107,18 @@ namespace GSF.TimeSeries.Adapters
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private int m_initializationTimeout;
-        private string m_dependencies;
-        private long m_dependencyTimeout;
         private bool m_autoStart;
-        private bool m_processMeasurementFilter;
-        private MeasurementKey[] m_inputMeasurementKeys;
-        private IMeasurement[] m_outputMeasurements;
-        private List<MeasurementKey> m_inputMeasurementKeysHash;
-        private long m_processedMeasurements;
-        private int m_measurementReportingInterval;
+        private bool m_processSignalFilter;
+        private ISet<Guid> m_inputSignals;
+        private ISet<Guid> m_outputSignals;
+        private long m_processedEntities;
+        private int m_entityReportingInterval;
         private bool m_enabled;
         private long m_startTime;
         private long m_stopTime;
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
         private int m_processingInterval;
-        private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
 
@@ -140,7 +136,6 @@ namespace GSF.TimeSeries.Adapters
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
             m_processingInterval = -1;
-            GenHashCode();
 
             m_initializationTimeout = DefaultInitializationTimeout;
         }
@@ -172,7 +167,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_name = value;
-                GenHashCode();
             }
         }
 
@@ -188,7 +182,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_id = value;
-                GenHashCode();
             }
         }
 
@@ -197,19 +190,15 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Example connection string using manually defined measurements:<br/>
-        /// <c>inputMeasurementKeys={P1:1245;P1:1247;P2:1335};</c><br/>
-        /// <c>outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}</c><br/>
-        /// When defined manually, elements in key:<br/>
-        /// * inputMeasurementKeys are defined as "ArchiveSource:PointID"<br/>
-        /// * outputMeasurements are defined as "ArchiveSource:PointID,Adder,Multiplier", the adder and multiplier are optional
-        /// defaulting to 0.0 and 1.0 respectively.
-        /// <br/>
+        /// Example connection string using manually defined signals:<br/>
+        /// <c>inputSignals={P1:1245;P1:1247;P2:1335};</c><br/>
+        /// <c>outputSignals={P3:1345;P3:1346;P3:1347}</c><br/>
+        /// When defined manually, elements in key are defined as "ArchiveSource:PointID"<br/>
         /// </para>
         /// <para>
-        /// Example connection string using measurements defined in a <see cref="DataSource"/> table:<br/>
-        /// <c>inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='GSF' AND SignalType='FREQ' ORDER BY ID};</c><br/>
-        /// <c>outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
+        /// Example connection string using signals defined in a <see cref="DataSource"/> table:<br/>
+        /// <c>inputSignals={FILTER ActiveMeasurements WHERE Company='GSF' AND SignalType='FREQ' ORDER BY ID};</c><br/>
+        /// <c>outputSignals={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
         /// <br/>
         /// Basic filtering syntax is as follows:<br/>
         /// <br/>
@@ -230,7 +219,7 @@ namespace GSF.TimeSeries.Adapters
         ///     <item>
         ///         <term>PointTag</term>
         ///         <term>NVARCHAR</term>
-        ///         <description>Point tag of measurement.</description>
+        ///         <description>Point tag of signal.</description>
         ///     </item>
         ///     <item>
         ///         <term>Adder</term>
@@ -297,43 +286,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
-        /// </summary>
-        /// <remarks>
-        /// Adapters can specify a list of adapters that it depends on. The measurement routing
-        /// system will hold on to measurements that need to be passed through an adapter's
-        /// dependencies. Those measurements will be routed to the dependent adapter when all of
-        /// its dependencies have finished processing them.
-        /// </remarks>
-        public virtual string Dependencies
-        {
-            get
-            {
-                return m_dependencies;
-            }
-            set
-            {
-                m_dependencies = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        public virtual long DependencyTimeout
-        {
-            get
-            {
-                return m_dependencyTimeout;
-            }
-            set
-            {
-                m_dependencyTimeout = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
         /// </summary>
         public virtual bool AutoStart
@@ -349,99 +301,89 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
+        /// Gets or sets flag that determines if signals being queued for processing should be tested to see if they are in the <see cref="InputSignals"/>.
         /// </summary>
-        public virtual bool ProcessMeasurementFilter
+        public virtual bool ProcessSignalFilter
         {
             get
             {
-                return m_processMeasurementFilter;
+                return m_processSignalFilter;
             }
             set
             {
-                m_processMeasurementFilter = value;
+                m_processSignalFilter = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
+        /// Gets or sets primary keys of input signals the <see cref="AdapterBase"/> expects, if any.
         /// </summary>
         /// <remarks>
-        /// If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
+        /// If your adapter needs to receive all signals, you must explicitly set InputSignals to null.
         /// </remarks>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        Description("Defines primary keys of input signals the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public virtual MeasurementKey[] InputMeasurementKeys
+        public virtual ISet<Guid> InputSignals
         {
             get
             {
-                return m_inputMeasurementKeys;
+                return m_inputSignals;
             }
             set
             {
-                m_inputMeasurementKeys = value;
-
-                // Update input key lookup hash table
-                if (value != null && value.Length > 0)
-                {
-                    m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
-                    m_inputMeasurementKeysHash.Sort();
-                }
-                else
-                    m_inputMeasurementKeysHash = null;
-
-                OnInputMeasurementKeysUpdated();
+                m_inputSignals = value;
+                OnInputSignalsUpdated();
             }
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
+        /// Gets or sets output signals that the <see cref="AdapterBase"/> will produce, if any.
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        Description("Defines primary keys of output signals the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public virtual IMeasurement[] OutputMeasurements
+        public virtual ISet<Guid> OutputSignals
         {
             get
             {
-                return m_outputMeasurements;
+                return m_outputSignals;
             }
             set
             {
-                m_outputMeasurements = value;
-                OnOutputMeasurementsUpdated();
+                m_outputSignals = value;
+                OnOutputSignalsUpdated();
             }
         }
 
         /// <summary>
-        /// Gets the total number of measurements handled thus far by the <see cref="AdapterBase"/>.
+        /// Gets the total number of time-series entities handled thus far by the <see cref="AdapterBase"/>.
         /// </summary>
-        public virtual long ProcessedMeasurements
+        public virtual long ProcessedEntities
         {
             get
             {
-                return m_processedMeasurements;
+                return m_processedEntities;
             }
         }
 
         /// <summary>
-        /// Gets or sets the measurement reporting interval.
+        /// Gets or sets the entity reporting interval.
         /// </summary>
         /// <remarks>
-        /// This is used to determined how many measurements should be processed before reporting status.
+        /// This is used to determined how many entities should be processed before reporting status.
         /// </remarks>
-        public virtual int MeasurementReportingInterval
+        public virtual int EntityReportingInterval
         {
             get
             {
-                return m_measurementReportingInterval;
+                return m_entityReportingInterval;
             }
             set
             {
-                m_measurementReportingInterval = value;
+                m_entityReportingInterval = value;
             }
         }
 
@@ -610,10 +552,10 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                const int MaxMeasurementsToShow = 10;
+                const int MaxSignalsToShow = 10;
 
                 StringBuilder status = new StringBuilder();
-                DataSet dataSource = this.DataSource;
+                DataSet dataSource = DataSource;
 
                 status.AppendFormat("       Data source defined: {0}", (dataSource != null));
                 status.AppendLine();
@@ -624,7 +566,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
-                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
+                status.AppendFormat("      Using signal routing: {0}", !ProcessSignalFilter);
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
@@ -632,7 +574,7 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("         Connect on demand: {0}", !AutoStart);
                 status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
+                status.AppendFormat("        Processed entities: {0}", ProcessedEntities);
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
                 status.AppendLine();
@@ -647,7 +589,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
                     status.AppendLine();
                 }
-                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
+                status.AppendFormat("   Item reporting interval: {0}", EntityReportingInterval);
                 status.AppendLine();
                 status.AppendFormat("                Adapter ID: {0}", ID);
                 status.AppendLine();
@@ -680,37 +622,37 @@ namespace GSF.TimeSeries.Adapters
 
                 status.AppendLine();
 
-                if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
+                if ((object)OutputSignals != null && OutputSignals.Any(signalID => signalID != Guid.Empty))
                 {
-                    status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
+                    status.AppendFormat("            Output signals: {0} defined signals", OutputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
+                    // TODO: Fix metadata lookup and display point tag instead of signal ID
+                    foreach (Guid signalID in OutputSignals.Take(MaxSignalsToShow))
                     {
-                        status.Append(OutputMeasurements[i].ToString().TruncateRight(40).PadLeft(40));
+                        status.Append(LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
                         status.Append(" ");
-                        status.AppendLine(OutputMeasurements[i].ID.ToString());
+                        status.AppendLine(signalID.ToString());
                     }
 
-                    if (OutputMeasurements.Length > MaxMeasurementsToShow)
+                    if (OutputSignals.Count > MaxSignalsToShow)
                         status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
 
-                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
+                if ((object)InputSignals != null && InputSignals.Any(signalID => signalID != Guid.Empty))
                 {
-                    status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
+                    status.AppendFormat("             Input Signals: {0} defined signals", InputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
-                        status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
+                    // TODO: Fix metadata lookup and display point tag next to measurement key
+                    foreach (Guid signalID in InputSignals.Take(MaxSignalsToShow))
+                        status.Append(LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
 
-                    if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
+                    if (InputSignals.Count > MaxSignalsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
@@ -758,18 +700,18 @@ namespace GSF.TimeSeries.Adapters
             Dictionary<string, string> settings = Settings;
             string setting;
 
-            if (settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, setting);
+            if (settings.TryGetValue("inputSignals", out setting))
+                InputSignals = ParseFilterExpression(DataSource, true, setting);
             else
-                InputMeasurementKeys = new MeasurementKey[0];
+                InputSignals = new HashSet<Guid>();
 
-            if (settings.TryGetValue("outputMeasurements", out setting))
-                OutputMeasurements = ParseOutputMeasurements(DataSource, true, setting);
+            if (settings.TryGetValue("outputSignals", out setting))
+                OutputSignals = ParseFilterExpression(DataSource, true, setting);
 
-            if (settings.TryGetValue("measurementReportingInterval", out setting))
-                MeasurementReportingInterval = int.Parse(setting);
+            if (settings.TryGetValue("entityReportingInterval", out setting))
+                EntityReportingInterval = int.Parse(setting);
             else
-                MeasurementReportingInterval = DefaultMeasurementReportingInterval;
+                EntityReportingInterval = DefaultEntityReportingInterval;
 
             if (settings.TryGetValue("connectOnDemand", out setting))
                 AutoStart = !setting.ParseBoolean();
@@ -791,11 +733,6 @@ namespace GSF.TimeSeries.Adapters
 
             if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out processingInterval))
                 ProcessingInterval = processingInterval;
-
-            if (settings.TryGetValue("dependencyTimeout", out setting))
-                m_dependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
-            else
-                m_dependencyTimeout = Ticks.PerSecond / 30L;
         }
 
         /// <summary>
@@ -836,7 +773,7 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Manually sets the initialized state of the adapter.", "Administrator", "Editor")]
         public virtual void SetInitializedState(bool initialized)
         {
-            this.Initialized = initialized;
+            Initialized = initialized;
         }
 
         /// <summary>
@@ -847,16 +784,16 @@ namespace GSF.TimeSeries.Adapters
         public abstract string GetShortStatus(int maxLength);
 
         /// <summary>
-        /// Determines if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.
+        /// Determines if specified signal ID is defined in <see cref="InputSignals"/>.
         /// </summary>
-        /// <param name="item">Primary key of measurement to find.</param>
-        /// <returns>true if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.</returns>
-        public virtual bool IsInputMeasurement(MeasurementKey item)
+        /// <param name="item">Primary key of signal to find.</param>
+        /// <returns>true if specified signal ID is defined in <see cref="InputSignals"/>.</returns>
+        public virtual bool IsInputSignal(Guid item)
         {
-            if (m_inputMeasurementKeysHash != null)
-                return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
+            if ((object)InputSignals != null)
+                return InputSignals.Contains(item);
 
-            // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
+            // If no input signals are defined we must assume user wants to accept all signals - yikes!
             return true;
         }
 
@@ -924,46 +861,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Serves as a hash function for the current <see cref="AdapterBase"/>.
-        /// </summary>
-        /// <returns>A hash code for the current <see cref="AdapterBase"/>.</returns>
-        public override int GetHashCode()
-        {
-            return m_hashCode;
-        }
-
-        /// <summary>
-        /// Raises the <see cref="Notify"/> event with a collection of measurements that have been processed.
-        /// </summary>
-        /// <param name="measurements">The processed measurements.</param>
-        protected virtual void OnNotify(IEnumerable<IMeasurement> measurements)
-        {
-            if ((object)measurements != null)
-            {
-                foreach (IMeasurement measurement in measurements)
-                    OnNotify(measurement);
-            }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="Notify"/> event with a measurement that has been processed.
-        /// </summary>
-        /// <param name="measurement">The processed measurement.</param>
-        protected virtual void OnNotify(IMeasurement measurement)
-        {
-            try
-            {
-                if ((object)Notify != null)
-                    Notify(this, new EventArgs<IMeasurement>(measurement));
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for Notify event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
         /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
         /// <param name="status">New status message.</param>
@@ -1014,36 +911,36 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
+        /// Raises <see cref="InputSignalsUpdated"/> event.
         /// </summary>
-        protected virtual void OnInputMeasurementKeysUpdated()
+        protected virtual void OnInputSignalsUpdated()
         {
             try
             {
-                if ((object)InputMeasurementKeysUpdated != null)
-                    InputMeasurementKeysUpdated(this, EventArgs.Empty);
+                if ((object)InputSignalsUpdated != null)
+                    InputSignalsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputMeasurementKeysUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputSignalsUpdated event: {0}", ex.Message), ex));
             }
         }
 
         /// <summary>
-        /// Raises <see cref="OutputMeasurementsUpdated"/> event.
+        /// Raises <see cref="OutputSignalsUpdated"/> event.
         /// </summary>
-        protected virtual void OnOutputMeasurementsUpdated()
+        protected virtual void OnOutputSignalsUpdated()
         {
             try
             {
-                if ((object)OutputMeasurementsUpdated != null)
-                    OutputMeasurementsUpdated(this, EventArgs.Empty);
+                if ((object)OutputSignalsUpdated != null)
+                    OutputSignalsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputMeasurementsUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputSignalsUpdated event: {0}", ex.Message), ex));
             }
         }
 
@@ -1065,31 +962,43 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Safely increments the total processed measurements.
+        /// Raises the <see cref="EntitiesDiscarded"/> event.
         /// </summary>
-        /// <param name="totalAdded"></param>
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        protected virtual void IncrementProcessedMeasurements(long totalAdded)
+        /// <param name="entities">Enumeration of <see cref="ITimeSeriesEntity"/> objects being discarded.</param>
+        protected virtual void OnEntitiesDiscarded(IEnumerable<ITimeSeriesEntity> entities)
         {
-            // Check to see if total number of added points will exceed process interval used to show periodic
-            // messages of how many points have been archived so far...
-            int interval = MeasurementReportingInterval;
-
-            if (interval > 0)
+            try
             {
-                bool showMessage = m_processedMeasurements + totalAdded >= (m_processedMeasurements / interval + 1) * interval;
-
-                m_processedMeasurements += totalAdded;
-
-                if (showMessage)
-                    OnStatusMessage("{0:N0} measurements have been processed so far...", m_processedMeasurements);
+                if ((object)EntitiesDiscarded != null)
+                    EntitiesDiscarded(this, new EventArgs<IEnumerable<ITimeSeriesEntity>>(entities));
+            }
+            catch (Exception ex)
+            {
+                // We protect our code from consumer thrown exceptions
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for DiscardingMeasurements event: {0}", ex.Message), ex));
             }
         }
 
-        private void GenHashCode()
+        /// <summary>
+        /// Safely increments the total processed time-series entities.
+        /// </summary>
+        /// <param name="totalAdded">The number of time-series entities processed.</param>
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        protected virtual void IncrementProcessedEntities(long totalAdded)
         {
-            // We cache hash code during construction or after element value change to speed usage
-            m_hashCode = (Name + ID.ToString()).GetHashCode();
+            // Check to see if total number of added points will exceed process interval used to show periodic
+            // messages of how many points have been archived so far...
+            int interval = EntityReportingInterval;
+
+            if (interval > 0)
+            {
+                bool showMessage = m_processedEntities + totalAdded >= (m_processedEntities / interval + 1) * interval;
+
+                m_processedEntities += totalAdded;
+
+                if (showMessage)
+                    OnStatusMessage("{0:N0} entities have been processed so far...", m_processedEntities);
+            }
         }
 
         #endregion
@@ -1114,7 +1023,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This method can be safely called from multiple threads.
         /// </remarks>
-        public static bool ParseFilterExpression(string filterExpression, out string tableName, out string whereExpression, out string sortField, out int takeCount)
+        public static bool ParseFilterSyntax(string filterExpression, out string tableName, out string whereExpression, out string sortField, out int takeCount)
         {
             tableName = null;
             whereExpression = null;
@@ -1259,12 +1168,12 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Loads an <see cref="IOutputAdapter"/> or <see cref="IActionAdapter"/> instance's input measurement keys from a specific set of source ID's.
+        /// Loads an <see cref="IOutputAdapter"/> or <see cref="IActionAdapter"/> instance's input signals from a specific set of source ID's.
         /// </summary>
-        /// <param name="adapter"><see cref="IAdapter"/> to load input measurement keys for.</param>
+        /// <param name="adapter"><see cref="IAdapter"/> to load input signals for.</param>
         /// <param name="measurementTable">Measurement table name used to load input source ID's.</param>
         /// <remarks>
-        /// Any existing input measurement keys will be distinctly merged with those associated with specified source ID's.
+        /// Any existing input signals will be distinctly merged with those associated with specified source ID's.
         /// </remarks>
         public static void LoadInputSourceIDs(IAdapter adapter, string measurementTable = "ActiveMeasurements")
         {
@@ -1294,35 +1203,30 @@ namespace GSF.TimeSeries.Adapters
                         }
 
                         DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
-                        MeasurementKey[] sourceIDKeys = null;
 
                         if (filteredRows.Length > 0)
-                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
-
-                        if (sourceIDKeys != null)
                         {
-                            // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
-                            if (adapter.InputMeasurementKeys == null)
-                                adapter.InputMeasurementKeys = sourceIDKeys;
-                            else
-                                adapter.InputMeasurementKeys = sourceIDKeys.Concat(adapter.InputMeasurementKeys).Distinct().ToArray();
+                            if ((object)adapter.InputSignals == null)
+                                adapter.InputSignals = new HashSet<Guid>();
+
+                            adapter.InputSignals.UnionWith(filteredRows.Select(row => row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>()));
                         }
                     }
                 }
                 catch
                 {
-                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                    // Errors here are not catastrophic, this simply limits the auto-assignment of input signals based on specified source ID's
                 }
             }
         }
 
         /// <summary>
-        /// Loads an <see cref="IInputAdapter"/> or <see cref="IActionAdapter"/> instance's output measurements from a specific set of source ID's.
+        /// Loads an <see cref="IInputAdapter"/> or <see cref="IActionAdapter"/> instance's output signals from a specific set of source ID's.
         /// </summary>
-        /// <param name="adapter"><see cref="IAdapter"/> to load output measurements for.</param>
+        /// <param name="adapter"><see cref="IAdapter"/> to load output signals for.</param>
         /// <param name="measurementTable">Measurement table name used to load output source ID's.</param>
         /// <remarks>
-        /// Any existing output measurements will be distinctly merged with those associated with specified source ID's.
+        /// Any existing output signals will be distinctly merged with those associated with specified source ID's.
         /// </remarks>
         public static void LoadOutputSourceIDs(IAdapter adapter, string measurementTable = "ActiveMeasurements")
         {
@@ -1335,7 +1239,7 @@ namespace GSF.TimeSeries.Adapters
 
             if (sourceIDs != null)
             {
-                // Attempt to lookup output measurements for given source IDs from default measurement table, if defined
+                // Attempt to lookup output measurement keys for given source IDs from default measurement table, if defined
                 try
                 {
                     if (adapter.DataSource.Tables.Contains(measurementTable))
@@ -1352,82 +1256,34 @@ namespace GSF.TimeSeries.Adapters
                         }
 
                         DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
-                        MeasurementKey[] sourceIDKeys = null;
 
                         if (filteredRows.Length > 0)
-                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
-
-                        if (sourceIDKeys != null)
                         {
-                            List<IMeasurement> measurements = new List<IMeasurement>();
+                            if ((object)adapter.InputSignals == null)
+                                adapter.OutputSignals = new HashSet<Guid>();
 
-                            foreach (MeasurementKey key in sourceIDKeys)
-                            {
-                                // Create a new measurement for the provided field level information
-                                Measurement measurement = new Measurement
-                                    {
-                                        Key = key
-                                    };
-
-                                // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
-                                try
-                                {
-                                    if (adapter.DataSource.Tables.Contains(measurementTable))
-                                    {
-                                        filteredRows = adapter.DataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
-
-                                        if (filteredRows.Length > 0)
-                                        {
-                                            DataRow row = filteredRows[0];
-
-                                            measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                                            measurement.TagName = row["PointTag"].ToNonNullString();
-
-                                            // Attempt to update empty signal ID if available
-                                            if (measurement.Key.SignalID == Guid.Empty)
-                                                measurement.Key.UpdateSignalID(measurement.ID);
-
-                                            measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-                                            measurement.Adder = double.Parse(row["Adder"].ToString());
-                                        }
-                                    }
-                                }
-                                catch
-                                {
-                                    // Errors here are not catastrophic, this simply limits the available meta-data
-                                    measurement.ID = Guid.Empty;
-                                    measurement.TagName = string.Empty;
-                                }
-
-                                measurements.Add(measurement);
-                            }
-
-                            // Combine output measurements for source IDs with any existing output measurements and return unique set
-                            if (adapter.OutputMeasurements == null)
-                                adapter.OutputMeasurements = measurements.ToArray();
-                            else
-                                adapter.OutputMeasurements = measurements.Concat(adapter.OutputMeasurements).Distinct().ToArray();
+                            adapter.OutputSignals.UnionWith(filteredRows.Select(row => row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>()));
                         }
                     }
                 }
                 catch
                 {
-                    // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                    // Errors here are not catastrophic, this simply limits the auto-assignment of output signals based on specified source ID's
                 }
             }
         }
 
-        // Input keys can use DataSource for filtering desired set of input or output measurements
-        // based on any table and fields in the data set by using a filter expression instead of
-        // a list of measurement ID's. The format is as follows:
+        // Filter expression can use DataSource for filtering desired set of input or output
+        // signals based on any table and fields in the data set instead of a simple a list
+        // of signal ID's. The format is as follows:
 
         //  FILTER <TableName> WHERE <Expression> [ORDER BY <SortField>]
 
         // Source tables are expected to have at least the following fields:
         //
         //      ID          NVARCHAR    Measurement key formatted as: ArchiveSource:PointID
-        //      SignalID    GUID        Unique identification for measurement
-        //      PointTag    NVARCHAR    Point tag of measurement
+        //      SignalID    GUID        Unique identification for signal
+        //      PointTag    NVARCHAR    Point tag of signal
         //      Adder       FLOAT       Adder to apply to value, if any (default to 0.0)
         //      Multiplier  FLOAT       Multiplier to apply to value, if any (default to 1.0)
         //
@@ -1437,47 +1293,50 @@ namespace GSF.TimeSeries.Adapters
         // uses standard SQL syntax (it is simply the DataTable.Select filter expression).
 
         /// <summary>
-        /// Parses input measurement keys from connection string setting.
+        /// Parses filter expression from connection string setting.
         /// </summary>
-        /// <param name="dataSource">The <see cref="DataSet"/> used to define input measurement keys.</param>
-        /// <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining input measurement keys (see remarks about security).</param>
-        /// <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
-        /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
-        /// <returns>User selected input measurement keys.</returns>
+        /// <param name="dataSource">The <see cref="DataSet"/> used to define data that can be used in the expression.</param>
+        /// <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining input signals (see remarks about security).</param>
+        /// <param name="value">Value of setting used to define set of signals.</param>
+        /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying FILTER syntax.</param>
+        /// <returns>Set of signals defined by <paramref name="value"/>.</returns>
         /// <remarks>
         /// Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
         /// injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
         /// </remarks>
-        public static MeasurementKey[] ParseInputMeasurementKeys(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
+        public static ISet<Guid> ParseFilterExpression(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
         {
-            List<MeasurementKey> keys = new List<MeasurementKey>();
-            MeasurementKey key;
-            Guid id;
+            HashSet<Guid> signalIDs = new HashSet<Guid>();
+            bool dataSourceAvailable = ((object)dataSource != null);
+
             string tableName, expression, sortField;
             int takeCount;
-            bool dataSourceAvailable = ((object)dataSource != null);
+
+            MeasurementKey key;
+            Guid id;
 
             value = value.Trim();
 
             if (string.IsNullOrWhiteSpace(value))
-                return keys.ToArray();
+                return signalIDs;
 
-            if (dataSourceAvailable && ParseFilterExpression(value, out tableName, out expression, out sortField, out takeCount))
+            if (dataSourceAvailable && ParseFilterSyntax(value, out tableName, out expression, out sortField, out takeCount))
             {
+                // Filter expression was defined using FILTER syntax--run the query against the data set
                 foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
-                {
-                    if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
-                        keys.Add(key);
-                }
+                    signalIDs.Add(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
             }
             else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
             {
                 try
                 {
-                    // Load settings from the system settings category				
+                    // Filter expression was defined using SELECT syntax--check global
+                    // security settings and run the query against the database
+
+                    // Load security setting from the system settings category
                     ConfigurationFile config = ConfigurationFile.Current;
                     CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
-                    settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output measurements for adapters.");
+                    settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output signals for adapters.");
 
                     // Global configuration setting can override ability to use SELECT statements
                     if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
@@ -1487,10 +1346,7 @@ namespace GSF.TimeSeries.Adapters
                             DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
 
                             foreach (DataRow row in results.Rows)
-                            {
-                                if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
-                                    keys.Add(key);
-                            }
+                                signalIDs.Add(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
                         }
                     }
                     else
@@ -1500,294 +1356,80 @@ namespace GSF.TimeSeries.Adapters
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException(string.Format("Could not parse input measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
+                    throw new InvalidOperationException(string.Format("Could not parse signal definition from select statement \"{0}\": {1}", value, ex.Message), ex);
                 }
             }
             else
             {
-                // Add manually defined measurement keys
+                // Filter expression was defined as a simple list
+                // of signals--parse each signal individually
                 foreach (string item in value.Split(';'))
                 {
                     if (string.IsNullOrWhiteSpace(item))
                         continue;
 
-                    if (MeasurementKey.TryParse(item, Guid.Empty, out key))
+                    // Attempt to parse it as a GUID
+                    if (!Guid.TryParse(item, out id))
                     {
-                        // Attempt to update empty signal ID if available
-                        if (dataSourceAvailable && key.SignalID == Guid.Empty)
+                        // Attempt to parse it as a measurement key
+                        if (MeasurementKey.TryParse(item, out key))
                         {
-                            if (dataSource.Tables.Contains(measurementTable))
+                            // Search the data source for measurement keys that match the parsed measurement key
+                            if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                             {
                                 DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
 
                                 if (filteredRows.Length > 0)
-                                    key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                            }
-                        }
-
-                        keys.Add(key);
-                    }
-                    else if (Guid.TryParse(item, out id))
-                    {
-                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                        {
-                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
-
-                            if (filteredRows.Length > 0 && MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key))
-                                keys.Add(key);
-                        }
-                        else
-                        {
-                            keys.Add(MeasurementKey.LookupBySignalID(id));
-                        }
-                    }
-                    else
-                    {
-                        // Attempt to update empty signal ID if available
-                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                        {
-                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
-
-                            if (filteredRows.Length > 0)
-                            {
-                                key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
-                                keys.Add(key);
-                            }
-                        }
-
-                        if (key == default(MeasurementKey))
-                        {
-                            throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
-                        }
-                    }
-                }
-            }
-
-            return keys.ToArray();
-        }
-
-        /// <summary>
-        /// Parses output measurement keys from connection string setting.
-        /// </summary>
-        /// <param name="dataSource">The <see cref="DataSet"/> used to define output measurements.</param>
-        /// <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining output measurement keys (see remarks about security).</param>
-        /// <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
-        /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
-        /// <returns>User selected output measurements.</returns>
-        /// <remarks>
-        /// Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
-        /// injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
-        /// </remarks>
-        public static MeasurementKey[] ParseOutputMeasurementKeys(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
-        {
-            return ParseOutputMeasurements(dataSource, allowSelect, value, measurementTable).MeasurementKeys().ToArray();
-        }
-
-        /// <summary>
-        /// Parses output measurements from connection string setting.
-        /// </summary>
-        /// <param name="dataSource">The <see cref="DataSet"/> used to define output measurements.</param>
-        /// <param name="allowSelect">Determines if database access via "SELECT" statement should be allowed for defining output measurements (see remarks about security).</param>
-        /// <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
-        /// <param name="measurementTable">Measurement table name used to load additional meta-data; this is not used when specifying a FILTER expression.</param>
-        /// <returns>User selected output measurements.</returns>
-        /// <remarks>
-        /// Security warning: allowing SELECT statements, i.e., setting <paramref name="allowSelect"/> to <c>true</c>, should only be allowed in cases where SQL
-        /// injection would not be an issue (e.g., in places where a user can already access the database and would have nothing to gain via an injection attack).
-        /// </remarks>
-        public static IMeasurement[] ParseOutputMeasurements(DataSet dataSource, bool allowSelect, string value, string measurementTable = "ActiveMeasurements")
-        {
-            List<IMeasurement> measurements = new List<IMeasurement>();
-            Measurement measurement;
-            MeasurementKey key;
-            Guid id;
-            string tableName, expression, sortField;
-            int takeCount;
-            bool dataSourceAvailable = ((object)dataSource != null);
-
-            value = value.Trim();
-
-            if (string.IsNullOrWhiteSpace(value))
-                return measurements.ToArray();
-
-            if (dataSourceAvailable && ParseFilterExpression(value, out tableName, out expression, out sortField, out takeCount))
-            {
-                foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
-                {
-                    id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-
-                    measurement = new Measurement
-                    {
-                        ID = id,
-                        Key = MeasurementKey.Parse(row["ID"].ToString(), id),
-                        TagName = row["PointTag"].ToNonNullString(),
-                        Adder = double.Parse(row["Adder"].ToString()),
-                        Multiplier = double.Parse(row["Multiplier"].ToString())
-                    };
-
-                    measurements.Add(measurement);
-                }
-            }
-            else if (allowSelect && value.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase))
-            {
-                try
-                {
-                    // Load settings from the system settings category				
-                    ConfigurationFile config = ConfigurationFile.Current;
-                    CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
-                    settings.Add("AllowSelectFilterExpresssions", false, "Determines if database backed SELECT statements should be allowed as filter expressions for defining input and output measurements for adapters.");
-
-                    // Global configuration setting can override ability to use SELECT statements
-                    if (settings["AllowSelectFilterExpresssions"].ValueAsBoolean())
-                    {
-                        using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
-                        {
-                            DataTable results = database.Connection.RetrieveData(database.AdapterType, value);
-
-                            foreach (DataRow row in results.Rows)
-                            {
-                                id = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-
-                                measurement = new Measurement
-                                {
-                                    ID = id,
-                                    Key = MeasurementKey.Parse(row["ID"].ToString(), id),
-                                    TagName = row["PointTag"].ToNonNullString(),
-                                    Adder = double.Parse(row["Adder"].ToString()),
-                                    Multiplier = double.Parse(row["Multiplier"].ToString())
-                                };
-
-                                measurements.Add(measurement);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Database backed SELECT statements are disabled in the configuration.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException(string.Format("Could not parse output measurement definition from select statement \"{0}\": {1}", value, ex.Message), ex);
-                }
-            }
-            else
-            {
-                string[] elem;
-                double adder, multipler;
-
-                foreach (string item in value.Split(';'))
-                {
-                    if (string.IsNullOrWhiteSpace(item))
-                        continue;
-
-                    elem = item.Trim().Split(',');
-
-                    if (!MeasurementKey.TryParse(elem[0], Guid.Empty, out key))
-                    {
-                        if (Guid.TryParse(item, out id))
-                        {
-                            if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                            {
-                                DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
-
-                                if (filteredRows.Length > 0)
-                                    MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
-                            }
-                            else
-                            {
-                                key = MeasurementKey.LookupBySignalID(id);
+                                    id = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
                             }
                         }
                         else
                         {
-                            // Attempt to update empty signal ID if available
+                            // It couldn't be parsed as a measurement key, so assume the value is a point tag instead.
+                            // Search the data source for point tags that match the given point tag
                             if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                             {
                                 DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
 
                                 if (filteredRows.Length > 0)
-                                {
-                                    key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
-                                }
-                            }
-
-                            if (key == default(MeasurementKey))
-                            {
-                                throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+                                    id = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
                             }
                         }
                     }
 
-                    // Adder and multiplier may be optionally specified
-                    if (elem.Length > 1)
-                    {
-                        if (!double.TryParse(elem[1].Trim(), out adder))
-                            adder = 0.0D;
-                    }
+                    // If we were able to find a valid signal ID, add it to the list of signals
+                    if (id != Guid.Empty)
+                        signalIDs.Add(id);
                     else
-                    {
-                        adder = 0.0D;
-                    }
-
-                    if (elem.Length > 2)
-                    {
-                        if (!double.TryParse(elem[2].Trim(), out multipler))
-                            multipler = 1.0D;
-                    }
-                    else
-                    {
-                        multipler = 1.0D;
-                    }
-
-                    // Create a new measurement for the provided field level information
-                    measurement = new Measurement
-                    {
-                        ID = key.SignalID,
-                        Key = key,
-                        Adder = adder,
-                        Multiplier = multipler
-                    };
-
-                    // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
-                    try
-                    {
-                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
-                        {
-                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
-
-                            if (filteredRows.Length > 0)
-                            {
-                                DataRow row = filteredRows[0];
-
-                                measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                                measurement.TagName = row["PointTag"].ToNonNullString();
-
-                                // Attempt to update empty signal ID if available
-                                if (measurement.Key.SignalID == Guid.Empty)
-                                    measurement.Key.UpdateSignalID(measurement.ID);
-
-                                // Manually specified adder and multiplier take precedence, but if none were specified,
-                                // then those defined in the meta-data are used instead
-                                if (elem.Length < 3)
-                                    measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-
-                                if (elem.Length < 2)
-                                    measurement.Adder = double.Parse(row["Adder"].ToString());
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Errors here are not catastrophic, this simply limits the available meta-data
-                        measurement.TagName = string.Empty;
-                    }
-
-                    measurements.Add(measurement);
+                        throw new InvalidOperationException(string.Format("Could not parse input signal definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
                 }
             }
 
-            return measurements.ToArray();
+            return signalIDs;
+        }
+
+        /// <summary>
+        /// Looks up the measurement key for the given signal by searching in the data source.
+        /// </summary>
+        /// <param name="dataSource">The source of data to be searched for the measurement key.</param>
+        /// <param name="signalID">The identifier for the signal to look up the measurement key.</param>
+        /// <param name="measurementTable">Measurement table name to search for measurement key.</param>
+        /// <returns>The measurement key for the given signal or the default measurement key if no measurement key can be found.</returns>
+        public static MeasurementKey LookUpMeasurementKey(DataSet dataSource, Guid signalID, string measurementTable = "ActiveMeasurements")
+        {
+            try
+            {
+                DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = {0}", signalID));
+
+                if (filteredRows.Length > 0)
+                    return MeasurementKey.Parse(filteredRows[0]["ID"].ToNonNullString("__"));
+            }
+            catch
+            {
+                // Errors will result in returning the default measurement key
+            }
+
+            return default(MeasurementKey);
         }
 
         #endregion

@@ -248,7 +248,7 @@ namespace GSF.TimeSeries.Routing
 
         // Static Fields
         private static readonly Type s_fundamentalBaseType = typeof(ITimeSeriesEntity);
-        private static readonly Type s_genericListDefinition = typeof(List<object>).GetGenericTypeDefinition();
+        private static readonly Type s_genericListDefinition = typeof(List<>);
 
         // Static Methods
 

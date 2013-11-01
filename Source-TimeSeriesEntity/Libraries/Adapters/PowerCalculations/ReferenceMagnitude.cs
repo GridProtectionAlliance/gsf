@@ -115,13 +115,13 @@ namespace PowerCalculations
         /// <param name="index">Index of frame within the one second sample.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            if (frame.Measurements.Count > 0)
+            if (frame.Entities.Count > 0)
             {
                 // Calculate the average magnitude
-                m_referenceMagnitude = frame.Measurements.Values.Select(m => m.AdjustedValue).Average();
+                m_referenceMagnitude = frame.Entities.Values.Select(m => m.AdjustedValue).Average();
 
                 // Provide calculated measurement for external consumption
-                OnNewMeasurements(new IMeasurement[] { Measurement.Clone(OutputMeasurements[0], m_referenceMagnitude, frame.Timestamp) });
+                OnNewEntities(new IMeasurement[] { Measurement.Clone(OutputMeasurements[0], m_referenceMagnitude, frame.Timestamp) });
             }
             else
                 m_referenceMagnitude = 0.0D;

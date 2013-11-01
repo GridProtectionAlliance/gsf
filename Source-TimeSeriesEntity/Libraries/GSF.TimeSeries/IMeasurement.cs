@@ -27,17 +27,9 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 
 namespace GSF.TimeSeries
 {
-    /// <summary>
-    /// Method signature for function used to apply a downsampling filter over a sequence of <see cref="IMeasurement{T}"/> values.
-    /// </summary>
-    /// <param name="source">Sequence of <see cref="IMeasurement{T}"/> values over which to apply filter.</param>
-    /// <returns>Result of filter applied to sequence of <see cref="IMeasurement{T}"/> values.</returns>
-    public delegate T TimeSeriesFilterFunction<T>(IEnumerable<T> source) where T : ITimeSeriesEntity;
-
     #region [ Enumerations ]
 
     /// <summary>
@@ -188,10 +180,10 @@ namespace GSF.TimeSeries
     /// <remarks>
     /// This interface abstractly represents a measured value at an exact time interval.
     /// </remarks>
-    public interface IMeasurement<out T> : ITimeSeriesEntity
+    public interface IMeasurement : ITimeSeriesEntity
     {
         /// <summary>
-        /// Gets <see cref="MeasurementStateFlags"/> associated with this <see cref="IMeasurement{T}"/>.
+        /// Gets <see cref="MeasurementStateFlags"/> associated with this <see cref="IMeasurement"/>.
         /// </summary>
         MeasurementStateFlags StateFlags
         {
@@ -199,9 +191,26 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
+        /// Gets the raw value of this <see cref="IMeasurement"/>.
+        /// </summary>
+        object Value
+        {
+            get;
+        }
+    }
+
+    /// <summary>
+    /// Represents an interface for an abstract measurement value measured by a device at an exact time.
+    /// </summary>
+    /// <remarks>
+    /// This interface abstractly represents a measured value at an exact time interval.
+    /// </remarks>
+    public interface IMeasurement<out T> : IMeasurement
+    {
+        /// <summary>
         /// Gets the raw value of this <see cref="IMeasurement{T}"/>.
         /// </summary>
-        T Value
+        new T Value
         {
             get;
         }
@@ -215,7 +224,7 @@ namespace GSF.TimeSeries
     }
 
     /// <summary>
-    /// Defines static extension functions for <see cref="IMeasurement{T}"/> implementations.
+    /// Defines static extension functions for <see cref="IMeasurement"/> implementations.
     /// </summary>
     /// <remarks>
     /// These helper functions map to the previously defined corresponding properties to help with the transition of <see cref="MeasurementStateFlags"/>.
@@ -227,7 +236,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement{T}"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="MeasurementStateFlags.BadData"/> is not set.</returns>
-        public static bool ValueQualityIsGood<T>(this IMeasurement<T> measurement)
+        public static bool ValueQualityIsGood(this IMeasurement measurement)
         {
             return (measurement.StateFlags & MeasurementStateFlags.BadData) == 0;
         }
@@ -237,7 +246,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement{T}"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="MeasurementStateFlags.BadTime"/> is not set.</returns>
-        public static bool TimestampQualityIsGood<T>(this IMeasurement<T> measurement)
+        public static bool TimestampQualityIsGood(this IMeasurement measurement)
         {
             return (measurement.StateFlags & MeasurementStateFlags.BadTime) == 0;
         }
@@ -247,7 +256,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement{T}"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="MeasurementStateFlags.DiscardedValue"/> is not set.</returns>
-        public static bool IsDiscarded<T>(this IMeasurement<T> measurement)
+        public static bool IsDiscarded(this IMeasurement measurement)
         {
             return (measurement.StateFlags & MeasurementStateFlags.DiscardedValue) > 0;
         }
@@ -257,7 +266,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement{T}"/> instance to test.</param>
         /// <returns><c>true</c> if <see cref="MeasurementStateFlags.CalcuatedValue"/> is not set.</returns>
-        public static bool IsCalculated<T>(this IMeasurement<T> measurement)
+        public static bool IsCalculated(this IMeasurement measurement)
         {
             return (measurement.StateFlags & MeasurementStateFlags.CalcuatedValue) > 0;
         }

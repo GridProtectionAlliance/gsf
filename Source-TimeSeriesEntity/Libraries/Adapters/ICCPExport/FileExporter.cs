@@ -359,7 +359,7 @@ namespace ICCPExport
 
             // We enable tracking of latest measurements so we can use these values if points are missing - since we are using
             // latest measurement tracking, we sort all incoming points even though most of them will be thrown out...
-            TrackLatestMeasurements = true;
+            TrackLatestEntities = true;
         }
 
         /// <summary>
@@ -374,7 +374,7 @@ namespace ICCPExport
             // Only publish when the export interval time has passed
             if ((timestamp - m_lastPublicationTime).ToMilliseconds() > m_exportInterval)
             {
-                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
                 m_lastPublicationTime = timestamp;
 
                 if (measurements.Count > 0)
@@ -420,7 +420,7 @@ namespace ICCPExport
                                 else
                                 {
                                     // Didn't find measurement in this frame, try using a recent value
-                                    measurementValue = LatestMeasurements[inputMeasurementKey.SignalID];
+                                    measurementValue = LatestEntities[inputMeasurementKey.SignalID];
 
                                     // Interpret data quality flags - if no recent measurement is available, we mark it as bad
                                     measurementQuality = (Double.IsNaN(measurementValue) ? DataQuality.Bad : DataQuality.Good);

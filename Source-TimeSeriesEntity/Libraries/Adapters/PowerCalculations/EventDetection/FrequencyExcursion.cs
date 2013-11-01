@@ -347,8 +347,8 @@ namespace PowerCalculations.EventDetection
                 m_alarmProhibitCounter--;
 
             // Calculate the average of all the frequencies that arrived in this frame
-            if (frame.Measurements.Count > 0)
-                averageFrequency = frame.Measurements.Select(m => m.Value.AdjustedValue).Average();
+            if (frame.Entities.Count > 0)
+                averageFrequency = frame.Entities.Select(m => m.Value.AdjustedValue).Average();
 
             // Track new frequency and its timestamp
             m_frequencies.Add(averageFrequency);
@@ -397,7 +397,7 @@ namespace PowerCalculations.EventDetection
                 // Expose output measurement values
                 IMeasurement[] outputMeasurements = OutputMeasurements;
 
-                OnNewMeasurements(new IMeasurement[]
+                OnNewEntities(new IMeasurement[]
                 { 
                     Measurement.Clone(outputMeasurements[(int)Output.WarningSignal], warningSignaled ? 1.0D : 0.0D, frame.Timestamp),
                     Measurement.Clone(outputMeasurements[(int)Output.FrequencyDelta], frequencyDelta, frame.Timestamp),

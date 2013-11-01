@@ -52,7 +52,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnpublishedSamples;
+        public event EventHandler<EventArgs<int>> UnprocessedEntities;
 
         /// <summary>
         /// This event is raised if there are any measurements being discarded during the sorting process.
@@ -215,15 +215,15 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="UnpublishedSamples"/> event.
+        /// Raises the <see cref="UnprocessedEntities"/> event.
         /// </summary>
         /// <param name="unpublishedSamples">Total number of unpublished seconds of data in the queue.</param>
         protected virtual void OnUnpublishedSamples(int unpublishedSamples)
         {
             try
             {
-                if (UnpublishedSamples != null)
-                    UnpublishedSamples(this, new EventArgs<int>(unpublishedSamples));
+                if (UnprocessedEntities != null)
+                    UnprocessedEntities(this, new EventArgs<int>(unpublishedSamples));
             }
             catch (Exception ex)
             {
@@ -278,9 +278,9 @@ namespace GSF.TimeSeries.Adapters
             if (item != null)
             {
                 // Wire up events
-                item.NewMeasurements += item_NewMeasurements;
-                item.UnpublishedSamples += item_UnpublishedSamples;
-                item.DiscardingMeasurements += item_DiscardingMeasurements;
+                item.NewEntities += ItemNewEntities;
+                item.UnprocessedEntities += ItemUnprocessedEntities;
+                item.EntitiesDiscarded += ItemEntitiesDiscarded;
 
                 // Attach to collection-specific temporal support event
                 collection = item as ActionAdapterCollection;
@@ -303,9 +303,9 @@ namespace GSF.TimeSeries.Adapters
             if (item != null)
             {
                 // Un-wire events
-                item.NewMeasurements -= item_NewMeasurements;
-                item.UnpublishedSamples -= item_UnpublishedSamples;
-                item.DiscardingMeasurements -= item_DiscardingMeasurements;
+                item.NewEntities -= ItemNewEntities;
+                item.UnprocessedEntities -= ItemUnprocessedEntities;
+                item.EntitiesDiscarded -= ItemEntitiesDiscarded;
 
                 // Detach from collection-specific temporal support event
                 collection = item as ActionAdapterCollection;
@@ -318,21 +318,21 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Raise new measurements event on behalf of each item in collection
-        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        private void ItemNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             if (NewMeasurements != null)
                 NewMeasurements(sender, e);
         }
 
         // Raise unpublished samples event on behalf of each item in collection
-        private void item_UnpublishedSamples(object sender, EventArgs<int> e)
+        private void ItemUnprocessedEntities(object sender, EventArgs<int> e)
         {
-            if (UnpublishedSamples != null)
-                UnpublishedSamples(sender, e);
+            if (UnprocessedEntities != null)
+                UnprocessedEntities(sender, e);
         }
 
         // Raise discarding measurements event on behalf of each item in collection
-        private void item_DiscardingMeasurements(object sender, EventArgs<IEnumerable<IMeasurement>> e)
+        private void ItemEntitiesDiscarded(object sender, EventArgs<IEnumerable<IMeasurement>> e)
         {
             if (DiscardingMeasurements != null)
                 DiscardingMeasurements(sender, e);

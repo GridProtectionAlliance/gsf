@@ -72,11 +72,11 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                return base.InputMeasurementKeys;
+                return base.InputSignals;
             }
             set
             {
-                base.InputMeasurementKeys = value;
+                base.InputSignals = value;
 
                 m_inputMeasurementKeyTypes = new SignalType[value.Length];
 
@@ -98,11 +98,11 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                return base.OutputMeasurements;
+                return base.OutputSignals;
             }
             set
             {
-                base.OutputMeasurements = value;
+                base.OutputSignals = value;
 
                 m_outputMeasurementTypes = new SignalType[value.Length];
 
@@ -114,7 +114,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Gets or sets input measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.InputMeasurementKeys"/>, if any.
+        /// Gets or sets input measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.InputSignals"/>, if any.
         /// </summary>
         public virtual SignalType[] InputMeasurementKeyTypes
         {
@@ -125,7 +125,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Gets or sets output measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.OutputMeasurements"/>, if any.
+        /// Gets or sets output measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.OutputSignals"/>, if any.
         /// </summary>
         public virtual SignalType[] OutputMeasurementTypes
         {

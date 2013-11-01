@@ -189,7 +189,7 @@ namespace Dnp3Adapters
             m_Manager.AddTCPClient(m_portName, tcp.level, tcp.retryMs, tcp.address, tcp.port);            
             var adapter = new TimeSeriesDataObserver(new MeasurementLookup(m_MeasMap));
             adapter.NewMeasurements += adapter_NewMeasurements;
-            adapter.NewMeasurements += OnNewMeasurements;           
+            adapter.NewMeasurements += OnNewEntities;           
             var acceptor = m_Manager.AddMaster(m_portName, Name, FilterLevel.LEV_WARNING, adapter, m_MasterConfig.master);
             m_active = true;
         }

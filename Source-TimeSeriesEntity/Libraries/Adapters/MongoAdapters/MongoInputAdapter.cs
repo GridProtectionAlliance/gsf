@@ -356,7 +356,7 @@ namespace MongoAdapters
         /// <returns>The short status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Measurements retrieved: {0}", ProcessedMeasurements);
+            return string.Format("Measurements retrieved: {0}", ProcessedEntities);
         }
 
         // The timer that publishes measurements coming from the MongoDB database.
@@ -392,7 +392,7 @@ namespace MongoAdapters
 
                 // Set the last-used timestamp to the new value and publish the measurements.
                 m_lastTimestamp = foundWrapper.Timestamp;
-                OnNewMeasurements(measurements);
+                OnNewEntities(measurements);
             }
             catch
             {

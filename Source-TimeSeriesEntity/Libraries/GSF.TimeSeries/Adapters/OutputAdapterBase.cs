@@ -18,14 +18,13 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -39,9 +38,9 @@ namespace GSF.TimeSeries.Adapters
     /// Represents the base class for any outgoing data stream.
     /// </summary>
     /// <remarks>
-    /// This base class acts as a measurement queue so that output adapters can temporarily go
-    /// offline without losing any measurements to be processed. Derived classes are expected to
-    /// override <see cref="ProcessMeasurements"/> to handle queued measurements.
+    /// This base class acts as a time-series entity queue so that output adapters can temporarily go
+    /// offline without losing any entities to be processed. Derived classes are expected to
+    /// override <see cref="ProcessEntities"/> to handle queued entities.
     /// </remarks>
     public abstract class OutputAdapterBase : AdapterBase, IOutputAdapter
     {
@@ -50,23 +49,23 @@ namespace GSF.TimeSeries.Adapters
         // Events
 
         /// <summary>
-        /// Event is raised every five seconds allowing host to track total number of unprocessed measurements.
+        /// Event is raised every five seconds allowing host to track total number of unprocessed entities.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Base class reports current queue size of unprocessed measurements so that if queue size reaches
-        /// an unhealthy threshold, host can take evasive action.
+        /// Implementations of this interface are expected to report current queue size of unprocessed
+        /// time-series entities so that if queue size reaches an unhealthy threshold, host can take action.
         /// </para>
         /// <para>
-        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed measurements.
+        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
         /// </para>
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnprocessedMeasurements;
+        public event EventHandler<EventArgs<int>> UnprocessedEntities;
 
         // Fields
-        private ProcessQueue<IMeasurement> m_measurementQueue;
+        private ProcessQueue<ITimeSeriesEntity> m_entityQueue;
         private List<string> m_inputSourceIDs;
-        private MeasurementKey[] m_requestedInputMeasurementKeys;
+        private ISet<Guid> m_requestedInputSignals;
         private Timer m_connectionTimer;
         private Timer m_monitorTimer;
         private bool m_disposed;
@@ -80,8 +79,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected OutputAdapterBase()
         {
-            m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
-            m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
+            m_entityQueue = ProcessQueue<ITimeSeriesEntity>.CreateRealTimeQueue(ProcessEntities);
+            m_entityQueue.ProcessException += EntityQueueProcessException;
 
             m_connectionTimer = new Timer();
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
@@ -93,8 +92,8 @@ namespace GSF.TimeSeries.Adapters
             m_monitorTimer = new Timer();
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
 
-            // We monitor total number of unarchived measurements every 5 seconds - this is a useful statistic to monitor, if
-            // total number of unarchived measurements gets very large, measurement archival could be falling behind
+            // We monitor total number of unarchived entities every 5 seconds - this is a useful statistic to monitor, if
+            // total number of unarchived entities gets very large, entity archival could be falling behind
             m_monitorTimer.Interval = 5000;
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Enabled = false;
@@ -105,50 +104,7 @@ namespace GSF.TimeSeries.Adapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
-        /// </summary>
-        /// <remarks>
-        /// Adapters can specify a list of adapters that it depends on. The measurement routing
-        /// system will hold on to measurements that need to be passed through an adapter's
-        /// dependencies. Those measurements will be routed to the dependent adapter when all of
-        /// its dependencies have finished processing them.
-        /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(""),
-        Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
-        public override string Dependencies
-        {
-            get
-            {
-                return base.Dependencies;
-            }
-            set
-            {
-                base.Dependencies = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(0.0333333D),
-        Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
-        public override long DependencyTimeout
-        {
-            get
-            {
-                return base.DependencyTimeout;
-            }
-            set
-            {
-                base.DependencyTimeout = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets whether or not to automatically place measurements back into the processing
+        /// Gets or sets whether or not to automatically place entities back into the processing
         /// queue if an exception occurs while processing.  Defaults to false.
         /// </summary>
         /// <remarks>
@@ -158,19 +114,19 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                return m_measurementQueue.RequeueOnException;
+                return m_entityQueue.RequeueOnException;
             }
             set
             {
-                m_measurementQueue.RequeueOnException = value;
+                m_entityQueue.RequeueOnException = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurements.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input signals.
         /// </summary>
         /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
         public virtual string[] InputSourceIDs
@@ -194,31 +150,31 @@ namespace GSF.TimeSeries.Adapters
                     m_inputSourceIDs.Sort();
                 }
 
-                // Filter measurements to list of specified source IDs
+                // Filter signals to list of specified source IDs
                 LoadInputSourceIDs(this);
             }
         }
 
         /// <summary>
-        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets input signals that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedInputMeasurementKeys
+        public virtual ISet<Guid> RequestedInputSignals
         {
             get
             {
-                return m_requestedInputMeasurementKeys;
+                return m_requestedInputSignals;
             }
             set
             {
-                m_requestedInputMeasurementKeys = value;
+                m_requestedInputSignals = value;
             }
         }
 
         /// <summary>
-        /// Gets the flag that determines if measurements sent to this <see cref="OutputAdapterBase"/> are destined for archival.
+        /// Gets the flag that determines if entities sent to this <see cref="OutputAdapterBase"/> are destined for archival.
         /// </summary>
         /// <remarks>
-        /// This property allows the <see cref="OutputAdapterCollection"/> to calculate statistics on how many measurements have
+        /// This property allows the <see cref="OutputAdapterCollection"/> to calculate statistics on how many entities have
         /// been archived per minute. Historians would normally set this property to <c>true</c>; other custom exports would set
         /// this property to <c>false</c>.
         /// </remarks>
@@ -265,44 +221,44 @@ namespace GSF.TimeSeries.Adapters
                 {
                     base.ProcessingInterval = value;
                     bool enabled = false;
-                    bool requeueOnException = ProcessQueue<IMeasurement>.DefaultRequeueOnException;
-                    IMeasurement[] unprocessedMeasurements = null;
+                    bool requeueOnException = ProcessQueue<ITimeSeriesEntity>.DefaultRequeueOnException;
+                    ITimeSeriesEntity[] unprocessedEntities = null;
 
-                    if (m_measurementQueue != null)
+                    if (m_entityQueue != null)
                     {
-                        enabled = m_measurementQueue.Enabled;
-                        requeueOnException = m_measurementQueue.RequeueOnException;
+                        enabled = m_entityQueue.Enabled;
+                        requeueOnException = m_entityQueue.RequeueOnException;
 
-                        if (m_measurementQueue.Count > 0)
+                        if (m_entityQueue.Count > 0)
                         {
-                            m_measurementQueue.Stop();
-                            unprocessedMeasurements = m_measurementQueue.ToArray();
+                            m_entityQueue.Stop();
+                            unprocessedEntities = m_entityQueue.ToArray();
                         }
 
-                        m_measurementQueue.ProcessException -= m_measurementQueue_ProcessException;
-                        m_measurementQueue.Dispose();
+                        m_entityQueue.ProcessException -= EntityQueueProcessException;
+                        m_entityQueue.Dispose();
                     }
 
                     if (value <= 0)
                     {
                         // The default processing interval is "as fast as possible"
-                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
+                        m_entityQueue = ProcessQueue<ITimeSeriesEntity>.CreateRealTimeQueue(ProcessEntities);
                     }
                     else
                     {
                         // Set the desired processing interval
-                        m_measurementQueue = ProcessQueue<IMeasurement>.CreateSynchronousQueue(ProcessMeasurements);
-                        m_measurementQueue.ProcessInterval = value;
+                        m_entityQueue = ProcessQueue<ITimeSeriesEntity>.CreateSynchronousQueue(ProcessEntities);
+                        m_entityQueue.ProcessInterval = value;
                     }
 
-                    m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
-                    m_measurementQueue.RequeueOnException = requeueOnException;
+                    m_entityQueue.ProcessException += EntityQueueProcessException;
+                    m_entityQueue.RequeueOnException = requeueOnException;
 
-                    // Requeue any existing measurements
-                    if (unprocessedMeasurements != null && unprocessedMeasurements.Length > 0)
-                        m_measurementQueue.AddRange(unprocessedMeasurements);
+                    // Requeue any existing entities
+                    if (unprocessedEntities != null && unprocessedEntities.Length > 0)
+                        m_entityQueue.AddRange(unprocessedEntities);
 
-                    m_measurementQueue.Enabled = enabled;
+                    m_entityQueue.Enabled = enabled;
                 }
             }
         }
@@ -340,11 +296,11 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Allows derived class access to internal processing queue.
         /// </summary>
-        protected ProcessQueue<IMeasurement> InternalProcessQueue
+        protected ProcessQueue<ITimeSeriesEntity> InternalProcessQueue
         {
             get
             {
-                return m_measurementQueue;
+                return m_entityQueue;
             }
         }
 
@@ -355,24 +311,23 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                const int MaxMeasurementsToShow = 10;
+                const int MaxSignalsToShow = 10;
 
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
 
-                if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                if (RequestedInputSignals != null && RequestedInputSignals.Count > 0)
                 {
-                    status.AppendFormat("      Requested input keys: {0} defined measurements", RequestedInputMeasurementKeys.Length);
+                    status.AppendFormat("      Requested input keys: {0} defined signals", RequestedInputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
-                        status.AppendLine(RequestedInputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
+                    // TODO: Fix metadata lookup and display point tag next to measurement key
+                    foreach (var signalID in RequestedInputSignals.Take(MaxSignalsToShow))
+                        status.AppendLine(LookUpMeasurementKey(DataSource, signalID).ToString().TruncateRight(25).CenterText(50));
 
-                    if (RequestedInputMeasurementKeys.Length > MaxMeasurementsToShow)
+                    if (RequestedInputSignals.Count > MaxSignalsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
@@ -384,29 +339,29 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("     Output is for archive: {0}", OutputIsForArchive);
                 status.AppendLine();
-                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
+                status.AppendFormat("   Item reporting interval: {0}", EntityReportingInterval);
                 status.AppendLine();
-                status.Append(m_measurementQueue.Status);
+                status.Append(m_entityQueue.Status);
 
                 return status.ToString();
             }
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
+        /// Gets or sets output signals that the <see cref="AdapterBase"/> will produce, if any.
         /// </summary>
         /// <remarks>
         /// Redefined to hide attributes defined in the base class.
         /// </remarks>
-        public new virtual IMeasurement[] OutputMeasurements
+        public new virtual ISet<Guid> OutputSignals
         {
             get
             {
-                return base.OutputMeasurements;
+                return base.OutputSignals;
             }
             set
             {
-                base.OutputMeasurements = value;
+                base.OutputSignals = value;
             }
         }
 
@@ -440,12 +395,12 @@ namespace GSF.TimeSeries.Adapters
                         }
                         m_monitorTimer = null;
 
-                        if (m_measurementQueue != null)
+                        if (m_entityQueue != null)
                         {
-                            m_measurementQueue.ProcessException -= m_measurementQueue_ProcessException;
-                            m_measurementQueue.Dispose();
+                            m_entityQueue.ProcessException -= EntityQueueProcessException;
+                            m_entityQueue.Dispose();
                         }
-                        m_measurementQueue = null;
+                        m_entityQueue = null;
                     }
                 }
                 finally
@@ -483,13 +438,13 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Requests metadata refresh of output adapter.", "Administrator", "Editor")]
         public virtual void RefreshMetadata()
         {
-            // Force a recalculation of input measurement keys so that system can appropriately update routing tables
+            // Force a recalculation of input signals so that system can appropriately update routing tables
             string setting;
 
-            if (Settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, setting);
+            if (Settings.TryGetValue("inputSignals", out setting))
+                InputSignals = ParseFilterExpression(DataSource, true, setting);
             else
-                InputMeasurementKeys = null;
+                InputSignals = null;
 
             InputSourceIDs = InputSourceIDs;
         }
@@ -528,8 +483,8 @@ namespace GSF.TimeSeries.Adapters
         protected virtual void OnConnected()
         {
             // Start data processing thread
-            if (m_measurementQueue != null)
-                m_measurementQueue.Start();
+            if (m_entityQueue != null)
+                m_entityQueue.Start();
 
             OnStatusMessage("Connection established.");
         }
@@ -550,7 +505,7 @@ namespace GSF.TimeSeries.Adapters
                 base.Stop();
 
                 // Stop data processing thread
-                m_measurementQueue.Stop();
+                m_entityQueue.Stop();
 
                 // Attempt disconnection from historian (e.g., consumer to call historian API disconnect function)
                 AttemptDisconnection();
@@ -589,68 +544,56 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Queues a single measurement for processing. Measurement is automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// Queues a collection of time-series entities for processing.
         /// </summary>
-        /// <param name="measurement">Measurement to queue for processing.</param>
-        public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
-        {
-            QueueMeasurementsForProcessing(new[] { measurement });
-        }
-
-        /// <summary>
-        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
-        /// </summary>
-        /// <param name="measurements">Measurements to queue for processing.</param>
-        public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        /// <param name="entities">Entities to queue for processing.</param>
+        public virtual void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
         {
             if (m_disposed)
                 return;
 
-            if (!ProcessMeasurementFilter || InputMeasurementKeys == null)
+            if (!ProcessSignalFilter || (object)InputSignals == null)
             {
-                // No further filtering of incoming measurement required
-                m_measurementQueue.AddRange(measurements);
-                IncrementProcessedMeasurements(measurements.Count());
+                // No further filtering of incoming entities required
+                m_entityQueue.AddRange(entities);
+                IncrementProcessedEntities(entities.Count());
             }
             else
             {
-                // Filter measurements down to specified input measurements
-                List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
-                foreach (IMeasurement measurement in measurements)
-                {
-                    if (IsInputMeasurement(measurement.Key))
-                        filteredMeasurements.Add(measurement);
-                }
+                // Filter entities down to specified input signals
+                List<ITimeSeriesEntity> filteredEntities = entities
+                    .Where(entity => IsInputSignal(entity.ID))
+                    .ToList();
 
-                if (filteredMeasurements.Count > 0)
+                if (filteredEntities.Count > 0)
                 {
-                    m_measurementQueue.AddRange(filteredMeasurements);
-                    IncrementProcessedMeasurements(filteredMeasurements.Count());
+                    m_entityQueue.AddRange(filteredEntities);
+                    IncrementProcessedEntities(filteredEntities.Count);
                 }
             }
         }
 
         /// <summary>
-        /// Serializes measurements to data output stream.
+        /// Serializes entities to data output stream.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Derived classes must implement this function to process queued measurements.
-        /// For example, this function would "archive" measurements if output adapter is for a historian.
+        /// Derived classes must implement this function to process queued entities.
+        /// For example, this function would "archive" entities if output adapter is for a historian.
         /// </para>
         /// <para>
         /// It is important that consumers "resume" connection cycle if processing fails (e.g., connection
         /// to archive is lost). Here is an example:
         /// <example>
         /// <code>
-        /// protected virtual void ProcessMeasurements(IMeasurement[] measurements)
+        /// protected virtual void ProcessEntities(ITimeSeriesEntity[] entities)
         /// {
         ///     try
         ///     {
-        ///         // Process measurements...
-        ///         foreach (IMeasurement measurement in measurement)
+        ///         // Process entities...
+        ///         foreach (ITimeSeriesEntity entity in entities)
         ///         {
-        ///             ArchiveMeasurement(measurement);
+        ///             ArchiveEntity(entity);
         ///         }
         ///     }
         ///     catch (Exception)
@@ -664,28 +607,28 @@ namespace GSF.TimeSeries.Adapters
         /// </example>
         /// </para>
         /// </remarks>
-        protected abstract void ProcessMeasurements(IMeasurement[] measurements);
+        protected abstract void ProcessEntities(ITimeSeriesEntity[] entities);
 
         /// <summary>
-        /// This removes a range of measurements from the internal measurement queue.
+        /// This removes a range of entities from the internal entity queue.
         /// </summary>
         /// <remarks>
-        /// This method is typically only used to curtail size of measurement queue if it's getting too large.  If more points are
+        /// This method is typically only used to curtail size of entity queue if it's getting too large.  If more points are
         /// requested than there are points available - all points in the queue will be removed.
         /// </remarks>
-        public virtual void RemoveMeasurements(int total)
+        public virtual void RemoveEntities(int total)
         {
             if (m_disposed)
                 return;
 
-            if (total > m_measurementQueue.Count)
-                total = m_measurementQueue.Count;
+            if (total > m_entityQueue.Count)
+                total = m_entityQueue.Count;
 
-            IMeasurement measurement;
+            ITimeSeriesEntity entity;
 
             for (int i = 0; i < total; i++)
             {
-                m_measurementQueue.TryTake(out measurement);
+                m_entityQueue.TryTake(out entity);
             }
         }
 
@@ -706,25 +649,25 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         public virtual void Flush()
         {
-            if (m_measurementQueue != null)
-                m_measurementQueue.Flush();
+            if (m_entityQueue != null)
+                m_entityQueue.Flush();
         }
 
         /// <summary>
-        /// Raises the <see cref="UnprocessedMeasurements"/> event.
+        /// Raises the <see cref="UnprocessedEntities"/> event.
         /// </summary>
-        /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
-        protected virtual void OnUnprocessedMeasurements(int unprocessedMeasurements)
+        /// <param name="unprocessedEntities">Total number of time-series entities in the queue that have not been processed.</param>
+        protected virtual void OnUnprocessedEntities(int unprocessedEntities)
         {
             try
             {
-                if (UnprocessedMeasurements != null)
-                    UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
+                if (UnprocessedEntities != null)
+                    UnprocessedEntities(this, new EventArgs<int>(unprocessedEntities));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnprocessedMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnprocessedEntities event: {0}", ex.Message), ex));
             }
         }
 
@@ -758,14 +701,14 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        // All we do here is expose the total number of unarchived measurements in the queue
+        // All we do here is expose the total number of unarchived entities in the queue
         private void m_monitorTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            OnUnprocessedMeasurements(m_measurementQueue.Count);
+            OnUnprocessedEntities(m_entityQueue.Count);
         }
 
         // Bubble any exceptions occurring in the process queue to the base class event
-        private void m_measurementQueue_ProcessException(object sender, EventArgs<Exception> e)
+        private void EntityQueueProcessException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(e.Argument);
         }

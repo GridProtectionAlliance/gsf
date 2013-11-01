@@ -246,7 +246,7 @@ namespace TestingAdapters
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return ("Total sent measurements " + ProcessedMeasurements.ToString("N0")).CenterText(maxLength);
+            return ("Total sent measurements " + ProcessedEntities.ToString("N0")).CenterText(maxLength);
         }
 
         /// <summary>
@@ -279,15 +279,15 @@ namespace TestingAdapters
                 ICollection<IMeasurement> outputMeasurementClones = new List<IMeasurement>();
                 timestamp = DateTime.UtcNow.Ticks;
 
-                for (int j = 0; j < OutputMeasurements.Length; j++)
+                for (int j = 0; j < OutputSignals.Length; j++)
                 {
-                    OutputMeasurements[j].Timestamp = timestamp;
-                    OutputMeasurements[j].Value = randomNumber.NextDouble();
-                    outputMeasurementClones.Add(Measurement.Clone(OutputMeasurements[j]));
+                    OutputSignals[j].Timestamp = timestamp;
+                    OutputSignals[j].Value = randomNumber.NextDouble();
+                    outputMeasurementClones.Add(Measurement.Clone(OutputSignals[j]));
                 }
 
                 // Publish next set of measurements to consumer...
-                this.OnNewMeasurements(outputMeasurementClones);
+                this.OnNewEntities(outputMeasurementClones);
 
                 // Sleep until next desired publication...
                 Thread.Sleep(m_interpointDelay);

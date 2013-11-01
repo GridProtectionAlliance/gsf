@@ -175,7 +175,7 @@ namespace FileAdapters
             }
             set
             {
-                base.InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, value).Take(1).ToArray();
+                base.InputMeasurementKeys = ParseFilterExpression(DataSource, true, value).Take(1).ToArray();
             }
         }
 
@@ -433,7 +433,7 @@ namespace FileAdapters
 
             m_watchDirectory = FilePath.GetAbsolutePath(setting);
 
-            if (OutputMeasurements.Length <= 0)
+            if (OutputSignals.Length <= 0)
                 throw new ArgumentException(string.Format(ErrorMessage, "outputMeasurements"));
 
             // Optional parameters
@@ -532,11 +532,11 @@ namespace FileAdapters
         /// <summary>
         /// Queues a collection of measurements for processing.
         /// </summary>
-        /// <param name="measurements">Measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        /// <param name="entities">Measurements to queue for processing.</param>
+        public override void QueueEntitiesForProcessing(IEnumerable<IMeasurement> entities)
         {
-            base.QueueMeasurementsForProcessing(measurements);
-            ManageThrottleAdjustments((int)measurements.Last().Value);
+            base.QueueEntitiesForProcessing(entities);
+            ManageThrottleAdjustments((int)entities.Last().Value);
         }
 
         // Determines how to adjust the process interval and block size based on the
@@ -653,8 +653,8 @@ namespace FileAdapters
                     // Publish next block of file data
                     OnNewMeasurement(new TimeSeriesBuffer(buffer, 0, bytesRead)
                     {
-                        ID = OutputMeasurements[0].ID,
-                        Key = OutputMeasurements[0].Key,
+                        ID = OutputSignals[0].ID,
+                        Key = OutputSignals[0].Key,
                         Timestamp = DateTime.UtcNow.Ticks
                     });
                 }
@@ -666,11 +666,11 @@ namespace FileAdapters
         }
 
         /// <summary>
-        /// Raises the <see cref="InputAdapterBase.NewMeasurements"/> event.
+        /// Raises the <see cref="InputAdapterBase.NewEntities"/> event.
         /// </summary>
         private void OnNewMeasurement(IMeasurement measurement)
         {
-            OnNewMeasurements(new[] { measurement });
+            OnNewEntities(new[] { measurement });
             m_bufferBlocksSent++;
         }
 

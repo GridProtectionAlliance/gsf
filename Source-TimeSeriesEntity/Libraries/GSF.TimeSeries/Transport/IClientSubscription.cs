@@ -179,14 +179,14 @@ namespace GSF.TimeSeries.Transport
 
             // Cache the specified input measurement keys requested by the remote subscription
             // internally since these will only be needed in the private Iaon session
-            MeasurementKey[] inputMeasurementKeys = clientSubscription.InputMeasurementKeys;
-            IMeasurement[] outputMeasurements = clientSubscription.OutputMeasurements;
+            MeasurementKey[] inputMeasurementKeys = clientSubscription.InputSignals;
+            IMeasurement[] outputMeasurements = clientSubscription.OutputSignals;
 
             // Since historical data is requested, we "turn off" interaction with the outside real-time world
             // by removing this adapter from external routes. To accomplish this we expose I/O demands for an
             // undefined measurement. Note: assigning to null would mean "broadcast" of all data is desired.
-            clientSubscription.InputMeasurementKeys = new[] { MeasurementKey.Undefined };
-            clientSubscription.OutputMeasurements = new IMeasurement[] { Measurement.Undefined };
+            clientSubscription.InputSignals = new[] { MeasurementKey.Undefined };
+            clientSubscription.OutputSignals = new IMeasurement[] { Measurement.Undefined };
 
             // Create a new Iaon session
             session = new IaonSession();

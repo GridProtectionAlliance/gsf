@@ -124,7 +124,7 @@ namespace GSF.TimeSeries.Transport
             {
                 // Publish locally sorted measurements
                 if ((object)m_parent != null)
-                    m_parent.OnNewMeasurements(frame.Measurements.Values);
+                    m_parent.OnNewEntities(frame.Entities.Values);
             }
 
             #endregion
@@ -1187,7 +1187,7 @@ namespace GSF.TimeSeries.Transport
         // Returns true if output measurements were updated, otherwise false if they remain the same.
         private bool UpdateOutputMeasurements(bool initialCall = false)
         {
-            IMeasurement[] originalOutputMeasurements = OutputMeasurements;
+            IMeasurement[] originalOutputMeasurements = OutputSignals;
 
             // Reapply output measurements if reinitializing - this way filter expressions and/or sourceIDs
             // will be reapplied. This can be important after a meta-data refresh which may have added new
@@ -1197,7 +1197,7 @@ namespace GSF.TimeSeries.Transport
                 string setting;
 
                 if (Settings.TryGetValue("outputMeasurements", out setting))
-                    OutputMeasurements = ParseOutputMeasurements(DataSource, true, setting);
+                    OutputSignals = ParseOutputMeasurements(DataSource, true, setting);
 
                 OutputSourceIDs = OutputSourceIDs;
             }
@@ -1237,10 +1237,10 @@ namespace GSF.TimeSeries.Transport
                     if (subscribedMeasurements.Count > 0)
                     {
                         // Combine subscribed output measurement with any existing output measurement and return unique set
-                        if ((object)OutputMeasurements == null)
-                            OutputMeasurements = subscribedMeasurements.ToArray();
+                        if ((object)OutputSignals == null)
+                            OutputSignals = subscribedMeasurements.ToArray();
                         else
-                            OutputMeasurements = subscribedMeasurements.Concat(OutputMeasurements).Distinct().ToArray();
+                            OutputSignals = subscribedMeasurements.Concat(OutputSignals).Distinct().ToArray();
                     }
                 }
                 catch (Exception ex)
@@ -1255,7 +1255,7 @@ namespace GSF.TimeSeries.Transport
             TryFilterOutputMeasurements();
 
             // Determine if output measurements have changed
-            return originalOutputMeasurements.CompareTo(OutputMeasurements, false) != 0;
+            return originalOutputMeasurements.CompareTo(OutputSignals, false) != 0;
         }
 
         // When synchronizing meta-data, the publisher sends meta-data for all possible signals we can subscribe to.
@@ -1269,7 +1269,7 @@ namespace GSF.TimeSeries.Transport
 
             try
             {
-                if ((object)OutputMeasurements != null && (object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
+                if ((object)OutputSignals != null && (object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
                     measurementIDs = DataSource.Tables["ActiveMeasurements"]
                         .Select(string.Format("DeviceID = {0}", ID))
@@ -1278,7 +1278,7 @@ namespace GSF.TimeSeries.Transport
 
                     measurementIDSet = new HashSet<Guid>(measurementIDs);
 
-                    OutputMeasurements = OutputMeasurements.Where(measurement => measurementIDSet.Contains(measurement.ID)).ToArray();
+                    OutputSignals = OutputSignals.Where(measurement => measurementIDSet.Contains(measurement.ID)).ToArray();
                 }
             }
             catch (Exception ex)
@@ -1418,7 +1418,7 @@ namespace GSF.TimeSeries.Transport
                 localConcentrator.AllowSortsByArrival = info.AllowSortsByArrival;
                 localConcentrator.TimeResolution = info.TimeResolution;
                 localConcentrator.AllowPreemptivePublishing = info.AllowPreemptivePublishing;
-                localConcentrator.DownsamplingMethod = info.DownsamplingMethod;
+                localConcentrator.FilterFunction = info.DownsamplingMethod;
                 localConcentrator.UsePrecisionTimer = false;
 
                 // Parse time constraints, if defined
@@ -1689,7 +1689,7 @@ namespace GSF.TimeSeries.Transport
             m_localConcentrator.AllowSortsByArrival = allowSortsByArrival;
             m_localConcentrator.TimeResolution = timeResolution;
             m_localConcentrator.AllowPreemptivePublishing = allowPreemptivePublishing;
-            m_localConcentrator.DownsamplingMethod = downsamplingMethod;
+            m_localConcentrator.FilterFunction = downsamplingMethod;
             m_localConcentrator.UsePrecisionTimer = false;
 
             // Parse time constraints, if defined
@@ -2362,9 +2362,9 @@ namespace GSF.TimeSeries.Transport
 
                             // Provide new measurements to local concentrator, if defined, otherwise directly expose them to the consumer
                             if ((object)m_localConcentrator != null)
-                                m_localConcentrator.SortMeasurements(measurements);
+                                m_localConcentrator.SortEntities(measurements);
                             else
-                                OnNewMeasurements(measurements);
+                                OnNewEntities(measurements);
 
                             // Gather statistics on received data
                             long timeReceived = DateTime.UtcNow.Ticks;
@@ -2437,7 +2437,7 @@ namespace GSF.TimeSeries.Transport
                                         m_bufferBlockCache.RemoveRange(0, i);
 
                                     // Publish measurements
-                                    OnNewMeasurements(bufferBlockMeasurements);
+                                    OnNewEntities(bufferBlockMeasurements);
                                 }
                                 else
                                 {
@@ -2585,9 +2585,9 @@ namespace GSF.TimeSeries.Transport
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
 
-            if ((object)OutputMeasurements != null && OutputMeasurements.Length > 0)
+            if ((object)OutputSignals != null && OutputSignals.Length > 0)
             {
-                foreach (IMeasurement measurement in OutputMeasurements)
+                foreach (IMeasurement measurement in OutputSignals)
                 {
                     if (filterExpression.Length > 0)
                         filterExpression.Append(';');

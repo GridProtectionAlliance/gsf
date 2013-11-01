@@ -126,7 +126,7 @@ namespace PowerCalculations
         /// <param name="index">Index of frame within the one second sample.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            if (frame.Measurements.Count > 0)
+            if (frame.Entities.Count > 0)
             {
                 const double hzResolution = 1000.0; // three decimal places
 
@@ -141,7 +141,7 @@ namespace PowerCalculations
                 frequencyTotal = 0.0D;
                 total = 0;
 
-                foreach (IMeasurement measurement in frame.Measurements.Values)
+                foreach (IMeasurement measurement in frame.Entities.Values)
                 {
                     frequency = measurement.AdjustedValue;
                     adjustedFrequency = (int)(frequency * hzResolution);
@@ -184,7 +184,7 @@ namespace PowerCalculations
                 // Provide calculated measurements for external consumption
                 IMeasurement[] outputMeasurements = OutputMeasurements;
 
-                OnNewMeasurements(new IMeasurement[]{
+                OnNewEntities(new IMeasurement[]{
                     Measurement.Clone(outputMeasurements[(int)Output.Average], m_averageFrequency, frame.Timestamp),
                     Measurement.Clone(outputMeasurements[(int)Output.Maximum], m_maximumFrequency, frame.Timestamp),
                     Measurement.Clone(outputMeasurements[(int)Output.Minimum], m_minimumFrequency, frame.Timestamp)});

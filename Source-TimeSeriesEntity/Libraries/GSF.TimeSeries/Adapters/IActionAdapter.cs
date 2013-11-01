@@ -18,13 +18,14 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
+using GSF.TimeSeries.Routing;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -34,36 +35,31 @@ namespace GSF.TimeSeries.Adapters
     public interface IActionAdapter : IAdapter
     {
         /// <summary>
-        /// Provides new measurements from action adapter.
+        /// Provides new time-series entities from action adapter.
         /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
-        /// </remarks>
-        event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
+        event EventHandler<RoutingEventArgs> NewEntities;
 
         /// <summary>
-        /// This event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
+        /// Event is raised every five seconds allowing host to track total number of unprocessed entities.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
+        /// <para>
+        /// Implementations of this interface are expected to report current queue size of unprocessed
+        /// time-series entities so that if queue size reaches an unhealthy threshold, host can take action.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
+        /// </para>
         /// </remarks>
-        event EventHandler<EventArgs<int>> UnpublishedSamples;
-
-        /// <summary>
-        /// This event is raised if there are any measurements being discarded during the sorting process.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="IMeasurement"/> values that are being discarded during the sorting process.
-        /// </remarks>
-        event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
+        event EventHandler<EventArgs<int>> UnprocessedEntities;
 
         /// <summary>
         /// Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
         /// </summary>
         /// <remarks>
         /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
-        /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
-        /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+        /// adapter will behave concerning routing demands when the adapter is set up to connect on demand. In the case of respecting auto-start input demands,
+        /// as an example, this would be <c>false</c> for an action adapter that calculated measurements, but <c>true</c> for an action adapter used to archive inputs.
         /// </remarks>
         bool RespectInputDemands
         {
@@ -77,7 +73,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
-        /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+        /// as an example, this would be <c>true</c> for an action adapter that calculated measurements, but <c>false</c> for an action adapter used to archive inputs.
         /// </remarks>
         bool RespectOutputDemands
         {
@@ -86,10 +82,10 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input signals.
         /// </summary>
         /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> to apply no filter.
         /// </remarks>
         string[] InputSourceIDs
@@ -99,10 +95,10 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output signals.
         /// </summary>
         /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> to apply no filter.
         /// </remarks>
         string[] OutputSourceIDs
@@ -112,27 +108,27 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets input signals that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        MeasurementKey[] RequestedInputMeasurementKeys
+        ISet<Guid> RequestedInputSignals
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets output signals that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        MeasurementKey[] RequestedOutputMeasurementKeys
+        ISet<Guid> RequestedOutputSignals
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Queues measurements for processing.  Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// Queues entities for processing.
         /// </summary>
-        /// <param name="measurements">Collection of measurements to queue for calculation processing.</param>
-        void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);
+        /// <param name="entities">Collection of entities to queue for processing.</param>
+        void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities);
     }
 }

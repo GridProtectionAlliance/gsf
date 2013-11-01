@@ -158,7 +158,7 @@ namespace FileAdapters
         /// <summary>
         /// Writes buffer blocks out to files.
         /// </summary>
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(IMeasurement[] measurements)
         {
             TimeSeriesBuffer timeSeriesBuffer;
 

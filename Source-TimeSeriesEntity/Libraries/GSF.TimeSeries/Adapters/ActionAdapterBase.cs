@@ -20,8 +20,8 @@
 //       Generated original version of source code.
 //  02/08/2011 - J. Ritchie Carroll
 //       Added invokable ExamineQueueState method to analyze real-time concentrator frame queue state.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
@@ -32,6 +32,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using GSF.TimeSeries.Routing;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -39,23 +40,15 @@ namespace GSF.TimeSeries.Adapters
     /// Represents the base class for action adapters.
     /// </summary>
     /// <remarks>
-    /// This base class acts as a measurement concentrator which time aligns all incoming measurements for proper processing.
-    /// Derived classes are expected to override <see cref="ConcentratorBase.PublishFrame"/> to handle time aligned measurements
-    /// and call <see cref="OnNewMeasurements"/> for any new measurements that may get created.
+    /// This base class acts as a time-series entity concentrator which time aligns all incoming entities for proper processing.
+    /// Derived classes are expected to override <see cref="ConcentratorBase.PublishFrame"/> to handle time aligned entities
+    /// and call <see cref="OnNewEntities"/> for any new entities that may get created.
     /// </remarks>
     public abstract class ActionAdapterBase : ConcentratorBase, IActionAdapter
     {
         #region [ Members ]
 
         // Events
-
-        /// <summary>
-        /// Notifies dependent adapters that this adapter has finished processing a measurement.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
-        /// </remarks>
-        public event EventHandler<EventArgs<IMeasurement>> Notify;
 
         /// <summary>
         /// Provides status messages to consumer.
@@ -66,14 +59,14 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<string>> StatusMessage;
 
         /// <summary>
-        /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
+        /// Event is raised when <see cref="InputSignals"/> are updated.
         /// </summary>
-        public event EventHandler InputMeasurementKeysUpdated;
+        public event EventHandler InputSignalsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputMeasurements"/> are updated.
+        /// Event is raised when <see cref="OutputSignals"/> are updated.
         /// </summary>
-        public event EventHandler OutputMeasurementsUpdated;
+        public event EventHandler OutputSignalsUpdated;
 
         /// <summary>
         /// Event is raised when adapter is aware of a configuration change.
@@ -81,12 +74,9 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler ConfigurationChanged;
 
         /// <summary>
-        /// Provides new measurements from action adapter.
+        /// Provides new entities from action adapter.
         /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
-        /// </remarks>
-        public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
+        public event EventHandler<RoutingEventArgs> NewEntities;
 
         // Fields
         private string m_name;
@@ -94,25 +84,23 @@ namespace GSF.TimeSeries.Adapters
         private string m_connectionString;
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
+        private RoutingEventArgs m_routingEventArgs;
+        private readonly object m_newEntitiesLock;
         private int m_initializationTimeout;
-        private string m_dependencies;
-        private long m_dependencyTimeout;
         private bool m_autoStart;
         private bool m_respectInputDemands;
         private bool m_respectOutputDemands;
-        private bool m_processMeasurementFilter;
-        private MeasurementKey[] m_inputMeasurementKeys;
-        private List<MeasurementKey> m_inputMeasurementKeysHash;
-        private IMeasurement[] m_outputMeasurements;
-        private MeasurementKey[] m_requestedInputMeasurementKeys;
-        private MeasurementKey[] m_requestedOutputMeasurementKeys;
+        private bool m_processSignalFilter;
+        private ISet<Guid> m_inputSignals;
+        private ISet<Guid> m_outputSignals;
+        private ISet<Guid> m_requestedInputSignals;
+        private ISet<Guid> m_requestedOutputSignals;
         private List<string> m_inputSourceIDs;
         private List<string> m_outputSourceIDs;
-        private int m_minimumMeasurementsToUse;
+        private int m_minimumSignalsToUse;
         private ManualResetEvent m_initializeWaitHandle;
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
-        private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
 
@@ -125,18 +113,18 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected ActionAdapterBase()
         {
-            m_name = this.GetType().Name;
+            m_name = GetType().Name;
             m_settings = new Dictionary<string, string>();
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
-            GenHashCode();
+            m_newEntitiesLock = new object();
 
             // Create wait handle to use for adapter initialization
             m_initializeWaitHandle = new ManualResetEvent(false);
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
 
             // For most implementations millisecond resolution will be sufficient
-            base.TimeResolution = Ticks.PerMillisecond;
+            TimeResolution = Ticks.PerMillisecond;
         }
 
         #endregion
@@ -148,23 +136,19 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Example connection string using manually defined measurements:<br/>
-        /// <c>framesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumMeasurementsToUse=-1;
+        /// Example connection string using manually defined signals:<br/>
+        /// <c>framesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumSignalsToUse=-1;
         /// useLocalClockAsRealTime=true; allowSortsByArrival=false;</c><br/>
-        /// <c>inputMeasurementKeys={P1:1245;P1:1247;P2:1335};</c><br/>
-        /// <c>outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}</c><br/>
-        /// When defined manually, elements in key:<br/>
-        /// * inputMeasurementKeys are defined as "ArchiveSource:PointID"<br/>
-        /// * outputMeasurements are defined as "ArchiveSource:PointID,Adder,Multiplier", the adder and multiplier are optional
-        /// defaulting to 0.0 and 1.0 respectively.
-        /// <br/>
+        /// <c>inputSignals={P1:1245;P1:1247;P2:1335};</c><br/>
+        /// <c>outputSignals={P3:1345;P3:1346;P3:1347}</c><br/>
+        /// When defined manually, elements in key: are defined as "ArchiveSource:PointID"<br/>
         /// </para>
         /// <para>
-        /// Example connection string using measurements defined in a <see cref="DataSource"/> table:<br/>
-        /// <c>framesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumMeasurementsToUse=-1;
+        /// Example connection string using signals defined in a <see cref="DataSource"/> table:<br/>
+        /// <c>framesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumSignalsToUse=-1;
         /// useLocalClockAsRealTime=true; allowSortsByArrival=false;</c><br/>
-        /// <c>inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='GSF' AND SignalType='FREQ' ORDER BY ID};</c><br/>
-        /// <c>outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
+        /// <c>inputSignals={FILTER ActiveMeasurements WHERE Company='GSF' AND SignalType='FREQ' ORDER BY ID};</c><br/>
+        /// <c>outputSignals={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
         /// <br/>
         /// Basic filtering syntax is as follows:<br/>
         /// <br/>
@@ -185,7 +169,7 @@ namespace GSF.TimeSeries.Adapters
         ///     <item>
         ///         <term>PointTag</term>
         ///         <term>NVARCHAR</term>
-        ///         <description>Point tag of measurement.</description>
+        ///         <description>Point tag of signal.</description>
         ///     </item>
         ///     <item>
         ///         <term>Adder</term>
@@ -255,49 +239,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
-        /// </summary>
-        /// <remarks>
-        /// Adapters can specify a list of adapters that it depends on. The measurement routing
-        /// system will hold on to measurements that need to be passed through an adapter's
-        /// dependencies. Those measurements will be routed to the dependent adapter when all of
-        /// its dependencies have finished processing them.
-        /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(""),
-        Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
-        public virtual string Dependencies
-        {
-            get
-            {
-                return m_dependencies;
-            }
-            set
-            {
-                m_dependencies = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(0.0333333D),
-        Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
-        public virtual long DependencyTimeout
-        {
-            get
-            {
-                return m_dependencyTimeout;
-            }
-            set
-            {
-                m_dependencyTimeout = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets flag indicating if adapter should automatically start or otherwise connect on demand.
         /// </summary>
         public virtual bool AutoStart
@@ -318,7 +259,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
-        /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+        /// as an example, this would be <c>false</c> for an action adapter that calculated measurements, but <c>true</c> for an action adapter used to archive inputs.
         /// </remarks>
         public virtual bool RespectInputDemands
         {
@@ -338,7 +279,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
-        /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+        /// as an example, this would be <c>true</c> for an action adapter that calculated measurements, but <c>false</c> for an action adapter used to archive inputs.
         /// </remarks>
         public virtual bool RespectOutputDemands
         {
@@ -353,17 +294,17 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
+        /// Gets or sets flag that determines if signals being queued for processing should be tested to see if they are in the <see cref="InputSignals"/>.
         /// </summary>
-        public virtual bool ProcessMeasurementFilter
+        public virtual bool ProcessSignalFilter
         {
             get
             {
-                return m_processMeasurementFilter;
+                return m_processSignalFilter;
             }
             set
             {
-                m_processMeasurementFilter = value;
+                m_processSignalFilter = value;
             }
         }
 
@@ -391,8 +332,8 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
-        /// <para>Defines the time sensitivity to past measurement timestamps.</para>
-        /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+        /// <para>Defines the time sensitivity to past timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a timestamp is too old.</para>
         /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
@@ -414,8 +355,8 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
-        /// <para>Defines the time sensitivity to future measurement timestamps.</para>
-        /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+        /// <para>Defines the time sensitivity to future timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a timestamp is too advanced.</para>
         /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
@@ -434,70 +375,53 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets primary keys of input measurements the action adapter expects.
+        /// Gets or sets primary keys of input signals the action adapter expects.
         /// </summary>
         /// <remarks>
-        /// If your adapter needs to receive all measurements, you must explicitly set InputMeasurementKeys to null.
+        /// If your adapter needs to receive all signals, you must explicitly set InputSignals to null.
         /// </remarks>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Defines primary keys of input measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        Description("Defines primary keys of input signals the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public virtual MeasurementKey[] InputMeasurementKeys
+        public virtual ISet<Guid> InputSignals
         {
             get
             {
-                return m_inputMeasurementKeys;
+                return m_inputSignals;
             }
             set
             {
-                m_inputMeasurementKeys = value;
-
-                // Update input key lookup hash table
-                if (value != null && value.Length > 0)
-                {
-                    m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
-                    m_inputMeasurementKeysHash.Sort();
-
-                    // The input measurements typically define the "expected measurements" of the action adapter, so
-                    // we use the number of these items to define the expected measurement count
-                    ExpectedMeasurements = m_inputMeasurementKeys.Length;
-                }
-                else
-                {
-                    m_inputMeasurementKeysHash = null;
-                    ExpectedMeasurements = 0;
-                }
-
-                OnInputMeasurementKeysUpdated();
+                m_inputSignals = value;
+                OnInputSignalsUpdated();
             }
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the action adapter will produce, if any.
+        /// Gets or sets output signals that the action adapter will produce, if any.
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Defines primary keys of output measurements the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        Description("Defines primary keys of output signals the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public virtual IMeasurement[] OutputMeasurements
+        public virtual ISet<Guid> OutputSignals
         {
             get
             {
-                return m_outputMeasurements;
+                return m_outputSignals;
             }
             set
             {
-                m_outputMeasurements = value;
-                OnOutputMeasurementsUpdated();
+                m_outputSignals = value;
+                OnOutputSignalsUpdated();
             }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input signals.
         /// </summary>
         /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
         public virtual string[] InputSourceIDs
@@ -521,16 +445,16 @@ namespace GSF.TimeSeries.Adapters
                     m_inputSourceIDs.Sort();
                 }
 
-                // Filter measurements to list of specified source IDs
+                // Filter signals to list of specified source IDs
                 AdapterBase.LoadInputSourceIDs(this);
             }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output signals.
         /// </summary>
         /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
         public virtual string[] OutputSourceIDs
@@ -554,38 +478,38 @@ namespace GSF.TimeSeries.Adapters
                     m_outputSourceIDs.Sort();
                 }
 
-                // Filter measurements to list of specified source IDs
+                // Filter signals to list of specified source IDs
                 AdapterBase.LoadOutputSourceIDs(this);
             }
         }
 
         /// <summary>
-        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets input signals that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedInputMeasurementKeys
+        public virtual ISet<Guid> RequestedInputSignals
         {
             get
             {
-                return m_requestedInputMeasurementKeys;
+                return m_requestedInputSignals;
             }
             set
             {
-                m_requestedInputMeasurementKeys = value;
+                m_requestedInputSignals = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets output signals that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
+        public virtual ISet<Guid> RequestedOutputSignals
         {
             get
             {
-                return m_requestedOutputMeasurementKeys;
+                return m_requestedOutputSignals;
             }
             set
             {
-                m_requestedOutputMeasurementKeys = value;
+                m_requestedOutputSignals = value;
             }
         }
 
@@ -628,21 +552,21 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets minimum number of input measurements required for adapter.  Set to -1 to require all.
+        /// Gets or sets minimum number of input signals required for adapter.  Set to -1 to require all.
         /// </summary>
-        public virtual int MinimumMeasurementsToUse
+        public virtual int MinimumSignalsToUse
         {
             get
             {
-                // Default to all measurements if minimum is not specified
-                if (m_minimumMeasurementsToUse < 1 && InputMeasurementKeys != null)
-                    return InputMeasurementKeys.Length;
+                // Default to all signals if minimum is not specified
+                if (m_minimumSignalsToUse < 1 && (object)InputSignals != null)
+                    return InputSignals.Count;
 
-                return m_minimumMeasurementsToUse;
+                return m_minimumSignalsToUse;
             }
             set
             {
-                m_minimumMeasurementsToUse = value;
+                m_minimumSignalsToUse = value;
             }
         }
 
@@ -658,7 +582,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_name = value;
-                GenHashCode();
             }
         }
 
@@ -674,7 +597,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_id = value;
-                GenHashCode();
             }
         }
 
@@ -723,10 +645,10 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                const int MaxMeasurementsToShow = 10;
+                const int MaxSignalsToShow = 10;
 
                 StringBuilder status = new StringBuilder();
-                DataSet dataSource = this.DataSource;
+                DataSet dataSource = DataSource;
 
                 status.AppendFormat("       Data source defined: {0}", (dataSource != null));
                 status.AppendLine();
@@ -737,7 +659,7 @@ namespace GSF.TimeSeries.Adapters
                 }
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
-                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
+                status.AppendFormat("      Using signal routing: {0}", !ProcessSignalFilter);
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
@@ -749,7 +671,7 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat(" Respecting output demands: {0}", RespectOutputDemands);
                 status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
+                status.AppendFormat("        Processed entities: {0}", ProcessedEntities);
                 status.AppendLine();
                 status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
                 status.AppendLine();
@@ -795,77 +717,75 @@ namespace GSF.TimeSeries.Adapters
 
                 status.AppendLine();
 
-                if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
+                if ((object)OutputSignals != null && OutputSignals.Any(signalID => signalID != Guid.Empty))
                 {
-                    status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
+                    status.AppendFormat("            Output Signals: {0} defined signals", OutputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
+                    // TODO: Fix metadata lookup and display point tag instead of signal ID
+                    foreach (Guid signalID in OutputSignals.Take(MaxSignalsToShow))
                     {
-                        status.Append(OutputMeasurements[i].ToString().TruncateRight(40).PadLeft(40));
+                        status.Append(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
                         status.Append(" ");
-                        status.AppendLine(OutputMeasurements[i].ID.ToString());
+                        status.AppendLine(signalID.ToString());
                     }
 
-                    if (OutputMeasurements.Length > MaxMeasurementsToShow)
+                    if (OutputSignals.Count > MaxSignalsToShow)
                         status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
 
-                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
+                if ((object)InputSignals != null && InputSignals.Any(signalID => signalID != Guid.Empty))
                 {
-                    status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
+                    status.AppendFormat("             Input Signals: {0} defined signals", InputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
-                        status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
+                    // TODO: Fix metadata lookup and display point tag next to measurement key
+                    foreach (Guid signalID in InputSignals.Take(MaxSignalsToShow))
+                        status.AppendLine(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(25).CenterText(50));
 
-                    if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
+                    if (InputSignals.Count > MaxSignalsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
                 }
 
-                if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                if ((object)RequestedInputSignals != null && RequestedInputSignals.Count > 0)
                 {
-                    status.AppendFormat("      Requested input keys: {0} defined measurements", RequestedInputMeasurementKeys.Length);
+                    status.AppendFormat("      Requested input keys: {0} defined signals", RequestedInputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(RequestedInputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
-                        status.AppendLine(RequestedInputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
+                    // TODO: Fix metadata lookup and display point tag next to measurement key
+                    foreach (Guid signalID in RequestedInputSignals.Take(MaxSignalsToShow))
+                        status.AppendLine(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(25).CenterText(50));
 
-                    if (RequestedInputMeasurementKeys.Length > MaxMeasurementsToShow)
+                    if (RequestedInputSignals.Count > MaxSignalsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
                 }
 
-                if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                if ((object)RequestedOutputSignals != null && RequestedOutputSignals.Count > 0)
                 {
-                    status.AppendFormat("     Requested output keys: {0} defined measurements", RequestedOutputMeasurementKeys.Length);
+                    status.AppendFormat("     Requested output keys: {0} defined signals", RequestedOutputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
-                        status.AppendLine(RequestedOutputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
+                    // TODO: Fix metadata lookup and display point tag next to measurement key
+                    foreach (Guid signalID in RequestedOutputSignals.Take(MaxSignalsToShow))
+                        status.AppendLine(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(25).CenterText(50));
 
-                    if (RequestedOutputMeasurementKeys.Length > MaxMeasurementsToShow)
+                    if (RequestedOutputSignals.Count > MaxSignalsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
                 }
 
-                status.AppendFormat(" Minimum measurements used: {0}", MinimumMeasurementsToUse);
+                status.AppendFormat("      Minimum signals used: {0}", MinimumSignalsToUse);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -911,22 +831,22 @@ namespace GSF.TimeSeries.Adapters
             Initialized = false;
 
             Dictionary<string, string> settings = Settings;
-            const string errorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
+            const string ErrorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
             string setting;
 
             // Load required parameters
             if (!settings.TryGetValue("framesPerSecond", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "framesPerSecond"));
+                throw new ArgumentException(string.Format(ErrorMessage, "framesPerSecond"));
 
             base.FramesPerSecond = int.Parse(setting);
 
             if (!settings.TryGetValue("lagTime", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "lagTime"));
+                throw new ArgumentException(string.Format(ErrorMessage, "lagTime"));
 
             base.LagTime = double.Parse(setting);
 
             if (!settings.TryGetValue("leadTime", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "leadTime"));
+                throw new ArgumentException(string.Format(ErrorMessage, "leadTime"));
 
             base.LeadTime = double.Parse(setting);
 
@@ -943,16 +863,16 @@ namespace GSF.TimeSeries.Adapters
             if (settings.TryGetValue("allowSortsByArrival", out setting))
                 AllowSortsByArrival = setting.ParseBoolean();
 
-            if (settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, setting);
+            if (settings.TryGetValue("inputSignals", out setting))
+                InputSignals = AdapterBase.ParseFilterExpression(DataSource, true, setting);
             else
-                InputMeasurementKeys = new MeasurementKey[0];
+                InputSignals = new HashSet<Guid>();
 
-            if (settings.TryGetValue("outputMeasurements", out setting))
-                OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, true, setting);
+            if (settings.TryGetValue("outputSignals", out setting))
+                OutputSignals = AdapterBase.ParseFilterExpression(DataSource, true, setting);
 
-            if (settings.TryGetValue("minimumMeasurementsToUse", out setting))
-                MinimumMeasurementsToUse = int.Parse(setting);
+            if (settings.TryGetValue("minimumSignalsToUse", out setting))
+                MinimumSignalsToUse = int.Parse(setting);
 
             if (settings.TryGetValue("timeResolution", out setting))
                 TimeResolution = long.Parse(setting);
@@ -964,28 +884,10 @@ namespace GSF.TimeSeries.Adapters
                 PerformTimestampReasonabilityCheck = setting.ParseBoolean();
 
             if (settings.TryGetValue("processByReceivedTimestamp", out setting))
-                ProcessByReceivedTimestamp = setting.ParseBoolean();
-
-            if (settings.TryGetValue("trackPublishedTimestamp", out setting))
-                TrackPublishedTimestamp = setting.ParseBoolean();
+                ProcessByCreationTime = setting.ParseBoolean();
 
             if (settings.TryGetValue("maximumPublicationTimeout", out setting))
                 MaximumPublicationTimeout = int.Parse(setting);
-
-            if (settings.TryGetValue("downsamplingMethod", out setting))
-            {
-                DownsamplingMethod method;
-
-                if (Enum.TryParse(setting, true, out method))
-                {
-                    DownsamplingMethod = method;
-                }
-                else
-                {
-                    OnStatusMessage("WARNING: No down-sampling method labeled \"{0}\" exists, \"LastReceived\" method was selected.", setting);
-                    DownsamplingMethod = DownsamplingMethod.LastReceived;
-                }
-            }
 
             if (settings.TryGetValue("inputSourceIDs", out setting))
                 InputSourceIDs = setting.Split(',');
@@ -1023,11 +925,6 @@ namespace GSF.TimeSeries.Adapters
 
             if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out processingInterval))
                 ProcessingInterval = processingInterval;
-
-            if (settings.TryGetValue("dependencyTimeout", out setting))
-                m_dependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
-            else
-                m_dependencyTimeout = Ticks.PerSecond / 30L;
         }
 
         /// <summary>
@@ -1080,7 +977,7 @@ namespace GSF.TimeSeries.Adapters
         [AdapterCommand("Manually sets the initialized state of the action adapter.", "Administrator", "Editor")]
         public virtual void SetInitializedState(bool initialized)
         {
-            this.Initialized = initialized;
+            Initialized = initialized;
         }
 
         /// <summary>
@@ -1092,74 +989,45 @@ namespace GSF.TimeSeries.Adapters
         {
             int inputCount = 0, outputCount = 0;
 
-            if (InputMeasurementKeys != null)
-                inputCount = InputMeasurementKeys.Length;
+            if ((object)InputSignals != null)
+                inputCount = InputSignals.Count;
 
-            if (OutputMeasurements != null)
-                outputCount = OutputMeasurements.Length;
+            if ((object)OutputSignals != null)
+                outputCount = OutputSignals.Count;
 
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
+            return string.Format("Total input signals: {0}, total output signals: {1}", inputCount, outputCount).PadLeft(maxLength);
         }
 
         /// <summary>
-        /// Queues a single measurement for processing. Measurements is automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// Queues a collection of time-series entities for processing.
         /// </summary>
-        /// <param name="measurement">Measurement to queue for processing.</param>
-        /// <remarks>
-        /// Measurement is filtered against the defined <see cref="InputMeasurementKeys"/>.
-        /// </remarks>
-        public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
+        /// <param name="entities">Collection of entities to queue for processing.</param>
+        public virtual void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
         {
             if (m_disposed)
                 return;
 
-            // If this is an input measurement to this adapter, sort it!
-            if (!ProcessMeasurementFilter || IsInputMeasurement(measurement.Key))
-                SortMeasurement(measurement);
-        }
-
-        /// <summary>
-        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
-        /// </summary>
-        /// <param name="measurements">Collection of measurements to queue for processing.</param>
-        /// <remarks>
-        /// Measurements are filtered against the defined <see cref="InputMeasurementKeys"/>.
-        /// </remarks>
-        public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-        {
-            if (m_disposed)
-                return;
-
-            if (ProcessMeasurementFilter)
+            if (ProcessSignalFilter)
             {
-                List<IMeasurement> inputMeasurements = new List<IMeasurement>();
-
-                foreach (IMeasurement measurement in measurements)
-                {
-                    if (IsInputMeasurement(measurement.Key))
-                        inputMeasurements.Add(measurement);
-                }
-
-                if (inputMeasurements.Count > 0)
-                    SortMeasurements(inputMeasurements);
+                SortEntities(entities.Where(entity => InputSignals.Contains(entity.ID)).ToList());
             }
             else
             {
-                SortMeasurements(measurements);
+                SortEntities(entities);
             }
         }
 
         /// <summary>
-        /// Determines if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.
+        /// Determines if specified signal ID is defined in <see cref="InputSignals"/>.
         /// </summary>
-        /// <param name="item">Primary key of measurement to find.</param>
-        /// <returns>true if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.</returns>
-        public virtual bool IsInputMeasurement(MeasurementKey item)
+        /// <param name="signalID">Primary key of signal to find.</param>
+        /// <returns>true if specified signal ID is defined in <see cref="InputSignals"/>.</returns>
+        public virtual bool IsInputSignal(Guid signalID)
         {
-            if (m_inputMeasurementKeysHash != null)
-                return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
+            if ((object)InputSignals != null)
+                return InputSignals.Contains(signalID);
 
-            // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
+            // If no input signals are defined we must assume user wants to accept all signals - yikes!
             return true;
         }
 
@@ -1234,59 +1102,52 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Serves as a hash function for the current <see cref="ActionAdapterBase"/>.
+        /// Attempts to retrieve the minimum needed number of entities from the frame (as specified by MinimumSignalsToUse)
         /// </summary>
-        /// <returns>A hash code for the current <see cref="ActionAdapterBase"/>.</returns>
-        public override int GetHashCode()
-        {
-            return m_hashCode;
-        }
-
-        /// <summary>
-        /// Attempts to retrieve the minimum needed number of measurements from the frame (as specified by MinimumMeasurementsToUse)
-        /// </summary>
-        /// <param name="frame">Source frame for the measurements</param>
-        /// <param name="measurements">Return array of measurements</param>
-        /// <returns>True if minimum needed number of measurements were returned in measurement array</returns>
+        /// <param name="frame">Source frame for the entities</param>
+        /// <param name="entities">Return array of entities</param>
+        /// <returns>True if minimum needed number of entities were returned in entity array</returns>
         /// <remarks>
         /// <para>
-        /// Remember this function will *only* return the minimum needed number of measurements, no more.  If you want to use
-        /// all available measurements in your adapter you should just use Frame.Measurements.Values directly.
+        /// Remember this function will *only* return the minimum needed number of entities, no more.  If you want to use
+        /// all available entities in your adapter you should just use Frame.Entities.Values directly.
         /// </para>
         /// <para>
-        /// Note that the measurements array parameter will be created if the reference is null, otherwise if caller creates
-        /// array it must be sized to MinimumMeasurementsToUse
+        /// Note that the entities array parameter will be created if the reference is null, otherwise if caller creates
+        /// array it must be sized to MinimumSignalsToUse
         /// </para>
         /// </remarks>
-        protected virtual bool TryGetMinimumNeededMeasurements(IFrame frame, ref IMeasurement[] measurements)
+        protected virtual bool TryGetMinimumNeededEntities(IFrame frame, ref ITimeSeriesEntity[] entities)
         {
-            int index = 0, minNeeded = MinimumMeasurementsToUse;
-            IDictionary<MeasurementKey, IMeasurement> frameMeasurements = frame.Measurements;
-            MeasurementKey[] measurementKeys = InputMeasurementKeys;
+            int index = 0, minNeeded = MinimumSignalsToUse;
+            IDictionary<Guid, ITimeSeriesEntity> frameEntities = frame.Entities;
+            ISet<Guid> inputSignals = InputSignals;
 
-            if (measurements == null || measurements.Length < minNeeded)
-                measurements = new IMeasurement[minNeeded];
+            if ((object)entities == null || entities.Length < minNeeded)
+                entities = new ITimeSeriesEntity[minNeeded];
 
-            if (measurementKeys == null)
+            if ((object)inputSignals == null)
             {
-                // No input measurements are defined, just get first set of measurements in this frame
-                foreach (IMeasurement measurement in frameMeasurements.Values)
+                // No input signals are defined, just get first set of signals in this frame
+                foreach (ITimeSeriesEntity entity in frameEntities.Values)
                 {
-                    measurements[index++] = measurement;
+                    entities[index++] = entity;
+
                     if (index == minNeeded)
                         break;
                 }
             }
             else
             {
-                // Loop through all input measurements to see if they exist in this frame
-                IMeasurement measurement;
+                // Loop through all input signals to see if they exist in this frame
+                ITimeSeriesEntity entity;
 
-                foreach (MeasurementKey key in measurementKeys)
+                foreach (Guid signalID in inputSignals)
                 {
-                    if (frameMeasurements.TryGetValue(key, out measurement))
+                    if (frameEntities.TryGetValue(signalID, out entity))
                     {
-                        measurements[index++] = measurement;
+                        entities[index++] = entity;
+
                         if (index == minNeeded)
                             break;
                     }
@@ -1297,50 +1158,27 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="NewMeasurements"/> event.
+        /// Raises the <see cref="NewEntities"/> event.
         /// </summary>
-        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
+        protected virtual void OnNewEntities(ICollection<ITimeSeriesEntity> entities)
         {
             try
             {
-                if ((object)NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                lock (m_newEntitiesLock)
+                {
+                    if ((object)m_routingEventArgs == null)
+                        m_routingEventArgs = new RoutingEventArgs();
+
+                    m_routingEventArgs.TimeSeriesEntities = entities;
+
+                    if ((object)NewEntities != null)
+                        NewEntities(this, m_routingEventArgs);
+                }
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="Notify"/> event with a collection of measurements that have been processed.
-        /// </summary>
-        /// <param name="measurements">The processed measurements.</param>
-        protected virtual void OnNotify(IEnumerable<IMeasurement> measurements)
-        {
-            if ((object)measurements != null)
-            {
-                foreach (IMeasurement measurement in measurements)
-                    OnNotify(measurement);
-            }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="Notify"/> event with a measurement that has been processed.
-        /// </summary>
-        /// <param name="measurement">The processed measurement.</param>
-        protected virtual void OnNotify(IMeasurement measurement)
-        {
-            try
-            {
-                if ((object)Notify != null)
-                    Notify(this, new EventArgs<IMeasurement>(measurement));
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for Notify event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewEntities event: {0}", ex.Message), ex));
             }
         }
 
@@ -1385,36 +1223,36 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
+        /// Raises <see cref="InputSignalsUpdated"/> event.
         /// </summary>
-        protected virtual void OnInputMeasurementKeysUpdated()
+        protected virtual void OnInputSignalsUpdated()
         {
             try
             {
-                if ((object)InputMeasurementKeysUpdated != null)
-                    InputMeasurementKeysUpdated(this, EventArgs.Empty);
+                if ((object)InputSignalsUpdated != null)
+                    InputSignalsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputMeasurementKeysUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputSignalsUpdated event: {0}", ex.Message), ex));
             }
         }
 
         /// <summary>
-        /// Raises <see cref="OutputMeasurementsUpdated"/> event.
+        /// Raises <see cref="OutputSignalsUpdated"/> event.
         /// </summary>
-        protected virtual void OnOutputMeasurementsUpdated()
+        protected virtual void OnOutputSignalsUpdated()
         {
             try
             {
-                if ((object)OutputMeasurementsUpdated != null)
-                    OutputMeasurementsUpdated(this, EventArgs.Empty);
+                if ((object)OutputSignalsUpdated != null)
+                    OutputSignalsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputMeasurementsUpdated event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputSignalsUpdated event: {0}", ex.Message), ex));
             }
         }
 
@@ -1433,12 +1271,6 @@ namespace GSF.TimeSeries.Adapters
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConfigurationChanged event: {0}", ex.Message), ex));
             }
-        }
-
-        private void GenHashCode()
-        {
-            // We cache hash code during construction or after element value change to speed usage
-            m_hashCode = (Name + ID.ToString()).GetHashCode();
         }
 
         #endregion

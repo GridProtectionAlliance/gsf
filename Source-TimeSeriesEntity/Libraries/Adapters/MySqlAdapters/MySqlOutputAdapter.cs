@@ -169,7 +169,7 @@ namespace MySqlAdapters
         /// Archives <paramref name="measurements"/> locally.
         /// </summary>
         /// <param name="measurements">Measurements to be archived.</param>
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(IMeasurement[] measurements)
         {
             if ((object)measurements != null)
             {

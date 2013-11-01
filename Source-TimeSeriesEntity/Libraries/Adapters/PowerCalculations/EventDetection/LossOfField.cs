@@ -287,7 +287,7 @@ namespace PowerCalculations.EventDetection
 
             if (m_count % m_analysisInterval == 0)
             {
-                IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+                IDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
                 IMeasurement measurement;
                 double voltageMagnitude = 0.0D;
                 double voltageAngle = 0.0D;
@@ -341,7 +341,7 @@ namespace PowerCalculations.EventDetection
                 // Expose output measurement values
                 IMeasurement[] outputMeasurements = OutputMeasurements;
 
-                OnNewMeasurements(new IMeasurement[]
+                OnNewEntities(new IMeasurement[]
                 {
                     Measurement.Clone(outputMeasurements[(int)Output.WarningSignal], warningSignaled ? 1.0D : 0.0D, frame.Timestamp),
                     Measurement.Clone(outputMeasurements[(int)Output.RealPower], realPower, frame.Timestamp),

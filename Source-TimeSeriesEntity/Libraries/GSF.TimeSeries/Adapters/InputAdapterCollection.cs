@@ -116,7 +116,7 @@ namespace GSF.TimeSeries.Adapters
             if (item != null)
             {
                 // Wire up new measurement event
-                item.NewMeasurements += item_NewMeasurements;
+                item.NewEntities += ItemNewEntities;
                 item.ProcessingComplete += item_ProcessingComplete;
                 base.InitializeItem(item);
             }
@@ -131,14 +131,14 @@ namespace GSF.TimeSeries.Adapters
             if (item != null)
             {
                 // Un-wire new measurements event
-                item.NewMeasurements -= item_NewMeasurements;
+                item.NewEntities -= ItemNewEntities;
                 item.ProcessingComplete -= item_ProcessingComplete;
                 base.DisposeItem(item);
             }
         }
 
         // Raise new measurements event on behalf of each item in collection
-        private void item_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        private void ItemNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             if (NewMeasurements != null)
                 NewMeasurements(sender, e);

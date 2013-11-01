@@ -95,6 +95,17 @@ namespace GSF.TimeSeries
             }
         }
 
+        /// <summary>
+        /// Gets the raw value of this <see cref="IMeasurement"/>.
+        /// </summary>
+        object IMeasurement.Value
+        {
+            get
+            {
+                return m_value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

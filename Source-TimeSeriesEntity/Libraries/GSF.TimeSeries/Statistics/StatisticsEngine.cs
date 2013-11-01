@@ -389,7 +389,7 @@ namespace GSF.TimeSeries.Statistics
                     calculatedStatistics.AddRange(CalculateStatistics(statistics, serverTime, source));
 
                 // Send calculated statistics into the system
-                OnNewMeasurements(calculatedStatistics);
+                OnNewEntities(calculatedStatistics);
 
                 // Notify that statistics have been calculated
                 OnCalculated();

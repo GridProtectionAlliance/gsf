@@ -113,14 +113,14 @@ namespace PIAdapters
         {
             get
             {
-                return base.RequestedOutputMeasurementKeys;
+                return base.RequestedOutputSignals;
             }
             set
             {
                 // only run the adapter in playback temporal constraints
                 if (StartTimeConstraint != DateTime.MinValue)
                 {
-                    base.RequestedOutputMeasurementKeys = value;
+                    base.RequestedOutputSignals = value;
 
                     if (value != null)
                         HandleNewMeasurementsRequest(value);
@@ -319,7 +319,7 @@ namespace PIAdapters
             {
                 var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                             from key in keys
-                            where row["ID"].ToString().Split(':')[1] == key.ID.ToString() && row["PROTOCOL"].ToString() == "PI"
+                            where row["ID"].ToString().Split(':')[1] == key.PointID.ToString() && row["PROTOCOL"].ToString() == "PI"
                             select new
                             {
                                 Key = key,
@@ -488,7 +488,7 @@ namespace PIAdapters
                     }
 
                     if (publishMeasurements.Count > 0)
-                        OnNewMeasurements(publishMeasurements);
+                        OnNewEntities(publishMeasurements);
                 }
             }
             catch (Exception ex)

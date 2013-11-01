@@ -329,7 +329,7 @@ namespace PowerCalculations
 
             try
             {
-                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
                 double mA = 0.0D, aA = 0.0D, mB = 0.0D, aB = 0.0D, mC = 0.0D, aC = 0.0D;
                 IMeasurement measurement;
                 bool allValuesReceived = false;
@@ -457,7 +457,7 @@ namespace PowerCalculations
                 Measurement zeroAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.ZeroAngle], zeroSequence.Angle.ToDegrees(), frame.Timestamp);
 
                 // Provide calculated measurements for external consumption
-                OnNewMeasurements(new IMeasurement[] { positiveMagnitudeMeasurement, positiveAngleMeasurement, negativeMagnitudeMeasurement, negativeAngleMeasurement, zeroMagnitudeMeasurement, zeroAngleMeasurement });
+                OnNewEntities(new IMeasurement[] { positiveMagnitudeMeasurement, positiveAngleMeasurement, negativeMagnitudeMeasurement, negativeAngleMeasurement, zeroMagnitudeMeasurement, zeroAngleMeasurement });
             }
         }
 

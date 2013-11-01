@@ -301,7 +301,7 @@ namespace HistorianAdapters
                             Timestamp = dataPoint.Time
                         });
                 }
-                OnNewMeasurements(measurements);
+                OnNewEntities(measurements);
             }
             catch (Exception ex)
             {

@@ -237,7 +237,7 @@ namespace MongoAdapters
         /// Stores a collection of measurements in the MongoDB database.
         /// </summary>
         /// <param name="measurements">The measurements to be stored in the MongoDB database.</param>
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(IMeasurement[] measurements)
         {
             if ((object)measurements != null)
             {
@@ -256,7 +256,7 @@ namespace MongoAdapters
         /// <returns>The short status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Measurements archived: {0}", ProcessedMeasurements);
+            return string.Format("Measurements archived: {0}", ProcessedEntities);
         }
 
         #endregion

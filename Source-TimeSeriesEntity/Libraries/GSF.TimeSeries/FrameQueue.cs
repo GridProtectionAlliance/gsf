@@ -24,8 +24,6 @@
 //       Added ExamineQueueState method to analyze real-time queue state.
 //  05/10/2011 - J. Ritchie Carroll
 //       Updated frame queue locks to use a ReaderWriterSpinLock as an optimization.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
 
@@ -58,7 +56,6 @@ namespace GSF.TimeSeries
         private int m_framesPerSecond;                                  // Cached frames per second
         private double m_ticksPerFrame;                                 // Cached ticks per frame
         private long m_timeResolution;                                  // Cached time resolution (max sorting resolution in ticks)
-        private DownsamplingMethod m_downsamplingMethod;                // Cached down-sampling method
         private bool m_disposed;                                        // Object disposed flag
 
         #endregion
@@ -74,7 +71,6 @@ namespace GSF.TimeSeries
             m_frameList = new LinkedList<TrackingFrame>();
             m_frameHash = new ConcurrentDictionary<long, TrackingFrame>();
             m_queueLock = new SpinLock();
-            m_downsamplingMethod = DownsamplingMethod.LastReceived;
         }
 
         /// <summary>
@@ -113,7 +109,8 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
+        /// Gets or sets the maximum time resolution to use when sorting time-series
+        /// entities by their timestamps into their proper destination frames.
         /// </summary>
         public long TimeResolution
         {
@@ -124,21 +121,6 @@ namespace GSF.TimeSeries
             set
             {
                 m_timeResolution = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="GSF.TimeSeries.DownsamplingMethod"/> to be used by the <see cref="FrameQueue"/>.
-        /// </summary>
-        public DownsamplingMethod DownsamplingMethod
-        {
-            get
-            {
-                return m_downsamplingMethod;
-            }
-            set
-            {
-                m_downsamplingMethod = value;
             }
         }
 
@@ -228,8 +210,8 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Examines and returns the status of the <see cref="FrameQueue"/>.
         /// </summary>
-        /// <param name="expectedMeasurements">Number of expected measurements per frame.</param>
-        public string ExamineQueueState(int expectedMeasurements)
+        /// <param name="expectedEntities">Number of expected time-series entities per frame.</param>
+        public string ExamineQueueState(int expectedEntities)
         {
             StringBuilder status = new StringBuilder();
             bool locked = false;
@@ -265,11 +247,11 @@ namespace GSF.TimeSeries
                             if (frame == null)
                                 status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
                             else
-                                status.AppendFormat("Frame {0} @ {1} - {2} measurements, {3} received",
+                                status.AppendFormat("Frame {0} @ {1} - {2} entities, {3} received",
                                     i.ToString().PadLeft(4, '0'),
                                     (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
-                                    frame.Measurements.Count,
-                                    (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
+                                    frame.Entities.Count,
+                                    (frame.Entities.Count / (double)expectedEntities).ToString("##0.00%"));
 
                             status.AppendLine();
                             node = node.Next;
@@ -319,7 +301,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public void Pop()
         {
-            // We track latest published ticks - don't want to allow slow moving measurements
+            // We track latest published ticks - don't want to allow slow moving entities
             // to inject themselves after a certain publication timeframe has passed - this
             // avoids any possible out-of-sequence frame publication...
             m_last = m_head;
@@ -426,7 +408,7 @@ namespace GSF.TimeSeries
                         return frame;
 
                     // Create a new frame for this timestamp
-                    frame = new TrackingFrame(m_createNewFrame(destinationTicks), m_downsamplingMethod);
+                    frame = new TrackingFrame(m_createNewFrame(destinationTicks));
 
                     if (m_frameList.Count > 0)
                     {

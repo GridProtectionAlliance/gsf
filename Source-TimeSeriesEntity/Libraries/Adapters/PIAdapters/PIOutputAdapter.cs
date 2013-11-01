@@ -370,7 +370,7 @@ namespace PIAdapters
         /// Sorts measurements and sends them to the configured PI server in batches
         /// </summary>
         /// <param name="measurements">Measurements to queue</param>
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(IMeasurement[] measurements)
         {
             if (measurements != null)
             {

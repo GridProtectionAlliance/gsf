@@ -229,7 +229,7 @@ namespace PowerCalculations
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
             IMeasurement magnitude, angle;
             double voltageMagnitude = double.NaN, voltageAngle = double.NaN, power = 0.0D;
             int i;
@@ -289,7 +289,7 @@ namespace PowerCalculations
                 }
 
                 // Provide calculated measurements for external consumption
-                OnNewMeasurements(new IMeasurement[] { powerMeasurement, stdevMeasurement });
+                OnNewEntities(new IMeasurement[] { powerMeasurement, stdevMeasurement });
                 
                 // Track last standard deviation...
                 m_lastStdev = stdevMeasurement.AdjustedValue;
@@ -297,7 +297,7 @@ namespace PowerCalculations
             else if (power > 0.0D)
             {
                 // If not, we can still start publishing power calculation as soon as we have one...
-                OnNewMeasurements(new IMeasurement[] { powerMeasurement });
+                OnNewEntities(new IMeasurement[] { powerMeasurement });
             }
         }
 

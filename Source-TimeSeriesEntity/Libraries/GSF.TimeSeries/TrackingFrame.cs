@@ -18,19 +18,22 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  10/31/2013 - Stephen C. Wills
+//       Modified the tracking frame to track each individual time-series entity that entered the frame,
+//       as well as the time that the tracking frame was created. Also implemented a lock-free method
+//       for safely writing to and reading from a tracking frame based on its usage pattern.
 //
 //******************************************************************************************************
 
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
-using GSF.Threading;
+using System.Threading;
+using GSF.Collections;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// <see cref="IFrame"/> container used to track <see cref="IMeasurement"/> values for down-sampling.
+    /// <see cref="IFrame"/> container used to track <see cref="ITimeSeriesEntity"/> objects for down-sampling.
     /// </summary>
     internal class TrackingFrame
     {
@@ -38,11 +41,10 @@ namespace GSF.TimeSeries
 
         // Fields
         private readonly IFrame m_sourceFrame;
-        private readonly long m_timestamp;
-        private readonly DownsamplingMethod m_downsamplingMethod;
-        private readonly ConcurrentDictionary<MeasurementKey, List<IMeasurement>> m_measurements;
-        private readonly ReaderWriterSpinLock m_frameLock;
-        private long m_derivedMeasurements;
+        private readonly IDictionary<Guid, IList<ITimeSeriesEntity>> m_entities;
+        private Ticks m_createdTimestamp;
+        private int m_producerToken;
+        private int m_consumerToken;
 
         #endregion
 
@@ -52,16 +54,11 @@ namespace GSF.TimeSeries
         /// Constructs a new <see cref="TrackingFrame"/> given the specified parameters.
         /// </summary>
         /// <param name="sourceFrame">Source <see cref="IFrame"/> to track.</param>
-        /// <param name="downsamplingMethod"><see cref="DownsamplingMethod"/> to apply.</param>
-        public TrackingFrame(IFrame sourceFrame, DownsamplingMethod downsamplingMethod)
+        public TrackingFrame(IFrame sourceFrame)
         {
             m_sourceFrame = sourceFrame;
-            m_timestamp = sourceFrame.Timestamp;
-            m_downsamplingMethod = downsamplingMethod;
-            m_frameLock = new ReaderWriterSpinLock();
-
-            if (downsamplingMethod != DownsamplingMethod.LastReceived)
-                m_measurements = new ConcurrentDictionary<MeasurementKey, List<IMeasurement>>();
+            m_entities = new Dictionary<Guid, IList<ITimeSeriesEntity>>();
+            m_createdTimestamp = DateTime.UtcNow.Ticks;
         }
 
         #endregion
@@ -86,30 +83,32 @@ namespace GSF.TimeSeries
         {
             get
             {
-                return m_timestamp;
+                return m_sourceFrame.Timestamp;
             }
         }
 
         /// <summary>
-        /// Total number of measurements down-sampled by <see cref="TrackingFrame"/>.
+        /// Gets the number of signals that have been added to this tracking frame.
         /// </summary>
-        public long DownsampledMeasurements
+        public int SignalCount
         {
             get
             {
-                // Only measurements that came in after initial sorts were downsampled...
-                return m_derivedMeasurements - m_sourceFrame.SortedMeasurements;
+                return m_entities.Count;
             }
         }
 
         /// <summary>
-        /// Gets the <see cref="TrackingFrame"/> locking primitive.
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="TrackingFrame"/> was created.
         /// </summary>
-        public ReaderWriterSpinLock Lock
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public Ticks CreatedTimestamp
         {
             get
             {
-                return m_frameLock;
+                return m_createdTimestamp;
             }
         }
 
@@ -118,159 +117,56 @@ namespace GSF.TimeSeries
         #region [ Methods ]
 
         /// <summary>
-        /// Derives measurement value, down-sampling if needed.
+        /// Adds a time-series entity to this tracking frame so that it
+        /// can be applied to the source frame at the publication time.
         /// </summary>
-        /// <param name="measurement">New <see cref="IMeasurement"/> value.</param>
-        /// <returns>New derived <see cref="IMeasurement"/> value, or null if value should not be assigned to <see cref="IFrame"/>.</returns>
-        public IMeasurement DeriveMeasurementValue(IMeasurement measurement)
+        /// <param name="entity">The time-series entity to be added to the tracking frame.</param>
+        /// <returns>A boolean value indicating whether the value was successfully added to the tracking frame.</returns>
+        /// <remarks>
+        /// In multi-threaded scenarios, this thread will fail to add entities to the frame if multiple producer
+        /// threads attempt to add entities to the tracking frame at the same time. Additionally, after the first
+        /// call to <see cref="GetEntities"/>, the tracking frame will be locked so that this method will always
+        /// fail to add the entity to the frame. In these cases, this method will do nothing and return false.
+        /// </remarks>
+        public bool Add(ITimeSeriesEntity entity)
         {
-            IMeasurement derivedMeasurement;
-            List<IMeasurement> values;
+            IList<ITimeSeriesEntity> entities;
 
-            switch (m_downsamplingMethod)
+            if (Interlocked.CompareExchange(ref m_consumerToken, 0, 0) == 0)
             {
-                case DownsamplingMethod.LastReceived:
-                    // Keep track of total number of derived measurements
-                    m_derivedMeasurements++;
-
-                    // This is the simplest case, just apply latest value
-                    return measurement;
-                case DownsamplingMethod.Closest:
-                    // Get tracked measurement values
-                    if (m_measurements.TryGetValue(measurement.Key, out values))
-                    {
-                        if ((object)values != null && values.Count > 0)
-                        {
-                            // Get first tracked value (should only be one for "Closest")
-                            derivedMeasurement = values[0];
-
-                            if ((object)derivedMeasurement != null)
-                            {
-                                // Determine if new measurement's timestamp is closer to frame
-                                if (measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp)
-                                {
-                                    // This measurement came in out-of-order and is closer to frame timestamp, so 
-                                    // we sort this measurement instead of the original
-                                    values[0] = measurement;
-
-                                    // Keep track of total number of derived measurements
-                                    m_derivedMeasurements++;
-
-                                    return measurement;
-                                }
-
-                                // Prior measurement is closer to frame than new one
-                                return null;
-                            }
-                        }
-                    }
-
-                    // No prior measurement exists, track this initial one
-                    values = new List<IMeasurement> { measurement };
-                    m_measurements[measurement.Key] = values;
-
-                    // Keep track of total number of derived measurements
-                    m_derivedMeasurements++;
-
-                    return measurement;
-                case DownsamplingMethod.Filtered:
-                    // Get tracked measurement values
-                    if (m_measurements.TryGetValue(measurement.Key, out values))
-                    {
-                        if ((object)values != null && values.Count > 0)
-                        {
-                            // Get first tracked value - we clone the measurement since we are updating its value
-                            derivedMeasurement = Measurement.Clone(values[0]);
-
-                            if ((object)derivedMeasurement != null)
-                            {
-                                // Get function defined for measurement value filtering
-                                MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter;
-
-                                // Default to average value filter if none is specified
-                                if (measurementValueFilter == null)
-                                    measurementValueFilter = Measurement.AverageValueFilter;
-
-                                // Add new measurement to tracking collection
-                                values.Add(measurement);
-
-                                // Perform filter calculation as specified by device measurement
-                                if (values.Count > 1)
-                                {
-                                    derivedMeasurement.Value = measurementValueFilter(values);
-
-                                    // Keep track of total number of derived measurements
-                                    m_derivedMeasurements++;
-
-                                    return derivedMeasurement;
-                                }
-
-                                // No change from existing measurement
-                                return null;
-                            }
-                        }
-                    }
-
-                    // No prior measurement exists, track this initial one
-                    values = new List<IMeasurement> { measurement };
-                    m_measurements[measurement.Key] = values;
-
-                    // Keep track of total number of derived measurements
-                    m_derivedMeasurements++;
-
-                    return measurement;
-                case DownsamplingMethod.BestQuality:
-                    // Get tracked measurement values
-                    if (m_measurements.TryGetValue(measurement.Key, out values))
-                    {
-                        if ((object)values != null && values.Count > 0)
-                        {
-                            // Get first tracked value (should only be one for "BestQuality")
-                            derivedMeasurement = values[0];
-
-                            if ((object)derivedMeasurement != null)
-                            {
-                                // Determine if new measurement's quality is better than existing one or if new measurement's timestamp is closer to frame
-                                if
-                                (
-                                    (
-                                        (!derivedMeasurement.ValueQualityIsGood() || !derivedMeasurement.TimestampQualityIsGood())
-                                            &&
-                                        (measurement.ValueQualityIsGood() || measurement.TimestampQualityIsGood())
-                                    )
-                                        ||
-                                    (
-                                        measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp
-                                    )
-                                )
-                                {
-                                    // This measurement has a better quality or came in out-of-order and is closer to frame timestamp, so 
-                                    // we sort this measurement instead of the original
-                                    values[0] = measurement;
-
-                                    // Keep track of total number of derived measurements
-                                    m_derivedMeasurements++;
-
-                                    return measurement;
-                                }
-
-                                // Prior measurement is closer to frame than new one
-                                return null;
-                            }
-                        }
-                    }
-
-                    // No prior measurement exists, track this initial one
-                    values = new List<IMeasurement> { measurement };
-                    m_measurements[measurement.Key] = values;
-
-                    // Keep track of total number of derived measurements
-                    m_derivedMeasurements++;
-
-                    return measurement;
+                if (Interlocked.CompareExchange(ref m_producerToken, 1, 0) == 0)
+                {
+                    entities = m_entities.GetOrAdd(entity.ID, signalID => new List<ITimeSeriesEntity>());
+                    entities.Add(entity);
+                    Interlocked.Exchange(ref m_producerToken, 0);
+                    return true;
+                }
             }
 
-            return null;
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the collection of entities, grouped by signal, that were added to the frame.
+        /// </summary>
+        /// <returns>The collection of entities that were added to the frame.</returns>
+        /// <remarks>
+        /// This method causes the tracking frame to be locked so that additional attempts
+        /// to add entities to the frame will fail. This allows thread-safety between
+        /// <see cref="Add"/> and <c>GetEntities</c> so that the value returned from this
+        /// method can be used safely without the possibility of separate thread adding
+        /// entities to the collections.
+        /// </remarks>
+        public IDictionary<Guid, IList<ITimeSeriesEntity>> GetEntities()
+        {
+            SpinWait spinner = new SpinWait();
+
+            Interlocked.Exchange(ref m_consumerToken, 1);
+
+            while (Interlocked.CompareExchange(ref m_producerToken, 0, 0) != 0)
+                spinner.SpinOnce();
+
+            return m_entities;
         }
 
         #endregion

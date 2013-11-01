@@ -18,13 +18,14 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
+using GSF.TimeSeries.Routing;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -34,12 +35,9 @@ namespace GSF.TimeSeries.Adapters
     public interface IInputAdapter : IAdapter
     {
         /// <summary>
-        /// Provides new measurements from input adapter.
+        /// Provides new time-series entities from the input adapter.
         /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
-        /// </remarks>
-        event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
+        event EventHandler<RoutingEventArgs> NewEntities;
 
         /// <summary>
         /// Indicates to the host that processing for the input adapter has completed.
@@ -51,10 +49,10 @@ namespace GSF.TimeSeries.Adapters
         event EventHandler ProcessingComplete;
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output signals.
         /// </summary>
         /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
         string[] OutputSourceIDs
@@ -64,9 +62,9 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets output signal IDs that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        MeasurementKey[] RequestedOutputMeasurementKeys
+        ISet<Guid> RequestedOutputSignals
         {
             get;
             set;

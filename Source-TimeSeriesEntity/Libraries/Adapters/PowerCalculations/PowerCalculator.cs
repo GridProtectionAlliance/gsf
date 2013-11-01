@@ -193,16 +193,16 @@ namespace PowerCalculations
             m_currentAngle = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHA).FirstOrDefault();
             m_currentMagnitude = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).FirstOrDefault();
 
-            if (m_voltageAngle.ID == 0)
+            if (m_voltageAngle.PointID == 0)
                 throw new InvalidOperationException("No voltage angle input was defined - one voltage angle input measurement is required for the power calculator.");
 
-            if (m_voltageMagnitude.ID == 0)
+            if (m_voltageMagnitude.PointID == 0)
                 throw new InvalidOperationException("No voltage magnitude input was defined - one voltage magnitude input measurement is required for the power calculator.");
 
-            if (m_currentAngle.ID == 0)
+            if (m_currentAngle.PointID == 0)
                 throw new InvalidOperationException("No current angle input was defined - one current angle input measurement is required for the power calculator.");
 
-            if (m_currentMagnitude.ID == 0)
+            if (m_currentMagnitude.PointID == 0)
                 throw new InvalidOperationException("No current magnitude input measurement was defined - one current magnitude input measurement is required for the power calculator.");
 
             // Make sure only these four phasor measurements are used as input (any others will be ignored)
@@ -234,7 +234,7 @@ namespace PowerCalculations
 
             try
             {
-                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
                 double voltageMagnitude = 0.0D, voltageAngle = 0.0D, currentMagnitude = 0.0D, currentAngle = 0.0D;
                 IMeasurement measurement;
                 bool allValuesReceived = false;
@@ -314,7 +314,7 @@ namespace PowerCalculations
                 Measurement stdevMeasurement = Measurement.Clone(outputMeasurements[(int)Output.ReactivePower], reactivePower, frame.Timestamp);
 
                 // Provide calculated measurements for external consumption
-                OnNewMeasurements(new IMeasurement[] { powerMeasurement, stdevMeasurement });
+                OnNewEntities(new IMeasurement[] { powerMeasurement, stdevMeasurement });
             }
         }
 

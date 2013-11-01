@@ -49,7 +49,7 @@ namespace GSF.TimeSeries.Adapters
         /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed measurements.
         /// </para>
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnprocessedMeasurements;
+        public event EventHandler<EventArgs<int>> UnprocessedEntities;
 
         #endregion
 
@@ -73,7 +73,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets the total number of measurements processed and destined for archive thus far by each
         /// <see cref="IOutputAdapter"/> implementation in the <see cref="OutputAdapterCollection"/>.
         /// </summary>
-        public override long ProcessedMeasurements
+        public override long ProcessedEntities
         {
             get
             {
@@ -85,7 +85,7 @@ namespace GSF.TimeSeries.Adapters
                     foreach (IOutputAdapter item in this)
                     {
                         if (item.OutputIsForArchive)
-                            processedMeasurements += item.ProcessedMeasurements;
+                            processedMeasurements += item.ProcessedEntities;
                     }
                 }
 
@@ -151,28 +151,28 @@ namespace GSF.TimeSeries.Adapters
         /// This method is typically only used to curtail size of measurement queue if it's getting too large.  If more points are
         /// requested than there are points available - all points in the queue will be removed.
         /// </remarks>
-        public virtual void RemoveMeasurements(int total)
+        public virtual void RemoveEntities(int total)
         {
             lock (this)
             {
                 foreach (IOutputAdapter item in this)
                 {
                     if (item.Enabled)
-                        item.RemoveMeasurements(total);
+                        item.RemoveEntities(total);
                 }
             }
         }
 
         /// <summary>
-        /// Raises the <see cref="UnprocessedMeasurements"/> event.
+        /// Raises the <see cref="UnprocessedEntities"/> event.
         /// </summary>
         /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
         protected virtual void OnUnprocessedMeasurements(int unprocessedMeasurements)
         {
             try
             {
-                if (UnprocessedMeasurements != null)
-                    UnprocessedMeasurements(this, new EventArgs<int>(unprocessedMeasurements));
+                if (UnprocessedEntities != null)
+                    UnprocessedEntities(this, new EventArgs<int>(unprocessedMeasurements));
             }
             catch (Exception ex)
             {
@@ -190,7 +190,7 @@ namespace GSF.TimeSeries.Adapters
             if (item != null)
             {
                 // Wire up unprocessed measurements event
-                item.UnprocessedMeasurements += item_UnprocessedMeasurements;
+                item.UnprocessedEntities += ItemUnprocessedEntities;
                 base.InitializeItem(item);
             }
         }
@@ -204,16 +204,16 @@ namespace GSF.TimeSeries.Adapters
             if (item != null)
             {
                 // Un-wire unprocessed measurements event
-                item.UnprocessedMeasurements -= item_UnprocessedMeasurements;
+                item.UnprocessedEntities -= ItemUnprocessedEntities;
                 base.DisposeItem(item);
             }
         }
 
         // Raise unprocessed measurements event on behalf of each item in collection
-        private void item_UnprocessedMeasurements(object sender, EventArgs<int> e)
+        private void ItemUnprocessedEntities(object sender, EventArgs<int> e)
         {
-            if (UnprocessedMeasurements != null)
-                UnprocessedMeasurements(sender, e);
+            if (UnprocessedEntities != null)
+                UnprocessedEntities(sender, e);
         }
 
         #endregion

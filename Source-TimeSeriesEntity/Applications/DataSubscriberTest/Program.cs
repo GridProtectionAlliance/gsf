@@ -55,7 +55,7 @@ namespace DataSubscriberTest
             subscriber.ProcessException += subscriber_ProcessException;
             subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
             subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
-            subscriber.NewMeasurements += subscriber_NewMeasurements;
+            subscriber.NewEntities += SubscriberNewEntities;
 
             StringBuilder connectionString = new StringBuilder();
 
@@ -99,7 +99,7 @@ namespace DataSubscriberTest
             subscriber.ProcessException -= subscriber_ProcessException;
             subscriber.ConnectionEstablished -= subscriber_ConnectionEstablished;
             subscriber.ConnectionTerminated -= subscriber_ConnectionTerminated;
-            subscriber.NewMeasurements -= subscriber_NewMeasurements;
+            subscriber.NewEntities -= SubscriberNewEntities;
 
             timer.Elapsed -= timer_Elapsed;
             timer.Stop();
@@ -150,7 +150,7 @@ namespace DataSubscriberTest
             }
         }
 
-        static void subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        static void SubscriberNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             // Check to see if total number of added points will exceed process interval used to show periodic
             // messages of how many points have been archived so far...

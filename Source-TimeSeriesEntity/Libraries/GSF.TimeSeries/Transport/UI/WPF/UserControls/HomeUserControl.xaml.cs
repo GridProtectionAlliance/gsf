@@ -416,7 +416,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 InitializeUnsynchronizedSubscription();
         }
 
-        private void m_unsynchronizedSubscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        private void UnsynchronizedSubscriberNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             if (0 == Interlocked.Exchange(ref m_processingUnsynchronizedMeasurements, 1))
             {
@@ -485,7 +485,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                     m_unsynchronizedSubscriber.StatusMessage += m_unsynchronizedSubscriber_StatusMessage;
                     m_unsynchronizedSubscriber.ProcessException += m_unsynchronizedSubscriber_ProcessException;
                     m_unsynchronizedSubscriber.ConnectionEstablished += m_unsynchronizedSubscriber_ConnectionEstablished;
-                    m_unsynchronizedSubscriber.NewMeasurements += m_unsynchronizedSubscriber_NewMeasurements;
+                    m_unsynchronizedSubscriber.NewEntities += UnsynchronizedSubscriberNewEntities;
                     m_unsynchronizedSubscriber.ConnectionTerminated += m_unsynchronizedSubscriber_ConnectionTerminated;
                     m_unsynchronizedSubscriber.ConnectionString = database.DataPublisherConnectionString();
                     m_unsynchronizedSubscriber.Initialize();
@@ -505,7 +505,7 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 m_unsynchronizedSubscriber.StatusMessage -= m_unsynchronizedSubscriber_StatusMessage;
                 m_unsynchronizedSubscriber.ProcessException -= m_unsynchronizedSubscriber_ProcessException;
                 m_unsynchronizedSubscriber.ConnectionEstablished -= m_unsynchronizedSubscriber_ConnectionEstablished;
-                m_unsynchronizedSubscriber.NewMeasurements -= m_unsynchronizedSubscriber_NewMeasurements;
+                m_unsynchronizedSubscriber.NewEntities -= UnsynchronizedSubscriberNewEntities;
                 m_unsynchronizedSubscriber.ConnectionTerminated -= m_unsynchronizedSubscriber_ConnectionTerminated;
                 m_unsynchronizedSubscriber.Stop();
                 m_unsynchronizedSubscriber.Dispose();

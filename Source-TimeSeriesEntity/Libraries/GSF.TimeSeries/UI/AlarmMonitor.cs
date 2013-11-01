@@ -109,7 +109,7 @@ namespace GSF.TimeSeries.UI
             m_dataSubscriber = new DataSubscriber();
             m_dataSubscriber.ConnectionEstablished += m_dataSubscriber_ConnectionEstablished;
             m_dataSubscriber.ReceivedServerResponse += m_dataSubscriber_ReceivedServerResponse;
-            m_dataSubscriber.NewMeasurements += m_dataSubscriber_NewMeasurements;
+            m_dataSubscriber.NewEntities += DataSubscriberNewEntities;
             m_dataSubscriber.ProcessException += m_dataSubscriber_ProcessException;
             m_dataSubscriber.ConnectionString = GetDataPublisherConnectionString();
             m_dataSubscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData;
@@ -204,7 +204,7 @@ namespace GSF.TimeSeries.UI
                         {
                             m_dataSubscriber.ConnectionEstablished -= m_dataSubscriber_ConnectionEstablished;
                             m_dataSubscriber.ReceivedServerResponse -= m_dataSubscriber_ReceivedServerResponse;
-                            m_dataSubscriber.NewMeasurements -= m_dataSubscriber_NewMeasurements;
+                            m_dataSubscriber.NewEntities -= DataSubscriberNewEntities;
                             m_dataSubscriber.ProcessException -= m_dataSubscriber_ProcessException;
                             m_dataSubscriber.Dispose();
                             m_dataSubscriber = null;
@@ -455,7 +455,7 @@ namespace GSF.TimeSeries.UI
                 m_alarmStatusQuery.RequestRaisedAlarmStates();
         }
 
-        private void m_dataSubscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        private void DataSubscriberNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             Dictionary<Guid, Alarm> definedAlarmsByMeasurement = m_definedAlarmsByMeasurement;
             ICollection<IMeasurement> latestMeasurements;

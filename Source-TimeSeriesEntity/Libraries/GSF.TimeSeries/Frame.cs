@@ -22,13 +22,12 @@
 //       Added received and published timestamps for measurements.
 //  05/11/2011 - J. Ritchie Carroll
 //       Updated to use a concurrent dictionary.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to maintain a dictionary of time-series entities.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace GSF.TimeSeries
@@ -37,20 +36,15 @@ namespace GSF.TimeSeries
     /// Implementation of a basic <see cref="IFrame"/>.
     /// </summary>
     /// <remarks>
-    /// A frame represents a collection of measurements at a given time.
+    /// A frame represents a collection of time-series entities at a given time.
     /// </remarks>
     public class Frame : IFrame
     {
         #region [ Members ]
 
         // Fields
-        private Ticks m_timestamp;                                                  // Time, represented as 100-nanosecond ticks, of this frame of data
-        private Ticks m_receivedTimestamp;                                          // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
-        private Ticks m_publishedTimestamp;                                         // Time, represented as 100-nanosecond ticks, of frame published (post process)
-        private bool m_published;                                                   // Determines if this frame of data has been published
-        private int m_sortedMeasurements;                                           // Total measurements sorted into this frame
-        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements;  // Concurrent dictionary of measurements published by this frame
-        private IMeasurement m_lastSortedMeasurement;                               // Last measurement sorted into this frame
+        private readonly Ticks m_timestamp;                                  // Time, represented as 100-nanosecond ticks, of this frame of data
+        private readonly IDictionary<Guid, ITimeSeriesEntity> m_entities;    // Dictionary of time-series entities published by this frame
 
         #endregion
 
@@ -60,83 +54,31 @@ namespace GSF.TimeSeries
         /// Constructs a new <see cref="Frame"/> given the specified parameters.
         /// </summary>
         /// <param name="timestamp">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
-        /// <param name="expectedMeasurements">Expected number of measurements for the <see cref="Frame"/>.</param>
-        public Frame(Ticks timestamp, int expectedMeasurements = -1)
+        /// <param name="expectedEntities">Expected number of time-series entities for the <see cref="Frame"/>.</param>
+        public Frame(Ticks timestamp, int expectedEntities = -1)
         {
             m_timestamp = timestamp;
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
 
-            if (expectedMeasurements > 0)
-                m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(s_defaultConcurrencyLevel, expectedMeasurements * 2);
+            if (expectedEntities > 0)
+                m_entities = new Dictionary<Guid, ITimeSeriesEntity>(expectedEntities * 2);
             else
-                m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
-
-            m_sortedMeasurements = -1;
+                m_entities = new Dictionary<Guid, ITimeSeriesEntity>();
         }
 
         /// <summary>
         /// Constructs a new <see cref="Frame"/> given the specified parameters.
         /// </summary>
         /// <param name="timestamp">Timestamp, in ticks, for this <see cref="Frame"/>.</param>
-        /// <param name="measurements">Initial set of measurements to load into the <see cref="Frame"/>, if any.</param>
-        public Frame(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
+        /// <param name="entities">Initial set of time-series entities to load into the <see cref="Frame"/>, if any.</param>
+        public Frame(Ticks timestamp, IDictionary<Guid, ITimeSeriesEntity> entities)
         {
             m_timestamp = timestamp;
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
-            m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(measurements);
-            m_sortedMeasurements = -1;
+            m_entities = new Dictionary<Guid, ITimeSeriesEntity>(entities);
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Keyed measurements in this <see cref="Frame"/>.
-        /// </summary>
-        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements
-        {
-            get
-            {
-                return m_measurements;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets published state of this <see cref="Frame"/> (pre-processing).
-        /// </summary>
-        public bool Published
-        {
-            get
-            {
-                return m_published;
-            }
-            set
-            {
-                m_published = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets total number of measurements that have been sorted into this <see cref="Frame"/>.
-        /// </summary>
-        /// <remarks>
-        /// If this property has not been assigned a value, the property will return measurement count.
-        /// </remarks>
-        public int SortedMeasurements
-        {
-            get
-            {
-                if (m_sortedMeasurements == -1)
-                    return m_measurements.Count;
-
-                return m_sortedMeasurements;
-            }
-            set
-            {
-                m_sortedMeasurements = value;
-            }
-        }
 
         /// <summary>
         /// Gets or sets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="Frame"/>.
@@ -150,70 +92,19 @@ namespace GSF.TimeSeries
             {
                 return m_timestamp;
             }
-            set
-            {
-                m_timestamp = value;
-            }
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Frame"/> was received (i.e., created).
+        /// Keyed time-series entities in this <see cref="Frame"/>.
         /// </summary>
         /// <remarks>
-        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// Represents a dictionary of time-series entities, keyed by signal ID.
         /// </remarks>
-        public Ticks ReceivedTimestamp
+        public IDictionary<Guid, ITimeSeriesEntity> Entities
         {
             get
             {
-                return m_receivedTimestamp;
-            }
-            set
-            {
-                m_receivedTimestamp = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Frame"/> was published (post-processing).
-        /// </summary>
-        /// <remarks>
-        /// <para>In the default implementation, setting this property will update all associated <see cref="IMeasurement.PublishedTimestamp"/>.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
-        /// </remarks>
-        public Ticks PublishedTimestamp
-        {
-            get
-            {
-                return m_publishedTimestamp;
-            }
-            set
-            {
-                m_publishedTimestamp = value;
-
-                if (m_measurements != null)
-                {
-                    foreach (IMeasurement measurement in m_measurements.Values)
-                    {
-                        measurement.PublishedTimestamp = m_publishedTimestamp;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets reference to last measurement that was sorted into this <see cref="Frame"/>.
-        /// </summary>
-        public IMeasurement LastSortedMeasurement
-        {
-            get
-            {
-                return m_lastSortedMeasurement;
-            }
-            set
-            {
-                m_lastSortedMeasurement = value;
+                return m_entities;
             }
         }
 
@@ -222,18 +113,12 @@ namespace GSF.TimeSeries
         #region [ Methods ]
 
         /// <summary>
-        /// Create a copy of this <see cref="Frame"/> and its measurements.
+        /// Create a copy of this <see cref="Frame"/> and its time-series entities.
         /// </summary>
-        /// <remarks>
-        /// The measurement dictionary of this <see cref="Frame"/> is synclocked during copy.
-        /// </remarks>
         /// <returns>A cloned <see cref="Frame"/>.</returns>
         public virtual Frame Clone()
         {
-            lock (m_measurements)
-            {
-                return new Frame(m_timestamp, m_measurements);
-            }
+            return new Frame(m_timestamp, m_entities);
         }
 
         /// <summary>
@@ -395,13 +280,6 @@ namespace GSF.TimeSeries
 
             return ((object)frame2 == null);
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly int s_defaultConcurrencyLevel = Environment.ProcessorCount * 4;
 
         #endregion
     }

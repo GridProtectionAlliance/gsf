@@ -20,15 +20,17 @@
 //       Generated original version of source code.
 //  12/02/2010 - J. Ritchie Carroll
 //       Added an immediate measurement tracking option for incoming data.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text;
+using GSF.TimeSeries.Routing;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -36,9 +38,9 @@ namespace GSF.TimeSeries.Adapters
     /// Represents the base class for simple, non-time-aligned, action adapters.
     /// </summary>
     /// <remarks>
-    /// This base class acts on incoming measurements, in a non-time-aligned fashion, for general processing. If derived
-    /// class needs time-aligned data for processing, the <see cref="ActionAdapterBase"/> class should be used instead.
-    /// Derived classes are expected call <see cref="OnNewMeasurements"/> for any new measurements that may get created.
+    /// This base class acts on incoming time-series entities, in a non-time-aligned fashion, for general processing.
+    /// If derived class needs time-aligned data for processing, the <see cref="ActionAdapterBase"/> class should be used instead.
+    /// Derived classes are expected call <see cref="OnNewEntities"/> for any new entities that may get created.
     /// </remarks>
     public abstract class FacileActionAdapterBase : AdapterBase, IActionAdapter
     {
@@ -47,41 +49,43 @@ namespace GSF.TimeSeries.Adapters
         // Events
 
         /// <summary>
-        /// Provides new measurements from action adapter.
+        /// Provides new time-series entities from action adapter.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
+        /// <see cref="EventArgs{T}.Argument"/> is a collection of new entities for host to process.
         /// </remarks>
-        public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
+        public event EventHandler<RoutingEventArgs> NewEntities;
 
         /// <summary>
-        /// This event is raised by derived class, if needed, to track current number of unpublished seconds of data in the queue.
+        /// Event is raised every five seconds allowing host to track total number of unprocessed entities.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
+        /// <para>
+        /// Implementations of this interface are expected to report current queue size of unprocessed
+        /// time-series entities so that if queue size reaches an unhealthy threshold, host can take action.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
+        /// </para>
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnpublishedSamples;
-
-        /// <summary>
-        /// This event is raised if there are any measurements being discarded during the sorting process.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="IMeasurement"/> values that are being discarded during the sorting process.
-        /// </remarks>
-        public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
+        public event EventHandler<EventArgs<int>> UnprocessedEntities;
 
         // Fields
         private List<string> m_inputSourceIDs;
         private List<string> m_outputSourceIDs;
-        private MeasurementKey[] m_requestedInputMeasurementKeys;
-        private MeasurementKey[] m_requestedOutputMeasurementKeys;
+        private ISet<Guid> m_requestedInputSignals;
+        private ISet<Guid> m_requestedOutputSignals;
         private bool m_respectInputDemands;
         private bool m_respectOutputDemands;
-        private int m_framesPerSecond;                                  // Defined frames per second, if defined
-        private bool m_trackLatestMeasurements;                         // Determines whether or not to track latest measurements
-        private readonly ImmediateMeasurements m_latestMeasurements;    // Absolute latest received measurement values
-        private bool m_useLocalClockAsRealTime;                         // Determines whether or not to use local system clock as "real-time"
-        private long m_realTimeTicks;                                   // Timestamp of real-time or the most recently received measurement
+        private RoutingEventArgs m_routingEventArgs;
+        private readonly object m_newEntitiesLock;
+        private double m_lagTime;
+        private double m_leadTime;
+        private int m_framesPerSecond;                                          // Defined frames per second, if defined
+        private bool m_trackLatestEntities;                                     // Determines whether or not to track latest time-series entities
+        private readonly IDictionary<Guid, ITimeSeriesEntity> m_latestEntities; // Absolute latest received time-series entities
+        private bool m_useLocalClockAsRealTime;                                 // Determines whether or not to use local system clock as "real-time"
+        private long m_realTimeTicks;                                           // Timestamp of real-time or the most recently received time-series entity
 
         #endregion
 
@@ -92,8 +96,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected FacileActionAdapterBase()
         {
-            m_latestMeasurements = new ImmediateMeasurements();
-            m_latestMeasurements.RealTimeFunction = () => RealTime;
+            m_newEntitiesLock = new object();
+            m_latestEntities = new Dictionary<Guid, ITimeSeriesEntity>();
             m_useLocalClockAsRealTime = true;
         }
 
@@ -102,33 +106,29 @@ namespace GSF.TimeSeries.Adapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets primary keys of input measurements the <see cref="FacileActionAdapterBase"/> expects, if any.
+        /// Gets or sets primary keys of input signals the <see cref="FacileActionAdapterBase"/> expects, if any.
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        Description("Defines primary keys of input signals the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public override MeasurementKey[] InputMeasurementKeys
+        public override ISet<Guid> InputSignals
         {
             get
             {
-                return base.InputMeasurementKeys;
+                return base.InputSignals;
             }
             set
             {
-                base.InputMeasurementKeys = value;
-
-                // Clear measurement cache when updating input measurement keys
-                if (TrackLatestMeasurements)
-                    LatestMeasurements.ClearMeasurementCache();
+                base.InputSignals = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input measurement keys.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter input signals.
         /// </summary>
         /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
         public virtual string[] InputSourceIDs
@@ -152,59 +152,16 @@ namespace GSF.TimeSeries.Adapters
                     m_inputSourceIDs.Sort();
                 }
 
-                // Filter measurements to list of specified source IDs
+                // Filter signals to list of specified source IDs
                 LoadInputSourceIDs(this);
             }
         }
 
         /// <summary>
-        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output signals.
         /// </summary>
         /// <remarks>
-        /// Adapters can specify a list of adapters that it depends on. The measurement routing
-        /// system will hold on to measurements that need to be passed through an adapter's
-        /// dependencies. Those measurements will be routed to the dependent adapter when all of
-        /// its dependencies have finished processing them.
-        /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(""),
-        Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
-        public override string Dependencies
-        {
-            get
-            {
-                return base.Dependencies;
-            }
-            set
-            {
-                base.Dependencies = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(0.0333333D),
-        Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
-        public override long DependencyTimeout
-        {
-            get
-            {
-                return base.DependencyTimeout;
-            }
-            set
-            {
-                base.DependencyTimeout = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
-        /// </summary>
-        /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
         public virtual string[] OutputSourceIDs
@@ -228,38 +185,38 @@ namespace GSF.TimeSeries.Adapters
                     m_outputSourceIDs.Sort();
                 }
 
-                // Filter measurements to list of specified source IDs
+                // Filter signals to list of specified source IDs
                 LoadOutputSourceIDs(this);
             }
         }
 
         /// <summary>
-        /// Gets or sets input measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets input signals that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedInputMeasurementKeys
+        public virtual ISet<Guid> RequestedInputSignals
         {
             get
             {
-                return m_requestedInputMeasurementKeys;
+                return m_requestedInputSignals;
             }
             set
             {
-                m_requestedInputMeasurementKeys = value;
+                m_requestedInputSignals = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets output signals that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
+        public virtual ISet<Guid> RequestedOutputSignals
         {
             get
             {
-                return m_requestedOutputMeasurementKeys;
+                return m_requestedOutputSignals;
             }
             set
             {
-                m_requestedOutputMeasurementKeys = value;
+                m_requestedOutputSignals = value;
             }
         }
 
@@ -269,7 +226,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start input demands,
-        /// as an example, this would be <c>false</c> for an action adapter that calculated measurement, but <c>true</c> for an action adapter used to archive inputs.
+        /// as an example, this would be <c>false</c> for an action adapter that calculated measurements, but <c>true</c> for an action adapter used to archive inputs.
         /// </remarks>
         public virtual bool RespectInputDemands
         {
@@ -289,7 +246,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Action adapters are in the curious position of being able to both consume and produce points, as such the user needs to be able to control how their
         /// adapter will behave concerning routing demands when the adapter is setup to connect on demand. In the case of respecting auto-start output demands,
-        /// as an example, this would be <c>true</c> for an action adapter that calculated measurement, but <c>false</c> for an action adapter used to archive inputs.
+        /// as an example, this would be <c>true</c> for an action adapter that calculated measurements, but <c>false</c> for an action adapter used to archive inputs.
         /// </remarks>
         public virtual bool RespectOutputDemands
         {
@@ -328,8 +285,8 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
-        /// <para>Defines the time sensitivity to past measurement timestamps.</para>
-        /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+        /// <para>Defines the time sensitivity to past timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a timestamp is too old.</para>
         /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
@@ -340,11 +297,11 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                return LatestMeasurements.LagTime;
+                return m_lagTime;
             }
             set
             {
-                LatestMeasurements.LagTime = value;
+                m_lagTime = value;
             }
         }
 
@@ -352,8 +309,8 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
-        /// <para>Defines the time sensitivity to future measurement timestamps.</para>
-        /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+        /// <para>Defines the time sensitivity to future timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a timestamp is too advanced.</para>
         /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
@@ -364,40 +321,40 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                return LatestMeasurements.LeadTime;
+                return m_leadTime;
             }
             set
             {
-                LatestMeasurements.LeadTime = value;
+                m_leadTime = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets flag to start tracking the absolute latest received measurement values.
+        /// Gets or sets flag to start tracking the absolute latest received time-series entities.
         /// </summary>
         /// <remarks>
-        /// Latest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
+        /// Latest received time-series entity will be available via the <see cref="LatestEntities"/> property.
         /// </remarks>
-        public virtual bool TrackLatestMeasurements
+        public virtual bool TrackLatestEntities
         {
             get
             {
-                return m_trackLatestMeasurements;
+                return m_trackLatestEntities;
             }
             set
             {
-                m_trackLatestMeasurements = value;
+                m_trackLatestEntities = value;
             }
         }
 
         /// <summary>
-        /// Gets reference to the collection of absolute latest received measurement values.
+        /// Gets reference to the collection of absolute latest received time-series entities.
         /// </summary>
-        public virtual ImmediateMeasurements LatestMeasurements
+        public virtual IList<ITimeSeriesEntity> LatestEntities
         {
             get
             {
-                return m_latestMeasurements;
+                return m_latestEntities.Values.ToList();
             }
         }
 
@@ -406,7 +363,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// Use your local system clock as real time only if the time is locally GPS-synchronized,
-        /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
+        /// or if the time-series entities being sorted were not measured relative to a GPS-synchronized clock.
         /// Turn this off if the class is intended to process historical data.
         /// </remarks>
         public virtual bool UseLocalClockAsRealTime
@@ -424,17 +381,17 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets the the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
         /// this function will return <see cref="DateTime.UtcNow"/>. Otherwise, this function will return the timestamp of the
-        /// most recent measurement.
+        /// most recent time-series entity.
         /// </summary>
         public Ticks RealTime
         {
             get
             {
                 // When using local clock as real-time, assume this is the best value we have for real time.
-                if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
+                if (UseLocalClockAsRealTime || !TrackLatestEntities)
                     return DateTime.UtcNow.Ticks;
 
-                // Assume lastest measurement timestamp is the best value we have for real-time.
+                // Assume lastest timestamp is the best value we have for real-time.
                 return m_realTimeTicks;
             }
         }
@@ -454,7 +411,7 @@ namespace GSF.TimeSeries.Adapters
                 status.Append(base.Status);
                 status.AppendFormat("        Defined frame rate: {0} frames/sec", FramesPerSecond);
                 status.AppendLine();
-                status.AppendFormat("      Measurement tracking: {0}", m_trackLatestMeasurements ? "Enabled" : "Disabled");
+                status.AppendFormat("           Entity tracking: {0}", m_trackLatestEntities ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.AppendFormat("  Respecting input demands: {0}", RespectInputDemands);
                 status.AppendLine();
@@ -485,20 +442,20 @@ namespace GSF.TimeSeries.Adapters
             if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
                 UseLocalClockAsRealTime = setting.ParseBoolean();
 
-            if (settings.TryGetValue("trackLatestMeasurements", out setting))
-                TrackLatestMeasurements = setting.ParseBoolean();
+            if (settings.TryGetValue("trackLatestEntities", out setting))
+                TrackLatestEntities = setting.ParseBoolean();
 
-            if (TrackLatestMeasurements)
+            if (TrackLatestEntities)
             {
                 if (settings.TryGetValue("lagTime", out setting))
-                    LatestMeasurements.LagTime = double.Parse(setting);
+                    LagTime = double.Parse(setting);
                 else
-                    LatestMeasurements.LagTime = 10.0;
+                    LagTime = 10.0;
 
                 if (settings.TryGetValue("leadTime", out setting))
-                    LatestMeasurements.LeadTime = double.Parse(setting);
+                    LeadTime = double.Parse(setting);
                 else
-                    LatestMeasurements.LeadTime = 5.0;
+                    LeadTime = 5.0;
             }
 
             if (settings.TryGetValue("respectInputDemands", out setting))
@@ -513,90 +470,75 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Queues a single measurement for processing.
+        /// Queues a collection of time-series entities for processing.
         /// </summary>
-        /// <param name="measurement">Measurement to queue for processing.</param>
-        public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
+        /// <param name="entities">Entities to queue for processing.</param>
+        public virtual void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
         {
-            QueueMeasurementsForProcessing(new[] { measurement });
-        }
+            ITimeSeriesEntity latestEntity;
 
-        /// <summary>
-        /// Queues a collection of measurements for processing.
-        /// </summary>
-        /// <param name="measurements">Measurements to queue for processing.</param>
-        public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-        {
-            // If enabled, facile adapter will track the absolute latest measurement values.
-            if (m_trackLatestMeasurements)
+            // If enabled, facile adapter will track the absolute latest time-series entities.
+            if (m_trackLatestEntities)
             {
                 bool useLocalClockAsRealTime = UseLocalClockAsRealTime;
 
-                foreach (IMeasurement measurement in measurements)
+                foreach (ITimeSeriesEntity entity in entities)
                 {
-                    m_latestMeasurements.UpdateMeasurementValue(measurement);
+                    // If this entity is more recent than the latest entity for the same signal, make this entity the latest entity
+                    if (!m_latestEntities.TryGetValue(entity.ID, out latestEntity) || entity.Timestamp > latestEntity.Timestamp)
+                        m_latestEntities[entity.ID] = entity;
 
                     // Track latest timestamp as real-time, if requested.
                     // This class is not currently going through hassle of determining if
                     // the latest timestamp is reasonable...
-                    if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks)
-                        m_realTimeTicks = measurement.Timestamp;
+                    if (!useLocalClockAsRealTime && entity.Timestamp > m_realTimeTicks)
+                        m_realTimeTicks = entity.Timestamp;
                 }
             }
         }
 
         /// <summary>
-        /// Raises the <see cref="NewMeasurements"/> event.
+        /// Raises the <see cref="NewEntities"/> event.
         /// </summary>
-        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
+        protected virtual void OnNewEntities(ICollection<ITimeSeriesEntity> entities)
         {
             try
             {
-                if (NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                lock (m_newEntitiesLock)
+                {
+                    if ((object)m_routingEventArgs == null)
+                        m_routingEventArgs = new RoutingEventArgs();
 
-                IncrementProcessedMeasurements(measurements.Count);
+                    m_routingEventArgs.TimeSeriesEntities = entities;
+
+                    if ((object)NewEntities != null)
+                        NewEntities(this, m_routingEventArgs);
+                }
+
+                IncrementProcessedEntities(entities.Count);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewEntities event: {0}", ex.Message), ex));
             }
         }
 
         /// <summary>
-        /// Raises the <see cref="UnpublishedSamples"/> event.
+        /// Raises the <see cref="UnprocessedEntities"/> event.
         /// </summary>
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(int seconds)
         {
             try
             {
-                if (UnpublishedSamples != null)
-                    UnpublishedSamples(this, new EventArgs<int>(seconds));
+                if (UnprocessedEntities != null)
+                    UnprocessedEntities(this, new EventArgs<int>(seconds));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
                 OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnpublishedSamples event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="DiscardingMeasurements"/> event.
-        /// </summary>
-        /// <param name="measurements">Enumeration of <see cref="IMeasurement"/> values being discarded.</param>
-        protected virtual void OnDiscardingMeasurements(IEnumerable<IMeasurement> measurements)
-        {
-            try
-            {
-                if (DiscardingMeasurements != null)
-                    DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for DiscardingMeasurements event: {0}", ex.Message), ex));
             }
         }
 

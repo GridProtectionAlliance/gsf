@@ -77,11 +77,11 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Proxies measurements to parent adapter for processing.
         /// </summary>
-        /// <param name="measurements">Collection of measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        /// <param name="entities">Collection of measurements to queue for processing.</param>
+        public override void QueueEntitiesForProcessing(IEnumerable<IMeasurement> entities)
         {
             if ((object)m_parent != null)
-                m_parent.QueueMeasurementsForProcessing(measurements);
+                m_parent.QueueMeasurementsForProcessing(entities);
         }
 
         /// <summary>
@@ -96,8 +96,8 @@ namespace GSF.TimeSeries.Transport
             if (InputMeasurementKeys != null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if (OutputMeasurements != null)
-                outputCount = OutputMeasurements.Length;
+            if (OutputSignals != null)
+                outputCount = OutputSignals.Length;
 
             return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
         }

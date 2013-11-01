@@ -244,7 +244,7 @@ namespace EpriExport
 
             // We enable tracking of latest measurements so we can use these values if points are missing - since we are using
             // latest measurement tracking, we sort all incoming points even though most of them will be thrown out...
-            TrackLatestMeasurements = true;
+            TrackLatestEntities = true;
 
             //// Create a new dictionary of base voltages
             //m_baseVoltages = new Dictionary<MeasurementKey, double>();
@@ -357,7 +357,7 @@ namespace EpriExport
             double measurementValue;
             bool displayedWarning = false;
 
-            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
+            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
 
             if (measurements.Count > 0)
             {
@@ -379,7 +379,7 @@ namespace EpriExport
                     signalType = InputMeasurementKeyTypes[i];
 
                     // Get measurement for this frame, falling back on latest value
-                    measurementValue = measurements.TryGetValue(inputMeasurementKey, out measurement) ? measurement.AdjustedValue : LatestMeasurements[inputMeasurementKey.SignalID];
+                    measurementValue = measurements.TryGetValue(inputMeasurementKey, out measurement) ? measurement.AdjustedValue : LatestEntities[inputMeasurementKey.SignalID];
 
                     // Export measurement value making any needed adjustments based on signal type
                     if (signalType == SignalType.VPHM)

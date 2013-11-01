@@ -155,11 +155,11 @@ namespace PIAdapters
         {
             get
             {
-                return base.RequestedOutputMeasurementKeys;
+                return base.RequestedOutputSignals;
             }
             set
             {
-                base.RequestedOutputMeasurementKeys = value;
+                base.RequestedOutputSignals = value;
                 if (value != null && value.Any())
                     HandleNewMeasurementsRequest(value);
             }
@@ -316,8 +316,8 @@ namespace PIAdapters
                     outputMeasurements.Add(measurement);
                 }
 
-                OutputMeasurements = outputMeasurements.ToArray();
-                OnOutputMeasurementsUpdated();
+                OutputSignals = outputMeasurements.ToArray();
+                OnOutputSignalsUpdated();
             }
         }
 
@@ -388,7 +388,7 @@ namespace PIAdapters
 
             var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
                         from key in Keys
-                        where row["ID"].ToString().Split(':')[1] == key.ID.ToString()
+                        where row["ID"].ToString().Split(':')[1] == key.PointID.ToString()
                         select new
                         {
                             Key = key,
@@ -609,7 +609,7 @@ namespace PIAdapters
                     }
 
                     if (publishMeasurements != null)
-                        OnNewMeasurements(publishMeasurements);
+                        OnNewEntities(publishMeasurements);
                 }
             }
             catch (Exception ex)
@@ -660,7 +660,7 @@ namespace PIAdapters
 
             if (measurements.Any())
             {
-                OnNewMeasurements(measurements);
+                OnNewEntities(measurements);
                 m_processedMeasurements += measurements.Count;
             }
         }

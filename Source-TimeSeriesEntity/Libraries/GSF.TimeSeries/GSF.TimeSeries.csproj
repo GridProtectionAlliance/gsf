@@ -108,7 +108,6 @@
     <Compile Include="FrameQueue.cs" />
     <Compile Include="IFrame.cs" />
     <Compile Include="IMeasurement.cs" />
-    <Compile Include="ImmediateMeasurements.cs" />
     <Compile Include="InstallerBase.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -169,7 +168,6 @@
     <Compile Include="ServiceHostBase.designer.cs">
       <DependentUpon>ServiceHostBase.cs</DependentUpon>
     </Compile>
-    <Compile Include="TemporalMeasurement.cs" />
     <Compile Include="TrackingFrame.cs" />
     <Compile Include="Transport\CompactMeasurement.cs" />
     <Compile Include="Transport\IClientSubscription.cs" />

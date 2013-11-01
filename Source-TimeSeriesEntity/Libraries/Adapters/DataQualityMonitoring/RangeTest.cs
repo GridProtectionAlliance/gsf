@@ -312,9 +312,9 @@ namespace DataQualityMonitoring
         {
             IMeasurement measurement = null;
 
-            foreach (MeasurementKey key in frame.Measurements.Keys)
+            foreach (MeasurementKey key in frame.Entities.Keys)
             {
-                measurement = frame.Measurements[key];
+                measurement = frame.Entities[key];
 
                 if (measurement.AdjustedValue < m_lowRange || measurement.AdjustedValue > m_highRange)
                 {

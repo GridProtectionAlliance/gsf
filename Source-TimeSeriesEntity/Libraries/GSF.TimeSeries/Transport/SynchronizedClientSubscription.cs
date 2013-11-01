@@ -263,7 +263,7 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                return base.InputMeasurementKeys;
+                return base.InputSignals;
             }
             set
             {
@@ -275,10 +275,10 @@ namespace GSF.TimeSeries.Transport
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
                         if ((object)DataSource != null && (object)m_signalIndexCache != null)
-                            value = AdapterBase.ParseInputMeasurementKeys(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
+                            value = AdapterBase.ParseFilterExpression(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
                     }
 
-                    base.InputMeasurementKeys = value;
+                    base.InputSignals = value;
                 }
             }
         }
@@ -423,7 +423,7 @@ namespace GSF.TimeSeries.Transport
                 m_parent.SendDataStartTime(m_clientID, timestamp);
             }
 
-            if (ProcessMeasurementFilter)
+            if (ProcessSignalFilter)
             {
                 lock (this)
                 {
@@ -527,7 +527,7 @@ namespace GSF.TimeSeries.Transport
 
             long publishTime;
 
-            foreach (IMeasurement measurement in frame.Measurements.Values)
+            foreach (IMeasurement measurement in frame.Entities.Values)
             {
                 timeSeriesBuffer = measurement as TimeSeriesBuffer;
 
@@ -591,7 +591,7 @@ namespace GSF.TimeSeries.Transport
 
             // Update latency statistics
             publishTime = DateTime.UtcNow.Ticks;
-            m_parent.UpdateLatencyStatistics(frame.Measurements.Values.Select(m => (long)(publishTime - m.Timestamp)));
+            m_parent.UpdateLatencyStatistics(frame.Entities.Values.Select(m => (long)(publishTime - m.Timestamp)));
         }
 
         private void ProcessBinaryMeasurements(IEnumerable<IBinaryMeasurement> measurements, long frameLevelTimestamp, bool useCompactMeasurementFormat, bool usePayloadCompression)

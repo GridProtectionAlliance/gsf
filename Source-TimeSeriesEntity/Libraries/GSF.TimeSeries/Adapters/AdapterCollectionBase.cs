@@ -78,12 +78,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
         /// </summary>
-        public event EventHandler InputMeasurementKeysUpdated;
+        public event EventHandler InputSignalsUpdated;
 
         /// <summary>
         /// Event is raised when <see cref="OutputMeasurements"/> are updated.
         /// </summary>
-        public event EventHandler OutputMeasurementsUpdated;
+        public event EventHandler OutputSignalsUpdated;
 
         /// <summary>
         /// Event is raised when adapter is aware of a configuration change.
@@ -106,7 +106,7 @@ namespace GSF.TimeSeries.Adapters
         private int m_initializationTimeout;
         private long m_dependencyTimeout;
         private bool m_autoStart;
-        private bool m_processMeasurementFilter;
+        private bool m_processSignalFilter;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_inputMeasurementKeys;
         private string[] m_inputSourceIDs;
@@ -332,22 +332,22 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
         /// </summary>
-        public virtual bool ProcessMeasurementFilter
+        public virtual bool ProcessSignalFilter
         {
             get
             {
-                return m_processMeasurementFilter;
+                return m_processSignalFilter;
             }
             set
             {
-                m_processMeasurementFilter = value;
+                m_processSignalFilter = value;
 
                 // Update this flag for items in this collection
                 lock (this)
                 {
                     foreach (T item in this)
                     {
-                        item.ProcessMeasurementFilter = m_processMeasurementFilter;
+                        item.ProcessSignalFilter = m_processSignalFilter;
                     }
                 }
             }
@@ -373,7 +373,7 @@ namespace GSF.TimeSeries.Adapters
                     {
                         if ((object)adapter != null)
                         {
-                            MeasurementKey[] inputMeasurementKeys = adapter.InputMeasurementKeys;
+                            MeasurementKey[] inputMeasurementKeys = adapter.InputSignals;
 
                             // If any of the children expects all measurements (i.e., null InputMeasurementKeys)
                             // then the parent collection must expect all measurements
@@ -416,7 +416,7 @@ namespace GSF.TimeSeries.Adapters
                     {
                         if ((object)adapter != null)
                         {
-                            IMeasurement[] outputMeasurements = adapter.OutputMeasurements;
+                            IMeasurement[] outputMeasurements = adapter.OutputSignals;
 
                             if (outputMeasurements != null && outputMeasurements.Length > 0)
                                 cumulativeMeasurements.AddRange(outputMeasurements);
@@ -484,10 +484,10 @@ namespace GSF.TimeSeries.Adapters
                 lock (this)
                 {
                     if (typeof(IActionAdapter).IsAssignableFrom(typeof(T)))
-                        return this.Cast<IActionAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IActionAdapter>().Where(item => item.RequestedInputSignals != null).SelectMany(item => item.RequestedInputSignals).Distinct().ToArray();
 
                     if (typeof(IOutputAdapter).IsAssignableFrom(typeof(T)))
-                        return this.Cast<IOutputAdapter>().Where(item => item.RequestedInputMeasurementKeys != null).SelectMany(item => item.RequestedInputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IOutputAdapter>().Where(item => item.RequestedInputSignals != null).SelectMany(item => item.RequestedInputSignals).Distinct().ToArray();
                 }
 
                 return null;
@@ -513,10 +513,10 @@ namespace GSF.TimeSeries.Adapters
                 lock (this)
                 {
                     if (typeof(IActionAdapter).IsAssignableFrom(typeof(T)))
-                        return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IActionAdapter>().Where(item => item.RequestedOutputSignals != null).SelectMany(item => item.RequestedOutputSignals).Distinct().ToArray();
 
                     if (typeof(IInputAdapter).IsAssignableFrom(typeof(T)))
-                        return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputMeasurementKeys != null).SelectMany(item => item.RequestedOutputMeasurementKeys).Distinct().ToArray();
+                        return this.Cast<IInputAdapter>().Where(item => item.RequestedOutputSignals != null).SelectMany(item => item.RequestedOutputSignals).Distinct().ToArray();
                 }
 
                 return null;
@@ -607,7 +607,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets the total number of measurements processed thus far by each <see cref="IAdapter"/> implementation
         /// in the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        public virtual long ProcessedMeasurements
+        public virtual long ProcessedEntities
         {
             get
             {
@@ -618,7 +618,7 @@ namespace GSF.TimeSeries.Adapters
                 {
                     foreach (T item in this)
                     {
-                        processedMeasurements += item.ProcessedMeasurements;
+                        processedMeasurements += item.ProcessedEntities;
                     }
                 }
 
@@ -713,7 +713,7 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
-                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
+                status.AppendFormat(" Using measurement routing: {0}", !ProcessSignalFilter);
                 status.AppendLine();
                 status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
@@ -1406,14 +1406,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
+        /// Raises <see cref="InputSignalsUpdated"/> event.
         /// </summary>
         protected virtual void OnInputMeasurementKeysUpdated()
         {
             try
             {
-                if ((object)InputMeasurementKeysUpdated != null)
-                    InputMeasurementKeysUpdated(this, EventArgs.Empty);
+                if ((object)InputSignalsUpdated != null)
+                    InputSignalsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -1423,14 +1423,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="OutputMeasurementsUpdated"/> event.
+        /// Raises <see cref="OutputSignalsUpdated"/> event.
         /// </summary>
         protected virtual void OnOutputMeasurementsUpdated()
         {
             try
             {
-                if ((object)OutputMeasurementsUpdated != null)
-                    OutputMeasurementsUpdated(this, EventArgs.Empty);
+                if ((object)OutputSignalsUpdated != null)
+                    OutputSignalsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -1536,13 +1536,13 @@ namespace GSF.TimeSeries.Adapters
                 item.Notify += item_Notify;
                 item.StatusMessage += item_StatusMessage;
                 item.ProcessException += item_ProcessException;
-                item.InputMeasurementKeysUpdated += item_InputMeasurementKeysUpdated;
-                item.OutputMeasurementsUpdated += item_OutputMeasurementsUpdated;
+                item.InputSignalsUpdated += ItemInputSignalsUpdated;
+                item.OutputSignalsUpdated += ItemOutputSignalsUpdated;
                 item.ConfigurationChanged += item_ConfigurationChanged;
                 item.Disposed += item_Disposed;
 
                 // Update adapter routing type flag
-                item.ProcessMeasurementFilter = ProcessMeasurementFilter;
+                item.ProcessSignalFilter = ProcessSignalFilter;
 
                 try
                 {
@@ -1579,8 +1579,8 @@ namespace GSF.TimeSeries.Adapters
                 item.Notify -= item_Notify;
                 item.StatusMessage -= item_StatusMessage;
                 item.ProcessException -= item_ProcessException;
-                item.InputMeasurementKeysUpdated -= item_InputMeasurementKeysUpdated;
-                item.OutputMeasurementsUpdated -= item_OutputMeasurementsUpdated;
+                item.InputSignalsUpdated -= ItemInputSignalsUpdated;
+                item.OutputSignalsUpdated -= ItemOutputSignalsUpdated;
                 item.ConfigurationChanged -= item_ConfigurationChanged;
 
                 // Dispose of item, then un-wire disposed event
@@ -1611,17 +1611,17 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Raise input measurement keys updated event on behalf of each item in collection
-        private void item_InputMeasurementKeysUpdated(object sender, EventArgs e)
+        private void ItemInputSignalsUpdated(object sender, EventArgs e)
         {
-            if ((object)InputMeasurementKeysUpdated != null)
-                InputMeasurementKeysUpdated(sender, e);
+            if ((object)InputSignalsUpdated != null)
+                InputSignalsUpdated(sender, e);
         }
 
         // Raise output measurements updated event on behalf of each item in collection
-        private void item_OutputMeasurementsUpdated(object sender, EventArgs e)
+        private void ItemOutputSignalsUpdated(object sender, EventArgs e)
         {
-            if ((object)OutputMeasurementsUpdated != null)
-                OutputMeasurementsUpdated(sender, e);
+            if ((object)OutputSignalsUpdated != null)
+                OutputSignalsUpdated(sender, e);
         }
 
         // Raise configuration changed event on behalf of each item in collection
@@ -1643,7 +1643,7 @@ namespace GSF.TimeSeries.Adapters
         {
             StringBuilder status = new StringBuilder();
             Ticks currentTime, totalProcessTime;
-            long totalNew, processedMeasurements = this.ProcessedMeasurements;
+            long totalNew, processedMeasurements = this.ProcessedEntities;
 
             // Calculate time since last call
             currentTime = DateTime.UtcNow.Ticks;

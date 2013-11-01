@@ -121,11 +121,11 @@ namespace OneSecondFrequencyAverager
         }
 
         /// <summary>
-        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputSignals"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
         /// <remarks>
-        /// Measurements are filtered against the defined <see cref="ActionAdapterBase.InputMeasurementKeys"/>.
+        /// Measurements are filtered against the defined <see cref="ActionAdapterBase.InputSignals"/>.
         /// </remarks>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
@@ -162,21 +162,21 @@ namespace OneSecondFrequencyAverager
             IMeasurement outMeasurement;
             Tuple<double, int> valueAndLatchedCount;
 
-            for (int i = 0; i < InputMeasurementKeys.Length; i++)
+            for (int i = 0; i < InputSignals.Length; i++)
             {
-                if (!frame.Measurements.TryGetValue(InputMeasurementKeys[i], out inMeasurement))
+                if (!frame.Entities.TryGetValue(InputSignals[i], out inMeasurement))
                     continue;
 
                 if (m_valuesAndLatchedCounts.TryGetValue(inMeasurement.ID, out valueAndLatchedCount) && valueAndLatchedCount.Item2 >= m_flatlineCount)
                     continue;
 
-                outMeasurement = Measurement.Clone(OutputMeasurements[i]);
+                outMeasurement = Measurement.Clone(OutputSignals[i]);
                 outMeasurement.Value = inMeasurement.Value;
                 outMeasurement.Timestamp = frame.Timestamp + Ticks.PerSecond;
                 newMeasurements.Add(outMeasurement);
             }
 
-            OnNewMeasurements(newMeasurements);
+            OnNewEntities(newMeasurements);
         }
 
         #endregion

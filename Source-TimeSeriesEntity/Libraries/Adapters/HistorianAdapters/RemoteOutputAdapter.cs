@@ -393,7 +393,7 @@ namespace HistorianAdapters
         /// </summary>
         /// <param name="measurements">Measurements to be archived.</param>
         /// <exception cref="OperationCanceledException">Acknowledgement is not received from historian for published data.</exception>
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(IMeasurement[] measurements)
         {
             if (m_historianPublisher.CurrentState != ClientState.Connected)
                 throw new InvalidOperationException("Historian publisher socket is not connected");

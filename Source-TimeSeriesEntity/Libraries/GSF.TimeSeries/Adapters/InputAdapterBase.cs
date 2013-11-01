@@ -18,16 +18,18 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Timers;
+using GSF.TimeSeries.Routing;
 using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Adapters
@@ -36,7 +38,7 @@ namespace GSF.TimeSeries.Adapters
     /// Represents the base class for any incoming input adapter.
     /// </summary>
     /// <remarks>
-    /// Derived classes are expected to call <see cref="OnNewMeasurements"/> when new measurements are received.
+    /// Derived classes are expected to call <see cref="OnNewEntities"/> when new time-series entities are received.
     /// </remarks>
     public abstract class InputAdapterBase : AdapterBase, IInputAdapter
     {
@@ -45,12 +47,9 @@ namespace GSF.TimeSeries.Adapters
         // Events
 
         /// <summary>
-        /// Provides new measurements from input adapter.
+        /// Provides new time-series entities from input adapter.
         /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
-        /// </remarks>
-        public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
+        public event EventHandler<RoutingEventArgs> NewEntities;
 
         /// <summary>
         /// Indicates to the host that processing for the input adapter has completed.
@@ -62,8 +61,10 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler ProcessingComplete;
 
         // Fields
+        private readonly object m_newEntitiesLock;
+        private RoutingEventArgs m_routingEventArgs;
         private List<string> m_outputSourceIDs;
-        private MeasurementKey[] m_requestedOutputMeasurementKeys;
+        private ISet<Guid> m_requestedOutputSignals;
         private Timer m_connectionTimer;
         private bool m_isConnected;
         private bool m_disposed;
@@ -77,6 +78,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected InputAdapterBase()
         {
+            m_newEntitiesLock = new object();
+
             m_connectionTimer = new Timer();
             m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
 
@@ -90,10 +93,10 @@ namespace GSF.TimeSeries.Adapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output measurements.
+        /// Gets or sets <see cref="MeasurementKey.Source"/> values used to filter output signals.
         /// </summary>
         /// <remarks>
-        /// This allows an adapter to associate itself with entire collections of measurements based on the source of the measurement keys.
+        /// This allows an adapter to associate itself with entire collections of signals based on the source of the measurement keys.
         /// Set to <c>null</c> apply no filter.
         /// </remarks>
         public virtual string[] OutputSourceIDs
@@ -117,23 +120,23 @@ namespace GSF.TimeSeries.Adapters
                     m_outputSourceIDs.Sort();
                 }
 
-                // Filter measurements to list of specified source IDs
+                // Filter signals to list of specified source IDs
                 LoadOutputSourceIDs(this);
             }
         }
 
         /// <summary>
-        /// Gets or sets output measurement keys that are requested by other adapters based on what adapter says it can provide.
+        /// Gets or sets output signals that are requested by other adapters based on what adapter says it can provide.
         /// </summary>
-        public virtual MeasurementKey[] RequestedOutputMeasurementKeys
+        public virtual ISet<Guid> RequestedOutputSignals
         {
             get
             {
-                return m_requestedOutputMeasurementKeys;
+                return m_requestedOutputSignals;
             }
             set
             {
-                m_requestedOutputMeasurementKeys = value;
+                m_requestedOutputSignals = value;
             }
         }
 
@@ -192,24 +195,23 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                const int MaxMeasurementsToShow = 10;
+                const int MaxSignalsToShow = 10;
 
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
 
-                if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                if (RequestedOutputSignals != null && RequestedOutputSignals.Count > 0)
                 {
-                    status.AppendFormat("     Requested output keys: {0} defined measurements", RequestedOutputMeasurementKeys.Length);
+                    status.AppendFormat("     Requested output keys: {0} defined signals", RequestedOutputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    for (int i = 0; i < Common.Min(RequestedOutputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
-                    {
-                        status.AppendLine(RequestedOutputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
-                    }
+                    // TODO: Fix metadata lookup and display point tag next to measurement key
+                    foreach (Guid signalID in RequestedOutputSignals.Take(MaxSignalsToShow))
+                        status.AppendLine(LookUpMeasurementKey(DataSource, signalID).ToString().TruncateRight(25).CenterText(50));
 
-                    if (RequestedOutputMeasurementKeys.Length > MaxMeasurementsToShow)
+                    if (RequestedOutputSignals.Count > MaxSignalsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
@@ -219,28 +221,10 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();
-                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
+                status.AppendFormat("   Item reporting interval: {0}", EntityReportingInterval);
                 status.AppendLine();
 
                 return status.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
-        /// </summary>
-        /// <remarks>
-        /// Redefined to hide attributes defined in the base class.
-        /// </remarks>
-        public new virtual MeasurementKey[] InputMeasurementKeys
-        {
-            get
-            {
-                return base.InputMeasurementKeys;
-            }
-            set
-            {
-                base.InputMeasurementKeys = value;
             }
         }
 
@@ -379,21 +363,29 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="NewMeasurements"/> event.
+        /// Raises the <see cref="NewEntities"/> event.
         /// </summary>
-        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
+        protected virtual void OnNewEntities(ICollection<ITimeSeriesEntity> entities)
         {
             try
             {
-                if (NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                lock (m_newEntitiesLock)
+                {
+                    if ((object)m_routingEventArgs == null)
+                        m_routingEventArgs = new RoutingEventArgs();
 
-                IncrementProcessedMeasurements(measurements.Count);
+                    m_routingEventArgs.TimeSeriesEntities = entities;
+
+                    if ((object)NewEntities != null)
+                        NewEntities(this, m_routingEventArgs);
+                }
+
+                IncrementProcessedEntities(entities.Count);
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewEntities event: {0}", ex.Message), ex));
             }
         }
 
@@ -404,7 +396,7 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                if (ProcessingComplete != null)
+                if ((object)ProcessingComplete != null)
                     ProcessingComplete(this, EventArgs.Empty);
             }
             catch (Exception ex)

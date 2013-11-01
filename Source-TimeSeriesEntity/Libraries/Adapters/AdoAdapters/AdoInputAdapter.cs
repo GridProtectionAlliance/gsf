@@ -339,7 +339,7 @@ namespace AdoAdapters
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} measurements read from database.", ProcessedMeasurements).CenterText(maxLength);
+            return string.Format("{0} measurements read from database.", ProcessedEntities).CenterText(maxLength);
         }
 
         // Gets the database field names specified by the user in the connection string.
@@ -522,7 +522,7 @@ namespace AdoAdapters
                                                     lookupCache[id] = key;
 
                                                     // Assign a runtime index optimization for distinct measurements
-                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(id, key.Source, key.ID));
+                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(id, key.Source, key.PointID));
                                                 }
                                             }
 
@@ -555,7 +555,7 @@ namespace AdoAdapters
                                                     lookupCache[measurement.ID] = key;
 
                                                     // Assign a runtime index optimization for distinct measurements
-                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.ID));
+                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.PointID));
                                                 }
                                             }
 
@@ -731,7 +731,7 @@ namespace AdoAdapters
                         m_nextIndex++;
                     }
 
-                    OnNewMeasurements(measurements);
+                    OnNewEntities(measurements);
 
                     // Prepare index for next check, time moving forward
                     if (m_nextIndex == m_dbMeasurements.Count)

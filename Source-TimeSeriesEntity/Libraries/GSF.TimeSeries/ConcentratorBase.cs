@@ -24,8 +24,8 @@
 //       Added ProcessByReceivedTimestamp property to sort and publish measurements by received time.
 //  05/06/2011 - J. Ritchie Carroll / Jian (Ryan) Zuo
 //       Updated to reduce lock contention and added volatile reads on stats for better accuracy.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  10/31/2013 - Stephen C. Wills
+//       Updated to concentrate time-series entities.
 //
 //******************************************************************************************************
 
@@ -40,51 +40,20 @@ using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries
 {
-    #region [ Enumerations ]
-
     /// <summary>
-    /// Down-sampling method enumeration.
+    /// Method signature for function used to apply a downsampling filter over a sequence of <see cref="ITimeSeriesEntity"/> objects.
     /// </summary>
-    public enum DownsamplingMethod
-    {
-        /// <summary>
-        /// Down-samples to the last measurement received.
-        /// </summary>
-        /// <remarks>
-        /// Use this option if no down-sampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
-        /// </remarks>
-        LastReceived,
-        /// <summary>
-        /// Down-samples to the measurement closest to frame time.
-        /// </summary>
-        /// <remarks>
-        /// This is the typical operation used when performing simple down-sampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
-        /// </remarks>
-        Closest,
-        /// <summary>
-        /// Down-samples by applying a user-defined value filter over all received measurements to anti-alias the results.
-        /// </summary>
-        /// <remarks>
-        /// This option will produce the best result but has a processing penalty.
-        /// </remarks>
-        Filtered,
-        /// <summary>
-        /// Down-samples to the measurement that has the best quality closest to frame time.
-        /// </summary>
-        /// <remarks>
-        /// This option chooses the measurement closest to the frame time with the best quality.
-        /// </remarks>
-        BestQuality
-    }
-
-    #endregion
+    /// <param name="targetFrameTimestamp">The timestamp of the destination frame.</param>
+    /// <param name="entities">Sequence of <see cref="ITimeSeriesEntity"/> objects over which to apply filter.</param>
+    /// <returns>Result of filter applied to sequence of <see cref="ITimeSeriesEntity"/> objects.</returns>
+    public delegate ITimeSeriesEntity TimeSeriesFilterFunction(long targetFrameTimestamp, IEnumerable<ITimeSeriesEntity> entities);
 
     /// <summary>
-    /// Measurement concentrator base class.
+    /// Time-series concentrator base class.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This class synchronizes (i.e., sorts by timestamp) real-time measurements.
+    /// This class synchronizes (i.e., sorts by timestamp) real-time time-series entities.
     /// </para>
     /// <para>
     /// Note that your lag time should be defined as it relates to the rate at which data data is coming
@@ -94,11 +63,11 @@ namespace GSF.TimeSeries
     /// trust that your local clock is within plus or minus 2 seconds of real-time.)
     /// </para>
     /// <para>
-    /// This concentrator is designed to sort measurements being transmitted in real-time for data being
+    /// This concentrator is designed to sort entities being transmitted in real-time for data being
     /// sent at rates of at least 1 sample per second. Slower rates (e.g., once every few seconds) are not
     /// supported since sorting data at these speeds would be trivial. There is no defined maximum number
     /// of supported samples per second - but keep in mind that CPU utilization will increase as the
-    /// measurement volume and frame rate increase.
+    /// volume of time-series objects and frame rate increase.
     /// </para>
     /// </remarks>
     public abstract class ConcentratorBase : IDisposable
@@ -362,12 +331,25 @@ namespace GSF.TimeSeries
         // Events
 
         /// <summary>
+        /// Event is raised every five seconds allowing host to track total number of unprocessed entities.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Implementations of this interface are expected to report current queue size of unprocessed
+        /// time-series entities so that if queue size reaches an unhealthy threshold, host can take action.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
+        /// </para>
+        /// </remarks>
+
+        /// <summary>
         /// This event is raised every 5 seconds allowing consumer to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnpublishedSamples;
+        public event EventHandler<EventArgs<int>> UnprocessedEntities;
 
         /// <summary>
         /// This event is raised if there is an exception encountered while attempting to process a frame in the sample queue.
@@ -383,12 +365,12 @@ namespace GSF.TimeSeries
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// This event is raised if there are any measurements being discarded during the sorting process.
+        /// This event is raised if there are any time-series entities being discarded during the sorting process.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="IMeasurement"/> values that are being discarded during the sorting process.
+        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="ITimeSeriesEntity"/> objects that are being discarded during the sorting process.
         /// </remarks>
-        public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
+        public event EventHandler<EventArgs<IEnumerable<ITimeSeriesEntity>>> EntitiesDiscarded;
 
         /// <summary>
         /// This event is raised when <see cref="ConcentratorBase"/> is disposed.
@@ -406,50 +388,49 @@ namespace GSF.TimeSeries
         internal event Action<double> LeadTimeUpdated;
 
         // Fields
-        private FrameQueue m_frameQueue;                    // Queue of frames to be published
-        private Thread m_publicationThread;                 // Thread that handles frame publication
-        private AutoResetEvent m_publicationWaitHandle;     // Inter-frame publication wait handle
-        private bool m_usePrecisionTimer;                   // Flag that enables use of precision timer (over just simple thread sleep)
-        private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
-        private Timer m_monitorTimer;                       // Sample monitor - tracks total number of unpublished frames
-        private int m_framesPerSecond;                      // Frames per second
-        private double m_ticksPerFrame;                     // Ticks per frame
-        private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
-        private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
-        private long m_timeResolution;                      // Maximum sorting resolution in ticks
-        private int m_processingInterval;                   // Defines a specific processing interval for data, if desired
-        private DownsamplingMethod m_downsamplingMethod;    // Down-sampling method to use if input is at a higher-resolution than output
-        private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
-        private int m_maximumPublicationTimeout;            // Maximum publication wait timeout
-        private Ticks m_lagTicks;                           // Current lag time calculated in ticks
-        private volatile bool m_enabled;                    // Enabled state of concentrator
-        private long m_startTime;                           // Start time of concentrator
-        private long m_stopTime;                            // Stop time of concentrator
-        private long m_realTimeTicks;                       // Timestamp of real-time or the most recently received measurement
-        private bool m_ignoreBadTimestamps;                 // Determines whether or not to ignore bad timestamps when sorting measurements
-        private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
-        private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
-        private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
-        private bool m_performTimestampReasonabilityCheck;  // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
-        private bool m_processByReceivedTimestamp;          // Determines whether or not to sort and publish measurements by their ReceivedTimestamp
-        private bool m_trackPublishedTimestamp;             // Determines whether or not to track timestamp of publication for all processed frames and measurements
-        private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
-        private long m_receivedMeasurements;                // Total number of measurements ever received for sorting
-        private long m_processedMeasurements;               // Total number of measurements ever successfully sorted
-        private long m_discardedMeasurements;               // Total number of discarded measurements
-        private long m_measurementsSortedByArrival;         // Total number of measurements that were sorted by arrival
-        private long m_publishedMeasurements;               // Total number of published measurements
-        private long m_downsampledMeasurements;             // Total number of down-sampled measurements
-        private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
-        private long m_waitHandleExpirations;               // Total number of wait handle expirations encountered due to delayed precision timer releases
-        private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
-        private long m_publishedFrames;                     // Total number of published frames
-        private long m_totalPublishTime;                    // Total cumulative frame user function publication time (in ticks) - used to calculate average
-        private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
-        private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
-        private IMeasurement m_lastDiscardedMeasurement;    // Last measurement that was discarded by the concentrator
-        private long m_lastDiscardedMeasurementLatency;     // Latency of last measurement that was discarded by the concentrator
-        private bool m_disposed;                            // Disposed flag detects redundant calls to dispose method
+        private FrameQueue m_frameQueue;                               // Queue of frames to be published
+        private Thread m_publicationThread;                            // Thread that handles frame publication
+        private AutoResetEvent m_publicationWaitHandle;                // Inter-frame publication wait handle
+        private bool m_usePrecisionTimer;                              // Flag that enables use of precision timer (over just simple thread sleep)
+        private bool m_attachedToFrameRateTimer;                       // Flag that tracks if instance is attached to a frame rate timer
+        private Timer m_monitorTimer;                                  // Sample monitor - tracks total number of unpublished frames
+        private int m_framesPerSecond;                                 // Frames per second
+        private double m_ticksPerFrame;                                // Ticks per frame
+        private double m_lagTime;                                      // Allowed past time deviation tolerance, in seconds
+        private double m_leadTime;                                     // Allowed future time deviation tolerance, in seconds
+        private long m_timeResolution;                                 // Maximum sorting resolution in ticks
+        private int m_processingInterval;                              // Defines a specific processing interval for data, if desired
+        private TimeSeriesFilterFunction m_filterFunction;             // Down-sampling method to use if input is at a higher-resolution than output
+        private double m_timeOffset;                                   // Half the distance of the time resolution used for index calculation
+        private int m_maximumPublicationTimeout;                       // Maximum publication wait timeout
+        private Ticks m_lagTicks;                                      // Current lag time calculated in ticks
+        private volatile bool m_enabled;                               // Enabled state of concentrator
+        private long m_startTime;                                      // Start time of concentrator
+        private long m_stopTime;                                       // Stop time of concentrator
+        private long m_realTimeTicks;                                  // Timestamp of real-time or the most recently received entity
+        private bool m_ignoreBadTimestamps;                            // Determines whether or not to ignore bad timestamps when sorting measurements
+        private bool m_allowSortsByArrival;                            // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
+        private bool m_useLocalClockAsRealTime;                        // Determines whether or not to use local system clock as "real-time"
+        private bool m_allowPreemptivePublishing;                      // Determines whether or not to preemptively publish frame if expected time-series entities arrive
+        private bool m_performTimestampReasonabilityCheck;             // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
+        private bool m_processByCreationTime;                     // Determines whether or not to publish frames by their CreatedTimestamp
+        private int m_expectedEntities;                                // Expected number of time-series entities to be sorted into a frame
+        private long m_receivedEntities;                               // Total number of time-series entities ever received for sorting
+        private long m_processedEntities;                              // Total number of time-series entities ever successfully sorted
+        private long m_discardedEntities;                              // Total number of discarded time-series entities
+        private long m_measurementsSortedByArrival;                    // Total number of measurements that were sorted by arrival
+        private long m_publishedEntities;                              // Total number of published time-series entities
+        private long m_downsampledEntities;                            // Total number of down-sampled time-series entities
+        private long m_missedSortsByTimeout;                           // Total number of unsorted time-series entities due to timeout waiting for lock
+        private long m_waitHandleExpirations;                          // Total number of wait handle expirations encountered due to delayed precision timer releases
+        private long m_framesAheadOfSchedule;                          // Total number of frames published ahead of schedule
+        private long m_publishedFrames;                                // Total number of published frames
+        private long m_totalPublishTime;                               // Total cumulative frame user function publication time (in ticks) - used to calculate average
+        private bool m_trackLatestEntities;                            // Determines whether or not to track latest time-series entities
+        private IDictionary<Guid, ITimeSeriesEntity> m_latestEntities; // Absolute latest received time-series entities
+        private ITimeSeriesEntity m_lastDiscardedEntity;               // Last time-series entity that was discarded by the concentrator
+        private long m_latencyOfLastDiscardedEntity;                     // Latency of last time-series entity that was discarded by the concentrator
+        private bool m_disposed;                                       // Disposed flag detects redundant calls to dispose method
 
         #endregion
 
@@ -469,12 +450,12 @@ namespace GSF.TimeSeries
             m_allowPreemptivePublishing = true;
             m_performTimestampReasonabilityCheck = true;
             m_processingInterval = -1;
-            m_downsamplingMethod = DownsamplingMethod.LastReceived;
-            m_latestMeasurements = new ImmediateMeasurements(this);
+            m_filterFunction = LastReceived;
+            m_latestEntities = new Dictionary<Guid, ITimeSeriesEntity>();
             m_maximumPublicationTimeout = Timeout.Infinite;
 
             // Create a new queue for managing real-time frames
-            m_frameQueue = new FrameQueue(this.CreateNewFrame);
+            m_frameQueue = new FrameQueue(CreateNewFrame);
 
             // Set minimum timer resolution to one millisecond to improve timer accuracy
             PrecisionTimer.SetMinimumTimerResolution(1);
@@ -487,8 +468,7 @@ namespace GSF.TimeSeries
             m_publicationThread.Start();
 
             // This timer monitors the total number of unpublished samples every 5 seconds. This is a useful statistic
-            // to monitor: if total number of unpublished samples exceed lag time, measurement concentration could
-            // be falling behind.
+            // to monitor: if total number of unpublished samples exceed lag time, concentration could be falling behind
             m_monitorTimer = new Timer();
             m_monitorTimer.Interval = 5000;
             m_monitorTimer.AutoReset = true;
@@ -522,9 +502,9 @@ namespace GSF.TimeSeries
         protected ConcentratorBase(int framesPerSecond, double lagTime, double leadTime)
             : this()
         {
-            this.FramesPerSecond = framesPerSecond;
-            this.LagTime = lagTime;
-            this.LeadTime = leadTime;
+            FramesPerSecond = framesPerSecond;
+            LagTime = lagTime;
+            LeadTime = leadTime;
         }
 
         /// <summary>
@@ -544,8 +524,8 @@ namespace GSF.TimeSeries
         /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
-        /// <para>Defines the time sensitivity to past measurement timestamps.</para>
-        /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+        /// <para>Defines the time sensitivity to timestamps in the past.</para>
+        /// <para>The number of seconds allowed before assuming a timestamp is too old.</para>
         /// <para>This becomes the amount of delay introduced by the concentrator to allow time for data to flow into the system.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
@@ -583,8 +563,8 @@ namespace GSF.TimeSeries
         /// Gets or sets the allowed future time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         /// <remarks>
-        /// <para>Defines the time sensitivity to future measurement timestamps.</para>
-        /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+        /// <para>Defines the time sensitivity to timestamps in the future.</para>
+        /// <para>The number of seconds allowed before assuming a timestamp is too advanced.</para>
         /// <para>This becomes the tolerated +/- accuracy of the local clock to real-time.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
@@ -607,32 +587,32 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets flag to start tracking the absolute latest received measurement values.
+        /// Gets or sets flag to start tracking the absolute latest received time-series entities.
         /// </summary>
         /// <remarks>
-        /// Latest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
+        /// Latest received entity will be available via the <see cref="LatestEntities"/> property.
         /// Note that enabling this option will slightly increase the required sorting time.
         /// </remarks>
-        public bool TrackLatestMeasurements
+        public bool TrackLatestEntities
         {
             get
             {
-                return m_trackLatestMeasurements;
+                return m_trackLatestEntities;
             }
             set
             {
-                m_trackLatestMeasurements = value;
+                m_trackLatestEntities = value;
             }
         }
 
         /// <summary>
-        /// Gets reference to the collection of absolute latest received measurement values.
+        /// Gets reference to the collection of absolute latest received time-series entities.
         /// </summary>
-        public ImmediateMeasurements LatestMeasurements
+        public IList<ITimeSeriesEntity> LatestEntities
         {
             get
             {
-                return m_latestMeasurements;
+                return m_latestEntities.Values.ToList();
             }
         }
 
@@ -643,11 +623,11 @@ namespace GSF.TimeSeries
         {
             get
             {
-                if (m_frameQueue != null)
+                if ((object)m_frameQueue != null)
                 {
                     TrackingFrame last = m_frameQueue.Last;
 
-                    if (last != null)
+                    if ((object)last != null)
                         return last.SourceFrame;
                 }
 
@@ -774,7 +754,7 @@ namespace GSF.TimeSeries
         ///     <item>
         ///         <term>&lt; 0</term>
         ///         <description>
-        ///         In this case the default processing interval has been requested, as a result the <see cref="ProcessByReceivedTimestamp"/>
+        ///         In this case the default processing interval has been requested, as a result the <see cref="ProcessByCreationTime"/>
         ///         will be set to <c>false</c> and the concentrator processing interval will be defined based on the currently defined
         ///         <see cref="FramesPerSecond"/> property, e.g., if the frames per second is 30 the processing interval will be 33.33ms.
         ///         </description>
@@ -783,10 +763,10 @@ namespace GSF.TimeSeries
         ///         <term>0</term>
         ///         <description>
         ///         In this case the processing interval has been defined to process data as fast as possible, as a result the
-        ///         <see cref="ProcessByReceivedTimestamp"/> property will be set to <c>true</c> and <see cref="UsePrecisionTimer"/> property
+        ///         <see cref="ProcessByCreationTime"/> property will be set to <c>true</c> and <see cref="UsePrecisionTimer"/> property
         ///         will be set to <c>false</c>. With a processing interval of zero data is expected to flow into the concentrator as quick as
         ///         it can be provided. The <see cref="FramesPerSecond"/> property will still be used to sort data by time into appropriate
-        ///         frames, but the concentrator will use the reception time of the measurements against the defined lag-time to make sure
+        ///         frames, but the concentrator will use the creation time of the frame against the defined lag-time to make sure
         ///         needed data has arrived before publication and frames will be published at the same rate of data arrival.
         ///         </description>
         ///     </item>
@@ -794,10 +774,10 @@ namespace GSF.TimeSeries
         ///         <term>&gt; 0</term>
         ///         <description>
         ///         In this case a specific processing interval has been defined for processing data, as a result both the
-        ///         <see cref="ProcessByReceivedTimestamp"/> and <see cref="UsePrecisionTimer"/> properties will be set to <c>true</c>. With
+        ///         <see cref="ProcessByCreationTime"/> and <see cref="UsePrecisionTimer"/> properties will be set to <c>true</c>. With
         ///         a specifically defined processing interval, data is expected to flow into the concentrator at a similar rate. The
         ///         <see cref="FramesPerSecond"/> property will still be used to sort data by time into appropriate frames, but the concentrator
-        ///         will use the reception time of the measurements against the defined lag-time to make sure needed data has arrived before
+        ///         will use the creation time of the frame against the defined lag-time to make sure needed data has arrived before
         ///         publication and frames will be published on the specified interval. If multiple frames are ready for publication when the
         ///         processing interval executes, then all the ready frames will be published sequentially as quickly as possible.
         ///         </description>
@@ -822,7 +802,7 @@ namespace GSF.TimeSeries
                     if (m_processingInterval < -1)
                         m_processingInterval = -1;
 
-                    ProcessByReceivedTimestamp = (m_processingInterval > -1);
+                    ProcessByCreationTime = (m_processingInterval > -1);
 
                     if (m_processingInterval == 0)
                     {
@@ -887,7 +867,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
+        /// Gets or sets the maximum time resolution, in ticks, to use when sorting time-series entities by timestamps into their proper destination frame.
         /// </summary>
         /// <remarks>
         /// <list type="table">
@@ -935,30 +915,26 @@ namespace GSF.TimeSeries
                 m_timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
 
                 // Assign desired time resolution to frame queue
-                if (m_frameQueue != null)
+                if ((object)m_frameQueue != null)
                     m_frameQueue.TimeResolution = m_timeResolution;
             }
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="GSF.TimeSeries.DownsamplingMethod"/> to be used by the concentrator.
+        /// Gets or sets the <see cref="TimeSeriesFilterFunction"/> to be used by the concentrator.
         /// </summary>
         /// <remarks>
         /// The down-sampling method determines the algorithm to use if input is being received at a higher-resolution than the defined output.
         /// </remarks>
-        public DownsamplingMethod DownsamplingMethod
+        public TimeSeriesFilterFunction FilterFunction
         {
             get
             {
-                return m_downsamplingMethod;
+                return m_filterFunction;
             }
             set
             {
-                m_downsamplingMethod = value;
-
-                // Assign desired down-sampling method to frame queue
-                if (m_frameQueue != null)
-                    m_frameQueue.DownsamplingMethod = m_downsamplingMethod;
+                m_filterFunction = value ?? LastReceived;
             }
         }
 
@@ -974,25 +950,25 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets the expected number of measurements to be assigned to a single frame.
+        /// Gets or sets the expected number of time-series entities to be assigned to a single frame.
         /// </summary>
-        public int ExpectedMeasurements
+        public int ExpectedEntities
         {
             get
             {
-                return m_expectedMeasurements;
+                return m_expectedEntities;
             }
             set
             {
-                m_expectedMeasurements = value;
+                m_expectedEntities = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets flag that allows system to preemptively publish frames assuming all <see cref="ExpectedMeasurements"/> have arrived.
+        /// Gets or sets flag that allows system to preemptively publish frames assuming all <see cref="ExpectedEntities"/> have arrived.
         /// </summary>
         /// <remarks>
-        /// In order for this property to used, the <see cref="ExpectedMeasurements"/> must be defined.
+        /// In order for this property to used, the <see cref="ExpectedEntities"/> must be defined.
         /// </remarks>
         public bool AllowPreemptivePublishing
         {
@@ -1008,7 +984,7 @@ namespace GSF.TimeSeries
 
         /// <summary>
         /// Gets or sets flag that determines if timestamp reasonability checks should be performed on incoming
-        /// measurements (i.e., measurement timestamps are compared to system clock for reasonability using
+        /// time-series entities (i.e., timestamps are compared to system clock for reasonability using
         /// <see cref="LeadTime"/> tolerance).
         /// </summary>
         /// <remarks>
@@ -1030,62 +1006,39 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if concentrator should sort measurements by received time.
+        /// Gets or sets flag that determines if concentrator should publish frames by created time.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Setting this value to <c>true</c> will make concentrator use the timestamp of measurement
-        /// reception, which is typically the <see cref="IMeasurement"/> creation time, for sorting and
-        /// publication. This is useful in scenarios where the concentrator will be receiving very large
-        /// volumes of data but not necessarily in real-time, such as, reading values from a file where
-        /// you want data to be sorted and processed as fast as possible.
+        /// Setting this value to <c>true</c> will make concentrator use the timestamp of frame creation
+        /// for publication. This is useful in scenarios where the concentrator will be receiving very
+        /// large volumes of data but not necessarily in real-time, such as, reading values from a file
+        /// where you want data to be sorted and processed as fast as possible.
         /// </para>
         /// <para>
         /// Setting this value to <c>true</c> will force <see cref="UseLocalClockAsRealTime"/> to be <c>true</c>
         /// and <see cref="AllowSortsByArrival"/> to be <c>false</c>.
         /// </para>
         /// </remarks>
-        public bool ProcessByReceivedTimestamp
+        public bool ProcessByCreationTime
         {
             get
             {
-                return m_processByReceivedTimestamp;
+                return m_processByCreationTime;
             }
             set
             {
                 if (!value && m_processingInterval > -1)
-                    throw new InvalidOperationException("Processing by received timestamp cannot be disabled when a processing interval is defined.");
+                    throw new InvalidOperationException("Processing by creation time cannot be disabled when a processing interval is defined.");
 
-                m_processByReceivedTimestamp = value;
+                m_processByCreationTime = value;
 
-                if (m_processByReceivedTimestamp)
+                if (m_processByCreationTime)
                 {
                     m_useLocalClockAsRealTime = true;
                     m_allowSortsByArrival = false;
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets or sets flag that determines if system should track timestamp of publication for all frames and measurements.
-        /// </summary>
-        /// <remarks>
-        /// Setting this value to <c>true</c> will cause the concentrator to mark the timestamp of publication in each
-        /// <see cref="IFrame.PublishedTimestamp"/> and its measurement's <see cref="IMeasurement.PublishedTimestamp"/>.
-        /// Since this is extra processing time that may not be needed except in cases of calculating statistics for
-        /// system performance, this must be explicitly enabled.
-        /// </remarks>
-        public bool TrackPublishedTimestamp
-        {
-            get
-            {
-                return m_trackPublishedTimestamp;
-            }
-            set
-            {
-                m_trackPublishedTimestamp = value;
-            }
-
         }
 
         /// <summary>
@@ -1189,7 +1142,7 @@ namespace GSF.TimeSeries
         /// <see cref="IgnoreBadTimestamps"/> is <c>false</c>.
         /// </para>
         /// <para>
-        /// Value will be forced to <c>false</c> if <see cref="ProcessByReceivedTimestamp"/> is <c>true</c>.
+        /// Value will be forced to <c>false</c> if <see cref="ProcessByCreationTime"/> is <c>true</c>.
         /// </para>
         /// </remarks>
         public bool AllowSortsByArrival
@@ -1200,7 +1153,7 @@ namespace GSF.TimeSeries
             }
             set
             {
-                if (m_processByReceivedTimestamp)
+                if (m_processByCreationTime)
                     m_allowSortsByArrival = false;
                 else
                     m_allowSortsByArrival = value;
@@ -1213,10 +1166,10 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// <para>
         /// Use your local system clock as real-time only if the time is locally GPS-synchronized,
-        /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
+        /// or if the time-series entities being sorted were not measured relative to a GPS-synchronized clock.
         /// </para>
         /// <para>
-        /// If <see cref="ProcessByReceivedTimestamp"/> is <c>true</c>, <see cref="UseLocalClockAsRealTime"/> will
+        /// If <see cref="ProcessByCreationTime"/> is <c>true</c>, <see cref="UseLocalClockAsRealTime"/> will
         /// always be set to <c>true</c>, even if you try to set it to <c>false</c>.
         /// </para>
         /// </remarks>
@@ -1228,7 +1181,7 @@ namespace GSF.TimeSeries
             }
             set
             {
-                if (m_processByReceivedTimestamp)
+                if (m_processByCreationTime)
                     m_useLocalClockAsRealTime = true;
                 else
                     m_useLocalClockAsRealTime = value;
@@ -1238,7 +1191,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets the the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
         /// this function will return <see cref="DateTime.UtcNow"/>. Otherwise, this function will return the timestamp of the
-        /// most recent measurement, or <see cref="DateTime.UtcNow"/> if no measurement timestamps are within time deviation
+        /// most recent time-series entity, or <see cref="DateTime.UtcNow"/> if no timestamps are within time deviation
         /// tolerances as specified by the <see cref="LeadTime"/> value.
         /// </summary>
         /// <remarks>
@@ -1246,12 +1199,12 @@ namespace GSF.TimeSeries
         /// are typically more accurate than the local clock. As a result, we can use the latest received timestamp as the best
         /// local time measurement we have (ignoring transmission delays); but, even these times can be incorrect so we still have
         /// to apply reasonability checks to these times. To do this, we use the local system time and the <see cref="LeadTime"/>
-        /// value to validate the latest measured timestamp. If the newest received measurement timestamp gets too old or creeps
-        /// too far into the future (both validated + and - against defined lead time property value), we will fall back on local
-        /// system time. Note that this creates a dependency on a fairly accurate local clock - the smaller the lead time deviation
-        /// tolerance, the better the needed local clock accuracy. For example, a lead time deviation tolerance of a few seconds
-        /// might only require keeping the local clock synchronized to an NTP time source; but, a sub-second tolerance would
-        /// require that the local clock be very close to GPS time.
+        /// value to validate the latest measured timestamp. If the newest received timestamp gets too old or creeps too far into
+        /// the future (both validated + and - against defined lead time property value), we will fall back on local system time.
+        /// Note that this creates a dependency on a fairly accurate local clock - the smaller the lead time deviation tolerance,
+        /// the better the needed local clock accuracy. For example, a lead time deviation tolerance of a few seconds might only
+        /// require keeping the local clock synchronized to an NTP time source; but, a sub-second tolerance would require that
+        /// the local clock be very close to GPS time.
         /// </remarks>
         public Ticks RealTime
         {
@@ -1264,10 +1217,9 @@ namespace GSF.TimeSeries
                 if (m_performTimestampReasonabilityCheck)
                 {
                     // If the current value for real-time is outside of the time deviation tolerance of the local
-                    // clock, then we set latest measurement time (i.e., real-time) to be the current local clock
-                    // time. Since the lead time typically defines the tolerated accuracy of the local clock to
-                    // real-time we will use this value as the + and - timestamp tolerance to validate if the
-                    // measurement time is reasonable.
+                    // clock, then we set real-time to be the current local clock time. Since the lead time typically
+                    // defines the tolerated accuracy of the local clock to real-time we will use this value as the
+                    // +/- timestamp tolerance to validate if the timestamp is reasonable.
                     long currentTimeTicks = DateTime.UtcNow.Ticks;
                     double distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
 
@@ -1276,75 +1228,75 @@ namespace GSF.TimeSeries
                         Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
                 }
 
-                // Assume latest measurement timestamp is the best value we have for real-time.
+                // Assume latest time-series entity's timestamp is the best value we have for real-time.
                 return Thread.VolatileRead(ref m_realTimeTicks);
             }
         }
 
         /// <summary>
-        /// Gets the total number of measurements ever requested for sorting.
+        /// Gets the total number of time-series entities ever requested for sorting.
         /// </summary>
-        public long ReceivedMeasurements
+        public long ReceivedEntities
         {
             get
             {
-                return Thread.VolatileRead(ref m_receivedMeasurements);
+                return Thread.VolatileRead(ref m_receivedEntities);
             }
         }
 
         /// <summary>
-        /// Gets the total number of measurements successfully sorted.
+        /// Gets the total number of time-series entities successfully sorted.
         /// </summary>
-        public long ProcessedMeasurements
+        public long ProcessedEntities
         {
             get
             {
-                return Thread.VolatileRead(ref m_processedMeasurements);
+                return Thread.VolatileRead(ref m_processedEntities);
             }
         }
 
         /// <summary>
-        /// Gets the total number of measurements that have been discarded because of old timestamps
-        /// (i.e., measurements that were outside the time deviation tolerance from base time, past or future).
+        /// Gets the total number of time-series entities that have been discarded because of old timestamps
+        /// (i.e., entities that were outside the time deviation tolerance from base time, past or future).
         /// </summary>
-        public long DiscardedMeasurements
+        public long DiscardedEntities
         {
             get
             {
-                return Thread.VolatileRead(ref m_discardedMeasurements);
+                return Thread.VolatileRead(ref m_discardedEntities);
             }
         }
 
         /// <summary>
-        /// Gets a reference the last <see cref="IMeasurement"/> that was discarded by the concentrator.
+        /// Gets a reference the last <see cref="ITimeSeriesEntity"/> that was discarded by the concentrator.
         /// </summary>
-        public IMeasurement LastDiscardedMeasurement
+        public ITimeSeriesEntity LastDiscardedEntity
         {
             get
             {
-                return m_lastDiscardedMeasurement;
+                return m_lastDiscardedEntity;
             }
         }
 
         /// <summary>
-        /// Gets the calculated latency of the last <see cref="IMeasurement"/> that was discarded by the concentrator.
+        /// Gets the calculated latency of the last <see cref="ITimeSeriesEntity"/> that was discarded by the concentrator.
         /// </summary>
-        public Ticks LastDiscardedMeasurementLatency
+        public Ticks LatencyOfLastDiscardedEntity
         {
             get
             {
-                return Thread.VolatileRead(ref m_lastDiscardedMeasurementLatency);
+                return Thread.VolatileRead(ref m_latencyOfLastDiscardedEntity);
             }
         }
 
         /// <summary>
-        /// Gets the total number of published measurements.
+        /// Gets the total number of published time-series entities.
         /// </summary>
-        public long PublishedMeasurements
+        public long PublishedEntities
         {
             get
             {
-                return Thread.VolatileRead(ref m_publishedMeasurements);
+                return Thread.VolatileRead(ref m_publishedEntities);
             }
         }
 
@@ -1371,13 +1323,13 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets the total number of down-sampled measurements processed by the concentrator.
+        /// Gets the total number of down-sampled time-series entities processed by the concentrator.
         /// </summary>
-        public long DownsampledMeasurements
+        public long DownsampledEntities
         {
             get
             {
-                return Thread.VolatileRead(ref m_downsampledMeasurements);
+                return Thread.VolatileRead(ref m_downsampledEntities);
             }
         }
 
@@ -1448,7 +1400,7 @@ namespace GSF.TimeSeries
             get
             {
                 if (m_frameQueue != null)
-                    return m_frameQueue.ExamineQueueState(m_expectedMeasurements);
+                    return m_frameQueue.ExamineQueueState(m_expectedEntities);
 
                 return "";
             }
@@ -1462,26 +1414,26 @@ namespace GSF.TimeSeries
             get
             {
                 StringBuilder status = new StringBuilder();
-                IFrame lastFrame = LastFrame;
-                IMeasurement lastDiscardedMeasurement = null;
+                ITimeSeriesEntity lastDiscardedEntity = null;
                 DateTime currentTime = DateTime.UtcNow;
 
                 status.AppendFormat("     Data concentration is: {0}", Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.AppendFormat("    Total process run time: {0}", RunTime.ToString());
                 status.AppendLine();
-                status.AppendFormat("    Measurement wait delay: {0} seconds (lag time)", m_lagTime);
+                status.AppendFormat("        Maximum wait delay: {0} seconds (lag time)", m_lagTime);
                 status.AppendLine();
                 status.AppendFormat("     Local clock tolerance: {0} seconds (lead time)", m_leadTime);
                 status.AppendLine();
                 status.AppendFormat("   Maximum time resolution: {0} ticks", m_timeResolution);
                 status.AppendLine();
-                status.AppendFormat("      Down-sampling method: {0}", m_downsamplingMethod);
+                status.AppendFormat("      Down-sampling method: {0}", m_filterFunction);
                 status.AppendLine();
                 status.AppendFormat("    Local clock time (UTC): {0}", currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 status.AppendLine();
                 status.AppendFormat("  Using clock as real-time: {0}", m_useLocalClockAsRealTime);
                 status.AppendLine();
+
                 if (!m_useLocalClockAsRealTime)
                 {
                     status.Append("      Local clock accuracy: ");
@@ -1489,6 +1441,7 @@ namespace GSF.TimeSeries
                     status.Append(" second deviation from latest time");
                     status.AppendLine();
                 }
+
                 status.AppendFormat("     Ignore bad timestamps: {0}", m_ignoreBadTimestamps);
                 status.AppendLine();
                 status.AppendFormat("    Allow sorts by arrival: {0}", !m_ignoreBadTimestamps && m_allowSortsByArrival);
@@ -1497,55 +1450,53 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.AppendFormat("  Time reasonability check: {0}", m_performTimestampReasonabilityCheck ? "Enabled" : "Disabled");
                 status.AppendLine();
-                status.AppendFormat(" Tracking publication time: {0}", m_trackPublishedTimestamp);
+                status.AppendFormat("  Process by received time: {0}", m_processByCreationTime);
                 status.AppendLine();
-                status.AppendFormat("  Process by received time: {0}", m_processByReceivedTimestamp);
+                status.AppendFormat("         Received entities: {0}", ReceivedEntities);
                 status.AppendLine();
-                status.AppendFormat("     Received measurements: {0}", ReceivedMeasurements);
+                status.AppendFormat("        Processed entities: {0}", ProcessedEntities);
                 status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
+                status.AppendFormat("        Discarded entities: {0}", DiscardedEntities);
                 status.AppendLine();
-                status.AppendFormat("    Discarded measurements: {0}", DiscardedMeasurements);
+                status.AppendFormat("     Down-sampled entities: {0}", DownsampledEntities);
                 status.AppendLine();
-                status.AppendFormat(" Down-sampled measurements: {0}", DownsampledMeasurements);
+                status.AppendFormat("        Published entities: {0}", PublishedEntities);
                 status.AppendLine();
-                status.AppendFormat("    Published measurements: {0}", PublishedMeasurements);
+                status.AppendFormat("         Expected entities: {0} ({1} / frame)", PublishedFrames * m_expectedEntities, m_expectedEntities);
                 status.AppendLine();
-                status.AppendFormat("     Expected measurements: {0} ({1} / frame)", PublishedFrames * m_expectedMeasurements, m_expectedMeasurements);
-                status.AppendLine();
-                status.Append("Last discarded measurement: ");
+                status.Append("Last discarded entity: ");
 
-                Interlocked.Exchange(ref lastDiscardedMeasurement, m_lastDiscardedMeasurement);
-                if (lastDiscardedMeasurement == null)
+                Interlocked.Exchange(ref lastDiscardedEntity, m_lastDiscardedEntity);
+                if (lastDiscardedEntity == null)
                 {
                     status.Append("<none>");
                 }
                 else
                 {
-                    status.Append(Measurement.ToString(lastDiscardedMeasurement));
+                    status.Append(lastDiscardedEntity);
                     status.Append(" - ");
-                    status.Append(((DateTime)lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                    status.Append(((DateTime)lastDiscardedEntity.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                     status.AppendLine();
-                    status.AppendFormat(" Latency of last discarded: {0} seconds", LastDiscardedMeasurementLatency.ToSeconds().ToString("0.0000"));
+                    status.AppendFormat(" Latency of last discarded: {0} seconds", LatencyOfLastDiscardedEntity.ToSeconds().ToString("0.0000"));
                 }
                 status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.AppendLine();
                 status.AppendFormat("  Pre-lag-time publication: {0}", (FramesAheadOfSchedule / (double)PublishedFrames).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat(" Down-sampling application: {0}", (DownsampledMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat(" Down-sampling application: {0}", (DownsampledEntities / (double)ProcessedEntities).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("Published measurement loss: {0}", (DiscardedMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("     Published entity loss: {0}", (DiscardedEntities / (double)ProcessedEntities).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("    Total sorts by arrival: {0}", MeasurementsSortedByArrival);
                 status.AppendLine();
-                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - MeasurementsSortedByArrival / (double)ReceivedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - MeasurementsSortedByArrival / (double)ReceivedEntities).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("   Missed sorts by timeout: {0}", MissedSortsByTimeout);
                 status.AppendLine();
-                status.AppendFormat("      Loss due to timeouts: {0}", (MissedSortsByTimeout / (double)ProcessedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("      Loss due to timeouts: {0}", (MissedSortsByTimeout / (double)ProcessedEntities).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("     Using precision timer: {0}", m_usePrecisionTimer);
                 status.AppendLine();
@@ -1578,20 +1529,6 @@ namespace GSF.TimeSeries
                 }
 
                 status.AppendFormat("        Queued frame count: {0}", m_frameQueue.Count);
-                status.AppendLine();
-                status.Append("      Last published frame: ");
-
-                if (lastFrame == null)
-                {
-                    status.Append("<none>");
-                }
-                else
-                {
-                    status.Append(((DateTime)lastFrame.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
-                    status.AppendLine();
-                    status.Append("   Last sorted measurement: ");
-                    status.Append(Measurement.ToString(lastFrame.LastSortedMeasurement));
-                }
                 status.AppendLine();
 
                 return status.ToString();
@@ -1651,13 +1588,7 @@ namespace GSF.TimeSeries
                         }
                         m_monitorTimer = null;
 
-                        if (m_latestMeasurements != null)
-                        {
-                            m_latestMeasurements.Dispose();
-                        }
-                        m_latestMeasurements = null;
-
-                        m_lastDiscardedMeasurement = null;
+                        m_lastDiscardedEntity = null;
 
                         // Clear minimum timer resolution.
                         PrecisionTimer.ClearMinimumTimerResolution(1);
@@ -1720,19 +1651,19 @@ namespace GSF.TimeSeries
         /// </summary>
         public virtual void ResetStatistics()
         {
-            m_receivedMeasurements = 0;
-            m_processedMeasurements = 0;
-            m_discardedMeasurements = 0;
-            m_downsampledMeasurements = 0;
-            m_publishedMeasurements = 0;
+            m_receivedEntities = 0;
+            m_processedEntities = 0;
+            m_discardedEntities = 0;
+            m_downsampledEntities = 0;
+            m_publishedEntities = 0;
             m_measurementsSortedByArrival = 0;
             m_missedSortsByTimeout = 0;
             m_waitHandleExpirations = 0;
             m_framesAheadOfSchedule = 0;
             m_publishedFrames = 0;
             m_totalPublishTime = 0;
-            m_lastDiscardedMeasurement = null;
-            m_lastDiscardedMeasurementLatency = 0;
+            m_lastDiscardedEntity = null;
+            m_latencyOfLastDiscardedEntity = 0;
         }
 
         /// <summary>
@@ -1769,25 +1700,16 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Sorts the <see cref="IMeasurement"/> placing the data point in its proper <see cref="IFrame"/>.
+        /// Sorts each <see cref="ITimeSeriesEntity"/> placing each data point in its proper <see cref="IFrame"/>.
         /// </summary>
-        /// <param name="measurement"><see cref="IMeasurement"/> to sort.</param>
-        public virtual void SortMeasurement(IMeasurement measurement)
-        {
-            SortMeasurements(new[] { measurement });
-        }
-
-        /// <summary>
-        /// Sorts each <see cref="IMeasurement"/> placing each data point in its proper <see cref="IFrame"/>.
-        /// </summary>
-        /// <param name="measurements">Collection of <see cref="IMeasurement"/>'s to sort.</param>
-        public virtual void SortMeasurements(IEnumerable<IMeasurement> measurements)
+        /// <param name="entities">Collection of <see cref="ITimeSeriesEntity"/> objects to sort.</param>
+        public virtual void SortEntities(IEnumerable<ITimeSeriesEntity> entities)
         {
             if (!m_enabled)
                 return;
 
-            // This function is called continually with new measurements to handle "time-alignment" (i.e., sorting)
-            // of these new values. Many threads will be waiting for frames of time aligned data so make sure any
+            // This function is called continually with new time-series entities to handle "time-alignment" (i.e., sorting)
+            // of these new entities. Many threads will be waiting for frames of time aligned data so make sure any
             // work to be done here is executed as efficiently as possible.
 
             // Note that breaking up this function into several parts might help with readability and make it
@@ -1795,26 +1717,38 @@ namespace GSF.TimeSeries
             // put the code into one larger more complex function...
 
             TrackingFrame frame = null;
-            List<IMeasurement> discardedMeasurements = null;
-            IMeasurement derivedMeasurement;
-            IFrame sourceFrame;
+            IMeasurement measurement;
+            ITimeSeriesEntity latestEntity;
+
             Ticks timestamp = 0, lastTimestamp = 0;
             double distance;
-            bool discardMeasurement;
+            bool discardEntity;
 
-            // Track the total number of measurements ever received for sorting.
-            Interlocked.Add(ref m_receivedMeasurements, measurements.Count());
+            List<ITimeSeriesEntity> discardedEntities = null;
 
-            // Measurements usually come in groups. This function processes all available measurements in the
-            // collection here directly as an optimization which avoids the overhead of a function call for
-            // each measurement.
-            foreach (IMeasurement measurement in measurements)
+            // Track the total number of time-series entities ever received for sorting.
+            Interlocked.Add(ref m_receivedEntities, entities.Count());
+
+            // Time-series entities usually come in groups. This function processes all available entities
+            // in the collection here directly as an optimization which avoids the overhead of a function
+            // call for each entity.
+            foreach (ITimeSeriesEntity entity in entities)
             {
-                // Reset flag for next measurement.
-                discardMeasurement = false;
+                // Attempt to cast the entity as a measurement
+                measurement = entity as IMeasurement;
+
+                // Reset flag for next entity.
+                discardEntity = false;
+
+                if (m_trackLatestEntities)
+                {
+                    // If this entity is more recent than the latest entity for the same signal, make this entity the latest entity
+                    if (!m_latestEntities.TryGetValue(entity.ID, out latestEntity) || entity.Timestamp > latestEntity.Timestamp)
+                        m_latestEntities[entity.ID] = entity;
+                }
 
                 // Check for a bad measurement timestamp.
-                if (!m_ignoreBadTimestamps && (measurement.StateFlags & MeasurementStateFlags.BadTime) > 0)
+                if (!m_ignoreBadTimestamps && (object)measurement != null && !measurement.TimestampQualityIsGood())
                 {
                     if (m_allowSortsByArrival)
                     {
@@ -1827,38 +1761,39 @@ namespace GSF.TimeSeries
                     }
                     else
                     {
-                        // If sorting by arrival time is not allowed, measurements with bad timestamps are discarded.
-                        discardMeasurement = true;
+                        // If sorting by arrival time is not allowed,
+                        // measurements with bad timestamps are discarded.
+                        discardEntity = true;
                     }
                 }
                 else
                 {
-                    // Timestamp quality is good, get ticks for this measurement.
-                    timestamp = measurement.Timestamp;
+                    // Timestamp quality is good, get ticks for this entity.
+                    timestamp = entity.Timestamp;
                 }
 
-                if (!discardMeasurement)
+                if (!discardEntity)
                 {
                     //
-                    // *** Sort the measurement into proper frame ***
+                    // *** Sort the time-series entity into the proper frame ***
                     //
 
-                    // Get the destination frame for the measurement. Note that groups of parsed measurements will
+                    // Get the destination frame for the time-series entity. Note that groups of parsed entities will
                     // typically be coming in from the same source and will have the same ticks. If we have already
                     // found the destination frame for the same ticks, then there is no need to lookup frame again.
-                    if (frame == null || timestamp != lastTimestamp)
+                    if ((object)frame == null || timestamp != lastTimestamp)
                     {
-                        if (m_processByReceivedTimestamp)
+                        if (m_processByCreationTime)
                         {
-                            // If sorting by received timestamp, simply get a frame for this measurement since
+                            // If sorting by received timestamp, simply get a frame for this entity since
                             // this is used in scenarios where very large volumes of data need concentration
                             frame = m_frameQueue.GetFrame(timestamp);
                             lastTimestamp = timestamp;
                         }
                         else
                         {
-                            // Badly time-aligned measurements, or those coming in at a higher sample rate, may fall
-                            // outside available frame buckets. To check for this, the difference between the measurement
+                            // Badly time-aligned entities, or those coming in at a higher sample rate, may fall
+                            // outside available frame buckets. To check for this, the difference between the entity's
                             // timestamp and real-time in seconds is calculated and validated between lag and lead times.
                             distance = SecondsFromRealTime(timestamp);
 
@@ -1872,88 +1807,50 @@ namespace GSF.TimeSeries
                             }
                             else
                             {
-                                // Get a frame for this measurement
+                                // Get a frame for this time-series entity
                                 frame = m_frameQueue.GetFrame(timestamp);
                                 lastTimestamp = timestamp;
                             }
                         }
                     }
 
-                    if (frame == null)
+                    if ((object)frame == null)
                     {
-                        // Measurement is discarded if no bucket (i.e., destination frame) was found for it.
-                        discardMeasurement = true;
+                        // Time-series entity is discarded if no bucket (i.e., destination frame) was found for it.
+                        discardEntity = true;
                         lastTimestamp = 0;
+                    }
+                    else if (frame.Add(entity))
+                    {
+                        // Track the total number of time-series entities successfully requested for sorting.
+                        Interlocked.Increment(ref m_processedEntities);
                     }
                     else
                     {
-                        // Derive new measurement value applying any needed down-sampling
-                        derivedMeasurement = frame.DeriveMeasurementValue(measurement);
+                        // Track the total number of time-series entities that
+                        // failed to sort because the system ran out of time.
+                        Interlocked.Increment(ref m_missedSortsByTimeout);
 
-                        if (derivedMeasurement == null)
-                        {
-                            // Count this as a discarded measurement if down-sampling derivation was not applied.
-                            discardMeasurement = true;
-                        }
-                        else
-                        {
-                            sourceFrame = frame.SourceFrame;
-
-                            // Access published flag within critical section to ensure no updates will
-                            // be made to frame while it is being published
-                            frame.Lock.EnterReadLock();
-
-                            try
-                            {
-                                if (!sourceFrame.Published)
-                                {
-                                    // Assign derived measurement to its source frame using user customizable function.
-                                    AssignMeasurementToFrame(sourceFrame, derivedMeasurement);
-                                    sourceFrame.LastSortedMeasurement = derivedMeasurement;
-
-                                    // Track the total number of measurements successfully requested for sorting.
-                                    Interlocked.Increment(ref m_processedMeasurements);
-                                }
-                                else
-                                {
-                                    // Track the total number of measurements that failed to sort because the
-                                    // system ran out of time.
-                                    Interlocked.Increment(ref m_missedSortsByTimeout);
-
-                                    // Count this as a discarded measurement if it was never assigned to the frame.
-                                    discardMeasurement = true;
-                                }
-                            }
-                            finally
-                            {
-                                frame.Lock.ExitReadLock();
-                            }
-
-                            // If enabled, concentrator will track the absolute latest measurement values.
-                            if (m_trackLatestMeasurements)
-                                m_latestMeasurements.UpdateMeasurementValue(derivedMeasurement);
-                        }
+                        // Count this as a discarded entity if it was never assigned to the frame.
+                        discardEntity = true;
                     }
                 }
 
-                if (discardMeasurement)
+                if (discardEntity)
                 {
-                    // This flag only make sense if there is one action adapter, so it is no longer auto-assigned
-                    //measurement.StateFlags |= MeasurementStateFlags.DiscardedValue;
+                    // This time-series entity was marked to be discarded.
+                    Interlocked.Exchange(ref m_lastDiscardedEntity, entity);
+                    Interlocked.Exchange(ref m_latencyOfLastDiscardedEntity, RealTime - m_lastDiscardedEntity.Timestamp);
 
-                    // This measurement was marked to be discarded.
-                    Interlocked.Exchange(ref m_lastDiscardedMeasurement, measurement);
-                    Interlocked.Exchange(ref m_lastDiscardedMeasurementLatency, RealTime - m_lastDiscardedMeasurement.Timestamp);
+                    // Track total number of discarded entities
+                    Interlocked.Increment(ref m_discardedEntities);
 
-                    // Track total number of discarded measurements
-                    Interlocked.Increment(ref m_discardedMeasurements);
+                    // Make sure discarded entity collection exists
+                    if (discardedEntities == null)
+                        discardedEntities = new List<ITimeSeriesEntity>();
 
-                    // Make sure discarded measurement collection exists
-                    if (discardedMeasurements == null)
-                        discardedMeasurements = new List<IMeasurement>();
-
-                    // Add discarded measurement to local collection
-                    discardedMeasurements.Add(measurement);
+                    // Add discarded entity to local collection
+                    discardedEntities.Add(entity);
                 }
                 else
                 {
@@ -1964,9 +1861,9 @@ namespace GSF.TimeSeries
                     if (!m_useLocalClockAsRealTime)
                     {
                         // Algorithm:
-                        //      If the measurement time is newer than the current real-time value and within the
-                        //      specified time deviation tolerance of the local clock time, then the measurement
-                        //      timestamp is set as real-time.
+                        //      If the time-series entity's timestamp is newer than the current real-time value,
+                        //      and it is within the specified time deviation tolerance of the local clock time,
+                        //      then the entity's timestamp is set as real-time.
                         if (timestamp > Thread.VolatileRead(ref m_realTimeTicks))
                         {
                             if (m_performTimestampReasonabilityCheck)
@@ -1978,18 +1875,18 @@ namespace GSF.TimeSeries
 
                                 if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
                                 {
-                                    // The new time measurement looks good, so this function assumes the time is "real-time"
+                                    // The new time timestamp looks good, so this function assumes the time is "real-time"
                                     Thread.VolatileWrite(ref m_realTimeTicks, timestamp);
                                 }
                                 else
                                 {
-                                    // Measurement ticks were outside of time deviation tolerances so we'll also check to make
+                                    // Entity's timestamp was outside of time deviation tolerances so we'll also check to make
                                     // sure current real-time ticks are within these tolerances as well
                                     distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
 
                                     if (distance > m_leadTime || distance < -m_leadTime)
                                     {
-                                        // New time measurement was invalid as was current real-time value so we have no choice but to
+                                        // New time was invalid, as was current real-time value, so we have no choice but to
                                         // assume the current time as "real-time", so we set real-time ticks to current ticks
                                         Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
                                     }
@@ -2005,16 +1902,16 @@ namespace GSF.TimeSeries
                 }
             }
 
-            // Provide discarded measurements to consumers, if any
-            if (discardedMeasurements != null)
-                OnDiscardingMeasurements(discardedMeasurements);
+            // Provide discarded entities to consumers, if any
+            if ((object)discardedEntities != null)
+                OnDiscardedEntities(discardedEntities);
         }
 
         /// <summary>
-        /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
+        /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="ITimeSeriesEntity"/> objects that arrived within the
         /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
         /// </summary>
-        /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
+        /// <param name="frame"><see cref="IFrame"/> of time-series entities with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         /// <remarks>
         /// If user implemented publication function consistently exceeds available publishing time (i.e., <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c> seconds),
@@ -2029,27 +1926,27 @@ namespace GSF.TimeSeries
         /// <param name="timestamp">Timestamp for new <see cref="IFrame"/> in <see cref="Ticks"/>.</param>
         /// <returns>New <see cref="IFrame"/> at given <paramref name="timestamp"/>.</returns>
         /// <remarks>
-        /// Derived classes can override this method to create a new custom <see cref="IFrame"/>. Default
-        /// behavior creates a basic <see cref="Frame"/> to hold synchronized measurements.
+        /// Derived classes can override this method to create a new custom <see cref="IFrame"/>.
+        /// Default behavior creates a basic <see cref="Frame"/> to hold synchronized time-series entities.
         /// </remarks>
         protected internal virtual IFrame CreateNewFrame(Ticks timestamp)
         {
-            return new Frame(timestamp, m_expectedMeasurements);
+            return new Frame(timestamp, m_expectedEntities);
         }
 
         /// <summary>
-        /// Assigns <see cref="IMeasurement"/> to its associated <see cref="IFrame"/>.
+        /// Assigns <see cref="ITimeSeriesEntity"/> to its associated <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
-        /// Derived classes can choose to override this method to handle custom assignment of a <see cref="IMeasurement"/> to
-        /// its <see cref="IFrame"/>. Default behavior simply assigns measurement to frame's keyed measurement dictionary:
-        /// <code>frame.Measurements[measurement.Key] = measurement;</code>
+        /// Derived classes can choose to override this method to handle custom assignment of a <see cref="ITimeSeriesEntity"/> to
+        /// its <see cref="IFrame"/>. Default behavior simply assigns entity to frame's keyed entity dictionary:
+        /// <code>frame.Entities[entity.ID] = entity;</code>
         /// </remarks>
         /// <param name="frame">The <see cref="IFrame"/> that is used.</param>
-        /// <param name="measurement">The type of <see cref="IMeasurement"/> to use."/></param>
-        protected virtual void AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
+        /// <param name="entity">The <see cref="ITimeSeriesEntity"/> to be assigned to the frame."/></param>
+        protected virtual void AssignEntityToFrame(IFrame frame, ITimeSeriesEntity entity)
         {
-            frame.Measurements[measurement.Key] = measurement;
+            frame.Entities[entity.ID] = entity;
         }
 
         /// <summary>
@@ -2061,31 +1958,31 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void OnProcessException(Exception ex)
         {
-            if (ProcessException != null)
+            if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
-        /// Raises the <see cref="UnpublishedSamples"/> event.
+        /// Raises the <see cref="UnprocessedEntities"/> event.
         /// </summary>
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(int seconds)
         {
-            if (UnpublishedSamples != null)
-                UnpublishedSamples(this, new EventArgs<int>(seconds));
+            if ((object)UnprocessedEntities != null)
+                UnprocessedEntities(this, new EventArgs<int>(seconds));
         }
 
         /// <summary>
-        /// Raises the <see cref="DiscardingMeasurements"/> event.
+        /// Raises the <see cref="DiscardedEntities"/> event.
         /// </summary>
-        /// <param name="measurements">Enumeration of <see cref="IMeasurement"/> values being discarded.</param>
+        /// <param name="entities">Enumeration of <see cref="ITimeSeriesEntity"/> objects being discarded.</param>
         /// <remarks>
-        /// Allows derived classes to raise a discarding measurements event.
+        /// Allows derived classes to raise an entities discarded event.
         /// </remarks>
-        protected virtual void OnDiscardingMeasurements(IEnumerable<IMeasurement> measurements)
+        protected virtual void OnDiscardedEntities(IEnumerable<ITimeSeriesEntity> entities)
         {
-            if (DiscardingMeasurements != null)
-                DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
+            if ((object)EntitiesDiscarded != null)
+                EntitiesDiscarded(this, new EventArgs<IEnumerable<ITimeSeriesEntity>>(entities));
         }
 
         // Tick handler for frame rate timer simply signals waiting thread to publish
@@ -2104,6 +2001,8 @@ namespace GSF.TimeSeries
             long startTime, stopTime;
             int frameIndex;
 
+            int downsampledEntities;
+
             // Keep thread alive...
             while (m_publicationWaitHandle != null)
             {
@@ -2116,6 +2015,7 @@ namespace GSF.TimeSeries
                     {
                         // Get top frame
                         frame = m_frameQueue.Head;
+                        downsampledEntities = 0;
 
                         // If no frame is ready to publish, exit
                         if (frame == null)
@@ -2125,11 +2025,11 @@ namespace GSF.TimeSeries
                         sourceFrame = frame.SourceFrame;
                         timestamp = sourceFrame.Timestamp;
 
-                        if (m_processByReceivedTimestamp)
+                        if (m_processByCreationTime)
                         {
                             // When processing by received timestamp, we need to test received timestamp against lag-time
                             // to make sure there has been time enough to publish frame:
-                            if (m_lagTicks - (RealTime - sourceFrame.ReceivedTimestamp) > 0)
+                            if (m_lagTicks - (RealTime - frame.CreatedTimestamp) > 0)
                                 break;
                         }
                         else
@@ -2138,11 +2038,11 @@ namespace GSF.TimeSeries
                             if (m_lagTicks - (RealTime - timestamp) > 0)
                             {
                                 // It's not the scheduled time to publish this frame, however, if preemptive publishing is enabled,
-                                // an expected number of measurements per-frame have been defined and the frame has received this
-                                // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
+                                // an expected number of time-series entities per-frame have been defined and the frame has received
+                                // this expected number of entities, we can go ahead and publish the frame ahead of schedule. This
                                 // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
                                 // frame as soon as the expected data has arrived.
-                                if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || sourceFrame.SortedMeasurements < m_expectedMeasurements)
+                                if (m_expectedEntities < 1 || !m_allowPreemptivePublishing || frame.SignalCount < m_expectedEntities)
                                     break;
 
                                 // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
@@ -2158,17 +2058,10 @@ namespace GSF.TimeSeries
                         // published within one frame period if the system is stressed
                         frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
 
-                        // Mark the frame as published to prevent any further sorting into this frame - setting this flag
-                        // is in a critical section to ensure that sorting into this frame has ceased prior to publication
-                        frame.Lock.EnterWriteLock();
-
-                        try
+                        foreach (IList<ITimeSeriesEntity> signal in frame.GetEntities().Values)
                         {
-                            sourceFrame.Published = true;
-                        }
-                        finally
-                        {
-                            frame.Lock.ExitWriteLock();
+                            downsampledEntities += signal.Count - 1;
+                            AssignEntityToFrame(sourceFrame, m_filterFunction(sourceFrame.Timestamp, signal));
                         }
 
                         try
@@ -2183,14 +2076,11 @@ namespace GSF.TimeSeries
 
                             // Update publication statistics
                             Interlocked.Increment(ref m_publishedFrames);
-                            Interlocked.Add(ref m_publishedMeasurements, sourceFrame.SortedMeasurements);
-                            Interlocked.Add(ref m_downsampledMeasurements, frame.DownsampledMeasurements);
+                            Interlocked.Add(ref m_publishedEntities, frame.SignalCount);
+                            Interlocked.Add(ref m_downsampledEntities, downsampledEntities);
 
                             // Mark stop time for publication
                             stopTime = DateTime.UtcNow.Ticks;
-
-                            if (m_trackPublishedTimestamp)
-                                sourceFrame.PublishedTimestamp = stopTime;
 
                             // Track total publication time
                             Interlocked.Add(ref m_totalPublishTime, stopTime - startTime);
@@ -2295,6 +2185,19 @@ namespace GSF.TimeSeries
         static ConcentratorBase()
         {
             s_frameRateTimers = new Dictionary<Tuple<int, int>, FrameRateTimer>();
+        }
+
+        // Static Methods
+
+        /// <summary>
+        /// Returns the most recently received time-series entity in the given collection of time-series entities.
+        /// </summary>
+        /// <param name="targetFrameTimestamp">The timestamp of the destination frame.</param>
+        /// <param name="entities">Sequence of <see cref="ITimeSeriesEntity"/> objects over which to apply this filter.</param>
+        /// <returns>The last entity in the given collection.</returns>
+        public static ITimeSeriesEntity LastReceived(long targetFrameTimestamp, IEnumerable<ITimeSeriesEntity> entities)
+        {
+            return entities.Last();
         }
 
         #endregion

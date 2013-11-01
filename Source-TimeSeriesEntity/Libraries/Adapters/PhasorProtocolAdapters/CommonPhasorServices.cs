@@ -1501,7 +1501,7 @@ namespace PhasorProtocolAdapters
             PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
             if ((object)outputStream != null)
-                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.DiscardedMeasurements, "DiscardedMeasurements");
+                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.DiscardedEntities, "DiscardedMeasurements");
 
             return statistic;
         }
@@ -1518,7 +1518,7 @@ namespace PhasorProtocolAdapters
             PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
             if ((object)outputStream != null)
-                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ReceivedMeasurements, "ReceivedMeasurements");
+                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ReceivedEntities, "ReceivedMeasurements");
 
             return statistic;
         }
@@ -1540,7 +1540,7 @@ namespace PhasorProtocolAdapters
             if ((object)outputStream != null)
             {
                 double publishedFrames = s_statisticValueCache.GetDifference(outputStream, outputStream.PublishedFrames, "ExpectedMeasurements");
-                statistic = outputStream.ExpectedMeasurements * publishedFrames;
+                statistic = outputStream.ExpectedEntities * publishedFrames;
             }
 
             return statistic;
@@ -1558,7 +1558,7 @@ namespace PhasorProtocolAdapters
             PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
             if ((object)outputStream != null)
-                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ProcessedMeasurements, "ProcessedMeasurements");
+                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.ProcessedEntities, "ProcessedMeasurements");
 
             return statistic;
         }
@@ -1592,7 +1592,7 @@ namespace PhasorProtocolAdapters
             PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
             if ((object)outputStream != null)
-                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.PublishedMeasurements, "PublishedMeasurements");
+                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.PublishedEntities, "PublishedMeasurements");
 
             return statistic;
         }
@@ -1609,7 +1609,7 @@ namespace PhasorProtocolAdapters
             PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
             if ((object)outputStream != null)
-                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.DownsampledMeasurements, "DownsampledMeasurements");
+                statistic = s_statisticValueCache.GetDifference(outputStream, outputStream.DownsampledEntities, "DownsampledMeasurements");
 
             return statistic;
         }
@@ -1866,7 +1866,7 @@ namespace PhasorProtocolAdapters
             PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
             if ((object)outputStream != null)
-                statistic = outputStream.DiscardedMeasurements;
+                statistic = outputStream.DiscardedEntities;
 
             return statistic;
         }
@@ -1877,7 +1877,7 @@ namespace PhasorProtocolAdapters
             PhasorDataConcentratorBase outputStream = source as PhasorDataConcentratorBase;
 
             if ((object)outputStream != null)
-                statistic = outputStream.DownsampledMeasurements;
+                statistic = outputStream.DownsampledEntities;
 
             return statistic;
         }

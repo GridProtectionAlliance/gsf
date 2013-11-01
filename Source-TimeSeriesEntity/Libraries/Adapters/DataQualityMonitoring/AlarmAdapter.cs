@@ -150,7 +150,7 @@ namespace DataQualityMonitoring
                     .Aggregate((list, id) => list + ";" + id);
 
                 // Set input measurement keys for measurement routing
-                InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, filterExpression);
+                InputMeasurementKeys = ParseFilterExpression(DataSource, true, filterExpression);
             }
 
             try
@@ -206,10 +206,10 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Queues a collection of measurements for processing.
         /// </summary>
-        /// <param name="measurements">Measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        /// <param name="entities">Measurements to queue for processing.</param>
+        public override void QueueEntitiesForProcessing(IEnumerable<IMeasurement> entities)
         {
-            m_measurementQueue.Enqueue(measurements);
+            m_measurementQueue.Enqueue(entities);
         }
 
         /// <summary>
@@ -367,10 +367,10 @@ namespace DataQualityMonitoring
                     // Send new alarm events into the system,
                     // then reset the collection for the next
                     // group of measurements
-                    OnNewMeasurements(alarmEvents);
+                    OnNewEntities(alarmEvents);
 
                     // Increment total count of processed measurements
-                    IncrementProcessedMeasurements(processedMeasurements);
+                    IncrementProcessedEntities(processedMeasurements);
 
                     if (measurements.Any())
                         spinner.Reset();

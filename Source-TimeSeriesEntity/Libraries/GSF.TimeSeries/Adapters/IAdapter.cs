@@ -18,15 +18,14 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Threading;
 
 namespace GSF.TimeSeries.Adapters
@@ -36,13 +35,9 @@ namespace GSF.TimeSeries.Adapters
     /// </summary>
     public interface IAdapter : ISupportLifecycle, IProvideStatus
     {
-        /// <summary>
-        /// Notifies dependent adapters that this adapter has finished processing a measurement.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
-        /// </remarks>
-        event EventHandler<EventArgs<IMeasurement>> Notify;
+        #region [ Members ]
+
+        // Events
 
         /// <summary>
         /// Provides status messages to consumer.
@@ -69,19 +64,31 @@ namespace GSF.TimeSeries.Adapters
         event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Event is raised when <see cref="InputMeasurementKeys"/> are updated.
+        /// Event is raised when <see cref="InputSignals"/> are updated.
         /// </summary>
-        event EventHandler InputMeasurementKeysUpdated;
+        event EventHandler InputSignalsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputMeasurements"/> are updated.
+        /// Event is raised when <see cref="OutputSignals"/> are updated.
         /// </summary>
-        event EventHandler OutputMeasurementsUpdated;
+        event EventHandler OutputSignalsUpdated;
 
         /// <summary>
         /// Event is raised when adapter is aware of a configuration change.
         /// </summary>
         event EventHandler ConfigurationChanged;
+
+        /// <summary>
+        /// This event is raised if there are any time-series entities being discarded during processing.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="ITimeSeriesEntity"/> objects that are being discarded during processing.
+        /// </remarks>
+        event EventHandler<EventArgs<IEnumerable<ITimeSeriesEntity>>> EntitiesDiscarded;
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to <see cref="IAdapter"/>.
@@ -140,22 +147,13 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
+        /// Gets or sets the maximum amount of time the adapter is expected to take during initialization,
+        /// after which the system will issue a warning that the adapter is taking too long to initialize.
         /// </summary>
         /// <remarks>
-        /// Implementers should use value <see cref="Timeout.Infinite"/> to wait indefinitely.
+        /// Implementers should use value <see cref="Timeout.Infinite"/> to disable the warning.
         /// </remarks>
         int InitializationTimeout
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        long DependencyTimeout
         {
             get;
             set;
@@ -171,36 +169,36 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
+        /// Gets or sets flag that determines if signals being queued for processing should be tested to see if they are in the <see cref="InputSignals"/>.
         /// </summary>
-        bool ProcessMeasurementFilter
+        bool ProcessSignalFilter
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Gets or sets primary keys of input measurements the adapter expects.
+        /// Gets or sets the collection of signals the adapter wishes to receive as input.
         /// </summary>
-        MeasurementKey[] InputMeasurementKeys
+        ISet<Guid> InputSignals
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Gets or sets output measurements that the adapter will produce, if any.
+        /// Gets or sets the collection of signals the adapter plans to create as output.
         /// </summary>
-        IMeasurement[] OutputMeasurements
+        ISet<Guid> OutputSignals
         {
             get;
             set;
         }
 
         /// <summary>
-        /// Gets the total number of measurements processed thus far by the <see cref="IAdapter"/>.
+        /// Gets the total number of time-series entities processed thus far by the <see cref="IAdapter"/>.
         /// </summary>
-        long ProcessedMeasurements
+        long ProcessedEntities
         {
             get;
         }
@@ -250,6 +248,10 @@ namespace GSF.TimeSeries.Adapters
             get;
             set;
         }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         ///  Starts the adapter, if it is not already running.
@@ -318,12 +320,14 @@ namespace GSF.TimeSeries.Adapters
         /// </para>
         /// </remarks>
         void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters);
+
+        #endregion
     }
 
     /// <summary>
     /// Defines static extension functions for <see cref="IAdapter"/> implementations.
     /// </summary>
-    public static class IAdapterExtensions
+    public static class AdapterExtensions
     {
         /// <summary>
         /// Returns <c>true</c> if <see cref="IAdapter"/> has a temporal constraint defined, i.e., either
@@ -335,58 +339,6 @@ namespace GSF.TimeSeries.Adapters
         public static bool TemporalConstraintIsDefined(this IAdapter adapter)
         {
             return (adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue);
-        }
-
-        /// <summary>
-        /// Returns the <see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> output measurements.
-        /// </summary>
-        /// <param name="adapter"><see cref="IAdapter"/> instance output measurements to convert.</param>
-        /// <returns><see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> output measurements.</returns>
-        public static MeasurementKey[] OutputMeasurementKeys(this IAdapter adapter)
-        {
-            return adapter.OutputMeasurements.MeasurementKeys().ToArray();
-        }
-
-        /// <summary>
-        /// Gets a distinct list of input measurement keys for all of the provided adapters.
-        /// </summary>
-        /// <typeparam name="T">Type of <see cref="IAdapter"/>.</typeparam>
-        /// <param name="adapters">Source <see cref="IAdapter"/> enumeration.</param>
-        /// <returns>Distinct list of input measurement keys for all of the provided adapters.</returns>
-        public static MeasurementKey[] InputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
-        {
-            List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>();
-
-            foreach (T adapter in adapters)
-            {
-                MeasurementKey[] adapterInputMeasurementKeys = adapter.InputMeasurementKeys;
-
-                if (adapterInputMeasurementKeys != null && adapterInputMeasurementKeys.Length > 0)
-                    inputMeasurementKeys.AddRange(adapterInputMeasurementKeys);
-            }
-
-            return inputMeasurementKeys.Distinct().ToArray();
-        }
-
-        /// <summary>
-        /// Gets a distinct list of output measurement keys for all of the provided adapters.
-        /// </summary>
-        /// <typeparam name="T">Type of <see cref="IAdapter"/>.</typeparam>
-        /// <param name="adapters">Source <see cref="IAdapter"/> enumeration.</param>
-        /// <returns>Distinct list of output measurement keys for all of the provided adapters.</returns>
-        public static MeasurementKey[] OutputMeasurementKeys<T>(this IEnumerable<T> adapters) where T : IAdapter
-        {
-            List<MeasurementKey> outputMeasurementKeys = new List<MeasurementKey>();
-
-            foreach (T adapter in adapters)
-            {
-                IEnumerable<MeasurementKey> adapterOutputMeasurementKeys = adapter.OutputMeasurementKeys();
-
-                if ((object)adapterOutputMeasurementKeys != null && adapterOutputMeasurementKeys.Any())
-                    outputMeasurementKeys.AddRange(adapterOutputMeasurementKeys);
-            }
-
-            return outputMeasurementKeys.Distinct().ToArray();
         }
     }
 }

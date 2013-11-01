@@ -60,7 +60,7 @@ namespace GSF.TimeSeries.Statistics
             DataSubscriber subscriber = source as DataSubscriber;
 
             if ((object)subscriber != null)
-                statistic = s_statisticValueCache.GetDifference(subscriber, subscriber.ProcessedMeasurements, "ProcessedMeasurements");
+                statistic = s_statisticValueCache.GetDifference(subscriber, subscriber.ProcessedEntities, "ProcessedMeasurements");
 
             return statistic;
         }
@@ -223,7 +223,7 @@ namespace GSF.TimeSeries.Statistics
             DataPublisher publisher = source as DataPublisher;
 
             if ((object)publisher != null)
-                statistic = s_statisticValueCache.GetDifference(publisher, publisher.ProcessedMeasurements, "ProcessedMeasurements");
+                statistic = s_statisticValueCache.GetDifference(publisher, publisher.ProcessedEntities, "ProcessedMeasurements");
 
             return statistic;
         }

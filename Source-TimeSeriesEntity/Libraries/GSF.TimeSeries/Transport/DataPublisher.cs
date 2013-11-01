@@ -525,7 +525,7 @@ namespace GSF.TimeSeries.Transport
                 string inputMeasurementKeys;
 
                 if (Settings.TryGetValue("inputMeasurementKeys", out inputMeasurementKeys))
-                    InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, inputMeasurementKeys);
+                    InputMeasurementKeys = ParseFilterExpression(DataSource, true, inputMeasurementKeys);
             }
         }
 
@@ -1475,7 +1475,7 @@ namespace GSF.TimeSeries.Transport
         {
             int measurementCount;
 
-            if (this.ProcessMeasurementFilter)
+            if (this.ProcessSignalFilter)
                 base.QueueMeasurementsForProcessing(measurements);
             else
                 m_routingTables.RoutingEventHandler(measurements);
@@ -1736,14 +1736,14 @@ namespace GSF.TimeSeries.Transport
                     {
                         // Validate that subscriber has rights to this signal
                         if (SubscriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
-                            reference.TryAdd(index++, new Tuple<Guid, string, uint>(signalID, key.Source, key.ID));
+                            reference.TryAdd(index++, new Tuple<Guid, string, uint>(signalID, key.Source, key.PointID));
                         else
                             unauthorizedKeys.Add(key.SignalID);
                     }
                     else
                     {
                         // When client authorization is not required, all points are assumed to be allowed
-                        reference.TryAdd(index++, new Tuple<Guid, string, uint>(LookupSignalID(key), key.Source, key.ID));
+                        reference.TryAdd(index++, new Tuple<Guid, string, uint>(LookupSignalID(key), key.Source, key.PointID));
                     }
                 }
             }
@@ -1772,7 +1772,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     if (TryGetAdapterByName("LatestMeasurementCache", out cache))
                     {
-                        cache.InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, cacheMeasurementKeys);
+                        cache.InputSignals = AdapterBase.ParseFilterExpression(DataSource, true, cacheMeasurementKeys);
                         m_routingTables.CalculateRoutingTables(null);
                     }
                 }
@@ -1898,6 +1898,7 @@ namespace GSF.TimeSeries.Transport
                 SendNotifications(connection);
         }
 
+        // TODO: Notifications of generic types and also add timeouts...
         private void SendNotifications(ClientConnection connection)
         {
             Dictionary<int, string> notifications;
@@ -2011,7 +2012,7 @@ namespace GSF.TimeSeries.Transport
                 // Look up implicitly defined group based measurements
                 return subscriberMeasurementGroups
                     .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, DataSource.Tables["MeasurementGroups"].Select(string.Format("ID = {0}", subscriberMeasurementGroup["MeasurementGroupID"]))))
-                    .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseInputMeasurementKeys(DataSource, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
+                    .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseFilterExpression(DataSource, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
                     .Select(tuple => tuple.Item1["Allowed"].ToNonNullString("0").ParseBoolean())
                     .DefaultIfEmpty(false)
                     .All(allowed => allowed);
@@ -2342,7 +2343,7 @@ namespace GSF.TimeSeries.Transport
                 if ((object)subscription != null)
                 {
                     // Update the subscription associated with this connection based on newly acquired or revoked rights
-                    requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
+                    requestedInputs = AdapterBase.ParseFilterExpression(DataSource, false, subscription.RequestedInputFilter);
                     authorizedSignals = new HashSet<MeasurementKey>();
                     subscriberID = subscription.SubscriberID;
 
@@ -2352,10 +2353,10 @@ namespace GSF.TimeSeries.Transport
                             authorizedSignals.Add(input);
                     }
 
-                    if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
+                    if (!authorizedSignals.SetEquals(subscription.InputSignals))
                     {
                         message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
-                        subscription.InputMeasurementKeys = authorizedSignals.ToArray();
+                        subscription.InputSignals = authorizedSignals.ToArray();
                         SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
                     }
                 }
@@ -3049,7 +3050,7 @@ namespace GSF.TimeSeries.Transport
 
                                 if ((object)cache != null)
                                 {
-                                    IEnumerable<IMeasurement> cachedMeasurements = cache.LatestMeasurements.Where(measurement => subscription.InputMeasurementKeys.Any(key => key.SignalID == measurement.ID));
+                                    IEnumerable<IMeasurement> cachedMeasurements = cache.LatestEntities.Where(measurement => subscription.InputSignals.Any(key => key.SignalID == measurement.ID));
                                     subscription.QueueMeasurementsForProcessing(cachedMeasurements);
                                 }
                             }
@@ -3071,8 +3072,8 @@ namespace GSF.TimeSeries.Transport
                             }
                             else
                             {
-                                if ((object)subscription.InputMeasurementKeys != null)
-                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
+                                if ((object)subscription.InputSignals != null)
+                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputSignals.Length);
                                 else
                                     message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
                             }
@@ -3163,7 +3164,7 @@ namespace GSF.TimeSeries.Transport
                         foreach (string expression in expressions)
                         {
                             // Attempt to parse filter expression and add it dictionary if successful
-                            if (AdapterBase.ParseFilterExpression(expression, out tableName, out filterExpression, out sortField, out takeCount))
+                            if (AdapterBase.ParseFilterSyntax(expression, out tableName, out filterExpression, out sortField, out takeCount))
                                 filterExpressions.Add(tableName, Tuple.Create(filterExpression, sortField, takeCount));
                         }
                     }

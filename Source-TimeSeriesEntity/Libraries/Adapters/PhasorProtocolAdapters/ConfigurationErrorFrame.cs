@@ -225,7 +225,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        ConcurrentDictionary<MeasurementKey, IMeasurement> IFrame.Measurements
+        ConcurrentDictionary<MeasurementKey, IMeasurement> IFrame.Entities
         {
             get
             {

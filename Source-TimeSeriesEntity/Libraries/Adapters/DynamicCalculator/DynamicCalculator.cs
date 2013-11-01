@@ -140,7 +140,7 @@ namespace DynamicCalculator
                         .Aggregate((runningKeyList, nextKey) => runningKeyList + ";" + nextKey);
 
                     // Set the input measurements for this adapter
-                    InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, true, keyList);
+                    InputSignals = AdapterBase.ParseFilterExpression(DataSource, true, keyList);
                 }
             }
         }
@@ -219,8 +219,8 @@ namespace DynamicCalculator
             base.Initialize();
             settings = Settings;
 
-            if (OutputMeasurements.Length != 1)
-                throw new ArgumentException(string.Format("Exactly one output measurement must be defined. Amount defined: {0}", OutputMeasurements.Length));
+            if (OutputSignals.Length != 1)
+                throw new ArgumentException(string.Format("Exactly one output measurement must be defined. Amount defined: {0}", OutputSignals.Length));
 
             // Load required parameters
 
@@ -266,7 +266,7 @@ namespace DynamicCalculator
             IMeasurement measurement;
             string name;
 
-            measurements = frame.Measurements;
+            measurements = frame.Entities;
             m_expressionContext.Variables.Clear();
 
             // Set the values of variables in the expression
@@ -374,7 +374,7 @@ namespace DynamicCalculator
             {
                 // Defined using the measurement's GUID
                 undefined = MeasurementKey.Undefined;
-                key = new MeasurementKey(signalId, undefined.ID, undefined.Source);
+                key = new MeasurementKey(signalId, undefined.PointID, undefined.Source);
             }
             else
             {
@@ -393,7 +393,7 @@ namespace DynamicCalculator
             if ((object)value == null)
                 throw new InvalidOperationException("Calculation must not return a type that does not convert to double.");
 
-            calculatedMeasurement = Measurement.Clone(OutputMeasurements[0], Convert.ToDouble(value), DateTime.UtcNow.Ticks);
+            calculatedMeasurement = Measurement.Clone(OutputSignals[0], Convert.ToDouble(value), DateTime.UtcNow.Ticks);
             OnNewMeasurement(calculatedMeasurement);
         }
 
@@ -403,7 +403,7 @@ namespace DynamicCalculator
         {
             // skip processing of an output with a value of NaN unless configured to process NaN outputs
             if (!m_skipNanOutput || !double.IsNaN(measurement.Value))
-                OnNewMeasurements(new IMeasurement[] { measurement });
+                OnNewEntities(new IMeasurement[] { measurement });
         }
 
         #endregion

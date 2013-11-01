@@ -104,11 +104,11 @@ namespace WavInputAdapter
         {
             get
             {
-                return base.OutputMeasurements;
+                return base.OutputSignals;
             }
             set
             {
-                base.OutputMeasurements = value.OrderBy(measurement => measurement.Key.ToString()).ToArray();
+                base.OutputSignals = value.OrderBy(measurement => measurement.Key.ToString()).ToArray();
             }
         }
 
@@ -300,7 +300,7 @@ namespace WavInputAdapter
                         timestamp = m_startTime + (m_dataIndex * Ticks.PerSecond / m_sampleRate);
                     }
 
-                    OnNewMeasurements(measurements);
+                    OnNewEntities(measurements);
                     measurements.Clear();
 
                     while (DateTime.UtcNow.Ticks - timestamp <= GapThreshold / 100)

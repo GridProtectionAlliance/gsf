@@ -556,7 +556,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 InitializeSubscription();
         }
 
-        private void m_subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        private void SubscriberNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             if (0 == Interlocked.Exchange(ref m_processingSynchronizedMeasurements, 1))
             {
@@ -699,7 +699,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     m_subscriber.StatusMessage += m_subscriber_StatusMessage;
                     m_subscriber.ProcessException += m_subscriber_ProcessException;
                     m_subscriber.ConnectionEstablished += m_subscriber_ConnectionEstablished;
-                    m_subscriber.NewMeasurements += m_subscriber_NewMeasurements;
+                    m_subscriber.NewEntities += SubscriberNewEntities;
                     m_subscriber.ConnectionTerminated += m_subscriber_ConnectionTerminated;
                     m_subscriber.ProcessingComplete += m_subscriber_ProcessingComplete;
                     m_subscriber.ConnectionString = database.DataPublisherConnectionString();
@@ -721,7 +721,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 m_subscriber.StatusMessage -= m_subscriber_StatusMessage;
                 m_subscriber.ProcessException -= m_subscriber_ProcessException;
                 m_subscriber.ConnectionEstablished -= m_subscriber_ConnectionEstablished;
-                m_subscriber.NewMeasurements -= m_subscriber_NewMeasurements;
+                m_subscriber.NewEntities -= SubscriberNewEntities;
                 m_subscriber.ConnectionTerminated -= m_subscriber_ConnectionTerminated;
                 m_subscriber.ProcessingComplete -= m_subscriber_ProcessingComplete;
                 m_subscriber.Stop();

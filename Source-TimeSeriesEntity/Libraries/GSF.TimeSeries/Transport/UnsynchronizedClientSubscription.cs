@@ -288,7 +288,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <remarks>
         /// We override method so assignment can be synchronized such that dynamic updates won't interfere
-        /// with filtering in <see cref="QueueMeasurementsForProcessing"/>.
+        /// with filtering in <see cref="QueueEntitiesForProcessing"/>.
         /// </remarks>
         public override MeasurementKey[] InputMeasurementKeys
         {
@@ -306,7 +306,7 @@ namespace GSF.TimeSeries.Transport
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
                         if ((object)DataSource != null && (object)m_signalIndexCache != null)
-                            value = ParseInputMeasurementKeys(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
+                            value = ParseFilterExpression(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
                     }
 
                     base.InputMeasurementKeys = value;
@@ -507,8 +507,8 @@ namespace GSF.TimeSeries.Transport
             if ((object)InputMeasurementKeys != null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if ((object)OutputMeasurements != null)
-                outputCount = OutputMeasurements.Length;
+            if ((object)OutputSignals != null)
+                outputCount = OutputSignals.Length;
 
             return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
         }
@@ -516,21 +516,21 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Queues a collection of measurements for processing.
         /// </summary>
-        /// <param name="measurements">Collection of measurements to queue for processing.</param>
+        /// <param name="entities">Collection of measurements to queue for processing.</param>
         /// <remarks>
         /// Measurements are filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
         /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
         /// </remarks>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        public override void QueueEntitiesForProcessing(IEnumerable<IMeasurement> entities)
         {
-            if ((object)measurements == null)
+            if ((object)entities == null)
                 return;
 
-            if (!m_startTimeSent && measurements.Any())
+            if (!m_startTimeSent && entities.Any())
             {
                 m_startTimeSent = true;
 
-                IMeasurement measurement = measurements.FirstOrDefault(m => (object)m != null);
+                IMeasurement measurement = entities.FirstOrDefault(m => (object)m != null);
                 Ticks timestamp = 0;
 
                 if ((object)measurement != null)
@@ -539,27 +539,27 @@ namespace GSF.TimeSeries.Transport
                 m_parent.SendDataStartTime(m_clientID, timestamp);
             }
 
-            if (ProcessMeasurementFilter)
+            if (ProcessSignalFilter)
             {
                 List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
 
                 lock (this)
                 {
-                    filteredMeasurements.AddRange(measurements.Where(measurement => IsInputMeasurement(measurement.Key)));
+                    filteredMeasurements.AddRange(entities.Where(measurement => IsInputSignal(measurement.Key)));
                 }
 
-                measurements = filteredMeasurements;
+                entities = filteredMeasurements;
             }
 
-            if (!measurements.Any() || !Enabled)
+            if (!entities.Any() || !Enabled)
                 return;
 
-            if (TrackLatestMeasurements)
+            if (TrackLatestEntities)
             {
                 double publishInterval;
 
                 // Keep track of latest measurements
-                base.QueueMeasurementsForProcessing(measurements);
+                base.QueueEntitiesForProcessing(entities);
                 publishInterval = (m_publishInterval > 0) ? m_publishInterval : LagTime;
 
                 if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
@@ -568,7 +568,7 @@ namespace GSF.TimeSeries.Transport
                     Measurement newMeasurement;
 
                     // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
-                    foreach (TemporalMeasurement measurement in LatestMeasurements)
+                    foreach (TemporalMeasurement measurement in LatestEntities)
                     {
                         newMeasurement = new Measurement
                         {
@@ -602,9 +602,9 @@ namespace GSF.TimeSeries.Transport
                 {
                     // Order measurements by signal type for better compression when enabled
                     if (m_usePayloadCompression)
-                        m_processQueue.Enqueue(measurements.OrderBy(measurement => measurement.GetSignalType(DataSource)));
+                        m_processQueue.Enqueue(entities.OrderBy(measurement => measurement.GetSignalType(DataSource)));
                     else
-                        m_processQueue.Enqueue(measurements);
+                        m_processQueue.Enqueue(entities);
                 }
             }
         }

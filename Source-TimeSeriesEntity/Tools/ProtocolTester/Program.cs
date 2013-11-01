@@ -69,7 +69,7 @@ namespace ProtocolTester
                 concentrator.LagTime = 3.0D;
                 concentrator.LeadTime = 9.0D;
                 concentrator.PerformTimestampReasonabilityCheck = false;
-                concentrator.ProcessByReceivedTimestamp = true;
+                concentrator.ProcessByCreationTime = true;
                 concentrator.Start();
             }
 
@@ -275,7 +275,7 @@ namespace ProtocolTester
                 }
             }
 
-            concentrator.SortMeasurements(mappedMeasurements);
+            concentrator.SortEntities(mappedMeasurements);
         }
 
         private static void MapMeasurementAttributes(ICollection<IMeasurement> mappedMeasurements, string signalReference, IMeasurement parsedMeasurement)

@@ -257,9 +257,9 @@ namespace DataQualityMonitoring
             IMeasurement measurement = null;
             lock (m_lastChange)
             {
-                foreach (MeasurementKey key in frame.Measurements.Keys)
+                foreach (MeasurementKey key in frame.Entities.Keys)
                 {
-                    measurement = frame.Measurements[key];
+                    measurement = frame.Entities[key];
 
                     if (!m_lastChange.ContainsKey(key))
                         m_lastChange.Add(key, measurement);
@@ -328,7 +328,7 @@ namespace DataQualityMonitoring
         {
             Ticks timestamp = base.RealTime;
 
-            foreach (MeasurementKey key in InputMeasurementKeys)
+            foreach (MeasurementKey key in InputSignals)
             {
                 // Try to find the signal ID and add the measurement to the m_lastChange collection
                 if (DataSource.Tables.Contains("ActiveMeasurements"))

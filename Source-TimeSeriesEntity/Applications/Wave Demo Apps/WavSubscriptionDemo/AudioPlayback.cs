@@ -387,7 +387,7 @@ namespace NAudioWpfDemo
             subscriber.ConnectionTerminated += DataSubscriber_ConnectionTerminated;
             subscriber.MetaDataReceived += DataSubscriber_MetaDataReceived;
             subscriber.DataStartTime += DataSubscriber_DataStartTime;
-            subscriber.NewMeasurements += DataSubscriber_NewMeasurements;
+            subscriber.NewEntities += DataSubscriberNewEntities;
 
             subscriber.ConnectionString = string.Format("server={0}; interface={1}; localCertificate={2}; remoteCertificate={3}; validPolicyErrors={4}; validChainFlags={5}", server, IPv6Enabled ? "::0" : "0.0.0.0", FilePath.GetAbsolutePath("Local.cer"), FilePath.GetAbsolutePath("Remote.cer"), ~SslPolicyErrors.None, ~X509ChainStatusFlags.NoError);
             subscriber.SecurityMode = EnableEncryption ? SecurityMode.TLS : SecurityMode.None;
@@ -418,7 +418,7 @@ namespace NAudioWpfDemo
                 subscriber.ConnectionTerminated -= DataSubscriber_ConnectionTerminated;
                 subscriber.MetaDataReceived -= DataSubscriber_MetaDataReceived;
                 subscriber.DataStartTime -= DataSubscriber_DataStartTime;
-                subscriber.NewMeasurements -= DataSubscriber_NewMeasurements;
+                subscriber.NewEntities -= DataSubscriberNewEntities;
 
                 subscriber.Dispose();
             }
@@ -509,7 +509,7 @@ namespace NAudioWpfDemo
         }
 
         // Handles the subscriber's NewMeasurements event.
-        private void DataSubscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        private void DataSubscriberNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
             // Gather statistics.
             Interlocked.Add(ref m_measurementCount, e.Argument.Count);

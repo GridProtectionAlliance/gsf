@@ -582,7 +582,7 @@ namespace HistorianAdapters
         /// </summary>
         /// <param name="measurements">Measurements to be archived.</param>
         /// <exception cref="InvalidOperationException">Local archive is closed.</exception>
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(IMeasurement[] measurements)
         {
             foreach (IMeasurement measurement in measurements)
             {

@@ -100,7 +100,7 @@ namespace TestingAdapters
         /// <summary>
         /// Serializes measurements to data output stream.
         /// </summary>
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(IMeasurement[] measurements)
         {
         }
 

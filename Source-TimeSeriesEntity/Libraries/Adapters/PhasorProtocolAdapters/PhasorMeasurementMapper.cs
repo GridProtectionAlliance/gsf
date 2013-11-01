@@ -1367,9 +1367,9 @@ namespace PhasorProtocolAdapters
 
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
             if (m_definedMeasurements.Count > 0)
-                OutputMeasurements = m_definedMeasurements.Values.ToArray();
+                OutputSignals = m_definedMeasurements.Values.ToArray();
             else
-                OutputMeasurements = null;
+                OutputSignals = null;
 
             OnStatusMessage("Loaded {0} active device measurements...", m_definedMeasurements.Count);
         }
@@ -1694,7 +1694,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Extract frame measurements and add expose them via the <see cref="IInputAdapter.NewMeasurements"/> event.
+        /// Extract frame measurements and add expose them via the <see cref="IInputAdapter.NewEntities"/> event.
         /// </summary>
         /// <param name="frame">Phasor data frame to extract measurements from.</param>
         protected void ExtractFrameMeasurements(IDataFrame frame)
@@ -1851,7 +1851,7 @@ namespace PhasorProtocolAdapters
             }
 
             // Provide real-time measurements where needed
-            OnNewMeasurements(mappedMeasurements);
+            OnNewEntities(mappedMeasurements);
 
             int measurementCount = mappedMeasurements.Count;
             m_lifetimeMeasurements += measurementCount;
@@ -2004,7 +2004,7 @@ namespace PhasorProtocolAdapters
                 }
 
                 m_missingDataMonitor.RedundantFramesPerPacket = m_frameParser.RedundantFramesPerPacket;
-                m_missingDataMonitor.SortMeasurements(e.Argument.Cells);
+                m_missingDataMonitor.SortEntities(e.Argument.Cells);
             }
         }
 

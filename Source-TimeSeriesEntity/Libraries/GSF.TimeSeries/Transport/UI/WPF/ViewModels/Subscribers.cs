@@ -597,7 +597,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             // Look up implicitly defined group based measurements
             return subscriberMeasurementGroups
                 .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, m_subscriberPermissionsDataSet.Tables["MeasurementGroups"].Select(string.Format("ID = {0}", subscriberMeasurementGroup["MeasurementGroupID"]))))
-                .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseInputMeasurementKeys(m_subscriberPermissionsDataSet, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
+                .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseFilterExpression(m_subscriberPermissionsDataSet, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
                 .Select(tuple => tuple.Item1["Allowed"].ToNonNullString("0").ParseBoolean())
                 .DefaultIfEmpty(false)
                 .All(allowed => allowed);
