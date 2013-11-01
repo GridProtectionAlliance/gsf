@@ -132,7 +132,7 @@ public class GraphLines : MonoBehaviour
 					if (float.IsNaN(unscaledValue))
 						unscaledValue = MidPoint;
 						
-					m_linePoints[i].z = ScaleValue(unscaledValue);
+					m_linePoints[i].z = -ScaleValue(unscaledValue);
 				}
 			}
 			
@@ -144,7 +144,7 @@ public class GraphLines : MonoBehaviour
 			}
 			
 			m_unscaledData[i] = newValue;
-			m_linePoints[i].z = ScaleValue(newValue);
+			m_linePoints[i].z = -ScaleValue(newValue);
 		}
 		
 		private float ScaleValue(float newValue)
