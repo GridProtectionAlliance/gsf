@@ -331,25 +331,12 @@ namespace GSF.TimeSeries
         // Events
 
         /// <summary>
-        /// Event is raised every five seconds allowing host to track total number of unprocessed entities.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Implementations of this interface are expected to report current queue size of unprocessed
-        /// time-series entities so that if queue size reaches an unhealthy threshold, host can take action.
-        /// </para>
-        /// <para>
-        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
-        /// </para>
-        /// </remarks>
-
-        /// <summary>
-        /// This event is raised every 5 seconds allowing consumer to track current number of unpublished seconds of data in the queue.
+        /// This event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnprocessedEntities;
+        public event EventHandler<EventArgs<int>> UnpublishedSamples;
 
         /// <summary>
         /// This event is raised if there is an exception encountered while attempting to process a frame in the sample queue.
@@ -1963,13 +1950,13 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Raises the <see cref="UnprocessedEntities"/> event.
+        /// Raises the <see cref="UnpublishedSamples"/> event.
         /// </summary>
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(int seconds)
         {
-            if ((object)UnprocessedEntities != null)
-                UnprocessedEntities(this, new EventArgs<int>(seconds));
+            if ((object)UnpublishedSamples != null)
+                UnpublishedSamples(this, new EventArgs<int>(seconds));
         }
 
         /// <summary>

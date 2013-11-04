@@ -101,6 +101,7 @@ namespace GSF.TimeSeries.Adapters
         private bool m_initialized;
         private DataSet m_dataSource;
         private string m_dataMember;
+        private bool m_processSignalFilter;
         private ISet<Guid> m_inputSignals;
         private ISet<Guid> m_outputSignals;
         private Ticks m_lastProcessTime;
@@ -239,6 +240,30 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_dataMember = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputSignals"/>.
+        /// </summary>
+        public virtual bool ProcessSignalFilter
+        {
+            get
+            {
+                return m_processSignalFilter;
+            }
+            set
+            {
+                m_processSignalFilter = value;
+
+                // Update this flag for items in this collection
+                lock (this)
+                {
+                    foreach (T item in this)
+                    {
+                        item.ProcessSignalFilter = m_processSignalFilter;
+                    }
+                }
             }
         }
 

@@ -57,18 +57,12 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<RoutingEventArgs> NewEntities;
 
         /// <summary>
-        /// Event is raised every five seconds allowing host to track total number of unprocessed entities.
+        /// This event is raised by derived class, if needed, to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// Implementations of this interface are expected to report current queue size of unprocessed
-        /// time-series entities so that if queue size reaches an unhealthy threshold, host can take action.
-        /// </para>
-        /// <para>
-        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
-        /// </para>
+        /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnprocessedEntities;
+        public event EventHandler<EventArgs<int>> UnpublishedSamples;
 
         // Fields
         private List<string> m_inputSourceIDs;
@@ -525,15 +519,15 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="UnprocessedEntities"/> event.
+        /// Raises the <see cref="UnpublishedSamples"/> event.
         /// </summary>
         /// <param name="seconds">Total number of unpublished seconds of data.</param>
         protected virtual void OnUnpublishedSamples(int seconds)
         {
             try
             {
-                if (UnprocessedEntities != null)
-                    UnprocessedEntities(this, new EventArgs<int>(seconds));
+                if ((object)UnpublishedSamples != null)
+                    UnpublishedSamples(this, new EventArgs<int>(seconds));
             }
             catch (Exception ex)
             {

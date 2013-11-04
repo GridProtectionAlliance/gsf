@@ -18,13 +18,14 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/23/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/04/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -44,9 +45,9 @@ namespace GSF.TimeSeries.Adapters
         // Constants
 
         /// <summary>
-        /// Default value for <see cref="UseMeasurementRouting"/> property.
+        /// Default value for <see cref="UseSignalRouting"/> property.
         /// </summary>
-        public const bool DefaultUseMeasurementRouting = true;
+        public const bool DefaultUseSignalRouting = true;
 
         // Events
 
@@ -70,12 +71,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Event is raised when <see cref="IAdapter.InputSignals"/> are updated.
         /// </summary>
-        public event EventHandler InputMeasurementKeysUpdated;
+        public event EventHandler InputSignalsUpdated;
 
         /// <summary>
         /// Event is raised when <see cref="IAdapter.OutputSignals"/> are updated.
         /// </summary>
-        public event EventHandler OutputMeasurementsUpdated;
+        public event EventHandler OutputSignalsUpdated;
 
         /// <summary>
         /// Event is raised when adapter is aware of a configuration change.
@@ -91,18 +92,18 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<int>> UnpublishedSamples;
 
         /// <summary>
-        /// Event is raised every five seconds allowing host to track total number of unprocessed measurements.
+        /// Event is raised every five seconds allowing host to track total number of unprocessed time-series entities.
         /// </summary>
         /// <remarks>
         /// <para>
         /// Each <see cref="IOutputAdapter"/> implementation reports its current queue size of unprocessed
-        /// measurements so that if queue size reaches an unhealthy threshold, host can take evasive action.
+        /// entities so that if queue size reaches an unhealthy threshold, host can take evasive action.
         /// </para>
         /// <para>
-        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed measurements.
+        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
         /// </para>
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnprocessedMeasurements;
+        public event EventHandler<EventArgs<int>> UnprocessedEntities;
 
         /// <summary>
         /// Indicates to the host that processing for one of the input adapters has completed.
@@ -126,10 +127,10 @@ namespace GSF.TimeSeries.Adapters
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
         private readonly ConcurrentDictionary<object, string> m_derivedNameCache;
-        private MeasurementKey[] m_inputMeasurementKeysRestriction;
-        private bool m_useMeasurementRouting;
-        private readonly int m_measurementWarningThreshold;
-        private readonly int m_measurementDumpingThreshold;
+        private ISet<Guid> m_inputSignalsRestriction;
+        private bool m_useSignalRouting;
+        private readonly int m_entityWarningThreshold;
+        private readonly int m_entityDumpingThreshold;
         private readonly int m_defaultSampleSizeWarningThreshold;
         private readonly object m_requestTemporalSupportLock;
         private string m_name;
@@ -150,20 +151,20 @@ namespace GSF.TimeSeries.Adapters
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
 
             systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
-            systemSettings.Add("UseMeasurementRouting", DefaultUseMeasurementRouting, "Set to true to use optimized adapter measurement routing.");
+            systemSettings.Add("UseSignalRouting", DefaultUseSignalRouting, "Set to true to use optimized adapter signal routing.");
 
             m_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
-            m_useMeasurementRouting = systemSettings["UseMeasurementRouting"].ValueAsBoolean(DefaultUseMeasurementRouting);
+            m_useSignalRouting = systemSettings["UseSignalRouting"].ValueAsBoolean(DefaultUseSignalRouting);
 
             // Initialize threshold settings
             CategorizedSettingsElementCollection thresholdSettings = configFile.Settings["thresholdSettings"];
 
-            thresholdSettings.Add("MeasurementWarningThreshold", "100000", "Number of unarchived measurements allowed in any output adapter queue before displaying a warning message");
-            thresholdSettings.Add("MeasurementDumpingThreshold", "500000", "Number of unarchived measurements allowed in any output adapter queue before taking evasive action and dumping data");
+            thresholdSettings.Add("EntityWarningThreshold", "100000", "Number of unarchived time-series entities allowed in any output adapter queue before displaying a warning message");
+            thresholdSettings.Add("EntityDumpingThreshold", "500000", "Number of unarchived time-series entities allowed in any output adapter queue before taking evasive action and dumping data");
             thresholdSettings.Add("DefaultSampleSizeWarningThreshold", "10", "Default number of unpublished samples (in seconds) allowed in any action adapter queue before displaying a warning message");
 
-            m_measurementWarningThreshold = thresholdSettings["MeasurementWarningThreshold"].ValueAsInt32();
-            m_measurementDumpingThreshold = thresholdSettings["MeasurementDumpingThreshold"].ValueAsInt32();
+            m_entityWarningThreshold = thresholdSettings["EntityWarningThreshold"].ValueAsInt32();
+            m_entityDumpingThreshold = thresholdSettings["EntityDumpingThreshold"].ValueAsInt32();
             m_defaultSampleSizeWarningThreshold = thresholdSettings["DefaultSampleSizeWarningThreshold"].ValueAsInt32();
 
             // Create a cache for derived adapter names
@@ -188,32 +189,29 @@ namespace GSF.TimeSeries.Adapters
             // Create input adapters collection
             m_inputAdapters = new InputAdapterCollection();
 
-            if (m_useMeasurementRouting)
+            if (m_useSignalRouting)
                 m_inputAdapters.NewEntities += m_routingTables.RoutingEventHandler;
             else
                 m_inputAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
 
-            m_inputAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
+            m_inputAdapters.ProcessSignalFilter = !m_useSignalRouting;
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
 
             // Create action adapters collection
             m_actionAdapters = new ActionAdapterCollection();
 
-            if (m_useMeasurementRouting)
+            if (m_useSignalRouting)
                 m_actionAdapters.NewEntities += m_routingTables.RoutingEventHandler;
             else
                 m_actionAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
 
-            m_actionAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
-            m_actionAdapters.UnprocessedEntities += UnpublishedEntitiesHandler;
-            m_actionAdapters.Notify += m_routingTables.NotifyHandler;
-            m_actionAdapters.RequestTemporalSupport += RequestTemporalSupportHandler;
+            m_actionAdapters.ProcessSignalFilter = !m_useSignalRouting;
+            m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
 
             // Create output adapters collection
             m_outputAdapters = new OutputAdapterCollection();
-            m_outputAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
+            m_outputAdapters.ProcessSignalFilter = !m_useSignalRouting;
             m_outputAdapters.UnprocessedEntities += UnprocessedEntitiesHandler;
-            m_outputAdapters.Notify += m_routingTables.NotifyHandler;
 
             // Associate adapter collections with routing tables
             m_routingTables.InputAdapters = m_inputAdapters;
@@ -287,43 +285,43 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if measurement routing should be used.
+        /// Gets or sets flag that determines if signal routing should be used.
         /// </summary>
-        public virtual bool UseMeasurementRouting
+        public virtual bool UseSignalRouting
         {
             get
             {
-                return m_useMeasurementRouting;
+                return m_useSignalRouting;
             }
             set
             {
-                if (m_useMeasurementRouting != value)
+                if (m_useSignalRouting != value)
                 {
-                    if (m_useMeasurementRouting)
+                    if (m_useSignalRouting)
                         m_inputAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                     else
                         m_inputAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
 
-                    if (m_useMeasurementRouting)
+                    if (m_useSignalRouting)
                         m_actionAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                     else
                         m_actionAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
 
-                    m_useMeasurementRouting = value;
+                    m_useSignalRouting = value;
 
-                    if (m_useMeasurementRouting)
+                    if (m_useSignalRouting)
                         m_inputAdapters.NewEntities += m_routingTables.RoutingEventHandler;
                     else
                         m_inputAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
 
-                    if (m_useMeasurementRouting)
+                    if (m_useSignalRouting)
                         m_actionAdapters.NewEntities += m_routingTables.RoutingEventHandler;
                     else
                         m_actionAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
 
-                    m_inputAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
-                    m_actionAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
-                    m_outputAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
+                    m_inputAdapters.ProcessSignalFilter = !m_useSignalRouting;
+                    m_actionAdapters.ProcessSignalFilter = !m_useSignalRouting;
+                    m_outputAdapters.ProcessSignalFilter = !m_useSignalRouting;
                 }
             }
         }
@@ -340,17 +338,17 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets a routing table restriction for a collection of input measurement keys.
+        /// Gets or sets a routing table restriction for a collection of input signals.
         /// </summary>
-        public virtual MeasurementKey[] InputMeasurementKeysRestriction
+        public virtual ISet<Guid> InputSignalsRestriction
         {
             get
             {
-                return m_inputMeasurementKeysRestriction;
+                return m_inputSignalsRestriction;
             }
             set
             {
-                m_inputMeasurementKeysRestriction = value;
+                m_inputSignalsRestriction = value;
             }
         }
 
@@ -458,14 +456,14 @@ namespace GSF.TimeSeries.Adapters
                 {
                     if (disposing)
                     {
-                        DataSet dataSource = this.DataSource;
+                        DataSet dataSource = DataSource;
 
                         // Dispose input adapters collection
                         if (m_inputAdapters != null)
                         {
                             m_inputAdapters.Stop();
 
-                            if (m_useMeasurementRouting)
+                            if (m_useSignalRouting)
                                 m_inputAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                             else
                                 m_inputAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
@@ -480,14 +478,12 @@ namespace GSF.TimeSeries.Adapters
                         {
                             m_actionAdapters.Stop();
 
-                            if (m_useMeasurementRouting)
+                            if (m_useSignalRouting)
                                 m_actionAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                             else
                                 m_actionAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
 
-                            m_actionAdapters.UnprocessedEntities -= UnpublishedEntitiesHandler;
-                            m_actionAdapters.Notify -= m_routingTables.NotifyHandler;
-                            m_actionAdapters.RequestTemporalSupport -= RequestTemporalSupportHandler;
+                            m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
                             m_actionAdapters.Dispose();
                         }
                         m_actionAdapters = null;
@@ -497,7 +493,6 @@ namespace GSF.TimeSeries.Adapters
                         {
                             m_outputAdapters.Stop();
                             m_outputAdapters.UnprocessedEntities -= UnprocessedEntitiesHandler;
-                            m_outputAdapters.Notify -= m_routingTables.NotifyHandler;
                             m_outputAdapters.Dispose();
                         }
                         m_outputAdapters = null;
@@ -609,8 +604,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual void RecalculateRoutingTables()
         {
-            if (m_useMeasurementRouting && (object)m_routingTables != null && (object)m_allAdapters != null && m_allAdapters.Initialized)
-                m_routingTables.CalculateRoutingTables(m_inputMeasurementKeysRestriction);
+            if (m_useSignalRouting && (object)m_routingTables != null && (object)m_allAdapters != null && m_allAdapters.Initialized)
+                m_routingTables.CalculateRoutingTables(m_inputSignalsRestriction);
         }
 
         /// <summary>
@@ -660,23 +655,23 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="InputMeasurementKeysUpdated"/> event.
+        /// Raises <see cref="InputSignalsUpdated"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
-        protected virtual void OnInputMeasurementKeysUpdated(object sender)
+        protected virtual void OnInputSignalsUpdated(object sender)
         {
-            if ((object)InputMeasurementKeysUpdated != null)
-                InputMeasurementKeysUpdated(sender, EventArgs.Empty);
+            if ((object)InputSignalsUpdated != null)
+                InputSignalsUpdated(sender, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raises <see cref="OutputMeasurementsUpdated"/> event.
+        /// Raises <see cref="OutputSignalsUpdated"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
-        protected virtual void OnOutputMeasurementsUpdated(object sender)
+        protected virtual void OnOutputSignalsUpdated(object sender)
         {
-            if ((object)OutputMeasurementsUpdated != null)
-                OutputMeasurementsUpdated(sender, EventArgs.Empty);
+            if ((object)OutputSignalsUpdated != null)
+                OutputSignalsUpdated(sender, EventArgs.Empty);
         }
 
         /// <summary>
@@ -701,14 +696,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="UnprocessedMeasurements"/> event.
+        /// Raises the <see cref="UnprocessedEntities"/> event.
         /// </summary>
         /// <param name="sender">Object source raising the event.</param>
-        /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
-        protected virtual void OnUnprocessedMeasurements(object sender, int unprocessedMeasurements)
+        /// <param name="unprocessedEntities">Total entities in the queue that have not been processed.</param>
+        protected virtual void OnUnprocessedEntities(object sender, int unprocessedEntities)
         {
-            if ((object)UnprocessedMeasurements != null)
-                UnprocessedMeasurements(sender, new EventArgs<int>(unprocessedMeasurements));
+            if ((object)UnprocessedEntities != null)
+                UnprocessedEntities(sender, new EventArgs<int>(unprocessedEntities));
         }
 
         /// <summary>
@@ -757,31 +752,31 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Event handler for updates to adapter input measurement key definitions.
+        /// Event handler for updates to adapter input signal definitions.
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event arguments, if any.</param>
         public virtual void InputSignalsUpdatedHandler(object sender, EventArgs e)
         {
-            // When adapter measurement keys are dynamically updated, routing tables need to be updated
+            // When adapter input signals are dynamically updated, routing tables need to be updated
             RecalculateRoutingTables();
 
             // Bubble message up to any event subscribers
-            OnInputMeasurementKeysUpdated(sender);
+            OnInputSignalsUpdated(sender);
         }
 
         /// <summary>
-        /// Event handler for updates to adapter output measurement definitions.
+        /// Event handler for updates to adapter output signal definitions.
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event arguments, if any.</param>
         public virtual void OutputSignalsUpdatedHandler(object sender, EventArgs e)
         {
-            // When adapter measurement keys are dynamically updated, routing tables need to be updated
+            // When adapter output signals are dynamically updated, routing tables need to be updated
             RecalculateRoutingTables();
 
             // Bubble message up to any event subscribers
-            OnOutputMeasurementsUpdated(sender);
+            OnOutputSignalsUpdated(sender);
         }
 
         /// <summary>
@@ -804,7 +799,7 @@ namespace GSF.TimeSeries.Adapters
         /// Time-series framework uses this handler to monitor the number of unpublished samples, in seconds of data, in action adapters.<br/>
         /// This method is typically called once every five seconds.
         /// </remarks>
-        public virtual void UnprocessedEntitiesHandler(object sender, EventArgs<int> e)
+        public virtual void UnpublishedSamplesHandler(object sender, EventArgs<int> e)
         {
             int secondsOfData = e.Argument;
             int threshold = m_defaultSampleSizeWarningThreshold;
@@ -870,47 +865,47 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Event handler for monitoring unprocessed measurements.
+        /// Event handler for monitoring unprocessed time-series entities.
         /// </summary>
-        /// <param name="sender">Event source reference to adapter, typically an output adapter, that is reporting the number of unprocessed measurements.</param>
-        /// <param name="e">Event arguments containing number of queued (i.e., unprocessed) measurements in the source adapter.</param>
+        /// <param name="sender">Event source reference to adapter, typically an output adapter, that is reporting the number of unprocessed entities.</param>
+        /// <param name="e">Event arguments containing number of queued (i.e., unprocessed) entities in the source adapter.</param>
         /// <remarks>
-        /// Time-series framework uses this handler to monitor the number of unprocessed measurements in output adapters.<br/>
+        /// Time-series framework uses this handler to monitor the number of unprocessed entities in output adapters.<br/>
         /// This method is typically called once every five seconds.
         /// </remarks>
         public virtual void UnprocessedEntitiesHandler(object sender, EventArgs<int> e)
         {
-            int unprocessedMeasurements = e.Argument;
+            int unprocessedEntities = e.Argument;
 
-            if (unprocessedMeasurements > m_measurementDumpingThreshold)
+            if (unprocessedEntities > m_entityDumpingThreshold)
             {
                 IOutputAdapter outputAdapter = sender as IOutputAdapter;
 
                 if (outputAdapter != null)
                 {
-                    // If an output adapter queue size exceeds the defined measurement dumping threshold,
+                    // If an output adapter queue size exceeds the defined entity dumping threshold,
                     // then the queue will be truncated before system runs out of memory
-                    outputAdapter.RemoveEntities(m_measurementDumpingThreshold);
-                    OnStatusMessage(sender, "[{0}] System exercised evasive action to conserve memory and dumped {1} unprocessed measurements from the output queue :(", UpdateType.Alarm, outputAdapter.Name, m_measurementDumpingThreshold);
-                    OnStatusMessage(sender, "[{0}] NOTICE: Please adjust measurement threshold settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdapter.Name);
+                    outputAdapter.RemoveEntities(m_entityDumpingThreshold);
+                    OnStatusMessage(sender, "[{0}] System exercised evasive action to conserve memory and dumped {1} unprocessed entities from the output queue :(", UpdateType.Alarm, outputAdapter.Name, m_entityDumpingThreshold);
+                    OnStatusMessage(sender, "[{0}] NOTICE: Please adjust entity threshold settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdapter.Name);
                 }
                 else
                 {
                     // It is only expected that output adapters will be mapped to this handler, but in case
                     // another adapter type uses this handler we will still display a message
-                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1} unprocessed measurements in the adapter queue - but sender \"{2}\" is not an IOutputAdapter, so no evasive action can be exercised.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements, sender.GetType().Name);
+                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1} unprocessed entities in the adapter queue - but sender \"{2}\" is not an IOutputAdapter, so no evasive action can be exercised.", UpdateType.Warning, GetDerivedName(sender), unprocessedEntities, sender.GetType().Name);
                 }
             }
-            else if (unprocessedMeasurements > m_measurementWarningThreshold)
+            else if (unprocessedEntities > m_entityWarningThreshold)
             {
-                if (unprocessedMeasurements >= m_measurementDumpingThreshold - m_measurementWarningThreshold)
-                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
+                if (unprocessedEntities >= m_entityDumpingThreshold - m_entityWarningThreshold)
+                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1} unprocessed entities in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedEntities);
                 else
-                    OnStatusMessage(sender, "[{0}] There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
+                    OnStatusMessage(sender, "[{0}] There are {1} unprocessed entities in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedEntities);
             }
 
             // Bubble message up to any event subscribers
-            OnUnprocessedMeasurements(sender, e.Argument);
+            OnUnprocessedEntities(sender, e.Argument);
         }
 
         /// <summary>

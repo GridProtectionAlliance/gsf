@@ -51,7 +51,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
         /// </remarks>
-        public event EventHandler<EventArgs<int>> UnprocessedEntities;
+        public event EventHandler<EventArgs<int>> UnpublishedSamples;
 
         #endregion
 
@@ -71,15 +71,15 @@ namespace GSF.TimeSeries.Adapters
         #region [ Methods ]
 
         /// <summary>
-        /// Raises the <see cref="UnprocessedEntities"/> event.
+        /// Raises the <see cref="UnpublishedSamples"/> event.
         /// </summary>
         /// <param name="unprocessedEntities">Total number of unpublished seconds of data in the queue.</param>
         protected virtual void OnUnprocessedEntities(int unprocessedEntities)
         {
             try
             {
-                if ((object)UnprocessedEntities != null)
-                    UnprocessedEntities(this, new EventArgs<int>(unprocessedEntities));
+                if ((object)UnpublishedSamples != null)
+                    UnpublishedSamples(this, new EventArgs<int>(unprocessedEntities));
             }
             catch (Exception ex)
             {
@@ -98,7 +98,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 // Wire up events
                 item.NewEntities += item_NewEntities;
-                item.UnprocessedEntities += item_UnprocessedEntities;
+                item.UnpublishedSamples += item_UnprocessedSamples;
                 base.InitializeItem(item);
             }
         }
@@ -113,7 +113,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 // Un-wire events
                 item.NewEntities -= item_NewEntities;
-                item.UnprocessedEntities -= item_UnprocessedEntities;
+                item.UnpublishedSamples -= item_UnprocessedSamples;
                 base.DisposeItem(item);
             }
         }
@@ -126,10 +126,10 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Raise unpublished samples event on behalf of each item in collection
-        private void item_UnprocessedEntities(object sender, EventArgs<int> e)
+        private void item_UnprocessedSamples(object sender, EventArgs<int> e)
         {
-            if (UnprocessedEntities != null)
-                UnprocessedEntities(sender, e);
+            if ((object)UnpublishedSamples != null)
+                UnpublishedSamples(sender, e);
         }
 
         #endregion

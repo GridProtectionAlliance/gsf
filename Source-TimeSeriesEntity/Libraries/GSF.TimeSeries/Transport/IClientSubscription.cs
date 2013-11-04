@@ -193,7 +193,7 @@ namespace GSF.TimeSeries.Transport
             session.Name = "<" + clientSubscription.HostName.ToNonNullString("unavailable") + ">@" + clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss");
 
             // Assign requested input measurement keys as a routing restriction
-            session.InputMeasurementKeysRestriction = inputMeasurementKeys;
+            session.InputSignalsRestriction = inputMeasurementKeys;
 
             // Setup default bubbling event handlers associated with the client session adapter
             EventHandler<EventArgs<string, UpdateType>> statusMessageHandler = (sender, e) =>

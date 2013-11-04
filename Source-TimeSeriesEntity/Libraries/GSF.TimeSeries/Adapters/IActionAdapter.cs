@@ -40,18 +40,12 @@ namespace GSF.TimeSeries.Adapters
         event EventHandler<RoutingEventArgs> NewEntities;
 
         /// <summary>
-        /// Event is raised every five seconds allowing host to track total number of unprocessed entities.
+        /// This event is raised every five seconds allowing consumer to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// Implementations of this interface are expected to report current queue size of unprocessed
-        /// time-series entities so that if queue size reaches an unhealthy threshold, host can take action.
-        /// </para>
-        /// <para>
-        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
-        /// </para>
+        /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
         /// </remarks>
-        event EventHandler<EventArgs<int>> UnprocessedEntities;
+        event EventHandler<EventArgs<int>> UnpublishedSamples;
 
         /// <summary>
         /// Gets or sets flag indicating if action adapter should respect auto-start requests based on input demands.
