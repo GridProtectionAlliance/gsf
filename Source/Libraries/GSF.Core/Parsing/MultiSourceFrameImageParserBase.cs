@@ -196,7 +196,7 @@ namespace GSF.Parsing
             /// </summary>
             public void Initialize()
             {
-                // Undispose class instance if it is being reused                
+                // Un-dispose class instance if it is being reused
                 if (m_disposed)
                 {
                     m_disposed = false;
@@ -207,10 +207,23 @@ namespace GSF.Parsing
             #endregion
         }
 
+        // Events
+
+        /// <summary>
+        /// Occurs when a data image is deserialized successfully to one or more of the output types that the data image represents.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the source for the data image.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is a list of objects deserialized from the data image.
+        /// </remarks>
+        [Description("Occurs when a data image is deserialized successfully to one or more object of the Type that the data image was for.")]
+        public event EventHandler<EventArgs<TSourceIdentifier, IList<TOutputType>>> SourceDataParsed;
+
         // Fields
         private ProcessQueue<SourceIdentifiableBuffer> m_bufferQueue;
         private readonly ConcurrentDictionary<TSourceIdentifier, bool> m_sourceInitialized;
         private readonly ConcurrentDictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
+        private readonly ConcurrentDictionary<TSourceIdentifier, List<TOutputType>> m_parsedSourceData;
         private TSourceIdentifier m_source;
         private bool m_disposed;
 
@@ -230,6 +243,7 @@ namespace GSF.Parsing
                 m_sourceInitialized = new ConcurrentDictionary<TSourceIdentifier, bool>();
 
             m_unparsedBuffers = new ConcurrentDictionary<TSourceIdentifier, byte[]>();
+            m_parsedSourceData = new ConcurrentDictionary<TSourceIdentifier, List<TOutputType>>();
         }
 
         #endregion
@@ -320,6 +334,7 @@ namespace GSF.Parsing
                 m_sourceInitialized.Clear();
 
             m_unparsedBuffers.Clear();
+            m_parsedSourceData.Clear();
             m_bufferQueue.Start();
         }
 
@@ -335,6 +350,7 @@ namespace GSF.Parsing
                 m_sourceInitialized.Clear();
 
             m_unparsedBuffers.Clear();
+            m_parsedSourceData.Clear();
             m_bufferQueue.Start();
         }
 
@@ -385,7 +401,7 @@ namespace GSF.Parsing
                     identifiableBuffer.Source = source;
                     identifiableBuffer.Count = count;
 
-                    // Copy buffer data for processing (destination buffer preallocated from buffer pool)
+                    // Copy buffer data for processing (destination buffer pre-allocated from buffer pool)
                     Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
 
                     // Add buffer to the queue for parsing
@@ -464,8 +480,8 @@ namespace GSF.Parsing
         /// </para>
         /// <para>
         /// It is possible for items to be queued while the flush is executing. The flush will continue to parse buffers as quickly
-        /// as possible until the internal buffer queue is empty. Unless the user stops queueing data to be parsed (i.e. calling the
-        /// <see cref="Parse(TSourceIdentifier,byte[])"/> method), the flush call may never return (not a happy situtation on shutdown).
+        /// as possible until the internal buffer queue is empty. Unless the user stops queuing data to be parsed (i.e. calling the
+        /// <see cref="Parse(TSourceIdentifier,byte[])"/> method), the flush call may never return (not a happy situation on shutdown).
         /// </para>
         /// <para>
         /// The <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> does not clear queue prior to destruction.
@@ -507,31 +523,49 @@ namespace GSF.Parsing
         /// </remarks>
         protected virtual void ParseQueuedBuffers(SourceIdentifiableBuffer[] buffers)
         {
-            // Process all queued data buffers...
-            foreach (SourceIdentifiableBuffer buffer in buffers)
+            try
             {
-                // Track current buffer source
-                m_source = buffer.Source;
+                // Process all queued data buffers...
+                foreach (SourceIdentifiableBuffer buffer in buffers)
+                {
+                    // Track current buffer source
+                    m_source = buffer.Source;
 
-                // Check to see if this data source has been initialized
-                if ((object)m_sourceInitialized != null)
-                    StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, true);
+                    // Check to see if this data source has been initialized
+                    if ((object)m_sourceInitialized != null)
+                        StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, true);
 
-                // Restore any unparsed buffers for this data source, if any
-                UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_source, (byte[])null);
+                    // Restore any unparsed buffers for this data source, if any
+                    UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_source, (byte[])null);
 
-                // Start parsing sequence for this buffer - this will begin publication of new parsed outputs
-                base.Write(buffer.Buffer, 0, buffer.Count);
+                    // Start parsing sequence for this buffer - this will begin publication of new parsed outputs
+                    base.Write(buffer.Buffer, 0, buffer.Count);
 
-                // Track last unparsed buffer for this data source
-                m_unparsedBuffers[m_source] = UnparsedBuffer;
+                    // Track last unparsed buffer for this data source
+                    m_unparsedBuffers[m_source] = UnparsedBuffer;
+                }
+            }
+            finally
+            {
+                // If user has attached to SourceDataParsed event, expose list of parsed data per source
+                if ((object)SourceDataParsed != null)
+                {
+                    foreach (KeyValuePair<TSourceIdentifier, List<TOutputType>> parsedData in m_parsedSourceData)
+                    {
+                        OnSourceDataParsed(parsedData.Key, parsedData.Value);
+                    }
+
+                    // Clear parsed data dictionary for next pass
+                    m_parsedSourceData.Clear();
+                }
+
             }
 
             // Dispose of source buffers - no rush
             ThreadPool.QueueUserWorkItem(DisposeSourceBuffers, buffers);
         }
 
-        // Handle disposing of source buffers (this will return items to the resuable object pool)
+        // Handle disposing of source buffers (this will return items to the reusable object pool)
         private void DisposeSourceBuffers(object state)
         {
             SourceIdentifiableBuffer[] buffers = state as SourceIdentifiableBuffer[];
@@ -556,6 +590,24 @@ namespace GSF.Parsing
             output.Source = m_source;
 
             base.OnDataParsed(output);
+
+            // If user has attached to SourceDataParsed event, track parsed data per source
+            if ((object)SourceDataParsed != null)
+            {
+                List<TOutputType> sourceData = m_parsedSourceData.GetOrAdd(output.Source, id => new List<TOutputType>());
+                sourceData.Add(output);
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="SourceDataParsed"/> event.
+        /// </summary>
+        /// <param name="source">Identifier for the data source.</param>
+        /// <param name="output">The objects that were deserialized from binary images from the <paramref name="source"/> data stream.</param>
+        protected virtual void OnSourceDataParsed(TSourceIdentifier source, IList<TOutputType> output)
+        {
+            if ((object)SourceDataParsed != null)
+                SourceDataParsed(this, new EventArgs<TSourceIdentifier, IList<TOutputType>>(source, output));
         }
 
         /// <summary>
