@@ -189,9 +189,9 @@ namespace GSF.TimeSeries.Adapters
             m_inputAdapters = new InputAdapterCollection();
 
             if (m_useMeasurementRouting)
-                m_inputAdapters.NewMeasurements += m_routingTables.RoutingEventHandler;
+                m_inputAdapters.NewEntities += m_routingTables.RoutingEventHandler;
             else
-                m_inputAdapters.NewMeasurements += m_routingTables.BroadcastEventHandler;
+                m_inputAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
 
             m_inputAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
@@ -200,9 +200,9 @@ namespace GSF.TimeSeries.Adapters
             m_actionAdapters = new ActionAdapterCollection();
 
             if (m_useMeasurementRouting)
-                m_actionAdapters.NewMeasurements += m_routingTables.RoutingEventHandler;
+                m_actionAdapters.NewEntities += m_routingTables.RoutingEventHandler;
             else
-                m_actionAdapters.NewMeasurements += m_routingTables.BroadcastEventHandler;
+                m_actionAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
 
             m_actionAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
             m_actionAdapters.UnprocessedEntities += UnpublishedEntitiesHandler;
@@ -300,26 +300,26 @@ namespace GSF.TimeSeries.Adapters
                 if (m_useMeasurementRouting != value)
                 {
                     if (m_useMeasurementRouting)
-                        m_inputAdapters.NewMeasurements -= m_routingTables.RoutingEventHandler;
+                        m_inputAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                     else
-                        m_inputAdapters.NewMeasurements -= m_routingTables.BroadcastEventHandler;
+                        m_inputAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
 
                     if (m_useMeasurementRouting)
-                        m_actionAdapters.NewMeasurements -= m_routingTables.RoutingEventHandler;
+                        m_actionAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                     else
-                        m_actionAdapters.NewMeasurements -= m_routingTables.BroadcastEventHandler;
+                        m_actionAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
 
                     m_useMeasurementRouting = value;
 
                     if (m_useMeasurementRouting)
-                        m_inputAdapters.NewMeasurements += m_routingTables.RoutingEventHandler;
+                        m_inputAdapters.NewEntities += m_routingTables.RoutingEventHandler;
                     else
-                        m_inputAdapters.NewMeasurements += m_routingTables.BroadcastEventHandler;
+                        m_inputAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
 
                     if (m_useMeasurementRouting)
-                        m_actionAdapters.NewMeasurements += m_routingTables.RoutingEventHandler;
+                        m_actionAdapters.NewEntities += m_routingTables.RoutingEventHandler;
                     else
-                        m_actionAdapters.NewMeasurements += m_routingTables.BroadcastEventHandler;
+                        m_actionAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
 
                     m_inputAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
                     m_actionAdapters.ProcessSignalFilter = !m_useMeasurementRouting;
@@ -466,9 +466,9 @@ namespace GSF.TimeSeries.Adapters
                             m_inputAdapters.Stop();
 
                             if (m_useMeasurementRouting)
-                                m_inputAdapters.NewMeasurements -= m_routingTables.RoutingEventHandler;
+                                m_inputAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                             else
-                                m_inputAdapters.NewMeasurements -= m_routingTables.BroadcastEventHandler;
+                                m_inputAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
 
                             m_inputAdapters.ProcessingComplete -= ProcessingCompleteHandler;
                             m_inputAdapters.Dispose();
@@ -481,9 +481,9 @@ namespace GSF.TimeSeries.Adapters
                             m_actionAdapters.Stop();
 
                             if (m_useMeasurementRouting)
-                                m_actionAdapters.NewMeasurements -= m_routingTables.RoutingEventHandler;
+                                m_actionAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                             else
-                                m_actionAdapters.NewMeasurements -= m_routingTables.BroadcastEventHandler;
+                                m_actionAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
 
                             m_actionAdapters.UnprocessedEntities -= UnpublishedEntitiesHandler;
                             m_actionAdapters.Notify -= m_routingTables.NotifyHandler;

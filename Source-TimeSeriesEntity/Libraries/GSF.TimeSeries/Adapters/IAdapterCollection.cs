@@ -18,11 +18,12 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/01/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -31,8 +32,63 @@ namespace GSF.TimeSeries.Adapters
     /// <summary>
     /// Represents the abstract interface for a collection of adapters.
     /// </summary>
-    public interface IAdapterCollection : IAdapter, IList<IAdapter>
+    public interface IAdapterCollection : IList<IAdapter>
     {
+        #region [ Members ]
+
+        // Events
+
+        /// <summary>
+        /// Provides status messages to consumer.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is new status message.
+        /// </remarks>
+        event EventHandler<EventArgs<string>> StatusMessage;
+
+        /// <summary>
+        /// Event is raised when there is an exception encountered while processing.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Implementations of this interface are expected to capture any exceptions that might be thrown by
+        /// user code in any processing to prevent third-party code from causing an unhandled exception
+        /// in the host.  Errors are reported via this event so host administrators will be aware of the exception.
+        /// Any needed connection cycle to data adapter should be restarted when an exception is encountered.
+        /// </para>
+        /// <para>
+        /// <see cref="EventArgs{T}.Argument"/> is the exception that was thrown.
+        /// </para>
+        /// </remarks>
+        event EventHandler<EventArgs<Exception>> ProcessException;
+
+        /// <summary>
+        /// Event is raised when <see cref="InputSignals"/> are updated.
+        /// </summary>
+        event EventHandler InputSignalsUpdated;
+
+        /// <summary>
+        /// Event is raised when <see cref="OutputSignals"/> are updated.
+        /// </summary>
+        event EventHandler OutputSignalsUpdated;
+
+        /// <summary>
+        /// Event is raised when adapter is aware of a configuration change.
+        /// </summary>
+        event EventHandler ConfigurationChanged;
+
+        /// <summary>
+        /// This event is raised if there are any time-series entities being discarded during processing.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="ITimeSeriesEntity"/> objects that are being discarded during processing.
+        /// </remarks>
+        event EventHandler<EventArgs<IEnumerable<ITimeSeriesEntity>>> EntitiesDiscarded;
+
+        #endregion
+
+        #region [ Properties ]
+
         /// <summary>
         /// Gets or sets specific data member (e.g., table name) in <see cref="IAdapter.DataSource"/> used to initialize this <see cref="IAdapterCollection"/>.
         /// </summary>
@@ -42,7 +98,56 @@ namespace GSF.TimeSeries.Adapters
         /// ID, AdapterName, AssemblyName, TypeName, ConnectionString<br/>
         /// ID column type should be integer based, all other column types are expected to be string based.
         /// </remarks>
-        string DataMember { get; set; }
+        string DataMember
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the collection of signals the adapter wishes to receive as input.
+        /// </summary>
+        ISet<Guid> InputSignals
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the collection of signals the adapter plans to create as output.
+        /// </summary>
+        ISet<Guid> OutputSignals
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the desired processing interval, in milliseconds, for the adapter collection and applies this interval to each adapter.
+        /// </summary>
+        /// <remarks>
+        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
+        /// interval while a value of 0 means to process data as fast as possible.
+        /// </remarks>
+        int ProcessingInterval
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the total number of measurements processed thus far by each <see cref="IAdapter"/> implementation
+        /// in the <see cref="AdapterCollectionBase{T}"/>.
+        /// </summary>
+        long ProcessedEntities
+        {
+            get;
+        }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Resets the statistics of this collection.
@@ -72,12 +177,14 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="adapter">Initialized adapter if successful; otherwise null.</param>
         /// <returns><c>true</c> if item was successfully initialized; otherwise <c>false</c>.</returns>
         bool TryCreateAdapter(DataRow adapterRow, out IAdapter adapter);
-        
+
         /// <summary>
         /// Attempts to initialize (or reinitialize) an individual <see cref="IAdapter"/> based on its ID.
         /// </summary>
         /// <param name="id">The numeric ID associated with the <see cref="IAdapter"/> to be initialized.</param>
         /// <returns><c>true</c> if item was successfully initialized; otherwise <c>false</c>.</returns>
         bool TryInitializeAdapterByID(uint id);
+
+        #endregion
     }
 }

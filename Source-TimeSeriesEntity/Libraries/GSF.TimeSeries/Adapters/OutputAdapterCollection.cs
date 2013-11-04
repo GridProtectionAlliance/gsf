@@ -18,35 +18,34 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/04/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 
 namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents a collection of <see cref="IOutputAdapter"/> implementations.
     /// </summary>
-    public class OutputAdapterCollection : AdapterCollectionBase<IOutputAdapter>, IOutputAdapter
+    public class OutputAdapterCollection : AdapterCollectionBase<IOutputAdapter>
     {
         #region [ Members ]
 
         // Events
 
         /// <summary>
-        /// Event is raised every five seconds allowing host to track total number of unprocessed measurements.
+        /// Event is raised every five seconds allowing host to track total number of unprocessed time-series entities.
         /// </summary>
         /// <remarks>
         /// <para>
         /// Each <see cref="IOutputAdapter"/> implementation reports its current queue size of unprocessed
-        /// measurements so that if queue size reaches an unhealthy threshold, host can take evasive action.
+        /// entities so that if queue size reaches an unhealthy threshold, host can take evasive action.
         /// </para>
         /// <para>
-        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed measurements.
+        /// <see cref="EventArgs{T}.Argument"/> is total number of unprocessed entities.
         /// </para>
         /// </remarks>
         public event EventHandler<EventArgs<int>> UnprocessedEntities;
@@ -70,14 +69,14 @@ namespace GSF.TimeSeries.Adapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the total number of measurements processed and destined for archive thus far by each
+        /// Gets the total number of time-series entities processed and destined for archive thus far by each
         /// <see cref="IOutputAdapter"/> implementation in the <see cref="OutputAdapterCollection"/>.
         /// </summary>
         public override long ProcessedEntities
         {
             get
             {
-                long processedMeasurements = 0;
+                long processedEntities = 0;
 
                 // Calculate new total for all archive destined output adapters
                 lock (this)
@@ -85,17 +84,17 @@ namespace GSF.TimeSeries.Adapters
                     foreach (IOutputAdapter item in this)
                     {
                         if (item.OutputIsForArchive)
-                            processedMeasurements += item.ProcessedEntities;
+                            processedEntities += item.ProcessedEntities;
                     }
                 }
 
-                return processedMeasurements;
+                return processedEntities;
             }
         }
 
         /// <summary>
-        /// Returns a flag that determines if all measurements sent to this <see cref="OutputAdapterCollection"/> are
-        /// destined for archival.
+        /// Returns a flag that determines if all time-series entities sent to this
+        /// <see cref="OutputAdapterCollection"/> are destined for archival.
         /// </summary>
         public virtual bool OutputIsForArchive
         {
@@ -119,65 +118,20 @@ namespace GSF.TimeSeries.Adapters
         #region [ Methods ]
 
         /// <summary>
-        /// Queues a collection of measurements for processing to each <see cref="IOutputAdapter"/> implementation in
-        /// this <see cref="OutputAdapterCollection"/>.
-        /// </summary>
-        /// <param name="measurements">Measurements to queue for processing.</param>
-        public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-        {
-            try
-            {
-                lock (this)
-                {
-                    foreach (IOutputAdapter item in this)
-                    {
-                        item.QueueMeasurementsForProcessing(measurements);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException("Failed to queue measurements to output adapters: " + ex.Message, ex));
-            }
-        }
-
-        /// <summary>
-        /// This function removes a range of measurements from the internal measurement queues. Note that the requested
-        /// <paramref name="total"/> will be removed from each <see cref="IOutputAdapter"/> implementation in this
-        /// <see cref="OutputAdapterCollection"/>.
-        /// </summary>
-        /// <param name="total">Total measurements to remove from the each <see cref="IOutputAdapter"/> queue.</param>
-        /// <remarks>
-        /// This method is typically only used to curtail size of measurement queue if it's getting too large.  If more points are
-        /// requested than there are points available - all points in the queue will be removed.
-        /// </remarks>
-        public virtual void RemoveEntities(int total)
-        {
-            lock (this)
-            {
-                foreach (IOutputAdapter item in this)
-                {
-                    if (item.Enabled)
-                        item.RemoveEntities(total);
-                }
-            }
-        }
-
-        /// <summary>
         /// Raises the <see cref="UnprocessedEntities"/> event.
         /// </summary>
-        /// <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
-        protected virtual void OnUnprocessedMeasurements(int unprocessedMeasurements)
+        /// <param name="unprocessedEntities">Total entities in the queue that have not been processed.</param>
+        protected virtual void OnUnprocessedEntities(int unprocessedEntities)
         {
             try
             {
-                if (UnprocessedEntities != null)
-                    UnprocessedEntities(this, new EventArgs<int>(unprocessedMeasurements));
+                if ((object)UnprocessedEntities != null)
+                    UnprocessedEntities(this, new EventArgs<int>(unprocessedEntities));
             }
             catch (Exception ex)
             {
                 // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnprocessedMeasurements event: {0}", ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for UnprocessedEntities event: {0}", ex.Message), ex));
             }
         }
 
@@ -187,10 +141,10 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item">New <see cref="IOutputAdapter"/> implementation.</param>
         protected override void InitializeItem(IOutputAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
-                // Wire up unprocessed measurements event
-                item.UnprocessedEntities += ItemUnprocessedEntities;
+                // Wire up unprocessed entities event
+                item.UnprocessedEntities += item_UnprocessedEntities;
                 base.InitializeItem(item);
             }
         }
@@ -201,18 +155,18 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="item"><see cref="IOutputAdapter"/> to dispose.</param>
         protected override void DisposeItem(IOutputAdapter item)
         {
-            if (item != null)
+            if ((object)item != null)
             {
-                // Un-wire unprocessed measurements event
-                item.UnprocessedEntities -= ItemUnprocessedEntities;
+                // Un-wire unprocessed entities event
+                item.UnprocessedEntities -= item_UnprocessedEntities;
                 base.DisposeItem(item);
             }
         }
 
-        // Raise unprocessed measurements event on behalf of each item in collection
-        private void ItemUnprocessedEntities(object sender, EventArgs<int> e)
+        // Raise unprocessed entities event on behalf of each item in collection
+        private void item_UnprocessedEntities(object sender, EventArgs<int> e)
         {
-            if (UnprocessedEntities != null)
+            if ((object)UnprocessedEntities != null)
                 UnprocessedEntities(sender, e);
         }
 

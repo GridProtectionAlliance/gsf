@@ -2596,7 +2596,7 @@ namespace GSF.TimeSeries.Transport
         // Handle notification on input measurement key change
         private void NotifyHostOfSubscriptionRemoval(object state)
         {
-            OnInputMeasurementKeysUpdated();
+            OnInputSignalsUpdated();
         }
 
         // Attempt to find client subscription

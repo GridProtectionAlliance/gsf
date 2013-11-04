@@ -18,32 +18,32 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/04/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
+using GSF.TimeSeries.Routing;
 
 namespace GSF.TimeSeries.Adapters
 {
     /// <summary>
     /// Represents a collection of <see cref="IInputAdapter"/> implementations.
     /// </summary>
-    public class InputAdapterCollection : AdapterCollectionBase<IInputAdapter>, IInputAdapter
+    public class InputAdapterCollection : AdapterCollectionBase<IInputAdapter>
     {
         #region [ Members ]
 
         // Events
 
         /// <summary>
-        /// This event will be raised when there are new measurements available from the input data source.
+        /// This event will be raised when there are new time-series entities available from the input data source.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is collection of new measurements for host to process.
+        /// <see cref="EventArgs{T}.Argument"/> is collection of new entities for host to process.
         /// </remarks>
-        public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
+        public event EventHandler<RoutingEventArgs> NewEntities;
 
         /// <summary>
         /// Indicates to the host that processing for one of the input adapters has completed.
@@ -73,31 +73,13 @@ namespace GSF.TimeSeries.Adapters
         #region [ Methods ]
 
         /// <summary>
-        /// Raises the <see cref="NewMeasurements"/> event.
-        /// </summary>
-        /// <param name="measurements">New measurements.</param>
-        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
-        {
-            try
-            {
-                if (NewMeasurements != null)
-                    NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for NewMeasurements event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
         /// Raises the <see cref="ProcessingComplete"/> event.
         /// </summary>
         protected virtual void OnProcessingComplete()
         {
             try
             {
-                if (ProcessingComplete != null)
+                if ((object)ProcessingComplete != null)
                     ProcessingComplete(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -115,8 +97,8 @@ namespace GSF.TimeSeries.Adapters
         {
             if (item != null)
             {
-                // Wire up new measurement event
-                item.NewEntities += ItemNewEntities;
+                // Wire up new entities event
+                item.NewEntities += item_NewEntities;
                 item.ProcessingComplete += item_ProcessingComplete;
                 base.InitializeItem(item);
             }
@@ -130,24 +112,24 @@ namespace GSF.TimeSeries.Adapters
         {
             if (item != null)
             {
-                // Un-wire new measurements event
-                item.NewEntities -= ItemNewEntities;
+                // Un-wire new entities event
+                item.NewEntities -= item_NewEntities;
                 item.ProcessingComplete -= item_ProcessingComplete;
                 base.DisposeItem(item);
             }
         }
 
-        // Raise new measurements event on behalf of each item in collection
-        private void ItemNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
+        // Raise new entities event on behalf of each item in collection
+        private void item_NewEntities(object sender, RoutingEventArgs e)
         {
-            if (NewMeasurements != null)
-                NewMeasurements(sender, e);
+            if ((object)NewEntities != null)
+                NewEntities(sender, e);
         }
 
         // Raise processing complete event on behalf of each item in collection
         private void item_ProcessingComplete(object sender, EventArgs e)
         {
-            if (ProcessingComplete != null)
+            if ((object)ProcessingComplete != null)
                 ProcessingComplete(sender, e);
         }
 
