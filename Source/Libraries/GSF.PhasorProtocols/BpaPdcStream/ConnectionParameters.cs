@@ -95,19 +95,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected ConnectionParameters(SerializationInfo info, StreamingContext context)
         {
             // Deserialize connection parameters
-            m_configurationFileName = info.GetString("configurationFileName");
-            m_refreshConfigurationFileOnChange = info.GetBoolean("refreshConfigurationFileOnChange");
-            m_parseWordCountFromByte = info.GetBoolean("parseWordCountFromByte");
-
-            // The usePhasorDataFileFormat flag did not exist in prior versions so we protect against possible deserialization failures
-            try
-            {
-                m_usePhasorDataFileFormat = info.GetBoolean("usePhasorDataFileFormat");
-            }
-            catch
-            {
-                m_usePhasorDataFileFormat = false;
-            }
+            m_configurationFileName = info.GetOrDefault("configurationFileName", (string)null);
+            m_refreshConfigurationFileOnChange = info.GetOrDefault("refreshConfigurationFileOnChange", false);
+            m_parseWordCountFromByte = info.GetOrDefault("parseWordCountFromByte", false);
+            m_usePhasorDataFileFormat = info.GetOrDefault("usePhasorDataFileFormat", false);
         }
 
         #endregion

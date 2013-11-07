@@ -95,7 +95,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             m_guessConfiguration = DefaultGuessConfiguration;
             m_parseRedundantASDUs = DefaultParseRedundantASDUs;
             m_ignoreSignatureValidationFailures = DefaultIgnoreSignatureValidationFailures;
-            IgnoreSampleSizeValidationFailures = DefaultIgnoreSampleSizeValidationFailures;
+            m_ignoreSampleSizeValidationFailures = DefaultIgnoreSampleSizeValidationFailures;
             m_phasorAngleFormat = (AngleFormat)Enum.Parse(typeof(AngleFormat), DefaultPhasorAngleFormat, true);
         }
 
@@ -106,61 +106,13 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected ConnectionParameters(SerializationInfo info, StreamingContext context)
         {
-            // Deserialize connection parameters - each is in a try/catch in case flags did not exist
-            // in prior versions to protect against possible deserialization failures
-            try
-            {
-                m_useETRConfiguration = info.GetBoolean("useETRConfiguration");
-            }
-            catch (SerializationException)
-            {
-                m_useETRConfiguration = DefaultUseETRConfiguration;
-            }
-
-            try
-            {
-                m_guessConfiguration = info.GetBoolean("guessConfiguration");
-            }
-            catch (SerializationException)
-            {
-                m_guessConfiguration = DefaultGuessConfiguration;
-            }
-
-            try
-            {
-                m_parseRedundantASDUs = info.GetBoolean("parseRedundantASDUs");
-            }
-            catch (SerializationException)
-            {
-                m_parseRedundantASDUs = DefaultParseRedundantASDUs;
-            }
-
-            try
-            {
-                m_ignoreSignatureValidationFailures = info.GetBoolean("ignoreSignatureValidationFailures");
-            }
-            catch (SerializationException)
-            {
-                m_ignoreSignatureValidationFailures = DefaultIgnoreSignatureValidationFailures;
-            }
-
-            try
-            {
-                IgnoreSampleSizeValidationFailures = info.GetBoolean("ignoreSampleSizeValidationFailures");
-            }
-            catch (SerializationException)
-            {
-                IgnoreSampleSizeValidationFailures = DefaultIgnoreSampleSizeValidationFailures;
-            }
-
-            try
-            {
-                m_phasorAngleFormat = (AngleFormat)info.GetValue("phasorAngleFormat", typeof(AngleFormat));
-            }
-            catch (SerializationException)
-            {
-                m_phasorAngleFormat = (AngleFormat)Enum.Parse(typeof(AngleFormat), DefaultPhasorAngleFormat, true);
-            }
+            // Deserialize connection parameters
+            m_useETRConfiguration = info.GetOrDefault("useETRConfiguration", DefaultUseETRConfiguration);
+            m_guessConfiguration = info.GetOrDefault("guessConfiguration", DefaultGuessConfiguration);
+            m_parseRedundantASDUs = info.GetOrDefault("parseRedundantASDUs", DefaultParseRedundantASDUs);
+            m_ignoreSignatureValidationFailures = info.GetOrDefault("ignoreSignatureValidationFailures", DefaultIgnoreSignatureValidationFailures);
+            m_ignoreSampleSizeValidationFailures = info.GetOrDefault("ignoreSampleSizeValidationFailures", DefaultIgnoreSampleSizeValidationFailures);
+            m_phasorAngleFormat = info.GetOrDefault("phasorAngleFormat", (AngleFormat)Enum.Parse(typeof(AngleFormat), DefaultPhasorAngleFormat, true));
         }
 
         #endregion

@@ -289,12 +289,22 @@ namespace GSF
                 Type newType;
                 string newTypeName;
 
-                // Perform namespace transformations that occurred
-                // when migrating to the Grid Solutions Framework
+                // Perform namespace transformations that occurred when migrating to the Grid Solutions Framework
+                // from various older versions of code with different namespaces
                 newTypeName = typeName
                     .Replace("TVA.", "GSF.")
                     .Replace("TimeSeriesFramework.", "GSF.TimeSeries.")
-                    .Replace("ConnectionTester.", "GSF.PhasorProtocols.");
+                    .Replace("ConnectionTester.", "GSF.PhasorProtocols.")   // PMU Connection Tester namespace
+                    .Replace("TVA.Phasors.", "GSF.PhasorProtocols.")        // 2007 TVA Code Library namespace
+                    .Replace("Tva.Phasors.", "GSF.PhasorProtocols.")        // 2008 TVA Code Library namespace
+                    .Replace("BpaPdcStream", "BPAPDCstream")                // 2013 GSF uppercase phasor protocol namespace
+                    .Replace("FNet", "FNET")                                // 2013 GSF uppercase phasor protocol namespace
+                    .Replace("Iec61850_90_5", "IEC61850_90_5")              // 2013 GSF uppercase phasor protocol namespace
+                    .Replace("Ieee1344", "IEEE1344")                        // 2013 GSF uppercase phasor protocol namespace
+                    .Replace("IeeeC37_118", "IEEEC37_118");                 // 2013 GSF uppercase phasor protocol namespace
+
+                if (newTypeName.StartsWith("PhasorProtocols"))              // 2009 TVA Code Library namespace
+                    newTypeName = "GSF." + newTypeName;
 
                 // Search each assembly in the current application
                 // domain for the type with the transformed name
@@ -520,6 +530,32 @@ namespace GSF
             catch
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="SerializationInfo"/> value for specified <paramref name="name"/>; otherwise <paramref name="defaultValue"/>.
+        /// </summary>
+        /// <typeparam name="T">Type of parameter to get from <see cref="SerializationInfo"/>.</typeparam>
+        /// <param name="info"><see cref="SerializationInfo"/> object that contains deserialized values.</param>
+        /// <param name="name">Name of deserialized parameter to retrieve.</param>
+        /// <param name="defaultValue">Default value to return if <paramref name="name"/> does not exist or cannot be deserialized.</param>
+        /// <returns>Value for specified <paramref name="name"/>; otherwise <paramref name="defaultValue"/></returns>
+        /// <remarks>
+        /// <see cref="SerializationInfo"/> do not have a direct way of determining if an item with a specified name exists, so when calling
+        /// one of the Get(n) functions you will simply get a <see cref="SerializationException"/> if the parameter does not exist; similarly
+        /// you will receive this exception if the parameter fails to properly deserialize. This extension method protects against both of
+        /// these failures and returns a default value if the named parameter does not exist or cannot be deserialized.
+        /// </remarks>
+        public static T GetOrDefault<T>(this SerializationInfo info, string name, T defaultValue)
+        {
+            try
+            {
+                return (T)info.GetValue(name, typeof(T));
+            }
+            catch (SerializationException)
+            {
+                return defaultValue;
             }
         }
     }

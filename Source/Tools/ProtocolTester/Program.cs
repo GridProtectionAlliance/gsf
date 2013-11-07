@@ -94,7 +94,8 @@ namespace ProtocolTester
             //parser.ConnectionString = @"phasorProtocol=FNET; transportProtocol=TCP; server=172.21.4.100:4001; interface=0.0.0.0; isListener=false";
             //parser.ConnectionString = @"phasorProtocol=Macrodyne; transportProtocol=Serial; port=COM6; baudrate=38400; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";
             //parser.ConnectionString = @"phasorProtocol=SelFastMessage; transportProtocol=Serial; port=COM5; baudrate=57600; parity=None; stopbits=One; databits=8; dtrenable=False; rtsenable=False;";            
-            parser.ConnectionString = @"phasorProtocol=IEEEC37_118v1; transportProtocol=File; file=C:\Users\Ritchie\Desktop\MTI_Test_3phase.PmuCapture; checkSumValidationFrameTypes=DataFrame,HeaderFrame,CommandFrame";
+            //parser.ConnectionString = @"phasorProtocol=IEEEC37_118v1; transportProtocol=File; file=C:\Users\Ritchie\Desktop\MTI_Test_3phase.PmuCapture; checkSumValidationFrameTypes=DataFrame,HeaderFrame,CommandFrame";
+            parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=tcp; server=172.21.4.100:4001; interface=0.0.0.0; isListener=false";
 
             // When connecting to a file based resource you may want to loop the data
             parser.AutoRepeatCapturedPlayback = true;
