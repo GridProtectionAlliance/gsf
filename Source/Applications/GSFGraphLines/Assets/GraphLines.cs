@@ -237,7 +237,7 @@ public class GraphLines : MonoBehaviour
 
     // Fields	
 	private ConcurrentDictionary<Guid, DataLine> m_dataLines;
-	private ConcurrentQueue<IMeasurement> m_dataQueue;
+	private ConcurrentQueue<ICollection<IMeasurement>> m_dataQueue;
 	private DataSubscriber m_subscriber;
 	private DataTable m_measurementMetadata;
 	private List<LegendLine> m_legendLines;
@@ -322,7 +322,7 @@ public class GraphLines : MonoBehaviour
 		
 		// Create line dictionary and data queue
 		m_dataLines = new ConcurrentDictionary<Guid, DataLine>();
-		m_dataQueue = new ConcurrentQueue<IMeasurement>();		
+		m_dataQueue = new ConcurrentQueue<ICollection<IMeasurement>>();		
 		m_legendLines = new List<LegendLine>();
 				
 		// Initialize status rows and timer to hide status after a period of no updates
@@ -448,14 +448,17 @@ public class GraphLines : MonoBehaviour
 				return;
 		}
 		
-		IMeasurement measurement;
+		ICollection<IMeasurement> measurements;
 		DataLine line;
 		
 		// Dequeue all new measurements and apply values to lines
-		while (m_dataQueue.TryDequeue(out measurement))
+		while (m_dataQueue.TryDequeue(out measurements))
 		{
-			if (m_dataLines.TryGetValue(measurement.ID, out line))
-				line.UpdateValue((float)measurement.Value);
+			foreach (IMeasurement measurement in measurements)
+			{
+				if (m_dataLines.TryGetValue(measurement.ID, out line))
+					line.UpdateValue((float)measurement.Value);
+			}
 		}		
         
 		// Allow application exit via "ESC" key
@@ -572,10 +575,7 @@ public class GraphLines : MonoBehaviour
 		}
 		
 		// Queue up new measurements for processing
-		foreach(IMeasurement measurement in e.Argument)
-		{
-			m_dataQueue.Enqueue(measurement);
-		}
+		m_dataQueue.Enqueue(e.Argument);
 	}
 		
 	private void subscriber_ConnectionTerminated(object sender, EventArgs e)
