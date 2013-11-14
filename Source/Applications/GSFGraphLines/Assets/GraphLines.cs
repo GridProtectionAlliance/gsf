@@ -36,33 +36,36 @@ using GSF.TimeSeries.Transport;
 
 public class GraphLines : MonoBehaviour
 {
-    #region [ Members ]
-
-    // Nested Types
-
+	#region [ Members ]
+	
+	// Nested Types
+	
 	// Defines a common set of methods for a line
 	private interface ILine
 	{
-		Guid ID { get; }
+		Guid ID
+		{
+			get;
+		}
 		void Stop();
 	}
-
+	
 	// Creates a dynamically scaled 3D line using Vectrosity asset to draw line for data
 	private class DataLine : ILine
-	{		
+	{
 		private GraphLines m_parent;
 		private VectorLine m_vector;
 		private Guid m_id;
 		private float[] m_unscaledData;
-		private Vector3[] m_linePoints;  
+		private Vector3[] m_linePoints;
 		private float m_min = float.NaN;
 		private float m_max = float.NaN;
 		
 		public DataLine(GraphLines parent, Guid id, int index)
-		{			
+		{
 			m_parent = parent;
 			m_id = id;
-
+			
 			m_unscaledData = new float[m_parent.m_pointsInLine];
 			m_linePoints = new Vector3[m_parent.m_pointsInLine];
 			
@@ -83,7 +86,7 @@ public class GraphLines : MonoBehaviour
 			{
 				return m_id;
 			}
-		}		
+		}
 		
 		public Color VectorColor
 		{
@@ -131,7 +134,7 @@ public class GraphLines : MonoBehaviour
 					
 					if (float.IsNaN(unscaledValue))
 						unscaledValue = MidPoint;
-						
+					
 					m_linePoints[i].z = -ScaleValue(unscaledValue);
 				}
 			}
@@ -151,7 +154,7 @@ public class GraphLines : MonoBehaviour
 		{
 			return (newValue - m_min) * (m_parent.m_graphScale * 2.0F) / Range - m_parent.m_graphScale;
 		}
-					
+		
 		private float Range
 		{
 			get
@@ -168,15 +171,15 @@ public class GraphLines : MonoBehaviour
 			}
 		}
 	}
-
+	
 	// Creates a fixed 3D line using Vectrosity asset to draw line for legend
 	private class LegendLine : ILine
 	{
 		private VectorLine m_vector;
 		private Guid m_id;
-
+		
 		public LegendLine(GraphLines parent, Guid id, int index, Color color)
-		{			
+		{
 			Vector3[] linePoints = new Vector3[2];
 			Transform transform = parent.m_legendMesh.transform;
 			Vector3 position = transform.position;
@@ -202,8 +205,8 @@ public class GraphLines : MonoBehaviour
 			{
 				return m_id;
 			}
-		}		
-
+		}
+		
 		public void Stop()
 		{
 			if ((object)m_vector != null)
@@ -221,21 +224,21 @@ public class GraphLines : MonoBehaviour
 			m_row = row;
 		}
 		
-        public string ToString(string format, IFormatProvider provider)
-        {
+		public string ToString(string format, IFormatProvider provider)
+		{
 			if (m_row.Table.Columns.Contains(format))
 				return m_row[format].ToString();
 			
 			return "<" + format + ">";
-        }
+		}
 	}
-
-    // Constants
-	private const string IniFileName = "GraphLines.ini";	
+	
+	// Constants
+	private const string IniFileName = "GraphLines.ini";
 	private const int ControlWindowActiveHeight = 130;
 	private const int ControlWindowMinimizedHeight = 20;
-
-    // Fields	
+	
+	// Fields	
 	private ConcurrentDictionary<Guid, DataLine> m_dataLines;
 	private ConcurrentQueue<ICollection<IMeasurement>> m_dataQueue;
 	private DataSubscriber m_subscriber;
@@ -248,18 +251,19 @@ public class GraphLines : MonoBehaviour
 	private bool m_subscribed;
 	
 	// Subscriber control window variables
-	private int m_lastScreenHeight = -1;
-	private int m_lastScreenWidth = -1;
+	private Texture2D m_controlWindowTexture;
 	private Rect m_controlWindowActiveLocation;
 	private Rect m_controlWindowMinimizedLocation;
 	private bool m_controlWindowMinimized = true;
+	private int m_lastScreenHeight = -1;
+	private int m_lastScreenWidth = -1;
 	private string m_startTime = "*-5M";
 	private string m_stopTime = "*";
 	private int m_processInterval = 33;
 	private bool m_historicalSubscription = false;
 	private Vector2 m_scrollPosition;
 	private int m_guiSize = 1;
-		
+	
 	// Public fields exposed to Unity UI interface
 	public string m_title = "Gateway Exchange Protocol Subscription Tester";
 	public string m_connectionString = "server=localhost:6165;";
@@ -276,10 +280,10 @@ public class GraphLines : MonoBehaviour
 	public int m_statusRows = 4;
 	public double m_statusDisplayInterval = 10000.0D;
 	public string m_legendFormat = "{0:SignalAcronym}: {0:Description} [{0:PointTag}]";
-
-    #endregion
-
-    #region [ Methods ]
+	
+	#endregion
+	
+	#region [ Methods ]
 	
 	#region [ Unity Event Handlers ]
 	
@@ -297,7 +301,7 @@ public class GraphLines : MonoBehaviour
 		
 		m_title = iniFile["Settings", "Title", m_title];
 		m_connectionString = iniFile["Settings", "ConnectionString", m_connectionString];
-		m_filterExpression = iniFile["Settings", "FilterExpression", m_filterExpression];			
+		m_filterExpression = iniFile["Settings", "FilterExpression", m_filterExpression];
 		m_lineWidth = int.Parse(iniFile["Settings", "LineWidth", m_lineWidth.ToString()]);
 		m_lineDepthOffset = float.Parse(iniFile["Settings", "LineDepthOffset", m_lineDepthOffset.ToString()]);
 		m_pointsInLine = int.Parse(iniFile["Settings", "PointsInLine", m_pointsInLine.ToString()]);
@@ -315,42 +319,47 @@ public class GraphLines : MonoBehaviour
 		catch (Exception ex)
 		{
 			Debug.Log("ERROR: " + ex.Message);
-		}		
+		}
 		
 		// Attempt to reference active mouse orbit script
-		m_mouseOrbitScript = GetComponent<MouseOrbit>();				
+		m_mouseOrbitScript = GetComponent<MouseOrbit>();
 		
 		// Create line dictionary and data queue
 		m_dataLines = new ConcurrentDictionary<Guid, DataLine>();
-		m_dataQueue = new ConcurrentQueue<ICollection<IMeasurement>>();		
+		m_dataQueue = new ConcurrentQueue<ICollection<IMeasurement>>();
 		m_legendLines = new List<LegendLine>();
-				
+		
 		// Initialize status rows and timer to hide status after a period of no updates
 		m_statusText = new string[m_statusRows];
 		
 		for (int i = 0; i < m_statusRows; i++)
 		{
-			m_statusText[i] = "";	
+			m_statusText[i] = "";
 		}
 		
 		m_hideStatusTimer = new System.Timers.Timer();
 		m_hideStatusTimer.AutoReset = false;
 		m_hideStatusTimer.Interval = m_statusDisplayInterval;
-		m_hideStatusTimer.Elapsed += m_hideStatusTimer_Elapsed;		
+		m_hideStatusTimer.Elapsed += m_hideStatusTimer_Elapsed;
 		
 		// For mobile applications we use a larger GUI font size.
 		// Other deployments might benefit from this as well - larger
 		// size modes may work also but are not tested
 		switch (Application.platform)
 		{
-			case RuntimePlatform.Android:
-			case RuntimePlatform.IPhonePlayer:
-				if (Screen.height <= 720)
-					m_guiSize = 2;	// 720P
-				else
-					m_guiSize = 3;	// 1080P or higher
-				break;
+		    case RuntimePlatform.Android:
+		    case RuntimePlatform.IPhonePlayer:
+			    if (Screen.height <= 720)
+				    m_guiSize = 2;	// 720P
+			    else
+				    m_guiSize = 3;	// 1080P or higher
+			    break;
 		}
+		
+		// Create a solid background for the control window
+		m_controlWindowTexture = new Texture2D(1, 1);
+		m_controlWindowTexture.SetPixel(0, 0, new Color32(10, 25, 70, 255));
+		m_controlWindowTexture.Apply();
 	}
 	
 	protected void Start()
@@ -383,7 +392,7 @@ public class GraphLines : MonoBehaviour
 			if ((object)statusObject != null)
 				m_statusMesh = statusObject.GetComponent<TextMesh>();
 		}
-
+		
 		InitiateConnection();
 	}
 	
@@ -416,7 +425,7 @@ public class GraphLines : MonoBehaviour
 		iniFile["Settings", "FilterExpression"] = m_filterExpression;
 		iniFile["Settings", "StartTime"] = m_startTime;
 		iniFile["Settings", "StopTime"] = m_stopTime;
-
+		
 		// Attempt to save INI file updates
 		try
 		{
@@ -427,7 +436,7 @@ public class GraphLines : MonoBehaviour
 			Debug.Log("ERROR: " + ex.Message);
 		}
 	}
-
+	
 	protected void Update()
 	{
 		// Check for screen resize
@@ -459,25 +468,20 @@ public class GraphLines : MonoBehaviour
 				if (m_dataLines.TryGetValue(measurement.ID, out line))
 					line.UpdateValue((float)measurement.Value);
 			}
-		}		
-        
+		}
+		
 		// Allow application exit via "ESC" key
 		if (Input.GetKey("escape"))
-            EndApplication();
+			EndApplication();
 	}
 	
 	private void OnGUI()
 	{
-		Rect controlWindowLocation = m_controlWindowMinimized ? m_controlWindowMinimizedLocation : m_controlWindowActiveLocation;		
+		Rect controlWindowLocation = m_controlWindowMinimized ? m_controlWindowMinimizedLocation : m_controlWindowActiveLocation;
 		
-		// Create a solid background for the control window
-		Texture2D texture = new Texture2D(1, 1);
-		texture.SetPixel(0, 0, new Color32(10, 25, 70, 255));
-    	texture.Apply();
-				
 		GUIStyle windowStyle = new GUIStyle(GUI.skin.window);
-		windowStyle.normal.background = texture;
-		windowStyle.onNormal = windowStyle.normal;		
+		windowStyle.normal.background = m_controlWindowTexture;
+		windowStyle.onNormal = windowStyle.normal;
 		
 		// Adjust font size for window title for larger GUI sizes
 		if (m_guiSize > 1)
@@ -514,7 +518,7 @@ public class GraphLines : MonoBehaviour
 			EndApplication();
 	}
 	
-    #endregion
+	#endregion
 	
 	#region [ Subscription Event Handlers ]
 	
@@ -523,7 +527,7 @@ public class GraphLines : MonoBehaviour
 		// Request metadata once connected
 		m_subscriber.RefreshMetadata();
 	}
-
+	
 	private void subscriber_MetaDataReceived(object sender, EventArgs<DataSet> e)
 	{
 		m_subscribed = false;
@@ -540,7 +544,7 @@ public class GraphLines : MonoBehaviour
 				{
 					m_measurementMetadata = metadata.Tables["MeasurementDetail"];
 					UpdateStatus("Received {0} metadata tables, {1} measurement records.", metadata.Tables.Count, m_measurementMetadata.Rows.Count);
-				}				
+				}
 				else
 				{
 					UpdateStatus("WARNING: Received metadata does not have a MeasurementDetail table.");
@@ -550,7 +554,7 @@ public class GraphLines : MonoBehaviour
 		
 		if ((object)m_measurementMetadata == null)
 			UpdateStatus("No metadata received.");
-
+		
 		// Once metadata has been received, subscribe to desired data
 		InitiateSubscription();
 	}
@@ -563,7 +567,7 @@ public class GraphLines : MonoBehaviour
 		// so we go ahead an cache list of measurement signal IDs (we may not know what
 		// these are in advance if we used a FILTER expression to subscribe to points)
 		if (!m_subscribed)
-		{			
+		{
 			Guid[] subscribedMeasurementIDs = m_subscriber.GetAuthorizedSignalIDs();
 			
 			// Create a new line for each subscribed measurement, this should be done in
@@ -577,7 +581,7 @@ public class GraphLines : MonoBehaviour
 		// Queue up new measurements for processing
 		m_dataQueue.Enqueue(e.Argument);
 	}
-		
+	
 	private void subscriber_ConnectionTerminated(object sender, EventArgs e)
 	{
 		if (m_subscribed)
@@ -596,7 +600,7 @@ public class GraphLines : MonoBehaviour
 	{
 		UpdateStatus("ERROR: {0}", e.Argument.Message);
 	}
-
+	
 	private void subscriber_ProcessingComplete(object sender, EventArgs<string> e)
 	{
 		UpdateStatus("*** Historical replay complete, restarting real-time subscription ***");
@@ -604,13 +608,13 @@ public class GraphLines : MonoBehaviour
 		// After processing of a historical query has completed, return to the real-time subscription
 		InitiateSubscription();
 	}
-
-    #endregion
+	
+	#endregion
 	
 	private void EndApplication()
 	{
 		TerminateConnection();
-
+		
 		if ((object)m_statusMesh != null)
 			m_statusMesh.UpdateText("");
 		
@@ -636,7 +640,7 @@ public class GraphLines : MonoBehaviour
 		// Append newest status text
 		m_statusText[m_statusText.Length - 1] = statusText;
 		cumulativeStatusText.Append(string.Format("{0}\r\n", statusText).RemoveDuplicates("\r\n"));
-				
+		
 		// Show text on 3D status text object
 		m_statusMesh.UpdateText(cumulativeStatusText.ToString());
 		
@@ -673,23 +677,23 @@ public class GraphLines : MonoBehaviour
 		{
 			m_dataLines.TryAdd(measurementID, new DataLine(this, measurementID, m_dataLines.Count));
 		}
-			
+		
 		// Update legend - we do this on a different thread since we've already
 		// waited around for initial set of lines to be created on a UI thread,
 		// no need to keep UI thread operations pending
 		ThreadPool.QueueUserWorkItem(UpdateLegend, subscribedMeasurementIDs);
 	}
-
+	
 	private void UpdateLegend(object state)
 	{
 		Guid[] subscribedMeasurementIDs = state as Guid[];
 		
 		if ((object)subscribedMeasurementIDs == null || (object)m_measurementMetadata == null)
 			return;
-				
+		
 		StringBuilder legendText = new StringBuilder();
 		DataRow[] rows;
-					
+		
 		// Go through each subscribed measurement ID and look up its associated metadata
 		foreach (Guid measurementID in subscribedMeasurementIDs)
 		{
@@ -714,7 +718,7 @@ public class GraphLines : MonoBehaviour
 		{
 			// Lines must be created on the UI thread
 			UIThread.Invoke(CreateLegendLine, measurementID);
-		}		
+		}
 	}
 	
 	// Create a new legend line
@@ -730,14 +734,13 @@ public class GraphLines : MonoBehaviour
 		if (m_dataLines.TryGetValue(id, out dataLine))
 			m_legendLines.Add(new LegendLine(this, id, m_legendLines.Count, dataLine.VectorColor));
 	}
-	
-	
+		
 	// Connects or reconnects to a data publisher
 	private void InitiateConnection()
 	{
 		// Shutdown any existing connection
 		TerminateConnection();
-				
+		
 		// Attempt to extract server name from connection string
 		string server = "unknown";
 		
@@ -748,28 +751,28 @@ public class GraphLines : MonoBehaviour
 			if (!settings.TryGetValue("server", out server))
 				server = "unknown";
 		}
-
+		
 		UpdateStatus("Attempting connection to \"{0}\"...", server);
-
+		
 		// Create a new data subscriber
 		m_subscriber = new DataSubscriber();
 		
 		// Attach to subscriber events
 		m_subscriber.MetaDataReceived += subscriber_MetaDataReceived;
-        m_subscriber.StatusMessage += subscriber_StatusMessage;
-        m_subscriber.ProcessException += subscriber_ProcessException;
-        m_subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
-        m_subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
-        m_subscriber.NewMeasurements += subscriber_NewMeasurements;
+		m_subscriber.StatusMessage += subscriber_StatusMessage;
+		m_subscriber.ProcessException += subscriber_ProcessException;
+		m_subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
+		m_subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
+		m_subscriber.NewMeasurements += subscriber_NewMeasurements;
 		m_subscriber.ProcessingComplete += subscriber_ProcessingComplete;
-
-        // Initialize subscriber
-        m_subscriber.ConnectionString = m_connectionString;
-        m_subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressMetadata;
-        m_subscriber.Initialize();
-
-        // Start subscriber connection cycle
-        m_subscriber.Start();
+		
+		// Initialize subscriber
+		m_subscriber.ConnectionString = m_connectionString;
+		m_subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressMetadata;
+		m_subscriber.Initialize();
+		
+		// Start subscriber connection cycle
+		m_subscriber.Start();
 	}
 	
 	// Terminates an existing connection to a data publisher
@@ -780,17 +783,17 @@ public class GraphLines : MonoBehaviour
 		if ((object)m_subscriber != null)
 		{
 			UpdateStatus("Terminating current connection...");
-
+			
 			// Stop the subscription if connected
 			m_subscriber.Stop();
-						
+			
 			// Detach from subscriber events
 			m_subscriber.MetaDataReceived -= subscriber_MetaDataReceived;
-	        m_subscriber.StatusMessage -= subscriber_StatusMessage;
-	        m_subscriber.ProcessException -= subscriber_ProcessException;
-	        m_subscriber.ConnectionEstablished -= subscriber_ConnectionEstablished;
-	        m_subscriber.ConnectionTerminated -= subscriber_ConnectionTerminated;
-	        m_subscriber.NewMeasurements -= subscriber_NewMeasurements;
+			m_subscriber.StatusMessage -= subscriber_StatusMessage;
+			m_subscriber.ProcessException -= subscriber_ProcessException;
+			m_subscriber.ConnectionEstablished -= subscriber_ConnectionEstablished;
+			m_subscriber.ConnectionTerminated -= subscriber_ConnectionTerminated;
+			m_subscriber.NewMeasurements -= subscriber_NewMeasurements;
 			m_subscriber.ProcessingComplete -= subscriber_ProcessingComplete;
 			
 			// Dispose of the subscription
@@ -818,7 +821,7 @@ public class GraphLines : MonoBehaviour
 		m_historicalSubscription = historical;
 		
 		UnsynchronizedSubscriptionInfo subscriptionInfo;
-
+		
 		subscriptionInfo = new UnsynchronizedSubscriptionInfo(false);
 		subscriptionInfo.FilterExpression = m_filterExpression;
 		
@@ -828,8 +831,8 @@ public class GraphLines : MonoBehaviour
 			subscriptionInfo.StopTime = m_stopTime;
 			subscriptionInfo.ProcessingInterval = m_processInterval;
 			UpdateStatus("*** Starting historical replay at {0} playback speed ***", m_processInterval == 0 ? "fast as possible" : m_processInterval + "ms");
-		}		
-
+		}
+		
 		// Attempt to extract possible data channel setting from connection string.
 		// For example, adding "; dataChannel={port=9191}" to the connection string
 		// would request that the data publisher send data to the subscriber over
@@ -839,7 +842,7 @@ public class GraphLines : MonoBehaviour
 		
 		if (!string.IsNullOrEmpty(m_connectionString))
 		{
-			Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();			
+			Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
 			settings.TryGetValue("dataChannel", out dataChannel);
 		}
 		
@@ -848,10 +851,10 @@ public class GraphLines : MonoBehaviour
 		
 		m_subscriber.UnsynchronizedSubscribe(subscriptionInfo);
 	}
-
+	
 	// Clears an existing subscription
 	private void ClearSubscription()
-	{		
+	{
 		// Reset subscription state
 		m_subscribed = false;
 		m_linesInitializedWaitHandle = null;
@@ -869,7 +872,7 @@ public class GraphLines : MonoBehaviour
 		
 		// Erase legend lines
 		if ((object)m_legendLines != null)
-		{		
+		{
 			foreach (LegendLine legendLine in m_legendLines)
 			{
 				UIThread.Invoke(EraseLine, legendLine);
@@ -892,7 +895,7 @@ public class GraphLines : MonoBehaviour
 		if ((object)line != null)
 			line.Stop();
 	}
-		
+	
 	private void OnScreenResize()
 	{
 		m_lastScreenHeight = Screen.height;
@@ -900,12 +903,12 @@ public class GraphLines : MonoBehaviour
 		
 		// Make control window size adjustments for larger GUI sizes
 		float heightScalar = m_guiSize > 1 ? m_guiSize * 0.80F : 1.0F;
-		int heighOffset =  m_guiSize > 1 ? 12 : 0;
+		int heighOffset = m_guiSize > 1 ? 12 : 0;
 		
 		m_controlWindowActiveLocation = new Rect(0, Screen.height - ControlWindowActiveHeight * heightScalar, Screen.width, ControlWindowActiveHeight * heightScalar);
 		m_controlWindowMinimizedLocation = new Rect(0, Screen.height - (ControlWindowMinimizedHeight + heighOffset), Screen.width, ControlWindowActiveHeight * heightScalar);
 	}
-		
+	
 	private void DrawControlsWindow(int windowID)
 	{
 		GUIStyle horizontalScrollbarThumbStyle = new GUIStyle(GUI.skin.horizontalScrollbarThumb);
@@ -930,98 +933,98 @@ public class GraphLines : MonoBehaviour
 			sliderStyle.fixedHeight *= m_guiSize;
 			sliderThumbStyle.fixedHeight *= m_guiSize;
 			sliderThumbStyle.padding.right *= m_guiSize;
-		
+			
 			widthScalar = m_guiSize * 0.85F;
 		}
 		
 		// Adjust vertical alignment for slider control for better vertical centering
 		sliderStyle.margin.top += 5;
 		sliderThumbStyle.padding.top += 5;
-			
+		
 		// Text field contents will auto-stretch control window beyond screen extent,
 		// so we add automatic scroll bars to the region in case things expand
 		m_scrollPosition = GUILayout.BeginScrollView(m_scrollPosition, horizontalScrollbarThumbStyle, verticalScrollbarThumbStyle);
 		GUILayout.BeginVertical();
 		
-			// Until a better way is found, just adding some vertical padding
-			// with a blank row for larger GUI sizes (optional Row 0)
-			if (m_guiSize > 1)
-			{		
-				GUIStyle blankLabelStyle = new GUIStyle(GUI.skin.label);
-				blankLabelStyle.fontSize = 4;
+		// Until a better way is found, just adding some vertical padding
+		// with a blank row for larger GUI sizes (optional Row 0)
+		if (m_guiSize > 1)
+		{
+			GUIStyle blankLabelStyle = new GUIStyle(GUI.skin.label);
+			blankLabelStyle.fontSize = 4;
 			
-				GUILayout.BeginHorizontal();
-				GUILayout.Label("", blankLabelStyle);
-				GUILayout.EndHorizontal();
-			}
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("", blankLabelStyle);
+			GUILayout.EndHorizontal();
+		}
 		
-			// Row 1 - server connection string
-			GUILayout.BeginHorizontal();
-			
-				GUILayout.Label(" Connection String:", labelStyle, GUILayout.Width(112 * widthScalar));
-				m_connectionString = GUILayout.TextField(m_connectionString, textFieldStyle);
-				
-				// Reconnect using new connection string
-				if (GUILayout.Button("Connect", buttonStyle, GUILayout.Width(100 * widthScalar)))
-					InitiateConnection();
-			
-			GUILayout.EndHorizontal();
-	
-			// Row 2 - filter expression
-			GUILayout.BeginHorizontal();
-			
-				GUILayout.Label(" Filter Expression:", labelStyle, GUILayout.Width(108 * widthScalar));
-				m_filterExpression = GUILayout.TextField(m_filterExpression, textFieldStyle);
-				
-				// Resubscribe using new filter expression
-				if (GUILayout.Button("Update", buttonStyle, GUILayout.Width(100 * widthScalar)))
-					InitiateSubscription();
-			
-			GUILayout.EndHorizontal();
-	
-			// Row 3 - historical query
-			GUILayout.BeginHorizontal();
+		// Row 1 - server connection string
+		GUILayout.BeginHorizontal();
 		
-				GUILayout.Label(" Start Time:", labelStyle, GUILayout.Width(70 * widthScalar));
-				m_startTime = GUILayout.TextField(m_startTime, textFieldStyle);
-				
-				GUILayout.Label(" Stop Time:", labelStyle, GUILayout.Width(70 * widthScalar));
-				m_stopTime = GUILayout.TextField(m_stopTime, textFieldStyle);
-				
-				GUILayout.Label("Process Interval:", labelStyle, GUILayout.Width(100 * widthScalar));
-				m_processInterval = (int)GUILayout.HorizontalSlider((float)m_processInterval, 0.0F, 300.0F, sliderStyle, sliderThumbStyle, GUILayout.Width(125 * widthScalar));
-				
-				// Dynamically update processing interval when user moves slider control
-				if (m_subscribed && (object)m_subscriber != null && m_processInterval != m_subscriber.ProcessingInterval)
-				{
-					bool showMessage = (m_subscriber.ProcessingInterval != -1);
-					m_subscriber.ProcessingInterval = m_processInterval;
-					
-					if (showMessage)
-						UpdateStatus("*** Changing historical replay speed to {0} ***", m_processInterval == 0 ? "fast as possible" : m_processInterval + "ms");
-				}
-				
-				// Resubscribe with historical replay parameters
-				if (GUILayout.Button("Replay", buttonStyle, GUILayout.Width(100 * widthScalar)))
-					InitiateSubscription(true);
-			
-			GUILayout.EndHorizontal();
-			
-			// Row 4 - INI file path
-			GUILayout.BeginHorizontal();
-	
-				GUIStyle iniLabelStyle = new GUIStyle(GUI.skin.label);
-				iniLabelStyle.fontSize = 10 + (m_guiSize > 1 ? m_guiSize * 4 : 0);
-				iniLabelStyle.fontStyle = FontStyle.Italic;
-				iniLabelStyle.alignment = TextAnchor.UpperCenter;
+		GUILayout.Label(" Connection String:", labelStyle, GUILayout.Width(112 * widthScalar));
+		m_connectionString = GUILayout.TextField(m_connectionString, textFieldStyle);
 		
-				GUILayout.Label(string.Format(" Settings File = \"{0}\" - Resolution = {1} x {2}", Application.persistentDataPath + "/" + IniFileName, Screen.width, Screen.height), iniLabelStyle);
+		// Reconnect using new connection string
+		if (GUILayout.Button("Connect", buttonStyle, GUILayout.Width(100 * widthScalar)))
+			InitiateConnection();
+		
+		GUILayout.EndHorizontal();
+		
+		// Row 2 - filter expression
+		GUILayout.BeginHorizontal();
+		
+		GUILayout.Label(" Filter Expression:", labelStyle, GUILayout.Width(108 * widthScalar));
+		m_filterExpression = GUILayout.TextField(m_filterExpression, textFieldStyle);
+		
+		// Resubscribe using new filter expression
+		if (GUILayout.Button("Update", buttonStyle, GUILayout.Width(100 * widthScalar)))
+			InitiateSubscription();
+		
+		GUILayout.EndHorizontal();
+		
+		// Row 3 - historical query
+		GUILayout.BeginHorizontal();
+		
+		GUILayout.Label(" Start Time:", labelStyle, GUILayout.Width(70 * widthScalar));
+		m_startTime = GUILayout.TextField(m_startTime, textFieldStyle);
+		
+		GUILayout.Label(" Stop Time:", labelStyle, GUILayout.Width(70 * widthScalar));
+		m_stopTime = GUILayout.TextField(m_stopTime, textFieldStyle);
+		
+		GUILayout.Label("Process Interval:", labelStyle, GUILayout.Width(100 * widthScalar));
+		m_processInterval = (int)GUILayout.HorizontalSlider((float)m_processInterval, 0.0F, 300.0F, sliderStyle, sliderThumbStyle, GUILayout.Width(125 * widthScalar));
+		
+		// Dynamically update processing interval when user moves slider control
+		if (m_subscribed && (object)m_subscriber != null && m_processInterval != m_subscriber.ProcessingInterval)
+		{
+			bool showMessage = (m_subscriber.ProcessingInterval != -1);
+			m_subscriber.ProcessingInterval = m_processInterval;
 			
-			GUILayout.EndHorizontal();
+			if (showMessage)
+				UpdateStatus("*** Changing historical replay speed to {0} ***", m_processInterval == 0 ? "fast as possible" : m_processInterval + "ms");
+		}
+		
+		// Resubscribe with historical replay parameters
+		if (GUILayout.Button("Replay", buttonStyle, GUILayout.Width(100 * widthScalar)))
+			InitiateSubscription(true);
+		
+		GUILayout.EndHorizontal();
+		
+		// Row 4 - INI file path
+		GUILayout.BeginHorizontal();
+		
+		GUIStyle iniLabelStyle = new GUIStyle(GUI.skin.label);
+		iniLabelStyle.fontSize = 10 + (m_guiSize > 1 ? m_guiSize * 4 : 0);
+		iniLabelStyle.fontStyle = FontStyle.Italic;
+		iniLabelStyle.alignment = TextAnchor.UpperCenter;
+		
+		GUILayout.Label(string.Format(" Settings File = \"{0}\" - Resolution = {1} x {2}", Application.persistentDataPath + "/" + IniFileName, Screen.width, Screen.height), iniLabelStyle);
+		
+		GUILayout.EndHorizontal();
 		
 		GUILayout.EndVertical();
 		GUILayout.EndScrollView();
 	}
-
-    #endregion
+	
+	#endregion
 }
