@@ -108,8 +108,6 @@
         <Properties>SignAssembly=true;AssemblyOriginatorKeyFile=$(LocalFolder)\Source\TVA.snk;OutputPath=$(BuildOutputFolder)\Libraries\Signed</Properties>
       </ProjectsToBuild>
       <ProjectsToBuild Include="$(LocalFolder)\Build\Scripts\$(ProjectName).shfbproj" Condition="'$(SkipHelpFiles)' == ''"/>
-      <!-- List of installs to build. -->
-      <InstallsToBuild Include="$(LocalFolder)\Source\**\*.vdproj"/>
     </ItemGroup>
   </Target>
 
