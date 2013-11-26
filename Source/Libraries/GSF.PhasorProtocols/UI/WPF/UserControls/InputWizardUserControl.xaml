@@ -202,18 +202,14 @@
 
                 <TextBlock Grid.Row="13" Grid.Column="2" Text="Historian"/>
                 <ComboBox Grid.Row="13" Grid.Column="3" ItemsSource="{Binding Source={StaticResource HistorianLookupList}}" DisplayMemberPath="Value"
-                      SelectedItem="{tsfBinding:Column Path=DataContext.HistorianID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1},
-                                    Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource HistorianLookupList}}"/>
+                          SelectedItem="{tsfBinding:Column Path=DataContext.HistorianID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource HistorianLookupList}}"/>
                 <TextBlock Grid.Row="14" Grid.Column="0" Text="Interconnection"/>
                 <ComboBox Grid.Row="14" Grid.Column="1" ItemsSource="{Binding Source={StaticResource InterconnectionLookupList}}" DisplayMemberPath="Value"
-                      SelectedItem="{tsfBinding:Column Path=DataContext.InterconnectionID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}, 
-                                    Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource InterconnectionLookupList}}"/>
-
+                          SelectedItem="{tsfBinding:Column Path=DataContext.InterconnectionID, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource InterconnectionLookupList}}"/>
             </Grid>
         </Expander>
 
         <Expander x:Name="ExpanderStep3" IsExpanded="False" Expanded="ExpanderStep3_Expanded">
-
             <Expander.HeaderTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -225,13 +221,9 @@
                     </StackPanel>
                 </DataTemplate>
             </Expander.HeaderTemplate>
-
-
-            <!--<ScrollViewer Height="400">-->
                 
-                <sdk:DataGrid x:Name="DataGridDevices" ItemsSource="{tsfBinding:Column Path=DataContext.ItemsSource, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}}"
-                          RowDetailsVisibilityMode="VisibleWhenSelected"  Height="500" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                
+            <sdk:DataGrid x:Name="DataGridDevices" ItemsSource="{tsfBinding:Column Path=DataContext.ItemsSource, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}}"
+                        RowDetailsVisibilityMode="VisibleWhenSelected" Height="500" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VirtualizingPanel.ScrollUnit="Pixel">
 
                 <sdk:DataGrid.Columns>
                         <!--<sdk:DataGridCheckBoxColumn Width="*" Binding="{tsfBinding:Column Path=Include}" CellStyle="{StaticResource CenterAlignCellStyle}"--> 
@@ -298,40 +290,35 @@
 
                 <sdk:DataGrid.RowDetailsTemplate>
                     <DataTemplate>
-                        <sdk:DataGrid ItemsSource="{tsfBinding:Column Path=PhasorList}" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden"
-                                     Height="Auto" Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=sdk:DataGrid}}">
+                        <sdk:DataGrid ItemsSource="{tsfBinding:Column Path=PhasorList}" Initialized="RowDetailsDataGrid_Initialized" SizeChanged="RowDetailsDataGrid_SizeChanged">
                             <sdk:DataGrid.Columns>
                                 <sdk:DataGridCheckBoxColumn Width="*" Binding="{tsfBinding:Column Path=Include}" CellStyle="{StaticResource CenterAlignCellStyle}"/>
-                                    <sdk:DataGridTemplateColumn Header="Label" Width="5*">
-                                        <sdk:DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBox Text="{tsfBinding:Column Path=Label}" Margin="0" Width="{StaticResource XXLargeItemSize}" MaxLength="200"/>
-                                            </DataTemplate>
-                                        </sdk:DataGridTemplateColumn.CellTemplate>
-                                    </sdk:DataGridTemplateColumn>
-                                    <sdk:DataGridTemplateColumn Header="Type" Width="2*">
-                                        <sdk:DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBox Text="{tsfBinding:Column Path=Type}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
-                                            </DataTemplate>
-                                        </sdk:DataGridTemplateColumn.CellTemplate>
-                                    </sdk:DataGridTemplateColumn>
-                                    <sdk:DataGridTemplateColumn Header="Phase" Width="2*">
-                                        <sdk:DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <TextBox Text="{tsfBinding:Column Path=Phase}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
-                                            </DataTemplate>
-                                        </sdk:DataGridTemplateColumn.CellTemplate>
-                                    </sdk:DataGridTemplateColumn>
+                                <sdk:DataGridTemplateColumn Header="Label" Width="5*">
+                                    <sdk:DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{tsfBinding:Column Path=Label}" Margin="0" Width="{StaticResource XXLargeItemSize}" MaxLength="200"/>
+                                        </DataTemplate>
+                                    </sdk:DataGridTemplateColumn.CellTemplate>
+                                </sdk:DataGridTemplateColumn>
+                                <sdk:DataGridTemplateColumn Header="Type" Width="2*">
+                                    <sdk:DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{tsfBinding:Column Path=Type}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
+                                        </DataTemplate>
+                                    </sdk:DataGridTemplateColumn.CellTemplate>
+                                </sdk:DataGridTemplateColumn>
+                                <sdk:DataGridTemplateColumn Header="Phase" Width="2*">
+                                    <sdk:DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBox Text="{tsfBinding:Column Path=Phase}" Margin="0" Width="{StaticResource XXXSmallItemSize}" MaxLength="1"/>
+                                        </DataTemplate>
+                                    </sdk:DataGridTemplateColumn.CellTemplate>
+                                </sdk:DataGridTemplateColumn>
                             </sdk:DataGrid.Columns>
                         </sdk:DataGrid>
                     </DataTemplate>
                 </sdk:DataGrid.RowDetailsTemplate>
-
             </sdk:DataGrid>
-
-            <!--</ScrollViewer>-->
-            
         </Expander>
 
         <Grid>
