@@ -32,7 +32,7 @@ namespace GSF.TimeSeries.Adapters
     /// <summary>
     /// Represents the abstract interface for a collection of adapters.
     /// </summary>
-    public interface IAdapterCollection : IList<IAdapter>, IProvideStatus
+    public interface IAdapterCollection : IList<IAdapter>, ISupportLifecycle, IProvideStatus
     {
         #region [ Members ]
 
