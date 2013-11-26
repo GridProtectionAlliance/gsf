@@ -111,6 +111,18 @@ namespace GSF.PhasorProtocols
             get;
             set;
         }
+        
+        /// <summary>
+        /// Gets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        new Ticks Timestamp
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets UNIX based time representation of the ticks of this <see cref="IChannelFrame"/>.

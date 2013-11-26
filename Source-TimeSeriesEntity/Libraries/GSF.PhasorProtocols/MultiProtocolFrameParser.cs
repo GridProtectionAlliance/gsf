@@ -3704,7 +3704,7 @@ namespace GSF.PhasorProtocols
             }
         }
 
-        private void MaintainCapturedFrameReplayTiming(IFrame sourceFrame)
+        private void MaintainCapturedFrameReplayTiming(IChannelFrame sourceFrame)
         {
             long simulatedTimestamp = 0;
 

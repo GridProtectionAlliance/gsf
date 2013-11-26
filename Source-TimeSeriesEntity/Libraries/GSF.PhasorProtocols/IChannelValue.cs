@@ -46,38 +46,61 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the <see cref="IDataCell"/> parent of this <see cref="IChannelValue{T}"/>.
         /// </summary>
-        IDataCell Parent { get; set; }
+        IDataCell Parent
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the <see cref="IChannelDefinition"/> associated with this <see cref="IChannelValue{T}"/>.
         /// </summary>
-        T Definition { get; set; }
+        T Definition
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the <see cref="GSF.PhasorProtocols.DataFormat"/> of this <see cref="IChannelValue{T}"/> typically derived from <see cref="IChannelDefinition.DataFormat"/>.
         /// </summary>
-        DataFormat DataFormat { get; }
+        DataFormat DataFormat
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets text based label of this <see cref="IChannelValue{T}"/> typically derived from <see cref="IChannelDefinition.Label"/>.
         /// </summary>
-        string Label { get; }
+        string Label
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets boolean value that determines if none of the composite values of <see cref="IChannelValue{T}"/> have been assigned a value.
         /// </summary>
         /// <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
-        bool IsEmpty { get; }
+        bool IsEmpty
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the composite values of this <see cref="IChannelValue{T}"/> as an array of <see cref="IMeasurement"/> values.
         /// </summary>
-        IMeasurement[] Measurements { get; }
+        IMeasurement[] Measurements
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets total number of composite values that this <see cref="IChannelValue{T}"/> provides.
         /// </summary>
-        int CompositeValueCount { get; }
+        int CompositeValueCount
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the specified composite value of this <see cref="IChannelValue{T}"/>.
@@ -85,12 +108,5 @@ namespace GSF.PhasorProtocols
         /// <param name="index">Index of composite value to retrieve.</param>
         /// <returns>A <see cref="double"/> representing the composite value.</returns>
         double GetCompositeValue(int index);
-
-        /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        /// <param name="index">Index of composite value for which to retrieve its filter function.</param>
-        /// <returns>Function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values, if defined; otherwise, <c>null</c>.</returns>
-        MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index);
     }
 }

@@ -137,12 +137,18 @@ namespace GSF.PhasorProtocols
         /// Gets boolean value that determines if none of the composite values of <see cref="ChannelValueBase{T}"/> have been assigned a value.
         /// </summary>
         /// <returns><c>true</c>, if no composite values have been assigned a value; otherwise, <c>false</c>.</returns>
-        public abstract bool IsEmpty { get; }
+        public abstract bool IsEmpty
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets total number of composite values that this <see cref="ChannelValueBase{T}"/> provides.
         /// </summary>
-        public abstract int CompositeValueCount { get; }
+        public abstract int CompositeValueCount
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets the composite values of this <see cref="ChannelValueBase{T}"/> as an array of <see cref="IMeasurement"/> values.
@@ -205,19 +211,20 @@ namespace GSF.PhasorProtocols
         /// <returns>A <see cref="double"/> representing the composite value.</returns>
         public abstract double GetCompositeValue(int index);
 
-        /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        /// <param name="index">Index of composite value for which to retrieve its filter function.</param>
-        /// <returns>Function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values, if defined; otherwise, <c>null</c>.</returns>
-        public virtual MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
-        {
-            if (index < 0 || index > CompositeValueCount - 1)
-                throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+        // TODO: Handle in new way...
+        ///// <summary>
+        ///// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        ///// </summary>
+        ///// <param name="index">Index of composite value for which to retrieve its filter function.</param>
+        ///// <returns>Function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values, if defined; otherwise, <c>null</c>.</returns>
+        //public virtual MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
+        //{
+        //    if (index < 0 || index > CompositeValueCount - 1)
+        //        throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
 
-            // All values assumed to be analog in nature unless derived class specifies otherwise
-            return Measurement.AverageValueFilter;
-        }
+        //    // All values assumed to be analog in nature unless derived class specifies otherwise
+        //    return Measurement.AverageValueFilter;
+        //}
 
         /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.

@@ -66,7 +66,7 @@ namespace GSF.PhasorProtocols
         private bool m_validateCheckSum;                                                    // Allows bypass of check-sum validation if devices are behaving badly
         private bool m_published;                                                           // Determines if this frame of data has been published (IFrame.Published)
         private int m_sortedMeasurements;                                                   // Total measurements published into this frame        (IFrame.SortedMeasurements)
-        private readonly ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements; // Collection of measurements published by this frame  (IFrame.Measurements)
+        private readonly ConcurrentDictionary<Guid, ITimeSeriesEntity> m_measurements;      // Collection of measurements published by this frame  (IFrame.Measurements)
         private IMeasurement m_lastSortedMeasurement;                                       // Last measurement sorted into this frame             (IFrame.LastSortedMeasurement)
 
         #endregion
@@ -87,7 +87,7 @@ namespace GSF.PhasorProtocols
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_trustHeaderLength = true;
             m_validateCheckSum = true;
-            m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
+            m_measurements = new ConcurrentDictionary<Guid, ITimeSeriesEntity>();
             m_sortedMeasurements = -1;
         }
 
@@ -105,7 +105,7 @@ namespace GSF.PhasorProtocols
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_trustHeaderLength = true;
             m_validateCheckSum = true;
-            m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
+            m_measurements = new ConcurrentDictionary<Guid, ITimeSeriesEntity>();
             m_sortedMeasurements = -1;
         }
 
@@ -175,10 +175,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Keyed measurements in this <see cref="ChannelFrameBase{T}"/>.
         /// </summary>
-        /// <remarks>
-        /// Represents a dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
-        /// </remarks>
-        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements
+        public IDictionary<Guid, ITimeSeriesEntity> Entities
         {
             get
             {
@@ -242,8 +239,7 @@ namespace GSF.PhasorProtocols
         /// Gets or sets exact timestamp, in ticks, of when this <see cref="ChannelFrameBase{T}"/> was published (post-processing).
         /// </summary>
         /// <remarks>
-        /// <para>In the default implementation, setting this property will update all associated <see cref="IMeasurement.PublishedTimestamp"/>.</para>
-        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
         public virtual Ticks PublishedTimestamp
         {
@@ -254,14 +250,6 @@ namespace GSF.PhasorProtocols
             set
             {
                 m_publishedTimestamp = value;
-
-                if (m_measurements != null)
-                {
-                    foreach (IMeasurement measurement in m_measurements.Values)
-                    {
-                        measurement.PublishedTimestamp = m_publishedTimestamp;
-                    }
-                }
             }
         }
 

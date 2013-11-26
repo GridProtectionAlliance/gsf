@@ -44,11 +44,11 @@ namespace GSF.PhasorProtocols
         #region [ Members ]
 
         // Fields
-        private IChannelValue<T> m_parent;
+        private readonly IChannelValue<T> m_parent;
+        private readonly int m_valueIndex;
+        private readonly MeasurementStateFlags m_stateFlags;
         private Guid m_id;
-        private MeasurementStateFlags m_stateFlags;
         private Ticks m_timestamp;
-        private int m_valueIndex;
 
         #endregion
 
@@ -58,10 +58,9 @@ namespace GSF.PhasorProtocols
         /// Constructs a new <see cref="ChannelValueMeasurement{T}"/> given the specified parameters.
         /// </summary>
         /// <param name="parent">The reference to the <see cref="IChannelValue{T}"/> that this measurement derives its values from.</param>
-        /// <param name="id">The fundamental identifier of the <see cref="ChannelValueMeasurement{T}"/></param>
         /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.</param>
-        public ChannelValueMeasurement(IChannelValue<T> parent, Guid id, int valueIndex)
-            : this(parent, id, -1, valueIndex)
+        public ChannelValueMeasurement(IChannelValue<T> parent, int valueIndex)
+            : this(parent, -1, valueIndex)
         {
         }
 
@@ -69,11 +68,10 @@ namespace GSF.PhasorProtocols
         /// Constructs a new <see cref="ChannelValueMeasurement{T}"/> given the specified parameters.
         /// </summary>
         /// <param name="parent">The reference to the <see cref="IChannelValue{T}"/> that this measurement derives its values from.</param>
-        /// <param name="id">The fundamental identifier of the <see cref="ChannelValueMeasurement{T}"/></param>
         /// <param name="timestamp">The exact timestamp, in ticks, of the data represented by this <see cref="ChannelValueMeasurement{T}"/></param>
         /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.</param>
-        public ChannelValueMeasurement(IChannelValue<T> parent, Guid id, Ticks timestamp, int valueIndex)
-            : this(parent, id, timestamp, GetParentFlags(parent, timestamp), valueIndex)
+        public ChannelValueMeasurement(IChannelValue<T> parent, Ticks timestamp, int valueIndex)
+            : this(parent, Guid.Empty, timestamp, GetParentFlags(parent, timestamp), valueIndex)
         {
         }
 
@@ -81,11 +79,10 @@ namespace GSF.PhasorProtocols
         /// Constructs a new <see cref="ChannelValueMeasurement{T}"/> given the specified parameters.
         /// </summary>
         /// <param name="parent">The reference to the <see cref="IChannelValue{T}"/> that this measurement derives its values from.</param>
-        /// <param name="id">The fundamental identifier of the <see cref="ChannelValueMeasurement{T}"/></param>
         /// <param name="stateFlags">The <see cref="MeasurementStateFlags"/> associated with this <see cref="ChannelValueMeasurement{T}"/></param>
         /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.</param>
-        public ChannelValueMeasurement(IChannelValue<T> parent, Guid id, MeasurementStateFlags stateFlags, int valueIndex)
-            : this(parent, id, -1, stateFlags, valueIndex)
+        public ChannelValueMeasurement(IChannelValue<T> parent, MeasurementStateFlags stateFlags, int valueIndex)
+            : this(parent, Guid.Empty, -1, stateFlags, valueIndex)
         {
         }
 
@@ -93,7 +90,7 @@ namespace GSF.PhasorProtocols
         /// Constructs a new <see cref="ChannelValueMeasurement{T}"/> given the specified parameters.
         /// </summary>
         /// <param name="parent">The reference to the <see cref="IChannelValue{T}"/> that this measurement derives its values from.</param>
-        /// <param name="id">The fundamental identifier of the <see cref="ChannelValueMeasurement{T}"/></param>
+        /// <param name="id">The fundamental identifier of the <see cref="IChannelValue{T}"/></param>
         /// <param name="timestamp">The exact timestamp, in ticks, of the data represented by this <see cref="ChannelValueMeasurement{T}"/></param>
         /// <param name="stateFlags">The <see cref="MeasurementStateFlags"/> associated with this <see cref="ChannelValueMeasurement{T}"/></param>
         /// <param name="valueIndex">The index into the <see cref="IChannelValue{T}.GetCompositeValue"/> that this measurement derives its value from.</param>
@@ -122,13 +119,17 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the <see cref="Guid"/> based signal ID of this <see cref="ChannelValueMeasurement{T}"/>, if available.
+        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="ChannelValueMeasurement{T}"/>, if available.
         /// </summary>
         public Guid ID
         {
             get
             {
                 return m_id;
+            }
+            set
+            {
+                m_id = value;
             }
         }
 
@@ -187,6 +188,31 @@ namespace GSF.PhasorProtocols
 
                 return value;
             }
+        }
+
+        /// <summary>
+        /// Gets the raw value of this <see cref="IMeasurement"/>.
+        /// </summary>
+        object IMeasurement.Value
+        {
+            get
+            {
+                return Value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Creates a copy of the specified measurement using new state flags.
+        /// </summary>
+        /// <param name="stateFlags">New <see cref="MeasurementStateFlags"/></param>
+        /// <returns>A copy of the <see cref="IMeasurement{T}"/> object.</returns>
+        public IMeasurement<double> Alter(MeasurementStateFlags stateFlags)
+        {
+            return new ChannelValueMeasurement<T>(m_parent, m_id, m_timestamp, stateFlags, m_valueIndex);
         }
 
         #endregion

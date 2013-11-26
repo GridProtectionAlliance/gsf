@@ -107,6 +107,15 @@ namespace GSF.PhasorProtocols
             }
         }
 
+        /// Gets the raw value of this measurement
+        object IMeasurement.Value
+        {
+            get
+            {
+                return m_measurement.Value;
+            }
+        }
+
         /// <summary>
         /// Gets the <see cref="SignalReference"/> associated with this <see cref="SignalReferenceMeasurement{T}"/>.
         /// </summary>
@@ -116,6 +125,20 @@ namespace GSF.PhasorProtocols
             {
                 return m_signalReference;
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Creates a copy of the specified measurement using new state flags.
+        /// </summary>
+        /// <param name="stateFlags">New <see cref="MeasurementStateFlags"/></param>
+        /// <returns>A copy of the <see cref="IMeasurement{T}"/> object.</returns>
+        public IMeasurement<T> Alter(MeasurementStateFlags stateFlags)
+        {
+            return new SignalReferenceMeasurement<T>(m_measurement, m_signalReference);
         }
 
         #endregion

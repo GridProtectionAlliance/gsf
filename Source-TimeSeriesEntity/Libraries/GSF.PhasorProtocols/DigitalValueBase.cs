@@ -32,7 +32,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
-using GSF.TimeSeries;
 
 namespace GSF.PhasorProtocols
 {
@@ -195,19 +194,20 @@ namespace GSF.PhasorProtocols
             throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
         }
 
-        /// <summary>
-        /// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
-        /// </summary>
-        /// <param name="index">Index of composite value for which to retrieve its filter function.</param>
-        /// <returns>Majority value filter function since all values are digital in nature.</returns>
-        public override MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
-        {
-            if (index != 0)
-                throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
+        // TODO: Handle in new way...
+        ///// <summary>
+        ///// Gets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        ///// </summary>
+        ///// <param name="index">Index of composite value for which to retrieve its filter function.</param>
+        ///// <returns>Majority value filter function since all values are digital in nature.</returns>
+        //public override MeasurementValueFilterFunction GetMeasurementValueFilterFunction(int index)
+        //{
+        //    if (index != 0)
+        //        throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
 
-            // Digital values shouldn't be averaged, so a majority value filter is applied when downsampling
-            return Measurement.MajorityValueFilter;
-        }
+        //    // Digital values shouldn't be averaged, so a majority value filter is applied when downsampling
+        //    return Measurement.MajorityValueFilter;
+        //}
 
         /// <summary>
         /// Parses the binary body image.

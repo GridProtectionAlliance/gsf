@@ -49,11 +49,6 @@ namespace GSF.PhasorProtocols
         public const byte SyncByte = 0xAA;
 
         /// <summary>
-        /// Undefined measurement key.
-        /// </summary>
-        internal static MeasurementKey UndefinedKey = new MeasurementKey(Guid.Empty, UInt32.MaxValue, "__");
-
-        /// <summary>
         /// This is a common optimized block copy function for binary data.
         /// </summary>
         /// <param name="source">Source buffer to copy data from.</param>
