@@ -23,8 +23,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.ViewModels;
 using GSF.TimeSeries.UI;
@@ -205,6 +207,38 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 ExpanderStep2.IsExpanded = false;
                 ButtonNext.Content = "Finish";
                 ButtonPrevious.IsEnabled = true;
+            }
+        }
+
+        private void RowDetailsDataGrid_Initialized(object sender, EventArgs e)
+        {
+            DataGrid grid = sender as DataGrid;
+
+            if ((object)grid != null)
+                grid.Visibility = (grid.Items.Count > 0) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void RowDetailsDataGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            DataGrid grid;
+            ScrollViewer scrollViewer;
+
+            if (e.PreviousSize != e.NewSize)
+            {
+                grid = sender as DataGrid;
+
+                if ((object)grid != null)
+                {
+                    scrollViewer = grid.Template.FindName("DG_ScrollViewer", grid) as ScrollViewer;
+
+                    if ((object)scrollViewer != null)
+                    {
+                        scrollViewer.Width = double.NaN;
+                        scrollViewer.UpdateLayout();
+                        scrollViewer.Width = scrollViewer.ActualWidth;
+                        scrollViewer.UpdateLayout();
+                    }
+                }
             }
         }
 

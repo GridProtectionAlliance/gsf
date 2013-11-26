@@ -41,7 +41,7 @@ namespace GSF.PhasorProtocols.FNET
     /// </remarks>
     [Serializable]
     public class ConnectionParameters : ConnectionParametersBase
-    {        
+    {
         #region [ Members ]
 
         // Fields
@@ -73,10 +73,10 @@ namespace GSF.PhasorProtocols.FNET
         protected ConnectionParameters(SerializationInfo info, StreamingContext context)
         {
             // Deserialize connection parameters
-            m_timeOffset = info.GetInt64("timeOffset");
-            m_frameRate = info.GetUInt16("frameRate");
-            m_nominalFrequency = (LineFrequency)info.GetValue("nominalFrequency", typeof(LineFrequency));
-            m_stationName = info.GetString("stationName");
+            m_timeOffset = info.GetOrDefault("timeOffset", Common.DefaultTimeOffset);
+            m_frameRate = info.GetOrDefault("frameRate", Common.DefaultFrameRate);
+            m_nominalFrequency = info.GetOrDefault("nominalFrequency", Common.DefaultNominalFrequency);
+            m_stationName = info.GetOrDefault("stationName", Common.DefaultStationName);
         }
 
         #endregion

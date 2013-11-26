@@ -297,7 +297,7 @@ namespace GSF.Parsing
             m_stopTime = 0;
             m_startTime = DateTime.Now.Ticks;
 
-            // Initialized state depends whether or not derived class uses a protocol synchrnonization byte
+            // Initialized state depends whether or not derived class uses a protocol synchronization byte
             StreamInitialized = !ProtocolUsesSyncBytes;
 
             m_enabled = true;
@@ -390,7 +390,7 @@ namespace GSF.Parsing
         /// <summary>
         /// The parser is designed as a write only stream, so this method is not implemented.
         /// </summary>
-        /// <exception cref="NotImplementedException">Cannnot read from WriteOnly stream.</exception>
+        /// <exception cref="NotImplementedException">Cannot read from WriteOnly stream.</exception>
         /// <param name="buffer">Array of <see cref="Byte"/>s.</param>
         /// <param name="count">An <see cref="Int32"/> value for the offset.</param>
         /// <param name="offset">An <see cref="Int32"/> value for the count.</param>
@@ -398,7 +398,7 @@ namespace GSF.Parsing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException("Cannnot read from WriteOnly stream");
+            throw new NotImplementedException("Cannot read from WriteOnly stream");
         }
 
         /// <summary>
@@ -407,7 +407,7 @@ namespace GSF.Parsing
         /// <exception cref="NotImplementedException">WriteOnly stream has no position.</exception>
         /// <param name="offset">A <see cref="Int64"/> value for the offset.</param>
         /// <param name="origin">A <see cref="SeekOrigin"/>.</param>
-        /// <returns>Returns a <see cref="Int64"/> value indicating the point that was seeked to.</returns>
+        /// <returns>Returns a <see cref="Int64"/> value indicating the point that was sought.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -478,7 +478,7 @@ namespace GSF.Parsing
                 }
 
                 endOfBuffer = offset + count - 1;
-                int parsedFrameLength = 0;
+                int parsedFrameLength;
 
                 // Move through buffer parsing all available frames
                 while (!(offset > endOfBuffer) && m_enabled)
@@ -568,7 +568,7 @@ namespace GSF.Parsing
         /// there is not enough data to represent the image return zero and base class will prepend buffer onto next incoming set of data.
         /// </para>
         /// <para>
-        /// Because of the expense incurred when an exception is thrown, any exceptions encounted in the derived implementations of this method
+        /// Because of the expense incurred when an exception is thrown, any exceptions encountered in the derived implementations of this method
         /// will cause the current data buffer to be discarded and a <see cref="ParsingException"/> event to be raised.  Doing this prevents
         /// exceptions from being thrown repeatedly for the same data. If your code implementation recognizes a malformed image, you can raise
         /// a custom event to indicate this instead of throwing as exception and keep moving through the buffer as an optimization.

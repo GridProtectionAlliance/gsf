@@ -98,6 +98,10 @@ namespace GSF.TimeSeries.UI
             if (settings.TryGetValue("validChainFlags", out setting) && Enum.TryParse(setting, out validChainFlags))
                 m_remotingClient.ValidChainFlags = validChainFlags;
 
+            // See if the user has explicitly defined whether to execute revocation checks on server certificates
+            if (settings.TryGetValue("checkCertificateRevocation", out setting) && !string.IsNullOrWhiteSpace(setting))
+                m_remotingClient.CheckCertificateRevocation = setting.ParseBoolean();
+
             // Initialize windows service client.
             m_clientHelper = new ClientHelper();
             m_clientHelper.RemotingClient = m_remotingClient;

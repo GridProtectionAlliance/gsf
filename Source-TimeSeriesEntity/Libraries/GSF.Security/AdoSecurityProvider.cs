@@ -495,15 +495,20 @@ namespace GSF.Security
                     command.CommandType = CommandType.Text;
 
                     if (command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
-                        command.CommandText = "UPDATE UserAccount SET [Password] = @newPassword WHERE Name = @name AND [Password] = @oldPassword";
+                        command.CommandText = "UPDATE UserAccount SET [Password] = @newPassword, ChangePasswordOn = @changePasswordOn WHERE Name = @name AND [Password] = @oldPassword";
                     else if (oracle)
-                        command.CommandText = "UPDATE UserAccount SET Password = :newPassword WHERE Name = :name AND Password = :oldPassword";
+                        command.CommandText = "UPDATE UserAccount SET Password = :newPassword, ChangePasswordOn = :changePasswordOn WHERE Name = :name AND Password = :oldPassword";
                     else
-                        command.CommandText = "UPDATE UserAccount SET Password = @newPassword WHERE Name = @name AND Password = @oldPassword";
+                        command.CommandText = "UPDATE UserAccount SET Password = @newPassword, ChangePasswordOn = @changePasswordOn WHERE Name = @name AND Password = @oldPassword";
 
                     IDbDataParameter param = command.CreateParameter();
                     param.ParameterName = oracle ? ":newPassword" : "@newPassword";
                     param.Value = SecurityProviderUtility.EncryptPassword(newPassword);
+                    command.Parameters.Add(param);
+
+                    param = command.CreateParameter();
+                    param.ParameterName = oracle ? ":changePasswordOn" : "@changePasswordOn";
+                    param.Value = DateTime.UtcNow.AddDays(90.0D);
                     command.Parameters.Add(param);
 
                     param = command.CreateParameter();

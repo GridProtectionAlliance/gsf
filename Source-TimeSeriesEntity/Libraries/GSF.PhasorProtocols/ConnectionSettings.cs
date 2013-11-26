@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Runtime.Serialization;
 using GSF.Communication;
 
 namespace GSF.PhasorProtocols
@@ -32,8 +33,12 @@ namespace GSF.PhasorProtocols
     /// Represents information defined in a PMU Connection Tester connection file.
     /// </summary>
     [Serializable]
-    public class ConnectionSettings
+    public class ConnectionSettings : ISerializable
     {
+        #region [ Members ]
+
+        // Fields
+
         /// <summary>
         /// Defines <see cref="PhasorProtocol"/> from PmuConnection file.
         /// </summary>
@@ -73,5 +78,70 @@ namespace GSF.PhasorProtocols
         /// Defines additional connection information such as alternate command channel from PmuConnection file.
         /// </summary>
         public IConnectionParameters ConnectionParameters;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ConnectionSettings"/> instance.
+        /// </summary>
+        public ConnectionSettings()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConnectionSettings"/> instance from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected ConnectionSettings(SerializationInfo info, StreamingContext context)
+        {
+            // Deserialize connection settings values
+            if (!Enum.TryParse(info.GetOrDefault("PhasorProtocol", "IEEEC37_118V1"), true, out PhasorProtocol))
+                PhasorProtocol = PhasorProtocol.IEEEC37_118V1;
+
+            if (!Enum.TryParse(info.GetOrDefault("TransportProtocol", "Tcp"), true, out TransportProtocol))
+                TransportProtocol = TransportProtocol.Tcp;
+
+            ConnectionString = info.GetOrDefault("ConnectionString", (string)null);
+
+            if (!int.TryParse(info.GetOrDefault("PmuID", "1"), out PmuID))
+                PmuID = 1;
+
+            if (!int.TryParse(info.GetOrDefault("FrameRate", "30"), out FrameRate))
+                FrameRate = 30;
+
+            if (!(info.GetOrDefault("AutoRepeatPlayback", "false")).ParseBoolean())
+                AutoRepeatPlayback = false;
+
+            int.TryParse(info.GetOrDefault("ByteEncodingDisplayFormat", "0"), out ByteEncodingDisplayFormat);
+
+            ConnectionParameters = info.GetOrDefault("ConnectionParameters", (IConnectionParameters)null);
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            // Serialize connection settings values
+            info.AddValue("PhasorProtocol", PhasorProtocol, typeof(PhasorProtocol));
+            info.AddValue("TransportProtocol", TransportProtocol, typeof(TransportProtocol));
+            info.AddValue("ConnectionString", ConnectionString);
+            info.AddValue("PmuID", PmuID);
+            info.AddValue("FrameRate", FrameRate);
+            info.AddValue("AutoRepeatPlayback", AutoRepeatPlayback);
+            info.AddValue("ByteEncodingDisplayFormat", ByteEncodingDisplayFormat);
+            info.AddValue("ConnectionParameters", ConnectionParameters, typeof(IConnectionParameters));
+        }
+
+        #endregion
     }
 }

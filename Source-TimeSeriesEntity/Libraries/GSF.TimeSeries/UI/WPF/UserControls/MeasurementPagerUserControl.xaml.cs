@@ -604,6 +604,7 @@ namespace GSF.TimeSeries.UI.UserControls
             }
             else if (e.PropertyName == "ItemsSource")
             {
+                Dispatcher.BeginInvoke(new Action(ResizeDataGridContent));
                 Dispatcher.BeginInvoke(new Action(SortDataGrid));
                 OnCurrentPageChanged();
             }
@@ -622,6 +623,21 @@ namespace GSF.TimeSeries.UI.UserControls
                     }
                 }));
             }
+        }
+
+        // Forces resize on the columns in the data grid
+        // so that they can shrink as well as grow.
+        private void ResizeDataGridContent()
+        {
+            List<DataGridLength> columnWidths = DataGridList.Columns.Select(column => column.Width).ToList();
+
+            foreach (DataGridColumn column in DataGridList.Columns)
+                column.Width = 0;
+
+            DataGridList.UpdateLayout();
+
+            for (int i = 0; i < DataGridList.Columns.Count; i++)
+                DataGridList.Columns[i].Width = new DataGridLength(columnWidths[i].Value, columnWidths[i].UnitType);
         }
 
         // Sorts the current page of the data grid.

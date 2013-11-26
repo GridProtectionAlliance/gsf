@@ -200,13 +200,13 @@ namespace GSF.COMTRADE
                 throw new FileNotFoundException(string.Format("Specified COMTRADE data file \"{0}\" was not found, cannot open files.", m_fileName));
 
             // Get all data files in the collection
-            const string fileRegex = @"(?:\.dat|\.d\d\d)$";
+            const string FileRegex = @"(?:\.dat|\.d\d\d)$";
             string directory = FilePath.GetDirectoryName(m_fileName);
             string rootFileName = FilePath.GetFileNameWithoutExtension(m_fileName);
             string extension = FilePath.GetExtension(m_fileName).Substring(0, 2) + "*";
 
             string[] fileNames = FilePath.GetFileList(Path.Combine(directory, rootFileName + extension))
-                .Where(fileName => Regex.IsMatch(fileName, fileRegex))
+                .Where(fileName => Regex.IsMatch(fileName, FileRegex, RegexOptions.IgnoreCase))
                 .OrderBy(fileName => fileName, StringComparer.InvariantCultureIgnoreCase)
                 .ToArray();
 

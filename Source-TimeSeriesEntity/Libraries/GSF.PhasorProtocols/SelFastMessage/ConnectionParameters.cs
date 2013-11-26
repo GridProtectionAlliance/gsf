@@ -41,7 +41,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
     /// </remarks>
     [Serializable]
     public class ConnectionParameters : ConnectionParametersBase
-    {        
+    {
         #region [ Members ]
 
         // Fields
@@ -67,7 +67,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         protected ConnectionParameters(SerializationInfo info, StreamingContext context)
         {
             // Deserialize connection parameters
-            m_messagePeriod = (MessagePeriod)info.GetValue("messagePeriod", typeof(MessagePeriod));
+            m_messagePeriod = info.GetOrDefault("messagePeriod", MessagePeriod.DefaultRate);
         }
 
         #endregion

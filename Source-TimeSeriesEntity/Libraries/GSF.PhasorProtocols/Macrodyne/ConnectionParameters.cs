@@ -94,20 +94,10 @@ namespace GSF.PhasorProtocols.Macrodyne
         protected ConnectionParameters(SerializationInfo info, StreamingContext context)
         {
             // Deserialize connection parameters
-            try
-            {
-                m_protocolVersion = (ProtocolVersion)info.GetValue("protocolVersion", typeof(ProtocolVersion));
-                m_configurationFileName = info.GetString("configurationFileName");
-                m_refreshConfigurationFileOnChange = info.GetBoolean("refreshConfigurationFileOnChange");
-                m_deviceLabel = info.GetString("deviceLabel");
-            }
-            catch (SerializationException)
-            {
-                m_protocolVersion = ProtocolVersion.M;
-                m_configurationFileName = null;
-                m_refreshConfigurationFileOnChange = false;
-                m_deviceLabel = null;
-            }
+            m_protocolVersion = info.GetOrDefault("protocolVersion", ProtocolVersion.M);
+            m_configurationFileName = info.GetOrDefault("configurationFileName", (string)null);
+            m_refreshConfigurationFileOnChange = info.GetOrDefault("refreshConfigurationFileOnChange", false);
+            m_deviceLabel = info.GetOrDefault("deviceLabel", (string)null);
         }
 
         #endregion

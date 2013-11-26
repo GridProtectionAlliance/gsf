@@ -1159,8 +1159,8 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     validChainFlags |= X509ChainStatusFlags.UntrustedRoot;
                 }
 
-                securitySpecificSettings = string.Format("{0}remoteCertificate={1}; validPolicyErrors={2}; validChainFlags={3}",
-                    GetLocalCertificateSetting(), RemoteCertificateFile, validPolicyErrors, validChainFlags);
+                securitySpecificSettings = string.Format("{0}remoteCertificate={1}; validPolicyErrors={2}; validChainFlags={3}; checkCertificateRevocation={4}",
+                    GetLocalCertificateSetting(), RemoteCertificateFile, validPolicyErrors, validChainFlags, !m_isRemoteCertificateSelfSigned);
             }
 
             device = new Device();

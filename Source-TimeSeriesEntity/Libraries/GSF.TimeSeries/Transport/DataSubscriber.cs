@@ -239,6 +239,7 @@ namespace GSF.TimeSeries.Transport
         private string m_remoteCertificate;
         private SslPolicyErrors m_validPolicyErrors;
         private X509ChainStatusFlags m_validChainFlags;
+        private bool m_checkCertificateRevocation;
         private bool m_internal;
         private bool m_includeTime;
         private bool m_autoSynchronizeMetadata;
@@ -1024,6 +1025,11 @@ namespace GSF.TimeSeries.Transport
 
                 if (!settings.TryGetValue("validChainFlags", out setting) || !Enum.TryParse(setting, out m_validChainFlags))
                     m_validChainFlags = X509ChainStatusFlags.NoError;
+
+                if (settings.TryGetValue("checkCertificateRevocation", out setting) && !string.IsNullOrWhiteSpace(setting))
+                    m_checkCertificateRevocation = setting.ParseBoolean();
+                else
+                    m_checkCertificateRevocation = true;
             }
 
             // Check if measurements for this connection should be marked as "internal" - i.e., owned and allowed for proxy
@@ -1126,6 +1132,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.PersistSettings = false;
                 commandChannel.MaxConnectionAttempts = 1;
                 commandChannel.CertificateFile = FilePath.GetAbsolutePath(m_localCertificate);
+                commandChannel.CheckCertificateRevocation = m_checkCertificateRevocation;
                 commandChannel.CertificateChecker = certificateChecker;
                 commandChannel.ReceiveBufferSize = bufferSize;
                 commandChannel.SendBufferSize = bufferSize;

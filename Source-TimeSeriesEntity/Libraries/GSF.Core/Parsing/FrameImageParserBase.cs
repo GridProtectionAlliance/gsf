@@ -89,7 +89,7 @@ namespace GSF.Parsing
         public event EventHandler<EventArgs<TOutputType>> DataParsed;
 
         /// <summary>
-        /// Occurs when matching an output type for deserializing the data image cound not be found.
+        /// Occurs when matching an output type for deserializing the data image could not be found.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the ID of the output type that could not be found.
@@ -121,7 +121,7 @@ namespace GSF.Parsing
         {
             m_outputTypes = new Dictionary<TTypeIdentifier, TypeInfo>();
             m_outputQueue = new AsyncQueue<EventArgs<TOutputType>>
-                {
+            {
                 ProcessItemFunction = PublishParsedOutput
             };
 
@@ -253,7 +253,7 @@ namespace GSF.Parsing
             // Call base class start method
             base.Start();
 
-            ConstructorInfo typeCtor = null;
+            ConstructorInfo typeCtor;
             List<TypeInfo> outputTypes = new List<TypeInfo>();  // Temporarily hold output types until their IDs are determined.
 
             foreach (Type type in implementations)
@@ -433,7 +433,7 @@ namespace GSF.Parsing
         /// <summary>
         /// <see cref="AsyncQueue{T}"/> handler used to publish queued outputs.
         /// </summary>
-        /// <param name="outputArgs">Event args continaing new output to publish.</param>
+        /// <param name="outputArgs">Event args containing new output to publish.</param>
         protected virtual void PublishParsedOutput(EventArgs<TOutputType> outputArgs)
         {
             try

@@ -213,10 +213,10 @@ namespace GSF.ServiceModel
         private bool m_publishMetadata;
         private bool m_allowCrossDomainAccess;
         private string m_allowedDomainList;
+        private bool m_serviceEnabled;
         private bool m_disposed;
         private bool m_initialized;
         private ServiceHost m_serviceHost;
-        private bool m_serviceEnabled;
 
         #endregion
 
@@ -231,6 +231,7 @@ namespace GSF.ServiceModel
             m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.ToNonNullString().Split(',')[1].Trim();
             m_allowCrossDomainAccess = false;
             m_allowedDomainList = "*";
+            m_serviceEnabled = true;
         }
 
         /// <summary>
@@ -386,6 +387,21 @@ namespace GSF.ServiceModel
             set
             {
                 m_allowedDomainList = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the web service is to be enabled at startup.
+        /// </summary>
+        public bool ServiceEnabled 
+        {
+            get
+            {
+                return m_serviceEnabled;
+            }
+            set
+            {
+                m_serviceEnabled = value;
             }
         }
 

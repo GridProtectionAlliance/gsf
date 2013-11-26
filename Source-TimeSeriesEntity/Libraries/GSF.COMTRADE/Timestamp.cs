@@ -73,7 +73,7 @@ namespace GSF.COMTRADE
             lineImage = string.Join(":", parts).RemoveWhiteSpace();
 
             DateTime result;
-            DateTime.TryParseExact(lineImage, new[] {"dd/MM/yyyy,HH:mm:ss.ffffff", "MM/dd/yyyy,HH:mm:ss.ffffff"}, CultureInfo.InvariantCulture, DateTimeStyles.None, out result);
+            DateTime.TryParseExact(lineImage, new[] {"d/M/yyyy,H:mm:ss.ffffff", "M/d/yyyy,H:mm:ss.ffffff"}, CultureInfo.InvariantCulture, DateTimeStyles.None, out result);
 
             Value = result.Ticks;
         }
