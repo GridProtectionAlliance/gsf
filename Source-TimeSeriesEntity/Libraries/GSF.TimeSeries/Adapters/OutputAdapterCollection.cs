@@ -57,7 +57,9 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Creates a new <see cref="OutputAdapterCollection"/>.
         /// </summary>
-        public OutputAdapterCollection()
+        /// <param name="temporalCollection">Determines if this collection is being used in a temporal <see cref="IaonSession"/>.</param>
+        public OutputAdapterCollection(bool temporalCollection)
+            : base(temporalCollection)
         {
             base.Name = "Output Adapter Collection";
             base.DataMember = "OutputAdapters";

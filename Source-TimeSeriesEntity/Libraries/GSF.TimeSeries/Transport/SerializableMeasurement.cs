@@ -42,7 +42,7 @@ namespace GSF.TimeSeries.Transport
     /// at their full resolution and no attempt is made to optimize the binary image for
     /// purposes of size reduction.
     /// </remarks>
-    public class SerializableMeasurement : ISupportBinaryImage
+    public class SerializableMeasurement : IBinaryMeasurement
     {
         #region [ Members ]
 
@@ -155,7 +155,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets or sets the raw value of this <see cref="SerializableMeasurement"/>.
         /// </summary>
-        public double Value
+        public object Value
         {
             get
             {
@@ -163,7 +163,7 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                m_value = value;
+                m_value = (double)value;
             }
         }
 
@@ -280,8 +280,8 @@ namespace GSF.TimeSeries.Transport
                 throw new InvalidOperationException("Not enough buffer available to deserialize measurement");
 
             int size, index = startIndex;
-            uint keyID;
-            string keySource = "";
+            //uint keyID;
+            //string keySource = "";
 
             // Decode key ID
             m_pointID = EndianOrder.BigEndian.ToUInt32(buffer, index);

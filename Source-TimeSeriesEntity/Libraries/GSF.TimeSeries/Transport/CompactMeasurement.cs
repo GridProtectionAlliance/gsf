@@ -168,7 +168,7 @@ namespace GSF.TimeSeries.Transport
     /// serialized and every attempt is made to optimize the binary image for purposes of size
     /// reduction.
     /// </remarks>
-    public class CompactMeasurement : ISupportBinaryImage
+    public class CompactMeasurement : IBinaryMeasurement
     {
         #region [ Members ]
 
@@ -306,7 +306,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Gets or sets the raw value of this <see cref="CompactMeasurement"/>.
         /// </summary>
-        public double Value
+        public object Value
         {
             get
             {
@@ -314,7 +314,7 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                m_value = value;
+                m_value = (double)value;
             }
         }
 

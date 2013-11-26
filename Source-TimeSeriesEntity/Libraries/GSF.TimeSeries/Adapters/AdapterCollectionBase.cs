@@ -55,7 +55,12 @@ namespace GSF.TimeSeries.Adapters
         /// Provides status messages to consumer.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// <see cref="EventArgs{T}.Argument"/> is new status message.
+        /// </para>
+        /// <para>
+        /// EventHander sender object will be represent source adapter or this collection.
+        /// </para>
         /// </remarks>
         public event EventHandler<EventArgs<string>> StatusMessage;
 
@@ -63,36 +68,58 @@ namespace GSF.TimeSeries.Adapters
         /// Event is raised when there is an exception encountered while processing.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// <see cref="EventArgs{T}.Argument"/> is the exception that was thrown.
+        /// </para>
+        /// <para>
+        /// EventHander sender object will be represent source adapter or this collection.
+        /// </para>
         /// </remarks>
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Event is raised when <see cref="InputSignals"/> are updated.
+        /// Event is raised when <see cref="InputSignals"/> are updated in any of the adapters in the collection.
         /// </summary>
+        /// <remarks>
+        /// EventHander sender object will be represent source adapter.
+        /// </remarks>
         public event EventHandler InputSignalsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputSignals"/> are updated.
+        /// Event is raised when <see cref="OutputSignals"/> are updated in any of the adapters in the collection.
         /// </summary>
+        /// <remarks>
+        /// EventHander sender object will be represent source adapter.
+        /// </remarks>
         public event EventHandler OutputSignalsUpdated;
 
         /// <summary>
-        /// Event is raised when adapter is aware of a configuration change.
+        /// Event is raised when an adapter is aware of a configuration change.
         /// </summary>
+        /// <remarks>
+        /// EventHander sender object will be represent source adapter.
+        /// </remarks>
         public event EventHandler ConfigurationChanged;
 
         /// <summary>
-        /// This event is raised if there are any time-series entities being discarded during processing.
+        /// This event is raised if there are any time-series entities being discarded during processing in any of the adapters in the collection.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="ITimeSeriesEntity"/> objects that are being discarded during processing.
+        /// </para>
+        /// <para>
+        /// EventHander sender object will be represent source adapter.
+        /// </para>
         /// </remarks>
         public event EventHandler<EventArgs<IEnumerable<ITimeSeriesEntity>>> EntitiesDiscarded;
 
         /// <summary>
         /// Event is raised when this <see cref="AdapterCollectionBase{T}"/> is disposed or an <see cref="IAdapter"/> in the collection is disposed.
         /// </summary>
+        /// <remarks>
+        /// EventHander sender object will be represent source adapter or this collection.
+        /// </remarks>
         public event EventHandler Disposed;
 
         // Fields
@@ -101,15 +128,14 @@ namespace GSF.TimeSeries.Adapters
         private bool m_initialized;
         private DataSet m_dataSource;
         private string m_dataMember;
-        private bool m_processSignalFilter;
-        private ISet<Guid> m_inputSignals;
-        private ISet<Guid> m_outputSignals;
+        private readonly bool m_temporalCollection;
         private Ticks m_lastProcessTime;
         private Time m_totalProcessTime;
         private long m_processedEntities;
         private int m_processingInterval;
         private Timer m_monitorTimer;
         private bool m_monitorTimerEnabled;
+        private bool m_delayAutoStart;
         private bool m_enabled;
         private bool m_disposed;
 
@@ -120,10 +146,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Constructs a new instance of the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        protected AdapterCollectionBase()
+        /// <param name="temporalCollection">Determines if this collection is being used in a temporal <see cref="IaonSession"/>.</param>
+        protected AdapterCollectionBase(bool temporalCollection)
         {
             m_name = GetType().Name;
             m_processingInterval = -1;
+            m_temporalCollection = temporalCollection;
 
             m_monitorTimer = new Timer();
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
@@ -192,6 +220,21 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if adapters should delay auto-start until after initialization.
+        /// </summary>
+        public virtual bool DelayAutoStart
+        {
+            get
+            {
+                return m_delayAutoStart;
+            }
+            set
+            {
+                m_delayAutoStart = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source used to load each <see cref="IAdapter"/>.
         /// Updates to this property will cascade to all items in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
@@ -199,7 +242,7 @@ namespace GSF.TimeSeries.Adapters
         /// Table name specified in <see cref="DataMember"/> from <see cref="DataSource"/> is expected
         /// to have the following table column names:<br/>
         /// ID, AdapterName, AssemblyName, TypeName, ConnectionString<br/>
-        /// ID column type should be integer based, all other column types are expected to be string based.
+        /// ID column type should be integer based, all other column types are expected to be strings.
         /// </remarks>
         public virtual DataSet DataSource
         {
@@ -229,7 +272,7 @@ namespace GSF.TimeSeries.Adapters
         /// Table name specified in <see cref="DataMember"/> from <see cref="DataSource"/> is expected
         /// to have the following table column names:<br/>
         /// ID, AdapterName, AssemblyName, TypeName, ConnectionString<br/>
-        /// ID column type should be integer based, all other column types are expected to be string based.
+        /// ID column type should be integer based, all other column types are expected to be strings.
         /// </remarks>
         public virtual string DataMember
         {
@@ -244,26 +287,13 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputSignals"/>.
+        /// Gets flag that determines if this collection is being used in a temporal <see cref="IaonSession"/>.
         /// </summary>
-        public virtual bool ProcessSignalFilter
+        public bool TemporalCollection
         {
             get
             {
-                return m_processSignalFilter;
-            }
-            set
-            {
-                m_processSignalFilter = value;
-
-                // Update this flag for items in this collection
-                lock (this)
-                {
-                    foreach (T item in this)
-                    {
-                        item.ProcessSignalFilter = m_processSignalFilter;
-                    }
-                }
+                return m_temporalCollection;
             }
         }
 
@@ -274,37 +304,19 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                // If a specific set of input signals has been assigned, use that set
-                if ((object)m_inputSignals != null)
-                    return m_inputSignals;
-
                 ISet<Guid> cumulativeSignals = new HashSet<Guid>();
 
-                // Otherwise return cumulative results of all child adapters
+                // Cumulate results of all child adapters
                 lock (this)
                 {
                     foreach (T adapter in this)
                     {
                         if ((object)adapter != null)
-                        {
-                            ISet<Guid> inputSignals = adapter.InputSignals;
-
-                            // If any of the children expects all signals (i.e., null InputSignals)
-                            // then the parent collection must expect all signals
-                            if ((object)inputSignals == null)
-                                return null;
-
-                            cumulativeSignals.UnionWith(inputSignals);
-                        }
+                            cumulativeSignals.UnionWith(adapter.InputSignals);
                     }
                 }
 
                 return cumulativeSignals;
-            }
-            set
-            {
-                m_inputSignals = value;
-                OnInputSignalsUpdated();
             }
         }
 
@@ -315,34 +327,19 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                // If a specific set of output signals has been assigned, use that set
-                if ((object)m_outputSignals != null)
-                    return m_outputSignals;
-
-                // Otherwise return cumulative results of all child adapters
                 ISet<Guid> cumulativeSignals = new HashSet<Guid>();
 
-                // Otherwise return cumulative results of all child adapters
+                // Cumulate results of all child adapters
                 lock (this)
                 {
                     foreach (T adapter in this)
                     {
                         if ((object)adapter != null)
-                        {
-                            ISet<Guid> outputSignals = adapter.OutputSignals;
-
-                            if ((object)outputSignals != null)
-                                cumulativeSignals.UnionWith(outputSignals);
-                        }
+                            cumulativeSignals.UnionWith(adapter.OutputSignals);
                     }
                 }
 
                 return cumulativeSignals;
-            }
-            set
-            {
-                m_outputSignals = value;
-                OnOutputSignalsUpdated();
             }
         }
 
@@ -600,7 +597,7 @@ namespace GSF.TimeSeries.Adapters
         {
             T item;
 
-            if (DataSource == null)
+            if ((object)DataSource == null)
                 throw new NullReferenceException(string.Format("DataSource is null, cannot load {0}", Name));
 
             if (string.IsNullOrWhiteSpace(DataMember))
@@ -615,7 +612,14 @@ namespace GSF.TimeSeries.Adapters
 
                 if (DataSource.Tables.Contains(DataMember))
                 {
-                    foreach (DataRow adapterRow in DataSource.Tables[DataMember].Rows)
+                    DataRow[] rows;
+
+                    if (m_temporalCollection)
+                        rows = DataSource.Tables[DataMember].Select("TemporalSession <> 0");
+                    else
+                        rows = DataSource.Tables[DataMember].Select();
+
+                    foreach (DataRow adapterRow in rows)
                     {
                         if (TryCreateAdapter(adapterRow, out item))
                             Add(item);
@@ -624,7 +628,9 @@ namespace GSF.TimeSeries.Adapters
                     Initialized = true;
                 }
                 else
+                {
                     throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", DataMember, Name));
+                }
             }
         }
 
@@ -638,7 +644,7 @@ namespace GSF.TimeSeries.Adapters
         /// See <see cref="DataSource"/> property for expected <see cref="DataRow"/> column names.
         /// </remarks>
         /// <exception cref="NullReferenceException"><paramref name="adapterRow"/> is null.</exception>
-        public virtual bool TryCreateAdapter(DataRow adapterRow, out T adapter)
+        protected virtual bool TryCreateAdapter(DataRow adapterRow, out T adapter)
         {
             if (adapterRow == null)
                 throw new NullReferenceException(string.Format("Cannot initialize from null adapter DataRow"));
@@ -747,18 +753,18 @@ namespace GSF.TimeSeries.Adapters
         // Explicit IAdapter implementation of TryGetAdapterByID
         bool IAdapterCollection.TryGetAdapterByID(uint id, out IAdapter adapter)
         {
-            T adapterT;
-            bool result = TryGetAdapterByID(id, out adapterT);
-            adapter = adapterT as IAdapter;
+            T typedAdapter;
+            bool result = TryGetAdapterByID(id, out typedAdapter);
+            adapter = typedAdapter;
             return result;
         }
 
         // Explicit IAdapter implementation of TryGetAdapterByName
         bool IAdapterCollection.TryGetAdapterByName(string name, out IAdapter adapter)
         {
-            T adapterT;
-            bool result = TryGetAdapterByName(name, out adapterT);
-            adapter = adapterT as IAdapter;
+            T typedAdapter;
+            bool result = TryGetAdapterByName(name, out typedAdapter);
+            adapter = typedAdapter;
             return result;
         }
 
@@ -770,47 +776,46 @@ namespace GSF.TimeSeries.Adapters
         public virtual bool TryInitializeAdapterByID(uint id)
         {
             T newAdapter, oldAdapter;
-            uint rowID;
 
-            foreach (DataRow adapterRow in DataSource.Tables[DataMember].Rows)
+            DataRow[] rows;
+
+            if (m_temporalCollection)
+                rows = DataSource.Tables[DataMember].Select(string.Format("ID = {0} AND TemporalSession <> 0", id));
+            else
+                rows = DataSource.Tables[DataMember].Select(string.Format("ID = {0}", id));
+
+            if (rows.Length > 0)
             {
-                rowID = uint.Parse(adapterRow["ID"].ToNonNullString("0"));
-
-                if (rowID == id)
+                if (TryCreateAdapter(rows[0], out newAdapter))
                 {
-                    if (TryCreateAdapter(adapterRow, out newAdapter))
+                    // Found and created new item - update collection reference
+                    bool foundItem = false;
+
+                    lock (this)
                     {
-                        // Found and created new item - update collection reference
-                        bool foundItem = false;
-
-                        lock (this)
+                        for (int i = 0; i < Count; i++)
                         {
-                            for (int i = 0; i < Count; i++)
+                            oldAdapter = this[i];
+
+                            if (oldAdapter.ID == id)
                             {
-                                oldAdapter = this[i];
+                                // Stop old item
+                                oldAdapter.Stop();
 
-                                if (oldAdapter.ID == id)
-                                {
-                                    // Stop old item
-                                    oldAdapter.Stop();
+                                // Dispose old item, initialize new item
+                                this[i] = newAdapter;
 
-                                    // Dispose old item, initialize new item
-                                    this[i] = newAdapter;
-
-                                    foundItem = true;
-                                    break;
-                                }
+                                foundItem = true;
+                                break;
                             }
-
-                            // Add item to collection if it didn't exist
-                            if (!foundItem)
-                                Add(newAdapter);
-
-                            return true;
                         }
-                    }
 
-                    break;
+                        // Add item to collection if it didn't exist
+                        if (!foundItem)
+                            Add(newAdapter);
+
+                        return true;
+                    }
                 }
             }
 
@@ -818,9 +823,13 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Starts, or restarts, each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
+        /// Starts each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        [AdapterCommand("Starts, or restarts, each adapter in the collection.", "Administrator", "Editor")]
+        /// <remarks>
+        /// When starting the adapter collections, the <see cref="DelayAutoStart"/> will set to <c>false</c> so
+        /// that adapters can actually be started.
+        /// </remarks>
+        [AdapterCommand("Starts each adapter in the collection.", "Administrator", "Editor")]
         public virtual void Start()
         {
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
@@ -828,8 +837,15 @@ namespace GSF.TimeSeries.Adapters
             {
                 m_enabled = true;
 
+                // We must set delay auto-start to false so that adapters can start - this can been set
+                // during initialization to delay the automatic starting process as needed, but now that
+                // start has been requested, the adapters must start.
+                DelayAutoStart = false;
+
                 ResetStatistics();
 
+                // This will "restart" all adapters that were previously stopped - note that during startup
+                // any adapters that were set to auto-start will be automatically started after initialization
                 lock (this)
                 {
                     foreach (T item in this)
@@ -842,73 +858,6 @@ namespace GSF.TimeSeries.Adapters
                 // Start data monitor...
                 if (MonitorTimerEnabled)
                     m_monitorTimer.Start();
-            }
-        }
-
-        // Thread delegate to handle item startup
-        private void InitializeAndStartItem(T item)
-        {
-            Timer initializationTimeoutTimer = null;
-
-            try
-            {
-                // If initialization timeout is specified for this item,
-                // start the initialization timeout timer
-                if (item.InitializationTimeout > 0)
-                {
-                    initializationTimeoutTimer = new Timer(item.InitializationTimeout);
-
-                    initializationTimeoutTimer.Elapsed += (sender, args) =>
-                    {
-                        const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
-                            " its timeout of {1} seconds. The adapter may still initialize, however this" +
-                            " may indicate a problem with the adapter. If you consider this to be normal," +
-                            " try adjusting the initialization timeout to suppress this message during" +
-                            " normal operations.";
-
-                        OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
-                    };
-
-                    initializationTimeoutTimer.AutoReset = false;
-                    initializationTimeoutTimer.Start();
-                }
-
-                // Initialize the item
-                item.Initialize();
-
-                // Initialization successfully completed, so stop the timeout timer
-                if ((object)initializationTimeoutTimer != null)
-                    initializationTimeoutTimer.Stop();
-
-                try
-                {
-                    // If the item is set to auto-start, start it now
-                    if (item.AutoStart)
-                        item.Start();
-                }
-                catch (Exception ex)
-                {
-                    // We report any errors encountered during startup...
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
-                }
-
-                // Set item to its final initialized state so that
-                // start and stop commands may be issued to the adapter
-                item.Initialized = true;
-
-                // If input signals were not updated during initialize of the adapter,
-                // make sure to notify routing tables that adapter is ready for broadcast
-                OnInputSignalsUpdated();
-            }
-            catch (Exception ex)
-            {
-                // We report any errors encountered during initialization...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to initialize adapter {0}: {1}", item.Name, ex.Message), ex));
-            }
-            finally
-            {
-                if ((object)initializationTimeoutTimer != null)
-                    initializationTimeoutTimer.Dispose();
             }
         }
 
@@ -960,9 +909,72 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Defines a temporal processing constraint for the adapter collection and applies this constraint to each adapter.
+        /// </summary>
+        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+        /// <remarks>
+        /// <para>
+        /// This method defines a temporal processing constraint for an adapter, i.e., the start and stop time over which an
+        /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+        /// should be able to dynamically handle multiple calls to this function with new constraints. Passing in <c>null</c>
+        /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+        /// return the adapter to standard / real-time operation.
+        /// </para>
+        /// <para>
+        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+        /// following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        [AdapterCommand("Defines a temporal processing constraint for each adapter in the collection.", "Administrator", "Editor", "Viewer")]
+        public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
+        {
+            // Apply temporal constraint to all adapters in this collection
+            lock (this)
+            {
+                foreach (T adapter in this)
+                {
+                    adapter.SetTemporalConstraint(startTime, stopTime, constraintParameters);
+                }
+            }
+        }
+
+        /// <summary>
         /// Raises <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
+        // internal protection level specified to allow attachment via temporal sessions
         internal protected virtual void OnProcessException(Exception ex)
         {
             if ((object)ProcessException != null)
@@ -995,6 +1007,7 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// This overload combines string.Format and SendStatusMessage for convenience.
         /// </remarks>
+        // internal protection level specified to allow attachment via temporal sessions
         internal protected virtual void OnStatusMessage(string formattedStatus, params object[] args)
         {
             try
@@ -1009,74 +1022,7 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        /// <summary>
-        /// Raises <see cref="InputSignalsUpdated"/> event.
-        /// </summary>
-        protected virtual void OnInputSignalsUpdated()
-        {
-            try
-            {
-                if ((object)InputSignalsUpdated != null)
-                    InputSignalsUpdated(this, EventArgs.Empty);
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for InputSignalsUpdated event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
-        /// Raises <see cref="OutputSignalsUpdated"/> event.
-        /// </summary>
-        protected virtual void OnOutputSignalsUpdated()
-        {
-            try
-            {
-                if ((object)OutputSignalsUpdated != null)
-                    OutputSignalsUpdated(this, EventArgs.Empty);
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for OutputSignalsUpdated event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
-        /// Raises <see cref="ConfigurationChanged"/> event.
-        /// </summary>
-        protected virtual void OnConfigurationChanged()
-        {
-            try
-            {
-                if ((object)ConfigurationChanged != null)
-                    ConfigurationChanged(this, EventArgs.Empty);
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for ConfigurationChanged event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="EntitiesDiscarded"/> event.
-        /// </summary>
-        /// <param name="entities">Enumeration of <see cref="ITimeSeriesEntity"/> objects being discarded.</param>
-        protected virtual void OnEntitiesDiscarded(IEnumerable<ITimeSeriesEntity> entities)
-        {
-            try
-            {
-                if ((object)EntitiesDiscarded != null)
-                    EntitiesDiscarded(this, new EventArgs<IEnumerable<ITimeSeriesEntity>>(entities));
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for EntitiesDiscarded event: {0}", ex.Message), ex));
-            }
-        }
+        // The following Collection<T> overrides allow operational interceptions to collection that we use to automatically manage adapter lifecycles
 
         /// <summary>
         /// Removes all elements from the <see cref="Collection{T}"/>.
@@ -1157,8 +1103,8 @@ namespace GSF.TimeSeries.Adapters
                 // Wire up events
                 item.StatusMessage += item_StatusMessage;
                 item.ProcessException += item_ProcessException;
-                item.InputSignalsUpdated += ItemInputSignalsUpdated;
-                item.OutputSignalsUpdated += ItemOutputSignalsUpdated;
+                item.InputSignalsUpdated += item_InputSignalsUpdated;
+                item.OutputSignalsUpdated += item_OutputSignalsUpdated;
                 item.ConfigurationChanged += item_ConfigurationChanged;
                 item.EntitiesDiscarded += item_EntitiesDiscarded;
                 item.Disposed += item_Disposed;
@@ -1169,9 +1115,9 @@ namespace GSF.TimeSeries.Adapters
                     // thread pool so it can take needed amount of time
                     if (AutoInitialize)
                     {
-                        Thread itemThread = new Thread(() => InitializeAndStartItem(item));
+                        Thread itemThread = new Thread(InitializeAndStartItem);
                         itemThread.IsBackground = true;
-                        itemThread.Start();
+                        itemThread.Start(item);
                     }
                 }
                 catch (Exception ex)
@@ -1197,8 +1143,8 @@ namespace GSF.TimeSeries.Adapters
                 // Un-wire events
                 item.StatusMessage -= item_StatusMessage;
                 item.ProcessException -= item_ProcessException;
-                item.InputSignalsUpdated -= ItemInputSignalsUpdated;
-                item.OutputSignalsUpdated -= ItemOutputSignalsUpdated;
+                item.InputSignalsUpdated -= item_InputSignalsUpdated;
+                item.OutputSignalsUpdated -= item_OutputSignalsUpdated;
                 item.ConfigurationChanged -= item_ConfigurationChanged;
                 item.EntitiesDiscarded -= item_EntitiesDiscarded;
 
@@ -1207,6 +1153,78 @@ namespace GSF.TimeSeries.Adapters
                 item.Disposed -= item_Disposed;
             }
         }
+
+        // Thread delegate to handle item startup
+        private void InitializeAndStartItem(object state)
+        {
+            T item = state as T;
+
+            if ((object)item == null)
+                return;
+
+            Timer initializationTimeoutTimer = null;
+
+            try
+            {
+                // If initialization timeout is specified for this item, start the initialization timeout timer
+                if (item.InitializationTimeout > 0)
+                {
+                    initializationTimeoutTimer = new Timer(item.InitializationTimeout);
+
+                    initializationTimeoutTimer.Elapsed += (sender, args) =>
+                    {
+                        const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
+                            " its timeout of {1} seconds. The adapter may still initialize, however this" +
+                            " may indicate a problem with the adapter. If you consider this to be normal," +
+                            " try adjusting the initialization timeout to suppress this message during" +
+                            " normal operations.";
+
+                        OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0D);
+                    };
+
+                    initializationTimeoutTimer.AutoReset = false;
+                    initializationTimeoutTimer.Start();
+                }
+
+                // Initialize the item
+                item.Initialize();
+
+                // Initialization successfully completed, so stop the timeout timer
+                if ((object)initializationTimeoutTimer != null)
+                    initializationTimeoutTimer.Stop();
+
+                // Set item to its final initialized state so that start and stop commands may be issued to the adapter
+                item.Initialized = true;
+
+                try
+                {
+                    // If the item is set to auto-start, start it now
+                    if (!m_delayAutoStart && item.AutoStart)
+                        item.Start();
+                }
+                catch (Exception ex)
+                {
+                    // We report any errors encountered during startup...
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
+                }
+            }
+            catch (Exception ex)
+            {
+                // We report any errors encountered during initialization...
+                OnProcessException(new InvalidOperationException(string.Format("Failed to initialize adapter {0}: {1}", item.Name, ex.Message), ex));
+            }
+            finally
+            {
+                if ((object)initializationTimeoutTimer != null)
+                    initializationTimeoutTimer.Dispose();
+            }
+        }
+
+        // In these individual item handlers it is important to directly raise events instead
+        // of going though the "On<EventName>" proxy event raisers so that the source item
+        // can be sent in through then "sender" object. Additionally, each item's event
+        // raiser is already set to protect code from consumer thrown exceptions so there is
+        // no need to replicate this protection.
 
         // Raise status message event on behalf of each item in collection
         private void item_StatusMessage(object sender, EventArgs<string> e)
@@ -1223,14 +1241,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         // Raise input signals updated event on behalf of each item in collection
-        private void ItemInputSignalsUpdated(object sender, EventArgs e)
+        private void item_InputSignalsUpdated(object sender, EventArgs e)
         {
             if ((object)InputSignalsUpdated != null)
                 InputSignalsUpdated(sender, e);
         }
 
         // Raise output signals updated event on behalf of each item in collection
-        private void ItemOutputSignalsUpdated(object sender, EventArgs e)
+        private void item_OutputSignalsUpdated(object sender, EventArgs e)
         {
             if ((object)OutputSignalsUpdated != null)
                 OutputSignalsUpdated(sender, e);

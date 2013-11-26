@@ -61,7 +61,9 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Creates a new <see cref="InputAdapterCollection"/>.
         /// </summary>
-        public InputAdapterCollection()
+        /// <param name="temporalCollection">Determines if this collection is being used in a temporal <see cref="IaonSession"/>.</param>
+        public InputAdapterCollection(bool temporalCollection)
+            : base(temporalCollection)
         {
             base.Name = "Input Adapter Collection";
             base.DataMember = "InputAdapters";

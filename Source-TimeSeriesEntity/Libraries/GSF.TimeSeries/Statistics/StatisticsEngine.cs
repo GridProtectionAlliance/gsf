@@ -361,7 +361,7 @@ namespace GSF.TimeSeries.Statistics
 
         private void CalculateStatistics()
         {
-            List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
+            List<ITimeSeriesEntity> calculatedStatistics = new List<ITimeSeriesEntity>();
             StatisticSource[] sources;
             Statistic[] statistics;
             DateTime serverTime;
@@ -451,16 +451,7 @@ namespace GSF.TimeSeries.Statistics
                 if ((object)statistic != null)
                 {
                     // Calculate the current value of the statistic measurement
-                    return new Measurement
-                        {
-                            ID = signalID,
-                            Key = MeasurementKey.Parse(measurement["ID"].ToString(), signalID),
-                            TagName = measurement["PointTag"].ToNonNullString(),
-                            Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
-                            Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
-                            Value = statistic.Method(source.Source, statistic.Arguments),
-                            Timestamp = serverTime
-                        };
+                    return new Measurement<double>(signalID, serverTime, MeasurementStateFlags.Normal, statistic.Method(source.Source, statistic.Arguments));
                 }
             }
             catch (Exception ex)

@@ -410,7 +410,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_remotelySynchronized;
 
         private int m_framesPerSecond;
-        private DownsamplingMethod m_downsamplingMethod;
+        private string m_downsamplingMethod;
         private bool m_allowPreemptivePublishing;
 
         private bool m_allowSortsByArrival;
@@ -431,7 +431,7 @@ namespace GSF.TimeSeries.Transport
             m_remotelySynchronized = remotelySynchronized;
 
             m_framesPerSecond = framesPerSecond;
-            m_downsamplingMethod = DownsamplingMethod.LastReceived;
+            m_downsamplingMethod = "LastReceived";
             m_allowPreemptivePublishing = true;
 
             m_allowSortsByArrival = true;
@@ -478,7 +478,7 @@ namespace GSF.TimeSeries.Transport
         /// the subscription is lower than the frame rate of the measurement's
         /// source.
         /// </summary>
-        public DownsamplingMethod DownsamplingMethod
+        public string DownsamplingMethod
         {
             get
             {

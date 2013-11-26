@@ -204,17 +204,6 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Gets reference to the <see cref="AllAdaptersCollection"/>.
-        /// </summary>
-        protected AllAdaptersCollection AllAdapters
-        {
-            get
-            {
-                return m_iaonSession.AllAdapters;
-            }
-        }
-
-        /// <summary>
         /// Gets reference to the <see cref="InputAdapterCollection"/>.
         /// </summary>
         protected InputAdapterCollection InputAdapters
@@ -1204,7 +1193,7 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        DisplayStatusMessage("Executing startup data operation \"{0}\".", UpdateType.Information, row["Description"].ToNonNullString("Unlabled"));
+                        DisplayStatusMessage("Executing startup data operation \"{0}\".", UpdateType.Information, row["Description"].ToNonNullString("[Unlabeled]"));
 
                         // Load data operation parameters
                         assemblyName = row["AssemblyName"].ToNonNullString();
@@ -1565,7 +1554,7 @@ namespace GSF.TimeSeries
                         return adapter;
 
                     // Try looking for ID in any collection if all runtime ID's are unique
-                    if (m_uniqueAdapterIDs && m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                    if (m_uniqueAdapterIDs && m_iaonSession.TryGetAnyAdapterByID(id, out adapter, out collection))
                         return adapter;
 
                     collection = GetRequestedCollection(requestInfo);
@@ -1578,7 +1567,7 @@ namespace GSF.TimeSeries
                         return adapter;
 
                     // Try looking for adapter name in any collection
-                    if (m_iaonSession.AllAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
+                    if (m_iaonSession.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
                         return adapter;
 
                     collection = GetRequestedCollection(requestInfo);
@@ -1824,32 +1813,34 @@ namespace GSF.TimeSeries
             }
             else
             {
-                IAdapter adapter = null;
+                IProvideStatus adapterOrCollection = null;
                 string command = null;
 
-                // See if specific ID for an adapter was requested
+                // See if specific ID for an adapter or collection type was requested
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
                 {
                     if (requestInfo.Request.Arguments.Exists("OrderedArg2"))
                     {
-                        adapter = GetRequestedAdapter(requestInfo);
+                        adapterOrCollection = GetRequestedAdapter(requestInfo);
                         command = requestInfo.Request.Arguments["OrderedArg2"];
                     }
                     else
                     {
-                        adapter = GetRequestedCollection(requestInfo);
+                        adapterOrCollection = GetRequestedCollection(requestInfo);
                         command = requestInfo.Request.Arguments["OrderedArg1"];
                     }
                 }
                 else
+                {
                     SendResponse(requestInfo, false, "No command was specified to invoke.");
+                }
 
-                if (adapter != null)
+                if ((object)adapterOrCollection != null)
                 {
                     try
                     {
                         // See if method exists with specified name using reflection
-                        MethodInfo method = adapter.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                        MethodInfo method = adapterOrCollection.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
                         // Invoke method
                         if (method != null)
@@ -1866,7 +1857,7 @@ namespace GSF.TimeSeries
                                 if (parameterInfo.Length == 0)
                                 {
                                     // Invoke parameterless adapter command
-                                    returnValue = method.Invoke(adapter, null);
+                                    returnValue = method.Invoke(adapterOrCollection, null);
                                 }
                                 else
                                 {
@@ -1884,7 +1875,7 @@ namespace GSF.TimeSeries
                                             .ToArray();
 
                                         // Invoke adapter command with specified parameters
-                                        returnValue = method.Invoke(adapter, parameters);
+                                        returnValue = method.Invoke(adapterOrCollection, parameters);
                                     }
                                     else
                                     {
@@ -1905,12 +1896,12 @@ namespace GSF.TimeSeries
                             }
                             else
                             {
-                                SendResponse(requestInfo, false, "Specified command \"{0}\" is not marked as invokable for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
+                                SendResponse(requestInfo, false, "Specified command \"{0}\" is not marked as invokable for adapter \"{1}\" [Type = {2}].", command, adapterOrCollection.Name, adapterOrCollection.GetType().Name);
                             }
                         }
                         else
                         {
-                            SendResponse(requestInfo, false, "Specified command \"{0}\" does not exist for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
+                            SendResponse(requestInfo, false, "Specified command \"{0}\" does not exist for adapter \"{1}\" [Type = {2}].", command, adapterOrCollection.Name, adapterOrCollection.GetType().Name);
                         }
                     }
                     catch (Exception ex)
@@ -1964,20 +1955,20 @@ namespace GSF.TimeSeries
             }
             else
             {
-                IAdapter adapter;
+                IProvideStatus adapterOrCollection;
 
-                // See if specific ID for an adapter was requested
+                // See if specific ID for an adapter or collection type was requested
                 if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
-                    adapter = GetRequestedAdapter(requestInfo);
+                    adapterOrCollection = GetRequestedAdapter(requestInfo);
                 else
-                    adapter = GetRequestedCollection(requestInfo);
+                    adapterOrCollection = GetRequestedCollection(requestInfo);
 
-                if (adapter != null)
+                if ((object)adapterOrCollection != null)
                 {
                     try
                     {
-                        // Get public command methods of specified adpater using reflection
-                        MethodInfo[] methods = adapter.GetType().GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                        // Get public command methods of specified adapter using reflection
+                        MethodInfo[] methods = adapterOrCollection.GetType().GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
 
                         // Invoke method
                         StringBuilder methodList = new StringBuilder();
@@ -1985,7 +1976,7 @@ namespace GSF.TimeSeries
                         bool firstParameter;
                         string typeName;
 
-                        methodList.AppendFormat("Adapter \"{0}\" [Type = {1}] Command List:", adapter.Name, adapter.GetType().Name);
+                        methodList.AppendFormat("Adapter \"{0}\" [Type = {1}] Command List:", adapterOrCollection.Name, adapterOrCollection.GetType().Name);
                         methodList.AppendLine();
                         methodList.AppendLine();
 
@@ -2051,7 +2042,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
-        /// Performs initialization or reinitialization of specified adapter or collection.
+        /// Performs initialization or re-initialization of specified adapter or collection.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void InitializeRequestHandler(ClientRequestInfo requestInfo)
@@ -2116,11 +2107,11 @@ namespace GSF.TimeSeries
                             uint id;
 
                             // Try initializing new adapter by ID searching in any collection if all runtime ID's are unique
-                            if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out id) && m_iaonSession.AllAdapters.TryInitializeAdapterByID(id))
+                            if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out id) && m_iaonSession.TryInitializeAdapterByID(id))
                             {
                                 IAdapter adapter;
 
-                                if (m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                                if (m_iaonSession.TryGetAnyAdapterByID(id, out adapter, out collection))
                                     SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
                                 else
                                     SendResponse(requestInfo, true, "Adapter ({1}) was successfully initialized...", id);
@@ -2368,6 +2359,7 @@ namespace GSF.TimeSeries
 
                 if (requestInfo.Request.Arguments.Exists(m_configurationType.ToString()))
                 {
+                    // TODO: Should likely cache...
                     DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
                     dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
 
@@ -2402,7 +2394,7 @@ namespace GSF.TimeSeries
 
                 if (systemConfigurationLoaded || (object)dataSource != null)
                 {
-                    m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
+                    m_iaonSession.UpdateCollectionConfigurations();
                     SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
                 }
                 else
@@ -2452,7 +2444,7 @@ namespace GSF.TimeSeries
                 {
                     // Update data source on all adapters in all collections
                     m_iaonSession.DataSource = dataSource;
-                    m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
+                    m_iaonSession.UpdateCollectionConfigurations();
                     SendResponse(requestInfo, true, "System configuration was successfully augmented.");
 
                     // Cache current configuration

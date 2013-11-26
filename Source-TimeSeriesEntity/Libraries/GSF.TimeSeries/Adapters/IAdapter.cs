@@ -169,30 +169,25 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if signals being queued for processing should be tested to see if they are in the <see cref="InputSignals"/>.
-        /// </summary>
-        bool ProcessSignalFilter
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets the collection of signals the adapter wishes to receive as input.
         /// </summary>
+        /// <remarks>
+        /// It is expected that that this value will never return null.
+        /// </remarks>
         ISet<Guid> InputSignals
         {
             get;
-            set;
         }
 
         /// <summary>
         /// Gets or sets the collection of signals the adapter plans to create as output.
         /// </summary>
+        /// <remarks>
+        /// It is expected that that this value will never return null.
+        /// </remarks>
         ISet<Guid> OutputSignals
         {
             get;
-            set;
         }
 
         /// <summary>

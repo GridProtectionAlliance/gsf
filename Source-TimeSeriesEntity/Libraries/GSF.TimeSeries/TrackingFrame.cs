@@ -124,7 +124,8 @@ namespace GSF.TimeSeries
         /// <returns>A boolean value indicating whether the value was successfully added to the tracking frame.</returns>
         /// <remarks>
         /// In multi-threaded scenarios, this thread will fail to add entities to the frame if multiple producer
-        /// threads attempt to add entities to the tracking frame at the same time. Additionally, after the first
+        /// threads attempt to add entities to the tracking frame at the same time (in scenarios related to the
+        /// <see cref="ConcentratorBase"/> class there will only be one producer). Additionally, after the first
         /// call to <see cref="GetEntities"/>, the tracking frame will be locked so that this method will always
         /// fail to add the entity to the frame. In these cases, this method will do nothing and return false.
         /// </remarks>

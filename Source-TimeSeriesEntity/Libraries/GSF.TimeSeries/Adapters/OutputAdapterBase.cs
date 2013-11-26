@@ -359,10 +359,6 @@ namespace GSF.TimeSeries.Adapters
             {
                 return base.OutputSignals;
             }
-            set
-            {
-                base.OutputSignals = value;
-            }
         }
 
         #endregion
@@ -441,10 +437,10 @@ namespace GSF.TimeSeries.Adapters
             // Force a recalculation of input signals so that system can appropriately update routing tables
             string setting;
 
+            InputSignals.Clear();
+
             if (Settings.TryGetValue("inputSignals", out setting))
-                InputSignals = ParseFilterExpression(DataSource, true, setting);
-            else
-                InputSignals = null;
+                InputSignals.UnionWith(ParseFilterExpression(DataSource, true, setting));
 
             InputSourceIDs = InputSourceIDs;
         }
@@ -552,25 +548,9 @@ namespace GSF.TimeSeries.Adapters
             if (m_disposed)
                 return;
 
-            if (!ProcessSignalFilter || (object)InputSignals == null)
-            {
-                // No further filtering of incoming entities required
-                m_entityQueue.AddRange(entities);
-                IncrementProcessedEntities(entities.Count());
-            }
-            else
-            {
-                // Filter entities down to specified input signals
-                List<ITimeSeriesEntity> filteredEntities = entities
-                    .Where(entity => IsInputSignal(entity.ID))
-                    .ToList();
-
-                if (filteredEntities.Count > 0)
-                {
-                    m_entityQueue.AddRange(filteredEntities);
-                    IncrementProcessedEntities(filteredEntities.Count);
-                }
-            }
+            // No further filtering of incoming entities required
+            m_entityQueue.AddRange(entities);
+            IncrementProcessedEntities(entities.Count());
         }
 
         /// <summary>

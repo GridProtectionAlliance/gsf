@@ -26,16 +26,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Reflection;
-using GSF.Security.Cryptography;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -50,6 +40,16 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using System.Xml;
+using GSF.Collections;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
@@ -1187,7 +1187,7 @@ namespace GSF.TimeSeries.Transport
         // Returns true if output measurements were updated, otherwise false if they remain the same.
         private bool UpdateOutputMeasurements(bool initialCall = false)
         {
-            IMeasurement[] originalOutputMeasurements = OutputSignals;
+            ISet<Guid> originalOutputMeasurements = OutputSignals;
 
             // Reapply output measurements if reinitializing - this way filter expressions and/or sourceIDs
             // will be reapplied. This can be important after a meta-data refresh which may have added new
@@ -1196,8 +1196,10 @@ namespace GSF.TimeSeries.Transport
             {
                 string setting;
 
+                OutputSignals.Clear();
+
                 if (Settings.TryGetValue("outputMeasurements", out setting))
-                    OutputSignals = ParseOutputMeasurements(DataSource, true, setting);
+                    OutputSignals.UnionWith(ParseFilterExpression(DataSource, true, setting));
 
                 OutputSourceIDs = OutputSourceIDs;
             }
@@ -1209,39 +1211,18 @@ namespace GSF.TimeSeries.Transport
                 {
                     // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
                     DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0");
-                    List<IMeasurement> subscribedMeasurements = new List<IMeasurement>();
-                    MeasurementKey key;
+                    HashSet<Guid> subscribedMeasurements = new HashSet<Guid>();
                     Guid signalID;
 
                     foreach (DataRow row in filteredRows)
                     {
-                        // Create a new measurement for the provided field level information
-                        Measurement measurement = new Measurement();
-
                         // Parse primary measurement identifier
                         signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-
-                        // Set measurement key if defined
-                        if (MeasurementKey.TryParse(row["ID"].ToString(), signalID, out key))
-                            measurement.Key = key;
-
-                        // Assign other attributes
-                        measurement.ID = signalID;
-                        measurement.TagName = row["PointTag"].ToNonNullString();
-                        measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-                        measurement.Adder = double.Parse(row["Adder"].ToString());
-
-                        subscribedMeasurements.Add(measurement);
+                        subscribedMeasurements.Add(signalID);
                     }
 
-                    if (subscribedMeasurements.Count > 0)
-                    {
-                        // Combine subscribed output measurement with any existing output measurement and return unique set
-                        if ((object)OutputSignals == null)
-                            OutputSignals = subscribedMeasurements.ToArray();
-                        else
-                            OutputSignals = subscribedMeasurements.Concat(OutputSignals).Distinct().ToArray();
-                    }
+                    // Combine subscribed output measurement with any existing output measurement and return unique set
+                    OutputSignals.UnionWith(subscribedMeasurements);
                 }
                 catch (Exception ex)
                 {
@@ -1255,7 +1236,7 @@ namespace GSF.TimeSeries.Transport
             TryFilterOutputMeasurements();
 
             // Determine if output measurements have changed
-            return originalOutputMeasurements.CompareTo(OutputSignals, false) != 0;
+            return originalOutputMeasurements.SetEquals(OutputSignals);
         }
 
         // When synchronizing meta-data, the publisher sends meta-data for all possible signals we can subscribe to.
@@ -1263,22 +1244,19 @@ namespace GSF.TimeSeries.Transport
         // the published meta-data rather than blindly attempting to subscribe to all signals.
         private void TryFilterOutputMeasurements()
         {
-            IEnumerable<Guid> measurementIDs;
-            ISet<Guid> measurementIDSet;
+            IEnumerable<Guid> signals;
             Guid signalID = Guid.Empty;
 
             try
             {
-                if ((object)OutputSignals != null && (object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
+                if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
                 {
-                    measurementIDs = DataSource.Tables["ActiveMeasurements"]
+                    signals = DataSource.Tables["ActiveMeasurements"]
                         .Select(string.Format("DeviceID = {0}", ID))
                         .Where(row => Guid.TryParse(row["SignalID"].ToNonNullString(), out signalID))
                         .Select(row => signalID);
 
-                    measurementIDSet = new HashSet<Guid>(measurementIDs);
-
-                    OutputSignals = OutputSignals.Where(measurement => measurementIDSet.Contains(measurement.ID)).ToArray();
+                    OutputSignals.IntersectWith(signals);
                 }
             }
             catch (Exception ex)
@@ -1378,7 +1356,7 @@ namespace GSF.TimeSeries.Transport
                 connectionString.AppendFormat("allowSortsByArrival={0};", info.AllowSortsByArrival);
                 connectionString.AppendFormat("timeResolution={0};", info.TimeResolution);
                 connectionString.AppendFormat("allowPreemptivePublishing={0};", info.AllowPreemptivePublishing);
-                connectionString.AppendFormat("downsamplingMethod={0};", info.DownsamplingMethod.ToString());
+                connectionString.AppendFormat("downsamplingMethod={0};", info.DownsamplingMethod);
                 connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
                 connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
@@ -1418,7 +1396,10 @@ namespace GSF.TimeSeries.Transport
                 localConcentrator.AllowSortsByArrival = info.AllowSortsByArrival;
                 localConcentrator.TimeResolution = info.TimeResolution;
                 localConcentrator.AllowPreemptivePublishing = info.AllowPreemptivePublishing;
-                localConcentrator.FilterFunction = info.DownsamplingMethod;
+
+                // TODO: Setup proper filter function based
+                localConcentrator.FilterFunction = null; //info.DownsamplingMethod;
+
                 localConcentrator.UsePrecisionTimer = false;
 
                 // Parse time constraints, if defined
@@ -1569,7 +1550,7 @@ namespace GSF.TimeSeries.Transport
         /// </para>
         /// </remarks>
         [Obsolete("Preferred method uses SubscriptionInfo object to subscribe.", false)]
-        public virtual bool RemotelySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
+        public virtual bool RemotelySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, string downsamplingMethod = "LastReceived", string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
             // Dispose of any previously established local concentrator
             DisposeLocalConcentrator();
@@ -1588,7 +1569,7 @@ namespace GSF.TimeSeries.Transport
             connectionString.AppendFormat("allowSortsByArrival={0}; ", allowSortsByArrival);
             connectionString.AppendFormat("timeResolution={0}; ", (long)timeResolution);
             connectionString.AppendFormat("allowPreemptivePublishing={0}; ", allowPreemptivePublishing);
-            connectionString.AppendFormat("downsamplingMethod={0}; ", downsamplingMethod.ToString());
+            connectionString.AppendFormat("downsamplingMethod={0}; ", downsamplingMethod);
             connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
             connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
@@ -1673,7 +1654,7 @@ namespace GSF.TimeSeries.Transport
         /// </para>
         /// </remarks>
         [Obsolete("Preferred method uses SubscriptionInfo object to subscribe.", false)]
-        public virtual bool LocallySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
+        public virtual bool LocallySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, string downsamplingMethod = "LastReceived", string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
         {
             // Dispose of any previously established local concentrator
             DisposeLocalConcentrator();
@@ -1689,7 +1670,13 @@ namespace GSF.TimeSeries.Transport
             m_localConcentrator.AllowSortsByArrival = allowSortsByArrival;
             m_localConcentrator.TimeResolution = timeResolution;
             m_localConcentrator.AllowPreemptivePublishing = allowPreemptivePublishing;
-            m_localConcentrator.FilterFunction = downsamplingMethod;
+
+            // TODO: Determine how to specify and lookup desired down-sampling method from a subscription perspective
+            if (string.IsNullOrEmpty(downsamplingMethod) || string.Compare(downsamplingMethod, "LastReceived", true) == 0)
+                m_localConcentrator.FilterFunction = null;
+            else
+                throw new InvalidOperationException("Cannot use specified down-sampling method: " + downsamplingMethod);
+
             m_localConcentrator.UsePrecisionTimer = false;
 
             // Parse time constraints, if defined
@@ -2253,7 +2240,7 @@ namespace GSF.TimeSeries.Transport
                             long now = DateTime.UtcNow.Ticks;
 
                             // Deserialize data packet
-                            List<IMeasurement> measurements = new List<IMeasurement>();
+                            List<ITimeSeriesEntity> measurements = new List<ITimeSeriesEntity>();
                             DataPacketFlags flags;
                             Ticks timestamp = 0;
                             int count;
@@ -2406,16 +2393,12 @@ namespace GSF.TimeSeries.Transport
                                     throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + signalIndex);
 
                                 // Skip the sequence number and signal index when creating the buffer block measurement
-                                timeSeriesBuffer = new TimeSeriesBuffer(buffer, responseIndex + 6, responseLength - 6)
-                                {
-                                    ID = measurementKey.Item1,
-                                    Key = new MeasurementKey(measurementKey.Item1, measurementKey.Item3, measurementKey.Item2)
-                                };
+                                timeSeriesBuffer = new TimeSeriesBuffer(measurementKey.Item1, DateTime.UtcNow.Ticks, buffer, responseIndex + 6, responseLength - 6);
 
                                 // Determine if this is the next buffer block in the sequence
                                 if (sequenceNumber == m_expectedBufferBlockSequenceNumber)
                                 {
-                                    List<IMeasurement> bufferBlockMeasurements = new List<IMeasurement>();
+                                    List<ITimeSeriesEntity> bufferBlockMeasurements = new List<ITimeSeriesEntity>();
                                     int i;
 
                                     // Add the buffer block measurement to the list of measurements to be published
@@ -2578,27 +2561,17 @@ namespace GSF.TimeSeries.Transport
 
         private void SubscribeToOutputMeasurements(bool metaDataRefreshCompleted)
         {
-            StringBuilder filterExpression = new StringBuilder();
             string dataChannel = null;
 
             // If TCP command channel is defined separately, then base connection string defines data channel
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
 
-            if ((object)OutputSignals != null && OutputSignals.Length > 0)
+            if (OutputSignals.Count > 0)
             {
-                foreach (IMeasurement measurement in OutputSignals)
-                {
-                    if (filterExpression.Length > 0)
-                        filterExpression.Append(';');
-
-                    // Subscribe by associated Guid...
-                    filterExpression.Append(measurement.ID);
-                }
-
-                // Start unsynchronized subscription
 #pragma warning disable 0618
-                UnsynchronizedSubscribe(true, false, filterExpression.ToString(), dataChannel);
+                // Start unsynchronized subscription
+                UnsynchronizedSubscribe(true, false, OutputSignals.ToDelimitedString(';'), dataChannel);
             }
             else if (metaDataRefreshCompleted)
             {

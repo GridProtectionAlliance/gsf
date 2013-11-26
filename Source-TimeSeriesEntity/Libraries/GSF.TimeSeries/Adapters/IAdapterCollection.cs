@@ -32,7 +32,7 @@ namespace GSF.TimeSeries.Adapters
     /// <summary>
     /// Represents the abstract interface for a collection of adapters.
     /// </summary>
-    public interface IAdapterCollection : IList<IAdapter>
+    public interface IAdapterCollection : IList<IAdapter>, IProvideStatus
     {
         #region [ Members ]
 
@@ -42,7 +42,12 @@ namespace GSF.TimeSeries.Adapters
         /// Provides status messages to consumer.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// <see cref="EventArgs{T}.Argument"/> is new status message.
+        /// </para>
+        /// <para>
+        /// EventHander sender object will be represent source adapter or this collection.
+        /// </para>
         /// </remarks>
         event EventHandler<EventArgs<string>> StatusMessage;
 
@@ -51,52 +56,93 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <remarks>
         /// <para>
+        /// <see cref="EventArgs{T}.Argument"/> is the exception that was thrown.
+        /// </para>
+        /// <para>
         /// Implementations of this interface are expected to capture any exceptions that might be thrown by
         /// user code in any processing to prevent third-party code from causing an unhandled exception
         /// in the host.  Errors are reported via this event so host administrators will be aware of the exception.
         /// Any needed connection cycle to data adapter should be restarted when an exception is encountered.
         /// </para>
         /// <para>
-        /// <see cref="EventArgs{T}.Argument"/> is the exception that was thrown.
+        /// EventHander sender object will be represent source adapter or this collection.
         /// </para>
         /// </remarks>
         event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Event is raised when <see cref="InputSignals"/> are updated.
+        /// Event is raised when <see cref="InputSignals"/> are updated in any of the adapters in the collection.
         /// </summary>
+        /// <remarks>
+        /// EventHander sender object will be represent source adapter.
+        /// </remarks>
         event EventHandler InputSignalsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputSignals"/> are updated.
+        /// Event is raised when <see cref="OutputSignals"/> are updated in any of the adapters in the collection.
         /// </summary>
+        /// <remarks>
+        /// EventHander sender object will be represent source adapter.
+        /// </remarks>
         event EventHandler OutputSignalsUpdated;
 
         /// <summary>
-        /// Event is raised when adapter is aware of a configuration change.
+        /// Event is raised when an adapter is aware of a configuration change.
         /// </summary>
+        /// <remarks>
+        /// EventHander sender object will be represent source adapter.
+        /// </remarks>
         event EventHandler ConfigurationChanged;
 
         /// <summary>
-        /// This event is raised if there are any time-series entities being discarded during processing.
+        /// This event is raised if there are any time-series entities being discarded during processing in any of the adapters in the collection.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="ITimeSeriesEntity"/> objects that are being discarded during processing.
+        /// </para>
+        /// <para>
+        /// EventHander sender object will be represent source adapter.
+        /// </para>
         /// </remarks>
         event EventHandler<EventArgs<IEnumerable<ITimeSeriesEntity>>> EntitiesDiscarded;
+
+        /// <summary>
+        /// Event is raised when this <see cref="IAdapterCollection"/> is disposed or an <see cref="IAdapter"/> in the collection is disposed.
+        /// </summary>
+        /// <remarks>
+        /// EventHander sender object will be represent source adapter or this collection.
+        /// </remarks>
+        event EventHandler Disposed;
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source used to load each <see cref="IAdapter"/>.
+        /// Updates to this property will cascade to all items in this <see cref="AdapterCollectionBase{T}"/>.
+        /// </summary>
+        /// <remarks>
+        /// Table name specified in <see cref="DataMember"/> from <see cref="DataSource"/> is expected
+        /// to have the following table column names:<br/>
+        /// ID, AdapterName, AssemblyName, TypeName, ConnectionString<br/>
+        /// ID column type should be integer based, all other column types are expected to be strings.
+        /// </remarks>
+        DataSet DataSource
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets specific data member (e.g., table name) in <see cref="IAdapter.DataSource"/> used to initialize this <see cref="IAdapterCollection"/>.
         /// </summary>
         /// <remarks>
-        /// Table name specified in <see cref="DataMember"/> from <see cref="IAdapter.DataSource"/> is expected
+        /// Table name specified in <see cref="DataMember"/> from <see cref="DataSource"/> is expected
         /// to have the following table column names:<br/>
         /// ID, AdapterName, AssemblyName, TypeName, ConnectionString<br/>
-        /// ID column type should be integer based, all other column types are expected to be string based.
+        /// ID column type should be integer based, all other column types are expected to be strings.
         /// </remarks>
         string DataMember
         {
@@ -105,18 +151,31 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the collection of signals the adapter wishes to receive as input.
+        /// Gets the cumulative set of signals that adapters in this collection wishes to receive as input.
         /// </summary>
+        /// <remarks>
+        /// It is expected that that this value will never return null.
+        /// </remarks>
         ISet<Guid> InputSignals
         {
             get;
-            set;
         }
 
         /// <summary>
-        /// Gets or sets the collection of signals the adapter plans to create as output.
+        /// Gets the cumulative set of signals that adapters in this collection plan to create as output.
         /// </summary>
+        /// <remarks>
+        /// It is expected that that this value will never return null.
+        /// </remarks>
         ISet<Guid> OutputSignals
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets or sets name of this <see cref="IAdapterCollection"/>.
+        /// </summary>
+        new string Name
         {
             get;
             set;
@@ -150,7 +209,12 @@ namespace GSF.TimeSeries.Adapters
         #region [ Methods ]
 
         /// <summary>
-        /// Resets the statistics of this collection.
+        /// Initializes the the adapter collection.
+        /// </summary>
+        void Initialize();
+
+        /// <summary>
+        /// Resets the statistics of this adapter collection.
         /// </summary>
         void ResetStatistics();
 

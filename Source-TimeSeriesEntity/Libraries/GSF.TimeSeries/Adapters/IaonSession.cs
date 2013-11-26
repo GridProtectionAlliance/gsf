@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using GSF.Collections;
+using System.Threading;
 using GSF.Configuration;
 using GSF.TimeSeries.Routing;
 
@@ -41,13 +41,6 @@ namespace GSF.TimeSeries.Adapters
     public class IaonSession : IProvideStatus, IDisposable
     {
         #region [ Members ]
-
-        // Constants
-
-        /// <summary>
-        /// Default value for <see cref="UseSignalRouting"/> property.
-        /// </summary>
-        public const bool DefaultUseSignalRouting = true;
 
         // Events
 
@@ -122,17 +115,19 @@ namespace GSF.TimeSeries.Adapters
         // Fields
         private Guid m_nodeID;
         private RoutingTables m_routingTables;
-        private AllAdaptersCollection m_allAdapters;
+        private DataSet m_dataSource;
+        private readonly object m_dataSourceLock;
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
+        private bool m_temporalSession;
+        private bool m_temporalSupportEvaluated;
+        private int m_processingInterval;
         private readonly ConcurrentDictionary<object, string> m_derivedNameCache;
         private ISet<Guid> m_inputSignalsRestriction;
-        private bool m_useSignalRouting;
         private readonly int m_entityWarningThreshold;
         private readonly int m_entityDumpingThreshold;
         private readonly int m_defaultSampleSizeWarningThreshold;
-        private readonly object m_requestTemporalSupportLock;
         private string m_name;
         private bool m_disposed;
 
@@ -144,18 +139,45 @@ namespace GSF.TimeSeries.Adapters
         /// Creates a new <see cref="IaonSession"/>.
         /// </summary>
         public IaonSession()
+            : this(false)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="IaonSession"/> using the existing data source.
+        /// </summary>
+        /// <param name="dataSource">Preexisting data source.</param>
+        /// <param name="temporalSession">Determines if Iaon Session should be for temporal use.</param>
+        public IaonSession(DataSet dataSource, bool temporalSession)
+            : this(temporalSession)
+        {
+            if (temporalSession && (object)dataSource == null)
+                throw new ArgumentNullException("dataSource", "Cannot establish a temporal Iaon Session without a preexisting data source.");
+
+            m_dataSource = dataSource;
+            m_inputAdapters.DataSource = m_dataSource;
+            m_actionAdapters.DataSource = m_dataSource;
+            m_outputAdapters.DataSource = m_dataSource;
+            m_temporalSupportEvaluated = true;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="IaonSession"/>.
+        /// </summary>
+        /// <param name="temporalSession">Determines if Iaon Session should be for temporal use.</param>
+        protected IaonSession(bool temporalSession)
         {
             ConfigurationFile configFile = ConfigurationFile.Current;
 
             // Initialize system settings
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
 
+            // TODO: In future versions we may consider removing the notion of a "node" from the schema since this doesn't add significant value - it's just as easy to add another schema in most cases
             systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
-            systemSettings.Add("UseSignalRouting", DefaultUseSignalRouting, "Set to true to use optimized adapter signal routing.");
 
             m_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
-            m_useSignalRouting = systemSettings["UseSignalRouting"].ValueAsBoolean(DefaultUseSignalRouting);
 
+            // TODO: Move these threshold settings to base class implementation of what will become "QueuedOutputAdapterBase.cs"
             // Initialize threshold settings
             CategorizedSettingsElementCollection thresholdSettings = configFile.Settings["thresholdSettings"];
 
@@ -175,57 +197,46 @@ namespace GSF.TimeSeries.Adapters
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
 
-            // Create a collection to manage all input, action and output adapter collections as a unit
-            m_allAdapters = new AllAdaptersCollection();
-
-            // Attach to common adapter events
-            m_allAdapters.StatusMessage += StatusMessageHandler;
-            m_allAdapters.ProcessException += ProcessExceptionHandler;
-            m_allAdapters.InputSignalsUpdated += InputSignalsUpdatedHandler;
-            m_allAdapters.OutputSignalsUpdated += OutputSignalsUpdatedHandler;
-            m_allAdapters.ConfigurationChanged += ConfigurationChangedHandler;
-            m_allAdapters.Disposed += DisposedHandler;
-
             // Create input adapters collection
-            m_inputAdapters = new InputAdapterCollection();
-
-            if (m_useSignalRouting)
-                m_inputAdapters.NewEntities += m_routingTables.RoutingEventHandler;
-            else
-                m_inputAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
-
-            m_inputAdapters.ProcessSignalFilter = !m_useSignalRouting;
+            m_inputAdapters = new InputAdapterCollection(temporalSession);
+            m_inputAdapters.NewEntities += m_routingTables.RoutingEventHandler;
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
+            m_inputAdapters.StatusMessage += StatusMessageHandler;
+            m_inputAdapters.ProcessException += ProcessExceptionHandler;
+            m_inputAdapters.InputSignalsUpdated += InputSignalsUpdatedHandler;
+            m_inputAdapters.OutputSignalsUpdated += OutputSignalsUpdatedHandler;
+            m_inputAdapters.ConfigurationChanged += ConfigurationChangedHandler;
+            m_inputAdapters.Disposed += DisposedHandler;
 
             // Create action adapters collection
-            m_actionAdapters = new ActionAdapterCollection();
-
-            if (m_useSignalRouting)
-                m_actionAdapters.NewEntities += m_routingTables.RoutingEventHandler;
-            else
-                m_actionAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
-
-            m_actionAdapters.ProcessSignalFilter = !m_useSignalRouting;
+            m_actionAdapters = new ActionAdapterCollection(temporalSession);
+            m_actionAdapters.NewEntities += m_routingTables.RoutingEventHandler;
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
+            m_actionAdapters.StatusMessage += StatusMessageHandler;
+            m_actionAdapters.ProcessException += ProcessExceptionHandler;
+            m_actionAdapters.InputSignalsUpdated += InputSignalsUpdatedHandler;
+            m_actionAdapters.OutputSignalsUpdated += OutputSignalsUpdatedHandler;
+            m_actionAdapters.ConfigurationChanged += ConfigurationChangedHandler;
+            m_actionAdapters.Disposed += DisposedHandler;
 
             // Create output adapters collection
-            m_outputAdapters = new OutputAdapterCollection();
-            m_outputAdapters.ProcessSignalFilter = !m_useSignalRouting;
+            m_outputAdapters = new OutputAdapterCollection(temporalSession);
             m_outputAdapters.UnprocessedEntities += UnprocessedEntitiesHandler;
+            m_outputAdapters.StatusMessage += StatusMessageHandler;
+            m_outputAdapters.ProcessException += ProcessExceptionHandler;
+            m_outputAdapters.InputSignalsUpdated += InputSignalsUpdatedHandler;
+            m_outputAdapters.OutputSignalsUpdated += OutputSignalsUpdatedHandler;
+            m_outputAdapters.ConfigurationChanged += ConfigurationChangedHandler;
+            m_outputAdapters.Disposed += DisposedHandler;
 
             // Associate adapter collections with routing tables
             m_routingTables.InputAdapters = m_inputAdapters;
             m_routingTables.ActionAdapters = m_actionAdapters;
             m_routingTables.OutputAdapters = m_outputAdapters;
 
-            // We group these adapters such that they are initialized in the following order: output, input, action. This
-            // is done so that the archival capabilities will be setup before we start receiving input and the input data
-            // will be flowing before any actions get established for the input - at least generally.
-            m_allAdapters.Add(m_outputAdapters);
-            m_allAdapters.Add(m_inputAdapters);
-            m_allAdapters.Add(m_actionAdapters);
-
-            m_requestTemporalSupportLock = new object();
+            m_dataSourceLock = new object();
+            m_processingInterval = -1;
+            m_temporalSession = temporalSession;
         }
 
         /// <summary>
@@ -239,17 +250,6 @@ namespace GSF.TimeSeries.Adapters
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets the all adapters collection for this <see cref="IaonSession"/>.
-        /// </summary>
-        public virtual AllAdaptersCollection AllAdapters
-        {
-            get
-            {
-                return m_allAdapters;
-            }
-        }
 
         /// <summary>
         /// Gets the input adapter collection for this <see cref="IaonSession"/>.
@@ -285,44 +285,13 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if signal routing should be used.
+        /// Gets an enumeration of the input, action and output adapter collections.
         /// </summary>
-        public virtual bool UseSignalRouting
+        protected IEnumerable<IAdapterCollection> AdapterCollections
         {
             get
             {
-                return m_useSignalRouting;
-            }
-            set
-            {
-                if (m_useSignalRouting != value)
-                {
-                    if (m_useSignalRouting)
-                        m_inputAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
-                    else
-                        m_inputAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
-
-                    if (m_useSignalRouting)
-                        m_actionAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
-                    else
-                        m_actionAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
-
-                    m_useSignalRouting = value;
-
-                    if (m_useSignalRouting)
-                        m_inputAdapters.NewEntities += m_routingTables.RoutingEventHandler;
-                    else
-                        m_inputAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
-
-                    if (m_useSignalRouting)
-                        m_actionAdapters.NewEntities += m_routingTables.RoutingEventHandler;
-                    else
-                        m_actionAdapters.NewEntities += m_routingTables.BroadcastEventHandler;
-
-                    m_inputAdapters.ProcessSignalFilter = !m_useSignalRouting;
-                    m_actionAdapters.ProcessSignalFilter = !m_useSignalRouting;
-                    m_outputAdapters.ProcessSignalFilter = !m_useSignalRouting;
-                }
+                return new IAdapterCollection[] { m_inputAdapters, m_actionAdapters, m_outputAdapters };
             }
         }
 
@@ -340,6 +309,12 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Gets or sets a routing table restriction for a collection of input signals.
         /// </summary>
+        /// <remarks>
+        /// This is useful for creating a new IaonSession over which only a few key signals are
+        /// actually desired, e.g., a temporal session from a remote subscription. When specified,
+        /// all signals that are required to produce the desired input signals will be included
+        /// in the routing paths, but no more.
+        /// </remarks>
         public virtual ISet<Guid> InputSignalsRestriction
         {
             get
@@ -359,11 +334,41 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                return m_allAdapters.DataSource;
+                return m_dataSource;
             }
             set
             {
-                m_allAdapters.DataSource = value;
+                lock (m_dataSourceLock)
+                {
+                    DataSet originalDataSource = m_dataSource;
+
+                    m_dataSource = value;
+                    m_inputAdapters.DataSource = m_dataSource;
+                    m_actionAdapters.DataSource = m_dataSource;
+                    m_outputAdapters.DataSource = m_dataSource;
+                    m_temporalSupportEvaluated = false;
+
+                    if ((object)originalDataSource != null)
+                        originalDataSource.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the processing interval for all adapter collections in this <see cref="IaonSession"/>.
+        /// </summary>
+        public virtual int ProcessingInterval
+        {
+            get
+            {
+                return m_processingInterval;
+            }
+            set
+            {
+                m_processingInterval = value;
+                m_inputAdapters.ProcessingInterval = m_processingInterval;
+                m_actionAdapters.ProcessingInterval = m_processingInterval;
+                m_outputAdapters.ProcessingInterval = m_processingInterval;
             }
         }
 
@@ -389,7 +394,7 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                return m_name.ToNonNullString();
+                return m_name.ToNonNullString("[IaonSession]");
             }
             set
             {
@@ -409,23 +414,17 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendLine(">> Input Adapters:");
                 status.AppendLine();
-
-                if (m_inputAdapters != null)
-                    status.AppendLine(m_inputAdapters.Status);
+                status.AppendLine(m_inputAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Action Adapters:");
                 status.AppendLine();
-
-                if (m_actionAdapters != null)
-                    status.AppendLine(m_actionAdapters.Status);
+                status.AppendLine(m_actionAdapters.Status);
 
                 status.AppendLine();
                 status.AppendLine(">> Output Adapters:");
                 status.AppendLine();
-
-                if (m_outputAdapters != null)
-                    status.AppendLine(m_outputAdapters.Status);
+                status.AppendLine(m_outputAdapters.Status);
 
                 return status.ToString();
             }
@@ -456,71 +455,61 @@ namespace GSF.TimeSeries.Adapters
                 {
                     if (disposing)
                     {
-                        DataSet dataSource = DataSource;
-
                         // Dispose input adapters collection
-                        if (m_inputAdapters != null)
+                        if ((object)m_inputAdapters != null)
                         {
                             m_inputAdapters.Stop();
-
-                            if (m_useSignalRouting)
-                                m_inputAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
-                            else
-                                m_inputAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
-
+                            m_inputAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                             m_inputAdapters.ProcessingComplete -= ProcessingCompleteHandler;
+                            m_inputAdapters.StatusMessage -= StatusMessageHandler;
+                            m_inputAdapters.ProcessException -= ProcessExceptionHandler;
+                            m_inputAdapters.InputSignalsUpdated -= InputSignalsUpdatedHandler;
+                            m_inputAdapters.OutputSignalsUpdated -= OutputSignalsUpdatedHandler;
+                            m_inputAdapters.ConfigurationChanged -= ConfigurationChangedHandler;
+                            m_inputAdapters.Disposed -= DisposedHandler;
                             m_inputAdapters.Dispose();
                         }
                         m_inputAdapters = null;
 
                         // Dispose action adapters collection
-                        if (m_actionAdapters != null)
+                        if ((object)m_actionAdapters != null)
                         {
                             m_actionAdapters.Stop();
-
-                            if (m_useSignalRouting)
-                                m_actionAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
-                            else
-                                m_actionAdapters.NewEntities -= m_routingTables.BroadcastEventHandler;
-
+                            m_actionAdapters.NewEntities -= m_routingTables.RoutingEventHandler;
                             m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
+                            m_actionAdapters.StatusMessage -= StatusMessageHandler;
+                            m_actionAdapters.ProcessException -= ProcessExceptionHandler;
+                            m_actionAdapters.InputSignalsUpdated -= InputSignalsUpdatedHandler;
+                            m_actionAdapters.OutputSignalsUpdated -= OutputSignalsUpdatedHandler;
+                            m_actionAdapters.ConfigurationChanged -= ConfigurationChangedHandler;
+                            m_actionAdapters.Disposed -= DisposedHandler;
                             m_actionAdapters.Dispose();
                         }
                         m_actionAdapters = null;
 
                         // Dispose output adapters collection
-                        if (m_outputAdapters != null)
+                        if ((object)m_outputAdapters != null)
                         {
                             m_outputAdapters.Stop();
                             m_outputAdapters.UnprocessedEntities -= UnprocessedEntitiesHandler;
+                            m_outputAdapters.StatusMessage -= StatusMessageHandler;
+                            m_outputAdapters.ProcessException -= ProcessExceptionHandler;
+                            m_outputAdapters.InputSignalsUpdated -= InputSignalsUpdatedHandler;
+                            m_outputAdapters.OutputSignalsUpdated -= OutputSignalsUpdatedHandler;
+                            m_outputAdapters.ConfigurationChanged -= ConfigurationChangedHandler;
+                            m_outputAdapters.Disposed -= DisposedHandler;
                             m_outputAdapters.Dispose();
                         }
                         m_outputAdapters = null;
 
-                        // Dispose all adapters collection
-                        if (m_allAdapters != null)
-                        {
-                            m_allAdapters.StatusMessage -= StatusMessageHandler;
-                            m_allAdapters.ProcessException -= ProcessExceptionHandler;
-                            m_allAdapters.InputSignalsUpdated -= InputSignalsUpdatedHandler;
-                            m_allAdapters.OutputSignalsUpdated -= OutputSignalsUpdatedHandler;
-                            m_allAdapters.ConfigurationChanged -= ConfigurationChangedHandler;
-                            m_allAdapters.Disposed -= DisposedHandler;
-                            m_allAdapters.Dispose();
-                        }
-                        m_allAdapters = null;
-
                         // Dispose of routing tables
-                        if (m_routingTables != null)
+                        if ((object)m_routingTables != null)
                         {
                             m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
                             m_routingTables.ProcessException -= m_routingTables_ProcessException;
                             m_routingTables.Dispose();
                         }
                         m_routingTables = null;
-
-                        if ((object)dataSource != null)
-                            dataSource.Dispose();
                     }
                 }
                 finally
@@ -534,42 +523,163 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Initialize and start adapters.
+        /// Initialize adapters.
         /// </summary>
-        /// <param name="autoStart">Sets flag that determines if adapters should be automatically started.</param>
-        public virtual void Initialize(bool autoStart = true)
+        /// <param name="delayAutoStart">Determines if adapters should delay auto-start until after initialization.</param>
+        public virtual void Initialize(bool delayAutoStart = false)
         {
-            // Initialize all adapters
-            m_allAdapters.Initialize();
+            if ((object)m_dataSource == null)
+                throw new NullReferenceException("No data source for IaonSession has been defined - cannot initialize Iaon Session");
 
-            if (autoStart)
+            // Set desired delay auto-start state for collections
+            m_inputAdapters.DelayAutoStart = delayAutoStart;
+            m_actionAdapters.DelayAutoStart = delayAutoStart;
+            m_outputAdapters.DelayAutoStart = delayAutoStart;
+
+            // Initialize adapter collections
+            m_inputAdapters.Initialize();
+            m_actionAdapters.Initialize();
+            m_outputAdapters.Initialize();
+
+            // Start adapter collections - due to adapter initialization sequence, adapters may already
+            // be automatically starting but this step also enables adapter monitoring by the collections
+            if (!delayAutoStart)
+                Start();
+
+            if (!m_temporalSession)
             {
-                // Start all adapters if they
-                // haven't started already
-                m_allAdapters.Start();
+                // After adapters have been initialized we begin the process to determine if adapters support temporal processing
+                Thread itemThread = new Thread(WaitAndEvaluateTemporalAdapterSupport);
+                itemThread.IsBackground = true;
+                itemThread.Start();
             }
         }
 
         /// <summary>
-        /// Gets flag that determines if temporal processing is supported in this <see cref="IaonSession"/>.
+        /// Create newly defined adapters and remove adapters that are no longer present in the adapter collection configurations. 
         /// </summary>
-        /// <param name="collection">Name of collection over which to check support (e.g., "InputAdapters"); or <c>null</c> for all collections.</param>
-        /// <returns>Flag that determines if temporal processing is supported in this <see cref="IaonSession"/>.</returns>
-        public virtual bool TemporalProcessingSupportExists(string collection = null)
+        public virtual void UpdateCollectionConfigurations()
         {
-            try
+            foreach (IAdapterCollection adapterCollection in AdapterCollections)
             {
-                DataTable temporalSupport = m_allAdapters.DataSource.Tables["TemporalSupport"];
+                string dataMember = adapterCollection.DataMember;
 
-                if (string.IsNullOrWhiteSpace(collection))
-                    return temporalSupport.Rows.Count > 0;
+                if (DataSource.Tables.Contains(dataMember))
+                {
+                    // Remove adapters that are no longer present in the configuration
+                    for (int i = adapterCollection.Count - 1; i >= 0; i--)
+                    {
+                        IAdapter adapter = adapterCollection[i];
+                        DataRow[] adapterRows = DataSource.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
 
-                return temporalSupport.Select(string.Format("Source = '{0}'", collection)).Length > 0;
+                        if (adapterRows.Length == 0 && adapter.ID != 0)
+                        {
+                            try
+                            {
+                                adapter.Stop();
+                            }
+                            catch (Exception ex)
+                            {
+                                OnProcessException(this, new InvalidOperationException(string.Format("Exception while stopping adapter {0}: {1}", adapter.Name, ex.Message), ex));
+                            }
+
+                            adapterCollection.Remove(adapter);
+                        }
+                    }
+
+                    // Create newly defined adapters
+                    DataRow[] rows;
+
+                    if (m_temporalSession)
+                        rows = DataSource.Tables[dataMember].Select("TemporalSession <> 0");
+                    else
+                        rows = DataSource.Tables[dataMember].Select();
+
+                    foreach (DataRow row in rows)
+                    {
+                        IAdapter adapter;
+
+                        if (!adapterCollection.TryGetAdapterByID(uint.Parse(row["ID"].ToNonNullString("0")), out adapter) && adapterCollection.TryCreateAdapter(row, out adapter))
+                            adapterCollection.Add(adapter);
+                    }
+                }
+
+                // Reassess temporal support when new adapters may have come online
+                m_temporalSupportEvaluated = false;
+
+                if (!m_temporalSession)
+                {
+                    // After adapters have been initialized we begin the process to determine if adapters support temporal processing
+                    Thread itemThread = new Thread(WaitAndEvaluateTemporalAdapterSupport);
+                    itemThread.IsBackground = true;
+                    itemThread.Start();
+                }
             }
-            catch
+        }
+
+        /// <summary>
+        /// Attempts to get any adapter in all collections with the specified <paramref name="id"/>.
+        /// </summary>
+        /// <param name="id">ID of adapter to get.</param>
+        /// <param name="adapter">Adapter reference if found; otherwise null.</param>
+        /// <param name="adapterCollection">Adapter collection reference if <paramref name="adapter"/> is found; otherwise null.</param>
+        /// <returns><c>true</c> if adapter with the specified <paramref name="id"/> was found; otherwise <c>false</c>.</returns>
+        public virtual bool TryGetAnyAdapterByID(uint id, out IAdapter adapter, out IAdapterCollection adapterCollection)
+        {
+            foreach (IAdapterCollection collection in AdapterCollections)
             {
-                return false;
+                if (collection.TryGetAdapterByID(id, out adapter))
+                {
+                    adapterCollection = collection;
+                    return true;
+                }
             }
+
+            adapter = null;
+            adapterCollection = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to get any adapter in all collections with the specified <paramref name="name"/>.
+        /// </summary>
+        /// <param name="name">Name of adapter to get.</param>
+        /// <param name="adapter">Adapter reference if found; otherwise null.</param>
+        /// <param name="adapterCollection">Adapter collection reference if <paramref name="adapter"/> is found; otherwise null.</param>
+        /// <returns><c>true</c> if adapter with the specified <paramref name="name"/> was found; otherwise <c>false</c>.</returns>
+        public virtual bool TryGetAnyAdapterByName(string name, out IAdapter adapter, out IAdapterCollection adapterCollection)
+        {
+            foreach (IAdapterCollection collection in AdapterCollections)
+            {
+                if (collection.TryGetAdapterByName(name, out adapter))
+                {
+                    adapterCollection = collection;
+                    return true;
+                }
+            }
+
+            adapter = null;
+            adapterCollection = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to initialize (or reinitialize) an individual <see cref="IAdapter"/> based on its ID from any collection.
+        /// </summary>
+        /// <param name="id">The numeric ID associated with the <see cref="IAdapter"/> to be initialized.</param>
+        /// <returns><c>true</c> if item was successfully initialized; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// This method traverses all collections looking for an adapter with the specified ID.
+        /// </remarks>
+        public virtual bool TryInitializeAdapterByID(uint id)
+        {
+            foreach (IAdapterCollection collection in AdapterCollections)
+            {
+                if (collection.TryInitializeAdapterByID(id))
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -604,9 +714,183 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual void RecalculateRoutingTables()
         {
-            if (m_useSignalRouting && (object)m_routingTables != null && (object)m_allAdapters != null && m_allAdapters.Initialized)
-                m_routingTables.CalculateRoutingTables(m_inputSignalsRestriction);
+            if ((object)m_routingTables != null && m_inputAdapters.Initialized && m_actionAdapters.Initialized && m_outputAdapters.Initialized)
+                m_routingTables.CalculateRoutingTables(InputSignalsRestriction);
         }
+
+        /// <summary>
+        /// Starts each <see cref="IAdapter"/> implementation in all adapter collections.
+        /// </summary>
+        public virtual void Start()
+        {
+            m_inputAdapters.Start();
+            m_actionAdapters.Start();
+            m_outputAdapters.Start();
+        }
+
+        /// <summary>
+        /// Stops each <see cref="IAdapter"/> implementation in all adapter collections.
+        /// </summary>
+        public virtual void Stop()
+        {
+            m_inputAdapters.Stop();
+            m_actionAdapters.Stop();
+            m_outputAdapters.Stop();
+        }
+
+        /// <summary>
+        /// Defines a temporal processing constraint for each of the adapter collections and applies this constraint to all adapters.
+        /// </summary>
+        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
+        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint.</param>
+        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint.</param>
+        /// <remarks>
+        /// <para>
+        /// This method defines a temporal processing constraint for an adapter, i.e., the start and stop time over which an
+        /// adapter will process data. Actual implementation of the constraint will be adapter specific. Implementations
+        /// should be able to dynamically handle multiple calls to this function with new constraints. Passing in <c>null</c>
+        /// for the <paramref name="startTime"/> and <paramref name="stopTime"/> should cancel the temporal constraint and
+        /// return the adapter to standard / real-time operation.
+        /// </para>
+        /// <para>
+        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
+        /// following formats:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Time Format</term>
+        ///         <description>Format Description</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>12-30-2000 23:59:59.033</term>
+        ///         <description>Absolute date and time.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*</term>
+        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-20s</term>
+        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-10m</term>
+        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1h</term>
+        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>*-1d</term>
+        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public virtual void SetTemporalConstraint(string startTime, string stopTime, string constraintParameters)
+        {
+            // Apply temporal constraint to all adapters in each collection
+            m_inputAdapters.SetTemporalConstraint(startTime, stopTime, constraintParameters);
+            m_actionAdapters.SetTemporalConstraint(startTime, stopTime, constraintParameters);
+            m_outputAdapters.SetTemporalConstraint(startTime, stopTime, constraintParameters);
+        }
+
+        /// <summary>
+        /// Gets flag that determines if temporal processing is supported in this <see cref="IaonSession"/>.
+        /// </summary>
+        /// <param name="collection">Name of collection over which to check support (e.g., "InputAdapters"); or <c>null</c> for all collections.</param>
+        /// <returns><c>true</c> if temporal processing is supported in this <see cref="IaonSession"/>; otherwise <c>false</c>.</returns>
+        public virtual bool TemporalProcessingSupportExists(string collection = null)
+        {
+            lock (m_dataSourceLock)
+            {
+                if (!m_temporalSupportEvaluated)
+                    throw new InvalidOperationException("Temporal processing support has yet to be evaluated.");
+
+                if (string.IsNullOrWhiteSpace(collection))
+                    return ((object)m_dataSource != null && (
+                        (m_dataSource.Tables["InputAdapters"].Select("TemporalSupport <> 0").Length > 0) ||
+                        (m_dataSource.Tables["ActionAdapters"].Select("TemporalSupport <> 0").Length > 0) ||
+                        (m_dataSource.Tables["OutputAdapters"].Select("TemporalSupport <> 0").Length > 0)));
+
+                switch (collection.ToLower())
+                {
+                    case "inputadapters":
+                        return ((object)m_dataSource != null && m_dataSource.Tables["InputAdapters"].Select("TemporalSupport <> 0").Length > 0);
+                    case "actionadapters":
+                        return ((object)m_dataSource != null && m_dataSource.Tables["ActionAdapters"].Select("TemporalSupport <> 0").Length > 0);
+                    case "outputadapters":
+                        return ((object)m_dataSource != null && m_dataSource.Tables["OutputAdapters"].Select("TemporalSupport <> 0").Length > 0);
+                }
+            }
+
+            return false;
+        }
+
+        // Attempt to wait for adapter initialization before initial temporal support evaluation
+        private void WaitAndEvaluateTemporalAdapterSupport(object state)
+        {
+            Ticks startTime = DateTime.UtcNow.Ticks;
+
+            // We'll hold the lock while we wait or timeout to give as many adapters as possible a chance to get started before
+            // the official temporal support evaluation. This will limit reload config operations to once every 15 seconds.
+            lock (m_dataSourceLock)
+            {
+                // TODO: See if there is a possible improvement to this behavior - could get a more immediate notification from collection that all adapters are "initializing" (at least after parse of any temporal support flags)
+
+                while ((DateTime.UtcNow.Ticks - startTime).ToMilliseconds() < AdapterBase.DefaultInitializationTimeout && (
+                       !m_inputAdapters.All<IInputAdapter>(adapter => adapter.Initialized) ||
+                       !m_actionAdapters.All<IActionAdapter>(adapter => adapter.Initialized) ||
+                       !m_outputAdapters.All<IOutputAdapter>(adapter => adapter.Initialized)))
+                {
+                    Thread.Sleep(100);
+                }
+
+                // Establish temporal configuration if it hasn't been
+                if (!m_temporalSupportEvaluated)
+                {
+                    IAdapterCollection collection;
+
+                    foreach (DataTable table in m_dataSource.Tables)
+                    {
+                        collection = null;
+
+                        switch (table.TableName.ToLower())
+                        {
+                            case "inputadapters":
+                                collection = m_inputAdapters;
+                                break;
+                            case "actionadapters":
+                                collection = m_actionAdapters;
+                                break;
+                            case "outputadapters":
+                                collection = m_outputAdapters;
+                                break;
+                        }
+
+                        if ((object)collection == null)
+                            continue;
+
+                        // Add a temporal support column to the adapter definition table
+                        if (!table.Columns.Contains("TemporalSupport"))
+                            table.Columns.Add("TemporalSupport", typeof(bool));
+
+                        // Determine which adapters support temporal processing
+                        foreach (IAdapter adapter in collection)
+                        {
+                            DataRow[] rows = table.Select(string.Format("ID = {0}", adapter.ID));
+
+                            if (rows.Length > 0)
+                                rows[0]["TemporalSupport"] = adapter.SupportsTemporalProcessing;
+                        }
+                    }
+
+                    m_temporalSupportEvaluated = true;
+                }
+            }
+        }
+
+        // TODO: Perhaps all status message events should be modified with an optional "UpdateType" parameter 
 
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event.
@@ -790,6 +1074,8 @@ namespace GSF.TimeSeries.Adapters
             OnConfigurationChanged(sender);
         }
 
+        // TODO: See if it is possible for this method to be replaced with existing UnprocessedEntities event since its only purpose is to notify user of queue size getting too large...
+
         /// <summary>
         /// Event handler for monitoring unpublished samples.
         /// </summary>
@@ -827,42 +1113,7 @@ namespace GSF.TimeSeries.Adapters
             OnUnpublishedSamples(sender, e.Argument);
         }
 
-        /// <summary>
-        /// Event handler for requesting temporal support.
-        /// </summary>
-        /// <param name="sender">Event source reference to adapter collection, typically an action adapter collection, that is requesting temporal support.</param>
-        /// <param name="e">Event arguments are not used.</param>
-        /// <remarks>
-        /// Action adapter collections use this handler to make sure temporal support is initialized before setting up temporal sessions.
-        /// </remarks>
-        public virtual void RequestTemporalSupportHandler(object sender, EventArgs e)
-        {
-            lock (m_requestTemporalSupportLock)
-            {
-                if (!m_allAdapters.DataSource.Tables.Contains("TemporalSupport"))
-                {
-                    // Create a new temporal support identification table
-                    DataTable temporalSupport = new DataTable("TemporalSupport");
-
-                    temporalSupport.Columns.Add("Source", typeof(string));
-                    temporalSupport.Columns.Add("ID", typeof(uint));
-
-                    // Add rows for each Iaon adapter collection to identify which adapters support temporal processing
-                    lock (m_allAdapters)
-                    {
-                        foreach (IAdapterCollection collection in m_allAdapters)
-                        {
-                            foreach (IAdapter adapter in collection.Where(adapter => adapter.SupportsTemporalProcessing))
-                            {
-                                temporalSupport.Rows.Add(collection.DataMember, adapter.ID);
-                            }
-                        }
-
-                        m_allAdapters.DataSource.Tables.Add(temporalSupport.Copy());
-                    }
-                }
-            }
-        }
+        // TODO: If a simple "OutputAdapterBase" is created then the following code will be specific to a "QueuedOutputAdapterBase" style class - perhaps handlers should be managed with "types" of base classes.
 
         /// <summary>
         /// Event handler for monitoring unprocessed time-series entities.
@@ -944,69 +1195,6 @@ namespace GSF.TimeSeries.Adapters
         private void m_routingTables_ProcessException(object sender, EventArgs<Exception> e)
         {
             ProcessExceptionHandler(sender, e);
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Methods
-
-        /// <summary>
-        /// Extracts a configuration that supports temporal processing from an existing real-time configuration.
-        /// </summary>
-        /// <param name="realtimeConfiguration">Real-time <see cref="DataSet"/> configuration.</param>
-        /// <returns>A new <see cref="DataSet"/> configuration for adapters that support temporal processing.</returns>
-        public static DataSet ExtractTemporalConfiguration(DataSet realtimeConfiguration)
-        {
-            // Duplicate current run-time session configuration that has temporal support
-            DataSet temporalConfiguration = new DataSet("IaonTemporal");
-            DataTable temporalSupport = realtimeConfiguration.Tables["TemporalSupport"];
-            string tableName;
-
-            foreach (DataTable table in realtimeConfiguration.Tables)
-            {
-                tableName = table.TableName;
-
-                switch (tableName.ToLower())
-                {
-                    case "inputadapters":
-                    case "actionadapters":
-                    case "outputadapters":
-                        // For Iaon adapter tables, we only copy in adapters that support temporal processing
-                        temporalConfiguration.Tables.Add(table.Clone());
-
-                        // Check for adapters with temporal support in this adapter collection
-                        DataRow[] temporalAdapters = temporalSupport.Select(string.Format("Source = '{0}'", tableName));
-
-                        // If any adapters support temporal processing, add them to the temporal configuration
-                        if (temporalAdapters.Length > 0)
-                        {
-                            DataTable realtimeTable = realtimeConfiguration.Tables[tableName];
-                            DataTable temporalTable = temporalConfiguration.Tables[tableName];
-
-                            foreach (DataRow row in realtimeTable.Select(string.Format("ID IN ({0})", temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(','))))
-                            {
-                                DataRow newRow = temporalTable.NewRow();
-
-                                for (int x = 0; x < realtimeTable.Columns.Count; x++)
-                                {
-                                    newRow[x] = row[x];
-                                }
-
-                                temporalConfiguration.Tables[tableName].Rows.Add(newRow);
-                            }
-                        }
-
-                        break;
-                    default:
-                        // For all other tables we add configuration information as-is
-                        temporalConfiguration.Tables.Add(table.Copy());
-                        break;
-                }
-            }
-
-            return temporalConfiguration;
         }
 
         #endregion

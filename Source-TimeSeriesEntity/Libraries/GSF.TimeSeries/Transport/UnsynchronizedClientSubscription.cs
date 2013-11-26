@@ -63,7 +63,7 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler<EventArgs<IClientSubscription, EventArgs>> ProcessingComplete;
 
         // Fields
-        private readonly AsyncDoubleBufferedQueue<IMeasurement> m_processQueue;
+        private readonly AsyncDoubleBufferedQueue<ITimeSeriesEntity> m_processQueue;
         private readonly SignalIndexCache m_signalIndexCache;
         private readonly Guid m_clientID;
         private readonly Guid m_subscriberID;
@@ -114,12 +114,14 @@ namespace GSF.TimeSeries.Transport
             m_signalIndexCache = new SignalIndexCache();
             m_signalIndexCache.SubscriberID = subscriberID;
 
-            m_processQueue = new AsyncDoubleBufferedQueue<IMeasurement>();
+            m_processQueue = new AsyncDoubleBufferedQueue<ITimeSeriesEntity>();
             m_processQueue.ProcessException += (sender, e) => OnProcessException(e.Argument);
 
             m_workingBuffer = new BlockAllocatedMemoryStream();
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
+
+            InputSignalsUpdated += UnsynchronizedClientSubscription_InputSignalsUpdated;
         }
 
         #endregion
@@ -278,39 +280,8 @@ namespace GSF.TimeSeries.Transport
                 base.ProcessingInterval = value;
 
                 // Update processing interval in private temporal session, if defined
-                if ((object)m_iaonSession != null && m_iaonSession.AllAdapters != null)
-                    m_iaonSession.AllAdapters.ProcessingInterval = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets primary keys of input measurements the <see cref="UnsynchronizedClientSubscription"/> expects, if any.
-        /// </summary>
-        /// <remarks>
-        /// We override method so assignment can be synchronized such that dynamic updates won't interfere
-        /// with filtering in <see cref="QueueEntitiesForProcessing"/>.
-        /// </remarks>
-        public override MeasurementKey[] InputMeasurementKeys
-        {
-            get
-            {
-                return base.InputMeasurementKeys;
-            }
-            set
-            {
-                lock (this)
-                {
-                    // Update signal index cache unless "detaching" from real-time
-                    if ((object)value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
-                    {
-                        m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
-
-                        if ((object)DataSource != null && (object)m_signalIndexCache != null)
-                            value = ParseFilterExpression(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs));
-                    }
-
-                    base.InputMeasurementKeys = value;
-                }
+                if ((object)m_iaonSession != null)
+                    m_iaonSession.ProcessingInterval = value;
             }
         }
 
@@ -502,15 +473,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            int inputCount = 0, outputCount = 0;
-
-            if ((object)InputMeasurementKeys != null)
-                inputCount = InputMeasurementKeys.Length;
-
-            if ((object)OutputSignals != null)
-                outputCount = OutputSignals.Length;
-
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
+            return string.Format("Total input measurements: {0}, total output measurements: {1}", InputSignals.Count, OutputSignals.Count).PadLeft(maxLength);
         }
 
         /// <summary>
@@ -518,10 +481,10 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="entities">Collection of measurements to queue for processing.</param>
         /// <remarks>
-        /// Measurements are filtered against the defined <see cref="InputMeasurementKeys"/> so we override method
+        /// Measurements are filtered against the defined <see cref="AdapterBase.InputSignals"/> so we override method
         /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
         /// </remarks>
-        public override void QueueEntitiesForProcessing(IEnumerable<IMeasurement> entities)
+        public override void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
         {
             if ((object)entities == null)
                 return;
@@ -530,25 +493,13 @@ namespace GSF.TimeSeries.Transport
             {
                 m_startTimeSent = true;
 
-                IMeasurement measurement = entities.FirstOrDefault(m => (object)m != null);
+                ITimeSeriesEntity measurement = entities.FirstOrDefault(m => (object)m != null);
                 Ticks timestamp = 0;
 
                 if ((object)measurement != null)
                     timestamp = measurement.Timestamp;
 
                 m_parent.SendDataStartTime(m_clientID, timestamp);
-            }
-
-            if (ProcessSignalFilter)
-            {
-                List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
-
-                lock (this)
-                {
-                    filteredMeasurements.AddRange(entities.Where(measurement => IsInputSignal(measurement.Key)));
-                }
-
-                entities = filteredMeasurements;
             }
 
             if (!entities.Any() || !Enabled)
@@ -564,34 +515,37 @@ namespace GSF.TimeSeries.Transport
 
                 if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(publishInterval))
                 {
-                    List<IMeasurement> currentMeasurements = new List<IMeasurement>();
-                    Measurement newMeasurement;
+                    //List<IMeasurement> currentMeasurements = new List<IMeasurement>();
+                    //Measurement newMeasurement;
 
-                    // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
-                    foreach (TemporalMeasurement measurement in LatestEntities)
-                    {
-                        newMeasurement = new Measurement
-                        {
-                            ID = measurement.ID,
-                            Key = measurement.Key,
-                            Value = measurement.GetValue(RealTime),
-                            Adder = measurement.Adder,
-                            Multiplier = measurement.Multiplier,
-                            Timestamp = measurement.Timestamp,
-                            StateFlags = measurement.StateFlags
-                        };
+                    //// Create a new set of measurements that represent the latest known values setting value to NaN if it is old
+                    //foreach (TemporalMeasurement measurement in LatestEntities)
+                    //{
+                    //    newMeasurement = new Measurement
+                    //    {
+                    //        ID = measurement.ID,
+                    //        Key = measurement.Key,
+                    //        Value = measurement.GetValue(RealTime),
+                    //        Adder = measurement.Adder,
+                    //        Multiplier = measurement.Multiplier,
+                    //        Timestamp = measurement.Timestamp,
+                    //        StateFlags = measurement.StateFlags
+                    //    };
 
-                        currentMeasurements.Add(newMeasurement);
-                    }
+                    //    currentMeasurements.Add(newMeasurement);
+                    //}
 
                     // Publish latest data values...
                     if ((object)m_processQueue != null)
                     {
+                        // TODO: Re-enable sorting at compressed payload serialization at a later serialization
                         // Order measurements by signal type for better compression when enabled
-                        if (m_usePayloadCompression)
-                            m_processQueue.Enqueue(currentMeasurements.OrderBy(measurement => measurement.GetSignalType(DataSource)));
-                        else
-                            m_processQueue.Enqueue(currentMeasurements);
+                        //if (m_usePayloadCompression)
+                        //    m_processQueue.Enqueue(currentMeasurements.OrderBy(measurement => measurement.GetSignalType(DataSource)));
+                        //else                        
+                        //m_processQueue.Enqueue(currentMeasurements);
+
+                        m_processQueue.Enqueue(LatestEntities);
                     }
                 }
             }
@@ -600,11 +554,13 @@ namespace GSF.TimeSeries.Transport
                 // Publish unsynchronized on data receipt otherwise...
                 if ((object)m_processQueue != null)
                 {
-                    // Order measurements by signal type for better compression when enabled
-                    if (m_usePayloadCompression)
-                        m_processQueue.Enqueue(entities.OrderBy(measurement => measurement.GetSignalType(DataSource)));
-                    else
-                        m_processQueue.Enqueue(entities);
+                    // TODO: Re-enable sorting at compressed payload serialization at a later serialization
+                    //// Order measurements by signal type for better compression when enabled
+                    //if (m_usePayloadCompression)
+                    //    m_processQueue.Enqueue(entities.OrderBy(measurement => measurement.GetSignalType(DataSource)));
+                    //else
+                    
+                    m_processQueue.Enqueue(entities);
                 }
             }
         }
@@ -682,7 +638,7 @@ namespace GSF.TimeSeries.Transport
                     // Includes data packet flags and measurement count
                     const int PacketHeaderSize = DataPublisher.ClientResponseHeaderSize + 5;
 
-                    IEnumerable<IMeasurement> measurements;
+                    IEnumerable<ITimeSeriesEntity> signals;
                     List<IBinaryMeasurement> packet = new List<IBinaryMeasurement>();
                     bool usePayloadCompression = m_usePayloadCompression;
                     bool useCompactMeasurementFormat = m_useCompactMeasurementFormat || usePayloadCompression;
@@ -702,11 +658,11 @@ namespace GSF.TimeSeries.Transport
                         m_initializedBaseTimeOffsets = true;
                     }
 
-                    measurements = m_processQueue.Dequeue();
+                    signals = m_processQueue.Dequeue();
 
-                    foreach (IMeasurement measurement in measurements)
+                    foreach (ITimeSeriesEntity signal in signals)
                     {
-                        timeSeriesBuffer = measurement as TimeSeriesBuffer;
+                        timeSeriesBuffer = signal as TimeSeriesBuffer;
 
                         if ((object)timeSeriesBuffer != null)
                         {
@@ -742,27 +698,32 @@ namespace GSF.TimeSeries.Transport
                         }
                         else
                         {
-                            // Serialize the current measurement.
-                            if (useCompactMeasurementFormat)
-                                binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
-                            else
-                                binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
+                            // Serialize the current measurement - if the time-series entity is a measurement...
+                            IMeasurement<double> measurement = signal as IMeasurement<double>;
 
-                            // Determine the size of the measurement in bytes.
-                            binaryLength = binaryMeasurement.BinaryLength;
-
-                            // If the current measurement will not fit in the packet based on the max
-                            // packet size, process the current packet and start a new packet.
-                            if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                            if ((object)measurement != null)
                             {
-                                ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
-                                packet.Clear();
-                                packetSize = PacketHeaderSize;
-                            }
+                                if (useCompactMeasurementFormat)
+                                    binaryMeasurement = new CompactMeasurement(measurement, m_signalIndexCache, m_includeTime, m_baseTimeOffsets, m_timeIndex, m_useMillisecondResolution);
+                                else
+                                    binaryMeasurement = new SerializableMeasurement(measurement, m_parent.GetClientEncoding(m_clientID));
 
-                            // Add the current measurement to the packet.
-                            packet.Add(binaryMeasurement);
-                            packetSize += binaryLength;
+                                // Determine the size of the measurement in bytes.
+                                binaryLength = binaryMeasurement.BinaryLength;
+
+                                // If the current measurement will not fit in the packet based on the max
+                                // packet size, process the current packet and start a new packet.
+                                if (packetSize + binaryLength > DataPublisher.MaxPacketSize)
+                                {
+                                    ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
+                                    packet.Clear();
+                                    packetSize = PacketHeaderSize;
+                                }
+
+                                // Add the current measurement to the packet.
+                                packet.Add(binaryMeasurement);
+                                packetSize += binaryLength;
+                            }
                         }
                     }
 
@@ -771,9 +732,9 @@ namespace GSF.TimeSeries.Transport
                         ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
 
                     // Update latency statistics
-                    m_parent.UpdateLatencyStatistics(measurements.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
+                    m_parent.UpdateLatencyStatistics(signals.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
 
-                    if (measurements.Any())
+                    if (signals.Any())
                         spinner.Reset();
                     else
                         spinner.SpinOnce();
@@ -889,6 +850,21 @@ namespace GSF.TimeSeries.Transport
         {
             if ((object)BufferBlockRetransmission != null)
                 BufferBlockRetransmission(this, EventArgs.Empty);
+        }
+
+        // Update signal index cache unless "detaching" from any real-time signals
+        private void UnsynchronizedClientSubscription_InputSignalsUpdated(object sender, EventArgs e)
+        {
+            lock (this)
+            {
+                if (InputSignals.Count > 0)
+                {
+                    m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, InputSignals);
+
+                    if ((object)DataSource != null && (object)m_signalIndexCache != null)
+                        InputSignals.UnionWith(ParseFilterExpression(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs)));
+                }
+            }
         }
 
         // Explicitly implement status message event bubbler to satisfy IClientSubscription interface

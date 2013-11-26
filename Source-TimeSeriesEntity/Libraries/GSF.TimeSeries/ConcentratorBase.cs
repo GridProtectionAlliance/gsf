@@ -41,7 +41,7 @@ using Timer = System.Timers.Timer;
 namespace GSF.TimeSeries
 {
     /// <summary>
-    /// Method signature for function used to apply a downsampling filter over a sequence of <see cref="ITimeSeriesEntity"/> objects.
+    /// Method signature for function used to apply a down-sampling filter over a sequence of <see cref="ITimeSeriesEntity"/> objects.
     /// </summary>
     /// <param name="targetFrameTimestamp">The timestamp of the destination frame.</param>
     /// <param name="entities">Sequence of <see cref="ITimeSeriesEntity"/> objects over which to apply filter.</param>
@@ -56,18 +56,16 @@ namespace GSF.TimeSeries
     /// This class synchronizes (i.e., sorts by timestamp) real-time time-series entities.
     /// </para>
     /// <para>
-    /// Note that your lag time should be defined as it relates to the rate at which data data is coming
-    /// into the concentrator. Make sure you allow enough time for transmission of data over the network
-    /// allowing any needed time for possible network congestion.  Lead time should be defined as your
-    /// confidence in the accuracy of your local clock (e.g., if you set lead time to 2, this means you
-    /// trust that your local clock is within plus or minus 2 seconds of real-time.)
+    /// Note that your lag time should be defined as it relates to the rate at which data data is coming into the concentrator.
+    /// Make sure you allow enough time for transmission of data over the network allowing any needed time for possible network
+    /// congestion.  Lead time should be defined as your confidence in the accuracy of your local clock (e.g., if you set lead
+    /// time to 2, this means you trust that your local clock is within plus or minus 2 seconds of real-time.)
     /// </para>
     /// <para>
-    /// This concentrator is designed to sort entities being transmitted in real-time for data being
-    /// sent at rates of at least 1 sample per second. Slower rates (e.g., once every few seconds) are not
-    /// supported since sorting data at these speeds would be trivial. There is no defined maximum number
-    /// of supported samples per second - but keep in mind that CPU utilization will increase as the
-    /// volume of time-series objects and frame rate increase.
+    /// This concentrator is designed to sort entities being transmitted in real-time for data being sent at rates of at least
+    /// 1 sample per second. Slower rates (e.g., once every few seconds) are not supported since sorting data at these speeds
+    /// would be trivial. There is no defined maximum number of supported samples per second - but keep in mind that CPU
+    /// utilization will increase as the volume of time-series objects and frame rate increase.
     /// </para>
     /// </remarks>
     public abstract class ConcentratorBase : IDisposable
@@ -231,7 +229,7 @@ namespace GSF.TimeSeries
                     }
                     finally
                     {
-                        m_disposed = true;  // Prevent duplicate dispose.
+                        m_disposed = true; // Prevent duplicate dispose.
                     }
                 }
             }
@@ -375,49 +373,49 @@ namespace GSF.TimeSeries
         internal event Action<double> LeadTimeUpdated;
 
         // Fields
-        private FrameQueue m_frameQueue;                               // Queue of frames to be published
-        private Thread m_publicationThread;                            // Thread that handles frame publication
-        private AutoResetEvent m_publicationWaitHandle;                // Inter-frame publication wait handle
-        private bool m_usePrecisionTimer;                              // Flag that enables use of precision timer (over just simple thread sleep)
-        private bool m_attachedToFrameRateTimer;                       // Flag that tracks if instance is attached to a frame rate timer
-        private Timer m_monitorTimer;                                  // Sample monitor - tracks total number of unpublished frames
-        private int m_framesPerSecond;                                 // Frames per second
-        private double m_ticksPerFrame;                                // Ticks per frame
-        private double m_lagTime;                                      // Allowed past time deviation tolerance, in seconds
-        private double m_leadTime;                                     // Allowed future time deviation tolerance, in seconds
-        private long m_timeResolution;                                 // Maximum sorting resolution in ticks
-        private int m_processingInterval;                              // Defines a specific processing interval for data, if desired
-        private TimeSeriesFilterFunction m_filterFunction;             // Down-sampling method to use if input is at a higher-resolution than output
-        private double m_timeOffset;                                   // Half the distance of the time resolution used for index calculation
-        private int m_maximumPublicationTimeout;                       // Maximum publication wait timeout
-        private Ticks m_lagTicks;                                      // Current lag time calculated in ticks
-        private volatile bool m_enabled;                               // Enabled state of concentrator
-        private long m_startTime;                                      // Start time of concentrator
-        private long m_stopTime;                                       // Stop time of concentrator
-        private long m_realTimeTicks;                                  // Timestamp of real-time or the most recently received entity
-        private bool m_ignoreBadTimestamps;                            // Determines whether or not to ignore bad timestamps when sorting measurements
-        private bool m_allowSortsByArrival;                            // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
-        private bool m_useLocalClockAsRealTime;                        // Determines whether or not to use local system clock as "real-time"
-        private bool m_allowPreemptivePublishing;                      // Determines whether or not to preemptively publish frame if expected time-series entities arrive
-        private bool m_performTimestampReasonabilityCheck;             // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
-        private bool m_processByCreationTime;                     // Determines whether or not to publish frames by their CreatedTimestamp
-        private int m_expectedEntities;                                // Expected number of time-series entities to be sorted into a frame
-        private long m_receivedEntities;                               // Total number of time-series entities ever received for sorting
-        private long m_processedEntities;                              // Total number of time-series entities ever successfully sorted
-        private long m_discardedEntities;                              // Total number of discarded time-series entities
-        private long m_measurementsSortedByArrival;                    // Total number of measurements that were sorted by arrival
-        private long m_publishedEntities;                              // Total number of published time-series entities
-        private long m_downsampledEntities;                            // Total number of down-sampled time-series entities
-        private long m_missedSortsByTimeout;                           // Total number of unsorted time-series entities due to timeout waiting for lock
-        private long m_waitHandleExpirations;                          // Total number of wait handle expirations encountered due to delayed precision timer releases
-        private long m_framesAheadOfSchedule;                          // Total number of frames published ahead of schedule
-        private long m_publishedFrames;                                // Total number of published frames
-        private long m_totalPublishTime;                               // Total cumulative frame user function publication time (in ticks) - used to calculate average
-        private bool m_trackLatestEntities;                            // Determines whether or not to track latest time-series entities
-        private IDictionary<Guid, ITimeSeriesEntity> m_latestEntities; // Absolute latest received time-series entities
-        private ITimeSeriesEntity m_lastDiscardedEntity;               // Last time-series entity that was discarded by the concentrator
-        private long m_latencyOfLastDiscardedEntity;                     // Latency of last time-series entity that was discarded by the concentrator
-        private bool m_disposed;                                       // Disposed flag detects redundant calls to dispose method
+        private FrameQueue m_frameQueue; // Queue of frames to be published
+        private Thread m_publicationThread; // Thread that handles frame publication
+        private AutoResetEvent m_publicationWaitHandle; // Inter-frame publication wait handle
+        private bool m_usePrecisionTimer; // Flag that enables use of precision timer (over just simple thread sleep)
+        private bool m_attachedToFrameRateTimer; // Flag that tracks if instance is attached to a frame rate timer
+        private Timer m_monitorTimer; // Sample monitor - tracks total number of unpublished frames
+        private int m_framesPerSecond; // Frames per second
+        private double m_ticksPerFrame; // Ticks per frame
+        private double m_lagTime; // Allowed past time deviation tolerance, in seconds
+        private double m_leadTime; // Allowed future time deviation tolerance, in seconds
+        private long m_timeResolution; // Maximum sorting resolution in ticks
+        private int m_processingInterval; // Defines a specific processing interval for data, if desired
+        private TimeSeriesFilterFunction m_filterFunction; // Down-sampling method to use if input is at a higher-resolution than output
+        private double m_timeOffset; // Half the distance of the time resolution used for index calculation
+        private int m_maximumPublicationTimeout; // Maximum publication wait timeout
+        private Ticks m_lagTicks; // Current lag time calculated in ticks
+        private volatile bool m_enabled; // Enabled state of concentrator
+        private long m_startTime; // Start time of concentrator
+        private long m_stopTime; // Stop time of concentrator
+        private long m_realTimeTicks; // Timestamp of real-time or the most recently received entity
+        private bool m_ignoreBadTimestamps; // Determines whether or not to ignore bad timestamps when sorting measurements
+        private bool m_allowSortsByArrival; // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
+        private bool m_useLocalClockAsRealTime; // Determines whether or not to use local system clock as "real-time"
+        private bool m_allowPreemptivePublishing; // Determines whether or not to preemptively publish frame if expected time-series entities arrive
+        private bool m_performTimestampReasonabilityCheck; // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
+        private bool m_processByCreationTime; // Determines whether or not to publish frames by their CreatedTimestamp
+        private int m_expectedEntities; // Expected number of time-series entities to be sorted into a frame
+        private long m_receivedEntities; // Total number of time-series entities ever received for sorting
+        private long m_processedEntities; // Total number of time-series entities ever successfully sorted
+        private long m_discardedEntities; // Total number of discarded time-series entities
+        private long m_measurementsSortedByArrival; // Total number of measurements that were sorted by arrival
+        private long m_publishedEntities; // Total number of published time-series entities
+        private long m_downsampledEntities; // Total number of down-sampled time-series entities
+        private long m_missedSortsByTimeout; // Total number of unsorted time-series entities due to timeout waiting for lock
+        private long m_waitHandleExpirations; // Total number of wait handle expirations encountered due to delayed precision timer releases
+        private long m_framesAheadOfSchedule; // Total number of frames published ahead of schedule
+        private long m_publishedFrames; // Total number of published frames
+        private long m_totalPublishTime; // Total cumulative frame user function publication time (in ticks) - used to calculate average
+        private bool m_trackLatestEntities; // Determines whether or not to track latest time-series entities
+        private readonly IDictionary<Guid, ITimeSeriesEntity> m_latestEntities; // Absolute latest received time-series entities
+        private ITimeSeriesEntity m_lastDiscardedEntity; // Last time-series entity that was discarded by the concentrator
+        private long m_latencyOfLastDiscardedEntity; // Latency of last time-series entity that was discarded by the concentrator
+        private bool m_disposed; // Disposed flag detects redundant calls to dispose method
 
         #endregion
 
@@ -1583,7 +1581,7 @@ namespace GSF.TimeSeries
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_disposed = true; // Prevent duplicate dispose.
 
                     if (Disposed != null)
                         Disposed(this, EventArgs.Empty);
@@ -1704,7 +1702,6 @@ namespace GSF.TimeSeries
             // put the code into one larger more complex function...
 
             TrackingFrame frame = null;
-            IMeasurement measurement;
             ITimeSeriesEntity latestEntity;
 
             Ticks timestamp = 0, lastTimestamp = 0;
@@ -1721,9 +1718,6 @@ namespace GSF.TimeSeries
             // call for each entity.
             foreach (ITimeSeriesEntity entity in entities)
             {
-                // Attempt to cast the entity as a measurement
-                measurement = entity as IMeasurement;
-
                 // Reset flag for next entity.
                 discardEntity = false;
 
@@ -1733,6 +1727,9 @@ namespace GSF.TimeSeries
                     if (!m_latestEntities.TryGetValue(entity.ID, out latestEntity) || entity.Timestamp > latestEntity.Timestamp)
                         m_latestEntities[entity.ID] = entity;
                 }
+
+                // Attempt to cast the entity as a measurement
+                IMeasurement measurement = entity as IMeasurement;
 
                 // Check for a bad measurement timestamp.
                 if (!m_ignoreBadTimestamps && (object)measurement != null && !measurement.TimestampQualityIsGood())
@@ -1772,7 +1769,7 @@ namespace GSF.TimeSeries
                     {
                         if (m_processByCreationTime)
                         {
-                            // If sorting by received timestamp, simply get a frame for this entity since
+                            // If sorting by creation timestamp, simply get a frame for this entity since
                             // this is used in scenarios where very large volumes of data need concentration
                             frame = m_frameQueue.GetFrame(timestamp);
                             lastTimestamp = timestamp;

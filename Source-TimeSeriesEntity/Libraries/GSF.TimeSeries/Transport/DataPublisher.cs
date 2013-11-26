@@ -28,8 +28,8 @@
 //       Implemented subscriber authentication model.
 //  02/07/2012 - Mehulbhai Thakkar
 //       Modified m_metadataTables to include filter expression and made the list ";" separated.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  11/04/2013 - Stephen C. Wills
+//       Updated to process time-series entities.
 //
 //******************************************************************************************************
 
@@ -467,67 +467,9 @@ namespace GSF.TimeSeries.Transport
     /// </summary>
     [Description("DataPublisher: server component that allows gateway-style subscription connections.")]
     [EditorBrowsable(EditorBrowsableState.Always)]
-    public class DataPublisher : ActionAdapterCollection
+    public class DataPublisher : FacileActionAdapterBase
     {
         #region [ Members ]
-
-        // Nested Types
-
-        private sealed class LatestMeasurementCache : FacileActionAdapterBase
-        {
-            public LatestMeasurementCache(string connectionString)
-            {
-                ConnectionString = connectionString;
-            }
-
-            public override DataSet DataSource
-            {
-                get
-                {
-                    return base.DataSource;
-                }
-                set
-                {
-                    base.DataSource = value;
-
-                    if (Initialized)
-                        UpdateInputMeasurementKeys();
-                }
-            }
-
-            public override string Name
-            {
-                get
-                {
-                    return "LatestMeasurementCache";
-                }
-                set
-                {
-                    base.Name = value;
-                }
-            }
-
-            public override bool SupportsTemporalProcessing
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public override string GetShortStatus(int maxLength)
-            {
-                return "LatestMeasurementCache happily exists. :)";
-            }
-
-            private void UpdateInputMeasurementKeys()
-            {
-                string inputMeasurementKeys;
-
-                if (Settings.TryGetValue("inputMeasurementKeys", out inputMeasurementKeys))
-                    InputMeasurementKeys = ParseFilterExpression(DataSource, true, inputMeasurementKeys);
-            }
-        }
 
         // Events
 
@@ -632,15 +574,16 @@ namespace GSF.TimeSeries.Transport
         private Dictionary<X509Certificate, DataRow> m_subscriberIdentities;
         private ConcurrentDictionary<Guid, ClientConnection> m_clientConnections;
         private readonly ConcurrentDictionary<Guid, IServer> m_clientPublicationChannels;
-        private readonly ConcurrentDictionary<MeasurementKey, Guid> m_signalIDCache;
         private readonly Dictionary<Guid, Dictionary<int, string>> m_clientNotifications;
         private readonly object m_clientNotificationsLock;
         private Timer m_commandChannelRestartTimer;
         private Timer m_cipherKeyRotationTimer;
-        private RoutingTables m_routingTables;
+        private readonly RoutingTables m_routingTables;
+        private readonly RoutingEventArgs m_routingEventArgs;
+        private readonly Dictionary<Guid, ITimeSeriesEntity> m_cachedEntities;
+        private ISet<Guid> m_cachedSignals;
         private string m_metadataTables;
-        private string m_dependencies;
-        private string m_cacheMeasurementKeys;
+        private string m_cacheFilterExpression;
         private SecurityMode m_securityMode;
         private bool m_encryptPayload;
         private bool m_sharedDatabase;
@@ -683,11 +626,9 @@ namespace GSF.TimeSeries.Transport
         public DataPublisher()
         {
             base.Name = "Data Publisher Collection";
-            base.DataMember = "[internal]";
 
             m_clientConnections = new ConcurrentDictionary<Guid, ClientConnection>();
             m_clientPublicationChannels = new ConcurrentDictionary<Guid, IServer>();
-            m_signalIDCache = new ConcurrentDictionary<MeasurementKey, Guid>();
             m_clientNotifications = new Dictionary<Guid, Dictionary<int, string>>();
             m_clientNotificationsLock = new object();
             m_securityMode = DefaultSecurityMode;
@@ -702,9 +643,12 @@ namespace GSF.TimeSeries.Transport
             m_forceReceiveMetadataFlags = OperationalModes.ReceiveInternalMetadata;
 
             m_routingTables = new RoutingTables();
-            m_routingTables.ActionAdapters = this;
+            m_routingTables.ActionAdapters = new ActionAdapterCollection(false);
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
+
+            m_routingEventArgs = new RoutingEventArgs();
+            m_cachedEntities = new Dictionary<Guid, ITimeSeriesEntity>();
 
             // Setup a timer for restarting the command channel if it fails
             m_commandChannelRestartTimer = new Timer(2000.0D);
@@ -935,49 +879,6 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
-        /// </summary>
-        /// <remarks>
-        /// Adapters can specify a list of adapters that it depends on. The measurement routing
-        /// system will hold on to measurements that need to be passed through an adapter's
-        /// dependencies. Those measurements will be routed to the dependent adapter when all of
-        /// its dependencies have finished processing them.
-        /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(""),
-        Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
-        public string Dependencies
-        {
-            get
-            {
-                return m_dependencies;
-            }
-            set
-            {
-                m_dependencies = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(0.0333333D),
-        Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
-        public override long DependencyTimeout
-        {
-            get
-            {
-                return base.DependencyTimeout;
-            }
-            set
-            {
-                base.DependencyTimeout = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the set of measurements which are cached by the data
         /// publisher to be published to subscribers immediately upon subscription.
         /// </summary>
@@ -985,15 +886,15 @@ namespace GSF.TimeSeries.Transport
         DefaultValue(""),
         Description("Defines the set of measurements to be cached and sent to subscribers immediately upon subscription."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public string CacheMeasurementKeys
+        public string CacheFilterExpression
         {
             get
             {
-                return m_cacheMeasurementKeys;
+                return m_cacheFilterExpression;
             }
             set
             {
-                m_cacheMeasurementKeys = value;
+                m_cacheFilterExpression = value;
             }
         }
 
@@ -1086,18 +987,6 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets flag that determines if <see cref="DataPublisher"/> subscriptions
-        /// are automatically initialized when they are added to the collection.
-        /// </summary>
-        protected override bool AutoInitialize
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Gets dictionary of connected clients.
         /// </summary>
         internal protected ConcurrentDictionary<Guid, ClientConnection> ClientConnections
@@ -1150,6 +1039,17 @@ namespace GSF.TimeSeries.Transport
                     m_commandChannel.ServerStarted += m_commandChannel_ServerStarted;
                     m_commandChannel.ServerStopped += m_commandChannel_ServerStopped;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return false;
             }
         }
 
@@ -1292,14 +1192,6 @@ namespace GSF.TimeSeries.Transport
 
                         m_clientConnections = null;
 
-                        if ((object)m_routingTables != null)
-                        {
-                            m_routingTables.StatusMessage -= m_routingTables_StatusMessage;
-                            m_routingTables.ProcessException -= m_routingTables_ProcessException;
-                            m_routingTables.Dispose();
-                        }
-                        m_routingTables = null;
-
                         // Dispose command channel restart timer
                         if ((object)m_commandChannelRestartTimer != null)
                         {
@@ -1330,16 +1222,14 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public override void Initialize()
         {
-            // We don't call base class initialize since it tries to auto-load adapters from the defined
-            // data member - instead, the data publisher dynamically creates adapters upon request
-            Initialized = false;
-
-            Clear();
-
-            Dictionary<string, string> settings = Settings;
+            Dictionary<string, string> settings;
             string setting;
             double period;
             int strength;
+
+            base.Initialize();
+
+            settings = Settings;
 
             // Setup data publishing server with or without required authentication 
             if (settings.TryGetValue("requireAuthentication", out setting))
@@ -1385,37 +1275,12 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("securityMode", out setting))
                 m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
 
-            if (settings.TryGetValue("dependencyTimeout", out setting))
-                DependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
-            else
-                DependencyTimeout = Ticks.PerSecond / 30L;
-
             // Determine the type of metadata to force upon clients who do not specify
             if (settings.TryGetValue("forceReceiveMetadataFlags", out setting) && Enum.TryParse(setting, true, out m_forceReceiveMetadataFlags))
                 m_forceReceiveMetadataFlags &= (OperationalModes.ReceiveInternalMetadata | OperationalModes.ReceiveExternalMetadata);
 
-            if (settings.TryGetValue("cacheMeasurementKeys", out m_cacheMeasurementKeys))
-            {
-                // Create adapter for caching measurements that have a slower refresh interval
-                LatestMeasurementCache cache = new LatestMeasurementCache(string.Format("trackLatestMeasurements=true;lagTime=60;leadTime=60;inputMeasurementKeys={{{0}}}", m_cacheMeasurementKeys));
-
-                // Set up its data source first
-                cache.DataSource = DataSource;
-
-                // Add the cache as a child to the data publisher
-                Add(cache);
-
-                // AutoInitialize is false for the DataPublisher,
-                // so we must initialize manually
-                cache.Initialize();
-                cache.Initialized = true;
-
-                // Trigger routing table calculation to route cached measurements to the cache
-                m_routingTables.CalculateRoutingTables(null);
-
-                // Start tracking cached measurements
-                cache.Start();
-            }
+            if (settings.TryGetValue("cachedSignals", out m_cacheFilterExpression))
+                m_cachedSignals = ParseFilterExpression(DataSource, true, m_cacheFilterExpression);
 
             if (m_securityMode != SecurityMode.TLS)
             {
@@ -1429,7 +1294,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.PersistSettings = true;
 
                 // Assign command channel client reference and attach to needed events
-                this.CommandChannel = commandChannel;
+                CommandChannel = commandChannel;
             }
             else
             {
@@ -1450,7 +1315,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.CertificateChecker = m_certificateChecker;
 
                 // Assign command channel client reference and attach to needed events
-                this.CommandChannel = commandChannel;
+                CommandChannel = commandChannel;
             }
 
             // Initialize TCP server (loads config file settings)
@@ -1463,26 +1328,32 @@ namespace GSF.TimeSeries.Transport
             // Register publisher with the statistics engine
             StatisticsEngine.Register(this, "Publisher", "PUB");
             StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
-
-            Initialized = true;
         }
 
         /// <summary>
         /// Queues a collection of measurements for processing to each <see cref="IActionAdapter"/> connected to this <see cref="DataPublisher"/>.
         /// </summary>
-        /// <param name="measurements">Measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        /// <param name="entities">Measurements to queue for processing.</param>
+        public override void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
         {
-            int measurementCount;
+            ITimeSeriesEntity cachedEntity;
 
-            if (this.ProcessSignalFilter)
-                base.QueueMeasurementsForProcessing(measurements);
-            else
-                m_routingTables.RoutingEventHandler(measurements);
+            ITimeSeriesEntity[] entityArray = entities.ToArray();
 
-            measurementCount = measurements.Count();
-            m_lifetimeMeasurements += measurementCount;
-            UpdateMeasurementsPerSecond(measurementCount);
+            if ((object)m_cachedSignals != null)
+            {
+                foreach (ITimeSeriesEntity entity in entityArray.Where(entity => m_cachedSignals.Contains(entity.ID)))
+                {
+                    if (!m_cachedEntities.TryGetValue(entity.ID, out cachedEntity) || cachedEntity.Timestamp < entity.Timestamp)
+                        m_cachedEntities[entity.ID] = entity;
+                }
+            }
+
+            m_routingEventArgs.TimeSeriesEntities = entityArray;
+            m_routingTables.RoutingEventHandler(this, m_routingEventArgs);
+
+            m_lifetimeMeasurements += entityArray.Length;
+            UpdateMeasurementsPerSecond(entityArray.Length);
         }
 
         /// <summary>
@@ -1714,42 +1585,49 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="clientID">Client ID of connection over which to update signal index cache.</param>
         /// <param name="signalIndexCache">New signal index cache.</param>
-        /// <param name="inputMeasurementKeys">Subscribed measurement keys.</param>
-        public void UpdateSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache, MeasurementKey[] inputMeasurementKeys)
+        /// <param name="inputSignals">Subscribed measurement keys.</param>
+        public void UpdateSignalIndexCache(Guid clientID, SignalIndexCache signalIndexCache, ISet<Guid> inputSignals)
         {
             ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
-            List<Guid> unauthorizedKeys = new List<Guid>();
+            List<Guid> unauthorizedSignals = new List<Guid>();
+            DataSet dataSource = DataSource;
+            MeasurementKey key;
             ushort index = 0;
-            Guid signalID;
 
             byte[] serializedSignalIndexCache;
             ClientConnection connection;
 
-            if ((object)inputMeasurementKeys != null)
+            if ((object)inputSignals != null)
             {
                 // We will now go through the client's requested keys and see which ones are authorized for subscription,
                 // this information will be available through the returned signal index cache which will also define
                 // a runtime index optimization for the allowed measurements.
-                foreach (MeasurementKey key in inputMeasurementKeys)
+                foreach (Guid signalID in inputSignals)
                 {
                     if (RequireAuthentication)
                     {
                         // Validate that subscriber has rights to this signal
-                        if (SubscriberHasRights(signalIndexCache.SubscriberID, key, out signalID))
+                        if (SubscriberHasRights(signalIndexCache.SubscriberID, signalID))
+                        {
+                            key = LookUpMeasurementKey(dataSource, signalID);
                             reference.TryAdd(index++, new Tuple<Guid, string, uint>(signalID, key.Source, key.PointID));
+                        }
                         else
-                            unauthorizedKeys.Add(key.SignalID);
+                        {
+                            unauthorizedSignals.Add(signalID);
+                        }
                     }
                     else
                     {
                         // When client authorization is not required, all points are assumed to be allowed
-                        reference.TryAdd(index++, new Tuple<Guid, string, uint>(LookupSignalID(key), key.Source, key.PointID));
+                        key = LookUpMeasurementKey(dataSource, signalID);
+                        reference.TryAdd(index++, new Tuple<Guid, string, uint>(signalID, key.Source, key.PointID));
                     }
                 }
             }
 
             signalIndexCache.Reference = reference;
-            signalIndexCache.UnauthorizedSignalIDs = unauthorizedKeys.ToArray();
+            signalIndexCache.UnauthorizedSignalIDs = unauthorizedSignals.ToArray();
             serializedSignalIndexCache = SerializeSignalIndexCache(clientID, signalIndexCache);
 
             // Send client updated signal index cache
@@ -1765,17 +1643,8 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                string cacheMeasurementKeys;
-                IActionAdapter cache;
-
-                if (Settings.TryGetValue("cacheMeasurementKeys", out cacheMeasurementKeys))
-                {
-                    if (TryGetAdapterByName("LatestMeasurementCache", out cache))
-                    {
-                        cache.InputSignals = AdapterBase.ParseFilterExpression(DataSource, true, cacheMeasurementKeys);
-                        m_routingTables.CalculateRoutingTables(null);
-                    }
-                }
+                if (Settings.TryGetValue("cacheMeasurementKeys", out m_cacheFilterExpression))
+                    m_cachedSignals = ParseFilterExpression(DataSource, true, m_cacheFilterExpression);
             }
             catch (Exception ex)
             {
@@ -1791,8 +1660,6 @@ namespace GSF.TimeSeries.Transport
         {
             foreach (ClientConnection connection in m_clientConnections.Values)
                 UpdateRights(connection);
-
-            m_routingTables.CalculateRoutingTables(null);
         }
 
         private void UpdateClientNotifications()
@@ -2012,7 +1879,7 @@ namespace GSF.TimeSeries.Transport
                 // Look up implicitly defined group based measurements
                 return subscriberMeasurementGroups
                     .Select(subscriberMeasurementGroup => Tuple.Create(subscriberMeasurementGroup, DataSource.Tables["MeasurementGroups"].Select(string.Format("ID = {0}", subscriberMeasurementGroup["MeasurementGroupID"]))))
-                    .Where(tuple => tuple.Item2.Any(measurementGroup => AdapterBase.ParseFilterExpression(DataSource, false, measurementGroup["FilterExpression"].ToNonNullString()).Select(key => key.SignalID).Contains(signalID)))
+                    .Where(tuple => tuple.Item2.Any(measurementGroup => ParseFilterExpression(DataSource, false, measurementGroup["FilterExpression"].ToNonNullString()).Contains(signalID)))
                     .Select(tuple => tuple.Item1["Allowed"].ToNonNullString("0").ParseBoolean())
                     .DefaultIfEmpty(false)
                     .All(allowed => allowed);
@@ -2023,58 +1890,6 @@ namespace GSF.TimeSeries.Transport
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Determines if subscriber has rights to specified <see cref="MeasurementKey"/>.
-        /// </summary>
-        /// <param name="subscriberID"><see cref="Guid"/> based subscriber ID.</param>
-        /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
-        /// <param name="signalID"><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</param>
-        /// <returns><c>true</c> if subscriber has rights to specified <see cref="MeasurementKey"/>; otherwise <c>false</c>.</returns>
-        protected bool SubscriberHasRights(Guid subscriberID, MeasurementKey key, out Guid signalID)
-        {
-            signalID = LookupSignalID(key);
-
-            if (signalID != Guid.Empty)
-                return SubscriberHasRights(subscriberID, signalID);
-
-            return false;
-        }
-
-        /// <summary>
-        /// Looks up <see cref="Guid"/> signal ID for given <see cref="MeasurementKey"/>.
-        /// </summary>
-        /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
-        /// <returns><see cref="Guid"/> signal ID if found; otherwise an empty Guid.</returns>
-        protected Guid LookupSignalID(MeasurementKey key)
-        {
-            // Attempt to lookup measurement key's signal ID that may have already been cached
-            return m_signalIDCache.GetOrAdd(key, keyParam =>
-            {
-                Guid signalID = Guid.Empty;
-
-                if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
-                {
-                    // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
-                    try
-                    {
-                        DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("ID='" + keyParam.ToString() + "'");
-
-                        if (filteredRows.Length > 0)
-                            Guid.TryParse(filteredRows[0]["SignalID"].ToString(), out signalID);
-                    }
-                    catch
-                    {
-                        // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
-                    }
-                }
-
-                if (signalID == Guid.Empty)
-                    signalID = key.SignalID;
-
-                return signalID;
-            });
         }
 
         /// <summary>
@@ -2331,8 +2146,8 @@ namespace GSF.TimeSeries.Transport
                 // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
                 // from the remote subscription - this will prevent possible SQL injection attacks.
                 IClientSubscription subscription = connection.Subscription;
-                MeasurementKey[] requestedInputs;
-                HashSet<MeasurementKey> authorizedSignals;
+                ISet<Guid> requestedInputs;
+                ISet<Guid> authorizedSignals;
                 Guid subscriberID;
                 string message;
 
@@ -2343,21 +2158,17 @@ namespace GSF.TimeSeries.Transport
                 if ((object)subscription != null)
                 {
                     // Update the subscription associated with this connection based on newly acquired or revoked rights
-                    requestedInputs = AdapterBase.ParseFilterExpression(DataSource, false, subscription.RequestedInputFilter);
-                    authorizedSignals = new HashSet<MeasurementKey>();
                     subscriberID = subscription.SubscriberID;
-
-                    foreach (MeasurementKey input in requestedInputs)
-                    {
-                        if (SubscriberHasRights(subscriberID, input.SignalID))
-                            authorizedSignals.Add(input);
-                    }
+                    requestedInputs = ParseFilterExpression(DataSource, false, subscription.RequestedInputFilter);
+                    authorizedSignals = new HashSet<Guid>(requestedInputs.Where(input => SubscriberHasRights(subscriberID, input)));
 
                     if (!authorizedSignals.SetEquals(subscription.InputSignals))
                     {
                         message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
-                        subscription.InputSignals = authorizedSignals.ToArray();
                         SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
+
+                        subscription.InputSignals.Clear();
+                        subscription.InputSignals.UnionWith(authorizedSignals);
                     }
                 }
             }
@@ -2577,7 +2388,7 @@ namespace GSF.TimeSeries.Transport
                 if (TryGetClientSubscription(clientID, out clientSubscription))
                 {
                     clientSubscription.Stop();
-                    Remove(clientSubscription);
+                    m_routingTables.ActionAdapters.Remove(clientSubscription);
 
                     try
                     {
@@ -2602,26 +2413,15 @@ namespace GSF.TimeSeries.Transport
         // Attempt to find client subscription
         private bool TryGetClientSubscription(Guid clientID, out IClientSubscription subscription)
         {
-            IActionAdapter adapter;
+            ClientConnection connection;
 
-            // Lookup adapter by its client ID
-            if (TryGetAdapter(clientID, GetClientSubscription, out adapter))
+            if (m_clientConnections.TryGetValue(clientID, out connection))
             {
-                subscription = (IClientSubscription)adapter;
+                subscription = connection.Subscription;
                 return true;
             }
 
             subscription = null;
-            return false;
-        }
-
-        private bool GetClientSubscription(IActionAdapter item, Guid value)
-        {
-            IClientSubscription subscription = item as IClientSubscription;
-
-            if ((object)subscription != null)
-                return subscription.ClientID == value;
-
             return false;
         }
 
@@ -2638,6 +2438,18 @@ namespace GSF.TimeSeries.Transport
                 result = predicate(connection);
 
             return result;
+        }
+
+        // TODO: Remove this method if ClientConnection notion can be eliminated
+        internal void PublishStatusMessage(string formattedStatus, params object[] args)
+        {
+            base.OnStatusMessage(formattedStatus, args);
+        }
+
+        // TODO: Remove this method if ClientConnection notion can be eliminated
+        internal void PublishProcessException(Exception ex)
+        {
+            base.OnProcessException(ex);
         }
 
         /// <summary>
@@ -2896,10 +2708,7 @@ namespace GSF.TimeSeries.Transport
                             //startIndex += byteLength;
 
                             // Get client subscription
-                            if ((object)connection.Subscription == null)
-                                TryGetClientSubscription(clientID, out subscription);
-                            else
-                                subscription = connection.Subscription;
+                            subscription = connection.Subscription;
 
                             if ((object)subscription == null)
                             {
@@ -2920,11 +2729,7 @@ namespace GSF.TimeSeries.Transport
                                     {
                                         // Subscription is for unsynchronized measurements and consumer is requesting synchronized
                                         subscription.Stop();
-
-                                        lock (this)
-                                        {
-                                            Remove(subscription);
-                                        }
+                                        m_routingTables.ActionAdapters.Remove(subscription);
 
                                         // Create a new synchronized subscription
                                         subscription = new SynchronizedClientSubscription(this, clientID, connection.SubscriberID);
@@ -2937,11 +2742,7 @@ namespace GSF.TimeSeries.Transport
                                     {
                                         // Subscription is for synchronized measurements and consumer is requesting unsynchronized
                                         subscription.Stop();
-
-                                        lock (this)
-                                        {
-                                            Remove(subscription);
-                                        }
+                                        m_routingTables.ActionAdapters.Remove(subscription);
 
                                         // Create a new unsynchronized subscription
                                         subscription = new UnsynchronizedClientSubscription(this, clientID, connection.SubscriberID);
@@ -3009,18 +2810,16 @@ namespace GSF.TimeSeries.Transport
                             if (addSubscription)
                             {
                                 // Adding client subscription to collection will automatically initialize it
-                                lock (this)
-                                {
-                                    Add(subscription);
-                                }
+                                m_routingTables.ActionAdapters.Add(subscription);
 
                                 // Attach to processing completed notification
                                 subscription.BufferBlockRetransmission += subscription_BufferBlockRetransmission;
                                 subscription.ProcessingComplete += subscription_ProcessingComplete;
                             }
 
-                            // Make sure temporal support is initialized
-                            OnRequestTemporalSupport();
+                            // ReloadConfig will automatically ascertain temporal session support automatically now
+                            //// Make sure temporal support is initialized
+                            //OnRequestTemporalSupport();
 
                             // Manually initialize client subscription
                             subscription.Initialize();
@@ -3041,19 +2840,7 @@ namespace GSF.TimeSeries.Transport
                                 connection.RotateCipherKeys();
 
                             // If client has subscribed to any cached measurements, queue them up for the client
-                            IActionAdapter adapter;
-                            LatestMeasurementCache cache;
-
-                            if (TryGetAdapterByName("LatestMeasurementCache", out adapter))
-                            {
-                                cache = adapter as LatestMeasurementCache;
-
-                                if ((object)cache != null)
-                                {
-                                    IEnumerable<IMeasurement> cachedMeasurements = cache.LatestEntities.Where(measurement => subscription.InputSignals.Any(key => key.SignalID == measurement.ID));
-                                    subscription.QueueMeasurementsForProcessing(cachedMeasurements);
-                                }
-                            }
+                            subscription.QueueEntitiesForProcessing(m_cachedEntities.Values.Where(entities => subscription.InputSignals.Contains(entities.ID)));
 
                             // Notify any direct publisher consumers about the new client connection
                             try
@@ -3072,10 +2859,10 @@ namespace GSF.TimeSeries.Transport
                             }
                             else
                             {
-                                if ((object)subscription.InputSignals != null)
-                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputSignals.Length);
+                                if (subscription.InputSignals.Count > 0)
+                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputSignals.Count);
                                 else
-                                    message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
+                                    message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputSignals\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
                             }
 
                             connection.IsSubscribed = true;
@@ -3164,7 +2951,7 @@ namespace GSF.TimeSeries.Transport
                         foreach (string expression in expressions)
                         {
                             // Attempt to parse filter expression and add it dictionary if successful
-                            if (AdapterBase.ParseFilterSyntax(expression, out tableName, out filterExpression, out sortField, out takeCount))
+                            if (ParseFilterSyntax(expression, out tableName, out filterExpression, out sortField, out takeCount))
                                 filterExpressions.Add(tableName, Tuple.Create(filterExpression, sortField, takeCount));
                         }
                     }
@@ -3729,11 +3516,11 @@ namespace GSF.TimeSeries.Transport
             }
             else if (m_securityMode == SecurityMode.TLS)
             {
-                const string errorFormat = "Unable to authenticate client. Client connected using" +
+                const string ErrorFormat = "Unable to authenticate client. Client connected using" +
                     " certificate of subscriber \"{0}\", however the IP address used ({1}) was" +
                     " not found among the list of valid IP addresses.";
 
-                string errorMessage = string.Format(errorFormat, connection.SubscriberName, connection.IPAddress);
+                string errorMessage = string.Format(ErrorFormat, connection.SubscriberName, connection.IPAddress);
 
                 OnProcessException(new InvalidOperationException(errorMessage));
             }

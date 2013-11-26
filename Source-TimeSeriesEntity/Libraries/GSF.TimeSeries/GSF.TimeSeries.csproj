@@ -120,7 +120,6 @@
     <Compile Include="Adapters\AdapterBase.cs" />
     <Compile Include="Adapters\AdapterCollectionBase.cs" />
     <Compile Include="Adapters\AdapterCommandAttribute.cs" />
-    <Compile Include="Adapters\AllAdaptersCollection.cs" />
     <Compile Include="Adapters\FacileActionAdapterBase.cs" />
     <Compile Include="Adapters\IActionAdapter.cs" />
     <Compile Include="Adapters\IAdapter.cs" />

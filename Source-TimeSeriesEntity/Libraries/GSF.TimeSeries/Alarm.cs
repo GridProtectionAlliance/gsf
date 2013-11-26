@@ -422,7 +422,8 @@ namespace GSF.TimeSeries
         // value is within the configured alarming range.
         private bool GetTestResult(IMeasurement signal)
         {
-            double value = signal.Value;
+            // TODO: Need to deal with non-double style values
+            double value = (double)signal.Value;
 
             switch (Operation)
             {
@@ -462,7 +463,8 @@ namespace GSF.TimeSeries
         // indicates that the signal has left the alarming range.
         private bool CheckRangeClear(IMeasurement signal)
         {
-            double value = signal.Value;
+            // TODO: Need to deal with non-double style values
+            double value = (double)signal.Value;
 
             switch (Operation)
             {
@@ -489,13 +491,16 @@ namespace GSF.TimeSeries
         {
             long dist, diff;
 
-            if (signal.Value != m_lastValue)
+            // TODO: Need to deal with non-double style values
+            double value = (double)signal.Value;
+
+            if (value != m_lastValue)
             {
                 m_lastChanged = signal.Timestamp;
-                m_lastValue = signal.Value;
+                m_lastValue = value;
             }
 
-            dist = Ticks.FromSeconds(Delay.Value);
+            dist = Ticks.FromSeconds(Delay.GetValueOrDefault());
             diff = signal.Timestamp - m_lastChanged;
 
             return diff >= dist;

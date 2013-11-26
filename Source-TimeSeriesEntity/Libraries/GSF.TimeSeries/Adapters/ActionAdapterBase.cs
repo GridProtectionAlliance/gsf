@@ -90,7 +90,6 @@ namespace GSF.TimeSeries.Adapters
         private bool m_autoStart;
         private bool m_respectInputDemands;
         private bool m_respectOutputDemands;
-        private bool m_processSignalFilter;
         private ISet<Guid> m_inputSignals;
         private ISet<Guid> m_outputSignals;
         private ISet<Guid> m_requestedInputSignals;
@@ -290,21 +289,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_respectOutputDemands = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets flag that determines if signals being queued for processing should be tested to see if they are in the <see cref="InputSignals"/>.
-        /// </summary>
-        public virtual bool ProcessSignalFilter
-        {
-            get
-            {
-                return m_processSignalFilter;
-            }
-            set
-            {
-                m_processSignalFilter = value;
             }
         }
 
@@ -559,7 +543,7 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 // Default to all signals if minimum is not specified
-                if (m_minimumSignalsToUse < 1 && (object)InputSignals != null)
+                if (m_minimumSignalsToUse < 1)
                     return InputSignals.Count;
 
                 return m_minimumSignalsToUse;
@@ -659,8 +643,6 @@ namespace GSF.TimeSeries.Adapters
                 }
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
-                status.AppendFormat("      Using signal routing: {0}", !ProcessSignalFilter);
-                status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
@@ -717,7 +699,7 @@ namespace GSF.TimeSeries.Adapters
 
                 status.AppendLine();
 
-                if ((object)OutputSignals != null && OutputSignals.Any(signalID => signalID != Guid.Empty))
+                if (OutputSignals.Any(signalID => signalID != Guid.Empty))
                 {
                     status.AppendFormat("            Output Signals: {0} defined signals", OutputSignals.Count);
                     status.AppendLine();
@@ -737,7 +719,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if ((object)InputSignals != null && InputSignals.Any(signalID => signalID != Guid.Empty))
+                if (InputSignals.Any(signalID => signalID != Guid.Empty))
                 {
                     status.AppendFormat("             Input Signals: {0} defined signals", InputSignals.Count);
                     status.AppendLine();
@@ -987,15 +969,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public virtual string GetShortStatus(int maxLength)
         {
-            int inputCount = 0, outputCount = 0;
-
-            if ((object)InputSignals != null)
-                inputCount = InputSignals.Count;
-
-            if ((object)OutputSignals != null)
-                outputCount = OutputSignals.Count;
-
-            return string.Format("Total input signals: {0}, total output signals: {1}", inputCount, outputCount).PadLeft(maxLength);
+            return string.Format("Total input signals: {0}, total output signals: {1}", InputSignals.Count, OutputSignals.Count).PadLeft(maxLength);
         }
 
         /// <summary>
@@ -1007,28 +981,7 @@ namespace GSF.TimeSeries.Adapters
             if (m_disposed)
                 return;
 
-            if (ProcessSignalFilter)
-            {
-                SortEntities(entities.Where(entity => InputSignals.Contains(entity.ID)).ToList());
-            }
-            else
-            {
-                SortEntities(entities);
-            }
-        }
-
-        /// <summary>
-        /// Determines if specified signal ID is defined in <see cref="InputSignals"/>.
-        /// </summary>
-        /// <param name="signalID">Primary key of signal to find.</param>
-        /// <returns>true if specified signal ID is defined in <see cref="InputSignals"/>.</returns>
-        public virtual bool IsInputSignal(Guid signalID)
-        {
-            if ((object)InputSignals != null)
-                return InputSignals.Contains(signalID);
-
-            // If no input signals are defined we must assume user wants to accept all signals - yikes!
-            return true;
+            SortEntities(entities);
         }
 
         /// <summary>

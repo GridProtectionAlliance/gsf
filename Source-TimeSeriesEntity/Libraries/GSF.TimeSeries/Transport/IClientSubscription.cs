@@ -27,7 +27,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text;
 using GSF.Collections;
 using GSF.TimeSeries.Adapters;
@@ -179,25 +178,25 @@ namespace GSF.TimeSeries.Transport
 
             // Cache the specified input measurement keys requested by the remote subscription
             // internally since these will only be needed in the private Iaon session
-            MeasurementKey[] inputMeasurementKeys = clientSubscription.InputSignals;
-            IMeasurement[] outputMeasurements = clientSubscription.OutputSignals;
+            ISet<Guid> inputSignals = new HashSet<Guid>(clientSubscription.InputSignals);
+            ISet<Guid> outputSignals = new HashSet<Guid>(clientSubscription.OutputSignals);
 
             // Since historical data is requested, we "turn off" interaction with the outside real-time world
-            // by removing this adapter from external routes. To accomplish this we expose I/O demands for an
-            // undefined measurement. Note: assigning to null would mean "broadcast" of all data is desired.
-            clientSubscription.InputSignals = new[] { MeasurementKey.Undefined };
-            clientSubscription.OutputSignals = new IMeasurement[] { Measurement.Undefined };
+            // by removing this adapter from external routes.
+            clientSubscription.InputSignals.Clear();
+            clientSubscription.OutputSignals.Clear();
 
-            // Create a new Iaon session
-            session = new IaonSession();
+            // Create a new temporal Iaon session using existing data source
+            session = new IaonSession(clientSubscription.DataSource, true);
             session.Name = "<" + clientSubscription.HostName.ToNonNullString("unavailable") + ">@" + clientSubscription.StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss");
 
             // Assign requested input measurement keys as a routing restriction
-            session.InputSignalsRestriction = inputMeasurementKeys;
+            session.InputSignalsRestriction = inputSignals;
 
             // Setup default bubbling event handlers associated with the client session adapter
             EventHandler<EventArgs<string, UpdateType>> statusMessageHandler = (sender, e) =>
             {
+                // TODO: If update type is applied to status messages at all levels, this prefix encoding can go away...
                 if (e.Argument2 == UpdateType.Information)
                     clientSubscription.OnStatusMessage(e.Argument1);
                 else
@@ -226,9 +225,6 @@ namespace GSF.TimeSeries.Transport
                     clientSubscription.ProcessingInterval == -1 ? "at the default rate" : "at " + clientSubscription.ProcessingInterval + "ms intervals"),
                 UpdateType.Information));
 
-            // Duplicate current real-time session configuration for adapters that report temporal support
-            session.DataSource = IaonSession.ExtractTemporalConfiguration(clientSubscription.DataSource);
-
             // Define an in-situ action adapter for the temporal Iaon session used to proxy data back to the client subscription
             DataTable actionAdapters = session.DataSource.Tables["ActionAdapters"];
             DataRow proxyAdapterRow = actionAdapters.NewRow();
@@ -236,15 +232,15 @@ namespace GSF.TimeSeries.Transport
             // Define connection string for proxy adapter based on original inputs and outputs as requested by client subscription
             StringBuilder connectionString = new StringBuilder();
 
-            if ((object)inputMeasurementKeys != null && inputMeasurementKeys.Length > 0)
-                connectionString.AppendFormat("inputMeasurementKeys={{{0}}}", inputMeasurementKeys.Select(key => key.SignalID).ToDelimitedString(";"));
+            if (inputSignals.Count > 0)
+                connectionString.AppendFormat("inputSignals={{{0}}}", inputSignals.ToDelimitedString(";"));
 
-            if ((object)outputMeasurements != null && outputMeasurements.Length > 0)
+            if (outputSignals.Count > 0)
             {
                 if (connectionString.Length > 0)
                     connectionString.Append("; ");
 
-                connectionString.AppendFormat("outputMeasurements={{{0}}}", outputMeasurements.Select(m => m.ID).ToDelimitedString(";"));
+                connectionString.AppendFormat("outputSignals={{{0}}}", outputSignals.ToDelimitedString(";"));
             }
 
             // Assign critical adapter properties
@@ -257,8 +253,8 @@ namespace GSF.TimeSeries.Transport
             // Add proxy row to Iaon action adapter definitions
             actionAdapters.Rows.Add(proxyAdapterRow);
 
-            // Initialize temporal session adapters without starting them
-            session.Initialize(false);
+            // Initialize temporal session adapters bypassing automatic start sequence
+            session.Initialize(true);
 
             // Get reference to temporal session proxy adapter to it can be associated with the client subscription
             TemporalClientSubscriptionProxy proxyAdapter = null;
@@ -283,14 +279,14 @@ namespace GSF.TimeSeries.Transport
             settings.TryGetValue("timeConstraintParameters", out parameters);
 
             // Assign requested temporal constraints to all private session adapters
-            session.AllAdapters.SetTemporalConstraint(startTime, stopTime, parameters);
-            session.AllAdapters.ProcessingInterval = clientSubscription.ProcessingInterval;
+            session.SetTemporalConstraint(startTime, stopTime, parameters);
+            session.ProcessingInterval = clientSubscription.ProcessingInterval;
 
-            // Start temporal session adapters
-            session.AllAdapters.Start();
+            // After the temporal constraints have been applied, start the session adapters
+            session.Start();
 
             // Recalculate routing tables to accommodate addition of proxy adapter and handle
-            // input measurement keys restriction
+            // input signals restriction
             session.RecalculateRoutingTables();
 
             return session;

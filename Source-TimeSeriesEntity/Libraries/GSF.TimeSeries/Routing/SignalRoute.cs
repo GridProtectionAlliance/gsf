@@ -39,11 +39,11 @@ namespace GSF.TimeSeries.Routing
         #region [ Members ]
 
         // Fields
-        private MethodInfo m_processingMethod;
-        private Type m_listType;
-        private Type m_signalType;
+        private readonly MethodInfo m_processingMethod;
+        private readonly Type m_listType;
+        private readonly Type m_signalType;
 
-        private IAdapter m_adapter;
+        private readonly IAdapter m_adapter;
         private IList m_list;
 
         #endregion
@@ -144,7 +144,7 @@ namespace GSF.TimeSeries.Routing
                 return m_adapter;
             }
         }
-        
+
         /// <summary>
         /// Gets the list that contains the signals to be processed by the <see cref="ProcessingMethod"/>.
         /// </summary>

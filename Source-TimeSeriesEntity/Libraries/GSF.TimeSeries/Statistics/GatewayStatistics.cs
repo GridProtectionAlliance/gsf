@@ -212,7 +212,7 @@ namespace GSF.TimeSeries.Statistics
             DataPublisher publisher = source as DataPublisher;
 
             if ((object)publisher != null)
-                statistic = publisher.Count;
+                statistic = publisher.ClientConnections.Count;
 
             return statistic;
         }

@@ -74,14 +74,15 @@ namespace GSF.TimeSeries.Transport
 
         #region [ Methods ]
 
+        // TODO: This key function will bubble measurements back out to the real-time function - once this mechanism has been reestablished...
         /// <summary>
         /// Proxies measurements to parent adapter for processing.
         /// </summary>
         /// <param name="entities">Collection of measurements to queue for processing.</param>
-        public override void QueueEntitiesForProcessing(IEnumerable<IMeasurement> entities)
+        public void QueueEntitiesForProcessing(IEnumerable<IMeasurement> entities)
         {
-            if ((object)m_parent != null)
-                m_parent.QueueMeasurementsForProcessing(entities);
+            //if ((object)m_parent != null)
+            //    m_parent.QueueMeasurementsForProcessing(entities);
         }
 
         /// <summary>
@@ -91,15 +92,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>A short one-line summary of the current status for this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            int inputCount = 0, outputCount = 0;
-
-            if (InputMeasurementKeys != null)
-                inputCount = InputMeasurementKeys.Length;
-
-            if (OutputSignals != null)
-                outputCount = OutputSignals.Length;
-
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
+            return string.Format("Total input measurements: {0}, total output measurements: {1}", InputSignals.Count, OutputSignals.Count).PadLeft(maxLength);
         }
 
         #endregion

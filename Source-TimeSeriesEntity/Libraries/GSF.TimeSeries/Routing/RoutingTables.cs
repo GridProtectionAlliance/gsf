@@ -49,7 +49,6 @@ namespace GSF.TimeSeries.Routing
         {
             public Dictionary<Guid, ICollection<IAdapter>> DestinationsLookup;
             public Dictionary<IAdapter, ICollection<SignalRoute>> AdapterRoutesLookup;
-            public List<IAdapter> BroadcastAdapters;
             public int CacheVersion;
         }
 
@@ -302,7 +301,6 @@ namespace GSF.TimeSeries.Routing
                 Dictionary<Guid, ICollection<IAdapter>> destinationsLookup = new Dictionary<Guid, ICollection<IAdapter>>();
                 Dictionary<IAdapter, ICollection<SignalRoute>> routesLookup = new Dictionary<IAdapter, ICollection<SignalRoute>>();
                 Dictionary<Type, ICollection<SignalRoute>> routesLookupTemplates = new Dictionary<Type, ICollection<SignalRoute>>();
-                List<IAdapter> broadcastAdapters = new List<IAdapter>();
 
                 Func<Type, ICollection<SignalRoute>> templateFactory;
                 ICollection<IAdapter> destinations;
@@ -333,21 +331,12 @@ namespace GSF.TimeSeries.Routing
                         signalIDs = adapter.InputSignals;
                         adapterType = adapter.GetType();
 
-                        if ((object)signalIDs != null)
+                        // Add this adapter as a destination to each
+                        // signal defined in its input measurement keys
+                        foreach (Guid signalID in signalIDs)
                         {
-                            // Add this adapter as a destination to each
-                            // signal defined in its input measurement keys
-                            foreach (Guid signalID in signalIDs)
-                            {
-                                destinations = destinationsLookup.GetOrAdd(signalID, guid => new List<IAdapter>());
-                                destinations.Add(adapter);
-                            }
-                        }
-                        else
-                        {
-                            // InputMeasurementKeys is null, therefore this adapter
-                            // requests a broadcast of all signals in the system
-                            broadcastAdapters.Add(adapter);
+                            destinations = destinationsLookup.GetOrAdd(signalID, guid => new List<IAdapter>());
+                            destinations.Add(adapter);
                         }
 
                         // Determine which methods defined on the adapter type qualify as routes and store those in a lookup table
@@ -359,17 +348,11 @@ namespace GSF.TimeSeries.Routing
                     }
                 }
 
-                // Add the broadcast adapters to all existing routes since
-                // they will be receiving all signals in the system
-                foreach (ICollection<IAdapter> signalDestinations in destinationsLookup.Values)
-                    broadcastAdapters.ForEach(adapter => signalDestinations.Add(adapter));
-
                 // Update global lookup tables for routing
                 m_globalCache = new GlobalCache()
                 {
                     DestinationsLookup = destinationsLookup,
                     AdapterRoutesLookup = routesLookup,
-                    BroadcastAdapters = broadcastAdapters,
                     CacheVersion = ((object)m_globalCache != null) ? m_globalCache.CacheVersion + 1 : 0
                 };
 
@@ -480,19 +463,6 @@ namespace GSF.TimeSeries.Routing
             }
         }
 
-        /// <summary>
-        /// Event handler for distributing new time-series entities in a broadcast fashion.
-        /// </summary>
-        /// <param name="sender">Event source reference to adapter that generated new time-series entities.</param>
-        /// <param name="e">Event arguments containing a collection of new time-series entities.</param>
-        /// <remarks>
-        /// Time-series framework uses this handler to route new time-series entities to the action and output adapters; adapter will handle filtering.
-        /// </remarks>
-        public virtual void BroadcastEventHandler(object sender, RoutingEventArgs e)
-        {
-            // TODO: Decide if this is still useful
-        }
-
         private ICollection<SignalRoute> FindAndCacheSignalRoutes(ITimeSeriesEntity timeSeriesEntity, GlobalCache globalCache, RoutingEventArgs localCache)
         {
             List<SignalRoute> signalRoutes = new List<SignalRoute>();
@@ -512,85 +482,85 @@ namespace GSF.TimeSeries.Routing
                     : new List<SignalRoute>();
             };
 
-            if (!globalCache.DestinationsLookup.TryGetValue(timeSeriesEntity.ID, out destinations))
-                destinations = globalCache.BroadcastAdapters;
-
-            foreach (IAdapter destination in destinations)
+            if (globalCache.DestinationsLookup.TryGetValue(timeSeriesEntity.ID, out destinations))
             {
-                // Check the local cache for routes first
-                localAdapterRoutes = localCache.AdapterRoutes.GetOrAdd(destination, adapterRoutesFactory);
-
-                // If there is a route that matches exactly with this time-series
-                // entity, then we are guaranteed there can be no better match
-                matchingRoutes = localAdapterRoutes
-                    .Where(route => route.SignalType == timeSeriesEntityType)
-                    .ToList();
-
-                if (matchingRoutes.Count == 0)
+                foreach (IAdapter destination in destinations)
                 {
-                    // Attempt to create matching generic routes
-                    genericRoutes = localAdapterRoutes
-                        .Select(route => route.MakeGenericSignalRoute(timeSeriesEntityType))
-                        .Where(genericRoute => (object)genericRoute != null)
-                        .Where(genericRoute => localAdapterRoutes.All(route => route.SignalType != genericRoute.SignalType))
-                        .ToList();
+                    // Check the local cache for routes first
+                    localAdapterRoutes = localCache.AdapterRoutes.GetOrAdd(destination, adapterRoutesFactory);
 
-                    // Add all created routes to the local cache
-                    foreach (SignalRoute genericRoute in genericRoutes)
-                        localAdapterRoutes.Add(genericRoute);
-
-                    // Get routes where the signal type is compatible with this time-series entity
+                    // If there is a route that matches exactly with this time-series
+                    // entity, then we are guaranteed there can be no better match
                     matchingRoutes = localAdapterRoutes
-                        .Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType))
+                        .Where(route => route.SignalType == timeSeriesEntityType)
                         .ToList();
-                }
 
-                // We should have found at least one route unless there
-                // are no routes defined to handle the signal's type
-                if (matchingRoutes.Count > 0)
-                {
-                    // In the case of multiple matches, get routes with
-                    // the most defined signal types, where it is not
-                    // compatible with any other type in the list
-                    if (matchingRoutes.Count > 1)
+                    if (matchingRoutes.Count == 0)
                     {
-                        matchingRoutes = matchingRoutes
-                            .Where(r1 => !matchingRoutes.Any(r2 => r1 != r2 && r1.SignalType.IsAssignableFrom(r2.SignalType)))
+                        // Attempt to create matching generic routes
+                        genericRoutes = localAdapterRoutes
+                            .Select(route => route.MakeGenericSignalRoute(timeSeriesEntityType))
+                            .Where(genericRoute => (object)genericRoute != null)
+                            .Where(genericRoute => localAdapterRoutes.All(route => route.SignalType != genericRoute.SignalType))
+                            .ToList();
+
+                        // Add all created routes to the local cache
+                        foreach (SignalRoute genericRoute in genericRoutes)
+                            localAdapterRoutes.Add(genericRoute);
+
+                        // Get routes where the signal type is compatible with this time-series entity
+                        matchingRoutes = localAdapterRoutes
+                            .Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType))
                             .ToList();
                     }
 
-                    // If we still have multiple matches,
-                    // try throwing out the generic routes
-                    if (matchingRoutes.Count > 1)
+                    // We should have found at least one route unless there
+                    // are no routes defined to handle the signal's type
+                    if (matchingRoutes.Count > 0)
                     {
-                        matchingRoutes = matchingRoutes
-                            .Where(route => !route.ProcessingMethod.IsGenericMethod)
-                            .ToList();
-                    }
+                        // In the case of multiple matches, get routes with
+                        // the most defined signal types, where it is not
+                        // compatible with any other type in the list
+                        if (matchingRoutes.Count > 1)
+                        {
+                            matchingRoutes = matchingRoutes
+                                .Where(r1 => !matchingRoutes.Any(r2 => r1 != r2 && r1.SignalType.IsAssignableFrom(r2.SignalType)))
+                                .ToList();
+                        }
 
-                    // There should only be one route,
-                    // except in the case of ambiguous matches
-                    if (matchingRoutes.Count == 1)
-                    {
-                        signalRoutes.Add(matchingRoutes[0]);
+                        // If we still have multiple matches,
+                        // try throwing out the generic routes
+                        if (matchingRoutes.Count > 1)
+                        {
+                            matchingRoutes = matchingRoutes
+                                .Where(route => !route.ProcessingMethod.IsGenericMethod)
+                                .ToList();
+                        }
+
+                        // There should only be one route,
+                        // except in the case of ambiguous matches
+                        if (matchingRoutes.Count == 1)
+                        {
+                            signalRoutes.Add(matchingRoutes[0]);
+                        }
+                        else
+                        {
+                            const string Message = "WARNING: When locating routes for signal [{0}] going to adapter [{1}]," +
+                                " multiple processing methods were found that could handle the signal's type, and the" +
+                                " system was unable to resolve the ambiguity. The signal will not be processed by this" +
+                                " adapter. The adapter will likely need to be fixed to resolve the ambiguity.";
+
+                            OnStatusMessage(Message, timeSeriesEntity.ID, destination.Name);
+                        }
                     }
                     else
                     {
                         const string Message = "WARNING: When locating routes for signal [{0}] going to adapter [{1}]," +
-                            " multiple processing methods were found that could handle the signal's type, and the" +
-                            " system was unable to resolve the ambiguity. The signal will not be processed by this" +
-                            " adapter. The adapter will likely need to be fixed to resolve the ambiguity.";
+                            " no processing methods were found that could handle the signal's type. The signal will" +
+                            " not be processed by this adapter. This is likely a configuration error.";
 
                         OnStatusMessage(Message, timeSeriesEntity.ID, destination.Name);
                     }
-                }
-                else
-                {
-                    const string Message = "WARNING: When locating routes for signal [{0}] going to adapter [{1}]," +
-                        " no processing methods were found that could handle the signal's type. The signal will" +
-                        " not be processed by this adapter. This is likely a configuration error.";
-
-                    OnStatusMessage(Message, timeSeriesEntity.ID, destination.Name);
                 }
             }
 
@@ -671,14 +641,13 @@ namespace GSF.TimeSeries.Routing
 
             if ((object)inputSignalsRestriction != null && inputSignalsRestriction.Any())
             {
-                // When an input measurement keys restriction has been defined, extract the needed
-                // input and output measurement keys by walking the dependency chain of the restriction
+                // When an input signals restriction has been defined, determine the set of adapters
+                // by walking the dependency chain of the restriction
                 dependencyChain = TraverseDependencyChain(inputSignalsRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
             }
             else
             {
-                // When an input measurement keys restriction has been defined, extract the needed
-                // input and output measurement keys by walking the dependency chain of the restriction
+                // Determine the set of adapters in the dependency chain for all adapters in the system
                 dependencyChain = TraverseDependencyChain(inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
             }
 
@@ -909,53 +878,53 @@ namespace GSF.TimeSeries.Routing
             }
         }
 
-        /// <summary>
-        /// Determines the set of adapters in the dependency chain that produces the set of signals in the
-        /// <paramref name="inputSignalsRestriction"/> and returns the set of input signals required by the
-        /// adapters in the chain and the set of output signals produced by the adapters in the chain.
-        /// </summary>
-        /// <param name="inputSignalsRestriction">The set of signals that must be produced by the dependency chain.</param>
-        /// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
-        /// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
-        /// <param name="inputSignals">The set of input signals required by the adapters in the dependency chain.</param>
-        /// <param name="outputSignals">The set of output signals produced by the adapters in the dependency chain.</param>
-        protected virtual void TraverseMeasurementKeyDependencyChain(ISet<Guid> inputSignalsRestriction, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, out ISet<Guid> inputSignals, out ISet<Guid> outputSignals)
-        {
-            List<IAdapter> producerAdapters = (inputAdapterCollection ?? Enumerable.Empty<IAdapter>())
-                    .Concat(actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
-                    .ToList();
+        ///// <summary>
+        ///// Determines the set of adapters in the dependency chain that produces the set of signals in the
+        ///// <paramref name="inputSignalsRestriction"/> and returns the set of input signals required by the
+        ///// adapters in the chain and the set of output signals produced by the adapters in the chain.
+        ///// </summary>
+        ///// <param name="inputSignalsRestriction">The set of signals that must be produced by the dependency chain.</param>
+        ///// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
+        ///// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
+        ///// <param name="inputSignals">The set of input signals required by the adapters in the dependency chain.</param>
+        ///// <param name="outputSignals">The set of output signals produced by the adapters in the dependency chain.</param>
+        //protected virtual void TraverseMeasurementKeyDependencyChain(ISet<Guid> inputSignalsRestriction, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, out ISet<Guid> inputSignals, out ISet<Guid> outputSignals)
+        //{
+        //    List<IAdapter> producerAdapters = (inputAdapterCollection ?? Enumerable.Empty<IAdapter>())
+        //            .Concat(actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
+        //            .ToList();
 
-            ISet<IAdapter> flattenedAdapterChain = new HashSet<IAdapter>();
+        //    ISet<IAdapter> flattenedAdapterChain = new HashSet<IAdapter>();
 
-            ISet<Guid> currentInputSignals = new HashSet<Guid>(inputSignalsRestriction);
-            List<IAdapter> currentLink;
-            int adapterCount;
+        //    ISet<Guid> currentInputSignals = new HashSet<Guid>(inputSignalsRestriction);
+        //    List<IAdapter> currentLink;
+        //    int adapterCount;
 
-            do
-            {
-                // Get the number of adapters in the chain before
-                // augmenting the amount with the next link in the chain
-                adapterCount = flattenedAdapterChain.Count;
+        //    do
+        //    {
+        //        // Get the number of adapters in the chain before
+        //        // augmenting the amount with the next link in the chain
+        //        adapterCount = flattenedAdapterChain.Count;
 
-                // Get the adapters which are in the next link in the chain
-                currentLink = producerAdapters
-                    .Where(adapter => adapter.OutputSignals.Overlaps(currentInputSignals))
-                    .ToList();
+        //        // Get the adapters which are in the next link in the chain
+        //        currentLink = producerAdapters
+        //            .Where(adapter => adapter.OutputSignals.Overlaps(currentInputSignals))
+        //            .ToList();
 
-                // Get the set of input signals for the current link in the chain
-                currentInputSignals.Clear();
-                currentInputSignals.UnionWith(currentLink.SelectMany(adapter => adapter.InputSignals));
+        //        // Get the set of input signals for the current link in the chain
+        //        currentInputSignals.Clear();
+        //        currentInputSignals.UnionWith(currentLink.SelectMany(adapter => adapter.InputSignals));
 
-                // Add the adapters in the current link of the chain
-                // to the flattened set of adapters in the chain
-                flattenedAdapterChain.UnionWith(currentLink);
-            }
-            while (flattenedAdapterChain.Count != adapterCount);
+        //        // Add the adapters in the current link of the chain
+        //        // to the flattened set of adapters in the chain
+        //        flattenedAdapterChain.UnionWith(currentLink);
+        //    }
+        //    while (flattenedAdapterChain.Count != adapterCount);
 
-            // Build the set of input signals and output signals for all the adapters in the chain
-            inputSignals = new HashSet<Guid>(flattenedAdapterChain.SelectMany(adapter => adapter.InputSignals));
-            outputSignals = new HashSet<Guid>(flattenedAdapterChain.SelectMany(adapter => adapter.OutputSignals));
-        }
+        //    // Build the set of input signals and output signals for all the adapters in the chain
+        //    inputSignals = new HashSet<Guid>(flattenedAdapterChain.SelectMany(adapter => adapter.InputSignals));
+        //    outputSignals = new HashSet<Guid>(flattenedAdapterChain.SelectMany(adapter => adapter.OutputSignals));
+        //}
 
         #endregion
     }

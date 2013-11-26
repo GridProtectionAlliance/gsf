@@ -171,6 +171,7 @@
     <Compile Include="Collections\CollectionExtensions.cs" />
     <Compile Include="Collections\DictionaryList.cs" />
     <Compile Include="Collections\DoubleBufferedQueue.cs" />
+    <Compile Include="Collections\ObservableHashSet.cs" />
     <Compile Include="Collections\ProcessDictionary.cs" />
     <Compile Include="Collections\NamespaceDoc.cs" />
     <Compile Include="Collections\ProcessList.cs" />

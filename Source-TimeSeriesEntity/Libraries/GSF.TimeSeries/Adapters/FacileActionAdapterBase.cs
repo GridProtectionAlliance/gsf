@@ -112,10 +112,6 @@ namespace GSF.TimeSeries.Adapters
             {
                 return base.InputSignals;
             }
-            set
-            {
-                base.InputSignals = value;
-            }
         }
 
         /// <summary>
@@ -385,7 +381,7 @@ namespace GSF.TimeSeries.Adapters
                 if (UseLocalClockAsRealTime || !TrackLatestEntities)
                     return DateTime.UtcNow.Ticks;
 
-                // Assume lastest timestamp is the best value we have for real-time.
+                // Assume latest timestamp is the best value we have for real-time.
                 return m_realTimeTicks;
             }
         }

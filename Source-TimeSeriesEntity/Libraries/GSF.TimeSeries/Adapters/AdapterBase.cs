@@ -23,11 +23,9 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Units;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Globalization;
@@ -36,6 +34,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.Units;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -108,9 +110,8 @@ namespace GSF.TimeSeries.Adapters
         private DataSet m_dataSource;
         private int m_initializationTimeout;
         private bool m_autoStart;
-        private bool m_processSignalFilter;
-        private ISet<Guid> m_inputSignals;
-        private ISet<Guid> m_outputSignals;
+        private readonly ObservableHashSet<Guid> m_inputSignals;
+        private readonly ObservableHashSet<Guid> m_outputSignals;
         private long m_processedEntities;
         private int m_entityReportingInterval;
         private bool m_enabled;
@@ -131,8 +132,15 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected AdapterBase()
         {
-            m_name = this.GetType().Name;
+            m_name = GetType().Name;
             m_settings = new Dictionary<string, string>();
+
+            m_inputSignals = new ObservableHashSet<Guid>();
+            m_outputSignals = new ObservableHashSet<Guid>();
+
+            m_inputSignals.CollectionChanged += m_inputSignals_CollectionChanged;
+            m_outputSignals.CollectionChanged += m_outputSignals_CollectionChanged;
+
             m_startTimeConstraint = DateTime.MinValue;
             m_stopTimeConstraint = DateTime.MaxValue;
             m_processingInterval = -1;
@@ -301,26 +309,8 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if signals being queued for processing should be tested to see if they are in the <see cref="InputSignals"/>.
+        /// Gets input signals the <see cref="AdapterBase"/> expects, if any.
         /// </summary>
-        public virtual bool ProcessSignalFilter
-        {
-            get
-            {
-                return m_processSignalFilter;
-            }
-            set
-            {
-                m_processSignalFilter = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets primary keys of input signals the <see cref="AdapterBase"/> expects, if any.
-        /// </summary>
-        /// <remarks>
-        /// If your adapter needs to receive all signals, you must explicitly set InputSignals to null.
-        /// </remarks>
         [ConnectionStringParameter,
         DefaultValue(null),
         Description("Defines primary keys of input signals the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
@@ -331,15 +321,10 @@ namespace GSF.TimeSeries.Adapters
             {
                 return m_inputSignals;
             }
-            set
-            {
-                m_inputSignals = value;
-                OnInputSignalsUpdated();
-            }
         }
 
         /// <summary>
-        /// Gets or sets output signals that the <see cref="AdapterBase"/> will produce, if any.
+        /// Gets output signals that the <see cref="AdapterBase"/> will produce, if any.
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(null),
@@ -350,11 +335,6 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 return m_outputSignals;
-            }
-            set
-            {
-                m_outputSignals = value;
-                OnOutputSignalsUpdated();
             }
         }
 
@@ -557,16 +537,16 @@ namespace GSF.TimeSeries.Adapters
                 StringBuilder status = new StringBuilder();
                 DataSet dataSource = DataSource;
 
-                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
+                status.AppendFormat("       Data source defined: {0}", ((object)dataSource != null));
                 status.AppendLine();
-                if (dataSource != null)
+
+                if ((object)dataSource != null)
                 {
                     status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
                     status.AppendLine();
                 }
-                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
-                status.AppendLine();
-                status.AppendFormat("      Using signal routing: {0}", !ProcessSignalFilter);
+
+                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout + " milliseconds");
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
@@ -576,10 +556,11 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("        Processed entities: {0}", ProcessedEntities);
                 status.AppendLine();
-                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
+                status.AppendFormat("    Total adapter run time: {0}", RunTime);
                 status.AppendLine();
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();
+
                 if (SupportsTemporalProcessing)
                 {
                     status.AppendFormat("     Start time constraint: {0}", StartTimeConstraint == DateTime.MinValue ? "Unspecified" : StartTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
@@ -589,6 +570,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
                     status.AppendLine();
                 }
+
                 status.AppendFormat("   Item reporting interval: {0}", EntityReportingInterval);
                 status.AppendLine();
                 status.AppendFormat("                Adapter ID: {0}", ID);
@@ -622,13 +604,13 @@ namespace GSF.TimeSeries.Adapters
 
                 status.AppendLine();
 
-                if ((object)OutputSignals != null && OutputSignals.Any(signalID => signalID != Guid.Empty))
+                if (OutputSignals.Count > 0)
                 {
                     status.AppendFormat("            Output signals: {0} defined signals", OutputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    // TODO: Fix metadata lookup and display point tag instead of signal ID
+                    // TODO: Fix metadata lookup and display point tag next to measurement key
                     foreach (Guid signalID in OutputSignals.Take(MaxSignalsToShow))
                     {
                         status.Append(LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
@@ -642,7 +624,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if ((object)InputSignals != null && InputSignals.Any(signalID => signalID != Guid.Empty))
+                if (InputSignals.Count > 0)
                 {
                     status.AppendFormat("             Input Signals: {0} defined signals", InputSignals.Count);
                     status.AppendLine();
@@ -685,6 +667,9 @@ namespace GSF.TimeSeries.Adapters
             {
                 m_disposed = true;  // Prevent duplicate dispose.
 
+                m_inputSignals.CollectionChanged -= m_inputSignals_CollectionChanged;
+                m_outputSignals.CollectionChanged -= m_outputSignals_CollectionChanged;
+
                 if (Disposed != null)
                     Disposed(this, EventArgs.Empty);
             }
@@ -701,12 +686,10 @@ namespace GSF.TimeSeries.Adapters
             string setting;
 
             if (settings.TryGetValue("inputSignals", out setting))
-                InputSignals = ParseFilterExpression(DataSource, true, setting);
-            else
-                InputSignals = new HashSet<Guid>();
+                m_inputSignals.UnionWith(ParseFilterExpression(DataSource, true, setting));
 
             if (settings.TryGetValue("outputSignals", out setting))
-                OutputSignals = ParseFilterExpression(DataSource, true, setting);
+                m_outputSignals.UnionWith(ParseFilterExpression(DataSource, true, setting));
 
             if (settings.TryGetValue("entityReportingInterval", out setting))
                 EntityReportingInterval = int.Parse(setting);
@@ -738,11 +721,14 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Starts the <see cref="AdapterBase"/> or restarts it if it is already running.
         /// </summary>
-        [AdapterCommand("Starts the adapter or restarts it if it is already running.", "Administrator", "Editor")]
+        [AdapterCommand("Starts the adapter, or restarts if already running.", "Administrator", "Editor")]
         public virtual void Start()
         {
             if (m_disposed)
                 throw new ObjectDisposedException(Name, "Cannot start adapter because it is disposed.");
+
+            if (!Initialized)
+                throw new InvalidOperationException("Cannot start adapter because it had not been initialized.");
 
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
             if (m_enabled)
@@ -784,20 +770,6 @@ namespace GSF.TimeSeries.Adapters
         public abstract string GetShortStatus(int maxLength);
 
         /// <summary>
-        /// Determines if specified signal ID is defined in <see cref="InputSignals"/>.
-        /// </summary>
-        /// <param name="item">Primary key of signal to find.</param>
-        /// <returns>true if specified signal ID is defined in <see cref="InputSignals"/>.</returns>
-        public virtual bool IsInputSignal(Guid item)
-        {
-            if ((object)InputSignals != null)
-                return InputSignals.Contains(item);
-
-            // If no input signals are defined we must assume user wants to accept all signals - yikes!
-            return true;
-        }
-
-        /// <summary>
         /// Defines a temporal processing constraint for the adapter.
         /// </summary>
         /// <param name="startTime">Defines a relative or exact start time for the temporal constraint.</param>
@@ -816,7 +788,7 @@ namespace GSF.TimeSeries.Adapters
         /// following formats:
         /// <list type="table">
         ///     <listheader>
-        ///         <term>Time Format</term>
+        ///         <term>Time Format Example</term>
         ///         <description>Format Description</description>
         ///     </listheader>
         ///     <item>
@@ -1001,6 +973,16 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
+        private void m_inputSignals_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnInputSignalsUpdated();
+        }
+
+        private void m_outputSignals_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            OnOutputSignalsUpdated();
+        }
+
         #endregion
 
         #region [ Static ]
@@ -1167,6 +1149,8 @@ namespace GSF.TimeSeries.Adapters
             return dateTime;
         }
 
+        // TODO: Filter expressions would be better able to accommodate sourceIDs if a "source" field was available to active measurements
+
         /// <summary>
         /// Loads an <see cref="IOutputAdapter"/> or <see cref="IActionAdapter"/> instance's input signals from a specific set of source ID's.
         /// </summary>
@@ -1205,12 +1189,7 @@ namespace GSF.TimeSeries.Adapters
                         DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
 
                         if (filteredRows.Length > 0)
-                        {
-                            if ((object)adapter.InputSignals == null)
-                                adapter.InputSignals = new HashSet<Guid>();
-
                             adapter.InputSignals.UnionWith(filteredRows.Select(row => row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>()));
-                        }
                     }
                 }
                 catch
@@ -1258,12 +1237,7 @@ namespace GSF.TimeSeries.Adapters
                         DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
 
                         if (filteredRows.Length > 0)
-                        {
-                            if ((object)adapter.InputSignals == null)
-                                adapter.OutputSignals = new HashSet<Guid>();
-
                             adapter.OutputSignals.UnionWith(filteredRows.Select(row => row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>()));
-                        }
                     }
                 }
                 catch

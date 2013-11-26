@@ -60,7 +60,9 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Constructs a new instance of the <see cref="ActionAdapterCollection"/>.
         /// </summary>
-        public ActionAdapterCollection()
+        /// <param name="temporalCollection">Determines if this collection is being used in a temporal <see cref="IaonSession"/>.</param>
+        public ActionAdapterCollection(bool temporalCollection)
+            : base(temporalCollection)
         {
             base.Name = "Action Adapter Collection";
             base.DataMember = "ActionAdapters";
@@ -73,13 +75,13 @@ namespace GSF.TimeSeries.Adapters
         /// <summary>
         /// Raises the <see cref="UnpublishedSamples"/> event.
         /// </summary>
-        /// <param name="unprocessedEntities">Total number of unpublished seconds of data in the queue.</param>
-        protected virtual void OnUnprocessedEntities(int unprocessedEntities)
+        /// <param name="unpublishedSamples">Total number of unpublished seconds of data in the queue.</param>
+        protected virtual void OnUnpublishedSamples(int unpublishedSamples)
         {
             try
             {
-                if ((object)UnpublishedSamples != null)
-                    UnpublishedSamples(this, new EventArgs<int>(unprocessedEntities));
+                if (UnpublishedSamples != null)
+                    UnpublishedSamples(this, new EventArgs<int>(unpublishedSamples));
             }
             catch (Exception ex)
             {
