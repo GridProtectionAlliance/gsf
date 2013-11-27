@@ -87,7 +87,7 @@ namespace PowerCalculations
 
             for (int i = 0; i < InputMeasurementKeys.Length; i++)
             {
-                keyType = InputMeasurementKeyTypes[i];
+                keyType = InputSignalTypes[i];
 
                 // Make sure measurement key type is a phase magnitude
                 if (keyType == SignalType.VPHM || keyType == SignalType.IPHM)
@@ -97,7 +97,7 @@ namespace PowerCalculations
             if (validInputMeasurementKeys.Count == 0)
                 throw new InvalidOperationException("No valid phase magnitudes were specified as inputs to the reference magnitude calculator.");
 
-            if (InputMeasurementKeyTypes.Count(s => s == SignalType.VPHM) > 0 && InputMeasurementKeyTypes.Count(s => s == SignalType.IPHM) > 0)
+            if (InputSignalTypes.Count(s => s == SignalType.VPHM) > 0 && InputSignalTypes.Count(s => s == SignalType.IPHM) > 0)
                 throw new InvalidOperationException("A mixture of voltage and current phase magnitudes were specified as inputs to the reference magnitude calculator - you must specify one or the other: only voltage phase magnitudes or only current phase magnitudes.");
 
             // Make sure only phase magnitudes are used as input

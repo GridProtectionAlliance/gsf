@@ -239,28 +239,28 @@ namespace PowerCalculations.EventDetection
             int index;
 
             // Get expected voltage magnitude
-            index = InputMeasurementKeyTypes.IndexOf(signalType => signalType == SignalType.VPHM);
+            index = InputSignalTypes.IndexOf(signalType => signalType == SignalType.VPHM);
             if (index < 0)
                 throw new InvalidOperationException("No voltage magnitude input measurement key was not found - this is a required input measurement for the loss of field detector.");
 
             m_voltageMagnitude = InputMeasurementKeys[index];
 
             // Get expected voltage angle
-            index = InputMeasurementKeyTypes.IndexOf(signalType => signalType == SignalType.VPHA);
+            index = InputSignalTypes.IndexOf(signalType => signalType == SignalType.VPHA);
             if (index < 0)
                 throw new InvalidOperationException("No voltage angle input measurement key was not found - this is a required input measurement for the loss of field detector.");
 
             m_voltageAngle = InputMeasurementKeys[index];
 
             // Get expecpted current magnitude
-            index = InputMeasurementKeyTypes.IndexOf(signalType => signalType == SignalType.IPHM);
+            index = InputSignalTypes.IndexOf(signalType => signalType == SignalType.IPHM);
             if (index < 0)
                 throw new InvalidOperationException("No current magnitude input measurement key was not found - this is a required input measurement for the loss of field detector.");
 
             m_currentMagnitude = InputMeasurementKeys[index];
 
             // Get expected current angle
-            index = InputMeasurementKeyTypes.IndexOf(signalType => signalType == SignalType.IPHA);
+            index = InputSignalTypes.IndexOf(signalType => signalType == SignalType.IPHA);
             if (index < 0)
                 throw new InvalidOperationException("No current angle input measurement key was not found - this is a required input measurement for the loss of field detector.");
 

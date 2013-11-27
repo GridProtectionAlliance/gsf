@@ -230,7 +230,7 @@ namespace EpriExport
             InputMeasurementKeys = (new[] { m_referenceAngleKey }).Concat(InputMeasurementKeys).ToArray();
 
             // Make sure sure reference angle key is actually an angle measurement
-            SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
+            SignalType signalType = InputSignalTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
 
             if (signalType != SignalType.IPHA && signalType != SignalType.VPHA)
                 throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedSignalTypeName()));
@@ -272,7 +272,7 @@ namespace EpriExport
                     referenceAdded = true;
                 }
                 else
-                    switch (InputMeasurementKeyTypes[i])
+                    switch (InputSignalTypes[i])
                     {
                         case SignalType.VPHM:
                             header.AppendFormat(",{0} |V|", deviceName);
@@ -376,7 +376,7 @@ namespace EpriExport
                 {
                     m_fileData.Append(',');
                     inputMeasurementKey = InputMeasurementKeys[i];
-                    signalType = InputMeasurementKeyTypes[i];
+                    signalType = InputSignalTypes[i];
 
                     // Get measurement for this frame, falling back on latest value
                     measurementValue = measurements.TryGetValue(inputMeasurementKey, out measurement) ? measurement.AdjustedValue : LatestEntities[inputMeasurementKey.SignalID];

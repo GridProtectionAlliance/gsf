@@ -548,9 +548,13 @@ namespace GSF.PhasorProtocols
             info.AddValue("digitalValues", m_digitalValues, typeof(DigitalValueCollection));
         }
 
-        public IMeasurement<double> GetStatusFlagsMeasurement(Guid id)
+        /// <summary>
+        /// Gets the status flags of the <see cref="DataCellBase"/> as a measurement value.
+        /// </summary>
+        /// <returns>Status flags of the <see cref="DataCellBase"/> as a measurement value.</returns>
+        public IMeasurement<double> GetStatusFlagsMeasurement()
         {
-            return new Measurement<double>(id, Parent.Timestamp, MeasurementStateFlags.Normal, CommonStatusFlags);
+            return new Measurement<double>(Guid.Empty, Parent.Timestamp, MeasurementStateFlags.Normal, CommonStatusFlags);
         }
 
         #endregion

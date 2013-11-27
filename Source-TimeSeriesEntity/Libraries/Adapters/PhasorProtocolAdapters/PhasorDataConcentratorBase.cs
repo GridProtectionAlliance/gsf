@@ -36,6 +36,16 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Timers;
 using GSF;
 using GSF.Communication;
 using GSF.Parsing;
@@ -45,17 +55,6 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Timers;
 using Timer = System.Timers.Timer;
 
 namespace PhasorProtocolAdapters
@@ -86,7 +85,7 @@ namespace PhasorProtocolAdapters
         // device, the EIRA PMU, which defines the calculated interconnection reference angle - this includes
         // an average interconnection frequency - hence you have a virtual device consisting entirely of
         // of composed measurement points. Normally you just want to retransmit the received device data
-        // which is forwared as a cell in the combined outgoing data stream - this typically excludes any
+        // which is forwarded as a cell in the combined outgoing data stream - this typically excludes any
         // digital or analog values - but there may be cases where this data should be retransmitted as well.
 
         // It is fairly straight forward to reverse the process of mapping device signals to measurements
@@ -110,9 +109,9 @@ namespace PhasorProtocolAdapters
 
         // In the end a set of tables needs to exist that defines the outgoing data streams, the devices
         // that will appear in these streams (technically these do not need to already exist) and the
-        // points that make up the field defintitions in these devices along with their signal references
-        // that designate their destination field location - this will not necessarily be the perordained 
-        // signal reference that was used to orginally map this field to a measurement - but rather an
+        // points that make up the field definitions in these devices along with their signal references
+        // that designate their destination field location - this will not necessarily be the preordained 
+        // signal reference that was used to originally map this field to a measurement - but rather an
         // outgoing data stream specific signal reference that exists for this measurement mapped into
         // this device.
 
@@ -156,7 +155,7 @@ namespace PhasorProtocolAdapters
         private IServer m_publishChannel;
         private IConfigurationFrame m_configurationFrame;
         private ConfigurationFrame m_baseConfigurationFrame;
-        private readonly ConcurrentDictionary<MeasurementKey, SignalReference[]> m_signalReferences;
+        private readonly ConcurrentDictionary<Guid, SignalReference[]> m_signalReferences;
         private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
         private readonly ConcurrentDictionary<Guid, string> m_connectionIDCache;
         private Timer m_commandChannelRestartTimer;
@@ -209,9 +208,9 @@ namespace PhasorProtocolAdapters
         protected PhasorDataConcentratorBase()
         {
             // Create a new signal reference dictionary indexed on measurement keys
-            m_signalReferences = new ConcurrentDictionary<MeasurementKey, SignalReference[]>();
+            m_signalReferences = new ConcurrentDictionary<Guid, SignalReference[]>();
 
-            // Create a cached signal reference dictionary for generated signal referencs
+            // Create a cached signal reference dictionary for generated signal references
             m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
 
             // Create a new connection ID cache
@@ -968,7 +967,7 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Manually stops the real-time data stream.", "Administrator", "Editor")]
         public virtual void StopDataChannel()
         {
-            // Undefine publication channel. This effectively haults socket based data publication.
+            // Undefine publication channel. This effectively halts socket based data publication.
             m_publishChannel = null;
         }
 
@@ -1111,10 +1110,6 @@ namespace PhasorProtocolAdapters
         public void UpdateConfiguration()
         {
             const int labelLength = 16;
-            Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>();
-            SignalReference signal;
-            SignalReference[] signals;
-            MeasurementKey measurementKey;
             PhasorType type;
             AnalogType analogType;
             char phase;
@@ -1261,90 +1256,82 @@ namespace PhasorProtocolAdapters
             // Clear any existing signal references
             m_signalReferences.Clear();
 
-            // Define measurement to signals cross reference dictionary
-            foreach (DataRow measurementRow in DataSource.Tables["OutputStreamMeasurements"].Select(string.Format("AdapterID={0}", ID)))
+            // Create a local cache of indices to speed initialization
+            Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>();
+            DataTable activeMeasurements = DataSource.Tables["ActiveMeasurements"];
+
+            if ((object)activeMeasurements == null)
             {
-                try
+                OnProcessException(new InvalidOperationException("Failed to find ActiveMeasurements data table in metadata. Phasor data concentrator cannot be properly initialized without this configuration data."));
+            }
+            else
+            {
+                // Define measurement to signals cross reference dictionary
+                foreach (DataRow measurementRow in DataSource.Tables["OutputStreamMeasurements"].Select(string.Format("AdapterID={0}", ID)))
                 {
-                    // Create a new signal reference
-                    signal = new SignalReference(measurementRow["SignalReference"].ToString());
-
-                    // Lookup cell index by acronym - doing this work upfront will save a huge amount
-                    // of work during primary measurement sorting
-                    if (!signalCellIndexes.TryGetValue(signal.Acronym, out signal.CellIndex))
+                    try
                     {
-                        // We cache these indices locally to speed up initialization as we'll be
-                        // requesting them for the same devices over and over
-                        signal.CellIndex = m_baseConfigurationFrame.Cells.IndexOfStationName(signal.Acronym);
-                        signalCellIndexes.Add(signal.Acronym, signal.CellIndex);
-                    }
+                        // Create a new signal reference
+                        SignalReference signal = new SignalReference(measurementRow["SignalReference"].ToString());
 
-                    // No need to define this measurement for sorting unless it has a destination in the outgoing frame
-                    if (signal.CellIndex > -1)
-                    {
-                        // Get historian field
-                        string historian = measurementRow["Historian"].ToNonNullString();
-                        string pointID = measurementRow["PointID"].ToString();
-
-                        // Define measurement key
-                        if (!string.IsNullOrEmpty(historian))
+                        // Lookup cell index by acronym - doing this work upfront will save a huge amount
+                        // of work during primary measurement sorting
+                        if (!signalCellIndexes.TryGetValue(signal.Acronym, out signal.CellIndex))
                         {
-                            measurementKey = new MeasurementKey(Guid.Empty, uint.Parse(pointID), historian);
+                            // We cache these indices locally to speed up initialization as we'll be
+                            // requesting them for the same devices over and over
+                            signal.CellIndex = m_baseConfigurationFrame.Cells.IndexOfStationName(signal.Acronym);
+                            signalCellIndexes.Add(signal.Acronym, signal.CellIndex);
                         }
-                        else
+
+                        // No need to define this measurement for sorting unless it has a destination in the outgoing frame
+                        if (signal.CellIndex > -1)
                         {
-                            DataTable activeMeasurements = DataSource.Tables["ActiveMeasurements"];
-                            DataRow[] activeMeasurementRows = new DataRow[0];
+                            string pointID = measurementRow["PointID"].ToString();
+                            DataRow[] rows = activeMeasurements.Select(string.Format("ID LIKE '*:{0}'", pointID));
 
-                            object activeMeasurementSignalID = null;
-                            object activeMeasurementID = null;
+                            if (rows.Length == 0)
+                                throw new Exception(string.Format("Cannot find an active measurement with a point ID of {0} - validate phasor data concentrator output stream measurement configuration.", pointID));
 
-                            if ((object)activeMeasurements != null)
-                                activeMeasurementRows = activeMeasurements.Select(string.Format("ID LIKE '*:{0}'", pointID));
+                            object signalIDRecord = rows[0]["SignalID"];
 
-                            if (activeMeasurementRows.Length == 1)
+                            if (rows.Length > 1)
+                                OnStatusMessage("WARNING: Found {0} measurements for signal reference \"{1}\" - mapping to first encountered.", rows.Length, measurementRow["SignalReference"].ToString().Trim());
+
+                            Guid signalID = Guid.Parse(signalIDRecord.ToString());
+
+                            // It is possible, but not as common, that a single measurement will have multiple destinations
+                            // within an outgoing data stream frame, hence the following
+                            SignalReference[] signals = m_signalReferences.GetOrAdd(signalID, null as SignalReference[]);
+
+                            if ((object)signals == null)
                             {
-                                activeMeasurementSignalID = activeMeasurementRows[0]["SignalID"];
-                                activeMeasurementID = activeMeasurementRows[0]["ID"];
+                                // Add new signal to new collection
+                                signals = new SignalReference[1];
+                                signals[0] = signal;
+                            }
+                            else
+                            {
+                                // Add a new signal to existing collection
+                                List<SignalReference> signalList = new List<SignalReference>(signals);
+                                signalList.Add(signal);
+                                signals = signalList.ToArray();
                             }
 
-                            // If we still can't find the measurement key, now is the time to give up
-                            if (activeMeasurementSignalID == null && activeMeasurementID == null)
-                                throw new Exception(string.Format("Cannot find measurement key for measurement with pointID {0}", pointID));
-
-                            measurementKey = MeasurementKey.Parse(activeMeasurementID.ToString(), Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()));
+                            m_signalReferences[signalID] = signals;
                         }
-
-                        // It is possible, but not as common, that a single measurement will have multiple destinations
-                        // within an outgoing data stream frame, hence the following
-                        signals = m_signalReferences.GetOrAdd(measurementKey, null as SignalReference[]);
-
-                        if ((object)signals == null)
-                        {
-                            // Add new signal to new collection
-                            signals = new SignalReference[1];
-                            signals[0] = signal;
-                        }
-                        else
-                        {
-                            // Add a new signal to existing collection
-                            List<SignalReference> signalList = new List<SignalReference>(signals);
-                            signalList.Add(signal);
-                            signals = signalList.ToArray();
-                        }
-
-                        m_signalReferences[measurementKey] = signals;
                     }
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to associate measurement key to signal reference \"{0}\" due to exception: {1}", measurementRow["SignalReference"].ToString().Trim(), ex.Message), ex));
+                    catch (Exception ex)
+                    {
+                        OnProcessException(new InvalidOperationException(string.Format("Failed to associate measurement to signal reference \"{0}\" due to exception: {1}", measurementRow["SignalReference"].ToString().Trim(), ex.Message), ex));
+                    }
                 }
             }
 
             // Assign action adapter input measurement keys - this assigns the expected measurements per frame needed
             // by the concentration engine for preemptive publication 
-            InputSignals = m_signalReferences.Keys.ToArray();
+            InputSignals.Clear();
+            InputSignals.UnionWith(m_signalReferences.Keys);
 
             // Allow for spaces in output stream device names if a replacement character has been defined for spaces
             if (m_replaceWithSpaceChar != Char.MinValue)
@@ -1449,35 +1436,33 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Queues a single measurement for processing.
+        /// Queues a collection of time-series entities for processing.
         /// </summary>
-        /// <param name="measurement">Measurement to queue for processing.</param>
-        public override void QueueMeasurementForProcessing(IMeasurement measurement)
+        /// <param name="entities">Collection of entities to queue for processing.</param>
+        public override void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
         {
-            QueueMeasurementsForProcessing(new[] { measurement });
-        }
-
-        /// <summary>
-        /// Queues a collection of measurements for processing.
-        /// </summary>
-        /// <param name="measurements">Collection of measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-        {
-            List<IMeasurement> inputMeasurements = new List<IMeasurement>();
+            List<ITimeSeriesEntity> inputMeasurements = new List<ITimeSeriesEntity>();
             SignalReference[] signals;
+            IMeasurement<double> measurement;
 
-            foreach (IMeasurement measurement in measurements)
+            foreach (ITimeSeriesEntity entity in entities)
             {
-                // We assign signal reference to measurement in advance since we are using this as a filter
-                // anyway, this will save a lookup later during measurement assignment to frame...
-                if (m_signalReferences.TryGetValue(measurement.Key, out signals))
+                // TODO: The phasor data concentrator is only currently considering IMeasurement<double> types - in the future perhaps UInt16 (status) and Complex (phasor) types could be considered as well
+                measurement = entity as IMeasurement<double>;
+
+                if ((object)measurement != null)
                 {
-                    // Loop through each signal reference defined for this measurement - this handles
-                    // the case where there can be more than one destination for a measurement within
-                    // an outgoing phasor data frame
-                    foreach (SignalReference signal in signals)
+                    // We assign signal reference to measurement in advance since we are using this as a filter
+                    // anyway, this will save a lookup later during measurement assignment to frame...
+                    if (m_signalReferences.TryGetValue(entity.ID, out signals))
                     {
-                        inputMeasurements.Add(new SignalReferenceMeasurement(measurement, signal));
+                        // Loop through each signal reference defined for this measurement - this handles
+                        // the case where there can be more than one destination for a measurement within
+                        // an outgoing phasor data frame
+                        foreach (SignalReference signal in signals)
+                        {
+                            inputMeasurements.Add(new SignalReferenceMeasurement(measurement, signal));
+                        }
                     }
                 }
             }
@@ -1487,23 +1472,27 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Assign <see cref="IMeasurement"/> to its <see cref="IFrame"/>.
+        /// Assigns <see cref="ITimeSeriesEntity"/> to its associated <see cref="IFrame"/>.
         /// </summary>
-        /// <param name="frame"><see cref="IFrame"/> to assign <paramref name="measurement"/> to.</param>
-        /// <param name="measurement"><see cref="IMeasurement"/> to assign to <paramref name="frame"/>.</param>
-        /// <returns><c>true</c> if <see cref="IMeasurement"/> was successfully assigned to its <see cref="IFrame"/>.</returns>
+        /// <remarks>
+        /// Derived classes can choose to override this method to handle custom assignment of a <see cref="ITimeSeriesEntity"/> to
+        /// its <see cref="IFrame"/>. Default behavior simply assigns entity to frame's keyed entity dictionary:
+        /// <code>frame.Entities[entity.ID] = entity;</code>
+        /// </remarks>
+        /// <param name="frame">The <see cref="IFrame"/> that is used.</param>
+        /// <param name="entity">The <see cref="ITimeSeriesEntity"/> to be assigned to the frame."/></param>
         /// <remarks>
         /// In simple concentration scenarios all you need to do is assign a measurement to its frame based on
         /// time. In the case of a phasor data concentrator you need to assign a measurement to its particular
         /// location in its <see cref="IDataFrame"/> - so this method overrides the default behavior in order
         /// to accomplish this task.
         /// </remarks>
-        protected override void AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
+        protected override void AssignEntityToFrame(IFrame frame, ITimeSeriesEntity entity)
         {
-            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
+            IDictionary<Guid, ITimeSeriesEntity> entities = frame.Entities;
 
             // Make sure the measurement is a "SignalReferenceMeasurement" (it should be)
-            SignalReferenceMeasurement signalMeasurement = measurement as SignalReferenceMeasurement;
+            SignalReferenceMeasurement signalMeasurement = entity as SignalReferenceMeasurement;
             IDataFrame dataFrame = frame as IDataFrame;
 
             if ((object)signalMeasurement != null && dataFrame != null)
@@ -1512,7 +1501,9 @@ namespace PhasorProtocolAdapters
                 SignalReference signal = signalMeasurement.SignalReference;
                 IDataCell dataCell = dataFrame.Cells[signal.CellIndex];
                 int signalIndex = signal.Index;
-                double signalValue = m_useAdjustedValue ? signalMeasurement.AdjustedValue : signalMeasurement.Value;
+
+                // TODO: Once the metadata mechanism has been defined we can "un-apply" linear adjustments and get back to original value when m_useAdjustedValue is false
+                double signalValue = signalMeasurement.Value; // m_useAdjustedValue ? signalMeasurement.AdjustedValue : signalMeasurement.Value;
 
                 // Assign measurement to its destination field in the data cell based on signal type
                 switch (signal.Kind)
@@ -1564,14 +1555,14 @@ namespace PhasorProtocolAdapters
                 // in down-sampling scenarios more than one of the same measurement can be sorted into a frame
                 // but this only needs to be counted as "one" sort so that when preemptive publishing is
                 // enabled you can compare expected measurements to sorted measurements...
-                measurements[measurement.Key] = measurement;
+                entities[entity.ID] = entity;
 
                 return;
             }
 
             // This is not expected to occur - but just in case
-            if ((object)signalMeasurement == null && measurement != null)
-                OnProcessException(new InvalidCastException(string.Format("Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{0}\"", measurement.GetType().Name)));
+            if ((object)signalMeasurement == null && (object)entity != null)
+                OnProcessException(new InvalidCastException(string.Format("Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{0}\"", entity.GetType().Name)));
 
             if ((object)dataFrame == null)
                 OnProcessException(new InvalidCastException(string.Format("During measurement assignment, incoming frame was not a phasor data concentration frame, expected a type derived from \"IDataFrame\" but received a \"{0}\"", frame.GetType().Name)));
@@ -1842,7 +1833,7 @@ namespace PhasorProtocolAdapters
         /// <returns>A new protocol specific <see cref="IConfigurationFrame"/>.</returns>
         /// <remarks>
         /// Derived classes should notify consumers of change in configuration if system is active when
-        /// new configuration frame is created if outgoing protocol allows such a notfication.
+        /// new configuration frame is created if outgoing protocol allows such a notification.
         /// </remarks>
         protected abstract IConfigurationFrame CreateNewConfigurationFrame(ConfigurationFrame baseConfigurationFrame);
 

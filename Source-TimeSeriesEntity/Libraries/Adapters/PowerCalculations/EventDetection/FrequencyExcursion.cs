@@ -311,7 +311,7 @@ namespace PowerCalculations.EventDetection
 
             for (int i = 0; i < InputMeasurementKeys.Length; i++)
             {
-                if (InputMeasurementKeyTypes[i] == SignalType.FREQ)
+                if (InputSignalTypes[i] == SignalType.FREQ)
                     validInputMeasurementKeys.Add(InputMeasurementKeys[i]);
             }
 

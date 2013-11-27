@@ -188,10 +188,10 @@ namespace PowerCalculations
                 m_sampleSize = 5;
 
             // Load needed phase angle and magnitude measurement keys from defined InputMeasurementKeys
-            m_voltageAngle = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHA).FirstOrDefault();
-            m_voltageMagnitude = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHM).FirstOrDefault();
-            m_currentAngle = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHA).FirstOrDefault();
-            m_currentMagnitude = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).FirstOrDefault();
+            m_voltageAngle = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHA).FirstOrDefault();
+            m_voltageMagnitude = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHM).FirstOrDefault();
+            m_currentAngle = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHA).FirstOrDefault();
+            m_currentMagnitude = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHM).FirstOrDefault();
 
             if (m_voltageAngle.PointID == 0)
                 throw new InvalidOperationException("No voltage angle input was defined - one voltage angle input measurement is required for the power calculator.");

@@ -43,7 +43,6 @@ using GSF.PhasorProtocols.Anonymous;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
-using GSF.TimeSeries.Transport;
 using GSF.Units;
 
 namespace PhasorProtocolAdapters
@@ -182,7 +181,7 @@ namespace PhasorProtocolAdapters
 
         // Fields
         private MultiProtocolFrameParser m_frameParser;
-        private ConcurrentDictionary<string, IMeasurement> m_definedMeasurements;
+        private ConcurrentDictionary<string, Guid> m_definedMeasurements;
         private ConcurrentDictionary<ushort, ConfigurationCell> m_definedDevices;
         private ConcurrentDictionary<string, ConfigurationCell> m_labelDefinedDevices;
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
@@ -993,8 +992,9 @@ namespace PhasorProtocolAdapters
             else
                 m_forceLabelMapping = false;
 
+            // TODO: Replace with secure notification mechanism to notify subordinate phasor adapter to kick on when primary data feed goes offline (if feature is still deemed useful)
+
             // Commented out for security purposes related to Parent collection --
-            // Replace with secure notification mechanism
 
             //if (settings.TryGetValue("primaryDataSource", out setting))
             //{
@@ -1328,11 +1328,10 @@ namespace PhasorProtocolAdapters
         // Load active device measurements for this mapper connection
         private void LoadDeviceMeasurements()
         {
-            Measurement definedMeasurement;
             Guid signalID;
             string signalReference;
 
-            m_definedMeasurements = new ConcurrentDictionary<string, IMeasurement>();
+            m_definedMeasurements = new ConcurrentDictionary<string, Guid>();
 
             foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select(string.Format("DeviceID={0}", SharedMappingID)))
             {
@@ -1343,20 +1342,10 @@ namespace PhasorProtocolAdapters
                     try
                     {
                         // Get measurement's signal ID
-                        signalID = new Guid(row["SignalID"].ToNonNullString(Guid.NewGuid().ToString()));
-
-                        // Create a measurement with a reference associated with this adapter
-                        definedMeasurement = new Measurement
-                		{
-                            ID = signalID,
-                            Key = MeasurementKey.Parse(row["ID"].ToString(), signalID),
-                            TagName = signalReference,
-                            Adder = double.Parse(row["Adder"].ToNonNullString("0.0")),
-                            Multiplier = double.Parse(row["Multiplier"].ToNonNullString("1.0"))
-                        };
+                        signalID = Guid.Parse(row["SignalID"].ToNonNullString(Guid.NewGuid().ToString()));
 
                         // Add measurement to definition list keyed by signal reference
-                        m_definedMeasurements.TryAdd(signalReference, definedMeasurement);
+                        m_definedMeasurements.TryAdd(signalReference, signalID);
                     }
                     catch (Exception ex)
                     {
@@ -1366,10 +1355,8 @@ namespace PhasorProtocolAdapters
             }
 
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
-            if (m_definedMeasurements.Count > 0)
-                OutputSignals = m_definedMeasurements.Values.ToArray();
-            else
-                OutputSignals = null;
+            OutputSignals.Clear();
+            OutputSignals.UnionWith(m_definedMeasurements.Values);
 
             OnStatusMessage("Loaded {0} active device measurements...", m_definedMeasurements.Count);
         }
@@ -1671,25 +1658,22 @@ namespace PhasorProtocolAdapters
         /// This procedure is used to identify a parsed measurement value by its derived signal reference and apply the
         /// additional needed measurement meta-data attributes (i.e., ID, Source, Adder and Multiplier).
         /// </remarks>
-        protected void MapMeasurementAttributes(ICollection<IMeasurement> mappedMeasurements, string signalReference, IMeasurement parsedMeasurement)
+        protected void MapMeasurementAttributes(ICollection<ITimeSeriesEntity> mappedMeasurements, string signalReference, IMeasurement<double> parsedMeasurement)
         {
             // Coming into this function the parsed measurement value will only have a "value" and a "timestamp";
             // the measurement will not yet be associated with an actual historian measurement ID as the measurement
             // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
-            // reference and use that to lookup the actual historian measurement ID, source, adder and multiplier.
-            IMeasurement definedMeasurement;
+            // reference and use that to lookup the actual measurement signal ID.
+            Guid signalID;
 
             // Lookup signal reference in defined measurement list
-            if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
+            if (m_definedMeasurements.TryGetValue(signalReference, out signalID))
             {
                 // Assign ID and other relevant attributes to the parsed measurement value
-                parsedMeasurement.ID = definedMeasurement.ID;
-                parsedMeasurement.Key = definedMeasurement.Key;
-                parsedMeasurement.Adder = definedMeasurement.Adder;              // Allows for run-time additive measurement value adjustments
-                parsedMeasurement.Multiplier = definedMeasurement.Multiplier;    // Allows for run-time multiplicative measurement value adjustments
+                Measurement<double> mappedMeasurement = new Measurement<double>(signalID, parsedMeasurement.Timestamp, parsedMeasurement.StateFlags, parsedMeasurement.Value);
 
                 // Add the updated measurement value to the destination measurement collection
-                mappedMeasurements.Add(parsedMeasurement);
+                mappedMeasurements.Add(mappedMeasurement);
             }
         }
 
@@ -1704,17 +1688,17 @@ namespace PhasorProtocolAdapters
             const int FrequencyIndex = (int)CompositeFrequencyValue.Frequency;
             const int DfDtIndex = (int)CompositeFrequencyValue.DfDt;
 
-            ICollection<IMeasurement> mappedMeasurements = new List<IMeasurement>();
+            List<ITimeSeriesEntity> mappedMeasurements = new List<ITimeSeriesEntity>();
             ConfigurationCell definedDevice;
             PhasorValueCollection phasors;
             AnalogValueCollection analogs;
             DigitalValueCollection digitals;
-            IMeasurement[] measurements;
+            IMeasurement<double>[] measurements;
             Ticks timestamp;
             int x, count;
 
             // Adjust time to UTC based on source time zone
-            if (m_timezone != TimeZoneInfo.Utc)
+            if (!Equals(m_timezone, TimeZoneInfo.Utc))
                 frame.Timestamp = TimeZoneInfo.ConvertTimeToUtc(frame.Timestamp, m_timezone);
 
             // We also allow "fine tuning" of time for fickle GPS clocks...
@@ -1780,7 +1764,7 @@ namespace PhasorProtocolAdapters
 
                         // Map status flags (SF) from device data cell itself (IDataCell implements IMeasurement
                         // and exposes the status flags as its value)
-                        MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Status), parsedDevice);
+                        MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Status), parsedDevice.GetStatusFlagsMeasurement());
 
                         // Map phase angles (PAn) and magnitudes (PMn)
                         phasors = parsedDevice.PhasorValues;
@@ -1968,21 +1952,23 @@ namespace PhasorProtocolAdapters
             m_measurementsPerSecondCount = 0L;
         }
 
-        // Primary data source connection has terminated, engage backup connection
-        private void m_primaryDataSource_ConnectionTerminated(object sender, EventArgs e)
-        {
-            OnStatusMessage("WARNING: Primary data source connection was terminated, attempting to engage backup connection...");
-            Start();
-        }
+        // TODO: Replace with secure notification mechanism handlers for notification when subordinate phasor adapter needs to kick on when primary data feed goes offline (if feature is still deemed useful)
 
-        // Primary data source connection has been reestablished, disengage backup connection
-        private void m_primaryDataSource_ConnectionEstablished(object sender, EventArgs e)
-        {
-            if (Enabled)
-                OnStatusMessage("Primary data source connection has been reestablished, disengaging backup connection...");
+        //// Primary data source connection has terminated, engage backup connection
+        //private void m_primaryDataSource_ConnectionTerminated(object sender, EventArgs e)
+        //{
+        //    OnStatusMessage("WARNING: Primary data source connection was terminated, attempting to engage backup connection...");
+        //    Start();
+        //}
 
-            Stop();
-        }
+        //// Primary data source connection has been reestablished, disengage backup connection
+        //private void m_primaryDataSource_ConnectionEstablished(object sender, EventArgs e)
+        //{
+        //    if (Enabled)
+        //        OnStatusMessage("Primary data source connection has been reestablished, disengaging backup connection...");
+
+        //    Stop();
+        //}
 
         private void m_frameParser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
         {
@@ -2004,7 +1990,7 @@ namespace PhasorProtocolAdapters
                 }
 
                 m_missingDataMonitor.RedundantFramesPerPacket = m_frameParser.RedundantFramesPerPacket;
-                m_missingDataMonitor.SortEntities(e.Argument.Cells);
+                m_missingDataMonitor.SortEntities(e.Argument.Cells.Select(cell => cell.GetStatusFlagsMeasurement()));
             }
         }
 

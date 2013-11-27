@@ -48,7 +48,7 @@ namespace GSF.PhasorProtocols
         // Fields
         private IDataCell m_parent;
         private T m_definition;
-        private IMeasurement[] m_measurements;
+        private IMeasurement<double>[] m_measurements;
 
         #endregion
 
@@ -153,14 +153,14 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets the composite values of this <see cref="ChannelValueBase{T}"/> as an array of <see cref="IMeasurement"/> values.
         /// </summary>
-        public virtual IMeasurement[] Measurements
+        public virtual IMeasurement<double>[] Measurements
         {
             get
             {
                 // Create a measurement instance for each composite value the derived channel value exposes
                 if (m_measurements == null)
                 {
-                    m_measurements = new IMeasurement[CompositeValueCount];
+                    m_measurements = new IMeasurement<double>[CompositeValueCount];
 
                     for (int x = 0; x < m_measurements.Length; x++)
                     {

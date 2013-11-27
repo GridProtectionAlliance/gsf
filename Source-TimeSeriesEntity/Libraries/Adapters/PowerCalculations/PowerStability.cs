@@ -188,10 +188,10 @@ namespace PowerCalculations
                 m_energizedThreshold = 58000.0D;
 
             // Load needed phase angle and magnitude measurement keys from defined InputMeasurementKeys
-            m_voltageAngles = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHA).ToArray();
-            m_voltageMagnitudes = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHM).ToArray();
-            m_currentAngles = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHA).ToArray();
-            m_currentMagnitudes = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).ToArray();
+            m_voltageAngles = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHA).ToArray();
+            m_voltageMagnitudes = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHM).ToArray();
+            m_currentAngles = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHA).ToArray();
+            m_currentMagnitudes = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHM).ToArray();
 
             if (m_voltageAngles.Length < 1)
                 throw new InvalidOperationException("No voltage angle input measurement keys were not found - at least one voltage angle input measurement is required for the power stability monitor.");

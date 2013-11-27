@@ -25,9 +25,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
-using GSF.TimeSeries;
 using GSF.Units;
 
 namespace GSF.PhasorProtocols
@@ -286,8 +284,8 @@ namespace GSF.PhasorProtocols
             {
                 if (DataFormat == DataFormat.FixedInteger)
                     return 4;
-                else
-                    return 8;
+
+                return 8;
             }
         }
 
@@ -462,27 +460,25 @@ namespace GSF.PhasorProtocols
 
                 return 4;
             }
+
+            if (CoordinateFormat == CoordinateFormat.Rectangular)
+            {
+                // Parse from single-precision floating-point, rectangular
+                m_phasor.Real = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
+                m_phasor.Imaginary = EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4);
+            }
             else
             {
-                if (CoordinateFormat == CoordinateFormat.Rectangular)
-                {
-                    // Parse from single-precision floating-point, rectangular
-                    m_phasor.Real = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
-                    m_phasor.Imaginary = EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4);
-                }
+                // Parse from single-precision floating-point, polar
+                m_phasor.Magnitude = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
+
+                if (AngleFormat == AngleFormat.Radians)
+                    m_phasor.Angle = EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4);
                 else
-                {
-                    // Parse from single-precision floating-point, polar
-                    m_phasor.Magnitude = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
-
-                    if (AngleFormat == AngleFormat.Radians)
-                        m_phasor.Angle = EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4);
-                    else
-                        m_phasor.Angle = Angle.FromDegrees(EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4));
-                }
-
-                return 8;
+                    m_phasor.Angle = Angle.FromDegrees(EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4));
             }
+
+            return 8;
         }
 
         /// <summary>

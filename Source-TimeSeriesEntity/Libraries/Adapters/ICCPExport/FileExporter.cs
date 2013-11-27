@@ -296,7 +296,7 @@ namespace ICCPExport
                     InputMeasurementKeys = InputMeasurementKeys.Concat(new[] { m_referenceAngleKey }).ToArray();
 
                 // Make sure sure reference angle key is actually an angle measurement
-                SignalType signalType = InputMeasurementKeyTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
+                SignalType signalType = InputSignalTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
 
                 if (signalType != SignalType.IPHA && signalType != SignalType.VPHA)
                     throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedSignalTypeName()));
@@ -403,7 +403,7 @@ namespace ICCPExport
                         for (int i = 0; i < InputMeasurementKeys.Length; i++)
                         {
                             inputMeasurementKey = InputMeasurementKeys[i];
-                            signalType = InputMeasurementKeyTypes[i];
+                            signalType = InputSignalTypes[i];
 
                             // Look up measurement's tag name
                             if (m_measurementTags.TryGetValue(inputMeasurementKey, out measurementTag))

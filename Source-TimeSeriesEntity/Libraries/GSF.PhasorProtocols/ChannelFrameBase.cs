@@ -58,7 +58,7 @@ namespace GSF.PhasorProtocols
         private ushort m_idCode;                                                            // Numeric identifier of this frame of data (e.g., ID code of the PDC)
         private readonly IChannelCellCollection<T> m_cells;                                 // Collection of "cells" within this frame of data (e.g., PMU's in the PDC frame)
         private Ticks m_timestamp;                                                          // Time, represented as 100-nanosecond ticks, of this frame of data
-        private Ticks m_receivedTimestamp;                                                  // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
+        private readonly Ticks m_receivedTimestamp;                                         // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
         private Ticks m_publishedTimestamp;                                                 // Time, represented as 100-nanosecond ticks, of frame published (post process)
         private int m_parsedBinaryLength;                                                   // Binary length of frame as provided from parsed header
         private SourceChannel m_source;                                                     // Defines source channel (e.g., data or command) for channel frame
@@ -217,7 +217,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of when this <see cref="ChannelFrameBase{T}"/> was received (i.e., created).
+        /// Gets timestamp, in ticks, of when this <see cref="ChannelFrameBase{T}"/> was received (i.e., created).
         /// </summary>
         /// <remarks>
         /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
@@ -228,10 +228,6 @@ namespace GSF.PhasorProtocols
             get
             {
                 return m_receivedTimestamp;
-            }
-            set
-            {
-                m_receivedTimestamp = value;
             }
         }
 

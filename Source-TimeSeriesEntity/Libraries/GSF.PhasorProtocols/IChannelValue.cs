@@ -87,9 +87,9 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the composite values of this <see cref="IChannelValue{T}"/> as an array of <see cref="IMeasurement"/> values.
+        /// Gets the composite values of this <see cref="IChannelValue{T}"/> as an array of <see cref="IMeasurement{T}"/> values.
         /// </summary>
-        IMeasurement[] Measurements
+        IMeasurement<double>[] Measurements
         {
             get;
         }

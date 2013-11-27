@@ -33,12 +33,12 @@ namespace GSF.PhasorProtocols
     /// <summary>
     /// Represents an <see cref="IMeasurement{T}"/> wrapper that is associated with a <see cref="SignalReference"/>.
     /// </summary>
-    public class SignalReferenceMeasurement<T> : IMeasurement<T>
+    public class SignalReferenceMeasurement : IMeasurement<double>
     {
         #region [ Members ]
 
         // Fields
-        private readonly IMeasurement<T> m_measurement;
+        private readonly IMeasurement<double> m_measurement;
         private readonly SignalReference m_signalReference;
 
         #endregion
@@ -46,11 +46,11 @@ namespace GSF.PhasorProtocols
         #region [ Constructors ]
 
         /// <summary>
-        /// Constructs a new <see cref="SignalReferenceMeasurement{T}"/> from the specified parameters.
+        /// Constructs a new <see cref="SignalReferenceMeasurement"/> from the specified parameters.
         /// </summary>
         /// <param name="measurement">Source <see cref="IMeasurement{T}"/> value.</param>
         /// <param name="signalReference">Associated <see cref="SignalReference"/>.</param>
-        public SignalReferenceMeasurement(IMeasurement<T> measurement, SignalReference signalReference)
+        public SignalReferenceMeasurement(IMeasurement<double> measurement, SignalReference signalReference)
         {
             m_measurement = measurement;
             m_signalReference = signalReference;
@@ -61,7 +61,7 @@ namespace GSF.PhasorProtocols
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="SignalReferenceMeasurement{T}"/>, if available.
+        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="SignalReferenceMeasurement"/>, if available.
         /// </summary>
         public Guid ID
         {
@@ -72,7 +72,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="SignalReferenceMeasurement{T}"/>.
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
@@ -86,7 +86,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="SignalReferenceMeasurement{T}"/>.
+        /// Gets or sets <see cref="MeasurementStateFlags"/> associated with this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
         public MeasurementStateFlags StateFlags
         {
@@ -97,9 +97,9 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the raw value of this <see cref="SignalReferenceMeasurement{T}"/>.
+        /// Gets the raw value of this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
-        public T Value
+        public double Value
         {
             get
             {
@@ -117,7 +117,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the <see cref="SignalReference"/> associated with this <see cref="SignalReferenceMeasurement{T}"/>.
+        /// Gets the <see cref="SignalReference"/> associated with this <see cref="SignalReferenceMeasurement"/>.
         /// </summary>
         public SignalReference SignalReference
         {
@@ -136,9 +136,9 @@ namespace GSF.PhasorProtocols
         /// </summary>
         /// <param name="stateFlags">New <see cref="MeasurementStateFlags"/></param>
         /// <returns>A copy of the <see cref="IMeasurement{T}"/> object.</returns>
-        public IMeasurement<T> Alter(MeasurementStateFlags stateFlags)
+        public IMeasurement<double> Alter(MeasurementStateFlags stateFlags)
         {
-            return new SignalReferenceMeasurement<T>(m_measurement, m_signalReference);
+            return new SignalReferenceMeasurement(m_measurement, m_signalReference);
         }
 
         #endregion

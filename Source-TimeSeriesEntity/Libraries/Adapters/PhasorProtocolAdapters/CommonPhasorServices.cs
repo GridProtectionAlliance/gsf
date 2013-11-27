@@ -42,7 +42,6 @@ using GSF.Data;
 using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
-using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
@@ -380,7 +379,6 @@ namespace PhasorProtocolAdapters
                 LoadDefaultProtocol(connection, statusMessage, processException);
                 LoadDefaultSignalType(connection, statusMessage, processException);
                 LoadDefaultStatistic(connection, statusMessage, processException);
-                EstablishDefaultMeasurementKeyCache(connection, adapterType, statusMessage, processException);
 
                 statusMessage("CommonPhasorServices", new EventArgs<string>("Validating signal types..."));
 
@@ -707,7 +705,7 @@ namespace PhasorProtocolAdapters
                         deviceSignalReference = new SignalReference(outputStreamMeasurement.Field<string>("SignalReference"));
 
                         // Validate that the signal reference is associated with one of the output stream's devices
-                        if (!outputStreamDevices.Any(row => string.Compare(row.Field<string>("Acronym"), deviceSignalReference.Acronym, true) == 0))
+                        if (outputStreamDevices.All(row => string.Compare(row.Field<string>("Acronym"), deviceSignalReference.Acronym, true) != 0))
                         {
                             // This measurement has a signal reference for a device that is not part of the associated output stream, so we mark it for deletion
                             measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
@@ -737,10 +735,10 @@ namespace PhasorProtocolAdapters
                 if (skipOptimization)
                 {
                     // If skipOptimization is set to true, automatically set it back to false
-                    string unskipOptimizationQuery = "UPDATE DataOperation SET Arguments = '' " +
-                        "WHERE AssemblyName = 'PhasorProtocolAdapters.dll' " +
-                        "AND TypeName = 'PhasorProtocolAdapters.CommonPhasorServices' " +
-                        "AND MethodName = 'PhasorDataSourceValidation'";
+                    const string unskipOptimizationQuery = "UPDATE DataOperation SET Arguments = '' " +
+                                                           "WHERE AssemblyName = 'PhasorProtocolAdapters.dll' " +
+                                                           "AND TypeName = 'PhasorProtocolAdapters.CommonPhasorServices' " +
+                                                           "AND MethodName = 'PhasorDataSourceValidation'";
 
                     connection.ExecuteNonQuery(unskipOptimizationQuery);
                 }
@@ -759,7 +757,7 @@ namespace PhasorProtocolAdapters
         {
             bool oracle = adapterType.Name == "OracleDataAdapter";
             char paramChar = oracle ? ':' : '@';
-            object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
+            object[] parameters = parameterNames.Select(name => paramChar + name).Cast<object>().ToArray();
             return string.Format(format, parameters);
         }
 
@@ -953,47 +951,6 @@ namespace PhasorProtocolAdapters
                 command.CommandText = oracle ? commandText.Replace('@', ':') : commandText;
                 command.ExecuteNonQuery();
             }
-        }
-
-        /// <summary>
-        /// Establish default <see cref="MeasurementKey"/> cache.
-        /// </summary>
-        /// <param name="connection">The database connection.</param>
-        /// <param name="adapterType">The database adapter type.</param>
-        /// <param name="statusMessage">The delegate which will display a status message to the user.</param>
-        /// <param name="processException">The delegate which will handle exception logging.</param>
-        [SuppressMessage("Microsoft.Usage", "CA1806")]
-        private static void EstablishDefaultMeasurementKeyCache(IDbConnection connection, Type adapterType, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException)
-        {
-            string keyID;
-            string[] elems;
-
-            statusMessage("CommonPhasorServices", new EventArgs<string>("Establishing default measurement key cache..."));
-
-            // Establish default measurement key cache
-            foreach (DataRow measurement in connection.RetrieveData(adapterType, "SELECT ID, SignalID FROM ActiveMeasurement").Rows)
-            {
-                keyID = measurement["ID"].ToNonNullString();
-
-                if (!string.IsNullOrWhiteSpace(keyID))
-                {
-                    elems = keyID.Split(':');
-
-                    // Cache new measurement key with associated Guid signal ID
-                    if (elems.Length == 2)
-                        new MeasurementKey(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), uint.Parse(elems[1].Trim()), elems[0].Trim());
-                }
-            }
-        }
-
-        private static string GetDeviceAcronym(object source)
-        {
-            ConfigurationCell device = source as ConfigurationCell;
-
-            if ((object)device == null)
-                return null;
-
-            return device.IDLabel;
         }
 
         #region [ Device Statistic Calculators ]

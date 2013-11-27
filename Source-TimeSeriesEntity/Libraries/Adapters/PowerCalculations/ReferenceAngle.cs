@@ -114,7 +114,7 @@ namespace PowerCalculations
 
             for (int i = 0; i < InputMeasurementKeys.Length; i++)
             {
-                keyType = InputMeasurementKeyTypes[i];
+                keyType = InputSignalTypes[i];
 
                 // Make sure measurement key type is a phase angle
                 if (keyType == SignalType.VPHA || keyType == SignalType.IPHA)
@@ -124,7 +124,7 @@ namespace PowerCalculations
             if (validInputMeasurementKeys.Count == 0)
                 throw new InvalidOperationException("No valid phase angles were specified as inputs to the reference angle calculator.");
 
-            if (InputMeasurementKeyTypes.Count(s => s == SignalType.VPHA) > 0 && InputMeasurementKeyTypes.Count(s => s == SignalType.IPHA) > 0)
+            if (InputSignalTypes.Count(s => s == SignalType.VPHA) > 0 && InputSignalTypes.Count(s => s == SignalType.IPHA) > 0)
                 throw new InvalidOperationException("A mixture of voltage and current phase angles were specified as inputs to the reference angle calculator - you must specify one or the other: only voltage phase angles or only current phase angles.");
 
             // Make sure only phase angles are used as input

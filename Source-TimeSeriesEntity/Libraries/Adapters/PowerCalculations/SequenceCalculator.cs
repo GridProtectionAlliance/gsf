@@ -253,33 +253,33 @@ namespace PowerCalculations
                 m_sampleSize = 5;
 
             // Load needed phase angle measurement keys from defined InputMeasurementKeys
-            m_angles = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHA).ToArray();
+            m_angles = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHA).ToArray();
 
             if (m_angles.Length == 0)
             {
                 // No voltage angles existed, check for current angles
-                m_angles = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHA).ToArray();
+                m_angles = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHA).ToArray();
             }
             else
             {
                 // Make sure only one kind of angles are defined - not a mixture of voltage and currents
-                if (InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHA).Any())
+                if (InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHA).Any())
                     throw new InvalidOperationException("Angle input measurements for a single sequence calculator instance should only be for voltages or currents - not both.");
             }
 
             // Load needed phase magnitude measurement keys from defined InputMeasurementKeys
-            m_magnitudes = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.VPHM).ToArray();
+            m_magnitudes = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHM).ToArray();
 
             if (m_magnitudes.Length == 0)
             {
                 // No voltage magnitudes existed, check for current magnitudes
-                m_magnitudes = InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).ToArray();
+                m_magnitudes = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHM).ToArray();
                 m_magnitudeUnits = "amps";
             }
             else
             {
                 // Make only only one kind of magnitudes are defined - not a mixture of voltage and currents
-                if (InputMeasurementKeys.Where((key, index) => InputMeasurementKeyTypes[index] == SignalType.IPHM).Any())
+                if (InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHM).Any())
                     throw new InvalidOperationException("Magnitude input measurements for a single sequence calculator instance should only be for voltages or currents - not both.");
 
                 m_magnitudeUnits = "volts";

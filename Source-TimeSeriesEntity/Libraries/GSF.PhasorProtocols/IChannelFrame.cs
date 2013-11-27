@@ -111,9 +111,9 @@ namespace GSF.PhasorProtocols
             get;
             set;
         }
-        
+
         /// <summary>
-        /// Gets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IFrame"/>.
+        /// Gets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IChannelFrame"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
@@ -128,6 +128,19 @@ namespace GSF.PhasorProtocols
         /// Gets UNIX based time representation of the ticks of this <see cref="IChannelFrame"/>.
         /// </summary>
         UnixTimeTag TimeTag
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets timestamp, in ticks, of when this <see cref="ChannelFrameBase{T}"/> was received (i.e., created).
+        /// </summary>
+        /// <remarks>
+        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="DateTime.UtcNow"/> of when this class was created.</para>
+        /// <para>This value is used latency calculations.</para>
+        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// </remarks>
+        Ticks ReceivedTimestamp
         {
             get;
         }

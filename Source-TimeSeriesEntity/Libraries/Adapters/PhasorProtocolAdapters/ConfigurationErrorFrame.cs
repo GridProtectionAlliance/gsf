@@ -28,7 +28,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF;
@@ -39,7 +38,7 @@ using GSF.TimeSeries;
 namespace PhasorProtocolAdapters
 {
     /// <summary>
-    /// Represents an implementation of <see cref="IConfigurationFrame"/> that by existance only denotes an error state.
+    /// Represents an implementation of <see cref="IConfigurationFrame"/> that by existence only denotes an error state.
     /// </summary>
     /// <remarks>
     /// This class is used by <see cref="CommonPhasorServices"/> to return an error state when configuration could not be retrieved.
@@ -63,6 +62,39 @@ namespace PhasorProtocolAdapters
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
         protected ConfigurationErrorFrame(SerializationInfo info, StreamingContext context)
         {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="ConfigurationErrorFrame"/>.
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public Ticks Timestamp
+        {
+            get
+            {
+                return 0;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Gets timestamp, in ticks, of when this <see cref="ConfigurationErrorFrame"/> was received (i.e., created).
+        /// </summary>
+        public Ticks ReceivedTimestamp
+        {
+            get
+            {
+                return DateTime.UtcNow.Ticks;
+            }
         }
 
         #endregion
@@ -213,83 +245,11 @@ namespace PhasorProtocolAdapters
             return 0;
         }
 
-        IMeasurement IFrame.LastSortedMeasurement
+        IDictionary<Guid, ITimeSeriesEntity> IFrame.Entities
         {
             get
             {
                 return null;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        ConcurrentDictionary<MeasurementKey, IMeasurement> IFrame.Entities
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        bool IFrame.Published
-        {
-            get
-            {
-                return false;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        int IFrame.SortedMeasurements
-        {
-            get
-            {
-                return -1;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        Ticks IFrame.Timestamp
-        {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        Ticks IFrame.ReceivedTimestamp
-        {
-            get
-            {
-                return DateTime.UtcNow.Ticks;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        Ticks IFrame.PublishedTimestamp
-        {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
             }
         }
 
