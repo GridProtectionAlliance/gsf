@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -260,7 +261,7 @@ namespace GSF.SELEventParser
 
         private static Header ParseHeader(string[] lines, ref int index)
         {
-            const string HeaderLine1 = @"(\S.*)\s+Date:\s+(\d{1,2}/\d{1,2}/\d{2,})\s+Time:\s+(\d{1,2}:\d{2}:\d{2}.\d{3})";
+            const string HeaderLine1 = @"(\S.*)\s+Date:\s+(\S+)\s+Time:\s+(\S+)";
             const string HeaderLine2 = @"(\S.*)(?:\s+Serial Number: (\d+))?";
 
             Header header = new Header();
@@ -273,7 +274,7 @@ namespace GSF.SELEventParser
             if (index < lines.Length)
             {
                 // Apply regex match to get information contained on first line of header
-                regexMatch = Regex.Match(lines[index++], HeaderLine1);
+                regexMatch = Regex.Match(lines[index], HeaderLine1);
 
                 if (regexMatch.Success)
                 {
@@ -284,7 +285,7 @@ namespace GSF.SELEventParser
                     eventTimeString = string.Format("{0} {1}", regexMatch.Groups[2].Value, regexMatch.Groups[3].Value);
 
                     // Get event time from line 1
-                    if (DateTime.TryParse(eventTimeString, out eventTime))
+                    if (TryParseDateTime(eventTimeString, out eventTime))
                         header.EventTime = eventTime;
 
                     // Advance to the next line
@@ -622,7 +623,7 @@ namespace GSF.SELEventParser
                                 date = field.Text;
 
                                 // If both date and time have been provided, parse them as a DateTime
-                                if ((object)time != null && DateTime.TryParse(string.Format("{0} {1}", date, time), out dateTime))
+                                if ((object)time != null && TryParseDateTime(string.Format("{0} {1}", date, time), out dateTime))
                                     eventHistory.Time = dateTime;
 
                                 break;
@@ -632,7 +633,7 @@ namespace GSF.SELEventParser
                                 time = field.Text;
 
                                 // If both date and time have been provided, parse them as a DateTime
-                                if ((object)date != null && DateTime.TryParse(string.Format("{0} {1}", date, time), out dateTime))
+                                if ((object)date != null && TryParseDateTime(string.Format("{0} {1}", date, time), out dateTime))
                                     eventHistory.Time = dateTime;
 
                                 break;
@@ -742,6 +743,12 @@ namespace GSF.SELEventParser
             }
 
             return tokens;
+        }
+
+        private static bool TryParseDateTime(string dateTimeString, out DateTime dateTime)
+        {
+            return DateTime.TryParse(dateTimeString, out dateTime)
+                || DateTime.TryParseExact(dateTimeString, new string[] { "y/M/d H:mm:ss.fff", "y/M/d H:mm:ss" }, CultureInfo.CurrentCulture.DateTimeFormat, DateTimeStyles.None, out dateTime);
         }
 
         #endregion
