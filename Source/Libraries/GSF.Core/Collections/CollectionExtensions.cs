@@ -169,6 +169,52 @@ namespace GSF.Collections
         /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist,
         /// or updates a key/value pair in the <see cref="IDictionary{TKey, TValue}"/> if the key already exists.
         /// </summary>
+        /// <param name="dictionary">The dictionary to add the key/value pair to if the key does not already exist.</param>
+        /// <param name="key">The key to be added or whose value should be updated</param>
+        /// <param name="addValueFactory">The function used to generate a value for an absent key</param>
+        /// <param name="updateValueFactory">The function used to generate a new value for an existing key based on the key's existing value</param>
+        /// <returns>The new value for the key. This will be either be the result of addValueFactory (if the key was absent) or the result of updateValueFactory (if the key was present).</returns>
+        public static TValue AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            TValue value;
+
+            if (dictionary.TryGetValue(key, out value))
+                value = updateValueFactory(key, value);
+            else
+                value = addValueFactory(key);
+
+            dictionary[key] = value;
+
+            return value;
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist,
+        /// or updates a key/value pair in the <see cref="IDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
+        /// <param name="dictionary">The dictionary to add the key/value pair to if the key does not already exist.</param>
+        /// <param name="key">The key to be added or whose value should be updated</param>
+        /// <param name="addValue">The value to be added for an absent key</param>
+        /// <param name="updateValueFactory">The function used to generate a new value for an existing key based on the key's existing value</param>
+        /// <returns>The new value for the key. This will be either be the result of addValueFactory (if the key was absent) or the result of updateValueFactory (if the key was present).</returns>
+        public static TValue AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue addValue, Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            TValue value;
+
+            if (dictionary.TryGetValue(key, out value))
+                value = updateValueFactory(key, value);
+            else
+                value = addValue;
+
+            dictionary[key] = value;
+
+            return value;
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="IDictionary{TKey, TValue}"/> if the key does not already exist,
+        /// or updates a key/value pair in the <see cref="IDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
         /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
         /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
         /// <param name="dictionary">The dictionary to add the key/value pair to if the key does not already exist.</param>
@@ -437,6 +483,40 @@ namespace GSF.Collections
             return copyOfSource;
         }
 
+
+        /// <summary>Selects the smallest item from the enumeration.</summary>
+        /// <typeparam name="TSource">The generic type of the objects to be selected from.</typeparam>
+        /// <typeparam name="TKey">The generic type of the objects to be compared.</typeparam>
+        /// <param name="source">An enumeration that contains the objects to be selected from.</param>
+        /// <param name="keySelector">A delegate that takes an object and produces the key for comparison.</param>
+        /// <returns>Returns the smallest item from the enumeration.</returns>
+        public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector) where TKey : IComparable
+        {
+            TSource minItem = default(TSource);
+            TKey minKey, nextKey;
+
+            IEnumerator<TSource> enumerator = source.GetEnumerator();
+
+            if (enumerator.MoveNext())
+            {
+                minItem = enumerator.Current;
+                minKey = keySelector(minItem);
+
+                while (enumerator.MoveNext())
+                {
+                    nextKey = keySelector(enumerator.Current);
+
+                    if (nextKey.CompareTo(minKey) < 0)
+                    {
+                        minItem = enumerator.Current;
+                        minKey = nextKey;
+                    }
+                }
+            }
+
+            return minItem;
+        }
+
         /// <summary>Returns the smallest item from the enumeration.</summary>
         /// <typeparam name="TSource">The generic type used.</typeparam>
         /// <param name="source">An enumeration that is compared against.</param>
@@ -470,6 +550,39 @@ namespace GSF.Collections
         public static TSource Min<TSource>(this IEnumerable<TSource> source, IComparer<TSource> comparer)
         {
             return source.Min(comparer.Compare);
+        }
+
+        /// <summary>Selects the largest item from the enumeration.</summary>
+        /// <typeparam name="TSource">The generic type of the objects to be selected from.</typeparam>
+        /// <typeparam name="TKey">The generic type of the objects to be compared.</typeparam>
+        /// <param name="source">An enumeration that contains the objects to be selected from.</param>
+        /// <param name="keySelector">A delegate that takes an object and produces the key for comparison.</param>
+        /// <returns>Returns the largest item from the enumeration.</returns>
+        public static TSource MaxBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector) where TKey : IComparable
+        {
+            TSource minItem = default(TSource);
+            TKey minKey, nextKey;
+
+            IEnumerator<TSource> enumerator = source.GetEnumerator();
+
+            if (enumerator.MoveNext())
+            {
+                minItem = enumerator.Current;
+                minKey = keySelector(minItem);
+
+                while (enumerator.MoveNext())
+                {
+                    nextKey = keySelector(enumerator.Current);
+
+                    if (nextKey.CompareTo(minKey) > 0)
+                    {
+                        minItem = enumerator.Current;
+                        minKey = nextKey;
+                    }
+                }
+            }
+
+            return minItem;
         }
 
         /// <summary>Returns the largest item from the enumeration.</summary>
