@@ -239,9 +239,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketArchive", "Tools\Sock
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GSF.SELEventParser", "Libraries\GSF.SELEventParser\GSF.SELEventParser.csproj", "{2C42B95F-A58A-413D-97E2-1968C087C472}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioAdapters", "Libraries\Adapters\AudioAdapters\AudioAdapters.csproj", "{26F261F8-8660-46D3-8090-BCDA9EFF5427}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 77
+		SccNumberOfProjects = 78
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -549,6 +551,10 @@ Global
 		SccProjectTopLevelParentUniqueName76 = GridSolutionsFramework.sln
 		SccProjectName76 = Libraries/GSF.SELEventParser
 		SccLocalPath76 = Libraries\\GSF.SELEventParser
+		SccProjectUniqueName77 = Libraries\\Adapters\\AudioAdapters\\AudioAdapters.csproj
+		SccProjectTopLevelParentUniqueName77 = GridSolutionsFramework.sln
+		SccProjectName77 = Libraries/Adapters/AudioAdapters
+		SccLocalPath77 = Libraries\\Adapters\\AudioAdapters
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
@@ -793,7 +799,7 @@ Global
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|x86.ActiveCfg = Debug|x86
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Debug|x86.Build.0 = Debug|x86
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Mono|Any CPU.ActiveCfg = Release|Any CPU
-		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Mono|x86.ActiveCfg = Release|x86
+		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Mono|x86.ActiveCfg = Release|Any CPU
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905}.Release|x86.ActiveCfg = Release|x86
@@ -1359,6 +1365,17 @@ Global
 		{2C42B95F-A58A-413D-97E2-1968C087C472}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C42B95F-A58A-413D-97E2-1968C087C472}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2C42B95F-A58A-413D-97E2-1968C087C472}.Release|x86.ActiveCfg = Release|Any CPU
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Debug|x86.ActiveCfg = Debug|x86
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Debug|x86.Build.0 = Debug|x86
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Mono|Any CPU.ActiveCfg = Mono|Any CPU
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Mono|Any CPU.Build.0 = Mono|Any CPU
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Mono|x86.ActiveCfg = Release|Any CPU
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Release|x86.ActiveCfg = Release|x86
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1446,6 +1463,7 @@ Global
 		{08F5CCE4-10C4-477C-B5C9-37F7D49748BC} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{43A322EE-37D2-4B13-BA16-023E88772F8D} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{7B0EEB2B-6F25-4D59-A15D-F39EA9DC94D3} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
+		{26F261F8-8660-46D3-8090-BCDA9EFF5427} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{62B8EC34-3208-4A64-9292-DB32C0A2F02A} = {00B924AB-0DC8-4826-8A63-3263E39C2EBF}
 		{7C825A52-3ADB-40BD-8D49-1519A4D534A1} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}
 		{4508009C-7011-4981-B35F-594F42CC0D1F} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}
