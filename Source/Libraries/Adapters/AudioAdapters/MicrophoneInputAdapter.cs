@@ -205,12 +205,43 @@ namespace AudioAdapters
                     // fit inside an Int32, the Int32 type code is returned.
                     return TypeCode.Int32;
                 case 32:
+                    if (m_waveIn.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+                        return TypeCode.Single;
+
                     return TypeCode.Int32;
                 case 64:
+                    if (m_waveIn.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+                        return TypeCode.Double;
+
                     return TypeCode.Int64;
                 default:
                     // Unable to determine proper type code, consumer may be using a special data format...
                     return TypeCode.Empty;
+            }
+        }
+
+        private short ConvertToPCM16(double sample)
+        {
+            switch (m_waveIn.WaveFormat.BitsPerSample)
+            {
+                case 8:
+                    return (short)((sample - 128.0D) / sbyte.MaxValue * short.MaxValue);
+                case 16:
+                    return (short)sample;
+                case 24:
+                    return (short)((double)sample / Int24.MaxValue * short.MaxValue);
+                case 32:
+                    if (m_waveIn.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+                        return (short)(sample * short.MaxValue);
+
+                    return (short)((double)sample / int.MaxValue * short.MaxValue);
+                case 64:
+                    if (m_waveIn.WaveFormat.Encoding == WaveFormatEncoding.IeeeFloat)
+                        return (short)(sample * short.MaxValue);
+
+                    return (short)((double)sample / long.MaxValue * short.MaxValue);
+                default:
+                    throw new InvalidOperationException(string.Format("Cannot convert sample \'{0}\' into 16-bits.", sample));
             }
         }
 
@@ -240,7 +271,7 @@ namespace AudioAdapters
                     {
                         // Create a measurement for this value
                         sampleValue = new LittleBinaryValue(m_sampleTypeCode, waveInEventArgs.Buffer, index + (channelIndex * m_sampleSize), m_sampleSize);
-                        measurements.Add(Measurement.Clone(OutputMeasurements[channelIndex], sampleValue.ConvertToType(TypeCode.Double).ToDouble(), sampleTime));
+                        measurements.Add(Measurement.Clone(OutputMeasurements[channelIndex], ConvertToPCM16(sampleValue.ConvertToType(TypeCode.Double).ToDouble()), sampleTime));
                     }
                 }
 
