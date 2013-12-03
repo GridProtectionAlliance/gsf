@@ -23,6 +23,7 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
@@ -34,6 +35,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+// Open internals for unit tests.
+[assembly: InternalsVisibleTo("GSF.Core.Tests")]
+[assembly: InternalsVisibleTo("GSF.TestsSuite")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]
