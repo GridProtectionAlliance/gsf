@@ -1,0 +1,142 @@
+﻿/*
+//******************************************************************************************************
+//  SecurityPortal.css - Gbtc
+//
+//  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  12/28/2010 - Pinal C. Patel
+//       Generated original version of source code.
+//
+//*******************************************************************************************************
+*/
+
+body, input
+{
+    color: #3e3e3e;
+    font-family: Trebuchet MS, Tahoma, Arial;
+    font-size: 10pt;
+}
+a:link, a:visited, a:hover
+{
+    color: inherit;
+}
+a:link, a:visited
+{
+    text-decoration: underline;
+}
+a:hover
+{
+    text-decoration: none;
+}
+.Container
+{
+    width: 500px;
+    border-collapse: collapse;
+}
+.Header
+{
+    border-width: 1px;
+    border-color: #808080;
+    border-style: dotted;
+}
+.Content
+{
+    text-align: center;
+    min-height: 200px;
+    background-color: #eaeaea;
+    border-width: 1px;
+    border-color: #808080;
+    border-left-style: dotted;
+    border-right-style: dotted;
+}
+.Footer
+{
+    height: 25px;
+    text-align: center;
+    color: #ffffff;
+    background-color: #808080;
+    border: solid 1px #808080;
+}
+.Footer a:link, .Footer a:visited, .Footer a:hover
+{
+    color: #ffffff;
+}
+.PanelTitle
+{
+    color: #000000;
+    font-size: 20pt;
+    text-align: center;
+    text-transform: lowercase;
+    padding-bottom: 10px;
+}
+.ErrorMessage
+{
+    color: #ff0000;
+}
+.InformationMessage
+{
+    color: #0000ff;
+}
+.Images
+{
+    padding: 5px;
+    border: none;
+}
+.SmallText
+{
+    font-size: 8pt;
+}
+.TextInputHalf
+{
+    color: #000000;
+    width: 200px;
+    margin: 1px 0px 5px 0px;
+}
+.TextInputFull
+{
+    color: #000000;
+    width: 445px;
+    margin: 1px 0px 5px 0px;
+}
+.CommandButton
+{
+    color: #000000;
+    width: 75px;
+    height: 30px;
+    margin-top: 10px;
+}
+.ColumnSpacer
+{
+    width: 50px;
+}
+.MessagePrompt
+{
+    text-align: center;
+    width: 200px;
+    font-style: italic;
+}
+.ContentPanel
+{
+    text-align: left;
+    width: 450px;
+    margin: 10px 25px 10px 25px;
+}
+.AccessDeniedPanel
+{
+    text-align: left;
+    width: 400px;
+    margin: 10px 50px 10px 50px;
+}

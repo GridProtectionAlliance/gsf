@@ -1,0 +1,1 @@
+This is a rough implementation of needed components from the .NET 4.0 library needed to compile code in this solution.

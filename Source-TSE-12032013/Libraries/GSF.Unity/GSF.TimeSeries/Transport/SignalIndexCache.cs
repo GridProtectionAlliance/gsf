@@ -1,0 +1,435 @@
+﻿//******************************************************************************************************
+//  SignalIndexCache.cs - Gbtc
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  05/15/2011 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using GSF.Parsing;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+
+namespace GSF.TimeSeries.Transport
+{
+    /// <summary>
+    /// Represents a serializable <see cref="Guid"/> signal ID to <see cref="ushort"/> index cross reference.
+    /// </summary>
+    /// <remarks>
+    /// This class is used to create a runtime index to be used for data exchange so that a 16-bit integer
+    /// is exchanged in the data packets for signal identification instead of the 128-bit Guid signal ID
+    /// to reduce bandwidth required for signal exchange. This means the total number of unique signal
+    /// IDs that could be exchanged using this method in a single session is 65,535. This number seems
+    /// reasonable for the currently envisioned use cases, however, multiple sessions each with their own
+    /// runtime signal index cache could be established if this is a limitation for a given data set.
+    /// </remarks>
+    [Serializable]
+    public class SignalIndexCache : ISupportBinaryImage
+    {
+        #region [ Members ]
+
+        // Fields
+        private Guid m_subscriberID;
+
+        // Since measurement keys are statically cached as a global system optimization and the keys
+        // can be different between two parties exchanging data, the raw measurement key elements are
+        // cached and exchanged instead of actual measurement key values
+        private ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> m_reference;
+        private Guid[] m_unauthorizedSignalIDs;
+
+        [NonSerialized] // SignalID reverse lookup runtime cache (used to speed deserialization)
+        private readonly ConcurrentDictionary<Guid, ushort> m_signalIDCache;
+
+        [NonSerialized]
+        private Encoding m_encoding;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="SignalIndexCache"/> instance.
+        /// </summary>
+        public SignalIndexCache()
+        {
+            m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
+            m_signalIDCache = new ConcurrentDictionary<Guid, ushort>();
+        }
+
+        /// <summary>
+        /// Creates a new local system cache from one that was received remotely.
+        /// </summary>
+        /// <param name="dataSource"><see cref="DataSet"/> based data source used to interpret local measurement keys.</param>
+        /// <param name="remoteCache">Deserialized remote signal index cache.</param>
+        public SignalIndexCache(DataSet dataSource, SignalIndexCache remoteCache)
+        {
+            m_subscriberID = remoteCache.SubscriberID;
+
+            // If active measurements are defined, interpret signal cache in context of current measurement key definitions
+            if (dataSource != null && dataSource.Tables != null && dataSource.Tables.Contains("ActiveMeasurements"))
+            {
+                DataTable activeMeasurements = dataSource.Tables["ActiveMeasurements"];
+                m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
+
+                foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> signalIndex in remoteCache.Reference)
+                {
+                    Guid signalID = signalIndex.Value.Item1;
+                    DataRow[] filteredRows = activeMeasurements.Select("SignalID = '" + signalID.ToString() + "'");
+
+                    if (filteredRows.Length > 0)
+                    {
+                        DataRow row = filteredRows[0];
+                        MeasurementKey key = MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), signalID);
+                        m_reference.TryAdd(signalIndex.Key, new Tuple<Guid, string, uint>(signalID, key.Source, key.ID));
+                    }
+                }
+
+                m_unauthorizedSignalIDs = remoteCache.UnauthorizedSignalIDs;
+            }
+            else
+            {
+                // Just use remote signal index cache as-is if no local configuration exists
+                m_reference = remoteCache.Reference;
+                m_unauthorizedSignalIDs = remoteCache.UnauthorizedSignalIDs;
+            }
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="Guid"/> based subscriber ID of this <see cref="SignalIndexCache"/>.
+        /// </summary>
+        public Guid SubscriberID
+        {
+            get
+            {
+                return m_subscriberID;
+            }
+            set
+            {
+                m_subscriberID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets integer signal index cross reference dictionary.
+        /// </summary>
+        public ConcurrentDictionary<ushort, Tuple<Guid, string, uint>> Reference
+        {
+            get
+            {
+                return m_reference;
+            }
+            set
+            {
+                m_signalIDCache.Clear();
+                m_reference = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets reference to array of requested input measurement signal IDs that were authorized.
+        /// </summary>
+        public Guid[] AuthorizedSignalIDs
+        {
+            get
+            {
+                return m_reference.Select(kvp => kvp.Value.Item1).ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets reference to array of requested input measurement signal IDs that were unauthorized.
+        /// </summary>
+        public Guid[] UnauthorizedSignalIDs
+        {
+            get
+            {
+                return m_unauthorizedSignalIDs;
+            }
+            set
+            {
+                m_unauthorizedSignalIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current maximum integer signal index.
+        /// </summary>
+        public ushort MaximumIndex
+        {
+            get
+            {
+                if (m_reference.Count == 0)
+                    return 0;
+
+                return (ushort)(m_reference.Max(kvp => kvp.Key) + 1);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets character encoding used to convert strings to binary.
+        /// </summary>
+        public Encoding Encoding
+        {
+            get
+            {
+                return m_encoding;
+            }
+            set
+            {
+                m_encoding = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the length of the binary image.
+        /// </summary>
+        public int BinaryLength
+        {
+            get
+            {
+                int binaryLength = 0;
+
+                if ((object)m_encoding == null)
+                    throw new InvalidOperationException("Attempt to get binary length of signal index cache without setting a character encoding.");
+
+                // Byte size of cache
+                binaryLength += 4;
+
+                // Subscriber ID
+                binaryLength += 16;
+
+                // Number of references
+                binaryLength += 4;
+
+                // Each reference
+                binaryLength += m_reference.Sum(kvp => 2 + 16 + 4 + m_encoding.GetByteCount(kvp.Value.Item2) + 4);
+
+                // Number of unauthorized IDs
+                binaryLength += 4;
+
+                // Each unauthorized ID
+                binaryLength += 16 * (m_unauthorizedSignalIDs ?? new Guid[0]).Length;
+
+                return binaryLength;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Gets runtime signal index for given <see cref="Guid"/> signal ID.
+        /// </summary>
+        /// <param name="signalID"><see cref="Guid"/> signal ID used to lookup associated runtime signal index.</param>
+        /// <returns>Runtime signal index for given <see cref="Guid"/> <paramref name="signalID"/>.</returns>
+        public ushort GetSignalIndex(Guid signalID)
+        {
+            ushort index = ushort.MaxValue;
+
+            if (!m_signalIDCache.TryGetValue(signalID, out index))
+            {
+                foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> item in m_reference)
+                {
+                    if (item.Value.Item1 == signalID)
+                    {
+                        index = item.Key;
+                        break;
+                    }
+                }
+
+                if (index != ushort.MaxValue)
+                    m_signalIDCache.TryAdd(signalID, index);
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        /// Generates binary image of the <see cref="SignalIndexCache"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+        /// </summary>
+        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+        public int GenerateBinaryImage(byte[] buffer, int startIndex)
+        {
+            Guid[] unauthorizedSignalIDs = m_unauthorizedSignalIDs ?? new Guid[0];
+
+            int binaryLength = BinaryLength;
+            int offset = startIndex;
+            byte[] bigEndianBuffer;
+            byte[] unicodeBuffer;
+
+            if ((object)m_encoding == null)
+                throw new InvalidOperationException("Attempt to generate binary image of signal index cache without setting a character encoding.");
+
+            buffer.ValidateParameters(startIndex, binaryLength);
+
+            // Byte size of cache
+            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(binaryLength);
+            Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+            offset += bigEndianBuffer.Length;
+
+            // Subscriber ID
+            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(m_subscriberID);
+            Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+            offset += bigEndianBuffer.Length;
+
+            // Number of references
+            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(m_reference.Count);
+            Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+            offset += bigEndianBuffer.Length;
+
+            foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> kvp in m_reference)
+            {
+                // Signal index
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Key);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+
+                // Signal ID
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Value.Item1);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+
+                // Source
+                unicodeBuffer = m_encoding.GetBytes(kvp.Value.Item2);
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(unicodeBuffer.Length);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+                Buffer.BlockCopy(unicodeBuffer, 0, buffer, offset, unicodeBuffer.Length);
+                offset += unicodeBuffer.Length;
+
+                // ID
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Value.Item3);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+            }
+
+            // Number of unauthorized IDs
+            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(unauthorizedSignalIDs.Length);
+            Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+            offset += bigEndianBuffer.Length;
+
+            foreach (Guid signalID in unauthorizedSignalIDs)
+            {
+                // Unauthorized ID
+                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(signalID);
+                Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
+                offset += bigEndianBuffer.Length;
+            }
+
+            return binaryLength;
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="SignalIndexCache"/> by parsing the specified <paramref name="buffer"/> containing a binary image.
+        /// </summary>
+        /// <param name="buffer">Buffer containing binary image to parse.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start parsing.</param>
+        /// <param name="length">Valid number of bytes within <paramref name="buffer"/> to read from <paramref name="startIndex"/>.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
+        {
+            int binaryLength = 0;
+            int offset = startIndex;
+
+            int referenceCount;
+            ushort signalIndex;
+            Guid signalID;
+            int sourceSize;
+            string source;
+            uint id;
+
+            int unauthorizedIDCount;
+
+            if ((object)m_encoding == null)
+                throw new InvalidOperationException("Attempt to parse binary image of signal index cache without setting a character encoding.");
+
+            buffer.ValidateParameters(startIndex, length);
+
+            if (length < 4)
+                return 0;
+
+            // Byte size of cache
+            binaryLength = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            offset += 4;
+
+            if (length < binaryLength)
+                return 0;
+
+            // We know we have enough data so we can empty the reference cache
+            m_reference.Clear();
+
+            // Subscriber ID
+            m_subscriberID = EndianOrder.BigEndian.ToGuid(buffer, offset);
+            offset += 16;
+
+            // Number of references
+            referenceCount = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            offset += 4;
+
+            for (int i = 0; i < referenceCount; i++)
+            {
+                // Signal index
+                signalIndex = EndianOrder.BigEndian.ToUInt16(buffer, offset);
+                offset += 2;
+
+                // Signal ID
+                signalID = EndianOrder.BigEndian.ToGuid(buffer, offset);
+                offset += 16;
+
+                // Source
+                sourceSize = EndianOrder.BigEndian.ToInt32(buffer, offset);
+                offset += 4;
+                source = m_encoding.GetString(buffer, offset, sourceSize);
+                offset += sourceSize;
+
+                // ID
+                id = EndianOrder.BigEndian.ToUInt32(buffer, offset);
+                offset += 4;
+
+                m_reference[signalIndex] = new Tuple<Guid, string, uint>(signalID, source, id);
+            }
+
+            // Number of unauthorized IDs
+            unauthorizedIDCount = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            m_unauthorizedSignalIDs = new Guid[unauthorizedIDCount];
+            offset += 4;
+
+            for (int i = 0; i < unauthorizedIDCount; i++)
+            {
+                // Unauthorized ID
+                m_unauthorizedSignalIDs[i] = EndianOrder.BigEndian.ToGuid(buffer, offset);
+                offset += 16;
+            }
+
+            return binaryLength;
+        }
+
+        #endregion
+    }
+}

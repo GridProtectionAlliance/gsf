@@ -1,0 +1,102 @@
+﻿<UserControl x:Class="GSF.PhasorProtocols.UI.UserControls.OutputStreamMeasurementUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="450" d:DesignWidth="600"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:uc="clr-namespace:GSF.TimeSeries.UI.UserControls;assembly=GSF.TimeSeries.UI.WPF"
+             xmlns:tsf="clr-namespace:GSF.TimeSeries.UI;assembly=GSF.TimeSeries.UI.WPF"
+             xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical">
+
+        <tsf:TsfPopup x:Name="PopupAddMore" Placement="Center" Width="500" Height="500" Topmost="False">
+
+            <Border CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Blue">
+
+                <StackPanel Orientation="Vertical" Margin="5">
+                    
+                    <uc:MeasurementPagerUserControl Name="MeasurementPager" ItemsPerPage="18" FilterExpression="SignalAcronym &lt;&gt; 'STAT'" Selectable="True" Searchable="True">
+                        <uc:MeasurementPagerUserControl.DataGridColumns>
+                            <sdk:DataGridTextColumn Header="ID" Width="2*" Binding="{Binding Path=ID}" IsReadOnly="True" ToolTipService.ToolTip="{Binding Path=SignalReference}"/>
+                            <sdk:DataGridTextColumn Header="Description" Width="9*" Binding="{Binding Path=Description}" IsReadOnly="True"
+                                                    ToolTipService.ToolTip="{Binding Path=Description}"/>
+                        </uc:MeasurementPagerUserControl.DataGridColumns>
+                    </uc:MeasurementPagerUserControl>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+
+                        <Button Content="Close" Width="Auto" Click="ButtonCancel_Click" Margin="5"/>
+                        <Button Content="Add Selected" Width="Auto" Click="ButtonAddMore_Click" Margin="5"/>
+
+                    </StackPanel>
+
+                </StackPanel>
+
+            </Border>
+
+        </tsf:TsfPopup>
+
+        <Button Width="Auto" Margin="0,20" Foreground="Blue" FontSize="18" Content="Click here to add source measurements to the output stream" Template="{StaticResource HyperlinkStyleButtonTemplate}" Click="Button_Click" />
+        <Separator />
+
+        <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}" DataContextChanged="GridDetailView_DataContextChanged">
+            <Grid.BindingGroup>
+                <BindingGroup Name="input"/>
+            </Grid.BindingGroup>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Historian" Grid.Row="0" Grid.Column="0"/>
+            <TextBlock Text="{Binding Path=HistorianAcronym}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left"/>
+            <TextBlock Text="Point ID"  Grid.Row="0" Grid.Column="2"/>
+            <TextBlock Text="{tsfBinding:Column Path=PointID}" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Left"/>
+            
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=SignalReference}"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Signal Reference" Style="{StaticResource RequiredLabel}"/>
+                <TextBlock Style="{StaticResource RequiredMarker}"/>
+            </StackPanel>
+            <TextBlock Text="Source PointTag" Grid.Row="1" Grid.Column="2" />
+            <TextBlock Text="{Binding Path=SourcePointTag}" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Left"/>
+        </Grid>
+                
+        <uc:DetailViewFooterUserControl x:Name="UserControlDetailViewFooter" DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
+                      SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
+
+        <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" Width="835"
+                        PreviewKeyDown="DataGrid_PreviewKeyDown" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="4"  Sorting="DataGrid_Sorting" SelectedIndex="{tsfBinding:Column Path=CurrentSelectedIndex}">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTextColumn Header="Point ID" Width="*" Binding="{tsfBinding:Column Path=PointID}" IsReadOnly="True"/>
+                <sdk:DataGridTextColumn Header="Signal Reference" Width="*" Binding="{tsfBinding:Column Path=SignalReference}"/>
+                <sdk:DataGridTextColumn Header="Source PointTag" Width="2*" Binding="{Binding Path=SourcePointTag}" IsReadOnly="True"/>
+                <sdk:DataGridTextColumn Header="Historian" Width="*" Binding="{Binding Path=HistorianAcronym}" IsReadOnly="True"/>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+
+        <uc:DataPagerUserControl Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+                                    FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
+                                    NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
+    </StackPanel>
+
+</UserControl>

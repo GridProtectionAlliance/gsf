@@ -1,0 +1,100 @@
+﻿<UserControl x:Class="openPDC.UI.UserControls.ExceptionLogUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
+             xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls;assembly=TimeSeriesFramework.UI.WPF"
+             xmlns:tsf="clr-namespace:TimeSeriesFramework.UI;assembly=TimeSeriesFramework.UI.WPF"
+             mc:Ignorable="d" 
+             d:DesignHeight="550" d:DesignWidth="700" Background="Transparent" Loaded="ExceptionViewer_Loaded"
+             Unloaded="ExceptionViewer_UnLoaded">
+    <StackPanel Orientation="Vertical">
+        <tsf:TsfPopup x:Name="PopupSettings" Topmost="False" Placement="Center">
+            <Border CornerRadius="5" BorderThickness="1" Background="White" BorderBrush="Blue" >
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Exception Viewer Refresh Interval (in seconds)" Grid.Column="0" Grid.Row="0"/>
+                    <TextBox x:Name="TextBoxRefreshInterval" Grid.Row="0" Grid.Column="1" Width="50"/>
+
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Right">
+                        <Button x:Name="ButtonRestore" Content="Restore Default" Margin="2" Width="Auto" Click="ButtonRestore_Click"/>
+                        <Button Content="Cancel" Margin="2" Click="ButtonCancel_Click"/>
+                        <Button x:Name="ButtonSave" Content="Ok" Margin="2" IsDefault="True" Click="ButtonOk_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </tsf:TsfPopup>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="ButtonDisplaySettings" Content="Display Settings" Template="{StaticResource HyperlinkStyleButtonTemplate}" 
+                     Width="Auto" Click="ButtonDisplaySettings_Click"/>
+            <TextBlock Text="Refresh Interval: " Width="Auto" />
+            <TextBlock x:Name="TextBlockExceptionRefreshInterval" Width="Auto"/>
+            <TextBlock Text="{Binding Path=DataContext.LastRefresh, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl, AncestorLevel=1}}" />
+        </StackPanel>
+        
+        <sdk:DataGrid x:Name="DataGridList" ItemsSource="{Binding CurrentPage}"
+                      SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Sorting="DataGrid_Sorting"  
+                      Height="Auto" HeadersVisibility="Column" CanUserReorderColumns="False" UseLayoutRounding="False" MaxHeight="560">
+            <sdk:DataGrid.Columns>
+                <DataGridTemplateColumn Header="Sl No." Width="45" SortMemberPath="Index">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Path=Index,Mode=TwoWay}" HorizontalAlignment="Center" TextAlignment="Center"  VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Date and Time" Width="3*" SortMemberPath="DateandTime">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Path=DateandTime,Mode=TwoWay}" HorizontalAlignment="Center" TextAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Exception Source" Width="3*" SortMemberPath="ExceptionSource">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Path=ExceptionSource,Mode=TwoWay}" HorizontalAlignment="Left" TextAlignment="Left" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Exception Type" Width="3*" SortMemberPath="ExceptionType">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Path=ExceptionType,Mode=TwoWay}" ToolTip="{Binding Path=ExceptionType}" HorizontalAlignment="Left" TextAlignment="Left" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Exception Message" Width="3*" SortMemberPath="ExceptionMessage">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Path=ExceptionMessage,Mode=TwoWay}" ToolTip="{Binding Path=ExceptionMessage}" HorizontalAlignment="Left" TextAlignment="Left" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Log" MinWidth="80" Width="80">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Template="{StaticResource HyperlinkStyleButtonTemplate}" Content="Details" 
+                                    Command="{tsfBinding:GridButtonCommand Path=DataContext.ShowCommand}" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+        <uc:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+                                 FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
+                                 NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
+    </StackPanel>
+</UserControl>

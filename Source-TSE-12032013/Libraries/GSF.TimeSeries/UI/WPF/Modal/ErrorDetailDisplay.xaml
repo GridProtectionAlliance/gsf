@@ -1,0 +1,12 @@
+﻿<Window x:Class="GSF.TimeSeries.UI.Modal.ErrorDetailDisplay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        mc:Ignorable="d" Title="Exception Details"
+        x:Name="LogDisplayWindow" Height="409" Width="624" Background="Transparent" ShowInTaskbar="False"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+    <StackPanel Orientation="Vertical" Margin="2" Background="{StaticResource MenuBackgroundBrush}">
+        <TextBox Name="textBox1" Text="{Binding Path=Message,Mode=TwoWay}" TextAlignment="Left" TextWrapping="Wrap" IsReadOnly="True" Width="605" Height="366" ScrollViewer.HorizontalScrollBarVisibility="Hidden"  ScrollViewer.VerticalScrollBarVisibility="Visible" />
+    </StackPanel>
+</Window>
