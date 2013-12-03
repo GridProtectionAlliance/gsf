@@ -1661,7 +1661,7 @@ namespace PhasorProtocolAdapters
         protected void MapMeasurementAttributes(ICollection<ITimeSeriesEntity> mappedMeasurements, string signalReference, IMeasurement<double> parsedMeasurement)
         {
             // Coming into this function the parsed measurement value will only have a "value" and a "timestamp";
-            // the measurement will not yet be associated with an actual historian measurement ID as the measurement
+            // the measurement will not yet be associated with an actual measurement signal ID as the measurement
             // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
             // reference and use that to lookup the actual measurement signal ID.
             Guid signalID;
@@ -1669,10 +1669,10 @@ namespace PhasorProtocolAdapters
             // Lookup signal reference in defined measurement list
             if (m_definedMeasurements.TryGetValue(signalReference, out signalID))
             {
-                // Assign ID and other relevant attributes to the parsed measurement value
+                // Assign ID and copy other relevant parameters from the parsed measurement
                 Measurement<double> mappedMeasurement = new Measurement<double>(signalID, parsedMeasurement.Timestamp, parsedMeasurement.StateFlags, parsedMeasurement.Value);
 
-                // Add the updated measurement value to the destination measurement collection
+                // Add the new measurement value to the destination measurement collection
                 mappedMeasurements.Add(mappedMeasurement);
             }
         }

@@ -95,13 +95,6 @@ namespace GSF.TimeSeries
         /// your own buffer as this buffer is from the buffer pool and will be returned back to
         /// the pool by this class.
         /// </para>
-        /// <para>
-        /// Set <see cref="Buffer"/> property to <c>null</c> when operations on buffer are complete
-        /// to return buffer to pool and unregister measurement instance from the finalizer queue.
-        /// If measurement has multiple destinations, it is recommended that queue and notify be
-        /// implemented so that final user of <see cref="TimeSeriesBuffer"/> instance can
-        /// return buffer back to the buffer pool.
-        /// </para>
         /// </remarks>
         public byte[] Buffer
         {

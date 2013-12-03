@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Data;
 
 namespace GSF.TimeSeries
 {
@@ -158,5 +159,29 @@ namespace GSF.TimeSeries
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Defines extension functions related to <see cref="MeasurementKey"/> objects.
+    /// </summary>
+    public static class MeasurementKeyExtensions
+    {
+        /// <summary>
+        /// Parses a <see cref="MeasurementKey"/> from a <see cref="DataRow"/> for the specified <paramref name="measurementKeyColumn"/>.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> that contains the field to parse as a <see cref="MeasurementKey"/>.</param>
+        /// <param name="measurementKeyColumn">Name of column that contains the data to parse as a <see cref="MeasurementKey"/>.</param>
+        /// <returns>
+        /// <see cref="MeasurementKey"/> from <see cref="DataRow"/> if parse succeeds; otherwise an empty <see cref="MeasurementKey"/>.
+        /// </returns>
+        public static MeasurementKey GetMeasurementKey(this DataRow row, string measurementKeyColumn = "ID")
+        {
+            MeasurementKey key = default(MeasurementKey);
+
+            if ((object)row != null && row.Table.Columns.Contains(measurementKeyColumn))
+                MeasurementKey.TryParse(row[measurementKeyColumn].ToNonNullString("__"), out key);
+
+            return key;
+        }
     }
 }

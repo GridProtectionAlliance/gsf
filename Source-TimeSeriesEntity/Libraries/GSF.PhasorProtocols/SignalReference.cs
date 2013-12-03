@@ -24,23 +24,24 @@
 //******************************************************************************************************
 
 using System;
+using System.Data;
 
 namespace GSF.PhasorProtocols
 {
     #region [ Enumerations ]
 
     /// <summary>
-    /// Fundamental signal types enumeration.
+    /// Fundamental signal kind enumeration.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This signal type represents the basic type of a signal used to suffix a formatted signal reference. When
-    /// used in context along with an optional index the fundamental signal type will identify a signal's location
-    /// within a frame of data (see <see cref="SignalReference"/>).
+    /// This signal enumeration represents the basic kind of a signal used to suffix a formatted signal reference.
+    /// When used in context along with an optional index the fundamental signal enumeration will identify a signal's
+    /// location within a frame of data (see <see cref="SignalReference"/>).
     /// </para>
     /// <para>
     /// Contrast this to the <see cref="SignalType"/> enumeration which further defines an
-    /// explicit type for a signal (e.g., a voltage or current type for an angle).
+    /// explicit type for a signal (e.g., a "voltage" or "current" type for an angle).
     /// </para>
     /// </remarks>
     [Serializable]
@@ -159,6 +160,30 @@ namespace GSF.PhasorProtocols
         /// Undefined signal.
         /// </summary>
         NONE = -1
+    }
+
+    /// <summary>
+    /// Defines extension functions related to <see cref="SignalType"/> enumerations.
+    /// </summary>
+    public static class SignalTypeExtensions
+    {
+        /// <summary>
+        /// Parses a <see cref="SignalType"/> value from a <see cref="DataRow"/> for the specified <paramref name="signalTypeColumn"/>.
+        /// </summary>
+        /// <param name="row"><see cref="DataRow"/> that contains the field to parse as a <see cref="SignalType"/>.</param>
+        /// <param name="signalTypeColumn">Name of column that contains the data to parse as a <see cref="SignalType"/>.</param>
+        /// <returns>
+        /// <see cref="SignalType"/> from <see cref="DataRow"/> if parse succeeds; otherwise an empty <see cref="SignalType"/>.
+        /// </returns>
+        public static SignalType GetSignalType(this DataRow row, string signalTypeColumn = "SignalType")
+        {
+            SignalType type = SignalType.NONE;
+
+            if ((object)row != null && row.Table.Columns.Contains(signalTypeColumn))
+                Enum.TryParse(row[signalTypeColumn].ToNonNullString("NONE"), out type);
+
+            return type;
+        }
     }
 
     #endregion
@@ -295,11 +320,11 @@ namespace GSF.PhasorProtocols
 
                 if (signalTypeCompare == 0)
                     return Index.CompareTo(other.Index);
-                else
-                    return signalTypeCompare;
+
+                return signalTypeCompare;
             }
-            else
-                return acronymCompare;
+
+            return acronymCompare;
         }
 
         /// <summary>
@@ -482,8 +507,8 @@ namespace GSF.PhasorProtocols
         {
             if (index > 0)
                 return string.Format("{0}-{1}{2}", acronym, GetSignalKindAcronym(type), index);
-            else
-                return string.Format("{0}-{1}", acronym, GetSignalKindAcronym(type));
+
+            return string.Format("{0}-{1}", acronym, GetSignalKindAcronym(type));
         }
 
         #endregion

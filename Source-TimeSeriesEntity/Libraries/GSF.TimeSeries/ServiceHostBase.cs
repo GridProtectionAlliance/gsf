@@ -996,6 +996,7 @@ namespace GSF.TimeSeries
             return configuration;
         }
 
+        // TODO: A better algorithm would be to ask database for changed records since last configuration load, perhaps by AuditLog - could use MAX(AuditLog.ID) as version number. Would need key tables always auditing.
         private DataSet GetAugmentedConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString)
         {
             DataSet configuration;

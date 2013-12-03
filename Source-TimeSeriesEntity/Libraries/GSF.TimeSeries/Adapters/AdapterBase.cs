@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -990,6 +991,7 @@ namespace GSF.TimeSeries.Adapters
         // Static Fields
         private static readonly Regex s_filterExpression = new Regex("(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(TOP[ ]+(?<MaxRows>\\d+)[ ]+)?(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_timetagExpression = new Regex("\\*(?<Offset>[+-]?\\d*\\.?\\d*)(?<Unit>\\w+)", RegexOptions.Compiled);
+        private static readonly ConcurrentDictionary<Guid, DataRow> s_metaDataCache = new ConcurrentDictionary<Guid, DataRow>();
 
         // Static Methods
 
@@ -1383,27 +1385,57 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Looks up the measurement key for the given signal by searching in the data source.
+        /// Looks up the <see cref="MeasurementKey"/> for the specified <paramref name="signalID"/> by searching in the <paramref name="dataSource"/>.
         /// </summary>
-        /// <param name="dataSource">The source of data to be searched for the measurement key.</param>
-        /// <param name="signalID">The identifier for the signal to look up the measurement key.</param>
-        /// <param name="measurementTable">Measurement table name to search for measurement key.</param>
-        /// <returns>The measurement key for the given signal or the default measurement key if no measurement key can be found.</returns>
-        public static MeasurementKey LookUpMeasurementKey(DataSet dataSource, Guid signalID, string measurementTable = "ActiveMeasurements")
+        /// <param name="dataSource"><see cref="DataSet"/> containing meta-data to be searched for the <see cref="MeasurementKey"/>.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the <see cref="MeasurementKey"/>.</param>
+        /// <param name="measurementTable">Measurement table name to search for <see cref="MeasurementKey"/>.</param>
+        /// <param name="measurementKeyColumn">Name of column that contains data to parse as a <see cref="MeasurementKey"/>.</param>
+        /// <returns>The <see cref="MeasurementKey"/> for the given <paramref name="signalID"/> or an empty <see cref="MeasurementKey"/> if record cannot be found.</returns>
+        public static MeasurementKey LookUpMeasurementKey(DataSet dataSource, Guid signalID, string measurementTable = "ActiveMeasurements", string measurementKeyColumn = "ID")
         {
-            try
-            {
-                DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = {0}", signalID));
+            DataRow row;
 
-                if (filteredRows.Length > 0)
-                    return MeasurementKey.Parse(filteredRows[0]["ID"].ToNonNullString("__"));
-            }
-            catch
-            {
-                // Errors will result in returning the default measurement key
-            }
+            if (TryGetMetadata(dataSource, signalID, out row, measurementTable))
+                return row.GetMeasurementKey(measurementKeyColumn);
 
             return default(MeasurementKey);
+        }
+
+        /// <summary>
+        /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="dataSource"><see cref="DataSet"/> containing meta-data to be searched.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="row"><see cref="DataRow"/> of meta-data associated with the specified <paramref name="signalID"/>.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <returns><c>true</c> if meta-data record for <paramref name="signalID"/> was found; otherwise, <c>false</c>.</returns>
+        public static bool TryGetMetadata(DataSet dataSource, Guid signalID, out DataRow row, string measurementTable = "ActiveMeasurements")
+        {
+            row = s_metaDataCache.GetOrAdd(signalID, id =>
+            {
+                try
+                {
+                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = {0}", id));
+
+                    if (filteredRows.Length > 0)
+                        return filteredRows[0];
+                }
+                catch
+                {
+                    // Any errors will result in a null data row
+                }
+
+                return null;
+            });
+
+            return ((object)row != null);
+        }
+
+        // Clear meta-data cache
+        internal static void ClearMetaDataCache()
+        {
+            s_metaDataCache.Clear();
         }
 
         #endregion

@@ -177,7 +177,7 @@ namespace GSF.TimeSeries.Adapters
 
             m_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
 
-            // TODO: Move these threshold settings to base class implementation of what will become "QueuedOutputAdapterBase.cs"
+            // TODO: Move these threshold settings to base class implementation of what will become "QueuedOutputAdapterBase.cs" - perhaps as "default values" with overridable connection string parameters
             // Initialize threshold settings
             CategorizedSettingsElementCollection thresholdSettings = configFile.Settings["thresholdSettings"];
 
@@ -338,6 +338,9 @@ namespace GSF.TimeSeries.Adapters
             }
             set
             {
+                if (m_temporalSession)
+                    throw new InvalidOperationException("Data source cannot be updated for a temporal Iaon Session. Create a new session instead.");
+
                 lock (m_dataSourceLock)
                 {
                     DataSet originalDataSource = m_dataSource;
@@ -347,6 +350,9 @@ namespace GSF.TimeSeries.Adapters
                     m_actionAdapters.DataSource = m_dataSource;
                     m_outputAdapters.DataSource = m_dataSource;
                     m_temporalSupportEvaluated = false;
+
+                    // Only primary Iaon session should be allowed to clear meta-data cache
+                    AdapterBase.ClearMetaDataCache();
 
                     if ((object)originalDataSource != null)
                         originalDataSource.Dispose();

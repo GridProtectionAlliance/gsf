@@ -31,10 +31,12 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
+using System.Linq;
 using System.Text;
 using GSF.PhasorProtocols;
 using GSF.TimeSeries;
-using PhasorProtocolAdapters;
+using GSF.TimeSeries.Adapters;
 
 namespace PowerCalculations
 {
@@ -42,7 +44,7 @@ namespace PowerCalculations
     /// Calculates a real-time average frequency reporting the average, maximum and minimum values.
     /// </summary>
     [Description("Average Frequency: calculates a real-time average frequency reporting the average, maximum, and minimum values")]
-    public class AverageFrequency : CalculatedMeasurementBase
+    public class AverageFrequency : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -100,22 +102,24 @@ namespace PowerCalculations
             base.Initialize();
 
             // Validate input measurements
-            List<MeasurementKey> validInputMeasurementKeys = new List<MeasurementKey>();
+            List<Guid> validInputSignals = new List<Guid>();
+            DataRow row;
 
-            for (int i = 0; i < InputMeasurementKeys.Length; i++)
+            foreach (Guid signalID in InputSignals)
             {
-                if (InputSignalTypes[i] == SignalType.FREQ)
-                    validInputMeasurementKeys.Add(InputMeasurementKeys[i]);
+                if (AdapterBase.TryGetMetadata(DataSource, signalID, out row) && row.GetSignalType() == SignalType.FREQ)
+                    validInputSignals.Add(signalID);
             }
 
-            if (validInputMeasurementKeys.Count == 0)
+            if (validInputSignals.Count == 0)
                 throw new InvalidOperationException("No valid frequency measurements were specified as inputs to the average frequency calculator.");
 
             // Make sure only frequencies are used as input
-            InputMeasurementKeys = validInputMeasurementKeys.ToArray();
+            InputSignals.Clear();
+            InputSignals.UnionWith(validInputSignals);
 
             // Validate output measurements
-            if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
+            if (OutputSignals.Count < Enum.GetValues(typeof(Output)).Length)
                 throw new InvalidOperationException("Not enough output measurements were specified for the average frequency calculator, expecting measurements for \"Average\", \"Maximum\", and \"Minimum\" frequencies - in this order.");
         }
 
@@ -141,9 +145,9 @@ namespace PowerCalculations
                 frequencyTotal = 0.0D;
                 total = 0;
 
-                foreach (IMeasurement measurement in frame.Entities.Values)
+                foreach (IMeasurement<double> measurement in frame.Entities.Values.OfType<IMeasurement<double>>())
                 {
-                    frequency = measurement.AdjustedValue;
+                    frequency = measurement.Value;
                     adjustedFrequency = (int)(frequency * hzResolution);
 
                     // Do some simple flat line avoidance...
@@ -182,7 +186,9 @@ namespace PowerCalculations
                 }
 
                 // Provide calculated measurements for external consumption
-                IMeasurement[] outputMeasurements = OutputMeasurements;
+                List<Measurement<double>> outputMeasurements = new List<Measurement<double>>();
+
+                outputMeasurements.Add(new Measurement<double>())
 
                 OnNewEntities(new IMeasurement[]{
                     Measurement.Clone(outputMeasurements[(int)Output.Average], m_averageFrequency, frame.Timestamp),
