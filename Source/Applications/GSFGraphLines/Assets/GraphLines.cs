@@ -53,6 +53,9 @@ public class GraphLines : MonoBehaviour
 	// Creates a dynamically scaled 3D line using Vectrosity asset to draw line for data
 	private class DataLine : ILine
 	{
+		private const float ShrinkStartThreshold = 0.5F;
+		private const float ShrinkStopThreshold = 0.9F;
+
 		private GraphLines m_parent;
 		private VectorLine m_vector;
 		private Guid m_id;
@@ -60,11 +63,18 @@ public class GraphLines : MonoBehaviour
 		private Vector3[] m_linePoints;
 		private float m_min = float.NaN;
 		private float m_max = float.NaN;
+
+		private bool m_scaleUpdated;
+		private bool m_autoShrinkScale;
+		private bool m_scaleIsShrinking;
+		private float m_displayMin = float.NaN;
+		private float m_displayMax = float.NaN;
 		
-		public DataLine(GraphLines parent, Guid id, int index)
+		public DataLine(GraphLines parent, Guid id, int index, bool autoShrinkScale)
 		{
 			m_parent = parent;
 			m_id = id;
+			m_autoShrinkScale = autoShrinkScale;
 			
 			m_unscaledData = new float[m_parent.m_pointsInLine];
 			m_linePoints = new Vector3[m_parent.m_pointsInLine];
@@ -108,46 +118,105 @@ public class GraphLines : MonoBehaviour
 		
 		public void UpdateValue(float newValue)
 		{
-			bool scaleUpdated = false;
-			int i;
+			int x;
+
+			// Determine if display min/max need to be recalculated
+			if (m_autoShrinkScale)
+			{
+				if (newValue >= m_displayMin && m_unscaledData[0] == m_displayMin)
+				{
+					m_displayMin = newValue;
+					
+					for (x = 1; x < m_unscaledData.Length; x++)
+						m_displayMin = Math.Min(m_unscaledData[x], m_displayMin);
+				}
+				
+				if (newValue <= m_displayMax && m_unscaledData[0] == m_displayMax)
+				{
+					m_displayMax = newValue;
+					
+					for (x = 1; x < m_unscaledData.Length; x++)
+						m_displayMax = Math.Max(m_unscaledData[x], m_displayMax);
+				}
+			}
 			
 			if (newValue < m_min || float.IsNaN(m_min))
 			{
 				m_min = newValue;
-				scaleUpdated = true;
+				m_displayMin = newValue;
+				m_scaleUpdated = true;
 			}
 			
 			if (newValue > m_max || float.IsNaN(m_max))
 			{
 				m_max = newValue;
-				scaleUpdated = true;
+				m_displayMax = newValue;
+				m_scaleUpdated = true;
 			}
-			
-			// Update line points if scale was updated
-			if (scaleUpdated)
+
+			// Automatically shrink the scale
+			if (m_autoShrinkScale)
 			{
-				float unscaledValue;
-				
-				for (i = 0; i < m_linePoints.Length; i++)
+				if (m_scaleUpdated)
 				{
-					unscaledValue = m_unscaledData[i];
-					
-					if (float.IsNaN(unscaledValue))
-						unscaledValue = MidPoint;
-					
-					m_linePoints[i].z = -ScaleValue(unscaledValue);
+					m_scaleIsShrinking = false;
+				}
+				else
+				{
+					if (newValue < m_displayMin)
+						m_displayMin = newValue;
+					else if (newValue > m_displayMax)
+						m_displayMax = newValue;
+
+					if (!m_scaleIsShrinking && (m_max - m_min) * ShrinkStartThreshold >= (m_displayMax - m_displayMin))
+						m_scaleIsShrinking = true;
 				}
 			}
 			
 			// Move y position of all points to the left by one
-			for (i = 0; i < m_linePoints.Length - 1; i++)
+			for (x = 0; x < m_linePoints.Length - 1; x++)
 			{
-				m_unscaledData[i] = m_unscaledData[i + 1];
-				m_linePoints[i].z = m_linePoints[i + 1].z;
+				m_unscaledData[x] = m_unscaledData[x + 1];
+				m_linePoints[x].z = m_linePoints[x + 1].z;
 			}
 			
-			m_unscaledData[i] = newValue;
-			m_linePoints[i].z = -ScaleValue(newValue);
+			m_unscaledData[x] = newValue;
+			m_linePoints[x].z = -ScaleValue(newValue);
+		}
+
+		public void UpdateDisplayScale()
+		{
+			if (m_scaleIsShrinking)
+			{
+				m_min += (m_displayMin - m_min) * Time.deltaTime * 5.0F;
+				m_max -= (m_max - m_displayMax) * Time.deltaTime * 5.0F;
+				m_scaleUpdated = true;
+				
+				if ((m_max - m_min) * ShrinkStopThreshold <= (m_displayMax - m_displayMin))
+					m_scaleIsShrinking = false;
+			}
+
+			ScaleLinePoints();
+		}
+
+		private void ScaleLinePoints()
+		{
+			float unscaledValue;
+
+			if (m_scaleUpdated)
+			{
+				for (int x = 0; x < m_linePoints.Length; x++)
+				{
+					unscaledValue = m_unscaledData[x];
+					
+					if (float.IsNaN(unscaledValue))
+						unscaledValue = MidPoint;
+					
+					m_linePoints[x].z = -ScaleValue(unscaledValue);
+				}
+
+				m_scaleUpdated = false;
+			}
 		}
 		
 		private float ScaleValue(float newValue)
@@ -469,6 +538,10 @@ public class GraphLines : MonoBehaviour
 					line.UpdateValue((float)measurement.Value);
 			}
 		}
+
+		// Update display scale on each line
+		foreach (DataLine dataLine in m_dataLines.Values)
+			dataLine.UpdateDisplayScale();
 		
 		// Allow application exit via "ESC" key
 		if (Input.GetKey("escape"))
@@ -675,7 +748,28 @@ public class GraphLines : MonoBehaviour
 		
 		foreach (Guid measurementID in subscribedMeasurementIDs)
 		{
-			m_dataLines.TryAdd(measurementID, new DataLine(this, measurementID, m_dataLines.Count));
+			bool autoShrinkScale = false;
+
+			if ((object)m_measurementMetadata != null)
+			{
+				DataRow[] rows = m_measurementMetadata.Select(string.Format("SignalID = '{0}'", measurementID));
+
+				if (rows.Length > 0)
+				{
+					switch(rows[0]["SignalAcronym"].ToNonNullString())
+					{
+						case "IPHM":
+						case "VPHM":
+						case "FREQ":
+						case "ALOG":
+						case "CALC":
+							autoShrinkScale = true;
+							break;
+					}
+				}
+			}
+
+			m_dataLines.TryAdd(measurementID, new DataLine(this, measurementID, m_dataLines.Count, autoShrinkScale));
 		}
 		
 		// Update legend - we do this on a different thread since we've already
