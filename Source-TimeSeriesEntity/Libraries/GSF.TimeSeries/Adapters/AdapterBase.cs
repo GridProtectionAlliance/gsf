@@ -111,8 +111,8 @@ namespace GSF.TimeSeries.Adapters
         private DataSet m_dataSource;
         private int m_initializationTimeout;
         private bool m_autoStart;
-        private readonly ObservableHashSet<Guid> m_inputSignals;
-        private readonly ObservableHashSet<Guid> m_outputSignals;
+        private readonly ObservableSet<Guid> m_inputSignals;
+        private readonly ObservableSet<Guid> m_outputSignals;
         private long m_processedEntities;
         private int m_entityReportingInterval;
         private bool m_enabled;
@@ -136,8 +136,8 @@ namespace GSF.TimeSeries.Adapters
             m_name = GetType().Name;
             m_settings = new Dictionary<string, string>();
 
-            m_inputSignals = new ObservableHashSet<Guid>();
-            m_outputSignals = new ObservableHashSet<Guid>();
+            m_inputSignals = new ObservableSet<Guid>();
+            m_outputSignals = new ObservableSet<Guid>();
 
             m_inputSignals.CollectionChanged += m_inputSignals_CollectionChanged;
             m_outputSignals.CollectionChanged += m_outputSignals_CollectionChanged;

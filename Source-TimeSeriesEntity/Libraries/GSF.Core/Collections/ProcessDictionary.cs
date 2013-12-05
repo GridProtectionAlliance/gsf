@@ -30,7 +30,7 @@ using System.ComponentModel;
 namespace GSF.Collections
 {
     /// <summary>
-    /// Represents a thread-safe (via locking) keyed collection of items, based on <see cref="DictionaryList{TKey,TValue}"/>, that get processed on independent threads with a consumer provided function.
+    /// Represents a thread-safe (via locking) keyed collection of items, based on <see cref="OrderedDictionary{TKey, TValue}"/>, that get processed on independent threads with a consumer provided function.
     /// </summary>
     /// <typeparam name="TKey">Type of keys used to reference process items.</typeparam>
     /// <typeparam name="TValue">Type of values to process.</typeparam>
@@ -44,18 +44,13 @@ namespace GSF.Collections
     /// <para>Note that the <see cref="ProcessDictionary{TKey,TValue}"/> will not start processing until the Start method is called.</para>
     /// <para>Because this <see cref="ProcessDictionary{TKey,TValue}"/> represents a dictionary style collection, all keys must be unique.</para>
     /// <para>
-    /// Be aware that this class is based on a <see cref="DictionaryList{TKey,TValue}"/> (i.e., a <see cref="SortedList{TKey,TValue}"/>
-    /// that implements <see cref="IList{T}"/>), and since items in this kind of list are automatically sorted, items will be processed
-    /// in "sorted" order regardless of the order in which they are added to the list.
-    /// </para>
-    /// <para>
     /// Important note about using an "Integer" as the key for this class: because the <see cref="ProcessDictionary{TKey,TValue}"/> base class must
     /// implement IList, a normal dictionary cannot be used for the base class. IDictionary implementations
     /// do not normally implement the IList interface because of ambiguity that is caused when implementing
     /// an integer key. For example, if you implement this class with a key of type "Integer," you will not
     /// be able to access items in the <see cref="ProcessDictionary{TKey,TValue}"/> by index without "casting" the 
     /// <see cref="ProcessDictionary{TKey,TValue}"/> as IList. This is because the Item property in both the IDictionary and IList would
-    /// have the same parameters (see the <see cref="DictionaryList{TKey,TValue}"/> class for more details.).
+    /// have the same parameters (see the <see cref="OrderedDictionary{TKey, TValue}"/> class for more details.).
     /// </para>
     /// </remarks>
     public class ProcessDictionary<TKey, TValue> : ProcessList<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
@@ -74,7 +69,7 @@ namespace GSF.Collections
         /// <para>Used when creating a <see cref="ProcessDictionary{TKey,TValue}"/> to process one item at a time.</para>
         /// <para>Asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> will process individual items on multiple threads</para>
         /// </remarks>
-        public new delegate void ProcessItemFunctionSignature(TKey key, TValue value);
+        public delegate void ProcessItemFunctionSignature(TKey key, TValue value);
 
         /// <summary>
         /// Function signature that determines if a key and value can be currently processed.
@@ -93,7 +88,7 @@ namespace GSF.Collections
         /// for processing must evaluate as "CanProcessItem = True" before any items are processed.
         /// </para>
         /// </remarks>
-        public new delegate bool CanProcessItemFunctionSignature(TKey key, TValue value);
+        public delegate bool CanProcessItemFunctionSignature(TKey key, TValue value);
 
         // Fields
         private ProcessItemFunctionSignature m_processItemFunction;
@@ -105,7 +100,7 @@ namespace GSF.Collections
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="DictionaryList{TKey, TValue}"/> class.
+        /// Creates a <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="OrderedDictionary{TKey, TValue}"/> class.
         /// </summary>
         /// <param name="processItemFunction">A delegate <see cref="ProcessItemFunctionSignature"/> that defines a function signature to process a key and value one at a time.</param>
         /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
@@ -115,7 +110,7 @@ namespace GSF.Collections
         /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether the process should requeue the item after a timeout.</param>
         /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether the process should requeue the item after an exception.</param>
         protected ProcessDictionary(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-            : base(null, null, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            : base(null, null, null, new OrderedDictionary<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
             m_processItemFunction = processItemFunction; // Defining this function creates a ProcessingStyle = OneAtATime keyed process queue
             m_canProcessItemFunction = canProcessItemFunction;
@@ -128,7 +123,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Creates a bulk-item <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="DictionaryList{TKey, TValue}"/> class.
+        /// Creates a bulk-item <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="OrderedDictionary{TKey, TValue}"/> class.
         /// </summary>
         /// <param name="processItemsFunction">A delegate ProcessItemsFunctionSignature that defines a function signature to process multiple items at once.</param>
         /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
@@ -138,7 +133,7 @@ namespace GSF.Collections
         /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether the process should requeue the item after a timeout.</param>
         /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether the process should requeue the item after an exception.</param>
         protected ProcessDictionary(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-            : base(null, processItemsFunction, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            : base(null, processItemsFunction, null, new OrderedDictionary<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
             m_canProcessItemFunction = canProcessItemFunction;
 
@@ -286,11 +281,11 @@ namespace GSF.Collections
         /// <summary>
         /// Gets the internal sorted dictionary for direct use by derived classes.
         /// </summary>
-        protected DictionaryList<TKey, TValue> InternalDictionary
+        protected OrderedDictionary<TKey, TValue> InternalDictionary
         {
             get
             {
-                return (DictionaryList<TKey, TValue>)InternalEnumerable;
+                return (OrderedDictionary<TKey, TValue>)InternalEnumerable;
             }
         }
 
@@ -583,7 +578,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="OrderedDictionary{TKey, TValue}"/> which is already
         /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -593,7 +588,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="OrderedDictionary{TKey, TValue}"/> which is already
         /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
         /// </summary>
         /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or-
@@ -605,7 +600,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="OrderedDictionary{TKey, TValue}"/> which is already
         /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
         /// </summary>
         /// <param name="comparison">The comparison to use when comparing elements.</param>
@@ -616,7 +611,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="DictionaryList{TKey,TValue}"/> which is already
+        /// <see cref="ProcessDictionary{TKey,TValue}"/> is based on a <see cref="OrderedDictionary{TKey, TValue}"/> which is already
         /// sorted, so calling this function has no effect.  As a result this function is marked as hidden from the editor.
         /// </summary>
         /// <param name="index">The zero-based starting index of the range to search.</param>

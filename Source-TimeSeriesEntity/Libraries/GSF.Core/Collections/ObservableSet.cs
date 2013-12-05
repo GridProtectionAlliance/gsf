@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ObservableHashSet.cs - Gbtc
+//  ObservableSet.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -39,14 +39,14 @@ namespace GSF.Collections
     /// </remarks>
     /// <typeparam name="T">The type of elements in the hash set.</typeparam>
     [Serializable]
-    public class ObservableHashSet<T> : ISet<T>, INotifyCollectionChanged, ISerializable, IDeserializationCallback
+    public class ObservableSet<T> : ISet<T>, INotifyCollectionChanged, ISerializable, IDeserializationCallback
     {
         #region [ Members ]
 
         // Events
 
         /// <summary>
-        /// Occurs when the <see cref="ObservableHashSet{T}"/> changes.
+        /// Occurs when the <see cref="ObservableSet{T}"/> changes.
         /// </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
@@ -58,41 +58,41 @@ namespace GSF.Collections
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ObservableHashSet{T}"/> class that is empty and uses the default equality
+        /// Initializes a new instance of the <see cref="ObservableSet{T}"/> class that is empty and uses the default equality
         /// comparer for the set type.
         /// </summary>
-        public ObservableHashSet()
+        public ObservableSet()
         {
             m_hashSet = new HashSet<T>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ObservableHashSet{T}"/> class that uses the default equality comparer for
+        /// Initializes a new instance of the <see cref="ObservableSet{T}"/> class that uses the default equality comparer for
         /// the set type, contains elements copied from the specified <paramref name="collection"/>, and has sufficient capacity
         /// to accommodate the number of elements copied.
         /// </summary>
         /// <param name="collection">The collection whose elements are copied to the new set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
-        public ObservableHashSet(IEnumerable<T> collection)
+        public ObservableSet(IEnumerable<T> collection)
         {
             m_hashSet = new HashSet<T>(collection);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ObservableHashSet{T}"/> class that is empty and uses the specified
+        /// Initializes a new instance of the <see cref="ObservableSet{T}"/> class that is empty and uses the specified
         /// equality <paramref name="comparer"/> for the set type.
         /// </summary>
         /// <param name="comparer">
         /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing values in the set, or <c>null</c> to
         /// use the default <see cref="IEqualityComparer{T}"/> implementation for the set type.
         /// </param>
-        public ObservableHashSet(IEqualityComparer<T> comparer)
+        public ObservableSet(IEqualityComparer<T> comparer)
         {
             m_hashSet = new HashSet<T>(comparer);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ObservableHashSet{T}"/> class that uses the specified equality
+        /// Initializes a new instance of the <see cref="ObservableSet{T}"/> class that uses the specified equality
         /// <paramref name="comparer"/> for the set type, contains elements copied from the specified <paramref name="collection"/>,
         /// and has sufficient capacity to accommodate the number of elements copied. 
         /// </summary>
@@ -102,30 +102,31 @@ namespace GSF.Collections
         /// use the default <see cref="IEqualityComparer{T}"/> implementation for the set type.
         /// </param>
         /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
-        public ObservableHashSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        public ObservableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
             m_hashSet = new HashSet<T>(collection, comparer);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ObservableHashSet{T}"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="ObservableSet{T}"/> class with serialized data.
         /// </summary>
         /// <param name="info">
         /// A <see cref="SerializationInfo"/> object that contains the information required to serialize the
-        /// <see cref="ObservableHashSet{T}"/> object.
+        /// <see cref="ObservableSet{T}"/> object.
         /// </param>
         /// <param name="context">
         /// A <see cref="StreamingContext"/> structure that contains the source and destination of the serialized stream
-        /// associated with the <see cref="ObservableHashSet{T}"/> object.
+        /// associated with the <see cref="ObservableSet{T}"/> object.
         /// </param>
-        protected ObservableHashSet(SerializationInfo info, StreamingContext context)
+        protected ObservableSet(SerializationInfo info, StreamingContext context)
         {
-            // Call protected deserialization constructor
+            // Setup call for protected deserialization constructor
             Type[] parameterTypes = new[] { typeof(SerializationInfo), typeof(StreamingContext) };
 
             ConstructorInfo constructor = typeof(HashSet<T>).GetConstructor(
                 BindingFlags.CreateInstance | BindingFlags.NonPublic | BindingFlags.Instance, null, parameterTypes, null);
 
+            // Construct hast set and start deserialization process
             m_hashSet = constructor.Invoke(new object[] { info, context }) as HashSet<T>;
         }
 
@@ -134,10 +135,10 @@ namespace GSF.Collections
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the number of elements contained in the <see cref="ObservableHashSet{T}"/>.
+        /// Gets the number of elements contained in the <see cref="ObservableSet{T}"/>.
         /// </summary>
         /// <returns>
-        /// The number of elements contained in the <see cref="ObservableHashSet{T}"/>.
+        /// The number of elements contained in the <see cref="ObservableSet{T}"/>.
         /// </returns>
         public int Count
         {
@@ -193,13 +194,13 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Removes all items from the <see cref="ObservableHashSet{T}"/> object.
+        /// Removes all items from the <see cref="ObservableSet{T}"/> object.
         /// </summary>
         public void Clear()
         {
             // Determine if set contains data before clear
             bool setHadData = (m_hashSet.Count > 0);
-            
+
             m_hashSet.Clear();
 
             if (setHadData)
@@ -207,11 +208,11 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Determines whether the <see cref="ObservableHashSet{T}"/> object contains the specified element.
+        /// Determines whether the <see cref="ObservableSet{T}"/> object contains the specified element.
         /// </summary>
-        /// <param name="item">The element to locate in the <see cref="ObservableHashSet{T}"/> object.</param>
+        /// <param name="item">The element to locate in the <see cref="ObservableSet{T}"/> object.</param>
         /// <returns>
-        /// <c>true</c> if <see cref="ObservableHashSet{T}"/> object contains the specified element; otherwise,
+        /// <c>true</c> if <see cref="ObservableSet{T}"/> object contains the specified element; otherwise,
         /// <c>false</c>.
         /// </returns>
         public bool Contains(T item)
@@ -220,11 +221,11 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Copies the elements of the <see cref="ObservableHashSet{T}"/> to an <see cref="Array"/>.
+        /// Copies the elements of the <see cref="ObservableSet{T}"/> to an <see cref="Array"/>.
         /// </summary>
         /// <param name="array">
         /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from
-        /// <see cref="ObservableHashSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
+        /// <see cref="ObservableSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
         /// </param>
         public void CopyTo(T[] array)
         {
@@ -232,12 +233,12 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Copies the elements of the <see cref="ObservableHashSet{T}"/> to an <see cref="Array"/>, starting at the
+        /// Copies the elements of the <see cref="ObservableSet{T}"/> to an <see cref="Array"/>, starting at the
         /// specified <paramref name="arrayIndex"/>.
         /// </summary>
         /// <param name="array">
         /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from
-        /// <see cref="ObservableHashSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
+        /// <see cref="ObservableSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
         /// </param>
         /// <param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
         /// <exception cref="ArgumentNullException"><paramref name="array"/> is null.</exception>
@@ -251,12 +252,12 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Copies the specified number of elements of the <see cref="ObservableHashSet{T}"/> to an <see cref="Array"/>,
+        /// Copies the specified number of elements of the <see cref="ObservableSet{T}"/> to an <see cref="Array"/>,
         /// starting at the specified <paramref name="arrayIndex"/>.
         /// </summary>
         /// <param name="array">
         /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from
-        /// <see cref="ObservableHashSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
+        /// <see cref="ObservableSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
         /// </param>
         /// <param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
         /// <param name="count">The number of elements to copy to <paramref name="array"/>.</param>
@@ -285,10 +286,10 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Returns an enumerator that iterates through the <see cref="ObservableHashSet{T}"/>.
+        /// Returns an enumerator that iterates through the <see cref="ObservableSet{T}"/>.
         /// </summary>
         /// <returns>
-        /// A <see cref="IEnumerator{T}"/> that can be used to iterate through the <see cref="ObservableHashSet{T}"/>.
+        /// A <see cref="IEnumerator{T}"/> that can be used to iterate through the <see cref="ObservableSet{T}"/>.
         /// </returns>
         public IEnumerator<T> GetEnumerator()
         {
@@ -303,7 +304,7 @@ namespace GSF.Collections
 
         /// <summary>
         /// Implements the <see cref="ISerializable"/> interface and populates the <paramref name="info"/> object with 
-        /// the data needed to serialize the serialize this <see cref="ObservableHashSet{T}"/> object.
+        /// the data needed to serialize the serialize this <see cref="ObservableSet{T}"/> object.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination (see <see cref="StreamingContext"/>) for this serialization.</param>
@@ -382,6 +383,7 @@ namespace GSF.Collections
         /// <param name="sender">The source of the deserialization event.</param>
         public void OnDeserialization(object sender)
         {
+            // Complete hash set deserialization process
             m_hashSet.OnDeserialization(sender);
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
@@ -401,12 +403,12 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Removes the the specified element from the <see cref="ObservableHashSet{T}"/> object.
+        /// Removes the the specified element from the <see cref="ObservableSet{T}"/> object.
         /// </summary>
         /// <returns>
         /// <c>true</c> if <paramref name="item"/> was successfully removed from the set; otherwise, <c>false</c>.
         /// This method also returns <c>false</c> if <paramref name="item"/> is not found in the 
-        /// <see cref="ObservableHashSet{T}"/> object.
+        /// <see cref="ObservableSet{T}"/> object.
         /// </returns>
         /// <param name="item">The object to remove from the set.</param>
         public bool Remove(T item)
@@ -416,10 +418,10 @@ namespace GSF.Collections
 
         /// <summary>
         /// Removes all elements that match the conditions defined by the specified predicate from the
-        /// <see cref="ObservableHashSet{T}"/> object.
+        /// <see cref="ObservableSet{T}"/> object.
         /// </summary>
         /// <returns>
-        /// The number of elements that were removed from the the <see cref="ObservableHashSet{T}"/> object.
+        /// The number of elements that were removed from the the <see cref="ObservableSet{T}"/> object.
         /// </returns>
         /// <param name="match">
         /// The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
@@ -455,7 +457,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Sets the capacity of this <see cref="ObservableHashSet{T}"/> object to the actual number of
+        /// Sets the capacity of this <see cref="ObservableSet{T}"/> object to the actual number of
         /// elements it contains, rounded up to a nearby, implementation-specific value.
         /// </summary>
         public void TrimExcess()
@@ -475,7 +477,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Raises the <see cref="CollectionChanged"/> event for this <see cref="ObservableHashSet{T}"/> object.
+        /// Raises the <see cref="CollectionChanged"/> event for this <see cref="ObservableSet{T}"/> object.
         /// </summary>
         /// <param name="e">
         /// The <see cref="NotifyCollectionChangedEventArgs"/> object to send to the <see cref="CollectionChanged"/> event.
