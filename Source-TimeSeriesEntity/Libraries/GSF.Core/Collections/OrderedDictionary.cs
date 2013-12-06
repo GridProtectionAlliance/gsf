@@ -735,6 +735,15 @@ namespace GSF.Collections
             return m_dictionary.TryGetValue(key, out value);
         }
 
+        /// <summary>
+        /// Sets the capacity of this <see cref="OrderedDictionary{TKey,TValue}"/> object to the actual number of
+        /// elements it contains, rounded up to a nearby, implementation-specific value.
+        /// </summary>
+        public void TrimExcess()
+        {
+            m_list.TrimExcess();
+        }
+
         #region [ Explicit Methods ]
 
         void IDictionary.Add(object key, object value)
