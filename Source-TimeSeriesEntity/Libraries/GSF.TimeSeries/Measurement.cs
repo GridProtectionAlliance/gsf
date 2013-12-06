@@ -47,6 +47,17 @@ namespace GSF.TimeSeries
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new instance of the <see cref="Measurement{T}"/> class with normal state flags.
+        /// </summary>
+        /// <param name="id">The fundamental identifier of the <see cref="Measurement{T}"/></param>
+        /// <param name="timestamp">The exact timestamp, in ticks, of the data represented by this <see cref="Measurement{T}"/></param>
+        /// <param name="value">The raw value of this <see cref="Measurement{T}"/></param>
+        public Measurement(Guid id, Ticks timestamp, T value)
+            : this(id, timestamp, MeasurementStateFlags.Normal, value)
+        {
+        }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="Measurement{T}"/> class.
         /// </summary>
         /// <param name="id">The fundamental identifier of the <see cref="Measurement{T}"/></param>

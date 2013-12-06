@@ -121,7 +121,7 @@ namespace GSF.TimeSeries.Transport
             m_bufferBlockCache = new List<byte[]>();
             m_bufferBlockCacheLock = new object();
 
-            InputSignalsUpdated += UnsynchronizedClientSubscription_InputSignalsUpdated;
+            InputSignalIDsUpdated += UnsynchronizedClientSubscription_InputSignalsUpdated;
         }
 
         #endregion
@@ -473,7 +473,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", InputSignals.Count, OutputSignals.Count).PadLeft(maxLength);
+            return string.Format("Total input measurements: {0}, total output measurements: {1}", InputSignalIDs.Count, OutputSignalIDs.Count).PadLeft(maxLength);
         }
 
         /// <summary>
@@ -481,7 +481,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="entities">Collection of measurements to queue for processing.</param>
         /// <remarks>
-        /// Measurements are filtered against the defined <see cref="AdapterBase.InputSignals"/> so we override method
+        /// Measurements are filtered against the defined <see cref="AdapterBase.InputSignalIDs"/> so we override method
         /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
         /// </remarks>
         public override void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
@@ -857,12 +857,12 @@ namespace GSF.TimeSeries.Transport
         {
             lock (this)
             {
-                if (InputSignals.Count > 0)
+                if (InputSignalIDs.Count > 0)
                 {
-                    m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, InputSignals);
+                    m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, InputSignalIDs);
 
                     if ((object)DataSource != null && (object)m_signalIndexCache != null)
-                        InputSignals.UnionWith(ParseFilterExpression(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs)));
+                        InputSignalIDs.UnionWith(ParseFilterExpression(DataSource, false, string.Join("; ", m_signalIndexCache.AuthorizedSignalIDs)));
                 }
             }
         }

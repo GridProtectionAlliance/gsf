@@ -433,7 +433,7 @@ namespace FileAdapters
 
             m_watchDirectory = FilePath.GetAbsolutePath(setting);
 
-            if (OutputSignals.Length <= 0)
+            if (OutputSignalIDs.Length <= 0)
                 throw new ArgumentException(string.Format(ErrorMessage, "outputMeasurements"));
 
             // Optional parameters
@@ -653,8 +653,8 @@ namespace FileAdapters
                     // Publish next block of file data
                     OnNewMeasurement(new TimeSeriesBuffer(buffer, 0, bytesRead)
                     {
-                        ID = OutputSignals[0].ID,
-                        Key = OutputSignals[0].Key,
+                        ID = OutputSignalIDs[0].ID,
+                        Key = OutputSignalIDs[0].Key,
                         Timestamp = DateTime.UtcNow.Ticks
                     });
                 }

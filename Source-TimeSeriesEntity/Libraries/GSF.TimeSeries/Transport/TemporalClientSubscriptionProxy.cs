@@ -92,7 +92,7 @@ namespace GSF.TimeSeries.Transport
         /// <returns>A short one-line summary of the current status for this <see cref="AdapterBase"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", InputSignals.Count, OutputSignals.Count).PadLeft(maxLength);
+            return string.Format("Total input measurements: {0}, total output measurements: {1}", InputSignalIDs.Count, OutputSignalIDs.Count).PadLeft(maxLength);
         }
 
         #endregion

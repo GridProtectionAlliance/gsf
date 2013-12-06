@@ -104,11 +104,11 @@ namespace WavInputAdapter
         {
             get
             {
-                return base.OutputSignals;
+                return base.OutputSignalIDs;
             }
             set
             {
-                base.OutputSignals = value.OrderBy(measurement => measurement.Key.ToString()).ToArray();
+                base.OutputSignalIDs = value.OrderBy(measurement => measurement.Key.ToString()).ToArray();
             }
         }
 

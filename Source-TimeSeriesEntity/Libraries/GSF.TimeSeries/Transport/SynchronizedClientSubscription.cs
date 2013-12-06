@@ -380,7 +380,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         /// <param name="entities">Collection of measurements to queue for processing.</param>
         /// <remarks>
-        /// Measurements are filtered against the defined <see cref="AdapterBase.InputSignals"/> so we override method
+        /// Measurements are filtered against the defined <see cref="AdapterBase.InputSignalIDs"/> so we override method
         /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
         /// </remarks>
         public override void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)

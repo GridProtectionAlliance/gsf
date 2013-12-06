@@ -59,14 +59,14 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<string>> StatusMessage;
 
         /// <summary>
-        /// Event is raised when <see cref="InputSignals"/> are updated.
+        /// Event is raised when <see cref="InputSignalIDs"/> are updated.
         /// </summary>
-        public event EventHandler InputSignalsUpdated;
+        public event EventHandler InputSignalIDsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputSignals"/> are updated.
+        /// Event is raised when <see cref="OutputSignalIDs"/> are updated.
         /// </summary>
-        public event EventHandler OutputSignalsUpdated;
+        public event EventHandler OutputSignalIDsUpdated;
 
         /// <summary>
         /// Event is raised when adapter is aware of a configuration change.
@@ -368,7 +368,7 @@ namespace GSF.TimeSeries.Adapters
         DefaultValue(null),
         Description("Defines primary keys of input signals the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public virtual ISet<Guid> InputSignals
+        public virtual ISet<Guid> InputSignalIDs
         {
             get
             {
@@ -388,7 +388,7 @@ namespace GSF.TimeSeries.Adapters
         DefaultValue(null),
         Description("Defines primary keys of output signals the action adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public virtual ISet<Guid> OutputSignals
+        public virtual ISet<Guid> OutputSignalIDs
         {
             get
             {
@@ -544,7 +544,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 // Default to all signals if minimum is not specified
                 if (m_minimumSignalsToUse < 1)
-                    return InputSignals.Count;
+                    return InputSignalIDs.Count;
 
                 return m_minimumSignalsToUse;
             }
@@ -699,37 +699,37 @@ namespace GSF.TimeSeries.Adapters
 
                 status.AppendLine();
 
-                if (OutputSignals.Any(signalID => signalID != Guid.Empty))
+                if (OutputSignalIDs.Any(signalID => signalID != Guid.Empty))
                 {
-                    status.AppendFormat("            Output Signals: {0} defined signals", OutputSignals.Count);
+                    status.AppendFormat("            Output Signals: {0} defined signals", OutputSignalIDs.Count);
                     status.AppendLine();
                     status.AppendLine();
 
                     // TODO: Fix metadata lookup and display point tag instead of signal ID
-                    foreach (Guid signalID in OutputSignals.Take(MaxSignalsToShow))
+                    foreach (Guid signalID in OutputSignalIDs.Take(MaxSignalsToShow))
                     {
                         status.Append(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
                         status.Append(" ");
                         status.AppendLine(signalID.ToString());
                     }
 
-                    if (OutputSignals.Count > MaxSignalsToShow)
+                    if (OutputSignalIDs.Count > MaxSignalsToShow)
                         status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
 
-                if (InputSignals.Any(signalID => signalID != Guid.Empty))
+                if (InputSignalIDs.Any(signalID => signalID != Guid.Empty))
                 {
-                    status.AppendFormat("             Input Signals: {0} defined signals", InputSignals.Count);
+                    status.AppendFormat("             Input Signals: {0} defined signals", InputSignalIDs.Count);
                     status.AppendLine();
                     status.AppendLine();
 
                     // TODO: Fix metadata lookup and display point tag next to measurement key
-                    foreach (Guid signalID in InputSignals.Take(MaxSignalsToShow))
+                    foreach (Guid signalID in InputSignalIDs.Take(MaxSignalsToShow))
                         status.AppendLine(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(25).CenterText(50));
 
-                    if (InputSignals.Count > MaxSignalsToShow)
+                    if (InputSignalIDs.Count > MaxSignalsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
@@ -846,12 +846,12 @@ namespace GSF.TimeSeries.Adapters
                 AllowSortsByArrival = setting.ParseBoolean();
 
             if (settings.TryGetValue("inputSignals", out setting))
-                InputSignals = AdapterBase.ParseFilterExpression(DataSource, true, setting);
+                InputSignalIDs = AdapterBase.ParseFilterExpression(DataSource, true, setting);
             else
-                InputSignals = new HashSet<Guid>();
+                InputSignalIDs = new HashSet<Guid>();
 
             if (settings.TryGetValue("outputSignals", out setting))
-                OutputSignals = AdapterBase.ParseFilterExpression(DataSource, true, setting);
+                OutputSignalIDs = AdapterBase.ParseFilterExpression(DataSource, true, setting);
 
             if (settings.TryGetValue("minimumSignalsToUse", out setting))
                 MinimumSignalsToUse = int.Parse(setting);
@@ -969,7 +969,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public virtual string GetShortStatus(int maxLength)
         {
-            return string.Format("Total input signals: {0}, total output signals: {1}", InputSignals.Count, OutputSignals.Count).PadLeft(maxLength);
+            return string.Format("Total input signals: {0}, total output signals: {1}", InputSignalIDs.Count, OutputSignalIDs.Count).PadLeft(maxLength);
         }
 
         /// <summary>
@@ -1055,62 +1055,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Attempts to retrieve the minimum needed number of entities from the frame (as specified by MinimumSignalsToUse)
-        /// </summary>
-        /// <param name="frame">Source frame for the entities</param>
-        /// <param name="entities">Return array of entities</param>
-        /// <returns>True if minimum needed number of entities were returned in entity array</returns>
-        /// <remarks>
-        /// <para>
-        /// Remember this function will *only* return the minimum needed number of entities, no more.  If you want to use
-        /// all available entities in your adapter you should just use Frame.Entities.Values directly.
-        /// </para>
-        /// <para>
-        /// Note that the entities array parameter will be created if the reference is null, otherwise if caller creates
-        /// array it must be sized to MinimumSignalsToUse
-        /// </para>
-        /// </remarks>
-        protected virtual bool TryGetMinimumNeededEntities(IFrame frame, ref ITimeSeriesEntity[] entities)
-        {
-            int index = 0, minNeeded = MinimumSignalsToUse;
-            IDictionary<Guid, ITimeSeriesEntity> frameEntities = frame.Entities;
-            ISet<Guid> inputSignals = InputSignals;
-
-            if ((object)entities == null || entities.Length < minNeeded)
-                entities = new ITimeSeriesEntity[minNeeded];
-
-            if ((object)inputSignals == null)
-            {
-                // No input signals are defined, just get first set of signals in this frame
-                foreach (ITimeSeriesEntity entity in frameEntities.Values)
-                {
-                    entities[index++] = entity;
-
-                    if (index == minNeeded)
-                        break;
-                }
-            }
-            else
-            {
-                // Loop through all input signals to see if they exist in this frame
-                ITimeSeriesEntity entity;
-
-                foreach (Guid signalID in inputSignals)
-                {
-                    if (frameEntities.TryGetValue(signalID, out entity))
-                    {
-                        entities[index++] = entity;
-
-                        if (index == minNeeded)
-                            break;
-                    }
-                }
-            }
-
-            return (index == minNeeded);
-        }
-
-        /// <summary>
         /// Raises the <see cref="NewEntities"/> event.
         /// </summary>
         protected virtual void OnNewEntities(ICollection<ITimeSeriesEntity> entities)
@@ -1176,14 +1120,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="InputSignalsUpdated"/> event.
+        /// Raises <see cref="InputSignalIDsUpdated"/> event.
         /// </summary>
         protected virtual void OnInputSignalsUpdated()
         {
             try
             {
-                if ((object)InputSignalsUpdated != null)
-                    InputSignalsUpdated(this, EventArgs.Empty);
+                if ((object)InputSignalIDsUpdated != null)
+                    InputSignalIDsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -1193,14 +1137,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="OutputSignalsUpdated"/> event.
+        /// Raises <see cref="OutputSignalIDsUpdated"/> event.
         /// </summary>
         protected virtual void OnOutputSignalsUpdated()
         {
             try
             {
-                if ((object)OutputSignalsUpdated != null)
-                    OutputSignalsUpdated(this, EventArgs.Empty);
+                if ((object)OutputSignalIDsUpdated != null)
+                    OutputSignalIDsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {

@@ -1194,7 +1194,7 @@ namespace GSF.TimeSeries.Transport
         // Returns true if output measurements were updated, otherwise false if they remain the same.
         private bool UpdateOutputMeasurements(bool initialCall = false)
         {
-            ISet<Guid> originalOutputMeasurements = OutputSignals;
+            ISet<Guid> originalOutputMeasurements = OutputSignalIDs;
 
             // Reapply output measurements if reinitializing - this way filter expressions and/or sourceIDs
             // will be reapplied. This can be important after a meta-data refresh which may have added new
@@ -1203,10 +1203,10 @@ namespace GSF.TimeSeries.Transport
             {
                 string setting;
 
-                OutputSignals.Clear();
+                OutputSignalIDs.Clear();
 
                 if (Settings.TryGetValue("outputMeasurements", out setting))
-                    OutputSignals.UnionWith(ParseFilterExpression(DataSource, true, setting));
+                    OutputSignalIDs.UnionWith(ParseFilterExpression(DataSource, true, setting));
 
                 OutputSourceIDs = OutputSourceIDs;
             }
@@ -1229,7 +1229,7 @@ namespace GSF.TimeSeries.Transport
                     }
 
                     // Combine subscribed output measurement with any existing output measurement and return unique set
-                    OutputSignals.UnionWith(subscribedMeasurements);
+                    OutputSignalIDs.UnionWith(subscribedMeasurements);
                 }
                 catch (Exception ex)
                 {
@@ -1243,7 +1243,7 @@ namespace GSF.TimeSeries.Transport
             TryFilterOutputMeasurements();
 
             // Determine if output measurements have changed
-            return originalOutputMeasurements.SetEquals(OutputSignals);
+            return originalOutputMeasurements.SetEquals(OutputSignalIDs);
         }
 
         // When synchronizing meta-data, the publisher sends meta-data for all possible signals we can subscribe to.
@@ -1263,7 +1263,7 @@ namespace GSF.TimeSeries.Transport
                         .Where(row => Guid.TryParse(row["SignalID"].ToNonNullString(), out signalID))
                         .Select(row => signalID);
 
-                    OutputSignals.IntersectWith(signals);
+                    OutputSignalIDs.IntersectWith(signals);
                 }
             }
             catch (Exception ex)
@@ -2574,11 +2574,11 @@ namespace GSF.TimeSeries.Transport
             if (Settings.ContainsKey("commandChannel"))
                 dataChannel = ConnectionString;
 
-            if (OutputSignals.Count > 0)
+            if (OutputSignalIDs.Count > 0)
             {
 #pragma warning disable 0618
                 // Start unsynchronized subscription
-                UnsynchronizedSubscribe(true, false, OutputSignals.ToDelimitedString(';'), dataChannel);
+                UnsynchronizedSubscribe(true, false, OutputSignalIDs.ToDelimitedString(';'), dataChannel);
             }
             else if (metaDataRefreshCompleted)
             {

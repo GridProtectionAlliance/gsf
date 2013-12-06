@@ -353,11 +353,11 @@ namespace GSF.TimeSeries.Adapters
         /// <remarks>
         /// Redefined to hide attributes defined in the base class.
         /// </remarks>
-        public new virtual ISet<Guid> OutputSignals
+        public new virtual ISet<Guid> OutputSignalIDs
         {
             get
             {
-                return base.OutputSignals;
+                return base.OutputSignalIDs;
             }
         }
 
@@ -437,10 +437,10 @@ namespace GSF.TimeSeries.Adapters
             // Force a recalculation of input signals so that system can appropriately update routing tables
             string setting;
 
-            InputSignals.Clear();
+            InputSignalIDs.Clear();
 
             if (Settings.TryGetValue("inputSignals", out setting))
-                InputSignals.UnionWith(ParseFilterExpression(DataSource, true, setting));
+                InputSignalIDs.UnionWith(ParseFilterExpression(DataSource, true, setting));
 
             InputSourceIDs = InputSourceIDs;
         }

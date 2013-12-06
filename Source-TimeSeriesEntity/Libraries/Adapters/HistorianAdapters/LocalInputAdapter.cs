@@ -458,7 +458,7 @@ namespace HistorianAdapters
         // Kick start read process for historian
         private void StartDataReader(object state)
         {
-            MeasurementKey[] requestedKeys = SupportsTemporalProcessing ? RequestedOutputSignals : OutputSignals.MeasurementKeys().ToArray();
+            MeasurementKey[] requestedKeys = SupportsTemporalProcessing ? RequestedOutputSignals : OutputSignalIDs.MeasurementKeys().ToArray();
 
             if (Enabled && m_archiveFile != null && requestedKeys != null && requestedKeys.Length > 0)
             {

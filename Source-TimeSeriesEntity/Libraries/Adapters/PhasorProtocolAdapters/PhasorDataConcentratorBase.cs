@@ -1330,8 +1330,8 @@ namespace PhasorProtocolAdapters
 
             // Assign action adapter input measurement keys - this assigns the expected measurements per frame needed
             // by the concentration engine for preemptive publication 
-            InputSignals.Clear();
-            InputSignals.UnionWith(m_signalReferences.Keys);
+            InputSignalIDs.Clear();
+            InputSignalIDs.UnionWith(m_signalReferences.Keys);
 
             // Allow for spaces in output stream device names if a replacement character has been defined for spaces
             if (m_replaceWithSpaceChar != Char.MinValue)

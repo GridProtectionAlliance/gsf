@@ -59,4 +59,41 @@ namespace GSF.TimeSeries
             get;
         }
     }
+
+    /// <summary>
+    /// Defines extension functions related to <see cref="IFrame"/> objects.
+    /// </summary>
+    public static class IFrameExtensions
+    {
+        /// <summary>
+        /// Attempts to retrieve the specified <paramref name="signalID"/> as a <paramref name="value"/> of type <typeparamref name="T"/>.
+        /// </summary>
+        /// <param name="frame"><see cref="IFrame"/> instance to retrieve <paramref name="value"/> from.</param>
+        /// <param name="signalID"><see cref="Guid"/> based <see cref="ITimeSeriesEntity.ID"/> to lookup.</param>
+        /// <param name="value">Retuned value if lookup succeeds.</param>
+        /// <typeparam name="T">Type of <see cref="ITimeSeriesEntity"/> class to find.</typeparam>
+        /// <returns>
+        /// <c>true</c> if <see cref="signalID"/> was found in dictionary and <see cref="ITimeSeriesEntity"/> value retrieved was
+        /// able to be cast as type <typeparamref name="T"/>; otherwise, <c>false</c>.
+        /// </returns>
+        /// <exception cref="ArgumentNullException"><paramref name="frame"/> is <c>null</c>.</exception>
+        public static bool TryGetEntity<T>(this IFrame frame, Guid signalID, out T value) where T : class, ITimeSeriesEntity
+        {
+            if ((object)frame == null)
+                throw new ArgumentNullException("frame");
+
+            ITimeSeriesEntity entity;
+
+            if (frame.Entities.TryGetValue(signalID, out entity))
+            {
+                value = entity as T;
+
+                if ((object)value != null)
+                    return true;
+            }
+
+            value = null;
+            return false;
+        }
+    }
 }

@@ -76,14 +76,14 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Event is raised when <see cref="InputSignals"/> are updated.
+        /// Event is raised when <see cref="InputSignalIDs"/> are updated.
         /// </summary>
-        public event EventHandler InputSignalsUpdated;
+        public event EventHandler InputSignalIDsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputSignals"/> are updated.
+        /// Event is raised when <see cref="OutputSignalIDs"/> are updated.
         /// </summary>
-        public event EventHandler OutputSignalsUpdated;
+        public event EventHandler OutputSignalIDsUpdated;
 
         /// <summary>
         /// Event is raised when adapter is aware of a configuration change.
@@ -316,7 +316,7 @@ namespace GSF.TimeSeries.Adapters
         DefaultValue(null),
         Description("Defines primary keys of input signals the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public virtual ISet<Guid> InputSignals
+        public virtual ISet<Guid> InputSignalIDs
         {
             get
             {
@@ -331,7 +331,7 @@ namespace GSF.TimeSeries.Adapters
         DefaultValue(null),
         Description("Defines primary keys of output signals the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public virtual ISet<Guid> OutputSignals
+        public virtual ISet<Guid> OutputSignalIDs
         {
             get
             {
@@ -605,37 +605,37 @@ namespace GSF.TimeSeries.Adapters
 
                 status.AppendLine();
 
-                if (OutputSignals.Count > 0)
+                if (OutputSignalIDs.Count > 0)
                 {
-                    status.AppendFormat("            Output signals: {0} defined signals", OutputSignals.Count);
+                    status.AppendFormat("            Output signals: {0} defined signals", OutputSignalIDs.Count);
                     status.AppendLine();
                     status.AppendLine();
 
                     // TODO: Fix metadata lookup and display point tag next to measurement key
-                    foreach (Guid signalID in OutputSignals.Take(MaxSignalsToShow))
+                    foreach (Guid signalID in OutputSignalIDs.Take(MaxSignalsToShow))
                     {
                         status.Append(LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
                         status.Append(" ");
                         status.AppendLine(signalID.ToString());
                     }
 
-                    if (OutputSignals.Count > MaxSignalsToShow)
+                    if (OutputSignalIDs.Count > MaxSignalsToShow)
                         status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
 
-                if (InputSignals.Count > 0)
+                if (InputSignalIDs.Count > 0)
                 {
-                    status.AppendFormat("             Input Signals: {0} defined signals", InputSignals.Count);
+                    status.AppendFormat("             Input Signals: {0} defined signals", InputSignalIDs.Count);
                     status.AppendLine();
                     status.AppendLine();
 
                     // TODO: Fix metadata lookup and display point tag next to measurement key
-                    foreach (Guid signalID in InputSignals.Take(MaxSignalsToShow))
+                    foreach (Guid signalID in InputSignalIDs.Take(MaxSignalsToShow))
                         status.Append(LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
 
-                    if (InputSignals.Count > MaxSignalsToShow)
+                    if (InputSignalIDs.Count > MaxSignalsToShow)
                         status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
@@ -884,14 +884,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="InputSignalsUpdated"/> event.
+        /// Raises <see cref="InputSignalIDsUpdated"/> event.
         /// </summary>
         protected virtual void OnInputSignalsUpdated()
         {
             try
             {
-                if ((object)InputSignalsUpdated != null)
-                    InputSignalsUpdated(this, EventArgs.Empty);
+                if ((object)InputSignalIDsUpdated != null)
+                    InputSignalIDsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -901,14 +901,14 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises <see cref="OutputSignalsUpdated"/> event.
+        /// Raises <see cref="OutputSignalIDsUpdated"/> event.
         /// </summary>
         protected virtual void OnOutputSignalsUpdated()
         {
             try
             {
-                if ((object)OutputSignalsUpdated != null)
-                    OutputSignalsUpdated(this, EventArgs.Empty);
+                if ((object)OutputSignalIDsUpdated != null)
+                    OutputSignalIDsUpdated(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -1151,7 +1151,7 @@ namespace GSF.TimeSeries.Adapters
             return dateTime;
         }
 
-        // TODO: Filter expressions would be better able to accommodate sourceIDs if a "source" field was available to active measurements
+        // TODO: Filter expressions would be better able to accommodate sourceIDs if a "source" was available as independent field in active measurements (i.e., instead of part of ID - for that matter, so would point ID - leave point ID?, but definitely add its fields independently)
 
         /// <summary>
         /// Loads an <see cref="IOutputAdapter"/> or <see cref="IActionAdapter"/> instance's input signals from a specific set of source ID's.
@@ -1191,7 +1191,7 @@ namespace GSF.TimeSeries.Adapters
                         DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
 
                         if (filteredRows.Length > 0)
-                            adapter.InputSignals.UnionWith(filteredRows.Select(row => row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>()));
+                            adapter.InputSignalIDs.UnionWith(filteredRows.Select(row => row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>()));
                     }
                 }
                 catch
@@ -1239,7 +1239,7 @@ namespace GSF.TimeSeries.Adapters
                         DataRow[] filteredRows = adapter.DataSource.Tables[measurementTable].Select(likeExpression.ToString());
 
                         if (filteredRows.Length > 0)
-                            adapter.OutputSignals.UnionWith(filteredRows.Select(row => row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>()));
+                            adapter.OutputSignalIDs.UnionWith(filteredRows.Select(row => row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>()));
                     }
                 }
                 catch
@@ -1253,7 +1253,7 @@ namespace GSF.TimeSeries.Adapters
         // signals based on any table and fields in the data set instead of a simple a list
         // of signal ID's. The format is as follows:
 
-        //  FILTER <TableName> WHERE <Expression> [ORDER BY <SortField>]
+        //  FILTER [TOP <MaxRows>] <TableName> WHERE <Expression> [ORDER BY <SortField>]
 
         // Source tables are expected to have at least the following fields:
         //
@@ -1400,6 +1400,66 @@ namespace GSF.TimeSeries.Adapters
                 return row.GetMeasurementKey(measurementKeyColumn);
 
             return default(MeasurementKey);
+        }
+
+        /// <summary>
+        /// Attempts to parse an individual signal ID from the specified <paramref name="parameterName"/> out of the <see cref="ConnectionString"/>.
+        /// </summary>
+        /// <param name="dataSource">The <see cref="DataSet"/>, if any, used to define data that can be used for the filter expression found in <paramref name="parameterName"/>.</param>
+        /// <param name="settings">Connection string settings dictionary.</param>
+        /// <param name="parameterName">Parameter name for the signal ID expected in the <see cref="ConnectionString"/>.</param>
+        /// <param name="signalID">The returned <see cref="Guid"/> based signal ID if successfully parsed.</param>
+        /// <returns><c>true</c> if signal ID was successfully parsed; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This function is useful when input or output signals need to be individually specified, e.g., in a calculation, where the signals are
+        /// identified as connection string parameters.
+        /// </para>
+        /// <para>
+        /// If <paramref name="parameterName"/> value is a filter expression that returns more than one value, first value is returned.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <c>null</c>.</exception>
+        public static bool TryParseSignalID(DataSet dataSource, Dictionary<string, string> settings, string parameterName, out Guid signalID)
+        {
+            Guid[] signalIDs;
+
+            if (TryParseSignalIDs(dataSource, settings, parameterName, out signalIDs))
+            {
+                signalID = signalIDs[0];
+                return true;
+            }
+
+            signalID = Guid.Empty;
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to parse signal IDs from the specified <paramref name="parameterName"/> out of the <see cref="ConnectionString"/>.
+        /// </summary>
+        /// <param name="dataSource">The <see cref="DataSet"/>, if any, used to define data that can be used for the filter expression found in <paramref name="parameterName"/>.</param>
+        /// <param name="settings">Connection string settings dictionary.</param>
+        /// <param name="parameterName">Parameter name for the signal ID expected in the <see cref="ConnectionString"/>.</param>
+        /// <param name="signalIDs">The returned <see cref="Guid"/> based signal IDs if successfully parsed.</param>
+        /// <returns><c>true</c> if any signal IDs were successfully parsed; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <c>null</c>.</exception>
+        public static bool TryParseSignalIDs(DataSet dataSource, Dictionary<string, string> settings, string parameterName, out Guid[] signalIDs)
+        {
+            if ((object)settings == null)
+                throw new ArgumentNullException("settings");
+
+            string parameterValue;
+
+            if (settings.TryGetValue(parameterName, out parameterValue) && !string.IsNullOrWhiteSpace(parameterValue))
+            {
+                signalIDs = ParseFilterExpression(dataSource, true, parameterValue).ToArray();
+
+                if (signalIDs.Length > 0)
+                    return true;
+            }
+
+            signalIDs = null;
+            return false;
         }
 
         /// <summary>

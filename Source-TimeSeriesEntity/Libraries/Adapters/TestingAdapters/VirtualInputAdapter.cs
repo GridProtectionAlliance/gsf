@@ -76,7 +76,7 @@ namespace TestingAdapters
             // that this adapter desires a full "broadcast" of all data - and hence routing demands from all.
             // User can override if desired using standard connection string parameters for I/O measurements.
             InputMeasurementKeys = new[] { MeasurementKey.Undefined };
-            OutputSignals = new[] { Measurement.Undefined };
+            OutputSignalIDs = new[] { Measurement.Undefined };
 
             base.Initialize();
         }

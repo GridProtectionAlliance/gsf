@@ -106,11 +106,11 @@ namespace GSF.TimeSeries.Adapters
         DefaultValue(null),
         Description("Defines primary keys of input signals the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public override ISet<Guid> InputSignals
+        public override ISet<Guid> InputSignalIDs
         {
             get
             {
-                return base.InputSignals;
+                return base.InputSignalIDs;
             }
         }
 

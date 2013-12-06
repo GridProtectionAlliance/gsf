@@ -140,7 +140,7 @@ namespace DynamicCalculator
                         .Aggregate((runningKeyList, nextKey) => runningKeyList + ";" + nextKey);
 
                     // Set the input measurements for this adapter
-                    InputSignals = AdapterBase.ParseFilterExpression(DataSource, true, keyList);
+                    InputSignalIDs = AdapterBase.ParseFilterExpression(DataSource, true, keyList);
                 }
             }
         }
@@ -219,8 +219,8 @@ namespace DynamicCalculator
             base.Initialize();
             settings = Settings;
 
-            if (OutputSignals.Length != 1)
-                throw new ArgumentException(string.Format("Exactly one output measurement must be defined. Amount defined: {0}", OutputSignals.Length));
+            if (OutputSignalIDs.Length != 1)
+                throw new ArgumentException(string.Format("Exactly one output measurement must be defined. Amount defined: {0}", OutputSignalIDs.Length));
 
             // Load required parameters
 
@@ -393,7 +393,7 @@ namespace DynamicCalculator
             if ((object)value == null)
                 throw new InvalidOperationException("Calculation must not return a type that does not convert to double.");
 
-            calculatedMeasurement = Measurement.Clone(OutputSignals[0], Convert.ToDouble(value), DateTime.UtcNow.Ticks);
+            calculatedMeasurement = Measurement.Clone(OutputSignalIDs[0], Convert.ToDouble(value), DateTime.UtcNow.Ticks);
             OnNewMeasurement(calculatedMeasurement);
         }
 

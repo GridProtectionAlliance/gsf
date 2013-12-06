@@ -431,7 +431,7 @@ namespace CsvAdapters
                     m_measurementsPerInterval = columnMappings.Keys.Max() + 1;
 
                     // Auto-assign output measurements based on column mappings
-                    OutputSignals = columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", true) != 0).Select(kvp =>
+                    OutputSignalIDs = columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", true) != 0).Select(kvp =>
                     {
                         string measurementID = kvp.Value;
                         IMeasurement measurement = new Measurement();

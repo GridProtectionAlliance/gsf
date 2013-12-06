@@ -312,7 +312,7 @@ namespace GSF.TimeSeries.Adapters
                     foreach (T adapter in this)
                     {
                         if ((object)adapter != null)
-                            cumulativeSignals.UnionWith(adapter.InputSignals);
+                            cumulativeSignals.UnionWith(adapter.InputSignalIDs);
                     }
                 }
 
@@ -335,7 +335,7 @@ namespace GSF.TimeSeries.Adapters
                     foreach (T adapter in this)
                     {
                         if ((object)adapter != null)
-                            cumulativeSignals.UnionWith(adapter.OutputSignals);
+                            cumulativeSignals.UnionWith(adapter.OutputSignalIDs);
                     }
                 }
 
@@ -1103,8 +1103,8 @@ namespace GSF.TimeSeries.Adapters
                 // Wire up events
                 item.StatusMessage += item_StatusMessage;
                 item.ProcessException += item_ProcessException;
-                item.InputSignalsUpdated += item_InputSignalsUpdated;
-                item.OutputSignalsUpdated += item_OutputSignalsUpdated;
+                item.InputSignalIDsUpdated += item_InputSignalsUpdated;
+                item.OutputSignalIDsUpdated += item_OutputSignalsUpdated;
                 item.ConfigurationChanged += item_ConfigurationChanged;
                 item.EntitiesDiscarded += item_EntitiesDiscarded;
                 item.Disposed += item_Disposed;
@@ -1143,8 +1143,8 @@ namespace GSF.TimeSeries.Adapters
                 // Un-wire events
                 item.StatusMessage -= item_StatusMessage;
                 item.ProcessException -= item_ProcessException;
-                item.InputSignalsUpdated -= item_InputSignalsUpdated;
-                item.OutputSignalsUpdated -= item_OutputSignalsUpdated;
+                item.InputSignalIDsUpdated -= item_InputSignalsUpdated;
+                item.OutputSignalIDsUpdated -= item_OutputSignalsUpdated;
                 item.ConfigurationChanged -= item_ConfigurationChanged;
                 item.EntitiesDiscarded -= item_EntitiesDiscarded;
 

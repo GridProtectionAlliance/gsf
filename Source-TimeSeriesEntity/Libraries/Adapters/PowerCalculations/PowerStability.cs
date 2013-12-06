@@ -21,7 +21,7 @@
 //  05/27/2008 - J. Ritchie Carroll
 //       Added Montgomery line to power calculation
 //  12/22/2009 - Jian R. Zuo
-//       Conveted code to C#;
+//       Converted code to C#;
 //  04/12/2010 - J. Ritchie Carroll
 //       Performed full code review, optimization and further abstracted code for stability calculator.
 //  12/13/2012 - Starlynn Danyelle Gilliam
@@ -40,7 +40,6 @@ using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
-using PhasorProtocolAdapters;
 
 namespace PowerCalculations
 {
@@ -63,29 +62,184 @@ namespace PowerCalculations
     /// Individual phase angle and magnitude phasor elements are expected to be defined consecutively.
     /// That is the definition order of angles and magnitudes must match so that the angle / magnitude
     /// pair can be matched up appropriately. For example: angle1;mag1;  angle2;mag2;  angle3;mag3.
+    /// This can be accomplished in a filter expression by suffixing with "ORDER BY PhasorID".
     /// </para>
     /// </remarks>
     [Description("Power Stability: calculates power and stability for a synchrophasor device")]
-    public class PowerStability : CalculatedMeasurementBase
+    public class PowerStability : ActionAdapterBase
     {
         #region [ Members ]
 
         // Fields
+        private Guid[] m_voltageAngleIDs;
+        private Guid[] m_voltageMagnitudeIDs;
+        private Guid[] m_currentAngleIDs;
+        private Guid[] m_currentMagnitudeIDs;
+
+        private Guid m_powerID;
+        private Guid m_standardDeviationID;
+
         private int m_minimumSamples;
         private double m_energizedThreshold;
         private List<double> m_powerDataSample;
-        private double m_lastStdev;
-        private MeasurementKey[] m_voltageAngles;
-        private MeasurementKey[] m_voltageMagnitudes;
-        private MeasurementKey[] m_currentAngles;
-        private MeasurementKey[] m_currentMagnitudes;
-
-        // Important: Make sure output definition defines points in the following order
-        private enum Output { Power, StDev }
+        private double m_lastStandardDeviation;
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the signal IDs of the voltage angle input measurements.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal IDs for the voltage angle measurements of the power stability calculator - order must match voltage magnitude IDs; can be one of a filter expression, measurement keys, point tags or Guids."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public Guid[] VoltageAngleIDs
+        {
+            get
+            {
+                return m_voltageAngleIDs;
+            }
+            set
+            {
+                m_voltageAngleIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal IDs of the voltage magnitude input measurements.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal IDs for the voltage magnitude measurements of the power stability calculator - order must match voltage angle IDs; can be one of a filter expression, measurement keys, point tags or Guids."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public Guid[] VoltageMagnitudeIDs
+        {
+            get
+            {
+                return m_voltageMagnitudeIDs;
+            }
+            set
+            {
+                m_voltageMagnitudeIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal IDs of the current angle input measurements.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal IDs for the current angle measurements of the power stability calculator - order must match current magnitude IDs; can be one of a filter expression, measurement keys, point tags or Guids."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public Guid[] CurrentAngleIDs
+        {
+            get
+            {
+                return m_currentAngleIDs;
+            }
+            set
+            {
+                m_currentAngleIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal IDs of the current magnitude input measurements.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal IDs for the current magnitude measurements of the power stability calculator - order must match current angle IDs; can be one of a filter expression, measurement keys, point tags or Guids."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        public Guid[] CurrentMagnitudeIDs
+        {
+            get
+            {
+                return m_currentMagnitudeIDs;
+            }
+            set
+            {
+                m_currentMagnitudeIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the power output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the power measurement of the power stability calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid PowerID
+        {
+            get
+            {
+                return m_powerID;
+            }
+            set
+            {
+                m_powerID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the standard deviation of power output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the standard deviation of power measurement of the power stability calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid StandardDeviationID
+        {
+            get
+            {
+                return m_standardDeviationID;
+            }
+            set
+            {
+                m_standardDeviationID = value;
+            }
+        }
+
+        // ReSharper disable RedundantOverridenMember
+        /// <summary>
+        /// Gets or sets input signal IDs that the action adapter will produce, if any.
+        /// </summary>
+        /// <remarks>
+        /// Overriding input signal IDs to remove its attributes such that it will not
+        /// show up in the connection string parameters list. User should manually assign
+        /// the <see cref="VoltageAngleIDs"/>, <see cref="VoltageMagnitudeIDs"/>,
+        /// <see cref="CurrentAngleIDs"/> and <see cref="CurrentMagnitudeIDs"/> for the
+        /// inputs of this calculator.
+        /// </remarks>
+        public override ISet<Guid> InputSignalIDs
+        {
+            get
+            {
+                return base.InputSignalIDs;
+            }
+            set
+            {
+                base.InputSignalIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output signal IDs that the action adapter will produce, if any.
+        /// </summary>
+        /// <remarks>
+        /// Overriding output signal IDs to remove its attributes such that it will not
+        /// show up in the connection string parameters list. User should manually assign
+        /// the <see cref="PowerID"/> and <see cref="StandardDeviationID"/> for the
+        /// outputs of this calculator.
+        /// </remarks>
+        public override ISet<Guid> OutputSignalIDs
+        {
+            get
+            {
+                return base.OutputSignalIDs;
+            }
+            set
+            {
+                base.OutputSignalIDs = value;
+            }
+        }
+        // ReSharper restore RedundantOverridenMember
 
         /// <summary>
         /// Gets or sets the sample size, in seconds, of the data to be monitored.
@@ -124,6 +278,17 @@ namespace PowerCalculations
         }
 
         /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Returns the detailed status of the <see cref="PowerStability"/> monitor.
         /// </summary>
         public override string Status
@@ -131,19 +296,19 @@ namespace PowerCalculations
             get
             {
                 const int ValuesToShow = 3;
-                
+
                 StringBuilder status = new StringBuilder();
 
                 status.AppendFormat("          Data sample size: {0} seconds", (int)(m_minimumSamples / FramesPerSecond));
                 status.AppendLine();
                 status.AppendFormat("   Energized bus threshold: {0} volts", m_energizedThreshold.ToString("0.00"));
                 status.AppendLine();
-                status.AppendFormat("     Total voltage phasors: {0}", m_voltageMagnitudes.Length);
+                status.AppendFormat("     Total voltage phasors: {0}", m_voltageMagnitudeIDs.Length);
                 status.AppendLine();
-                status.AppendFormat("     Total current phasors: {0}", m_currentMagnitudes.Length);
+                status.AppendFormat("     Total current phasors: {0}", m_currentMagnitudeIDs.Length);
                 status.AppendLine();
                 status.Append("         Last power values: ");
-                
+
                 lock (m_powerDataSample)
                 {
                     // Display last several values
@@ -154,7 +319,7 @@ namespace PowerCalculations
                 }
 
                 status.AppendLine();
-                status.AppendFormat("     Latest stdev of power: {0}", m_lastStdev);
+                status.AppendFormat("   Latest std dev of power: {0}", m_lastStandardDeviation);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -187,38 +352,46 @@ namespace PowerCalculations
             else
                 m_energizedThreshold = 58000.0D;
 
-            // Load needed phase angle and magnitude measurement keys from defined InputMeasurementKeys
-            m_voltageAngles = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHA).ToArray();
-            m_voltageMagnitudes = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHM).ToArray();
-            m_currentAngles = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHA).ToArray();
-            m_currentMagnitudes = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHM).ToArray();
+            // TODO: This could greatly benefit from selecting inputs as complex numbers (i.e., source phasors) so angle and magnitude would be together
 
-            if (m_voltageAngles.Length < 1)
-                throw new InvalidOperationException("No voltage angle input measurement keys were not found - at least one voltage angle input measurement is required for the power stability monitor.");
+            // Get ID's and validate signal type for input measurements
+            if (!this.TryParseSignalIDs(SignalType.VPHA, "voltageAngleIDs", out m_voltageAngleIDs))
+                throw new InvalidOperationException("No signal IDs could be parsed for the voltage angle input measurement.");
 
-            if (m_voltageMagnitudes.Length < 1)
-                throw new InvalidOperationException("No voltage magnitude input measurement keys were not found - at least one voltage magnitude input measurement is required for the power stability monitor.");
+            if (!this.TryParseSignalIDs(SignalType.VPHM, "voltageMagnitudeIDs", out m_voltageMagnitudeIDs))
+                throw new InvalidOperationException("No signal IDs could be parsed for the voltage magnitude input measurement.");
 
-            if (m_currentAngles.Length < 1)
-                throw new InvalidOperationException("No current angle input measurement keys were not found - at least one current angle input measurement is required for the power stability monitor.");
+            if (!this.TryParseSignalIDs(SignalType.IPHA, "currentAngleIDs", out m_currentAngleIDs))
+                throw new InvalidOperationException("No signal IDs could be parsed for the current angle input measurement.");
 
-            if (m_currentMagnitudes.Length < 1)
-                throw new InvalidOperationException("No current magnitude input measurement keys were not found - at least one current magnitude input measurement is required for the power stability monitor.");
+            if (!this.TryParseSignalIDs(SignalType.IPHM, "currentMagnitudeIDs", out m_currentMagnitudeIDs))
+                throw new InvalidOperationException("No signal IDs could be parsed for the current magnitude input measurement.");
 
-            if (m_voltageAngles.Length != m_voltageMagnitudes.Length)
-                throw new InvalidOperationException("A different number of voltage magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one voltage magnitude input measurement must be supplied for each voltage angle input measurement in a consecutive sequence (e.g., VA1;VM1;  VA2;VM2; ... VAn;VMn)");
+            if (m_voltageAngleIDs.Length != m_voltageMagnitudeIDs.Length)
+                throw new InvalidOperationException("A different number of voltage magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one voltage magnitude input measurement must be supplied for each voltage angle input measurement in paired order (e.g., \"ORDER BY PhasorID\")");
 
-            if (m_currentAngles.Length != m_currentMagnitudes.Length)
-                throw new InvalidOperationException("A different number of current magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one current magnitude input measurement must be supplied for each current angle input measurement in a consecutive sequence (e.g., IA1;IM1;  IA2;IM2; ... IAn;IMn)");
+            if (m_currentAngleIDs.Length != m_currentMagnitudeIDs.Length)
+                throw new InvalidOperationException("A different number of current magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs, i.e., one current magnitude input measurement must be supplied for each current angle input measurement in paired order (e.g., \"ORDER BY PhasorID\")");
 
-            // Make sure only these phasor measurements are used as input
-            InputMeasurementKeys = m_voltageAngles.Concat(m_voltageMagnitudes).Concat(m_currentAngles).Concat(m_currentMagnitudes).ToArray();
+            // Assign input measurements
+            InputSignalIDs.Clear();
+            InputSignalIDs.UnionWith(m_voltageAngleIDs);
+            InputSignalIDs.UnionWith(m_voltageMagnitudeIDs);
+            InputSignalIDs.UnionWith(m_currentAngleIDs);
+            InputSignalIDs.UnionWith(m_currentMagnitudeIDs);
 
-            // Validate output measurements
-            if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the power stability monitor, expecting measurements for the \"Calculated Power\", and the \"Standard Deviation of Power\" - in this order.");
+            // Get ID's for output measurements
+            if (!this.TryParseSignalID("powerID", out m_powerID))
+                throw new InvalidOperationException("No signal ID could be parsed for the power output measurement.");
 
-            m_powerDataSample = new List<double>();            
+            if (!this.TryParseSignalID("standardDeviationID", out m_standardDeviationID))
+                throw new InvalidOperationException("No signal ID could be parsed for the standard deviation of power output measurement.");
+
+            // Assign output measurements
+            OutputSignalIDs.Clear();
+            OutputSignalIDs.UnionWith(new[] { m_powerID, m_standardDeviationID });
+
+            m_powerDataSample = new List<double>();
         }
 
         /// <summary>
@@ -229,20 +402,19 @@ namespace PowerCalculations
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
-            IMeasurement magnitude, angle;
+            IMeasurement<double> magnitude, angle;
             double voltageMagnitude = double.NaN, voltageAngle = double.NaN, power = 0.0D;
             int i;
 
             // Get first voltage magnitude and angle value pair that is above the energized threshold
-            for (i = 0; i < m_voltageMagnitudes.Length; i++)
+            for (i = 0; i < m_voltageMagnitudeIDs.Length; i++)
             {
-                if (measurements.TryGetValue(m_voltageMagnitudes[i], out magnitude) && measurements.TryGetValue(m_voltageAngles[i], out angle))
+                if (frame.TryGetEntity(m_voltageMagnitudeIDs[i], out magnitude) && frame.TryGetEntity(m_voltageAngleIDs[i], out angle))
                 {
-                    if (magnitude.AdjustedValue > m_energizedThreshold)
+                    if (magnitude.Value > m_energizedThreshold)
                     {
-                        voltageMagnitude = magnitude.AdjustedValue;
-                        voltageAngle = angle.AdjustedValue;
+                        voltageMagnitude = magnitude.Value;
+                        voltageAngle = angle.Value;
                         break;
                     }
                 }
@@ -251,53 +423,57 @@ namespace PowerCalculations
             // Exit if bus voltage measurements were not available for calculation
             if (double.IsNaN(voltageMagnitude))
                 return;
-            
+
             // Calculate the sum of the current phasors
-            for (i = 0; i < m_currentMagnitudes.Length; i++)
+            for (i = 0; i < m_currentMagnitudeIDs.Length; i++)
             {
                 // Retrieve current magnitude and angle measurements as consecutive pairs
-                if (measurements.TryGetValue(m_currentMagnitudes[i], out magnitude) && measurements.TryGetValue(m_currentAngles[i], out angle))
-                    power += magnitude.AdjustedValue * Math.Cos(Angle.FromDegrees(angle.AdjustedValue - voltageAngle));
+                if (frame.TryGetEntity(m_currentMagnitudeIDs[i], out magnitude) && frame.TryGetEntity(m_currentAngleIDs[i], out angle))
+                    power += magnitude.Value * Math.Cos(Angle.FromDegrees(angle.Value - voltageAngle));
                 else
                     return; // Exit if current measurements were not available for calculation
             }
 
             // Apply bus voltage and convert to 3-phase megawatts
             power = power * voltageMagnitude / (SI.Mega / 3.0D);
-            
+
             // Add latest calculated power to data sample
             lock (m_powerDataSample)
             {
                 m_powerDataSample.Add(power);
-                
+
                 // Maintain sample size
                 while (m_powerDataSample.Count > m_minimumSamples)
                     m_powerDataSample.RemoveAt(0);
             }
 
-            IMeasurement[] outputMeasurements = OutputMeasurements;
-            Measurement powerMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Power], power, frame.Timestamp);
+            Measurement<double> powerMeasurement = new Measurement<double>(m_powerID, frame.Timestamp, power);
 
             // Check to see if the needed number of samples are available to begin producing the standard deviation output measurement
             if (m_powerDataSample.Count >= m_minimumSamples)
             {
-                Measurement stdevMeasurement = Measurement.Clone(outputMeasurements[(int)Output.StDev], frame.Timestamp);
+                double standardDeviation;
 
+                // Calculate standard deviation of power samples
                 lock (m_powerDataSample)
                 {
-                    stdevMeasurement.Value = m_powerDataSample.StandardDeviation();
+                    standardDeviation = m_powerDataSample.StandardDeviation();
                 }
 
                 // Provide calculated measurements for external consumption
-                OnNewEntities(new IMeasurement[] { powerMeasurement, stdevMeasurement });
-                
+                OnNewEntities(new IMeasurement<double>[]
+                {
+                    powerMeasurement, 
+                    new Measurement<double>(m_standardDeviationID, frame.Timestamp, standardDeviation)
+                });
+
                 // Track last standard deviation...
-                m_lastStdev = stdevMeasurement.AdjustedValue;
+                m_lastStandardDeviation = standardDeviation;
             }
             else if (power > 0.0D)
             {
                 // If not, we can still start publishing power calculation as soon as we have one...
-                OnNewEntities(new IMeasurement[] { powerMeasurement });
+                OnNewEntities(new[] { powerMeasurement });
             }
         }
 

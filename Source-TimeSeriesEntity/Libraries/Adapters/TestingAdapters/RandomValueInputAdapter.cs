@@ -279,11 +279,11 @@ namespace TestingAdapters
                 ICollection<IMeasurement> outputMeasurementClones = new List<IMeasurement>();
                 timestamp = DateTime.UtcNow.Ticks;
 
-                for (int j = 0; j < OutputSignals.Length; j++)
+                for (int j = 0; j < OutputSignalIDs.Length; j++)
                 {
-                    OutputSignals[j].Timestamp = timestamp;
-                    OutputSignals[j].Value = randomNumber.NextDouble();
-                    outputMeasurementClones.Add(Measurement.Clone(OutputSignals[j]));
+                    OutputSignalIDs[j].Timestamp = timestamp;
+                    OutputSignalIDs[j].Value = randomNumber.NextDouble();
+                    outputMeasurementClones.Add(Measurement.Clone(OutputSignalIDs[j]));
                 }
 
                 // Publish next set of measurements to consumer...

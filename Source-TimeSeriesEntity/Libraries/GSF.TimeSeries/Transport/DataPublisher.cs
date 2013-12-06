@@ -2162,13 +2162,13 @@ namespace GSF.TimeSeries.Transport
                     requestedInputs = ParseFilterExpression(DataSource, false, subscription.RequestedInputFilter);
                     authorizedSignals = new HashSet<Guid>(requestedInputs.Where(input => SubscriberHasRights(subscriberID, input)));
 
-                    if (!authorizedSignals.SetEquals(subscription.InputSignals))
+                    if (!authorizedSignals.SetEquals(subscription.InputSignalIDs))
                     {
                         message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
                         SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
 
-                        subscription.InputSignals.Clear();
-                        subscription.InputSignals.UnionWith(authorizedSignals);
+                        subscription.InputSignalIDs.Clear();
+                        subscription.InputSignalIDs.UnionWith(authorizedSignals);
                     }
                 }
             }
@@ -2840,7 +2840,7 @@ namespace GSF.TimeSeries.Transport
                                 connection.RotateCipherKeys();
 
                             // If client has subscribed to any cached measurements, queue them up for the client
-                            subscription.QueueEntitiesForProcessing(m_cachedEntities.Values.Where(entities => subscription.InputSignals.Contains(entities.ID)));
+                            subscription.QueueEntitiesForProcessing(m_cachedEntities.Values.Where(entities => subscription.InputSignalIDs.Contains(entities.ID)));
 
                             // Notify any direct publisher consumers about the new client connection
                             try
@@ -2859,8 +2859,8 @@ namespace GSF.TimeSeries.Transport
                             }
                             else
                             {
-                                if (subscription.InputSignals.Count > 0)
-                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputSignals.Count);
+                                if (subscription.InputSignalIDs.Count > 0)
+                                    message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputSignalIDs.Count);
                                 else
                                     message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputSignals\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
                             }

@@ -31,7 +31,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Linq;
 using System.Text;
 using GSF.PhasorProtocols;
@@ -53,22 +52,107 @@ namespace PowerCalculations
         private const double HiFrequency = 62.0D;
 
         // Fields
+        private Guid m_averageFrequencyID;
+        private Guid m_maximumFrequencyID;
+        private Guid m_minimumFrequencyID;
+
         private double m_averageFrequency;
         private double m_maximumFrequency;
         private double m_minimumFrequency;
-        private readonly ConcurrentDictionary<Guid, int> m_lastValues = new ConcurrentDictionary<Guid, int>();
 
-        // Important: Make sure output definition defines points in the following order
-        private enum Output
-        {
-            Average,
-            Maximum,
-            Minimum
-        }
+        private readonly ConcurrentDictionary<Guid, int> m_lastValues = new ConcurrentDictionary<Guid, int>();
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the signal ID for the average frequency output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the average frequency measurement of the average frequency calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid AverageFrequencyID
+        {
+            get
+            {
+                return m_averageFrequencyID;
+            }
+            set
+            {
+                m_averageFrequencyID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the maximum frequency output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the maximum frequency measurement of the average frequency calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid MaximumFrequencyID
+        {
+            get
+            {
+                return m_maximumFrequencyID;
+            }
+            set
+            {
+                m_maximumFrequencyID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the minimum frequency output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the minimum frequency measurement of the average frequency calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid MinimumFrequencyID
+        {
+            get
+            {
+                return m_minimumFrequencyID;
+            }
+            set
+            {
+                m_minimumFrequencyID = value;
+            }
+        }
+
+        // ReSharper disable RedundantOverridenMember
+        /// <summary>
+        /// Gets or sets output signals that the action adapter will produce, if any.
+        /// </summary>
+        /// <remarks>
+        /// Overriding output signals to remove its attributes such that it will not show up
+        /// in the connection string parameters list. User should manually assign the
+        /// <see cref="AverageFrequencyID"/>, <see cref="MaximumFrequencyID"/> and
+        /// <see cref="MinimumFrequencyID"/> for the outputs of this calculator.
+        /// </remarks>
+        public override ISet<Guid> OutputSignalIDs
+        {
+            get
+            {
+                return base.OutputSignalIDs;
+            }
+            set
+            {
+                base.OutputSignalIDs = value;
+            }
+        }
+        // ReSharper restore RedundantOverridenMember
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
 
         /// <summary>
         /// Returns the detailed status of the <see cref="AverageFrequency"/> calculator.
@@ -102,25 +186,29 @@ namespace PowerCalculations
             base.Initialize();
 
             // Validate input measurements
-            List<Guid> validInputSignals = new List<Guid>();
-            DataRow row;
+            SignalType type;
+            IEnumerable<Guid> validInputSignalIDs = InputSignalIDs.Where(id => this.TryGetSignalType(id, out type) && type == SignalType.FREQ);
 
-            foreach (Guid signalID in InputSignals)
-            {
-                if (AdapterBase.TryGetMetadata(DataSource, signalID, out row) && row.GetSignalType() == SignalType.FREQ)
-                    validInputSignals.Add(signalID);
-            }
-
-            if (validInputSignals.Count == 0)
+            if (!validInputSignalIDs.Any())
                 throw new InvalidOperationException("No valid frequency measurements were specified as inputs to the average frequency calculator.");
 
             // Make sure only frequencies are used as input
-            InputSignals.Clear();
-            InputSignals.UnionWith(validInputSignals);
+            InputSignalIDs.Clear();
+            InputSignalIDs.UnionWith(validInputSignalIDs);
 
-            // Validate output measurements
-            if (OutputSignals.Count < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the average frequency calculator, expecting measurements for \"Average\", \"Maximum\", and \"Minimum\" frequencies - in this order.");
+            // Get ID's for output measurements
+            if (!this.TryParseSignalID("averageFrequencyID", out m_averageFrequencyID))
+                throw new InvalidOperationException("No signal ID could be parsed for the average frequency output measurement.");
+
+            if (!this.TryParseSignalID("maximumFrequencyID", out m_maximumFrequencyID))
+                throw new InvalidOperationException("No signal ID could be parsed for the maximum frequency output measurement.");
+
+            if (!this.TryParseSignalID("minimumFrequencyID", out m_minimumFrequencyID))
+                throw new InvalidOperationException("No signal ID could be parsed for the minimum frequency output measurement.");
+
+            // Assign output measurements
+            OutputSignalIDs.Clear();
+            OutputSignalIDs.UnionWith(new[] { m_averageFrequencyID, m_maximumFrequencyID, m_minimumFrequencyID });
         }
 
         /// <summary>
@@ -186,14 +274,12 @@ namespace PowerCalculations
                 }
 
                 // Provide calculated measurements for external consumption
-                List<Measurement<double>> outputMeasurements = new List<Measurement<double>>();
-
-                outputMeasurements.Add(new Measurement<double>())
-
-                OnNewEntities(new IMeasurement[]{
-                    Measurement.Clone(outputMeasurements[(int)Output.Average], m_averageFrequency, frame.Timestamp),
-                    Measurement.Clone(outputMeasurements[(int)Output.Maximum], m_maximumFrequency, frame.Timestamp),
-                    Measurement.Clone(outputMeasurements[(int)Output.Minimum], m_minimumFrequency, frame.Timestamp)});
+                OnNewEntities(new[]
+                {
+                    new Measurement<double>(m_averageFrequencyID, frame.Timestamp, m_averageFrequency),
+                    new Measurement<double>(m_maximumFrequencyID, frame.Timestamp, m_maximumFrequency),
+                    new Measurement<double>(m_minimumFrequencyID, frame.Timestamp, m_minimumFrequency)
+                });
             }
             else
             {

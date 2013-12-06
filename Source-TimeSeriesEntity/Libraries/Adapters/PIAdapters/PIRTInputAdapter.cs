@@ -316,7 +316,7 @@ namespace PIAdapters
                     outputMeasurements.Add(measurement);
                 }
 
-                OutputSignals = outputMeasurements.ToArray();
+                OutputSignalIDs = outputMeasurements.ToArray();
                 OnOutputSignalsUpdated();
             }
         }

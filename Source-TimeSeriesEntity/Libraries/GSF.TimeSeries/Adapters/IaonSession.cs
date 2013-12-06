@@ -62,12 +62,12 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Event is raised when <see cref="IAdapter.InputSignals"/> are updated.
+        /// Event is raised when <see cref="IAdapter.InputSignalIDs"/> are updated.
         /// </summary>
         public event EventHandler InputSignalsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="IAdapter.OutputSignals"/> are updated.
+        /// Event is raised when <see cref="IAdapter.OutputSignalIDs"/> are updated.
         /// </summary>
         public event EventHandler OutputSignalsUpdated;
 

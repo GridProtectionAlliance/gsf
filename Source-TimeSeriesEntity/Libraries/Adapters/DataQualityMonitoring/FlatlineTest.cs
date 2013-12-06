@@ -328,7 +328,7 @@ namespace DataQualityMonitoring
         {
             Ticks timestamp = base.RealTime;
 
-            foreach (MeasurementKey key in InputSignals)
+            foreach (MeasurementKey key in InputSignalIDs)
             {
                 // Try to find the signal ID and add the measurement to the m_lastChange collection
                 if (DataSource.Tables.Contains("ActiveMeasurements"))

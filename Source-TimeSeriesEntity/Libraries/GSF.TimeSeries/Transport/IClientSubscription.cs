@@ -178,13 +178,13 @@ namespace GSF.TimeSeries.Transport
 
             // Cache the specified input measurement keys requested by the remote subscription
             // internally since these will only be needed in the private Iaon session
-            ISet<Guid> inputSignals = new HashSet<Guid>(clientSubscription.InputSignals);
-            ISet<Guid> outputSignals = new HashSet<Guid>(clientSubscription.OutputSignals);
+            ISet<Guid> inputSignals = new HashSet<Guid>(clientSubscription.InputSignalIDs);
+            ISet<Guid> outputSignals = new HashSet<Guid>(clientSubscription.OutputSignalIDs);
 
             // Since historical data is requested, we "turn off" interaction with the outside real-time world
             // by removing this adapter from external routes.
-            clientSubscription.InputSignals.Clear();
-            clientSubscription.OutputSignals.Clear();
+            clientSubscription.InputSignalIDs.Clear();
+            clientSubscription.OutputSignalIDs.Clear();
 
             // Create a new temporal Iaon session using existing data source
             session = new IaonSession(clientSubscription.DataSource, true);

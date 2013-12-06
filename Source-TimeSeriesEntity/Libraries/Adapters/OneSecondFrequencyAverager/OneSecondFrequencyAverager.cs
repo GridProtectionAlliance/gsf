@@ -121,11 +121,11 @@ namespace OneSecondFrequencyAverager
         }
 
         /// <summary>
-        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputSignals"/>.
+        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputSignalIDs"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
         /// <remarks>
-        /// Measurements are filtered against the defined <see cref="ActionAdapterBase.InputSignals"/>.
+        /// Measurements are filtered against the defined <see cref="ActionAdapterBase.InputSignalIDs"/>.
         /// </remarks>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
@@ -162,15 +162,15 @@ namespace OneSecondFrequencyAverager
             IMeasurement outMeasurement;
             Tuple<double, int> valueAndLatchedCount;
 
-            for (int i = 0; i < InputSignals.Length; i++)
+            for (int i = 0; i < InputSignalIDs.Length; i++)
             {
-                if (!frame.Entities.TryGetValue(InputSignals[i], out inMeasurement))
+                if (!frame.Entities.TryGetValue(InputSignalIDs[i], out inMeasurement))
                     continue;
 
                 if (m_valuesAndLatchedCounts.TryGetValue(inMeasurement.ID, out valueAndLatchedCount) && valueAndLatchedCount.Item2 >= m_flatlineCount)
                     continue;
 
-                outMeasurement = Measurement.Clone(OutputSignals[i]);
+                outMeasurement = Measurement.Clone(OutputSignalIDs[i]);
                 outMeasurement.Value = inMeasurement.Value;
                 outMeasurement.Timestamp = frame.Timestamp + Ticks.PerSecond;
                 newMeasurements.Add(outMeasurement);

@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading;
 
 namespace GSF.TimeSeries.Adapters
@@ -64,14 +65,14 @@ namespace GSF.TimeSeries.Adapters
         event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Event is raised when <see cref="InputSignals"/> are updated.
+        /// Event is raised when <see cref="InputSignalIDs"/> are updated.
         /// </summary>
-        event EventHandler InputSignalsUpdated;
+        event EventHandler InputSignalIDsUpdated;
 
         /// <summary>
-        /// Event is raised when <see cref="OutputSignals"/> are updated.
+        /// Event is raised when <see cref="OutputSignalIDs"/> are updated.
         /// </summary>
-        event EventHandler OutputSignalsUpdated;
+        event EventHandler OutputSignalIDsUpdated;
 
         /// <summary>
         /// Event is raised when adapter is aware of a configuration change.
@@ -169,23 +170,23 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the collection of signals the adapter wishes to receive as input.
+        /// Gets or sets the collection of signal IDs the adapter wishes to receive as input.
         /// </summary>
         /// <remarks>
         /// It is expected that that this value will never return null.
         /// </remarks>
-        ISet<Guid> InputSignals
+        ISet<Guid> InputSignalIDs
         {
             get;
         }
 
         /// <summary>
-        /// Gets or sets the collection of signals the adapter plans to create as output.
+        /// Gets or sets the collection of signal IDs the adapter plans to create as output.
         /// </summary>
         /// <remarks>
         /// It is expected that that this value will never return null.
         /// </remarks>
-        ISet<Guid> OutputSignals
+        ISet<Guid> OutputSignalIDs
         {
             get;
         }
@@ -334,6 +335,149 @@ namespace GSF.TimeSeries.Adapters
         public static bool TemporalConstraintIsDefined(this IAdapter adapter)
         {
             return (adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue);
+        }
+
+        /// <summary>
+        /// Attempts to parse an individual signal ID from the specified <paramref name="parameterName"/> out of the <see cref="IAdapter.ConnectionString"/>.
+        /// </summary>
+        /// <param name="adapter">The <see cref="IAdapter"/> used for source configuration.</param>
+        /// <param name="parameterName">Parameter name for the signal ID expected in the <see cref="IAdapter.ConnectionString"/>.</param>
+        /// <param name="signalID">The returned <see cref="Guid"/> based signal ID if successfully parsed.</param>
+        /// <returns><c>true</c> if signal ID was successfully parsed; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// This function is useful when output signals need to be individually specified, e.g., in a calculation, where the outputs are
+        /// identified as connection string parameters.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException"><see cref="IAdapter.Settings"/> is <c>null</c>.</exception>
+        public static bool TryParseSignalID(this IAdapter adapter, string parameterName, out Guid signalID)
+        {
+            if ((object)adapter == null)
+                throw new ArgumentNullException("adapter");
+
+            return AdapterBase.TryParseSignalID(adapter.DataSource, adapter.Settings, parameterName, out signalID);
+        }
+
+        /// <summary>
+        /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="adapter">Adapter to get meta-data for.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="row"><see cref="DataRow"/> of meta-data associated with the specified <paramref name="signalID"/>.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <returns><c>true</c> if meta-data record for <paramref name="signalID"/> was found; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        public static bool TryGetMetadata(this IAdapter adapter, Guid signalID, out DataRow row, string measurementTable = "ActiveMeasurements")
+        {
+            if ((object)adapter == null)
+                throw new ArgumentNullException("adapter");
+
+            return AdapterBase.TryGetMetadata(adapter.DataSource, signalID, out row, measurementTable);
+        }
+
+        /// <summary>
+        /// Gets the all available meta-data for the set of input or output signals associated with an adapter.
+        /// </summary>
+        /// <param name="adapter">Adapter to get meta-data for.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <returns>Available meta-data for a set of input or output signals associated with an adapter.</returns>
+        public static Dictionary<Guid, DataRow> GetMetadata(this IAdapter adapter, string measurementTable = "ActiveMeasurements")
+        {
+            if ((object)adapter == null)
+                throw new ArgumentNullException("adapter");
+
+            return GetMetadata(adapter.InputSignalIDs.Union(adapter.OutputSignalIDs), adapter.DataSource, measurementTable);
+        }
+
+        /// <summary>
+        /// Gets the all available meta-data for a set of signal IDs.
+        /// </summary>
+        /// <param name="signalIDs">Set of signalIDs to return meta-data for.</param>
+        /// <param name="dataSource"><see cref="DataSet"/> containing meta-data to be searched.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <returns>Available meta-data for a set of input or output signals associated with an adapter.</returns>
+        public static Dictionary<Guid, DataRow> GetMetadata(this IEnumerable<Guid> signalIDs, DataSet dataSource, string measurementTable = "ActiveMeasurements")
+        {
+            if ((object)signalIDs == null)
+                throw new ArgumentNullException("signalIDs");
+
+            Dictionary<Guid, DataRow> metadata = new Dictionary<Guid, DataRow>();
+            DataRow row;
+
+            foreach (Guid signalID in signalIDs)
+            {
+                if (AdapterBase.TryGetMetadata(dataSource, signalID, out row))
+                    metadata.Add(signalID, row);
+            }
+
+            return metadata;
+        }
+
+        /// <summary>
+        /// Attempts to retrieve the minimum needed number of entities from the frame (as specified by <paramref name="minimumToGet"/>).
+        /// </summary>
+        /// <param name="adapter">Adapter needing to entity data.</param>
+        /// <param name="frame">Source frame for the entities</param>
+        /// <param name="entities">Return array of entities</param>
+        /// <param name="minimumToGet">Minimum number of input signals required for adapter.  Set to -1 to require all.</param>
+        /// <returns><c>true</c> if minimum needed number of entities were returned in entity array; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This function will only return the minimum needed number of entities, no more.  If you want to use
+        /// all available entities in your adapter, just use <see cref="IFrame.Entities"/> directly.
+        /// </para>
+        /// <para>
+        /// Note that the entities array parameter will be created if the reference is null, otherwise if caller creates
+        /// array it must be sized to <paramref name="minimumToGet"/>
+        /// </para>
+        /// </remarks>
+        public static bool TryGetMinimumNeededEntities<T>(this IAdapter adapter, IFrame frame, int minimumToGet, ref T[] entities) where T : class, ITimeSeriesEntity
+        {
+            if ((object)adapter == null)
+                throw new ArgumentNullException("adapter");
+
+            if ((object)frame == null)
+                throw new ArgumentNullException("frame");
+
+            IDictionary<Guid, ITimeSeriesEntity> frameEntities = frame.Entities;
+            ISet<Guid> inputSignals = adapter.InputSignalIDs;
+            int index = 0;
+
+            if (minimumToGet == -1)
+                minimumToGet = inputSignals.Count();
+
+            if ((object)entities == null || entities.Length < minimumToGet)
+                entities = new T[minimumToGet];
+
+            if (inputSignals.Count == 0)
+            {
+                // No input signals are defined, just get first set of signals in this frame
+                foreach (ITimeSeriesEntity entity in frameEntities.Values)
+                {
+                    entities[index++] = entity as T;
+
+                    if (index == minimumToGet)
+                        break;
+                }
+            }
+            else
+            {
+                // Loop through all input signals to see if they exist in this frame
+                ITimeSeriesEntity entity;
+
+                foreach (Guid signalID in inputSignals)
+                {
+                    if (frameEntities.TryGetValue(signalID, out entity))
+                    {
+                        entities[index++] = entity as T;
+
+                        if (index == minimumToGet)
+                            break;
+                    }
+                }
+            }
+
+            return (index == minimumToGet);
         }
     }
 }

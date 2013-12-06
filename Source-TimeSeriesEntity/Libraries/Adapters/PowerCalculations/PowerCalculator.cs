@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -35,7 +34,6 @@ using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
-using PhasorProtocolAdapters;
 
 namespace PowerCalculations
 {
@@ -43,7 +41,7 @@ namespace PowerCalculations
     /// Calculates MW and MVAR using Voltage and Current Magnitude and Angle signals input to the adapter.
     /// </summary>
     [Description("Power Calculator: calculates power and reactive power for synchrophasor measurements")]
-    public class PowerCalculator : CalculatedMeasurementBase
+    public class PowerCalculator : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -51,25 +49,130 @@ namespace PowerCalculations
         private const double SqrtOf3 = 1.7320508075688772935274463415059D;
 
         // Fields
-        private MeasurementKey m_voltageAngle;
-        private MeasurementKey m_voltageMagnitude;
-        private MeasurementKey m_currentAngle;
-        private MeasurementKey m_currentMagnitude;
+        private Guid m_voltageAngleID;
+        private Guid m_voltageMagnitudeID;
+        private Guid m_currentAngleID;
+        private Guid m_currentMagnitudeID;
+
+        private Guid m_powerID;
+        private Guid m_reactivePowerID;
+
         private bool m_trackRecentValues;
         private int m_sampleSize;
         private List<double> m_powerSample;
         private List<double> m_reactivePowerSample;
 
-        // Important: Make sure output definition defines points in the following order
-        private enum Output
-        {
-            Power,
-            ReactivePower
-        }
-
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the signal ID of the voltage angle input measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the voltage angle measurement of the power calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid VoltageAngleID
+        {
+            get
+            {
+                return m_voltageAngleID;
+            }
+            set
+            {
+                m_voltageAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the voltage magnitude input measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the voltage magnitude measurement of the power calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid VoltageMagnitudeID
+        {
+            get
+            {
+                return m_voltageMagnitudeID;
+            }
+            set
+            {
+                m_voltageMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the current angle input measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the current angle measurement of the power calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid CurrentAngleID
+        {
+            get
+            {
+                return m_currentAngleID;
+            }
+            set
+            {
+                m_currentAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the current magnitude input measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the current magnitude measurement of the power calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid CurrentMagnitudeID
+        {
+            get
+            {
+                return m_currentMagnitudeID;
+            }
+            set
+            {
+                m_currentMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the power output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the power measurement of the power calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid PowerID
+        {
+            get
+            {
+                return m_powerID;
+            }
+            set
+            {
+                m_powerID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the reactive power output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the reactive power measurement of the power calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid ReactivePowerID
+        {
+            get
+            {
+                return m_reactivePowerID;
+            }
+            set
+            {
+                m_reactivePowerID = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if the last few values should be monitored.
@@ -106,6 +209,51 @@ namespace PowerCalculations
                 m_sampleSize = value;
             }
         }
+
+        // ReSharper disable RedundantOverridenMember
+        /// <summary>
+        /// Gets or sets input signal IDs that the action adapter will produce, if any.
+        /// </summary>
+        /// <remarks>
+        /// Overriding input signal IDs to remove its attributes such that it will not
+        /// show up in the connection string parameters list. User should manually assign
+        /// the <see cref="VoltageAngleID"/>, <see cref="VoltageMagnitudeID"/>,
+        /// <see cref="CurrentAngleID"/> and <see cref="CurrentMagnitudeID"/> for the
+        /// inputs of this calculator.
+        /// </remarks>
+        public override ISet<Guid> InputSignalIDs
+        {
+            get
+            {
+                return base.InputSignalIDs;
+            }
+            set
+            {
+                base.InputSignalIDs = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output signal IDs that the action adapter will produce, if any.
+        /// </summary>
+        /// <remarks>
+        /// Overriding output signal IDs to remove its attributes such that it will not
+        /// show up in the connection string parameters list. User should manually assign
+        /// the <see cref="PowerID"/> and <see cref="ReactivePowerID"/> for the outputs
+        /// of this calculator.
+        /// </remarks>
+        public override ISet<Guid> OutputSignalIDs
+        {
+            get
+            {
+                return base.OutputSignalIDs;
+            }
+            set
+            {
+                base.OutputSignalIDs = value;
+            }
+        }
+        // ReSharper restore RedundantOverridenMember
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -182,35 +330,40 @@ namespace PowerCalculations
             else
                 m_trackRecentValues = true;
 
-            if (settings.TryGetValue("sampleSize", out setting))            // Data sample size to monitor, in seconds
+            if (settings.TryGetValue("sampleSize", out setting))    // Data sample size to monitor, in seconds
                 m_sampleSize = int.Parse(setting);
             else
                 m_sampleSize = 5;
 
-            // Load needed phase angle and magnitude measurement keys from defined InputMeasurementKeys
-            m_voltageAngle = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHA).FirstOrDefault();
-            m_voltageMagnitude = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHM).FirstOrDefault();
-            m_currentAngle = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHA).FirstOrDefault();
-            m_currentMagnitude = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHM).FirstOrDefault();
+            // TODO: This could greatly benefit from selecting inputs as complex numbers (i.e., source phasors) so angle and magnitude would be together
 
-            if (m_voltageAngle.PointID == 0)
-                throw new InvalidOperationException("No voltage angle input was defined - one voltage angle input measurement is required for the power calculator.");
+            // Get ID's and validate signal type for input measurements
+            if (!this.TryParseSignalID(SignalType.VPHA, "voltageAngleID", out m_voltageAngleID))
+                throw new InvalidOperationException("No signal ID could be parsed for the voltage angle input measurement.");
 
-            if (m_voltageMagnitude.PointID == 0)
-                throw new InvalidOperationException("No voltage magnitude input was defined - one voltage magnitude input measurement is required for the power calculator.");
+            if (!this.TryParseSignalID(SignalType.VPHM, "voltageMagnitudeID", out m_voltageMagnitudeID))
+                throw new InvalidOperationException("No signal ID could be parsed for the voltage magnitude input measurement.");
 
-            if (m_currentAngle.PointID == 0)
-                throw new InvalidOperationException("No current angle input was defined - one current angle input measurement is required for the power calculator.");
+            if (!this.TryParseSignalID(SignalType.IPHA, "currentAngleID", out m_currentAngleID))
+                throw new InvalidOperationException("No signal ID could be parsed for the current angle input measurement.");
 
-            if (m_currentMagnitude.PointID == 0)
-                throw new InvalidOperationException("No current magnitude input measurement was defined - one current magnitude input measurement is required for the power calculator.");
+            if (!this.TryParseSignalID(SignalType.IPHM, "currentMagnitudeID", out m_currentMagnitudeID))
+                throw new InvalidOperationException("No signal ID could be parsed for the current magnitude input measurement.");
 
-            // Make sure only these four phasor measurements are used as input (any others will be ignored)
-            InputMeasurementKeys = new[] { m_voltageAngle, m_voltageMagnitude, m_currentAngle, m_currentMagnitude };
+            // Assign input measurements
+            InputSignalIDs.Clear();
+            InputSignalIDs.UnionWith(new[] { m_voltageAngleID, m_voltageMagnitudeID, m_currentAngleID, m_currentMagnitudeID });
 
-            // Validate output measurements
-            if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the power calculator, expecting measurements for the \"Calculated Power\" and the \"Calculated Reactive Power\" - in this order.");
+            // Get ID's for output measurements
+            if (!this.TryParseSignalID("powerID", out m_powerID))
+                throw new InvalidOperationException("No signal ID could be parsed for the power output measurement.");
+
+            if (!this.TryParseSignalID("reactivePowerID", out m_reactivePowerID))
+                throw new InvalidOperationException("No signal ID could be parsed for the reactive power output measurement.");
+
+            // Assign output measurements
+            OutputSignalIDs.Clear();
+            OutputSignalIDs.UnionWith(new[] { m_powerID, m_reactivePowerID });
 
             if (m_trackRecentValues)
             {
@@ -218,9 +371,17 @@ namespace PowerCalculations
                 m_reactivePowerSample = new List<double>();
             }
 
-            // Assign a default adapter name to be used if power calculator is loaded as part of automated collection
+            // Assign a default adapter name to be used if power calculator is loaded as part of an automated collection
             if (string.IsNullOrWhiteSpace(Name))
-                Name = string.Format("PC!{0}", OutputMeasurements[(int)Output.Power].Key);
+            {
+                MeasurementKey key;
+                string keyName = m_powerID.ToString();
+
+                if (this.TryGetMeasurementKey(m_powerID, out key))
+                    keyName = key.ToString();
+
+                Name = string.Format("PC!{0}", keyName);
+            }
         }
 
         /// <summary>
@@ -234,31 +395,30 @@ namespace PowerCalculations
 
             try
             {
-                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
                 double voltageMagnitude = 0.0D, voltageAngle = 0.0D, currentMagnitude = 0.0D, currentAngle = 0.0D;
-                IMeasurement measurement;
+                IMeasurement<double> measurement;
                 bool allValuesReceived = false;
 
                 // Get each needed value from this frame
-                if (measurements.TryGetValue(m_voltageMagnitude, out measurement) && measurement.ValueQualityIsGood())
+                if (frame.TryGetEntity(m_voltageMagnitudeID, out measurement) && measurement.ValueQualityIsGood())
                 {
                     // Get voltage magnitude value
-                    voltageMagnitude = measurement.AdjustedValue;
+                    voltageMagnitude = measurement.Value;
 
-                    if (measurements.TryGetValue(m_voltageAngle, out measurement) && measurement.ValueQualityIsGood())
+                    if (frame.TryGetEntity(m_voltageAngleID, out measurement) && measurement.ValueQualityIsGood())
                     {
                         // Get voltage angle value
-                        voltageAngle = measurement.AdjustedValue;
+                        voltageAngle = measurement.Value;
 
-                        if (measurements.TryGetValue(m_currentMagnitude, out measurement) && measurement.ValueQualityIsGood())
+                        if (frame.TryGetEntity(m_currentMagnitudeID, out measurement) && measurement.ValueQualityIsGood())
                         {
                             // Get current magnitude value
-                            currentMagnitude = measurement.AdjustedValue;
+                            currentMagnitude = measurement.Value;
 
-                            if (measurements.TryGetValue(m_currentAngle, out measurement) && measurement.ValueQualityIsGood())
+                            if (frame.TryGetEntity(m_currentAngleID, out measurement) && measurement.ValueQualityIsGood())
                             {
                                 // Get current angle value
-                                currentAngle = measurement.AdjustedValue;
+                                currentAngle = measurement.Value;
                                 allValuesReceived = true;
                             }
                         }
@@ -308,13 +468,12 @@ namespace PowerCalculations
             }
             finally
             {
-
-                IMeasurement[] outputMeasurements = OutputMeasurements;
-                Measurement powerMeasurement = Measurement.Clone(outputMeasurements[(int)Output.Power], power, frame.Timestamp);
-                Measurement stdevMeasurement = Measurement.Clone(outputMeasurements[(int)Output.ReactivePower], reactivePower, frame.Timestamp);
-
                 // Provide calculated measurements for external consumption
-                OnNewEntities(new IMeasurement[] { powerMeasurement, stdevMeasurement });
+                OnNewEntities(new[]
+                {
+                    new Measurement<double>(m_powerID, frame.Timestamp, power),
+                    new Measurement<double>(m_reactivePowerID, frame.Timestamp, reactivePower)
+                });
             }
         }
 

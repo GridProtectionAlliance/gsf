@@ -25,6 +25,7 @@
 
 using System;
 using System.Data;
+using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries
 {
@@ -91,6 +92,34 @@ namespace GSF.TimeSeries
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Indicates whether this <see cref="MeasurementKey"/> and the specified object are equal.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if <paramref name="obj"/> and this <see cref="MeasurementKey"/> are the same type and represent the same value; otherwise, <c>false</c>.
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is MeasurementKey)
+            {
+                MeasurementKey key = (MeasurementKey)obj;
+                return m_pointID == key.m_pointID && string.Compare(m_source, key.m_source, true) == 0;
+            }
+
+            return base.Equals(obj);
+        }
+
+        /// <summary>
+        /// Returns the hash code for this <see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <returns>
+        /// A 32-bit signed integer that is the hash code for this instance.
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return m_pointID.GetHashCode() ^ m_source.ToNonNullString().GetHashCode();
+        }
 
         /// <summary>
         /// Returns a <see cref="String"/> that represents the current <see cref="MeasurementKey"/>.
@@ -182,6 +211,32 @@ namespace GSF.TimeSeries
                 MeasurementKey.TryParse(row[measurementKeyColumn].ToNonNullString("__"), out key);
 
             return key;
+        }
+
+        /// <summary>
+        /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="adapter">Adapter to get meta-data for.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="key">The <see cref="MeasurementKey"/> instance to return.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <param name="measurementKeyColumn">Name of column that contains the data to parse as a <see cref="MeasurementKey"/>.</param>
+        /// <returns><c>true</c> if meta-data record for <paramref name="signalID"/> was found; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        public static bool TryGetMeasurementKey(this IAdapter adapter, Guid signalID, out MeasurementKey key, string measurementTable = "ActiveMeasurements", string measurementKeyColumn = "ID")
+        {
+            DataRow row;
+
+            if (adapter.TryGetMetadata(signalID, out row, measurementTable))
+            {
+                key = row.GetMeasurementKey(measurementKeyColumn);
+
+                if (!key.Equals(default(MeasurementKey)))
+                    return true;
+            }
+
+            key = default(MeasurementKey);
+            return false;
         }
     }
 }

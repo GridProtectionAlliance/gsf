@@ -1355,8 +1355,8 @@ namespace PhasorProtocolAdapters
             }
 
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
-            OutputSignals.Clear();
-            OutputSignals.UnionWith(m_definedMeasurements.Values);
+            OutputSignalIDs.Clear();
+            OutputSignalIDs.UnionWith(m_definedMeasurements.Values);
 
             OnStatusMessage("Loaded {0} active device measurements...", m_definedMeasurements.Count);
         }

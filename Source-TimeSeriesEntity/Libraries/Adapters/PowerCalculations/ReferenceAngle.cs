@@ -43,7 +43,7 @@ using System.Text;
 using GSF.Collections;
 using GSF.PhasorProtocols;
 using GSF.TimeSeries;
-using PhasorProtocolAdapters;
+using GSF.TimeSeries.Adapters;
 
 namespace PowerCalculations
 {
@@ -51,7 +51,7 @@ namespace PowerCalculations
     /// Calculates a composed reference angle.
     /// </summary>
     [Description("Reference Angle: calculates a composed reference angle")]
-    public class ReferenceAngle : CalculatedMeasurementBase
+    public class ReferenceAngle : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -59,15 +59,68 @@ namespace PowerCalculations
         private const int BackupQueueSize = 10;
 
         // Fields
+        private Guid m_referenceAngleID;
+
         private double m_phaseResetAngle;
-        private Dictionary<MeasurementKey, Double> m_lastAngles;
-        private Dictionary<MeasurementKey, Double> m_unwrapOffsets;
-        private List<Double> m_latestCalculatedAngles;
-        private IMeasurement[] m_measurements;
+        private Dictionary<Guid, double> m_lastAngles;
+        private Dictionary<Guid, double> m_unwrapOffsets;
+        private List<double> m_latestCalculatedAngles;
+        private IMeasurement<double>[] m_measurements;
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the signal ID for the reference angle output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the reference angle measurement of the reference angle calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid ReferenceAngleID
+        {
+            get
+            {
+                return m_referenceAngleID;
+            }
+            set
+            {
+                m_referenceAngleID = value;
+            }
+        }
+
+        // ReSharper disable RedundantOverridenMember
+        /// <summary>
+        /// Gets or sets output signals that the action adapter will produce, if any.
+        /// </summary>
+        /// <remarks>
+        /// Overriding output signals to remove its attributes such that it will not show up
+        /// in the connection string parameters list. User should manually assign the
+        /// <see cref="ReferenceAngleID"/> for the output of this calculator.
+        /// </remarks>
+        public override ISet<Guid> OutputSignalIDs
+        {
+            get
+            {
+                return base.OutputSignalIDs;
+            }
+            set
+            {
+                base.OutputSignalIDs = value;
+            }
+        }
+        // ReSharper restore RedundantOverridenMember
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
 
         /// <summary>
         /// Returns the detailed status of the <see cref="ReferenceAngle"/> calculator.
@@ -109,34 +162,33 @@ namespace PowerCalculations
             base.Initialize();
 
             // Validate input measurements
-            List<MeasurementKey> validInputMeasurementKeys = new List<MeasurementKey>();
-            SignalType keyType;
+            SignalType type;
 
-            for (int i = 0; i < InputMeasurementKeys.Length; i++)
-            {
-                keyType = InputSignalTypes[i];
+            Guid[] voltageAngleIDs = InputSignalIDs.Where(id => this.TryGetSignalType(id, out type) && type == SignalType.VPHA).ToArray();
+            Guid[] currentAngleIDs = InputSignalIDs.Where(id => this.TryGetSignalType(id, out type) && type == SignalType.IPHA).ToArray();
 
-                // Make sure measurement key type is a phase angle
-                if (keyType == SignalType.VPHA || keyType == SignalType.IPHA)
-                    validInputMeasurementKeys.Add(InputMeasurementKeys[i]);
-            }
-
-            if (validInputMeasurementKeys.Count == 0)
+            if (voltageAngleIDs.Length == 0 && currentAngleIDs.Length == 0)
                 throw new InvalidOperationException("No valid phase angles were specified as inputs to the reference angle calculator.");
 
-            if (InputSignalTypes.Count(s => s == SignalType.VPHA) > 0 && InputSignalTypes.Count(s => s == SignalType.IPHA) > 0)
+            if (voltageAngleIDs.Length > 0 && currentAngleIDs.Length > 0)
                 throw new InvalidOperationException("A mixture of voltage and current phase angles were specified as inputs to the reference angle calculator - you must specify one or the other: only voltage phase angles or only current phase angles.");
 
             // Make sure only phase angles are used as input
-            InputMeasurementKeys = validInputMeasurementKeys.ToArray();
+            InputSignalIDs.Clear();
+            InputSignalIDs.UnionWith(voltageAngleIDs);
+            InputSignalIDs.UnionWith(currentAngleIDs);
 
-            // Validate output measurements
-            if (OutputMeasurements.Length < 1)
-                throw new InvalidOperationException("An output measurement was not specified for the reference angle calculator - one measurement is expected to represent the \"Calculated Reference Angle\" value.");
+            // Get ID for the output measurement
+            if (!this.TryParseSignalID("referenceAngleID", out m_referenceAngleID))
+                throw new InvalidOperationException("No signal ID could be parsed for the reference angle output measurement.");
+
+            // Assign output measurement
+            OutputSignalIDs.Clear();
+            OutputSignalIDs.UnionWith(new[] { m_referenceAngleID });
 
             // Initialize member fields
-            m_lastAngles = new Dictionary<MeasurementKey, double>();
-            m_unwrapOffsets = new Dictionary<MeasurementKey, double>();
+            m_lastAngles = new Dictionary<Guid, double>();
+            m_unwrapOffsets = new Dictionary<Guid, double>();
             m_latestCalculatedAngles = new List<double>();
             m_phaseResetAngle = MinimumSignalsToUse * 360.0D;
         }
@@ -148,25 +200,25 @@ namespace PowerCalculations
         /// <param name="index">Index of frame within the one second samples</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            Measurement calculatedMeasurement = Measurement.Clone(OutputMeasurements[0], frame.Timestamp);
             double angle, deltaAngle, angleTotal, angleAverage, lastAngle, unwrapOffset;
-            IMeasurement currentAngle;
-            MeasurementKey key;
+            IMeasurement<double> currentAngle;
+            MeasurementStateFlags stateFlags = MeasurementStateFlags.Normal;
             bool dataSetChanged;
+            Guid id;
             int i;
 
             dataSetChanged = false;
             angleTotal = 0.0D;
 
             // Attempt to get minimum needed reporting set of composite angles used to calculate reference angle
-            if (TryGetMinimumNeededEntities(frame, ref m_measurements))
+            if (this.TryGetMinimumNeededEntities(frame, MinimumSignalsToUse, ref m_measurements))
             {
                 // See if data set has changed since last run
                 if (m_lastAngles.Count > 0 && m_lastAngles.Count == m_measurements.Length)
                 {
                     for (i = 0; i < m_measurements.Length; i++)
                     {
-                        if (!m_lastAngles.ContainsKey(m_measurements[i].Key))
+                        if (!m_lastAngles.ContainsKey(m_measurements[i].ID))
                         {
                             dataSetChanged = true;
                             break;
@@ -186,13 +238,13 @@ namespace PowerCalculations
                     m_unwrapOffsets.Clear();
 
                     // Calculate new unwrap offsets
-                    angleRef = m_measurements[0].AdjustedValue;
+                    angleRef = m_measurements[0].Value;
 
                     for (i = 0; i < m_measurements.Length; i++)
                     {
-                        angleDelta0 = Math.Abs(m_measurements[i].AdjustedValue - angleRef);
-                        angleDelta1 = Math.Abs(m_measurements[i].AdjustedValue + 360.0D - angleRef);
-                        angleDelta2 = Math.Abs(m_measurements[i].AdjustedValue - 360.0D - angleRef);
+                        angleDelta0 = Math.Abs(m_measurements[i].Value - angleRef);
+                        angleDelta1 = Math.Abs(m_measurements[i].Value + 360.0D - angleRef);
+                        angleDelta2 = Math.Abs(m_measurements[i].Value - 360.0D - angleRef);
 
                         if (angleDelta0 < angleDelta1 && angleDelta0 < angleDelta2)
                             unwrapOffset = 0.0D;
@@ -201,7 +253,7 @@ namespace PowerCalculations
                         else
                             unwrapOffset = -360.0D;
 
-                        m_unwrapOffsets[m_measurements[i].Key] = unwrapOffset;
+                        m_unwrapOffsets[m_measurements[i].ID] = unwrapOffset;
                     }
                 }
 
@@ -209,14 +261,14 @@ namespace PowerCalculations
                 for (i = 0; i < m_measurements.Length; i++)
                 {
                     // Get current angle value and key
-                    angle = m_measurements[i].AdjustedValue;
-                    key = m_measurements[i].Key;
+                    angle = m_measurements[i].Value;
+                    id = m_measurements[i].ID;
 
                     // Get the unwrap offset for this angle
-                    unwrapOffset = m_unwrapOffsets[key];
+                    unwrapOffset = m_unwrapOffsets[id];
 
                     // Get angle value from last run,if there was a last run
-                    if (m_lastAngles.TryGetValue(key, out lastAngle))
+                    if (m_lastAngles.TryGetValue(id, out lastAngle))
                     {
                         // Calculate the angle difference from last run
                         deltaAngle = angle - lastAngle;
@@ -234,7 +286,7 @@ namespace PowerCalculations
                             unwrapOffset += m_phaseResetAngle;
 
                         // Record last angle unwrap offset
-                        m_unwrapOffsets[key] = unwrapOffset;
+                        m_unwrapOffsets[id] = unwrapOffset;
                     }
 
                     // Add up all the angles
@@ -249,7 +301,7 @@ namespace PowerCalculations
                 for (i = 0; i < m_measurements.Length; i++)
                 {
                     currentAngle = m_measurements[i];
-                    m_lastAngles.Add(currentAngle.Key, currentAngle.AdjustedValue);
+                    m_lastAngles.Add(currentAngle.ID, currentAngle.Value);
                 }
             }
             else
@@ -261,7 +313,7 @@ namespace PowerCalculations
                     angleAverage = double.NaN;
 
                 // Mark quality as "bad" when falling back to stored value
-                calculatedMeasurement.StateFlags |= MeasurementStateFlags.BadData;
+                stateFlags |= MeasurementStateFlags.BadData;
             }
 
             // Convert angle value to the range of -180 to 180
@@ -271,10 +323,8 @@ namespace PowerCalculations
             if (angleAverage <= -180)
                 angleAverage += 360;
 
-            calculatedMeasurement.Value = angleAverage;
-
             // Expose calculated value
-            OnNewEntities(new IMeasurement[] { calculatedMeasurement });
+            OnNewEntities(new[] { new Measurement<double>(m_referenceAngleID, frame.Timestamp, stateFlags, angleAverage) });
 
             // Add calculated reference angle to latest angle queue as backup in case needed
             // minimum number of angles are not available
