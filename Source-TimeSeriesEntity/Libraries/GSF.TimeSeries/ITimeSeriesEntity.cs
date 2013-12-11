@@ -25,12 +25,15 @@
 //******************************************************************************************************
 
 using System;
+using ProtoBuf;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
     /// Represents the fundamental interface for any time-series interface.
     /// </summary>
+    [ProtoContract]
+    [ProtoInclude(1, typeof(TimeSeriesEntityBase))]
     public interface ITimeSeriesEntity
     {
         /// <summary>
@@ -39,6 +42,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// This is the fundamental identifier of the <see cref="ITimeSeriesEntity"/>.
         /// </remarks>
+        [ProtoMember(1)]
         Guid ID
         {
             get;
@@ -50,6 +54,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
+        [ProtoMember(2)]
         Ticks Timestamp
         {
             get;

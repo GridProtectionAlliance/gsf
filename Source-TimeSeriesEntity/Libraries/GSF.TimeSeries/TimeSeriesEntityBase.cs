@@ -22,18 +22,23 @@
 //******************************************************************************************************
 
 using System;
+using ProtoBuf;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
     /// Represents the fundamental base class for any time-series entity.
     /// </summary>
+    [ProtoContract]
+    [ProtoInclude(1, typeof(Measurement<>))]
     public abstract class TimeSeriesEntityBase : ITimeSeriesEntity
     {
         #region [ Members ]
 
         // Fields
+        [ProtoMember(1)]
         private readonly Guid m_id;
+        [ProtoMember(2)]
         private readonly Ticks m_timestamp;
 
         #endregion
@@ -49,6 +54,16 @@ namespace GSF.TimeSeries
         {
             m_id = id;
             m_timestamp = timestamp;
+        }
+
+        /// <summary>
+        /// DO NOT USE.  ProtoBuf-net requires a parameterless constructor and 
+        /// can access it via reflection.  This is protected so that 
+        /// Measurement has access to it.  
+        /// </summary>
+        protected TimeSeriesEntityBase()
+        {
+            
         }
 
         #endregion

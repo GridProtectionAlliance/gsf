@@ -27,6 +27,7 @@
 //******************************************************************************************************
 
 using System;
+using ProtoBuf;
 
 namespace GSF.TimeSeries
 {
@@ -36,6 +37,7 @@ namespace GSF.TimeSeries
     /// Measurement state flags.
     /// </summary>
     [Flags]
+    [ProtoContract]
     public enum MeasurementStateFlags : uint
     {
         /// <summary>
@@ -180,6 +182,8 @@ namespace GSF.TimeSeries
     /// <remarks>
     /// This interface abstractly represents a measured value at an exact time interval.
     /// </remarks>
+    [ProtoContract]
+    [ProtoInclude(1, typeof(Measurement<>))]
     public interface IMeasurement : ITimeSeriesEntity
     {
         /// <summary>
@@ -205,6 +209,8 @@ namespace GSF.TimeSeries
     /// <remarks>
     /// This interface abstractly represents a measured value at an exact time interval.
     /// </remarks>
+    [ProtoContract]
+    [ProtoInclude(2, typeof(Measurement<>))]
     public interface IMeasurement<out T> : IMeasurement
     {
         /// <summary>

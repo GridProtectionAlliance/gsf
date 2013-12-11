@@ -27,24 +27,36 @@
 //******************************************************************************************************
 
 using System;
+using ProtoBuf;
 
 namespace GSF.TimeSeries
 {
     /// <summary>
     /// Implementation of a basic measurement.
     /// </summary>
+    [ProtoContract]
     [Serializable]
     public class Measurement<T> : TimeSeriesEntityBase, IMeasurement<T>
     {
         #region [ Members ]
 
         // Fields
+        [ProtoMember(1)]
         private readonly MeasurementStateFlags m_stateFlags;
+        [ProtoMember(2)]
         private readonly T m_value;
 
         #endregion
 
         #region [ Constructors ]
+        /// <summary>
+        /// DO NOT USE.  ProtoBuf-net requires a parameterless constructor and 
+        /// can access it via reflection.  
+        /// </summary>
+        private Measurement() : base()
+        {
+            
+        } 
 
         /// <summary>
         /// Creates a new instance of the <see cref="Measurement{T}"/> class with normal state flags.
