@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  OrderedSet.cs - Gbtc
+//  OrderedTreeSet.cs - Gbtc
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  12/04/2013 - J. Ritchie Carroll
+//  12/09/2013 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -35,79 +35,206 @@ namespace GSF.Collections
     /// </summary>
     /// <typeparam name="T">The type of elements in the set.</typeparam>
     [Serializable]
-    public class OrderedSet<T> : IOrderedSet<T>, ISerializable
+    public class OrderedTreeSet<T> : IOrderedSet<T>, ISerializable
     {
         #region [ Members ]
 
         // Nested Types
-        private class NodeComparer : IEqualityComparer<LinkedListNode<T>>
+        private class TreeSetItem : IComparable<TreeSetItem>
         {
-            private IEqualityComparer<T> m_equalityComparer;
+            public T Value;
+            public int InsertValue;
+            public int LeftCount;
+            public int RightCount;
 
-            public NodeComparer(IEqualityComparer<T> equalityComparer)
+            public int DescendantCount
             {
-                m_equalityComparer = equalityComparer;
+                get
+                {
+                    return LeftCount + RightCount;
+                }
             }
 
-            public bool Equals(LinkedListNode<T> x, LinkedListNode<T> y)
+            public int CompareTo(TreeSetItem other)
             {
-                return m_equalityComparer.Equals(x.Value, y.Value);
-            }
+                if (InsertValue <= LeftCount)
+                    return -1;
 
-            public int GetHashCode(LinkedListNode<T> obj)
-            {
-                return m_equalityComparer.GetHashCode(obj.Value);
+                InsertValue -= LeftCount + 1;
+
+                return 1;
             }
         }
 
-        // Fields
-        private HashSet<LinkedListNode<T>> m_hashSet;
-        private LinkedList<T> m_linkedList;
-        private IEqualityComparer<T> m_equalityComparer;
+        private class TreeSetNode : RedBlackNode<TreeSetItem>
+        {
+            #region [ Constructors ]
 
-        private int m_lastVisitedIndex;
-        private LinkedListNode<T> m_lastVisitedNode;
+            public TreeSetNode(TreeSetItem item)
+                : base(item)
+            {
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public new TreeSetNode Root
+            {
+                get
+                {
+                    return (TreeSetNode)base.Root;
+                }
+            }
+
+            public new TreeSetNode Parent
+            {
+                get
+                {
+                    return (TreeSetNode)base.Parent;
+                }
+            }
+
+            public new TreeSetNode Left
+            {
+                get
+                {
+                    return (TreeSetNode)base.Left;
+                }
+            }
+
+            public new TreeSetNode Right
+            {
+                get
+                {
+                    return (TreeSetNode)base.Right;
+                }
+            }
+
+            public int Index
+            {
+                get
+                {
+                    int index = 0;
+
+                    if ((object)Parent != null && this == Parent.Right)
+                        index = Parent.Index + 1;
+
+                    return index + Item.LeftCount;
+                }
+            }
+
+            public TreeSetNode this[int index]
+            {
+                get
+                {
+                    if (index == 0 && Item.LeftCount == 0)
+                        return this;
+
+                    if (index <= Item.LeftCount)
+                        return Left[index];
+
+                    return Right[index - Item.LeftCount - 1];
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            protected override void ChildInserted()
+            {
+                TreeSetNode node = this;
+
+                while ((object)node != null)
+                {
+                    node.UpdateDescendantCounts();
+                    node = node.Parent;
+                }
+            }
+
+            protected override void ChildRemoved()
+            {
+                TreeSetNode node = this;
+
+                while ((object)node != null)
+                {
+                    node.UpdateDescendantCounts();
+                    node = node.Parent;
+                }
+            }
+
+            protected override void RotatedLeft()
+            {
+                Item.RightCount = ((object)Right != null) ? Right.Item.DescendantCount + 1 : 0;
+                Parent.Item.LeftCount = Item.DescendantCount + 1;
+            }
+
+            protected override void RotatedRight()
+            {
+                Item.LeftCount = ((object)Left != null) ? Left.Item.DescendantCount + 1 : 0;
+                Parent.Item.RightCount = Item.DescendantCount + 1;
+            }
+
+            protected override void Swapped(RedBlackNode<TreeSetItem> swappedNode)
+            {
+                UpdateDescendantCounts();
+            }
+
+            private void UpdateDescendantCounts()
+            {
+                Item.LeftCount = ((object)Left != null) ? Left.Item.DescendantCount + 1 : 0;
+                Item.RightCount = ((object)Right != null) ? Right.Item.DescendantCount + 1 : 0;
+            }
+
+            #endregion
+        }
+
+        // Fields
+        private IEqualityComparer<T> m_equalityComparer;
+        private IDictionary<T, TreeSetNode> m_nodeLookup;
+        private TreeSetNode m_root; 
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OrderedSet{T}"/> class that is empty and uses the default equality
+        /// Initializes a new instance of the <see cref="OrderedTreeSet{T}"/> class that is empty and uses the default equality
         /// comparer for the set type.
         /// </summary>
-        public OrderedSet()
+        public OrderedTreeSet()
             : this(Enumerable.Empty<T>(), EqualityComparer<T>.Default)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OrderedSet{T}"/> class that uses the default equality comparer for
+        /// Initializes a new instance of the <see cref="OrderedTreeSet{T}"/> class that uses the default equality comparer for
         /// the set type, contains elements copied from the specified <paramref name="collection"/>, and has sufficient capacity
         /// to accommodate the number of elements copied.
         /// </summary>
         /// <param name="collection">The collection whose elements are copied to the new set.</param>
         /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
-        public OrderedSet(IEnumerable<T> collection)
+        public OrderedTreeSet(IEnumerable<T> collection)
             : this (collection, EqualityComparer<T>.Default)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OrderedSet{T}"/> class that is empty and uses the specified
+        /// Initializes a new instance of the <see cref="OrderedTreeSet{T}"/> class that is empty and uses the specified
         /// equalilty <paramref name="comparer"/> for the set type.
         /// </summary>
         /// <param name="comparer">
         /// The <see cref="IEqualityComparer{T}"/> implementation to use when comparing values in the set, or <c>null</c> to
         /// use the default <see cref="IEqualityComparer{T}"/> implementation for the set type.
         /// </param>
-        public OrderedSet(IEqualityComparer<T> comparer)
+        public OrderedTreeSet(IEqualityComparer<T> comparer)
             : this(Enumerable.Empty<T>(), comparer)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OrderedSet{T}"/> class that uses the specified equality
+        /// Initializes a new instance of the <see cref="OrderedTreeSet{T}"/> class that uses the specified equality
         /// <paramref name="comparer"/> for the set type, contains elements copied from the specified <paramref name="collection"/>,
         /// and has sufficient capacity to accommodate the number of elements copied. 
         /// </summary>
@@ -117,35 +244,30 @@ namespace GSF.Collections
         /// use the default <see cref="IEqualityComparer{T}"/> implementation for the set type.
         /// </param>
         /// <exception cref="ArgumentNullException"><paramref name="collection"/> is <c>null</c>.</exception>
-        public OrderedSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        public OrderedTreeSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
-            if ((object)collection == null)
-                throw new ArgumentNullException("collection");
-
-            m_hashSet = new HashSet<LinkedListNode<T>>(new NodeComparer(comparer));
-            m_linkedList = new LinkedList<T>();
             m_equalityComparer = comparer;
+            m_nodeLookup = new Dictionary<T, TreeSetNode>(comparer);
 
             foreach (T item in collection)
                 Add(item);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OrderedSet{T}"/> class with serialized data.
+        /// Initializes a new instance of the <see cref="OrderedTreeSet{T}"/> class with serialized data.
         /// </summary>
         /// <param name="info">
         /// A <see cref="SerializationInfo"/> object that contains the information required to serialize the
-        /// <see cref="OrderedSet{T}"/> object.
+        /// <see cref="OrderedTreeSet{T}"/> object.
         /// </param>
         /// <param name="context">
         /// A <see cref="StreamingContext"/> structure that contains the source and destination of the serialized stream
-        /// associated with the <see cref="OrderedSet{T}"/> object.
+        /// associated with the <see cref="OrderedTreeSet{T}"/> object.
         /// </param>
-        protected OrderedSet(SerializationInfo info, StreamingContext context)
+        protected OrderedTreeSet(SerializationInfo info, StreamingContext context)
         {
             m_equalityComparer = (IEqualityComparer<T>)info.GetValue("equalityComparer", typeof(IEqualityComparer<T>));
-            m_hashSet = new HashSet<LinkedListNode<T>>(new NodeComparer(m_equalityComparer));
-            m_linkedList = new LinkedList<T>();
+            m_nodeLookup = new Dictionary<T, TreeSetNode>(m_equalityComparer);
 
             // Deserialize ordered list
             for (int x = 0; x < info.GetInt32("orderedCount"); x++)
@@ -163,33 +285,41 @@ namespace GSF.Collections
         /// The element at the specified index.
         /// </returns>
         /// <param name="index">The zero-based index of the element to get or set.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="OrderedSet{T}"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="OrderedTreeSet{T}"/>.</exception>
         public T this[int index]
         {
             get
             {
-                return Visit(index).Value;
+                if (index < 0 || index >= Count)
+                    throw new IndexOutOfRangeException();
+
+                return m_root[index].Item.Value;
             }
             set
             {
-                LinkedListNode<T> node = Visit(index);
-                m_hashSet.Remove(node);
-                node.Value = value;
-                m_hashSet.Add(node);
+                TreeSetNode node;
+
+                if (index < 0 || index >= Count)
+                    throw new IndexOutOfRangeException();
+
+                node = m_root[index];
+                m_nodeLookup.Remove(node.Item.Value);
+                node.Item.Value = value;
+                m_nodeLookup.Add(node.Item.Value, node);
             }
         }
 
         /// <summary>
-        /// Gets the number of elements contained in the <see cref="OrderedSet{T}"/>.
+        /// Gets the number of elements contained in the <see cref="OrderedTreeSet{T}"/>.
         /// </summary>
         /// <returns>
-        /// The number of elements contained in the <see cref="OrderedSet{T}"/>.
+        /// The number of elements contained in the <see cref="OrderedTreeSet{T}"/>.
         /// </returns>
         public int Count
         {
             get
             {
-                return m_hashSet.Count;
+                return m_nodeLookup.Count;
             }
         }
 
@@ -207,7 +337,7 @@ namespace GSF.Collections
             }
         }
 
-        // Gets "false", indicating the hash-set is not read-only.
+        // Gets "false", indicating the set is not read-only.
         bool ICollection<T>.IsReadOnly
         {
             get
@@ -239,20 +369,20 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Removes all items from the <see cref="OrderedSet{T}"/> object.
+        /// Removes all items from the <see cref="OrderedTreeSet{T}"/> object.
         /// </summary>
         public void Clear()
         {
-            m_hashSet.Clear();
-            m_linkedList.Clear();
+            m_nodeLookup.Clear();
+            m_root = null;
         }
 
         /// <summary>
-        /// Determines whether the <see cref="OrderedSet{T}"/> object contains the specified element.
+        /// Determines whether the <see cref="OrderedTreeSet{T}"/> object contains the specified element.
         /// </summary>
-        /// <param name="item">The element to locate in the <see cref="OrderedSet{T}"/> object.</param>
+        /// <param name="item">The element to locate in the <see cref="OrderedTreeSet{T}"/> object.</param>
         /// <returns>
-        /// <c>true</c> if <see cref="OrderedSet{T}"/> object contains the specified element; otherwise,
+        /// <c>true</c> if <see cref="OrderedTreeSet{T}"/> object contains the specified element; otherwise,
         /// <c>false</c>.
         /// </returns>
         public bool Contains(T item)
@@ -260,15 +390,15 @@ namespace GSF.Collections
             if ((object)item == null)
                 return false;
 
-            return m_hashSet.Contains(new LinkedListNode<T>(item));
+            return m_nodeLookup.ContainsKey(item);
         }
 
         /// <summary>
-        /// Copies the elements of the <see cref="OrderedSet{T}"/> to an <see cref="Array"/>.
+        /// Copies the elements of the <see cref="OrderedTreeSet{T}"/> to an <see cref="Array"/>.
         /// </summary>
         /// <param name="array">
         /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from
-        /// <see cref="OrderedSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
+        /// <see cref="OrderedTreeSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
         /// </param>
         public void CopyTo(T[] array)
         {
@@ -276,12 +406,12 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Copies the elements of the <see cref="OrderedSet{T}"/> to an <see cref="Array"/>, starting at the
+        /// Copies the elements of the <see cref="OrderedTreeSet{T}"/> to an <see cref="Array"/>, starting at the
         /// specified <paramref name="arrayIndex"/>.
         /// </summary>
         /// <param name="array">
         /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from
-        /// <see cref="OrderedSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
+        /// <see cref="OrderedTreeSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
         /// </param>
         /// <param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
         /// <exception cref="ArgumentNullException"><paramref name="array"/> is null.</exception>
@@ -295,12 +425,12 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Copies the specified number of elements of the <see cref="OrderedSet{T}"/> to an <see cref="Array"/>,
+        /// Copies the specified number of elements of the <see cref="OrderedTreeSet{T}"/> to an <see cref="Array"/>,
         /// starting at the specified <paramref name="arrayIndex"/>.
         /// </summary>
         /// <param name="array">
         /// The one-dimensional <see cref="Array"/> that is the destination of the elements copied from
-        /// <see cref="OrderedSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
+        /// <see cref="OrderedTreeSet{T}"/>. The <see cref="Array"/> must have zero-based indexing.
         /// </param>
         /// <param name="arrayIndex">The zero-based index in <paramref name="array"/> at which copying begins.</param>
         /// <param name="count">The number of elements to copy to <paramref name="array"/>.</param>
@@ -334,7 +464,7 @@ namespace GSF.Collections
 
             index = 0;
 
-            foreach (T item in m_linkedList)
+            foreach (T item in this)
             {
                 if (index >= count)
                     break;
@@ -359,25 +489,36 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Returns an enumerator that iterates through the <see cref="OrderedSet{T}"/>.
+        /// Returns an enumerator that iterates through the <see cref="OrderedTreeSet{T}"/>.
         /// </summary>
         /// <returns>
-        /// A <see cref="IEnumerator{T}"/> that can be used to iterate through the <see cref="OrderedSet{T}"/>.
+        /// A <see cref="IEnumerator{T}"/> that can be used to iterate through the <see cref="OrderedTreeSet{T}"/>.
         /// </returns>
         public IEnumerator<T> GetEnumerator()
         {
-            return m_linkedList.GetEnumerator();
+            RedBlackNode<TreeSetItem> node;
+
+            if ((object)m_root != null)
+            {
+                node = m_root.First;
+
+                while ((object)node != null)
+                {
+                    yield return node.Item.Value;
+                    node = node.Next;
+                }
+            }
         }
 
         // Gets a non-generic enumerator
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return m_linkedList.GetEnumerator();
+            return GetEnumerator();
         }
 
         /// <summary>
         /// Implements the <see cref="ISerializable"/> interface and populates the <paramref name="info"/> object with 
-        /// the data needed to serialize the serialize this <see cref="OrderedSet{T}"/> object.
+        /// the data needed to serialize the serialize this <see cref="OrderedTreeSet{T}"/> object.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination (see <see cref="StreamingContext"/>) for this serialization.</param>
@@ -388,8 +529,8 @@ namespace GSF.Collections
 
             info.AddValue("equalityComparer", m_equalityComparer, typeof(IEqualityComparer<T>));
             info.AddValue("orderedCount", Count);
-            
-            foreach (T item in m_linkedList)
+
+            foreach (T item in this)
             {
                 info.AddValue("orderedItem" + index, item, typeof(T));
                 index++;
@@ -397,75 +538,72 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Determines the index of a specific item in the <see cref="OrderedSet{T}"/>.
+        /// Determines the index of a specific item in the <see cref="OrderedTreeSet{T}"/>.
         /// </summary>
         /// <returns>
         /// The index of <paramref name="item"/> if found in the list; otherwise, -1.
         /// </returns>
-        /// <param name="item">The object to locate in the <see cref="OrderedSet{T}"/>.</param>
+        /// <param name="item">The object to locate in the <see cref="OrderedTreeSet{T}"/>.</param>
         public int IndexOf(T item)
         {
-            int index;
+            TreeSetNode node;
 
-            if (Contains(item))
-            {
-                index = 0;
+            if ((object)item == null)
+                throw new ArgumentNullException("item");
 
-                foreach (T listItem in m_linkedList)
-                {
-                    if (m_equalityComparer.Equals(item, listItem))
-                        return index;
-
-                    index++;
-                }
-            }
+            if (m_nodeLookup.TryGetValue(item, out node))
+                return node.Index;
 
             return -1;
         }
 
         /// <summary>
-        /// Inserts an item to the <see cref="OrderedSet{T}"/> at the specified index.
+        /// Inserts an item to the <see cref="OrderedTreeSet{T}"/> at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index at which <paramref name="item"/> should be inserted.</param>
-        /// <param name="item">The object to insert into the <see cref="OrderedSet{T}"/>.</param>
+        /// <param name="item">The object to insert into the <see cref="OrderedTreeSet{T}"/>.</param>
         /// <returns>True if the item was inserted; false otherwise.</returns>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="OrderedSet{T}"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="OrderedTreeSet{T}"/>.</exception>
         public bool Insert(int index, T item)
         {
-            LinkedListNode<T> node;
-            LinkedListNode<T> newNode;
+            TreeSetNode node;
+
+            if ((object)item == null)
+                throw new ArgumentNullException("item");
 
             if (index < 0 || index > Count)
                 throw new ArgumentOutOfRangeException("index");
 
-            if ((object)item == null)
+            if (m_nodeLookup.ContainsKey(item))
                 return false;
 
-            newNode = new LinkedListNode<T>(item);
-
-            if (!m_hashSet.Add(newNode))
-                return false;
-
-            if (index == Count)
+            node = new TreeSetNode(new TreeSetItem()
             {
-                m_linkedList.AddLast(newNode);
+                Value = item,
+                InsertValue = index
+            });
+
+            m_nodeLookup.Add(item, node);
+
+            if ((object)m_root == null)
+            {
+                m_root = node;
             }
             else
             {
-                node = Visit(index);
-                m_linkedList.AddBefore(node, newNode);
-                m_lastVisitedNode = newNode;
+                m_root.Insert(node);
+                m_root = m_root.Root;
             }
 
             return true;
         }
 
         /// <summary>
-        /// Inserts an item to the <see cref="OrderedSet{T}"/> at the specified index.
+        /// Inserts an item to the <see cref="OrderedTreeSet{T}"/> at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index at which <paramref name="item"/> should be inserted.</param>
-        /// <param name="item">The object to insert into the <see cref="OrderedSet{T}"/>.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="OrderedSet{T}"/>.</exception>
+        /// <param name="item">The object to insert into the <see cref="OrderedTreeSet{T}"/>.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="OrderedTreeSet{T}"/>.</exception>
         void IList<T>.Insert(int index, T item)
         {
             Insert(index, item);
@@ -478,10 +616,23 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
         public void IntersectWith(IEnumerable<T> other)
         {
+            IEnumerable<int> indexes;
+            bool[] keep;
+
             if ((object)other == null)
                 throw new ArgumentNullException("other");
 
-            ExceptWith(this.Except(other));
+            indexes = other.Where(Contains).Select(IndexOf);
+            keep = new bool[Count];
+
+            foreach (int index in indexes)
+                keep[index] = true;
+
+            for (int i = Count; i >= 0; i--)
+            {
+                if (!keep[i])
+                    RemoveAt(i);
+            }
         }
 
         /// <summary>
@@ -494,10 +645,24 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
         public bool IsProperSubsetOf(IEnumerable<T> other)
         {
+            bool[] present;
+            bool containsAll;
+
             if ((object)other == null)
                 throw new ArgumentNullException("other");
 
-            return m_hashSet.IsProperSubsetOf(other.Select(item => new LinkedListNode<T>(item)));
+            present = new bool[Count];
+            containsAll = true;
+
+            foreach (T item in other)
+            {
+                if (Contains(item))
+                    present[IndexOf(item)] = true;
+                else
+                    containsAll = false;
+            }
+
+            return present.All(p => p) && !containsAll;
         }
 
         /// <summary>
@@ -510,20 +675,22 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
         public bool IsProperSupersetOf(IEnumerable<T> other)
         {
-            int count = 0;
+            bool[] present;
 
             if ((object)other == null)
                 throw new ArgumentNullException("other");
 
-            foreach (T item in other.Distinct())
+            present = new bool[Count];
+
+            foreach (T item in other)
             {
                 if (!Contains(item))
                     return false;
 
-                count++;
+                present[IndexOf(item)] = true;
             }
 
-            return Count != count;
+            return !present.All(p => p);
         }
 
         /// <summary>
@@ -536,10 +703,20 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
         public bool IsSubsetOf(IEnumerable<T> other)
         {
+            bool[] present;
+
             if ((object)other == null)
                 throw new ArgumentNullException("other");
 
-            return m_hashSet.IsSubsetOf(other.Select(item => new LinkedListNode<T>(item)));
+            present = new bool[Count];
+
+            foreach (T item in other)
+            {
+                if (Contains(item))
+                    present[IndexOf(item)] = true;
+            }
+
+            return present.All(p => p);
         }
 
         /// <summary>
@@ -576,79 +753,58 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Removes the the specified element from the <see cref="OrderedSet{T}"/> object.
+        /// Removes the the specified element from the <see cref="OrderedTreeSet{T}"/> object.
         /// </summary>
         /// <returns>
         /// <c>true</c> if <paramref name="item"/> was successfully removed from the set; otherwise, <c>false</c>.
         /// This method also returns <c>false</c> if <paramref name="item"/> is not found in the 
-        /// <see cref="OrderedSet{T}"/> object.
+        /// <see cref="OrderedTreeSet{T}"/> object.
         /// </returns>
         /// <param name="item">The object to remove from the set.</param>
         public bool Remove(T item)
         {
-            LinkedListNode<T> node;
-            int index;
+            TreeSetNode node;
+            TreeSetNode relative;
 
-            if (!Contains(item))
-                return false;
+            if ((object)item == null)
+                throw new ArgumentNullException("item");
 
-            // Find the node to be removed
-            node = m_linkedList.First;
-            index = 0;
-
-            while (!m_equalityComparer.Equals(item, node.Value))
+            if (m_nodeLookup.TryGetValue(item, out node))
             {
-                node = node.Next;
-                index++;
+                relative = node.Parent ?? node.Left ?? node.Right;
+                m_nodeLookup.Remove(item);
+                node.Remove();
+
+                if ((object)relative != null)
+                    m_root = relative.Root;
+                else
+                    m_root = null;
+
+                return true;
             }
 
-            if (index <= m_lastVisitedIndex)
-            {
-                // The last visited node's index is going to change,
-                // so adjust the reference to the node that will take its place
-                m_lastVisitedNode = m_lastVisitedNode.Next;
-
-                // If the last visited node was at the end of the list before
-                // the adjustment, set last visited index to its default of 0
-                if ((object)m_lastVisitedNode == null)
-                    m_lastVisitedIndex = 0;
-            }
-
-            m_hashSet.Remove(node);
-            m_linkedList.Remove(node);
-
-            return true;
+            return false;
         }
 
         /// <summary>
-        /// Removes the <see cref="OrderedSet{T}"/> item at the specified index.
+        /// Removes the <see cref="OrderedTreeSet{T}"/> item at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index of the item to remove.</param>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="OrderedSet{T}"/>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="OrderedTreeSet{T}"/>.</exception>
         public void RemoveAt(int index)
         {
-            LinkedListNode<T> node = Visit(index);
+            if (index < 0 || index >= Count)
+                throw new ArgumentOutOfRangeException("index");
 
-            // We just visited the node we are about to remove.
-            // Since the next node will take its place,
-            // set last visited node to the next node after it
-            m_lastVisitedNode = m_lastVisitedNode.Next;
-
-            // If the node to be removed is the last node in the list,
-            // set last visited index back to its default of 0
-            if ((object)m_lastVisitedNode == null)
-                m_lastVisitedIndex = 0;
-
-            m_hashSet.Remove(node);
-            m_linkedList.Remove(node);
+            Remove(m_root[index].Item.Value);
         }
 
         /// <summary>
         /// Removes all elements that match the conditions defined by the specified predicate from the
-        /// <see cref="OrderedSet{T}"/> object.
+        /// <see cref="OrderedTreeSet{T}"/> object.
         /// </summary>
         /// <returns>
-        /// The number of elements that were removed from the the <see cref="OrderedSet{T}"/> object.
+        /// The number of elements that were removed from the the <see cref="OrderedTreeSet{T}"/> object.
         /// </returns>
         /// <param name="match">
         /// The <see cref="Predicate{T}" /> delegate that defines the conditions of the elements to remove.
@@ -656,32 +812,29 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="match" /> is null.</exception>
         public int RemoveWhere(Predicate<T> match)
         {
-            LinkedListNode<T> node;
-            LinkedListNode<T> nextNode;
+            RedBlackNode<TreeSetItem> node;
+            RedBlackNode<TreeSetItem> nextNode;
             int itemsRemoved;
 
             if ((object)match == null)
                 throw new ArgumentNullException("match");
 
-            node = m_linkedList.First;
+            node = m_root.First;
             itemsRemoved = 0;
 
             while ((object)node != null)
             {
                 nextNode = node.Next;
 
-                if (match(node.Value))
+                if (match(node.Item.Value))
                 {
-                    m_hashSet.Remove(node);
-                    m_linkedList.Remove(node);
+                    m_nodeLookup.Remove(node.Item.Value);
+                    m_root.Remove();
                     itemsRemoved++;
                 }
 
                 node = nextNode;
             }
-
-            m_lastVisitedIndex = 0;
-            m_lastVisitedNode = null;
 
             return itemsRemoved;
         }
@@ -696,20 +849,22 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
         public bool SetEquals(IEnumerable<T> other)
         {
-            int count = 0;
+            bool[] present;
 
-            foreach (T item in other.Distinct())
+            if ((object)other == null)
+                throw new ArgumentNullException("other");
+
+            present = new bool[Count];
+
+            foreach (T item in other)
             {
-                if (count > Count)
-                    return false;
-
                 if (!Contains(item))
                     return false;
 
-                count++;
+                present[IndexOf(item)] = true;
             }
 
-            return Count == count;
+            return present.All(p => p);
         }
 
         /// <summary>
@@ -720,25 +875,33 @@ namespace GSF.Collections
         /// <exception cref="ArgumentNullException"><paramref name="other"/> is null.</exception>
         public void SymmetricExceptWith(IEnumerable<T> other)
         {
+            bool[] remove;
+
             if ((object)other == null)
                 throw new ArgumentNullException("other");
 
-            foreach (T item in other.Distinct())
-            {
-                if (Contains(item))
-                    Remove(item);
-                else
-                    Add(item);
-            }
-        }
+            remove = new bool[Count];
 
-        /// <summary>
-        /// Sets the capacity of this <see cref="OrderedSet{T}"/> object to the actual number of
-        /// elements it contains, rounded up to a nearby, implementation-specific value.
-        /// </summary>
-        public void TrimExcess()
-        {
-            m_hashSet.TrimExcess();
+            foreach (T item in other)
+            {
+                if (!Contains(item))
+                {
+                    Add(item);
+                }
+                else
+                {
+                    int index = IndexOf(item);
+
+                    if (index < remove.Length)
+                        remove[index] = true;
+                }
+            }
+
+            for (int i = remove.Length; i >= 0; i--)
+            {
+                if (remove[i])
+                    RemoveAt(i);
+            }
         }
 
         /// <summary>
@@ -754,45 +917,6 @@ namespace GSF.Collections
 
             foreach (T item in other)
                 Add(item);
-        }
-
-        private LinkedListNode<T> Visit(int index)
-        {
-            int firstDistance;
-            int lastDistance;
-            int visitedDistance;
-
-            if (index < 0 || index >= m_linkedList.Count)
-                throw new ArgumentOutOfRangeException("index");
-
-            firstDistance = index;
-            lastDistance = m_linkedList.Count - index;
-            visitedDistance = Math.Abs(m_lastVisitedIndex - index);
-
-            if (firstDistance <= lastDistance && firstDistance <= visitedDistance)
-            {
-                m_lastVisitedNode = m_linkedList.First;
-                m_lastVisitedIndex = 0;
-            }
-            else if (lastDistance <= firstDistance && lastDistance <= visitedDistance)
-            {
-                m_lastVisitedNode = m_linkedList.Last;
-                m_lastVisitedIndex = m_linkedList.Count;
-            }
-
-            while (m_lastVisitedIndex < index)
-            {
-                m_lastVisitedNode = m_lastVisitedNode.Next;
-                m_lastVisitedIndex++;
-            }
-
-            while (m_lastVisitedIndex > index)
-            {
-                m_lastVisitedNode = m_lastVisitedNode.Previous;
-                m_lastVisitedIndex--;
-            }
-
-            return m_lastVisitedNode;
         }
 
         #endregion

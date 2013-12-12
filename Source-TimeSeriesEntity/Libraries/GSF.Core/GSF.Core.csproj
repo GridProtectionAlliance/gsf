@@ -175,11 +175,13 @@
     <Compile Include="Collections\ObservableSet.cs" />
     <Compile Include="Collections\OrderedDictionary.cs" />
     <Compile Include="Collections\OrderedSet.cs" />
+    <Compile Include="Collections\OrderedTreeSet.cs" />
     <Compile Include="Collections\ProcessDictionary.cs" />
     <Compile Include="Collections\NamespaceDoc.cs" />
     <Compile Include="Collections\ProcessList.cs" />
     <Compile Include="Collections\ProcessQueue.cs" />
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
+    <Compile Include="Collections\RedBlackNode.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="ComplexNumber.cs" />
     <Compile Include="CompoundValue.cs" />

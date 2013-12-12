@@ -31,5 +31,6 @@ namespace GSF.Collections
     /// <typeparam name="T">The type of elements in the set.</typeparam>
     public interface IOrderedSet<T> : ISet<T>, IList<T>
     {
+        bool Insert(int index, T item);
     }
 }

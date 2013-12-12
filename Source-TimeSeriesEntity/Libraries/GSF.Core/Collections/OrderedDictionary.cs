@@ -42,6 +42,7 @@ namespace GSF.Collections
     /// accessing items by key and accessing items by index. If an integer is absolutely needed for the key, one could try
     /// using an <see cref="Int64"/> as the <typeparamref name="TKey"/> type instead.
     /// </remarks>
+    [Serializable]
     public class OrderedDictionary<TKey, TValue> : IOrderedDictionary<TKey, TValue>, ISerializable, IDeserializationCallback
     {
         #region [ Members ]
