@@ -45,6 +45,24 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GSF.Communication\GSF.Communication.csproj">
+      <Project>{2b2eb9be-e6a9-406f-bfe6-ff46dd6bd264}</Project>
+      <Name>GSF.Communication</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.PhasorProtocols\GSF.PhasorProtocols.csproj">
+      <Project>{54ca98cc-2f0a-41f2-879d-0e42b17e8544}</Project>
+      <Name>GSF.PhasorProtocols</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
+      <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
+      <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GSF.TestsSuite\GSF.TestsSuite.csproj">
+      <Project>{13d1c7ae-a96d-4d13-8540-e87eedf1a971}</Project>
+      <Name>GSF.TestsSuite</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
