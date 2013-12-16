@@ -23,6 +23,7 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
@@ -33,7 +34,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct("Grid Solutions Framework")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyCulture("")] 
+[assembly: InternalsVisibleTo("GSF.TestsSuite")]
+[assembly: InternalsVisibleTo("GSF.Core.Tests")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]
