@@ -465,27 +465,7 @@ namespace GSF.Core.Tests
             byte actual;
             actual = target.ToByte(provider);
             Assert.AreEqual(expected, actual);
-        }
-
-        /// <summary>
-        ///A test for System.IConvertible.ToChar
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-        }
-
-        /// <summary>
-        ///A test for System.IConvertible.ToDateTime
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToDateTimeTest()
-        {
-            Assert.Inconclusive("Invalid cast from 'Double' to 'DateTime'.");
-        }
+        } 
 
         /// <summary>
         ///A test for System.IConvertible.ToDecimal

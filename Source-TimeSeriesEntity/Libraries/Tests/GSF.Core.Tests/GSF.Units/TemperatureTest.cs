@@ -748,17 +748,7 @@ namespace GSF.Core.Tests
         public void ToDateTimeTest()
         {
             Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-        }
-
-        /// <summary>
-        ///A test for System.IConvertible.ToChar
-        ///</summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-        }
+        } 
 
         /// <summary>
         ///A test for System.IConvertible.ToByte

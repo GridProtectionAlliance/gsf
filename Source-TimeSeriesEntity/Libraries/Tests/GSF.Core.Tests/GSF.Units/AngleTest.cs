@@ -358,27 +358,7 @@ namespace GSF.Core.Tests
             byte actual;
             actual = target.ToByte(provider);
             Assert.AreEqual(expected, actual);
-        }
-
-        /// <summary>
-        /// A test for System.IConvertible.ToChar
-        /// These are explicitly implemented on the native System.Double implementations, so we do the same...
-        /// </summary>
-        [TestMethod]
-        [DeploymentItem("GSF.Core.dll")]
-        public void ToCharTest()
-        {
-            /*
-            double value = 10F;
-            IConvertible target = new Angle(value);
-            IFormatProvider provider = null;
-            char expected = '\0';
-            char actual= target.ToChar(provider);
-            Assert.AreEqual(expected, actual);
-            * */
-            Assert.Inconclusive("Invalid cast from 'Double' to 'Char'.");
-
-        }
+        } 
 
         /// <summary>
         /// A test for System.IConvertible.ToDateTime
