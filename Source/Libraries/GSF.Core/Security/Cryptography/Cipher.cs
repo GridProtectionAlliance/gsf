@@ -24,7 +24,7 @@
 //       Changed string-based encrypt and decrypt functions to return null if
 //       input string to be encrypted or decrypted was null or empty.
 //  10/11/2007 - J. Ritchie Carroll
-//       Added Obfuscate and Deobfuscate functions that perform data obfuscation
+//       Added Obfuscate and De-obfuscate functions that perform data obfuscation
 //       based upon simple bit-rotation algorithms.
 //  12/13/2007 - Darrell Zuercher
 //       Edited code comments.
@@ -63,16 +63,16 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Configuration;
-using GSF.IO;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.IO;
+using Microsoft.Win32;
 
 namespace GSF.Security.Cryptography
 {
@@ -113,9 +113,6 @@ namespace GSF.Security.Cryptography
 
         // Default wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache
         private const double DefaultRetryDelayInterval = 200.0D;
-
-        // Default managed encryption, use managed encryption algorithms
-        private const bool DefaultManagedEncryption = true;
 
         // The standard settings category for cryptography information
         private const string CryptoServicesSettingsCategory = "CryptographyServices";
@@ -345,7 +342,7 @@ namespace GSF.Security.Cryptography
             }
 
             /// <summary>
-            /// Initiates interprocess synchronized save of key and initialization vector table.
+            /// Initiates inter-process synchronized save of key and initialization vector table.
             /// </summary>
             public override void Save()
             {
@@ -486,7 +483,7 @@ namespace GSF.Security.Cryptography
                 if (File.Exists(tempFile))
                     File.Delete(tempFile);
 #else
-                System.Security.AccessControl.DirectorySecurity ds = Directory.GetAccessControl(FilePath.GetDirectoryName(localCacheFileName));
+                Directory.GetAccessControl(FilePath.GetDirectoryName(localCacheFileName));
 #endif
 
                 // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
@@ -592,14 +589,14 @@ namespace GSF.Security.Cryptography
 
                 // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
                 commonKeyIVCache = new KeyIVCache
-                    {
-                        FileName = commonCacheFileName,
-                        RetryDelayInterval = retryDelayInterval,
-                        MaximumRetryAttempts = maximumRetryAttempts,
-                        ManagedEncryption = s_managedEncryption,
-                        ReloadOnChange = false,
-                        AutoSave = false
-                    };
+                {
+                    FileName = commonCacheFileName,
+                    RetryDelayInterval = retryDelayInterval,
+                    MaximumRetryAttempts = maximumRetryAttempts,
+                    ManagedEncryption = s_managedEncryption,
+                    ReloadOnChange = false,
+                    AutoSave = false
+                };
 
                 // Load initial keys
                 commonKeyIVCache.Load();
@@ -654,6 +651,10 @@ namespace GSF.Security.Cryptography
         /// <param name="password">User password to get hash for.</param>
         /// <param name="categoryID">Specifies the desired category ID.</param>
         /// <returns>Base64 encoded SHA-256 hash of user password.</returns>
+        /// <remarks>
+        /// The optional <paramref name="categoryID"/> will be appended to the <paramref name="password"/> to allow
+        /// the same password to be used in different contexts and return different results, when useful.
+        /// </remarks>
         public static string GetPasswordHash(string password, int categoryID = 0)
         {
             string hash;
