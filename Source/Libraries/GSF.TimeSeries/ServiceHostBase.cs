@@ -39,6 +39,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime;
+using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -49,6 +50,7 @@ using GSF.Communication;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
+using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.ServiceProcess;
 using GSF.TimeSeries.Adapters;
@@ -658,13 +660,9 @@ namespace GSF.TimeSeries
             ConfigurationFile configurationFile;
             CategorizedSettingsElementCollection remotingServer;
 
-            IPHostEntry hostEntry;
-            ProcessStartInfo processInfo;
-            Process makeCertProcess;
             string certificatePath;
-            string makeCertPath;
-            string commonNameList;
-            string certificateLocation;
+            CertificateGenerator certificateGenerator;
+            X509Certificate2 certificate = null;
 
             try
             {
@@ -673,40 +671,24 @@ namespace GSF.TimeSeries
                 configurationFile = ConfigurationFile.Current;
                 remotingServer = configurationFile.Settings["remotingServer"];
 
-                remotingServer.Add("CertificateFile", "Internal.cer", "Path to the local certificate used by this server for authentication.");
+                remotingServer.Add("CertificateFile", string.Format("{0}.cer", serviceName), "Path to the local certificate used by this server for authentication.");
                 certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
-                makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
 
-                if (!File.Exists(certificatePath) && File.Exists(makeCertPath))
+                certificateGenerator = new CertificateGenerator()
                 {
-                    hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+                    Issuer = serviceName,
+                    CertificatePath = certificatePath
+                };
 
-                    commonNameList = hostEntry.AddressList
-                        .Select(address => address.ToString())
-                        .Concat(hostEntry.Aliases)
-                        .Concat(new string[] { hostEntry.HostName })
-                        .Select(commonName => "CN=" + commonName)
-                        .Aggregate((list, name) => list + ", " + name);
+                if (File.Exists(certificatePath))
+                    certificate = new X509Certificate2(certificatePath);
 
-                    if (string.Compare(Environment.UserName, "SYSTEM", StringComparison.InvariantCultureIgnoreCase) == 0)
-                        certificateLocation = "LocalMachine";
-                    else
-                        certificateLocation = "CurrentUser";
-
-                    processInfo = new ProcessStartInfo(makeCertPath);
-                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr {1} \"{2}\"", commonNameList, certificateLocation, certificatePath);
-                    processInfo.UseShellExecute = true;
-
-                    makeCertProcess = Process.Start(processInfo);
-                    makeCertProcess.WaitForExit();
-                    makeCertProcess.Dispose();
-
+                if (!Equals(certificate, certificateGenerator.GenerateCertificate()))
                     EventLog.WriteEntry(serviceName, string.Format("Created self-signed certificate for service: \"{0}\"", certificatePath), EventLogEntryType.Information, 0);
-                }
             }
             catch (Exception ex)
             {
-                EventLog.WriteEntry(serviceName, string.Format("{0}{1}{2}", ex.Message, Environment.NewLine, ex.StackTrace), EventLogEntryType.Error, 0);
+                EventLog.WriteEntry(serviceName, string.Format("{0}{3}{1}{3}{2}", ex.Message, ex.GetType().FullName, ex.StackTrace, Environment.NewLine), EventLogEntryType.Error, 0);
             }
         }
 

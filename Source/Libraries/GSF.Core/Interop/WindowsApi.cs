@@ -77,6 +77,11 @@ namespace GSF.Interop
         /// </summary>
         public const int ERROR_ACCESS_DENIED = 5;
 
+        public const int CRYPT_OID_INFO_OID_KEY = 1;
+        public const int CRYPT_OID_INFO_NAME_KEY = 2;
+        public const uint CRYPT_OID_DISABLE_SEARCH_DS_FLAG = 0x80000000u;
+        public const int CRYPT_INSTALL_OID_INFO_BEFORE_FLAG = 1;
+
         public const string SE_ASSIGNPRIMARYTOKEN_NAME = "SeAssignPrimaryTokenPrivilege";
         public const string SE_AUDIT_NAME = "SeAuditPrivilege";
         public const string SE_BACKUP_NAME = "SeBackupPrivilege";
@@ -773,6 +778,41 @@ namespace GSF.Interop
         }
 
         /// <summary>
+        /// Win32 CRYPTOAPI_BLOB structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct CRYPTOAPI_BLOB
+        {
+            public int cbData;
+            public IntPtr pbData;
+        }
+
+        /// <summary>
+        /// Win32 CRYPT_OID_INFO class.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public class CRYPT_OID_INFO
+        {
+            public int cbSize;
+
+            [MarshalAs(UnmanagedType.LPStr)]
+            public string pszOID;
+
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string pwszName;
+
+            public int dwGroupId;
+            public int dwValueOrAlgidordwLength;
+            public CRYPTOAPI_BLOB ExtraInfo;
+
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string pwszCNGAlgid;
+
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string pwszCNGExtraAlgid;
+        }
+
+        /// <summary>
         /// Win32 InitiateSystemShutdownEx function.
         /// </summary>
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -957,6 +997,30 @@ namespace GSF.Interop
         /// </summary>
         [DllImport("kernel32.dll")]
         public static extern int FormatMessage(int dwFlags, ref IntPtr lpSource, int dwMessageId, int dwLanguageId, ref string lpBuffer, int nSize, ref IntPtr Arguments);
+
+        /// <summary>
+        /// Win32 CryptFindOIDInfo function.
+        /// </summary>
+        [DllImport("crypt32.dll", SetLastError = true)]
+        public static extern IntPtr CryptFindOIDInfo(int dwKeyType, string pvKey, uint dwGroupId);
+
+        /// <summary>
+        /// Win32 CryptRegisterOIDInfo function.
+        /// </summary>
+        [DllImport("crypt32.dll", SetLastError = true)]
+        public static extern bool CryptRegisterOIDInfo(IntPtr pInfo, int dwFlags);
+
+        /// <summary>
+        /// Win32 CryptUnregisterOIDInfo function.
+        /// </summary>
+        [DllImport("crypt32.dll", SetLastError = true)]
+        public static extern bool CryptUnregisterOIDInfo(IntPtr pInfo);
+
+        /// <summary>
+        /// Win32 IsWow64Process function.
+        /// </summary>
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool IsWow64Process(IntPtr hProcess, ref bool Wow64Process);
 
         /// <summary>
         /// Formats and returns a .NET string containing the Windows API level error message corresponding to the specified error code.
