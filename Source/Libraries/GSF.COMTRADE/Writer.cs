@@ -57,7 +57,7 @@ namespace GSF.COMTRADE
         /// the <see cref="Schema.FileImage"/> property to return a string that that can be written to a file
         /// that will be the contents of the configuration file.
         /// </remarks>
-        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, bool isBinary = true, double timeFactor = 1000.0D, double samplingRate = 1000.0D / 30.0D, LineFrequency nominalFrequency = LineFrequency.Hz60, bool includeFracSecDefinition = true)
+        public static Schema CreateSchema(IEnumerable<ChannelMetadata> metadata, string stationName, string deviceID, Ticks dataStartTime, int sampleCount, bool isBinary = true, double timeFactor = 1000.0D, double samplingRate = 1000.0D / 30.0D, double nominalFrequency = 60.0D, bool includeFracSecDefinition = true)
         {
             Schema schema = new Schema();
 

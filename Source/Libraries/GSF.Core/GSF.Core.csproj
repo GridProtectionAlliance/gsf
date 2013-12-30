@@ -286,6 +286,7 @@
     <Compile Include="Net\Smtp\NamespaceDoc.cs" />
     <Compile Include="NtpTimeTag.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
+    <Compile Include="NumericalAnalysis\Euclidean.cs" />
     <Compile Include="NumericalAnalysis\NamespaceDoc.cs" />
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
