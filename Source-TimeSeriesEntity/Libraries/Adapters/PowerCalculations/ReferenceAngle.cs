@@ -60,7 +60,6 @@ namespace PowerCalculations
 
         // Fields
         private Guid m_referenceAngleID;
-
         private double m_phaseResetAngle;
         private Dictionary<Guid, double> m_lastAngles;
         private Dictionary<Guid, double> m_unwrapOffsets;

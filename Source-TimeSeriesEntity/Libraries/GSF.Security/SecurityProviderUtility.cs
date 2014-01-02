@@ -40,7 +40,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Web.Security;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Net.Smtp;
@@ -116,7 +115,8 @@ namespace GSF.Security
             ISecurityProvider provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as ISecurityProvider;
 
             // Initialize the provider.
-            provider.Initialize();
+            if ((object)provider != null)
+                provider.Initialize();
 
             // Return initialized provider.
             return provider;
@@ -163,13 +163,13 @@ namespace GSF.Security
                 foreach (string item in inclusion.Key.Split(','))
                 {
                     if (IsRegexMatch(item.Trim(), resource))
-                    { 
+                    {
+                        // Allow security to be implemented inside the resource.
                         if (string.IsNullOrEmpty(inclusion.Value))
-                            // Allow security to be implemented inside the resource.
                             return true;
-                        else
-                            // Check resource role requirements against user's role subscription.
-                            return Thread.CurrentPrincipal.IsInRole(inclusion.Value);
+
+                        // Check resource role requirements against user's role subscription.
+                        return Thread.CurrentPrincipal.IsInRole(inclusion.Value);
                     }
                 }
             }
@@ -185,8 +185,8 @@ namespace GSF.Security
         /// <returns>true if the <paramref name="target"/> matches the <paramref name="spec"/>, otherwise false.</returns>
         public static bool IsRegexMatch(string spec, string target)
         {
-            spec = spec.Replace(".", "\\.");    // Escapse special regex character '.'.
-            spec = spec.Replace("?", "\\?");    // Escapse special regex character '?'.
+            spec = spec.Replace(".", "\\.");    // Escape special regex character '.'.
+            spec = spec.Replace("?", "\\?");    // Escape special regex character '?'.
             spec = spec.Replace("*", ".*");     // Convert '*' to its regex equivalent.
 
             // Perform a case-insensitive regex match.

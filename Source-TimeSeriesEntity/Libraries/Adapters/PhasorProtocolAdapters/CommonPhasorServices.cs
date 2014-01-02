@@ -42,6 +42,7 @@ using GSF.Data;
 using GSF.IO;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
+using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;

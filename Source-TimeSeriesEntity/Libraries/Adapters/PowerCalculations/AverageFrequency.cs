@@ -28,7 +28,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -60,7 +59,7 @@ namespace PowerCalculations
         private double m_maximumFrequency;
         private double m_minimumFrequency;
 
-        private readonly ConcurrentDictionary<Guid, int> m_lastValues = new ConcurrentDictionary<Guid, int>();
+        private readonly Dictionary<Guid, int> m_lastValues = new Dictionary<Guid, int>();
 
         #endregion
 
@@ -163,6 +162,16 @@ namespace PowerCalculations
             {
                 StringBuilder status = new StringBuilder();
 
+                status.AppendLine(">> Defined Outputs:");
+                status.AppendLine("---------------------------");
+                status.AppendFormat("         Average frequency: {0}", this.GetSignalInfo(m_averageFrequencyID));
+                status.AppendLine();
+                status.AppendFormat("         Maximum frequency: {0}", this.GetSignalInfo(m_maximumFrequencyID));
+                status.AppendLine();
+                status.AppendFormat("         Minimum frequency: {0}", this.GetSignalInfo(m_minimumFrequencyID));
+                status.AppendLine();
+                status.AppendLine();
+
                 status.AppendFormat("    Last average frequency: {0}", m_averageFrequency);
                 status.AppendLine();
                 status.AppendFormat("    Last maximum frequency: {0}", m_maximumFrequency);
@@ -223,15 +232,13 @@ namespace PowerCalculations
                 const double hzResolution = 1000.0; // three decimal places
 
                 double frequency;
-                double frequencyTotal;
                 double maximumFrequency = LoFrequency;
                 double minimumFrequency = HiFrequency;
                 int adjustedFrequency;
                 int lastValue;
-                int total;
 
-                frequencyTotal = 0.0D;
-                total = 0;
+                double total = 0.0D;
+                int count = 0;
 
                 foreach (IMeasurement<double> measurement in frame.Entities.Values.OfType<IMeasurement<double>>())
                 {
@@ -248,13 +255,13 @@ namespace PowerCalculations
                     }
                     else
                     {
-                        m_lastValues[measurement.ID] = adjustedFrequency;
+                        m_lastValues.Add(measurement.ID, adjustedFrequency);
                     }
 
                     // Validate frequency
                     if (frequency > LoFrequency && frequency < HiFrequency)
                     {
-                        frequencyTotal += frequency;
+                        total += frequency;
 
                         if (frequency > maximumFrequency)
                             maximumFrequency = frequency;
@@ -262,13 +269,13 @@ namespace PowerCalculations
                         if (frequency < minimumFrequency)
                             minimumFrequency = frequency;
 
-                        total++;
+                        count++;
                     }
                 }
 
-                if (total > 0)
+                if (count > 0)
                 {
-                    m_averageFrequency = (frequencyTotal / total);
+                    m_averageFrequency = (total / count);
                     m_maximumFrequency = maximumFrequency;
                     m_minimumFrequency = minimumFrequency;
                 }

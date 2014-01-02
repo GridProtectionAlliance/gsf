@@ -699,16 +699,34 @@ namespace GSF.TimeSeries.Adapters
 
                 status.AppendLine();
 
+                if (InputSignalIDs.Any(signalID => signalID != Guid.Empty))
+                {
+                    status.AppendFormat("             Input Signals: {0} defined signals", InputSignalIDs.Count);
+                    status.AppendLine();
+                    status.AppendLine();
+
+                    foreach (Guid signalID in InputSignalIDs.Take(MaxSignalsToShow))
+                    {
+                        status.Append(this.GetSignalInfo(signalID, maxLength: 40).PadLeft(40));
+                        status.Append(" ");
+                        status.AppendLine(signalID.ToString());
+                    }
+
+                    if (InputSignalIDs.Count > MaxSignalsToShow)
+                        status.AppendLine("...".PadLeft(26));
+
+                    status.AppendLine();
+                }
+
                 if (OutputSignalIDs.Any(signalID => signalID != Guid.Empty))
                 {
                     status.AppendFormat("            Output Signals: {0} defined signals", OutputSignalIDs.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    // TODO: Fix metadata lookup and display point tag instead of signal ID
                     foreach (Guid signalID in OutputSignalIDs.Take(MaxSignalsToShow))
                     {
-                        status.Append(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
+                        status.Append(this.GetSignalInfo(signalID, maxLength: 40).PadLeft(40));
                         status.Append(" ");
                         status.AppendLine(signalID.ToString());
                     }
@@ -719,50 +737,40 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if (InputSignalIDs.Any(signalID => signalID != Guid.Empty))
-                {
-                    status.AppendFormat("             Input Signals: {0} defined signals", InputSignalIDs.Count);
-                    status.AppendLine();
-                    status.AppendLine();
-
-                    // TODO: Fix metadata lookup and display point tag next to measurement key
-                    foreach (Guid signalID in InputSignalIDs.Take(MaxSignalsToShow))
-                        status.AppendLine(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(25).CenterText(50));
-
-                    if (InputSignalIDs.Count > MaxSignalsToShow)
-                        status.AppendLine("...".CenterText(50));
-
-                    status.AppendLine();
-                }
-
                 if ((object)RequestedInputSignals != null && RequestedInputSignals.Count > 0)
                 {
-                    status.AppendFormat("      Requested input keys: {0} defined signals", RequestedInputSignals.Count);
+                    status.AppendFormat("   Requested Input Signals: {0} defined signals", RequestedInputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    // TODO: Fix metadata lookup and display point tag next to measurement key
                     foreach (Guid signalID in RequestedInputSignals.Take(MaxSignalsToShow))
-                        status.AppendLine(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(25).CenterText(50));
+                    {
+                        status.Append(this.GetSignalInfo(signalID, maxLength: 40).PadLeft(40));
+                        status.Append(" ");
+                        status.AppendLine(signalID.ToString());
+                    }
 
                     if (RequestedInputSignals.Count > MaxSignalsToShow)
-                        status.AppendLine("...".CenterText(50));
+                        status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
 
                 if ((object)RequestedOutputSignals != null && RequestedOutputSignals.Count > 0)
                 {
-                    status.AppendFormat("     Requested output keys: {0} defined signals", RequestedOutputSignals.Count);
+                    status.AppendFormat("  Requested Output Signals: {0} defined signals", RequestedOutputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    // TODO: Fix metadata lookup and display point tag next to measurement key
                     foreach (Guid signalID in RequestedOutputSignals.Take(MaxSignalsToShow))
-                        status.AppendLine(AdapterBase.LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(25).CenterText(50));
+                    {
+                        status.Append(this.GetSignalInfo(signalID, maxLength: 40).PadLeft(40));
+                        status.Append(" ");
+                        status.AppendLine(signalID.ToString());
+                    }
 
                     if (RequestedOutputSignals.Count > MaxSignalsToShow)
-                        status.AppendLine("...".CenterText(50));
+                        status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }

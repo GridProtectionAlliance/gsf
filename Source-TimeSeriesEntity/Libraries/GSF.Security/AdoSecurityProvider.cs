@@ -46,7 +46,7 @@ namespace GSF.Security
 {
     /// <summary>
     /// Represents an <see cref="ISecurityProvider"/> that uses ADO.NET data source (SQL Server, MySQL, Microsoft Access etc) for its
-    /// backend datastore and authenticates internal users against Active Directory and external users against the database.
+    /// backend data store and authenticates internal users against Active Directory and external users against the database.
     /// </summary>
     /// <example>
     /// Required config file entries:
@@ -93,6 +93,8 @@ namespace GSF.Security
         #region [ Members ]
 
         // Constants
+
+        // TODO: Store these in the config file and load as member variables so these values can be tweaked by implementation
         private const int MinimumPasswordLength = 8;
         private const string PasswordRequirementRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
         private const string PasswordRequirementError = "Invalid Password: Password must be at least 8 characters; must contain at least 1 number, 1 upper case letter, and 1 lower case letter";
@@ -122,8 +124,8 @@ namespace GSF.Security
         /// Initializes a new instance of the <see cref="AdoSecurityProvider"/> class.
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
-        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend datastore, otherwise false.</param>
-        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend datastore, otherwise false.</param>
+        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend data store, otherwise false.</param>
+        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend data store, otherwise false.</param>
         /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         protected AdoSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
@@ -137,22 +139,18 @@ namespace GSF.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Geta a boolean value that indicates whether <see cref="SecurityProviderBase.UpdateData"/> operation is supported.
+        /// Gets a a boolean value that indicates whether <see cref="SecurityProviderBase.UpdateData"/> operation is supported.
         /// </summary>
         public override bool CanUpdateData
         {
             get
             {
+                // Data update supported on external user accounts.
                 if (UserData.IsDefined && UserData.IsExternal)
-                {
-                    // Data update supported on external user accounts.
                     return true;
-                }
-                else
-                {
-                    // Data update not supported on internal user accounts.
-                    return false;
-                }
+
+                // Data update not supported on internal user accounts.
+                return false;
             }
         }
 
@@ -186,7 +184,7 @@ namespace GSF.Security
             // Make sure default settings exist
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-            settings.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
+            settings.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security data store.");
             settings.Add("LdapPath", "", "Specifies the LDAP path used to initialize the security provider.");
         }
 
@@ -230,7 +228,7 @@ namespace GSF.Security
 
                     if (userDataTable.Rows.Count <= 0)
                     {
-                        // User doesn't exist in the database, however, user may exist in an NT authentication group which may have an explict role assignment. To test for this case
+                        // User doesn't exist in the database, however, user may exist in an NT authentication group which may have an explicit role assignment. To test for this case
                         // we make the assumption that this is a Windows authenticated user and test for rights within groups
                         UserData.IsDefined = true;
                         UserData.IsExternal = false;
@@ -410,7 +408,7 @@ namespace GSF.Security
                     {
                         Password = password;
 
-                        // Authenticate against backend datastore
+                        // Authenticate against backend data store
                         UserData.IsAuthenticated =
                             UserData.Password == password ||
                             UserData.Password == SecurityProviderUtility.EncryptPassword(password) ||
@@ -442,7 +440,7 @@ namespace GSF.Security
                 }
             }
 
-            // If an exception occured during authentication, rethrow it after loging authentication attempt
+            // If an exception occurred during authentication, rethrow it after logging authentication attempt
             if ((object)authenticationException != null)
             {
                 m_lastException = authenticationException;
@@ -454,7 +452,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Changes user password in the backend datastore.
+        /// Changes user password in the backend data store.
         /// </summary>
         /// <param name="oldPassword">User's current password.</param>
         /// <param name="newPassword">User's new password.</param>
@@ -589,7 +587,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Logs information about an encountered exception to the backend datastore.
+        /// Logs information about an encountered exception to the backend data store.
         /// </summary>
         /// <param name="source">Source of the exception.</param>
         /// <param name="message">Detailed description of the exception.</param>
@@ -636,7 +634,7 @@ namespace GSF.Security
         {
             try
             {
-                // Using an interprocess cache for user roles
+                // Using an inter-process cache for user roles
                 UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache();
                 string cachedRole, currentRole;
 

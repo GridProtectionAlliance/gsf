@@ -21,19 +21,19 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.IO;
-using GSF.Security.Cryptography;
-using GSF.Threading;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
+using GSF.Collections;
+using GSF.IO;
+using GSF.Security.Cryptography;
+using GSF.Threading;
 
 namespace GSF.Security
 {
     /// <summary>
-    /// Represents a secured interprocess cache for a <see cref="Dictionary{TKey,TValue}"/> of serialized user role information.
+    /// Represents a secured inter-process cache for a <see cref="Dictionary{TKey,TValue}"/> of serialized user role information.
     /// </summary>
     public class UserRoleCache : InterprocessCache
     {
@@ -206,7 +206,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Initiates interprocess synchronized save of user role cache.
+        /// Initiates inter-process synchronized save of user role cache.
         /// </summary>
         public override void Save()
         {
@@ -218,7 +218,7 @@ namespace GSF.Security
                 serializedUserDataTable = Serialization.Serialize(m_userRoles, SerializationFormat.Binary);
             }
 
-            // File data is the serialized user roles dictionary, assigmnent will initiate auto-save if needed
+            // File data is the serialized user roles dictionary, assignment will initiate auto-save if needed
             FileData = serializedUserDataTable;
         }
 
@@ -370,7 +370,7 @@ namespace GSF.Security
                 // Load initial keys
                 currentCache.Load();
 
-                // Merge new or updated keys, protected folder keys taking precendence over user keys
+                // Merge new or updated keys, protected folder keys taking precedence over user keys
                 currentCache.MergeRight(localUserRoleCache);
             }
 

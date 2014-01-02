@@ -25,7 +25,6 @@
 
 using System;
 using System.Data;
-using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries
 {
@@ -99,12 +98,16 @@ namespace GSF.TimeSeries
         /// <returns>
         /// <c>true</c> if <paramref name="obj"/> and this <see cref="MeasurementKey"/> are the same type and represent the same value; otherwise, <c>false</c>.
         /// </returns>
+        /// <remarks>
+        /// Overriding equals to avoid reflection based compare on value-type base class. Needed for quick comparison
+        /// in <see cref="GSF.TimeSeries.Adapters.AdapterExtensions.TryGetMeasurementKey"/>.
+        /// </remarks>
         public override bool Equals(object obj)
         {
             if (obj is MeasurementKey)
             {
                 MeasurementKey key = (MeasurementKey)obj;
-                return m_pointID == key.m_pointID && string.Compare(m_source, key.m_source, true) == 0;
+                return m_pointID == key.m_pointID && string.CompareOrdinal(m_source, key.m_source) == 0;
             }
 
             return base.Equals(obj);
@@ -211,32 +214,6 @@ namespace GSF.TimeSeries
                 MeasurementKey.TryParse(row[measurementKeyColumn].ToNonNullString("__"), out key);
 
             return key;
-        }
-
-        /// <summary>
-        /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
-        /// </summary>
-        /// <param name="adapter">Adapter to get meta-data for.</param>
-        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
-        /// <param name="key">The <see cref="MeasurementKey"/> instance to return.</param>
-        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
-        /// <param name="measurementKeyColumn">Name of column that contains the data to parse as a <see cref="MeasurementKey"/>.</param>
-        /// <returns><c>true</c> if meta-data record for <paramref name="signalID"/> was found; otherwise, <c>false</c>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
-        public static bool TryGetMeasurementKey(this IAdapter adapter, Guid signalID, out MeasurementKey key, string measurementTable = "ActiveMeasurements", string measurementKeyColumn = "ID")
-        {
-            DataRow row;
-
-            if (adapter.TryGetMetadata(signalID, out row, measurementTable))
-            {
-                key = row.GetMeasurementKey(measurementKeyColumn);
-
-                if (!key.Equals(default(MeasurementKey)))
-                    return true;
-            }
-
-            key = default(MeasurementKey);
-            return false;
         }
     }
 }

@@ -34,7 +34,7 @@ using System.Linq;
 using System.Text;
 using GSF.PhasorProtocols;
 using GSF.TimeSeries;
-using PhasorProtocolAdapters;
+using GSF.TimeSeries.Adapters;
 
 namespace PowerCalculations
 {
@@ -42,16 +42,69 @@ namespace PowerCalculations
     /// Calculates an average magnitude associated with a composed reference angle.
     /// </summary>
     [Description("Reference Magnitude: calculates an average magnitude associated with a composed reference angle")]
-    public class ReferenceMagnitude : CalculatedMeasurementBase
+    public class ReferenceMagnitude : ActionAdapterBase
     {
         #region [ Members ]
 
         // Fields
+        private Guid m_referenceMagnitudeID;
         private double m_referenceMagnitude;
-        
+        private readonly Dictionary<Guid, double> m_lastValues = new Dictionary<Guid, double>();
+
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the signal ID for the reference magnitude output measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the reference magnitude measurement of the reference magnitude calculator; can be one of a filter expression, measurement key, point tag or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid ReferenceMagnitudeID
+        {
+            get
+            {
+                return m_referenceMagnitudeID;
+            }
+            set
+            {
+                m_referenceMagnitudeID = value;
+            }
+        }
+
+        // ReSharper disable RedundantOverridenMember
+        /// <summary>
+        /// Gets or sets output signals that the action adapter will produce, if any.
+        /// </summary>
+        /// <remarks>
+        /// Overriding output signals to remove its attributes such that it will not show up
+        /// in the connection string parameters list. User should manually assign the
+        /// <see cref="ReferenceMagnitudeID"/> for the output of this calculator.
+        /// </remarks>
+        public override ISet<Guid> OutputSignalIDs
+        {
+            get
+            {
+                return base.OutputSignalIDs;
+            }
+            set
+            {
+                base.OutputSignalIDs = value;
+            }
+        }
+        // ReSharper restore RedundantOverridenMember
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
 
         /// <summary>
         /// Returns the detailed status of the <see cref="ReferenceMagnitude"/> calculator.
@@ -82,30 +135,29 @@ namespace PowerCalculations
             base.Initialize();
 
             // Validate input measurements
-            List<MeasurementKey> validInputMeasurementKeys = new List<MeasurementKey>();
-            SignalType keyType;
+            SignalType type;
 
-            for (int i = 0; i < InputMeasurementKeys.Length; i++)
-            {
-                keyType = InputSignalTypes[i];
+            Guid[] voltageMagnitudeIDs = InputSignalIDs.Where(id => this.TryGetSignalType(id, out type) && type == SignalType.VPHA).ToArray();
+            Guid[] currentAngleIDs = InputSignalIDs.Where(id => this.TryGetSignalType(id, out type) && type == SignalType.IPHA).ToArray();
 
-                // Make sure measurement key type is a phase magnitude
-                if (keyType == SignalType.VPHM || keyType == SignalType.IPHM)
-                    validInputMeasurementKeys.Add(InputMeasurementKeys[i]);
-            }
-
-            if (validInputMeasurementKeys.Count == 0)
+            if (voltageMagnitudeIDs.Length == 0 && currentAngleIDs.Length == 0)
                 throw new InvalidOperationException("No valid phase magnitudes were specified as inputs to the reference magnitude calculator.");
 
-            if (InputSignalTypes.Count(s => s == SignalType.VPHM) > 0 && InputSignalTypes.Count(s => s == SignalType.IPHM) > 0)
+            if (voltageMagnitudeIDs.Length > 0 && currentAngleIDs.Length > 0)
                 throw new InvalidOperationException("A mixture of voltage and current phase magnitudes were specified as inputs to the reference magnitude calculator - you must specify one or the other: only voltage phase magnitudes or only current phase magnitudes.");
 
             // Make sure only phase magnitudes are used as input
-            InputMeasurementKeys = validInputMeasurementKeys.ToArray();
+            InputSignalIDs.Clear();
+            InputSignalIDs.UnionWith(voltageMagnitudeIDs);
+            InputSignalIDs.UnionWith(currentAngleIDs);
 
-            // Validate output measurements
-            if (OutputMeasurements.Length < 1)
-                throw new InvalidOperationException("An output measurement was not specified for the reference magnitude calculator - one measurement is expected to represent the \"Calculated Reference Magnitude\" value.");
+            // Get ID for the output measurement
+            if (!this.TryParseSignalID("referenceMagnitudeID", out m_referenceMagnitudeID))
+                throw new InvalidOperationException("No signal ID could be parsed for the reference magnitude output measurement.");
+
+            // Assign output measurement
+            OutputSignalIDs.Clear();
+            OutputSignalIDs.UnionWith(new[] { m_referenceMagnitudeID });
         }
 
         /// <summary>
@@ -118,13 +170,47 @@ namespace PowerCalculations
             if (frame.Entities.Count > 0)
             {
                 // Calculate the average magnitude
-                m_referenceMagnitude = frame.Entities.Values.Select(m => m.AdjustedValue).Average();
+                double magnitude;
+                double lastValue;
+
+                double total = 0.0D;
+                int count = 0;
+
+                foreach (IMeasurement<double> measurement in frame.Entities.Values.OfType<IMeasurement<double>>())
+                {
+                    magnitude = measurement.Value;
+
+                    // Do some simple flat line avoidance...
+                    if (m_lastValues.TryGetValue(measurement.ID, out lastValue))
+                    {
+                        if (lastValue == magnitude)
+                            magnitude = double.NaN;
+                        else
+                            m_lastValues[measurement.ID] = magnitude;
+                    }
+                    else
+                    {
+                        m_lastValues.Add(measurement.ID, magnitude);
+                    }
+
+                    if (!double.IsNaN(magnitude))
+                    {
+                        total += magnitude;
+                        count++;
+                    }
+                }
+
+                if (count > 0)
+                    m_referenceMagnitude = total / count;
+
 
                 // Provide calculated measurement for external consumption
-                OnNewEntities(new IMeasurement[] { Measurement.Clone(OutputMeasurements[0], m_referenceMagnitude, frame.Timestamp) });
+                OnNewEntities(new[] { new Measurement<double>(m_referenceMagnitudeID, frame.Timestamp, m_referenceMagnitude) });
             }
             else
+            {
                 m_referenceMagnitude = 0.0D;
+            }
         }
 
         #endregion

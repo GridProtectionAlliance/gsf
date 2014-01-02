@@ -611,10 +611,9 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    // TODO: Fix metadata lookup and display point tag next to measurement key
                     foreach (Guid signalID in OutputSignalIDs.Take(MaxSignalsToShow))
                     {
-                        status.Append(LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
+                        status.Append(this.GetSignalInfo(signalID, maxLength: 40).PadLeft(40));
                         status.Append(" ");
                         status.AppendLine(signalID.ToString());
                     }
@@ -631,12 +630,15 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendLine();
 
-                    // TODO: Fix metadata lookup and display point tag next to measurement key
                     foreach (Guid signalID in InputSignalIDs.Take(MaxSignalsToShow))
-                        status.Append(LookUpMeasurementKey(dataSource, signalID).ToString().TruncateRight(40).PadLeft(40));
+                    {
+                        status.Append(this.GetSignalInfo(signalID, maxLength: 40).PadLeft(40));
+                        status.Append(" ");
+                        status.AppendLine(signalID.ToString());
+                    }
 
                     if (InputSignalIDs.Count > MaxSignalsToShow)
-                        status.AppendLine("...".CenterText(50));
+                        status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
@@ -996,7 +998,7 @@ namespace GSF.TimeSeries.Adapters
         // Static Methods
 
         /// <summary>
-        /// Parses a standard FILTER styles expression into its constituent parts.
+        /// Parses a standard FILTER style expression into its constituent parts.
         /// </summary>
         /// <param name="filterExpression">Filter expression to parse.</param>
         /// <param name="tableName">Name of table in filter expression.</param>
@@ -1463,6 +1465,73 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets a formatted string representing the <paramref name="signalID"/> in human identifiable form.
+        /// </summary>
+        /// <param name="dataSource"><see cref="DataSet"/> containing meta-data to be searched.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <param name="measurementKeyColumn">Name of column that contains the data to parse as a <see cref="MeasurementKey"/>.</param>
+        /// <param name="signalTypeColumn">Name of column that contains the data to parse as a <see cref="SignalType"/>.</param>
+        /// <param name="pointTagColumn">Name of column that contains the point tag name.</param>
+        /// <param name="maxLength">Defines a maximum length for the returned signal information; set to -1 for no limit. Minimum length limit is 20; smaller lengths will be set to 20.</param>
+        /// <returns>
+        /// A formatted string representing the <paramref name="signalID"/> in human identifiable form.
+        /// </returns>
+        /// <remarks>
+        /// If no meta-data can be found for the specified <paramref name="signalID"/>, the Guid will be serialized as a string and this will be the returned as the signal information.
+        /// When the <paramref name="signalID"/> is returned as the signal information, its length will always be 36 characters regardless of <pararef name="maxLength"/> value.
+        /// </remarks>
+        public static string GetSignalInfo(DataSet dataSource, Guid signalID, string measurementTable = "ActiveMeasurements", string measurementKeyColumn = "ID", string signalTypeColumn = "SignalType", string pointTagColumn = "PointTag", int maxLength = -1)
+        {
+            if (signalID == Guid.Empty)
+                return "Undefined";
+
+            DataRow row;
+
+            if (TryGetMetadata(dataSource, signalID, out row, measurementTable))
+            {
+                string key = row.GetMeasurementKey(measurementKeyColumn).ToString();
+                string pointTag = row[pointTagColumn].ToNonNullNorWhiteSpace(signalID.ToString());
+                string type = row.GetSignalType(signalTypeColumn).ToString();
+
+                // Perform length control on signal information display if requested
+                if (maxLength != -1)
+                {
+                    // Set minimum practical limit
+                    if (maxLength < 20)
+                        maxLength = 20;
+
+                    int baseLength = 6 + key.Length + type.Length;
+
+                    // If key and type alone are already greater than desired length, reduce
+                    // signal information display just to the measurement key
+                    if (baseLength > maxLength)
+                    {
+                        // If key alone is already greater than desired length, trim the
+                        // measurement key with ellipsis
+                        if (2 + key.Length > maxLength)
+                            return string.Format("[{0}]", key.TrimWithEllipsisEnd(maxLength - 2));
+
+                        return string.Format("[{0}]", key);
+                    }
+
+                    // If key and type alone do not leave enough room for an effective point tag display,
+                    // reduce signal information display just to the measurement key and type
+                    if (maxLength - baseLength < 8)
+                        return string.Format("[{0}] ({1})", key, type);
+
+                    // Perform normal display but limit maximum point tag length
+                    return string.Format("[{0}] {1} ({2})", key, pointTag.TrimWithEllipsisEnd(maxLength - baseLength), type);
+                }
+
+                // Return full-length signal information display
+                return string.Format("[{0}] {1} ({2})", key, pointTag, type);
+            }
+
+            return signalID.ToString();
+        }
+
+        /// <summary>
         /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
         /// </summary>
         /// <param name="dataSource"><see cref="DataSet"/> containing meta-data to be searched.</param>
@@ -1476,7 +1545,7 @@ namespace GSF.TimeSeries.Adapters
             {
                 try
                 {
-                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = {0}", id));
+                    DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
 
                     if (filteredRows.Length > 0)
                         return filteredRows[0];

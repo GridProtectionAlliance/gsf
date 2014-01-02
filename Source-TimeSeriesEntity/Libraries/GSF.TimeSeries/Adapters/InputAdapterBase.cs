@@ -29,6 +29,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Timers;
+using GSF.Collections;
 using GSF.TimeSeries.Routing;
 using Timer = System.Timers.Timer;
 
@@ -201,22 +202,27 @@ namespace GSF.TimeSeries.Adapters
 
                 status.Append(base.Status);
 
-                if (RequestedOutputSignals != null && RequestedOutputSignals.Count > 0)
+                if ((object)RequestedOutputSignals != null && RequestedOutputSignals.Count > 0)
                 {
-                    status.AppendFormat("     Requested output keys: {0} defined signals", RequestedOutputSignals.Count);
+                    status.AppendFormat("  Requested Output Signals: {0} defined signals", RequestedOutputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    // TODO: Fix metadata lookup and display point tag next to measurement key
                     foreach (Guid signalID in RequestedOutputSignals.Take(MaxSignalsToShow))
-                        status.AppendLine(LookUpMeasurementKey(DataSource, signalID).ToString().TruncateRight(25).CenterText(50));
+                    {
+                        status.Append(this.GetSignalInfo(signalID, maxLength: 40).PadLeft(40));
+                        status.Append(" ");
+                        status.AppendLine(signalID.ToString());
+                    }
 
                     if (RequestedOutputSignals.Count > MaxSignalsToShow)
-                        status.AppendLine("...".CenterText(50));
+                        status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
 
+                status.AppendFormat("     Source ID filter list: {0}", ((object)m_outputSourceIDs == null ? "[No filter applied]" : m_outputSourceIDs.ToDelimitedString(',')));
+                status.AppendLine();
                 status.AppendFormat("    Connection established: {0}", IsConnected);
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);

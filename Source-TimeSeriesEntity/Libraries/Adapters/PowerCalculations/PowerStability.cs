@@ -461,7 +461,7 @@ namespace PowerCalculations
                 }
 
                 // Provide calculated measurements for external consumption
-                OnNewEntities(new IMeasurement<double>[]
+                OnNewEntities(new[]
                 {
                     powerMeasurement, 
                     new Measurement<double>(m_standardDeviationID, frame.Timestamp, standardDeviation)

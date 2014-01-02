@@ -317,23 +317,26 @@ namespace GSF.TimeSeries.Adapters
 
                 status.Append(base.Status);
 
-                if (RequestedInputSignals != null && RequestedInputSignals.Count > 0)
+                if ((object)RequestedInputSignals != null && RequestedInputSignals.Count > 0)
                 {
-                    status.AppendFormat("      Requested input keys: {0} defined signals", RequestedInputSignals.Count);
+                    status.AppendFormat("   Requested Input Signals: {0} defined signals", RequestedInputSignals.Count);
                     status.AppendLine();
                     status.AppendLine();
 
-                    // TODO: Fix metadata lookup and display point tag next to measurement key
-                    foreach (var signalID in RequestedInputSignals.Take(MaxSignalsToShow))
-                        status.AppendLine(LookUpMeasurementKey(DataSource, signalID).ToString().TruncateRight(25).CenterText(50));
+                    foreach (Guid signalID in RequestedInputSignals.Take(MaxSignalsToShow))
+                    {
+                        status.Append(this.GetSignalInfo(signalID, maxLength: 40).PadLeft(40));
+                        status.Append(" ");
+                        status.AppendLine(signalID.ToString());
+                    }
 
                     if (RequestedInputSignals.Count > MaxSignalsToShow)
-                        status.AppendLine("...".CenterText(50));
+                        status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
 
-                status.AppendFormat("     Source ID filter list: {0}", (m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
+                status.AppendFormat("     Source ID filter list: {0}", ((object)m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();

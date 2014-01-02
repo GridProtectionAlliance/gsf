@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.Serialization;
+using GSF.TimeSeries;
 
 namespace GSF.PhasorProtocols.Anonymous
 {

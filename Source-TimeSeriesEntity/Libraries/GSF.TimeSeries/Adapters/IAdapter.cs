@@ -359,6 +359,204 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Attempts to parse an individual signal ID from the specified <paramref name="parameterName"/> out of the <see cref="IAdapter.ConnectionString"/>
+        /// and validate that the returned signal is the specified <see cref="SignalType"/>.
+        /// </summary>
+        /// <param name="adapter">The <see cref="IAdapter"/> used for source configuration.</param>
+        /// <param name="signalType">The desired <see cref="SignalType"/> of the <paramref name="signalID"/>.</param>
+        /// <param name="parameterName">Parameter name for the signal ID expected in the <see cref="IAdapter.ConnectionString"/>.</param>
+        /// <param name="signalID">The returned <see cref="Guid"/> based signal ID if successfully parsed.</param>
+        /// <returns><c>true</c> if signal ID was successfully parsed; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This function is useful when input or output signals need to be individually specified, e.g., in a calculation, where the signals are
+        /// identified as connection string parameters.
+        /// </para>
+        /// <para>
+        /// If <paramref name="parameterName"/> value is a filter expression that returns more than one value, first value is returned.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException"><see cref="IAdapter.Settings"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Could not determine signal type or signal type is not specified <paramref name="signalType"/> for given <paramref name="parameterName"/>.
+        /// </exception>
+        public static bool TryParseSignalID(this IAdapter adapter, SignalType signalType, string parameterName, out Guid signalID)
+        {
+            if ((object)adapter == null)
+                throw new ArgumentNullException("adapter");
+
+            return signalType.TryParseSignalID(adapter.DataSource, adapter.Settings, parameterName, out signalID);
+        }
+
+        /// <summary>
+        /// Attempts to parse an individual signal ID from the specified <paramref name="parameterName"/> out of the <see cref="IAdapter.ConnectionString"/>
+        /// and validate that the returned signal is the specified <see cref="SignalType"/>.
+        /// </summary>
+        /// <param name="signalType">The desired <see cref="SignalType"/> of the <paramref name="signalID"/>.</param>
+        /// <param name="dataSource">The <see cref="DataSet"/>, if any, used to define data that can be used for the filter expression found in <paramref name="parameterName"/>.</param>
+        /// <param name="settings">Connection string settings dictionary.</param>
+        /// <param name="parameterName">Parameter name for the signal ID expected in the <see cref="IAdapter.ConnectionString"/>.</param>
+        /// <param name="signalID">The returned <see cref="Guid"/> based signal ID if successfully parsed.</param>
+        /// <returns><c>true</c> if signal ID was successfully parsed; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This function is useful when input or output signals need to be individually specified, e.g., in a calculation, where the signals are
+        /// identified as connection string parameters.
+        /// </para>
+        /// <para>
+        /// If <paramref name="parameterName"/> value is a filter expression that returns more than one value, first value is returned.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Could not determine signal type or signal type is not specified <paramref name="signalType"/> for given <paramref name="parameterName"/>.
+        /// </exception>
+        public static bool TryParseSignalID(this SignalType signalType, DataSet dataSource, Dictionary<string, string> settings, string parameterName, out Guid signalID)
+        {
+            if (AdapterBase.TryParseSignalID(dataSource, settings, parameterName, out signalID))
+            {
+                DataRow row;
+
+                if (!AdapterBase.TryGetMetadata(dataSource, signalID, out row) || row.GetSignalType() != signalType)
+                    throw new InvalidOperationException(string.Format("Could not determine signal type or signal type is not a {0} for specified \"{1}\".", signalType.GetFormattedSignalTypeName(), parameterName));
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to parse signal IDs from the specified <paramref name="parameterName"/> out of the <see cref="IAdapter.ConnectionString"/>
+        /// and validate that the returned signals are all the specified <see cref="SignalType"/>.
+        /// </summary>
+        /// <param name="adapter">The <see cref="IAdapter"/> used for source configuration.</param>
+        /// <param name="signalType">The desired <see cref="SignalType"/> of the <paramref name="signalIDs"/>.</param>
+        /// <param name="parameterName">Parameter name for the signal ID expected in the <see cref="IAdapter.ConnectionString"/>.</param>
+        /// <param name="signalIDs">The returned <see cref="Guid"/> based signal IDs if successfully parsed.</param>
+        /// <returns><c>true</c> if any signal IDs were successfully parsed; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException"><see cref="IAdapter.Settings"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Could not determine signal type or signal type is not specified <paramref name="signalType"/> for given <paramref name="parameterName"/>.
+        /// </exception>
+        public static bool TryParseSignalIDs(this IAdapter adapter, SignalType signalType, string parameterName, out Guid[] signalIDs)
+        {
+            if ((object)adapter == null)
+                throw new ArgumentNullException("adapter");
+
+            return signalType.TryParseSignalIDs(adapter.DataSource, adapter.Settings, parameterName, out signalIDs);
+        }
+
+        /// <summary>
+        /// Attempts to parse signal IDs from the specified <paramref name="parameterName"/> out of the <see cref="IAdapter.ConnectionString"/>
+        /// and validate that the returned signals are all the specified <see cref="SignalType"/>.
+        /// </summary>
+        /// <param name="signalType">The desired <see cref="SignalType"/> of the <paramref name="signalIDs"/>.</param>
+        /// <param name="dataSource">The <see cref="DataSet"/>, if any, used to define data that can be used for the filter expression found in <paramref name="parameterName"/>.</param>
+        /// <param name="settings">Connection string settings dictionary.</param>
+        /// <param name="parameterName">Parameter name for the signal ID expected in the <see cref="IAdapter.ConnectionString"/>.</param>
+        /// <param name="signalIDs">The returned <see cref="Guid"/> based signal IDs if successfully parsed.</param>
+        /// <returns><c>true</c> if any signal IDs were successfully parsed; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="settings"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Could not determine signal type or signal type is not specified <paramref name="signalType"/> for given <paramref name="parameterName"/>.
+        /// </exception>
+        public static bool TryParseSignalIDs(this SignalType signalType, DataSet dataSource, Dictionary<string, string> settings, string parameterName, out Guid[] signalIDs)
+        {
+            if (AdapterBase.TryParseSignalIDs(dataSource, settings, parameterName, out signalIDs))
+            {
+                DataRow row;
+
+                if (!signalIDs.All(id => AdapterBase.TryGetMetadata(dataSource, id, out row) && row.GetSignalType() == signalType))
+                    throw new InvalidOperationException(string.Format("Could not determine signal type or signal type is not a {0} for all signals specified for \"{1}\".", signalType.GetFormattedSignalTypeName(), parameterName));
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="adapter">Adapter to get meta-data for.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="type">The <see cref="SignalType"/> instance to return.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <param name="signalTypeColumn">Name of column that contains the data to parse as a <see cref="SignalType"/>.</param>
+        /// <returns><c>true</c> if meta-data record for <paramref name="signalID"/> was found; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        public static bool TryGetSignalType(this IAdapter adapter, Guid signalID, out SignalType type, string measurementTable = "ActiveMeasurements", string signalTypeColumn = "SignalType")
+        {
+            DataRow row;
+
+            if (adapter.TryGetMetadata(signalID, out row, measurementTable))
+            {
+                type = row.GetSignalType(signalTypeColumn);
+
+                if (type != SignalType.NONE)
+                    return true;
+            }
+
+            type = SignalType.NONE;
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="adapter">Adapter to get meta-data for.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="key">The <see cref="MeasurementKey"/> instance to return.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <param name="measurementKeyColumn">Name of column that contains the data to parse as a <see cref="MeasurementKey"/>.</param>
+        /// <returns><c>true</c> if meta-data record for <paramref name="signalID"/> was found; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        public static bool TryGetMeasurementKey(this IAdapter adapter, Guid signalID, out MeasurementKey key, string measurementTable = "ActiveMeasurements", string measurementKeyColumn = "ID")
+        {
+            DataRow row;
+
+            if (adapter.TryGetMetadata(signalID, out row, measurementTable))
+            {
+                key = row.GetMeasurementKey(measurementKeyColumn);
+
+                if (!key.Equals(default(MeasurementKey)))
+                    return true;
+            }
+
+            key = default(MeasurementKey);
+            return false;
+        }
+
+        /// <summary>
+        /// Gets a formatted string representing the <paramref name="signalID"/> in human identifiable form.
+        /// </summary>
+        /// <param name="adapter">Adapter to get meta-data for.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <param name="measurementKeyColumn">Name of column that contains the data to parse as a <see cref="MeasurementKey"/>.</param>
+        /// <param name="signalTypeColumn">Name of column that contains the data to parse as a <see cref="SignalType"/>.</param>
+        /// <param name="pointTagColumn">Name of column that contains the point tag name.</param>
+        /// <param name="maxLength">Defines a maximum length for the returned signal information; set to -1 for no limit. Minimum length limit is 20; smaller lengths will be set to 20.</param>
+        /// <returns>
+        /// A formatted string representing the <paramref name="signalID"/> in human identifiable form.
+        /// </returns>
+        /// <remarks>
+        /// If no meta-data can be found for the specified <paramref name="signalID"/>, the Guid will be serialized as a string and this will be the returned as the signal information.
+        /// When the <paramref name="signalID"/> is returned as the signal information, its length will always be 36 characters regardless of <pararef name="maxLength"/> value.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        public static string GetSignalInfo(this IAdapter adapter, Guid signalID, string measurementTable = "ActiveMeasurements", string measurementKeyColumn = "ID", string signalTypeColumn = "SignalType", string pointTagColumn = "PointTag", int maxLength = -1)
+        {
+            if ((object)adapter == null)
+                throw new ArgumentNullException("adapter");
+
+            return AdapterBase.GetSignalInfo(adapter.DataSource, signalID, measurementTable, measurementKeyColumn, signalTypeColumn, pointTagColumn, maxLength);
+        }
+
+        /// <summary>
         /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
         /// </summary>
         /// <param name="adapter">Adapter to get meta-data for.</param>
@@ -386,7 +584,7 @@ namespace GSF.TimeSeries.Adapters
             if ((object)adapter == null)
                 throw new ArgumentNullException("adapter");
 
-            return GetMetadata(adapter.InputSignalIDs.Union(adapter.OutputSignalIDs), adapter.DataSource, measurementTable);
+            return adapter.InputSignalIDs.Union(adapter.OutputSignalIDs).GetMetadata(adapter.DataSource, measurementTable);
         }
 
         /// <summary>
@@ -444,7 +642,7 @@ namespace GSF.TimeSeries.Adapters
             int index = 0;
 
             if (minimumToGet == -1)
-                minimumToGet = inputSignals.Count();
+                minimumToGet = inputSignals.Count;
 
             if ((object)entities == null || entities.Length < minimumToGet)
                 entities = new T[minimumToGet];
