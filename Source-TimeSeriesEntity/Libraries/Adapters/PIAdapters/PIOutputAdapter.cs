@@ -51,7 +51,7 @@ namespace PIAdapters
         private int m_connectTimeout;                                        // PI connection timeout
         private PISDK.PISDK m_pi;                                            // PI SDK object
         private Server m_server;                                             // PI server object for archiving data
-        private ConcurrentDictionary<MeasurementKey, PIPoint> m_tagKeyMap;   // cache the mapping between GSFSchema measurements and PI points
+        private ConcurrentDictionary<Guid, PIPoint> m_tagKeyMap;             // cache the mapping between GSFSchema measurements and PI points
         private int m_processedMeasurements;                                 // track the processed measurements
         private readonly object m_queuedMetadataRefreshPending;              // sync object to prevent multiple metadata refreshes from occurring concurrently
         private readonly AutoResetEvent m_metadataRefreshComplete;           // Auto reset event to flag when metadata refresh has completed
@@ -73,7 +73,7 @@ namespace PIAdapters
             m_connectTimeout = 30000;
             m_queuedMetadataRefreshPending = new object();
             m_metadataRefreshComplete = new AutoResetEvent(true);
-            m_tagKeyMap = new ConcurrentDictionary<MeasurementKey, PIPoint>();
+            m_tagKeyMap = new ConcurrentDictionary<Guid, PIPoint>();
             m_processedMeasurements = 0;
             m_runMetadataSync = true;
         }
@@ -370,36 +370,36 @@ namespace PIAdapters
         /// Sorts measurements and sends them to the configured PI server in batches
         /// </summary>
         /// <param name="measurements">Measurements to queue</param>
-        protected override void ProcessEntities(IMeasurement[] measurements)
+        protected override void ProcessEntities(ITimeSeriesEntity[] measurements)
         {
             if (measurements != null)
             {
                 if (m_bulkUpdate)
                 {
-                    Dictionary<MeasurementKey, PIValues> values = new Dictionary<MeasurementKey, PIValues>();
+                    Dictionary<Guid, PIValues> values = new Dictionary<Guid, PIValues>();
 
                     foreach (IMeasurement measurement in measurements)
                     {
-                        if (!m_tagKeyMap.ContainsKey(measurement.Key))
+                        if (!m_tagKeyMap.ContainsKey(measurement.ID))
                             MapKeysToPoints();
 
-                        if (!values.ContainsKey(measurement.Key))
+                        if (!values.ContainsKey(measurement.ID))
                         {
-                            values.Add(measurement.Key, new PIValues());
-                            values[measurement.Key].ReadOnly = false;
+                            values.Add(measurement.ID, new PIValues());
+                            values[measurement.ID].ReadOnly = false;
                         }
 
-                        values[measurement.Key].Add(new DateTime(measurement.Timestamp).ToLocalTime(), measurement.AdjustedValue, null);
+                        values[measurement.ID].Add(new DateTime(measurement.Timestamp).ToLocalTime(), measurement.Value, null);
                         m_processedMeasurements++;
                     }
 
-                    foreach (MeasurementKey key in values.Keys)
+                    foreach (Guid signalID in values.Keys)
                     {
                         try
                         {
-                            // If the key isn't in the dictionary, something has gone wrong finding this point in PI
-                            if (m_tagKeyMap.ContainsKey(key))
-                                m_tagKeyMap[key].Data.UpdateValues(values[key]);
+                            // If the signal ID isn't in the dictionary, something has gone wrong finding this point in PI
+                            if (m_tagKeyMap.ContainsKey(signalID))
+                                m_tagKeyMap[signalID].Data.UpdateValues(values[signalID]);
                         }
                         catch (Exception e)
                         {
@@ -411,10 +411,10 @@ namespace PIAdapters
                 {
                     foreach (IMeasurement measurement in measurements)
                     {
-                        if (!m_tagKeyMap.ContainsKey(measurement.Key))
+                        if (!m_tagKeyMap.ContainsKey(measurement.ID))
                             MapKeysToPoints();
 
-                        m_tagKeyMap[measurement.Key].Data.UpdateValue(measurement.AdjustedValue, new DateTime(measurement.Timestamp).ToLocalTime());
+                        m_tagKeyMap[measurement.ID].Data.UpdateValue(measurement.Value, new DateTime(measurement.Timestamp).ToLocalTime());
                         m_processedMeasurements++;
                     }
                 }
@@ -426,44 +426,41 @@ namespace PIAdapters
         /// </summary>
         public void MapKeysToPoints()
         {
-            m_tagKeyMap.Clear();
             int mapped = 0;
+            DataRow row;
 
-            if (InputMeasurementKeys != null)
+            m_tagKeyMap.Clear();
+
+            foreach (Guid signalID in InputSignalIDs)
             {
-                foreach (MeasurementKey key in InputMeasurementKeys)
+                if (this.TryGetMetadata(signalID, out row))
                 {
-                    DataRow[] rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID='{0}'", key.SignalID));
+                    string tagname = row["PointTag"].ToString();
 
-                    if (rows.Length > 0)
+                    // Use alternate tag if one is defined
+                    if (!string.IsNullOrWhiteSpace(row["AlternateTag"].ToString()) && string.Compare(row["AlternateTag"].ToString(), "DIGI", true) != 0)
+                        tagname = row["AlternateTag"].ToString();
+
+                    PointList points;
+
+                    // Two ways to find points here
+                    // 1. if we are running metadata sync from the adapter, look for the signal ID in the exdesc field
+                    // 2. if the pi points are being manually maintained, look for either the point tag or alternate tag in the actual pi point tag
+                    string filter = !m_runMetadataSync ? string.Format("TAG='{0}'", tagname) : string.Format("EXDESC='{0}'", signalID);
+
+                    points = m_server.GetPoints(filter);
+
+                    if (points == null || points.Count == 0)
                     {
-                        string tagname = rows[0]["PointTag"].ToString();
+                        OnStatusMessage("No PI points found with {0}. Data will not be archived for signal {1}.", new object[] { filter, signalID });
+                    }
+                    else
+                    {
+                        if (points.Count > 1)
+                            OnStatusMessage("Multiple PI points were found with tagname matching '{0}' or '{1}' for signal {2}. The first match will be used.", new object[] { row["POINTTAG"], row["ALTERNATETAG"], signalID });
 
-                        // Use alternate tag if one is defined
-                        if (!string.IsNullOrWhiteSpace(rows[0]["AlternateTag"].ToString()) && string.Compare(rows[0]["AlternateTag"].ToString(), "DIGI", true) != 0)
-                            tagname = rows[0]["AlternateTag"].ToString();
-
-                        PointList points;
-
-                        // Two ways to find points here
-                        // 1. if we are running metadata sync from the adapter, look for the signal ID in the exdesc field
-                        // 2. if the pi points are being manually maintained, look for either the point tag or alternate tag in the actual pi point tag
-                        string filter = !m_runMetadataSync ? string.Format("TAG='{0}'", tagname) : string.Format("EXDESC='{0}'", key.SignalID);
-
-                        points = m_server.GetPoints(filter);
-
-                        if (points == null || points.Count == 0)
-                        {
-                            OnStatusMessage("No PI points found with {0}. Data will not be archived for signal {1}.", new object[] { filter, rows[0]["SIGNALID"] });
-                        }
-                        else
-                        {
-                            if (points.Count > 1)
-                                OnStatusMessage("Multiple PI points were found with tagname matching '{0}' or '{1}' for signal {2}. The first match will be used.", new object[] { rows[0]["POINTTAG"], rows[0]["ALTERNATETAG"], rows[0]["SIGNALID"] });
-
-                            m_tagKeyMap.AddOrUpdate(key, points[1], (k, v) => points[1]); // NOTE - The PointList is NOT 0-based (index 1 is the first item in points)
-                            mapped++;
-                        }
+                        m_tagKeyMap.AddOrUpdate(signalID, points[1], (k, v) => points[1]); // NOTE - The PointList is NOT 0-based (index 1 is the first item in points)
+                        mapped++;
                     }
                 }
             }
@@ -520,26 +517,23 @@ namespace PIAdapters
             {
                 base.RefreshMetadata();
 
-                if (InputMeasurementKeys != null && InputMeasurementKeys.Any())
+                if (InputSignalIDs.Any())
                 {
                     IPIPoints2 pts2 = (IPIPoints2)m_server.PIPoints;
                     PointList piPoints;
-                    DataTable measurements = DataSource.Tables["ActiveMeasurements"];
-                    DataRow[] rows;
+                    DataRow row;
 
-                    foreach (MeasurementKey key in InputMeasurementKeys)
+                    foreach (Guid signalID in InputSignalIDs)
                     {
-                        rows = measurements.Select(string.Format("SignalID='{0}'", key.SignalID));
-
-                        if (rows.Any())
+                        if (this.TryGetMetadata(signalID, out row))
                         {
-                            string tagname = rows[0]["PointTag"].ToString();
+                            string tagname = row["PointTag"].ToString();
 
                             // Use alternate tag if one is defined
-                            if (!string.IsNullOrWhiteSpace(rows[0]["AlternateTag"].ToString()) && string.Compare(rows[0]["AlternateTag"].ToString(), "DIGI", true) != 0)
-                                tagname = rows[0]["AlternateTag"].ToString();
+                            if (!string.IsNullOrWhiteSpace(row["AlternateTag"].ToString()) && string.Compare(row["AlternateTag"].ToString(), "DIGI", true) != 0)
+                                tagname = row["AlternateTag"].ToString();
 
-                            piPoints = m_server.GetPoints(string.Format("EXDESC='{0}'", rows[0]["SignalID"]));
+                            piPoints = m_server.GetPoints(string.Format("EXDESC='{0}'", signalID));
 
                             if (piPoints.Count == 0)
                             {
@@ -553,7 +547,7 @@ namespace PIAdapters
                             {
                                 foreach (PIPoint pt in piPoints)
                                 {
-                                    if (pt.Name != rows[0]["PointTag"].ToString())
+                                    if (pt.Name != row["PointTag"].ToString())
                                         pts2.Rename(pt.Name, tagname);
                                 }
                             }
@@ -563,15 +557,15 @@ namespace PIAdapters
                             NamedValues edit = new NamedValues();
 
                             edit.Add("pointsource", m_piPointSource);
-                            edit.Add("Descriptor", rows[0]["Description"].ToString());
-                            edit.Add("exdesc", rows[0]["SignalID"].ToString());
-                            edit.Add("sourcetag", rows[0]["PointTag"].ToString());
+                            edit.Add("Descriptor", row["Description"].ToString());
+                            edit.Add("exdesc", signalID);
+                            edit.Add("sourcetag", row["PointTag"].ToString());
 
                             // TODO: Add this field to the ActiveMeasurement view
-                            if (measurements.Columns.Contains("EngineeringUnits")) // engineering units is a new field for this view -- handle the case that its not there
-                                edit.Add("engunits", rows[0]["EngineeringUnits"].ToString());
+                            if (row.Table.Columns.Contains("EngineeringUnits")) // engineering units is a new field for this view -- handle the case that its not there
+                                edit.Add("engunits", row["EngineeringUnits"].ToString());
 
-                            edits.Add(rows[0]["PointTag"].ToString(), edit);
+                            edits.Add(row["PointTag"].ToString(), edit);
                             pts2.EditTags(edits, out errors);
 
                             if (errors.Count > 0)

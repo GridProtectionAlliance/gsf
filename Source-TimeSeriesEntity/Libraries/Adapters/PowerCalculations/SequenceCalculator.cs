@@ -43,7 +43,7 @@ namespace PowerCalculations
     /// Calculates positive, negative and zero sequences using A, B and C phase voltage or current magnitude and angle signals input to the adapter.
     /// </summary>
     [Description("Sequence Calculator: positive, negative and zero sequences for synchrophasor measurements")]
-    public class SequenceCalculator : CalculatedMeasurementBase
+    public class SequenceCalculator : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -51,11 +51,24 @@ namespace PowerCalculations
         private const double Rad120 = 2.0D * Math.PI / 3.0D;
 
         // Fields
-        private MeasurementKey[] m_angles;
-        private MeasurementKey[] m_magnitudes;
+        private Guid m_aPhaseMagnitudeID;
+        private Guid m_aPhaseAngleID;
+        private Guid m_bPhaseMagnitudeID;
+        private Guid m_bPhaseAngleID;
+        private Guid m_cPhaseMagnitudeID;
+        private Guid m_cPhaseAngleID;
+
+        private Guid m_positiveMagnitudeID;
+        private Guid m_negativeMagnitudeID;
+        private Guid m_zeroMagnitudeID;
+        private Guid m_positiveAngleID;
+        private Guid m_negativeAngleID;
+        private Guid m_zeroAngleID;
+
+        private string m_magnitudeUnits;
         private bool m_trackRecentValues;
         private int m_sampleSize;
-        private string m_magnitudeUnits;
+
         private List<double> m_positiveMagnitudeSample;
         private List<double> m_positiveAngleSample;
         private List<double> m_negativeMagnitudeSample;
@@ -63,20 +76,225 @@ namespace PowerCalculations
         private List<double> m_zeroMagnitudeSample;
         private List<double> m_zeroAngleSample;
 
-        // Important: Make sure output definition defines points in the following order
-        private enum Output
-        {
-            PositiveMagnitude,
-            PositiveAngle,
-            NegativeMagnitude,
-            NegativeAngle,
-            ZeroMagnitude,
-            ZeroAngle
-        }
-
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the signal ID for the magnitude of the A-phase voltage or current phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the magnitude of the A-phase voltage or current phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid APhaseMagnitudeID
+        {
+            get
+            {
+                return m_aPhaseMagnitudeID;
+            }
+            set
+            {
+                m_aPhaseMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the angle of the A-phase voltage or current phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the angle of the A-phase voltage or current phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid APhaseAngleID
+        {
+            get
+            {
+                return m_aPhaseAngleID;
+            }
+            set
+            {
+                m_aPhaseAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the magnitude of the B-phase voltage or current phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the magnitude of the B-phase voltage or current phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid BPhaseMagnitudeID
+        {
+            get
+            {
+                return m_bPhaseMagnitudeID;
+            }
+            set
+            {
+                m_bPhaseMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the angle of the B-phase voltage or current phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the angle of the B-phase voltage or current phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid BPhaseAngleID
+        {
+            get
+            {
+                return m_bPhaseAngleID;
+            }
+            set
+            {
+                m_bPhaseAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the magnitude of the C-phase voltage or current phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the magnitude of the C-phase voltage or current phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid CPhaseMagnitudeID
+        {
+            get
+            {
+                return m_cPhaseMagnitudeID;
+            }
+            set
+            {
+                m_cPhaseMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the angle of the C-phase voltage or current phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the angle of the C-phase voltage or current phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid CPhaseAngleID
+        {
+            get
+            {
+                return m_cPhaseAngleID;
+            }
+            set
+            {
+                m_cPhaseAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the positive sequence phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the magnitude of the positive sequence phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid PositiveMagnitudeID
+        {
+            get
+            {
+                return m_positiveMagnitudeID;
+            }
+            set
+            {
+                m_positiveMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the positive sequence phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the angle of the positive sequence phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid PositiveAngleID
+        {
+            get
+            {
+                return m_positiveAngleID;
+            }
+            set
+            {
+                m_positiveAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the negative sequence phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the magnitude of the negative sequence phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid NegativeMagnitudeID
+        {
+            get
+            {
+                return m_negativeMagnitudeID;
+            }
+            set
+            {
+                m_negativeMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the negative sequence phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the angle of the negative sequence phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid NegativeAngleID
+        {
+            get
+            {
+                return m_negativeAngleID;
+            }
+            set
+            {
+                m_negativeAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the zero sequence phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the magnitude of the zero sequence phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid ZeroMagnitudeID
+        {
+            get
+            {
+                return m_zeroMagnitudeID;
+            }
+            set
+            {
+                m_zeroMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID for the zero sequence phasor measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the output signal ID for the angle of the zero sequence phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid."),
+        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor", "selectable=false")]
+        public Guid ZeroAngleID
+        {
+            get
+            {
+                return m_zeroAngleID;
+            }
+            set
+            {
+                m_zeroAngleID = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets flag that determines if the last few values should be monitored.
@@ -100,7 +318,7 @@ namespace PowerCalculations
         /// Gets or sets the sample size of the data to be monitored.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the sample size of the data to be monitored."),
+        Description("Define the sample size of the data, in seconds, to be monitored."),
         DefaultValue(5)]
         public int SampleSize
         {
@@ -136,17 +354,36 @@ namespace PowerCalculations
 
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat("         Phase A magnitude: {0}", m_magnitudes[0]);
+                status.AppendLine(">> Defined Inputs:");
+                status.AppendLine("---------------------------");
+                status.AppendFormat("         Phase-A magnitude: {0}", this.GetSignalInfo(m_aPhaseMagnitudeID));
                 status.AppendLine();
-                status.AppendFormat("         Phase B magnitude: {0}", m_magnitudes[1]);
+                status.AppendFormat("             Phase-A angle: {0}", this.GetSignalInfo(m_aPhaseAngleID));
                 status.AppendLine();
-                status.AppendFormat("         Phase C magnitude: {0}", m_magnitudes[2]);
+                status.AppendFormat("         Phase-B magnitude: {0}", this.GetSignalInfo(m_bPhaseMagnitudeID));
                 status.AppendLine();
-                status.AppendFormat("             Phase A angle: {0}", m_angles[0]);
+                status.AppendFormat("             Phase-B angle: {0}", this.GetSignalInfo(m_bPhaseAngleID));
                 status.AppendLine();
-                status.AppendFormat("             Phase B angle: {0}", m_angles[1]);
+                status.AppendFormat("         Phase-C magnitude: {0}", this.GetSignalInfo(m_cPhaseMagnitudeID));
                 status.AppendLine();
-                status.AppendFormat("             Phase C angle: {0}", m_angles[2]);
+                status.AppendFormat("             Phase-C angle: {0}", this.GetSignalInfo(m_cPhaseAngleID));
+                status.AppendLine();
+                status.AppendLine();
+
+                status.AppendLine(">> Defined Outputs:");
+                status.AppendLine("---------------------------");
+                status.AppendFormat("    Positive-seq magnitude: {0}", this.GetSignalInfo(m_positiveMagnitudeID));
+                status.AppendLine();
+                status.AppendFormat("        Positive-seq angle: {0}", this.GetSignalInfo(m_positiveAngleID));
+                status.AppendLine();
+                status.AppendFormat("    Negative-seq magnitude: {0}", this.GetSignalInfo(m_negativeMagnitudeID));
+                status.AppendLine();
+                status.AppendFormat("        Negative-seq angle: {0}", this.GetSignalInfo(m_negativeAngleID));
+                status.AppendLine();
+                status.AppendFormat("        Zero-seq magnitude: {0}", this.GetSignalInfo(m_zeroMagnitudeID));
+                status.AppendLine();
+                status.AppendFormat("            Zero-seq angle: {0}", this.GetSignalInfo(m_zeroAngleID));
+                status.AppendLine();
                 status.AppendLine();
 
                 if (m_trackRecentValues)
@@ -236,12 +473,56 @@ namespace PowerCalculations
         /// </summary>
         public override void Initialize()
         {
-            base.Initialize();
-
-            Dictionary<string, string> settings = Settings;
+            Dictionary<string, string> settings;
             string setting;
+            Guid signalID;
 
-            // Load parameters
+            SignalType signalType = default(SignalType);
+            List<Guid> inputMagnitudeIDs;
+            List<Guid> inputAngleIDs;
+            List<SignalType> inputMagnitudeTypes;
+            List<SignalType> inputAngleTypes;
+
+            MeasurementKey key;
+            string keyName;
+
+            base.Initialize();
+            settings = Settings;
+
+            // Load required parameters
+
+            if (this.TryParseSignalID("aPhaseMagnitudeID", out signalID))
+                m_aPhaseAngleID = signalID;
+            else
+                throw new InvalidOperationException("aPhaseMagnitudeID connection string parameter is invalid or not defined. A-phase magnitude is required for sequence calculation.");
+
+            if (this.TryParseSignalID("aPhaseAngleID", out signalID))
+                m_aPhaseAngleID = signalID;
+            else
+                throw new InvalidOperationException("aPhaseAngleID connection string parameter is invalid or not defined. A-phase angle is required for sequence calculation.");
+
+            if (this.TryParseSignalID("bPhaseMagnitudeID", out signalID))
+                m_bPhaseAngleID = signalID;
+            else
+                throw new InvalidOperationException("bPhaseMagnitudeID connection string parameter is invalid or not defined. B-phase magnitude is required for sequence calculation.");
+
+            if (this.TryParseSignalID("bPhaseAngleID", out signalID))
+                m_bPhaseAngleID = signalID;
+            else
+                throw new InvalidOperationException("bPhaseAngleID connection string parameter is invalid or not defined. B-phase angle is required for sequence calculation.");
+
+            if (this.TryParseSignalID("cPhaseMagnitudeID", out signalID))
+                m_cPhaseAngleID = signalID;
+            else
+                throw new InvalidOperationException("cPhaseMagnitudeID connection string parameter is invalid or not defined. C-phase magnitude is required for sequence calculation.");
+
+            if (this.TryParseSignalID("cPhaseAngleID", out signalID))
+                m_cPhaseAngleID = signalID;
+            else
+                throw new InvalidOperationException("cPhaseAngleID connection string parameter is invalid or not defined. C-phase angle is required for sequence calculation.");
+
+            // Load optional parameters
+
             if (settings.TryGetValue("trackRecentValues", out setting))
                 m_trackRecentValues = setting.ParseBoolean();
             else
@@ -252,54 +533,56 @@ namespace PowerCalculations
             else
                 m_sampleSize = 5;
 
-            // Load needed phase angle measurement keys from defined InputMeasurementKeys
-            m_angles = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHA).ToArray();
-
-            if (m_angles.Length == 0)
+            // Validate parameters
+            inputMagnitudeIDs = new List<Guid>()
             {
-                // No voltage angles existed, check for current angles
-                m_angles = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHA).ToArray();
-            }
+                m_aPhaseMagnitudeID,
+                m_bPhaseMagnitudeID,
+                m_cPhaseMagnitudeID
+            };
+
+            inputAngleIDs = new List<Guid>()
+            {
+                m_aPhaseAngleID,
+                m_bPhaseAngleID,
+                m_cPhaseAngleID
+            };
+
+            inputMagnitudeTypes = inputMagnitudeIDs
+                .Where(id => this.TryGetSignalType(id, out signalType))
+                .Select(id => signalType)
+                .ToList();
+
+            inputAngleTypes = inputAngleIDs
+                .Where(id => this.TryGetSignalType(id, out signalType))
+                .Select(id => signalType)
+                .ToList();
+
+            if (inputMagnitudeTypes.Count < 3 || inputAngleTypes.Count < 3)
+                throw new InvalidOperationException("Types of all input signals must be defined.");
+
+            if (inputMagnitudeTypes.All(type => type == SignalType.VPHM) && inputAngleTypes.All(type => type == SignalType.VPHA))
+                m_magnitudeUnits = "Volts";
+            else if (inputMagnitudeTypes.All(type => type == SignalType.IPHM) && inputAngleTypes.All(type => type == SignalType.IPHA))
+                m_magnitudeUnits = "Amps";
             else
+                throw new InvalidOperationException("Input signals must either be all voltages or all currents.");
+
+            // Load input signal IDs into the set of input signal IDs
+            InputSignalIDs.UnionWith(new List<Guid>()
             {
-                // Make sure only one kind of angles are defined - not a mixture of voltage and currents
-                if (InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHA).Any())
-                    throw new InvalidOperationException("Angle input measurements for a single sequence calculator instance should only be for voltages or currents - not both.");
-            }
+                m_aPhaseMagnitudeID, m_aPhaseAngleID,
+                m_bPhaseMagnitudeID, m_bPhaseAngleID,
+                m_cPhaseMagnitudeID, m_cPhaseAngleID
+            });
 
-            // Load needed phase magnitude measurement keys from defined InputMeasurementKeys
-            m_magnitudes = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.VPHM).ToArray();
-
-            if (m_magnitudes.Length == 0)
+            // Load output signal IDs into the set of output signal IDs
+            OutputSignalIDs.UnionWith(new List<Guid>()
             {
-                // No voltage magnitudes existed, check for current magnitudes
-                m_magnitudes = InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHM).ToArray();
-                m_magnitudeUnits = "amps";
-            }
-            else
-            {
-                // Make only only one kind of magnitudes are defined - not a mixture of voltage and currents
-                if (InputMeasurementKeys.Where((key, index) => InputSignalTypes[index] == SignalType.IPHM).Any())
-                    throw new InvalidOperationException("Magnitude input measurements for a single sequence calculator instance should only be for voltages or currents - not both.");
-
-                m_magnitudeUnits = "volts";
-            }
-
-            if (m_angles.Length < 3)
-                throw new InvalidOperationException("Three angle input measurements, i.e., A, B and C - in that order, are required for the sequence calculator.");
-
-            if (m_magnitudes.Length < 3)
-                throw new InvalidOperationException("Three magnitude input measurements, i.e., A, B and C - in that order, are required for the sequence calculator.");
-
-            if (m_angles.Length != m_magnitudes.Length)
-                throw new InvalidOperationException("A different number of magnitude and angle input measurement keys were supplied - the angles and magnitudes must be supplied in pairs in A, B, C sequence, i.e., one magnitude input measurement must be supplied for each angle input measurement in a consecutive sequence (e.g., A1;M1;  A2;M2; ... An;Mn)");
-
-            // Make sure only these phasor measurements are used as input
-            InputMeasurementKeys = m_angles.Concat(m_magnitudes).ToArray();
-
-            // Validate output measurements
-            if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the sequence calculator, expecting measurements for the \"Positive Sequence Magnitude\", \"Positive Sequence Angle\", \"Negative Sequence Magnitude\", \"Negative Sequence Angle\", \"Zero Sequence Magnitude\" and \"Zero Sequence Angle\" - in this order.");
+                m_positiveMagnitudeID, m_positiveAngleID,
+                m_negativeMagnitudeID, m_negativeAngleID,
+                m_zeroMagnitudeID, m_zeroAngleID
+            });
 
             if (m_trackRecentValues)
             {
@@ -313,7 +596,14 @@ namespace PowerCalculations
 
             // Assign a default adapter name to be used if sequence calculator is loaded as part of automated collection
             if (string.IsNullOrWhiteSpace(Name))
-                Name = string.Format("SC!{0}", OutputMeasurements[(int)Output.PositiveMagnitude].Key);
+            {
+                keyName = m_aPhaseMagnitudeID.ToString();
+
+                if (this.TryGetMeasurementKey(m_aPhaseMagnitudeID, out key))
+                    keyName = key.ToString();
+
+                Name = string.Format("SC!{0}", keyName);
+            }
         }
 
         /// <summary>
@@ -327,43 +617,57 @@ namespace PowerCalculations
             ComplexNumber negativeSequence = new ComplexNumber(double.NaN, double.NaN);
             ComplexNumber zeroSequence = new ComplexNumber(double.NaN, double.NaN);
 
+            IMeasurement<double> measurement;
+            bool allValuesReceived;
+
+            double mA;
+            double aA;
+            double mB;
+            double aB;
+            double mC;
+            double aC;
+
             try
             {
-                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
-                double mA = 0.0D, aA = 0.0D, mB = 0.0D, aB = 0.0D, mC = 0.0D, aC = 0.0D;
-                IMeasurement measurement;
-                bool allValuesReceived = false;
+                allValuesReceived = false;
+
+                mA = 0.0D;
+                aA = 0.0D;
+                mB = 0.0D;
+                aB = 0.0D;
+                mC = 0.0D;
+                aC = 0.0D;
 
                 // Get all needed measurement values from this frame
-                if (measurements.TryGetValue(m_magnitudes[0], out measurement) && measurement.ValueQualityIsGood())
+                if (frame.TryGetEntity(m_aPhaseMagnitudeID, out measurement) && measurement.ValueQualityIsGood())
                 {
                     // Get A-phase magnitude value
-                    mA = measurement.AdjustedValue;
+                    mA = measurement.Value;
 
-                    if (measurements.TryGetValue(m_angles[0], out measurement) && measurement.ValueQualityIsGood())
+                    if (frame.TryGetEntity(m_aPhaseAngleID, out measurement) && measurement.ValueQualityIsGood())
                     {
                         // Get A-phase angle value
-                        aA = measurement.AdjustedValue;
+                        aA = measurement.Value;
 
-                        if (measurements.TryGetValue(m_magnitudes[1], out measurement) && measurement.ValueQualityIsGood())
+                        if (frame.TryGetEntity(m_bPhaseMagnitudeID, out measurement) && measurement.ValueQualityIsGood())
                         {
                             // Get B-phase magnitude value
-                            mB = measurement.AdjustedValue;
+                            mB = measurement.Value;
 
-                            if (measurements.TryGetValue(m_angles[1], out measurement) && measurement.ValueQualityIsGood())
+                            if (frame.TryGetEntity(m_bPhaseAngleID, out measurement) && measurement.ValueQualityIsGood())
                             {
                                 // Get B-phase angle value
-                                aB = measurement.AdjustedValue;
+                                aB = measurement.Value;
 
-                                if (measurements.TryGetValue(m_magnitudes[2], out measurement) && measurement.ValueQualityIsGood())
+                                if (frame.TryGetEntity(m_cPhaseMagnitudeID, out measurement) && measurement.ValueQualityIsGood())
                                 {
                                     // Get C-phase magnitude value
-                                    mC = measurement.AdjustedValue;
+                                    mC = measurement.Value;
 
-                                    if (measurements.TryGetValue(m_angles[2], out measurement) && measurement.ValueQualityIsGood())
+                                    if (frame.TryGetEntity(m_cPhaseAngleID, out measurement) && measurement.ValueQualityIsGood())
                                     {
                                         // Get C-phase angle value
-                                        aC = measurement.AdjustedValue;
+                                        aC = measurement.Value;
 
                                         allValuesReceived = true;
                                     }
@@ -447,17 +751,16 @@ namespace PowerCalculations
             }
             finally
             {
-                IMeasurement[] outputMeasurements = OutputMeasurements;
-
-                Measurement positiveMagnitudeMeasurement = Measurement.Clone(outputMeasurements[(int)Output.PositiveMagnitude], positiveSequence.Magnitude, frame.Timestamp);
-                Measurement positiveAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.PositiveAngle], positiveSequence.Angle.ToDegrees(), frame.Timestamp);
-                Measurement negativeMagnitudeMeasurement = Measurement.Clone(outputMeasurements[(int)Output.NegativeMagnitude], negativeSequence.Magnitude, frame.Timestamp);
-                Measurement negativeAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.NegativeAngle], negativeSequence.Angle.ToDegrees(), frame.Timestamp);
-                Measurement zeroMagnitudeMeasurement = Measurement.Clone(outputMeasurements[(int)Output.ZeroMagnitude], zeroSequence.Magnitude, frame.Timestamp);
-                Measurement zeroAngleMeasurement = Measurement.Clone(outputMeasurements[(int)Output.ZeroAngle], zeroSequence.Angle.ToDegrees(), frame.Timestamp);
-
                 // Provide calculated measurements for external consumption
-                OnNewEntities(new IMeasurement[] { positiveMagnitudeMeasurement, positiveAngleMeasurement, negativeMagnitudeMeasurement, negativeAngleMeasurement, zeroMagnitudeMeasurement, zeroAngleMeasurement });
+                OnNewEntities(new IMeasurement[]
+                {
+                    new Measurement<double>(m_positiveMagnitudeID, frame.Timestamp, positiveSequence.Magnitude),
+                    new Measurement<double>(m_positiveAngleID, frame.Timestamp, positiveSequence.Angle),
+                    new Measurement<double>(m_negativeMagnitudeID, frame.Timestamp, negativeSequence.Magnitude),
+                    new Measurement<double>(m_negativeAngleID, frame.Timestamp, negativeSequence.Angle),
+                    new Measurement<double>(m_zeroMagnitudeID, frame.Timestamp, zeroSequence.Magnitude),
+                    new Measurement<double>(m_zeroAngleID, frame.Timestamp, zeroSequence.Angle)
+                });
             }
         }
 

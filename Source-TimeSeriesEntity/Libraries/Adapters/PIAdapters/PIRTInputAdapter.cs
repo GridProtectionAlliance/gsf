@@ -49,7 +49,7 @@ namespace PIAdapters
         private readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0);  // Date used to calculated delta on timestamps from PI
 
         // Fields
-        private ConcurrentDictionary<string, MeasurementKey> m_tagKeyMap;     // Map PI tagnames to GSFSchema measurement keys
+        private ConcurrentDictionary<string, Guid> m_tagKeyMap;               // Map PI tagnames to GSFSchema measurement keys
         private string m_userName;                                            // Username for PI connection string
         private string m_password;                                            // Password for PI connection string
         private string m_servername;                                          // Server for PI connection string
@@ -61,12 +61,12 @@ namespace PIAdapters
         private bool m_autoAddOutput = false;                                 // whether or not to automatically add PI points
         private DateTime m_lastReceivedTimestamp;                             // last received timestamp from PI event pipe
         private bool m_useEventPipes = true;                                  // whether or not to use event pipes for real-time data
-        private List<IMeasurement> m_measurements;                            // Queried measurements that are prepared to be published  
+        private List<ITimeSeriesEntity> m_measurements;                       // Queried measurements that are prepared to be published  
         private int m_queryTimeSpan = 30;                                     // Minutes of data to pull per query
         private DateTime m_publishTime = DateTime.MinValue;                   // The timestamp that is currently being published
         private DateTime m_queryTime = DateTime.MinValue;                     // The timestamp that is currently being queried from PI
         Thread m_dataThread;                                                  // Thread to run queries
-        System.Timers.Timer m_publishTimer;                              // last received timestamp from PI
+        System.Timers.Timer m_publishTimer;                                   // last received timestamp from PI
 
         #endregion
 
@@ -77,7 +77,7 @@ namespace PIAdapters
         /// </summary>
         public PIRTInputAdapter()
         {
-            m_tagKeyMap = new ConcurrentDictionary<string, MeasurementKey>();
+            m_tagKeyMap = new ConcurrentDictionary<string, Guid>();
             m_pi = new PISDK.PISDK();
 
             m_userName = string.Empty;
@@ -151,7 +151,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the measurements that this <see cref="PIRTInputAdapter"/> has been requested to provide
         /// </summary>
-        public override MeasurementKey[] RequestedOutputMeasurementKeys
+        public override ISet<Guid> RequestedOutputSignals
         {
             get
             {
@@ -267,7 +267,7 @@ namespace PIAdapters
         {
             base.Initialize();
 
-            m_measurements = new List<IMeasurement>();
+            m_measurements = new List<ITimeSeriesEntity>();
 
             Dictionary<string, string> settings = Settings;
             string setting;
@@ -307,17 +307,7 @@ namespace PIAdapters
                                    where row["PROTOCOL"].ToString() == "PI"
                                    select row;
 
-                List<IMeasurement> outputMeasurements = new List<IMeasurement>();
-                foreach (DataRow row in measurements)
-                {
-                    var measurement = new Measurement();
-                    measurement.ID = new Guid(row["SIGNALID"].ToString());
-                    measurement.Key = new MeasurementKey(measurement.ID, uint.Parse(row["ID"].ToString().Split(':')[1]), row["ID"].ToString().Split(':')[0]);
-                    outputMeasurements.Add(measurement);
-                }
-
-                OutputSignalIDs = outputMeasurements.ToArray();
-                OnOutputSignalsUpdated();
+                OutputSignalIDs.UnionWith(measurements.Select(row => Guid.Parse(row["SignalID"].ToString())));
             }
         }
 
@@ -379,19 +369,19 @@ namespace PIAdapters
             return string.Format("Received {0} measurements from PI...", m_processedMeasurements).CenterText(maxLength);
         }
 
-        private void HandleNewMeasurementsRequest(MeasurementKey[] Keys)
+        private void HandleNewMeasurementsRequest(ISet<Guid> signalIDs)
         {
-            OnStatusMessage("Received request for {0} keys...", new object[] { Keys.Count() });
+            OnStatusMessage("Received request for {0} keys...", new object[] { signalIDs.Count() });
 
             if (!IsConnected)
                 AttemptConnection();
 
             var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
-                        from key in Keys
-                        where row["ID"].ToString().Split(':')[1] == key.PointID.ToString()
+                        from signalID in signalIDs
+                        where Guid.Parse(row["SignalID"].ToString()) == signalID
                         select new
                         {
-                            Key = key,
+                            SignalID = signalID,
                             AlternateTag = row["ALTERNATETAG"].ToString(),
                             PointTag = row["POINTTAG"].ToString()
                         };
@@ -405,7 +395,7 @@ namespace PIAdapters
 
                 if (!m_tagKeyMap.ContainsKey(tagname))
                 {
-                    m_tagKeyMap.AddOrUpdate(tagname, row.Key, (k, v) => row.Key);
+                    m_tagKeyMap.AddOrUpdate(tagname, row.SignalID, (k, v) => row.SignalID);
                 }
 
                 if (tagFilter.Length > 0)
@@ -537,12 +527,10 @@ namespace PIAdapters
                             {
                                 if (!value.Value.GetType().IsCOMObject)
                                 {
-                                    Measurement measurement = new Measurement();
-                                    measurement.Key = m_tagKeyMap[point.Name];
-                                    measurement.ID = measurement.Key.SignalID;
-                                    measurement.Value = Convert.ToDouble(value.Value);
-                                    measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
-                                    measToAdd.Add(measurement);
+                                    Guid signalID = m_tagKeyMap[point.Name];
+                                    Ticks timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
+                                    double measurementValue = Convert.ToDouble(value.Value);
+                                    measToAdd.Add(new Measurement<double>(signalID, timestamp, measurementValue));
                                 }
                             }
                         }
@@ -594,16 +582,16 @@ namespace PIAdapters
 
                     m_publishTime = m_publishTime.AddMilliseconds(33);
 
-                    List<IMeasurement> publishMeasurements = new List<IMeasurement>();
-                    foreach (IMeasurement measurement in m_measurements.ToArray())
+                    List<ITimeSeriesEntity> publishMeasurements = new List<ITimeSeriesEntity>();
+                    foreach (ITimeSeriesEntity entity in m_measurements.ToArray())
                     {
-                        if (measurement.Timestamp <= m_publishTime.Ticks)
+                        if (entity.Timestamp <= m_publishTime.Ticks)
                         {
-                            publishMeasurements.Add(measurement);
+                            publishMeasurements.Add(entity);
 
                             lock (m_measurements)
                             {
-                                m_measurements.Remove(measurement);
+                                m_measurements.Remove(entity);
                             }
                         }
                     }
@@ -620,7 +608,7 @@ namespace PIAdapters
 
         private void PipeOnOnNewValue()
         {
-            List<IMeasurement> measurements = new List<IMeasurement>();
+            List<ITimeSeriesEntity> measurements = new List<ITimeSeriesEntity>();
             PIEventObject eventobject;
             PointValue pointvalue;
             for (int i = 0; i < m_pipe.Count; i++)
@@ -634,20 +622,14 @@ namespace PIAdapters
                     {
                         pointvalue = (PointValue)eventobject.EventData;
 
+                        Guid signalID = m_tagKeyMap[pointvalue.PIPoint.Name];
+                        Ticks timestamp = pointvalue.PIValue.TimeStamp.LocalDate.ToUniversalTime();
                         double value = Convert.ToDouble(pointvalue.PIValue.Value);
-                        MeasurementKey key = m_tagKeyMap[pointvalue.PIPoint.Name];
 
-                        Measurement measurement = new Measurement();
-                        measurement.ID = key.SignalID;
-                        measurement.Key = key;
-                        measurement.Timestamp = pointvalue.PIValue.TimeStamp.LocalDate.ToUniversalTime();
-                        measurement.Value = value;
-                        measurement.StateFlags = MeasurementStateFlags.Normal;
+                        if (timestamp > m_lastReceivedTimestamp.Ticks)
+                            m_lastReceivedTimestamp = timestamp;
 
-                        if (measurement.Timestamp > m_lastReceivedTimestamp.Ticks)
-                            m_lastReceivedTimestamp = measurement.Timestamp;
-
-                        measurements.Add(measurement);
+                        measurements.Add(new Measurement<double>(signalID, timestamp, value));
                     }
                     catch
                     {

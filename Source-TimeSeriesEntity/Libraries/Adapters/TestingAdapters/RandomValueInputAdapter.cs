@@ -276,18 +276,14 @@ namespace TestingAdapters
 
             for (int i = 0; i < m_pointsToSend; i++)
             {
-                ICollection<IMeasurement> outputMeasurementClones = new List<IMeasurement>();
+                ICollection<ITimeSeriesEntity> outputMeasurements = new List<ITimeSeriesEntity>();
                 timestamp = DateTime.UtcNow.Ticks;
 
-                for (int j = 0; j < OutputSignalIDs.Length; j++)
-                {
-                    OutputSignalIDs[j].Timestamp = timestamp;
-                    OutputSignalIDs[j].Value = randomNumber.NextDouble();
-                    outputMeasurementClones.Add(Measurement.Clone(OutputSignalIDs[j]));
-                }
+                foreach (Guid signalID in OutputSignalIDs)
+                    outputMeasurements.Add(new Measurement<double>(signalID, timestamp, randomNumber.NextDouble()));
 
                 // Publish next set of measurements to consumer...
-                this.OnNewEntities(outputMeasurementClones);
+                this.OnNewEntities(outputMeasurements);
 
                 // Sleep until next desired publication...
                 Thread.Sleep(m_interpointDelay);

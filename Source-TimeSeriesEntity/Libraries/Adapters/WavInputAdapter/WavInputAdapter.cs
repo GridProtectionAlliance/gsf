@@ -53,11 +53,11 @@ namespace WavInputAdapter
         private const long GapThreshold = Ticks.PerSecond;
 
         // Fields
+        private List<Guid> m_channelSignalIDs;
         private WaveDataReader m_data;
         private long m_dataIndex;
         private int m_channels;
         private int m_sampleRate;
-        private int m_numSamples;
         private TimeSpan m_audioLength;
         private long m_startTime;
         private bool m_disposed;
@@ -86,30 +86,6 @@ namespace WavInputAdapter
         {
             get;
             set;
-        }
-
-        /// <summary>
-        /// Gets or sets the output measurements.
-        /// </summary>
-        /// <remarks>
-        /// The output measurements are like templates. New measurements generated
-        /// by this adapter will be copies of these output measurements, in which
-        /// only the values and timestamps will differ.
-        /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
-        public override IMeasurement[] OutputMeasurements
-        {
-            get
-            {
-                return base.OutputSignalIDs;
-            }
-            set
-            {
-                base.OutputSignalIDs = value.OrderBy(measurement => measurement.Key.ToString()).ToArray();
-            }
         }
 
         /// <summary>
@@ -171,7 +147,6 @@ namespace WavInputAdapter
 
             m_channels = fileInfo.Channels;
             m_sampleRate = fileInfo.SampleRate;
-            m_numSamples = fileInfo.DataChunk.ChunkSize / fileInfo.BlockAlignment;
             m_audioLength = fileInfo.AudioLength;
 
             m_data = WaveDataReader.FromFile(WavFileName);
@@ -243,7 +218,7 @@ namespace WavInputAdapter
         private void ProcessMeasurements()
         {
             // Declare the variables use in this method.
-            List<IMeasurement> measurements = new List<IMeasurement>((int)(Ticks.ToSeconds(GapThreshold) * m_sampleRate * m_channels * 1.1D));
+            List<ITimeSeriesEntity> measurements = new List<ITimeSeriesEntity>((int)(Ticks.ToSeconds(GapThreshold) * m_sampleRate * m_channels * 1.1D));
             LittleBinaryValue[] sample;
 
             while (Enabled)
@@ -291,7 +266,7 @@ namespace WavInputAdapter
                         // and add them to the measurements list.
                         for (int i = 0; i < m_channels; i++)
                         {
-                            measurements.Add(Measurement.Clone(OutputMeasurements[i], sample[i].ConvertToType(TypeCode.Double), timestamp));
+                            measurements.Add(new Measurement<double>(m_channelSignalIDs[i], timestamp, sample[i].ConvertToType(TypeCode.Double)));
                         }
 
                         // Update the data index and recalculate
@@ -314,6 +289,22 @@ namespace WavInputAdapter
                     OnProcessException(ex);
                 }
             }
+        }
+
+        /// <summary>
+        /// Raises <see cref="AdapterBase.OutputSignalIDsUpdated"/> event.
+        /// </summary>
+        protected override void OnOutputSignalsUpdated()
+        {
+            MeasurementKey key = default(MeasurementKey);
+
+            base.OnOutputSignalsUpdated();
+
+            m_channelSignalIDs = OutputSignalIDs
+                .Where(signalID => this.TryGetMeasurementKey(signalID, out key))
+                .Select(signalID => Tuple.Create(signalID, key)).OrderBy(tuple => tuple.Item2)
+                .Select(tuple => tuple.Item1)
+                .ToList();
         }
 
         #endregion

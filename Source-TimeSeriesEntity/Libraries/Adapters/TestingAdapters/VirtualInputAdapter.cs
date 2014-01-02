@@ -66,22 +66,6 @@ namespace TestingAdapters
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="VirtualInputAdapter"/>.
-        /// </summary>
-        public override void Initialize()
-        {
-            // In case user defines no inputs or outputs for virutal adapter, we "turn off" interaction with any
-            // other real-time adapters by removing this virtual adapter from external routes. To accomplish this
-            // we expose I/O demands for an undefined measurement. Leaving values assigning to null would mean
-            // that this adapter desires a full "broadcast" of all data - and hence routing demands from all.
-            // User can override if desired using standard connection string parameters for I/O measurements.
-            InputMeasurementKeys = new[] { MeasurementKey.Undefined };
-            OutputSignalIDs = new[] { Measurement.Undefined };
-
-            base.Initialize();
-        }
-
-        /// <summary>
         /// Gets a short one-line status of this <see cref="VirtualInputAdapter"/>.
         /// </summary>
         public override string GetShortStatus(int maxLength)

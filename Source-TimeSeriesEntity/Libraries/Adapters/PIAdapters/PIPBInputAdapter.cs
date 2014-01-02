@@ -54,8 +54,8 @@ namespace PIAdapters
         private PISDK.PISDK m_pisdk;                                // PI SDK object
         private Server m_server;                                    // PI server from which this adapter connects to get data
         private PointList m_points;                                 // List of points this adapter queries from PI
-        private Dictionary<string, MeasurementKey> m_tagKeyMap;     // Provides quick look ups of GSFSchema keys by PI point tag
-        private List<IMeasurement> m_measurements;                  // Queried measurements that are prepared to be published  
+        private Dictionary<string, Guid> m_tagKeyMap;               // Provides quick look ups of GSFSchema keys by PI point tag
+        private List<ITimeSeriesEntity> m_measurements;             // Queried measurements that are prepared to be published  
         private int m_processedMeasurements;                        // Track number of measurements queried from PI for statistics
         private DateTime m_publishTime = DateTime.MinValue;         // The timestamp that is currently being published
         private DateTime m_queryTime = DateTime.MinValue;           // The timestamp that is currently being queried from PI
@@ -75,9 +75,9 @@ namespace PIAdapters
             m_userName = string.Empty;
             m_password = string.Empty;
             m_servername = string.Empty;
-            m_tagKeyMap = new Dictionary<string, MeasurementKey>();
+            m_tagKeyMap = new Dictionary<string, Guid>();
             m_pisdk = new PISDK.PISDK();
-            m_measurements = new List<IMeasurement>();
+            m_measurements = new List<ITimeSeriesEntity>();
         }
 
         #endregion
@@ -109,7 +109,7 @@ namespace PIAdapters
         /// <summary>
         /// Represents the measurements that this adapter is currently providing because they are being used in the framework
         /// </summary>
-        public override MeasurementKey[] RequestedOutputMeasurementKeys
+        public override ISet<Guid> RequestedOutputSignals
         {
             get
             {
@@ -245,7 +245,7 @@ namespace PIAdapters
             settings.TryGetValue("username", out m_userName);
             settings.TryGetValue("password", out m_password);
 
-            m_measurements = new List<IMeasurement>();
+            m_measurements = new List<ITimeSeriesEntity>();
         }
 
         /// <summary>
@@ -307,22 +307,21 @@ namespace PIAdapters
         /// Prepares the adapter to query data for the points that have been requested for connect on demand. The adapter will
         /// look up PI tag names and start up the thread to start the timers and threads necessary to run.
         /// </summary>
-        /// <param name="keys"></param>
-        private void HandleNewMeasurementsRequest(MeasurementKey[] keys)
+        private void HandleNewMeasurementsRequest(ISet<Guid> signalIDs)
         {
             if (!IsConnected)
                 AttemptConnection();
 
             StopGettingData();
 
-            if (keys != null && keys.Length > 0)
+            if (signalIDs != null && signalIDs.Count > 0)
             {
                 var query = from row in DataSource.Tables["ActiveMeasurements"].AsEnumerable()
-                            from key in keys
-                            where row["ID"].ToString().Split(':')[1] == key.PointID.ToString() && row["PROTOCOL"].ToString() == "PI"
+                            from signalID in signalIDs
+                            where Guid.Parse(row["SignalID"].ToString()) == signalID && row["PROTOCOL"].ToString() == "PI"
                             select new
                             {
-                                Key = key,
+                                SignalID = signalID,
                                 AlternateTag = row["ALTERNATETAG"].ToString(),
                                 PointTag = row["POINTTAG"].ToString()
                             };
@@ -336,7 +335,7 @@ namespace PIAdapters
                         tagname = result.AlternateTag;
 
                     if (!m_tagKeyMap.ContainsKey(tagname))
-                        m_tagKeyMap.Add(tagname, result.Key);
+                        m_tagKeyMap.Add(tagname, result.SignalID);
 
                     if (whereClause.Length > 0)
                         whereClause.Append(" OR ");
@@ -424,12 +423,10 @@ namespace PIAdapters
                         {
                             if (!value.Value.GetType().IsCOMObject)
                             {
-                                Measurement measurement = new Measurement();
-                                measurement.Key = m_tagKeyMap[point.Name];
-                                measurement.ID = measurement.Key.SignalID;
-                                measurement.Value = (double)value.Value;
-                                measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
-                                measToAdd.Add(measurement);
+                                Guid signalID = m_tagKeyMap[point.Name];
+                                Ticks timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
+                                double measurementValue = (double)value.Value;
+                                measToAdd.Add(new Measurement<double>(signalID, timestamp, measurementValue));
                             }
                         }
                     }
@@ -473,16 +470,16 @@ namespace PIAdapters
 
                     m_publishTime = m_publishTime.AddMilliseconds(33);
 
-                    List<IMeasurement> publishMeasurements = new List<IMeasurement>();
-                    foreach (IMeasurement measurement in m_measurements.ToArray())
+                    List<ITimeSeriesEntity> publishMeasurements = new List<ITimeSeriesEntity>();
+                    foreach (ITimeSeriesEntity entity in m_measurements.ToArray())
                     {
-                        if (measurement.Timestamp <= m_publishTime.Ticks)
+                        if (entity.Timestamp <= m_publishTime.Ticks)
                         {
-                            publishMeasurements.Add(measurement);
+                            publishMeasurements.Add(entity);
 
                             lock (m_measurements)
                             {
-                                m_measurements.Remove(measurement);
+                                m_measurements.Remove(entity);
                             }
                         }
                     }
