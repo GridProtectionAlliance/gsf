@@ -84,11 +84,11 @@
 //  09/21/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
 //  11/23/2011 - J. Ritchie Carroll
-//       Modified to support new life cycle interface requirements (i.e., Diposed event).
+//       Modified to support new life cycle interface requirements (i.e., Disposed event).
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //  03/05/2013 - Joe France
-//      Prefer the lastlogontimestamp property over lastLogon property.
+//      Prefer the lastLogonTimestamp property over lastLogon property.
 //  03/06/2013 - Pinal C. Patel
 //       Added new GetUserPropertyValue() and GetUserPropertyValueAsString() methods to replace old
 //       GetUserProperty() method and marked GetUserPropertyValue() as obsolete.
@@ -427,7 +427,7 @@ namespace GSF.Identity
         /// </para>
         /// <para>
         /// If a laptop user that's normally connected to the domain takes their computer on the road without VPN or other
-        /// connectivity to the domain, the user can still login to the latop using cached credentials therefore they are
+        /// connectivity to the domain, the user can still login to the laptop using cached credentials therefore they are
         /// still considered to exist. Without access to the domain, no user information will be available (such as the
         /// <see cref="Groups"/> listing) - if this data is needed offline it will need to be cached by the application in
         /// anticipation of offline access.
@@ -451,7 +451,7 @@ namespace GSF.Identity
                         // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
                         // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
                         WindowsPrincipal windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                        exists = (object)windowsPrincipal != null && !string.IsNullOrEmpty(LoginID) && string.Compare(windowsPrincipal.Identity.Name, LoginID, true) == 0 && windowsPrincipal.Identity.IsAuthenticated;
+                        exists = (object)windowsPrincipal != null && !string.IsNullOrEmpty(LoginID) && string.Compare(windowsPrincipal.Identity.Name, LoginID, StringComparison.OrdinalIgnoreCase) == 0 && windowsPrincipal.Identity.IsAuthenticated;
                     }
                 }
 
@@ -677,7 +677,7 @@ namespace GSF.Identity
         }
 
         /// <summary>
-        /// Gets ths maximum password age for the user.
+        /// Gets this maximum password age for the user.
         /// </summary>
         public Ticks MaximumPasswordAge
         {
@@ -726,7 +726,7 @@ namespace GSF.Identity
         }
 
         /// <summary>
-        /// Gets the groups asscociated with the user.
+        /// Gets the groups associated with the user.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -1120,7 +1120,7 @@ namespace GSF.Identity
                 m_domain = Environment.MachineName;
 
             // Use active directory domain account for user information lookup as long as domain is not the current machine
-            if (string.Compare(Environment.MachineName, m_domain, true) != 0)
+            if (string.Compare(Environment.MachineName, m_domain, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 // Initialize the directory entry object used to retrieve active directory information
                 WindowsImpersonationContext currentContext = null;
@@ -2416,6 +2416,10 @@ namespace GSF.Identity
         /// </summary>
         /// <param name="accountName">The account name for which to look up the SID.</param>
         /// <returns>The SID for the given account name, or the account name if no SID can be found.</returns>
+        /// <remarks>
+        /// If the <paramref name="accountName"/> cannot be converted to a SID, <paramref name="accountName"/>
+        /// will be the return value.
+        /// </remarks>
         public static string AccountNameToSID(string accountName)
         {
 #if MONO
@@ -2454,10 +2458,14 @@ namespace GSF.Identity
         }
 
         /// <summary>
-        /// Converts the given SID to the correponding account name.
+        /// Converts the given SID to the corresponding account name.
         /// </summary>
         /// <param name="sid">The SID for which to look up the account name.</param>
         /// <returns>The account name for the given SID, or the SID if no account name can be found.</returns>
+        /// <remarks>
+        /// If the <paramref name="sid"/> cannot be converted to an account name, <paramref name="sid"/>
+        /// will be the return value.
+        /// </remarks>
         public static string SIDToAccountName(string sid)
         {
 #if MONO
