@@ -322,7 +322,9 @@ namespace GSF.IO
             set
             {
                 m_flushTimerInterval = value;
-                m_flushTimer.Interval = m_flushTimerInterval * 1000.0D;
+
+                if (m_flushTimerInterval > 0.0D)
+                    m_flushTimer.Interval = m_flushTimerInterval * 1000.0D;
             }
         }
 
