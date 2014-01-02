@@ -2411,6 +2411,82 @@ namespace GSF.Identity
 #endif
         }
 
+        /// <summary>
+        /// Converts the given account name to the SID corresponding to that account name.
+        /// </summary>
+        /// <param name="accountName">The account name for which to look up the SID.</param>
+        /// <returns>The SID for the given account name, or the account name if no SID can be found.</returns>
+        public static string AccountNameToSID(string accountName)
+        {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
+            try
+            {
+                string[] accountParts;
+
+                NTAccount account;
+                SecurityIdentifier securityIdentifier;
+
+                if ((object)accountName == null)
+                    throw new ArgumentNullException("accountName");
+
+                accountParts = accountName.Split('\\');
+
+                if (accountParts.Length == 2)
+                    account = new NTAccount(accountParts[0], accountParts[1]);
+                else
+                    account = new NTAccount(accountName);
+
+                securityIdentifier = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
+
+                return securityIdentifier.ToString();
+            }
+            catch (IdentityNotMappedException)
+            {
+            }
+            catch (SystemException)
+            {
+            }
+
+            return accountName;
+#endif
+        }
+
+        /// <summary>
+        /// Converts the given SID to the correponding account name.
+        /// </summary>
+        /// <param name="sid">The SID for which to look up the account name.</param>
+        /// <returns>The account name for the given SID, or the SID if no account name can be found.</returns>
+        public static string SIDToAccountName(string sid)
+        {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
+            try
+            {
+                SecurityIdentifier securityIdentifier;
+                NTAccount account;
+
+                if ((object)sid == null)
+                    throw new ArgumentNullException("sid");
+
+                securityIdentifier = new SecurityIdentifier(sid);
+                account = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
+
+                return account.ToString();
+            }
+            catch (IdentityNotMappedException)
+            {
+            }
+            catch (SystemException)
+            {
+            }
+
+            return sid;
+#endif
+        }
+
         #endregion
     }
 }
