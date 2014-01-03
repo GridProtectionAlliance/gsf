@@ -97,12 +97,11 @@
 //       integer.
 //  06/03/2013 - J. Ritchie Carroll
 //       Added static local user/group manipulation functions.
+//  01/02/2014 - Stephen C. Wills
+//       Added static account-to-SID conversion functions.
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.IO;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -112,12 +111,16 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
+using GSF.IO;
+using Microsoft.Win32;
 
 #if !MONO
-using GSF.Interop;
 using System.Collections;
 using System.Management;
+using GSF.Interop;
 #endif
 
 namespace GSF.Identity
@@ -2425,15 +2428,20 @@ namespace GSF.Identity
 #if MONO
             throw new NotSupportedException("Not supported under Mono.");
 #else
+            string[] accountParts;
+            NTAccount account;
+            SecurityIdentifier securityIdentifier;
+
+            string machineAlias;
+            string machineDomain;
+            string accountAlias;
+            string accountAliasSID;
+
+            if ((object)accountName == null)
+                throw new ArgumentNullException("accountName");
+
             try
             {
-                string[] accountParts;
-
-                NTAccount account;
-                SecurityIdentifier securityIdentifier;
-
-                if ((object)accountName == null)
-                    throw new ArgumentNullException("accountName");
 
                 accountParts = accountName.Split('\\');
 
@@ -2448,6 +2456,27 @@ namespace GSF.Identity
             }
             catch (IdentityNotMappedException)
             {
+                machineAlias = @".\";
+                machineDomain = Environment.MachineName + @"\";
+
+                if (accountName.StartsWith(machineAlias, StringComparison.OrdinalIgnoreCase))
+                {
+                    // If a '.' is specified as the domain, treat it as an alias for the machine domain and attempt the lookup again
+                    accountAlias = Regex.Replace(accountName, "^" + Regex.Escape(machineAlias), machineDomain, RegexOptions.IgnoreCase);
+                    accountAliasSID = AccountNameToSID(accountAlias);
+
+                    if (!ReferenceEquals(accountAlias, accountAliasSID))
+                        return accountAliasSID;
+                }
+                else if (accountName.StartsWith(machineDomain, StringComparison.OrdinalIgnoreCase))
+                {
+                    // If the machine domain is specified, attempt the lookup again using the BUILTIN domain instead
+                    accountAlias = Regex.Replace(accountName, "^" + Regex.Escape(machineDomain), @"BUILTIN\", RegexOptions.IgnoreCase);
+                    accountAliasSID = AccountNameToSID(accountAlias);
+
+                    if (!ReferenceEquals(accountAlias, accountAliasSID))
+                        return accountAliasSID;
+                }
             }
             catch (SystemException)
             {
