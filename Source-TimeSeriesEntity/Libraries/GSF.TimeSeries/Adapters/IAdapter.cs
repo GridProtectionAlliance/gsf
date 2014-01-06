@@ -531,6 +531,33 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="adapter">Adapter to get meta-data for.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="pointTag">The point tag to return.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <param name="pointTagColumn">Name of column that contains the data to parse as a point tag.</param>
+        /// <returns><c>true</c> if meta-data record for <paramref name="signalID"/> was found; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        public static bool TryGetPointTag(this IAdapter adapter, Guid signalID, out string pointTag, string measurementTable = "ActiveMeasurements", string pointTagColumn = "ID")
+        {
+            DataRow row;
+
+            if (adapter.TryGetMetadata(signalID, out row, measurementTable))
+            {
+                if (row.Table.Columns.Contains("PointTag"))
+                {
+                    pointTag = row["PointTag"].ToNonNullString();
+                    return true;
+                }
+            }
+
+            pointTag = null;
+            return false;
+        }
+
+        /// <summary>
         /// Gets a formatted string representing the <paramref name="signalID"/> in human identifiable form.
         /// </summary>
         /// <param name="adapter">Adapter to get meta-data for.</param>

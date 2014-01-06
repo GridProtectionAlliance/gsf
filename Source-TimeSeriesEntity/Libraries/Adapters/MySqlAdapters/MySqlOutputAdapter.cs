@@ -166,14 +166,14 @@ namespace MySqlAdapters
         }
 
         /// <summary>
-        /// Archives <paramref name="measurements"/> locally.
+        /// Archives <paramref name="entities"/> locally.
         /// </summary>
-        /// <param name="measurements">Measurements to be archived.</param>
-        protected override void ProcessEntities(IMeasurement[] measurements)
+        /// <param name="entities">Measurements to be archived.</param>
+        protected override void ProcessEntities(ITimeSeriesEntity[] entities)
         {
-            if ((object)measurements != null)
+            if ((object)entities != null)
             {
-                foreach (IMeasurement measurement in measurements)
+                foreach (IMeasurement measurement in entities.OfType<IMeasurement<double>>())
                 {
                     // Create the command string to insert the measurement as a record in the table.
                     StringBuilder commandString = new StringBuilder("INSERT INTO Measurement VALUES ('");
@@ -183,14 +183,14 @@ namespace MySqlAdapters
                     commandString.Append("','");
                     commandString.Append((long)measurement.Timestamp);
                     commandString.Append("',");
-                    commandString.Append(measurement.AdjustedValue);
+                    commandString.Append(measurement.Value);
                     commandString.Append(')');
 
                     command.CommandText = commandString.ToString();
                     command.ExecuteNonQuery();
 
                 }
-                m_measurementCount += measurements.Length;
+                m_measurementCount += entities.Length;
             }
         }
 

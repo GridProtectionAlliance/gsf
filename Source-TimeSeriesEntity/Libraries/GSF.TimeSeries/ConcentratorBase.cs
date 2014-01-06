@@ -30,6 +30,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -412,7 +413,7 @@ namespace GSF.TimeSeries
         private long m_publishedFrames; // Total number of published frames
         private long m_totalPublishTime; // Total cumulative frame user function publication time (in ticks) - used to calculate average
         private bool m_trackLatestEntities; // Determines whether or not to track latest time-series entities
-        private readonly IDictionary<Guid, ITimeSeriesEntity> m_latestEntities; // Absolute latest received time-series entities
+        private readonly ConcurrentDictionary<Guid, ITimeSeriesEntity> m_latestEntities; // Absolute latest received time-series entities
         private ITimeSeriesEntity m_lastDiscardedEntity; // Last time-series entity that was discarded by the concentrator
         private long m_latencyOfLastDiscardedEntity; // Latency of last time-series entity that was discarded by the concentrator
         private bool m_disposed; // Disposed flag detects redundant calls to dispose method
@@ -436,7 +437,7 @@ namespace GSF.TimeSeries
             m_performTimestampReasonabilityCheck = true;
             m_processingInterval = -1;
             m_filterFunction = LastReceived;
-            m_latestEntities = new Dictionary<Guid, ITimeSeriesEntity>();
+            m_latestEntities = new ConcurrentDictionary<Guid, ITimeSeriesEntity>();
             m_maximumPublicationTimeout = Timeout.Infinite;
 
             // Create a new queue for managing real-time frames
@@ -593,11 +594,11 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets reference to the collection of absolute latest received time-series entities.
         /// </summary>
-        public IList<ITimeSeriesEntity> LatestEntities
+        public ConcurrentDictionary<Guid, ITimeSeriesEntity> LatestEntities
         {
             get
             {
-                return m_latestEntities.Values.ToList();
+                return m_latestEntities;
             }
         }
 

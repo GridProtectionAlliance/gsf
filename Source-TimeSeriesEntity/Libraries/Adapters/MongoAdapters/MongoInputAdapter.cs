@@ -366,7 +366,7 @@ namespace MongoAdapters
             {
                 long nowTicks = DateTime.UtcNow.Ticks;
                 ICursor<MeasurementWrapper> wrappers;
-                List<IMeasurement> measurements;
+                List<ITimeSeriesEntity> entities;
                 MeasurementWrapper foundWrapper;
 
                 // Find the first measurements whose timestamp is larger than the last-used timestamp.
@@ -384,15 +384,16 @@ namespace MongoAdapters
                 {
                     foundWrapper.Timestamp
                 });
-                measurements = wrappers.Documents.Select(wrapper => wrapper.GetMeasurement()).ToList();
 
-                // Simulate real-time.
-                if (m_simulateRealTime)
-                    measurements.ForEach(measurement => measurement.Timestamp = nowTicks);
+                entities = wrappers.Documents
+                    .Select(wrapper => wrapper.GetMeasurement())
+                    .Select(measurement => m_simulateRealTime ? new Measurement<double>(measurement.ID, nowTicks, measurement.Value) : measurement)
+                    .Cast<ITimeSeriesEntity>()
+                    .ToList();
 
                 // Set the last-used timestamp to the new value and publish the measurements.
                 m_lastTimestamp = foundWrapper.Timestamp;
-                OnNewEntities(measurements);
+                OnNewEntities(entities);
             }
             catch
             {

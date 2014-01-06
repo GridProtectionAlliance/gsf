@@ -324,7 +324,7 @@ namespace MySqlAdapters
 
         private void m_timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            List<IMeasurement> measurements = new List<IMeasurement>();
+            List<ITimeSeriesEntity> measurements = new List<ITimeSeriesEntity>();
             StringBuilder columnString = new StringBuilder();
 
             int timestampColumn = GetColumnIndex("Timestamp");
@@ -349,18 +349,13 @@ namespace MySqlAdapters
 
             using (reader = command.ExecuteReader())
             {
-
                 while (reader.Read())
                 {
                     Ticks timeStamp = m_fakeTimestamps ? new Ticks(DateTime.UtcNow) : new Ticks(reader.GetInt64(timestampColumn));
-                    measurements.Add(new Measurement
-                        {
-                        ID = reader.GetGuid(idColumn),
-                        Value = reader.GetDouble(valueColumn),
-                        Timestamp = timeStamp
-                    });
+                    measurements.Add(new Measurement<double>(reader.GetGuid(idColumn), timeStamp, reader.GetDouble(valueColumn)));
                 }
             }
+
             OnNewEntities(measurements);
             m_startingMeasurement += m_measurementsPerInput;
         }

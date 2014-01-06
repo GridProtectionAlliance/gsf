@@ -59,7 +59,7 @@ namespace ICCPExport
     /// Represents an action adapter that exports measurements on an interval to a file that can be picked up by other systems such as ICCP.
     /// </summary>
     [Description("ICCP: exports measurements to a file that can be picked up by other systems")]
-    public class FileExporter : CalculatedMeasurementBase
+    public class FileExporter : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -76,8 +76,9 @@ namespace ICCPExport
 
         // Fields
         private MultipleDestinationExporter m_dataExporter;
-        private ConcurrentDictionary<MeasurementKey, string> m_measurementTags;
-        private MeasurementKey m_referenceAngleKey;
+        private ConcurrentDictionary<Guid, string> m_measurementTags;
+        private string m_configurationSection;
+        private Guid m_referenceAngleID;
         private bool m_useReferenceAngle;
         private bool m_useNumericQuality;
         private int m_exportInterval;
@@ -85,6 +86,8 @@ namespace ICCPExport
         private string m_companyTagPrefix;
         private bool m_statusDisplayed;
         private long m_skippedExports;
+
+        private bool m_disposed;
 
         #endregion
 
@@ -125,6 +128,24 @@ namespace ICCPExport
         }
 
         /// <summary>
+        /// Gets or sets the name of the file, without the extension, to which measurements will be exported.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("The name of the file, without the extension, to which measurements will be exported."),
+        DefaultValue("")]
+        public string ConfigurationSection
+        {
+            get
+            {
+                return m_configurationSection;
+            }
+            set
+            {
+                m_configurationSection = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the key of the measurement used to adjust the value of phase angles.
         /// </summary>
         [ConnectionStringParameter,
@@ -135,11 +156,11 @@ namespace ICCPExport
         {
             get
             {
-                return m_referenceAngleKey.ToString();
+                return m_referenceAngleID.ToString();
             }
             set
             {
-                m_referenceAngleKey = MeasurementKey.Parse(value);
+                m_referenceAngleID = Guid.Parse(value);
             }
         }
 
@@ -180,6 +201,22 @@ namespace ICCPExport
         }
 
         /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        /// <remarks>
+        /// Since a historical FileExporter would have the same settings as the real-time
+        /// FileExporter, allowing temporal processing would most likely cause undesired
+        /// behavior. Therefore, temporal processing is disabled.
+        /// </remarks>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Returns the detailed status of the <see cref="FileExporter"/>.
         /// </summary>
         public override string Status
@@ -197,7 +234,7 @@ namespace ICCPExport
 
                 if (m_useReferenceAngle)
                 {
-                    status.AppendFormat("     Reference angle point: {0}", m_referenceAngleKey.ToString());
+                    status.AppendFormat("     Reference angle point: {0}", m_referenceAngleID.ToString());
                     status.AppendLine();
                 }
 
@@ -219,8 +256,6 @@ namespace ICCPExport
         #endregion
 
         #region [ Methods ]
-
-        private bool m_disposed;
 
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="FileExporter"/> object and optionally releases the managed resources.
@@ -263,7 +298,11 @@ namespace ICCPExport
             Dictionary<string, string> settings = Settings;
             string errorMessage = "{0} is missing from Settings - Example: exportInterval=5; useReferenceAngle=True; referenceAngleMeasurement=DEVARCHIVE:6; companyTagPrefix=TVA; useNumericQuality=True; inputMeasurementKeys={{FILTER ActiveMeasurements WHERE Device='SHELBY' AND SignalType='FREQ'}}";
             string setting;
+
+            SignalType signalType;
             double seconds;
+            string pointTag;
+            MeasurementKey key;
 
             // Load required parameters
             if (!settings.TryGetValue("exportInterval", out setting) || !double.TryParse(setting, out seconds))
@@ -275,7 +314,7 @@ namespace ICCPExport
             if (m_exportInterval <= 0)
                 throw new ArgumentException("exportInterval should not be 0 - Example: exportInterval=5.5");
 
-            if (InputMeasurementKeys == null || InputMeasurementKeys.Length == 0)
+            if (InputSignalIDs.Count == 0)
                 throw new InvalidOperationException("There are no input measurements defined. You must define \"inputMeasurementKeys\" to define which measurements to export.");
 
             if (!settings.TryGetValue("useReferenceAngle", out setting))
@@ -289,16 +328,13 @@ namespace ICCPExport
                 if (!settings.TryGetValue("referenceAngleMeasurement", out setting))
                     throw new ArgumentException(string.Format(errorMessage, "referenceAngleMeasurement"));
 
-                m_referenceAngleKey = MeasurementKey.Parse(setting);
+                m_referenceAngleID = AdapterBase.ParseFilterExpression(DataSource, true, setting).First();
 
                 // Make sure reference angle is part of input measurement keys collection
-                if (!InputMeasurementKeys.Contains(m_referenceAngleKey))
-                    InputMeasurementKeys = InputMeasurementKeys.Concat(new[] { m_referenceAngleKey }).ToArray();
+                InputSignalIDs.Add(m_referenceAngleID);
 
                 // Make sure sure reference angle key is actually an angle measurement
-                SignalType signalType = InputSignalTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
-
-                if (signalType != SignalType.IPHA && signalType != SignalType.VPHA)
+                if (!this.TryGetSignalType(m_referenceAngleID, out signalType) || (signalType != SignalType.IPHA && signalType != SignalType.VPHA))
                     throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedSignalTypeName()));
             }
 
@@ -317,6 +353,12 @@ namespace ICCPExport
             if (!string.IsNullOrWhiteSpace(m_companyTagPrefix))
                 m_companyTagPrefix = m_companyTagPrefix.EnsureEnd('_');
 
+            if (!settings.TryGetValue("configurationSection", out m_configurationSection))
+                m_configurationSection = Name;
+
+            if (string.IsNullOrEmpty(m_configurationSection))
+                m_configurationSection = Name;
+
             // Define a default export location - user can override and add multiple locations in config later...
             m_dataExporter = new MultipleDestinationExporter(ConfigurationSection, m_exportInterval);
             m_dataExporter.StatusMessage += m_dataExporter_StatusMessage;
@@ -324,36 +366,29 @@ namespace ICCPExport
             m_dataExporter.Initialize(new[] { new ExportDestination(FilePath.GetAbsolutePath(ConfigurationSection + ".txt"), false, "", "", "") });
 
             // Create new measurement tag name dictionary
-            m_measurementTags = new ConcurrentDictionary<MeasurementKey, string>();
-            string pointID = "undefined";
+            m_measurementTags = new ConcurrentDictionary<Guid, string>();
 
             // Lookup point tag name for input measurement in the ActiveMeasurements table
-            foreach (MeasurementKey key in InputMeasurementKeys)
+            foreach (Guid signalID in InputSignalIDs)
             {
-                try
+                if (!this.TryGetPointTag(signalID, out pointTag))
                 {
-                    // Get measurement key as a string
-                    pointID = key.ToString();
+                    if (this.TryGetMeasurementKey(signalID, out key))
+                        pointTag = key.ToString();
+                    else
+                        OnProcessException(new InvalidOperationException(string.Format("Failed to lookup point tag for measurement [{0}]", this.GetSignalInfo(signalID))));
+                }
 
-                    // Lookup measurement key in active measurements table
-                    DataRow row = DataSource.Tables["ActiveMeasurements"].Select(string.Format("ID='{0}'", pointID))[0];
-
+                if ((object)pointTag != null)
+                {
                     // Remove invalid symbols that may be in tag name
-                    string pointTag = row["PointTag"].ToNonNullString(pointID).Replace('-', '_').Replace(':', '_').ToUpper();
+                    pointTag = pointTag.Replace('-', '_').Replace(':', '_').ToUpper();
 
                     // Prefix point tag with company prefix if defined
                     if (!string.IsNullOrWhiteSpace(m_companyTagPrefix) && !pointTag.StartsWith(m_companyTagPrefix))
                         pointTag = m_companyTagPrefix + pointTag;
 
-                    m_measurementTags.TryAdd(key, pointTag);
-                }
-                catch (ThreadAbortException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to lookup point tag for measurement [{0}] due to exception: {1}", pointID, ex.Message)));
+                    m_measurementTags.TryAdd(signalID, pointTag);
                 }
             }
 
@@ -374,13 +409,12 @@ namespace ICCPExport
             // Only publish when the export interval time has passed
             if ((timestamp - m_lastPublicationTime).ToMilliseconds() > m_exportInterval)
             {
-                ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
                 m_lastPublicationTime = timestamp;
 
-                if (measurements.Count > 0)
+                if (frame.Entities.Count > 0)
                 {
                     StringBuilder fileData = new StringBuilder();
-                    IMeasurement measurement, referenceAngle;
+                    IMeasurement<double> measurement, referenceAngle;
                     MeasurementKey inputMeasurementKey;
                     SignalType signalType;
                     DataQuality measurementQuality;
@@ -393,41 +427,48 @@ namespace ICCPExport
                     referenceAngle = null;
 
                     // Make sure reference made it in this frame...
-                    if (m_useReferenceAngle && !measurements.TryGetValue(m_referenceAngleKey, out referenceAngle))
+                    if (m_useReferenceAngle && !frame.TryGetEntity(m_referenceAngleID, out referenceAngle))
                     {
                         OnProcessException(new InvalidOperationException("Calculated reference angle was not found in this frame, possible reasons: system is initializing, receiving no data or lag time is too small. File creation was skipped."));
                     }
                     else
                     {
                         // Export all defined input measurements
-                        for (int i = 0; i < InputMeasurementKeys.Length; i++)
+                        foreach (Guid signalID in InputSignalIDs)
                         {
-                            inputMeasurementKey = InputMeasurementKeys[i];
-                            signalType = InputSignalTypes[i];
+                            if (!this.TryGetSignalType(signalID, out signalType))
+                                signalType = SignalType.NONE;
 
                             // Look up measurement's tag name
-                            if (m_measurementTags.TryGetValue(inputMeasurementKey, out measurementTag))
+                            if (m_measurementTags.TryGetValue(signalID, out measurementTag))
                             {
                                 // See if measurement exists in this frame
-                                if (measurements.TryGetValue(inputMeasurementKey, out measurement))
+                                if (frame.TryGetEntity(signalID, out measurement))
                                 {
-                                    // Get measurement's adjusted value (takes into account any adder and or multipler)
-                                    measurementValue = measurement.AdjustedValue;
+                                    // Get measurement's value
+                                    measurementValue = measurement.Value;
 
                                     // Interpret data quality flags
                                     measurementQuality = (measurement.ValueQualityIsGood() ? (measurement.TimestampQualityIsGood() ? DataQuality.Good : DataQuality.Suspect) : DataQuality.Bad);
                                 }
                                 else
                                 {
-                                    // Didn't find measurement in this frame, try using a recent value
-                                    measurementValue = LatestEntities[inputMeasurementKey.SignalID];
+                                    measurement = LatestEntities[signalID] as IMeasurement<double>;
+                                    measurementQuality = DataQuality.Bad;
+                                    measurementValue = 0.0D;
 
-                                    // Interpret data quality flags - if no recent measurement is available, we mark it as bad
-                                    measurementQuality = (Double.IsNaN(measurementValue) ? DataQuality.Bad : DataQuality.Good);
+                                    if ((object)measurement != null)
+                                    {
+                                        // Didn't find measurement in this frame, try using a recent value
+                                        measurementValue = measurement.Value;
 
-                                    // We'll export zero instead of NaN for bad data
-                                    if (measurementQuality == DataQuality.Bad)
-                                        measurementValue = 0.0D;
+                                        // Interpret data quality flags - if no recent measurement is available, we mark it as bad
+                                        measurementQuality = (double.IsNaN(measurementValue) ? DataQuality.Bad : DataQuality.Good);
+
+                                        // We'll export zero instead of NaN for bad data
+                                        if (measurementQuality == DataQuality.Bad)
+                                            measurementValue = 0.0D;
+                                    }
                                 }
 
                                 // Export tag name field
@@ -445,8 +486,8 @@ namespace ICCPExport
                                     }
                                     else
                                     {
-                                        // Get reference angle's adjusted value (takes into account any adder and or multipler)
-                                        referenceAngleValue = referenceAngle.AdjustedValue;
+                                        // Get reference angle's value
+                                        referenceAngleValue = referenceAngle.Value;
 
                                         // Handle relative angle wrapping
                                         double dis0 = Math.Abs(measurementValue - referenceAngleValue);
@@ -488,7 +529,7 @@ namespace ICCPExport
                             else
                             {
                                 // We were unable to find measurement tag for this key - this is unexpected
-                                OnProcessException(new InvalidOperationException(string.Format("Failed to find measurement tag for measurement {0}", inputMeasurementKey)));
+                                OnProcessException(new InvalidOperationException(string.Format("Failed to find measurement tag for measurement {0}", this.GetSignalInfo(signalID))));
                             }
                         }
                     }

@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using MongoDB;
@@ -236,12 +237,12 @@ namespace MongoAdapters
         /// <summary>
         /// Stores a collection of measurements in the MongoDB database.
         /// </summary>
-        /// <param name="measurements">The measurements to be stored in the MongoDB database.</param>
-        protected override void ProcessEntities(IMeasurement[] measurements)
+        /// <param name="entities">The measurements to be stored in the MongoDB database.</param>
+        protected override void ProcessEntities(ITimeSeriesEntity[] entities)
         {
-            if ((object)measurements != null)
+            if ((object)entities != null)
             {
-                foreach (IMeasurement measurement in measurements)
+                foreach (IMeasurement<double> measurement in entities.OfType<IMeasurement<double>>())
                 {
                     MeasurementWrapper wrapper = new MeasurementWrapper(measurement);
                     m_measurementCollection.Insert(wrapper);

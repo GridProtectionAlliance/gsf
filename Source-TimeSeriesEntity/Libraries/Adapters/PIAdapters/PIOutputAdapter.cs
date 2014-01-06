@@ -369,16 +369,16 @@ namespace PIAdapters
         /// <summary>
         /// Sorts measurements and sends them to the configured PI server in batches
         /// </summary>
-        /// <param name="measurements">Measurements to queue</param>
-        protected override void ProcessEntities(ITimeSeriesEntity[] measurements)
+        /// <param name="entities">Measurements to queue</param>
+        protected override void ProcessEntities(ITimeSeriesEntity[] entities)
         {
-            if (measurements != null)
+            if (entities != null)
             {
                 if (m_bulkUpdate)
                 {
                     Dictionary<Guid, PIValues> values = new Dictionary<Guid, PIValues>();
 
-                    foreach (IMeasurement measurement in measurements)
+                    foreach (IMeasurement measurement in entities)
                     {
                         if (!m_tagKeyMap.ContainsKey(measurement.ID))
                             MapKeysToPoints();
@@ -409,7 +409,7 @@ namespace PIAdapters
                 }
                 else
                 {
-                    foreach (IMeasurement measurement in measurements)
+                    foreach (IMeasurement measurement in entities)
                     {
                         if (!m_tagKeyMap.ContainsKey(measurement.ID))
                             MapKeysToPoints();
