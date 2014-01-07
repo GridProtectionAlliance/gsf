@@ -42,6 +42,9 @@ namespace CsvAdapters
     {
         #region [ Members ]
 
+        // Constants
+        private const string FileHeader = "Signal ID,Measurement Key,Timestamp,Value";
+
         // Fields
         private string m_fileName;
         private StreamWriter m_outStream;
@@ -150,7 +153,7 @@ namespace CsvAdapters
         protected override void AttemptConnection()
         {
             m_outStream = new StreamWriter(m_fileName);
-            m_outStream.WriteLine(s_fileHeader);
+            m_outStream.WriteLine(FileHeader);
         }
 
         /// <summary>
@@ -165,22 +168,28 @@ namespace CsvAdapters
         /// Archives <paramref name="measurements"/> locally.
         /// </summary>
         /// <param name="measurements">Measurements to be archived.</param>
-        protected override void ProcessEntities(IMeasurement[] measurements)
+        protected override void ProcessEntities(ITimeSeriesEntity[] measurements)
         {
+            StringBuilder builder;
+            MeasurementKey key;
+
             if ((object)measurements != null)
             {
-                StringBuilder builder = new StringBuilder();
+                builder = new StringBuilder();
 
                 foreach (IMeasurement measurement in measurements)
                 {
-                    builder.Append(measurement.ID);
-                    builder.Append(',');
-                    builder.Append(measurement.Key);
-                    builder.Append(',');
-                    builder.Append((long)measurement.Timestamp);
-                    builder.Append(',');
-                    builder.Append(measurement.AdjustedValue);
-                    builder.Append(Environment.NewLine);
+                    if (this.TryGetMeasurementKey(measurement.ID, out key))
+                    {
+                        builder.Append(measurement.ID);
+                        builder.Append(',');
+                        builder.Append(key);
+                        builder.Append(',');
+                        builder.Append((long)measurement.Timestamp);
+                        builder.Append(',');
+                        builder.Append(measurement.Value);
+                        builder.Append(Environment.NewLine);
+                    }
                 }
 
                 m_outStream.Write(builder.ToString());
@@ -197,13 +206,6 @@ namespace CsvAdapters
         {
             return string.Format("Archived {0} measurements to CSV file.", m_measurementCount).CenterText(maxLength);
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static string s_fileHeader = "Signal ID,Measurement Key,Timestamp,Value";
 
         #endregion
     }

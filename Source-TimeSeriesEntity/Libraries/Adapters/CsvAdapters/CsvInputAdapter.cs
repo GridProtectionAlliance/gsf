@@ -55,7 +55,7 @@ namespace CsvAdapters
         private StreamReader m_inStream;
         private string m_header;
         private readonly Dictionary<string, int> m_columns;
-        private readonly Dictionary<int, IMeasurement> m_columnMappings;
+        private readonly Dictionary<int, Guid> m_columnMappings;
         private double m_inputInterval;
         private int m_measurementsPerInterval;
         private int m_skipRows;
@@ -77,7 +77,7 @@ namespace CsvAdapters
         {
             m_fileName = "measurements.csv";
             m_columns = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
-            m_columnMappings = new Dictionary<int, IMeasurement>();
+            m_columnMappings = new Dictionary<int, Guid>();
             m_inputInterval = 33.333333;
             m_measurementsPerInterval = 5;
 
@@ -416,7 +416,9 @@ namespace CsvAdapters
                 if (settings.TryGetValue("columnMappings", out setting))
                 {
                     Dictionary<int, string> columnMappings = new Dictionary<int, string>();
+
                     int index;
+                    int timestampColumn;
 
                     foreach (KeyValuePair<string, string> mapping in setting.ParseKeyValuePairs())
                     {
@@ -431,58 +433,21 @@ namespace CsvAdapters
                     m_measurementsPerInterval = columnMappings.Keys.Max() + 1;
 
                     // Auto-assign output measurements based on column mappings
-                    OutputSignalIDs = columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", true) != 0).Select(kvp =>
+                    OutputSignalIDs.Clear();
+                    OutputSignalIDs.UnionWith(columnMappings.Where(kvp => string.Compare(kvp.Value, "Timestamp", StringComparison.OrdinalIgnoreCase) != 0).Select(kvp =>
                     {
-                        string measurementID = kvp.Value;
-                        IMeasurement measurement = new Measurement();
-                        MeasurementKey key;
-                        Guid id;
+                        Guid signalID = ParseFilterExpression(DataSource, false, kvp.Value).FirstOrDefault();
 
-                        if (Guid.TryParse(measurementID, out id))
-                        {
-                            measurement.ID = id;
-                            measurement.Key = MeasurementKey.LookupBySignalID(id);
-                        }
-                        else if (MeasurementKey.TryParse(measurementID, Guid.Empty, out key))
-                        {
-                            measurement.Key = key;
-                            measurement.ID = key.SignalID;
-                        }
+                        if (signalID != Guid.Empty)
+                            m_columnMappings[kvp.Key] = signalID;
 
-                        try
-                        {
-                            DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", measurement.ID));
+                        return signalID;
+                    }).Where(signalID => signalID != Guid.Empty));
 
-                            if (filteredRows.Length > 0)
-                            {
-                                DataRow row = filteredRows[0];
-
-                                // Assign other attributes
-                                measurement.TagName = row["PointTag"].ToNonNullString();
-                                measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-                                measurement.Adder = double.Parse(row["Adder"].ToString());
-                            }
-                        }
-                        catch
-                        {
-                            // Failure to lookup extra metadata is not catastrophic
-                        }
-
-                        // Associate measurement with column index
-                        m_columnMappings[kvp.Key] = measurement;
-
-                        return measurement;
-                    }).ToArray();
-
-                    int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", true) == 0).Key;
+                    timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", true) == 0).Key;
 
                     // Reserve a column mapping for timestamp value
-                    IMeasurement timestampMeasurement = new Measurement
-                        {
-                        TagName = "Timestamp"
-                    };
-
-                    m_columnMappings[timestampColumn] = timestampMeasurement;
+                    m_columnMappings[timestampColumn] = Guid.Empty;
                 }
                 else
                 {
@@ -598,7 +563,7 @@ namespace CsvAdapters
         {
             try
             {
-                List<IMeasurement> newMeasurements = new List<IMeasurement>();
+                List<ITimeSeriesEntity> newMeasurements = new List<ITimeSeriesEntity>();
                 long fileTime = 0;
                 int timestampColumn = 0;
                 string[] fields = m_inStream.ReadLine().ToNonNullString().Split(',');
@@ -615,14 +580,16 @@ namespace CsvAdapters
                     }
                     else
                     {
-                        timestampColumn = m_columnMappings.First(kvp => string.Compare(kvp.Value.TagName, "Timestamp", true) == 0).Key;
+                        timestampColumn = m_columnMappings.First(kvp => kvp.Value == Guid.Empty).Key;
                         fileTime = long.Parse(fields[timestampColumn]);
                     }
                 }
 
                 for (int i = 0; i < m_measurementsPerInterval; i++)
                 {
-                    IMeasurement measurement;
+                    Guid signalID = Guid.Empty;
+                    Ticks timestamp = 0L;
+                    double value = double.NaN;
 
                     if (m_transverse)
                     {
@@ -630,44 +597,29 @@ namespace CsvAdapters
                         if (i == timestampColumn)
                             continue;
 
-                        if (m_columnMappings.TryGetValue(i, out measurement))
-                        {
-                            measurement = Measurement.Clone(measurement);
-                            measurement.Value = double.Parse(fields[i]);
-                        }
-                        else
-                        {
-                            measurement = new Measurement();
-                            measurement.ID = Guid.Empty;
-                            measurement.Key = MeasurementKey.Undefined;
-                            measurement.Value = double.NaN;
-                        }
+                        if (m_columnMappings.TryGetValue(i, out signalID))
+                            value = double.Parse(fields[i]);
 
-                        if (m_simulateTimestamp)
-                            measurement.Timestamp = currentTime;
-                        else if (m_columns.ContainsKey("Timestamp"))
-                            measurement.Timestamp = fileTime;
+                        if (m_simulateTimestamp || m_columns.ContainsKey("Timestamp"))
+                            timestamp = fileTime;
+                        else
+                            timestamp = 0L;
                     }
                     else
                     {
-                        measurement = new Measurement();
-
                         if (m_columns.ContainsKey("Signal ID"))
-                            measurement.ID = new Guid(fields[m_columns["Signal ID"]]);
-
-                        if (m_columns.ContainsKey("Measurement Key"))
-                            measurement.Key = MeasurementKey.Parse(fields[m_columns["Measurement Key"]], measurement.ID);
+                            signalID = new Guid(fields[m_columns["Signal ID"]]);
 
                         if (m_simulateTimestamp)
-                            measurement.Timestamp = currentTime;
+                            timestamp = currentTime;
                         else if (m_columns.ContainsKey("Timestamp"))
-                            measurement.Timestamp = long.Parse(fields[m_columns["Timestamp"]]);
+                            timestamp = long.Parse(fields[m_columns["Timestamp"]]);
 
                         if (m_columns.ContainsKey("Value"))
-                            measurement.Value = double.Parse(fields[m_columns["Value"]]);
+                            value = double.Parse(fields[m_columns["Value"]]);
                     }
 
-                    newMeasurements.Add(measurement);
+                    newMeasurements.Add(new Measurement<double>(signalID, timestamp, value));
                 }
 
                 OnNewEntities(newMeasurements);

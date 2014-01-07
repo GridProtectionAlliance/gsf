@@ -24,7 +24,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -55,7 +54,7 @@ namespace DynamicCalculator
         private bool m_skipNanOutput;
 
         private readonly HashSet<string> m_variableNames;
-        private readonly Dictionary<MeasurementKey, string> m_keyMapping;
+        private readonly Dictionary<Guid, string> m_idMapping;
         private readonly SortedDictionary<int, string> m_nonAliasedTokens;
 
         private string m_aliasedExpressionText;
@@ -72,7 +71,7 @@ namespace DynamicCalculator
         public DynamicCalculator()
         {
             m_variableNames = new HashSet<string>();
-            m_keyMapping = new Dictionary<MeasurementKey, string>();
+            m_idMapping = new Dictionary<Guid, string>();
             m_nonAliasedTokens = new SortedDictionary<int, string>();
             m_expressionContext = new ExpressionContext();
         }
@@ -121,7 +120,7 @@ namespace DynamicCalculator
 
                     // Empty the collection of variable names
                     m_variableNames.Clear();
-                    m_keyMapping.Clear();
+                    m_idMapping.Clear();
                     m_nonAliasedTokens.Clear();
 
                     // If the value is null, do not attempt to process it
@@ -136,7 +135,7 @@ namespace DynamicCalculator
                     PerformAliasReplacement();
 
                     // Build the key list which will define the input measurements for this adapter
-                    keyList = m_keyMapping.Keys.Select(key => key.ToString())
+                    keyList = m_idMapping.Keys.Select(key => key.ToString())
                         .Aggregate((runningKeyList, nextKey) => runningKeyList + ";" + nextKey);
 
                     // Set the input measurements for this adapter
@@ -211,7 +210,7 @@ namespace DynamicCalculator
         /// </summary>
         public override void Initialize()
         {
-            string errorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={x = PPA:1; y = PPA:2}";
+            const string ErrorMessage = "{0} is missing from Settings - Example: expressionText=x+y; variableList={{x = PPA:1; y = PPA:2}}";
 
             Dictionary<string, string> settings;
             string setting;
@@ -219,17 +218,17 @@ namespace DynamicCalculator
             base.Initialize();
             settings = Settings;
 
-            if (OutputSignalIDs.Length != 1)
-                throw new ArgumentException(string.Format("Exactly one output measurement must be defined. Amount defined: {0}", OutputSignalIDs.Length));
+            if (OutputSignalIDs.Count != 1)
+                throw new ArgumentException(string.Format("Exactly one output measurement must be defined. Amount defined: {0}", OutputSignalIDs.Count));
 
             // Load required parameters
 
             if (!settings.TryGetValue("expressionText", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "expressionText"));
+                throw new ArgumentException(string.Format(ErrorMessage, "expressionText"));
             ExpressionText = settings["expressionText"];
 
             if (!settings.TryGetValue("variableList", out setting))
-                throw new ArgumentException(string.Format(errorMessage, "variableList"));
+                throw new ArgumentException(string.Format(ErrorMessage, "variableList"));
             VariableList = settings["variableList"];
 
             // Load optional parameters
@@ -262,20 +261,18 @@ namespace DynamicCalculator
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements;
             IMeasurement measurement;
             string name;
 
-            measurements = frame.Entities;
             m_expressionContext.Variables.Clear();
 
             // Set the values of variables in the expression
-            foreach (MeasurementKey key in m_keyMapping.Keys)
+            foreach (Guid signalID in m_idMapping.Keys)
             {
-                name = m_keyMapping[key];
+                name = m_idMapping[signalID];
 
-                if (measurements.TryGetValue(key, out measurement))
-                    m_expressionContext.Variables[name] = measurement.AdjustedValue;
+                if (frame.TryGetEntity(signalID, out measurement))
+                    m_expressionContext.Variables[name] = measurement.Value;
                 else
                     m_expressionContext.Variables[name] = double.NaN;
             }
@@ -288,7 +285,7 @@ namespace DynamicCalculator
             GenerateCalculatedMeasurement(m_expression.Evaluate() as IConvertible);
         }
 
-        // Adds a variable to the key-variable map.
+        // Adds a variable to the ID-variable map.
         private void AddVariable(string token)
         {
             // This determines whether the variable has been
@@ -300,110 +297,94 @@ namespace DynamicCalculator
                 AddNotAliasedVariable(token);
         }
 
-        // Adds an explicitly aliased variable to the key-variable map.
+        // Adds an explicitly aliased variable to the ID-variable map.
         private void AddAliasedVariable(string token)
         {
             string[] splitToken = token.Split('=');
-            MeasurementKey key;
+            Guid signalID;
             string alias;
 
             if (splitToken.Length > 2)
                 throw new FormatException(string.Format("Too many equals signs: {0}", token));
 
-            key = GetKey(splitToken[1].Trim());
+            signalID = GetSignalID(splitToken[1].Trim());
             alias = splitToken[0].Trim();
-            AddMapping(key, alias);
+            AddMapping(signalID, alias);
         }
 
-        // Adds a variable to the key-variable map which has not been explicitly aliased.
+        // Adds a variable to the ID-variable map which has not been explicitly aliased.
         private void AddNotAliasedVariable(string token)
         {
             string alias;
-            MeasurementKey key;
+            Guid signalID;
 
             token = token.Trim();
             m_nonAliasedTokens.Add(-token.Length, token);
 
-            key = GetKey(token);
+            signalID = GetSignalID(token);
             alias = token.ReplaceCharacters('_', c => !char.IsLetterOrDigit(c));
 
             // Ensure that the generated alias is unique
             while (m_variableNames.Contains(alias))
                 alias += "_";
 
-            AddMapping(key, alias);
+            AddMapping(signalID, alias);
         }
 
-        // Adds the given mapping to the key-variable map.
-        private void AddMapping(MeasurementKey key, string alias)
+        // Adds the given mapping to the ID-variable map.
+        private void AddMapping(Guid signalID, string alias)
         {
             if (m_variableNames.Contains(alias))
                 throw new ArgumentException(string.Format("Variable name is not unique: {0}", alias));
 
             m_variableNames.Add(alias);
-            m_keyMapping.Add(key, alias);
+            m_idMapping.Add(signalID, alias);
         }
 
         // Performs alias replacement on tokens that were not explicitly aliased.
         private void PerformAliasReplacement()
         {
-            StringBuilder aliasedExpressionTextBuilder = new StringBuilder(m_expressionText);
-            MeasurementKey key;
+            StringBuilder aliasedExpressionTextBuilder;
+            Guid signalID;
             string alias;
+
+            aliasedExpressionTextBuilder = new StringBuilder(m_expressionText);
 
             foreach (string token in m_nonAliasedTokens.Values)
             {
-                key = GetKey(token);
-                alias = m_keyMapping[key];
+                signalID = GetSignalID(token);
+                alias = m_idMapping[signalID];
                 aliasedExpressionTextBuilder.Replace(token, alias);
             }
 
             m_aliasedExpressionText = aliasedExpressionTextBuilder.ToString();
         }
 
-        // Gets a measurement key based on a token which
-        // may be either a signal ID or measurement key.
-        private MeasurementKey GetKey(string token)
+        // Gets a signal ID based on a token which may be
+        // any value that is valid in a filter expression.
+        // If multiple signal IDs are returned by parsing the
+        // filter expression, only the first one will be used.
+        private Guid GetSignalID(string token)
         {
-            MeasurementKey undefined;
-            Guid signalId;
-
-            MeasurementKey key;
-
-            if (Guid.TryParse(token, out signalId))
-            {
-                // Defined using the measurement's GUID
-                undefined = MeasurementKey.Undefined;
-                key = new MeasurementKey(signalId, undefined.PointID, undefined.Source);
-            }
-            else
-            {
-                // Defined using the measurement's key
-                key = MeasurementKey.Parse(token);
-            }
-
-            return key;
+            return AdapterBase.ParseFilterExpression(DataSource, true, token).First();
         }
 
         // Generates a measurement with the given value and sends it into the system
         private void GenerateCalculatedMeasurement(IConvertible value)
         {
-            IMeasurement calculatedMeasurement;
-
             if ((object)value == null)
                 throw new InvalidOperationException("Calculation must not return a type that does not convert to double.");
 
-            calculatedMeasurement = Measurement.Clone(OutputSignalIDs[0], Convert.ToDouble(value), DateTime.UtcNow.Ticks);
-            OnNewMeasurement(calculatedMeasurement);
+            OnNewMeasurement(new Measurement<double>(OutputSignalIDs.First(), DateTime.Now.Ticks, Convert.ToDouble(value)));
         }
 
         // Helper method to raise the NewMeasurements event
         // when only a single measurement is to be provided.
-        private void OnNewMeasurement(IMeasurement measurement)
+        private void OnNewMeasurement(IMeasurement<double> measurement)
         {
-            // skip processing of an output with a value of NaN unless configured to process NaN outputs
+            // Skip processing of an output with a value of NaN unless configured to process NaN outputs
             if (!m_skipNanOutput || !double.IsNaN(measurement.Value))
-                OnNewEntities(new IMeasurement[] { measurement });
+                OnNewEntities(new ITimeSeriesEntity[] { measurement });
         }
 
         #endregion

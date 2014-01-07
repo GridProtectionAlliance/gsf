@@ -47,7 +47,7 @@ namespace EpriExport
     /// Represents an action adapter that exports measurements on an interval to a file that can be picked up by EPRI applications.
     /// </summary>
     [Description("EPRI: exports measurements to a file that can be used by EPRI systems")]
-    public class FileExporter : CalculatedMeasurementBase
+    public class FileExporter : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -59,7 +59,7 @@ namespace EpriExport
         // Fields
         private string m_fileExportPath;
         private string m_header;
-        private MeasurementKey m_referenceAngleKey;
+        private Guid m_referenceAngleID;
         private int m_exportInterval;
         private string m_comments;
         private string m_modelIdentifier;
@@ -155,11 +155,27 @@ namespace EpriExport
         {
             get
             {
-                return m_referenceAngleKey.ToString();
+                return m_referenceAngleID.ToString();
             }
             set
             {
-                m_referenceAngleKey = MeasurementKey.Parse(value);
+                m_referenceAngleID = Guid.Parse(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        /// <remarks>
+        /// Since a historical FileExporter would have the same settings as the real-time
+        /// FileExporter, allowing temporal processing would most likely cause undesired
+        /// behavior. Therefore, temporal processing is disabled.
+        /// </remarks>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return false;
             }
         }
 
@@ -178,7 +194,7 @@ namespace EpriExport
                 status.AppendLine();
                 status.AppendFormat("          Model identifier: {0}", m_modelIdentifier);
                 status.AppendLine();
-                status.AppendFormat("     Reference angle point: {0}", m_referenceAngleKey);
+                status.AppendFormat("     Reference angle point: {0}", m_referenceAngleID);
                 status.AppendLine();
                 status.AppendFormat("           Skipped exports: {0}", m_skippedExports);
                 status.AppendLine();
@@ -203,6 +219,8 @@ namespace EpriExport
             Dictionary<string, string> settings = Settings;
             const string errorMessage = "{0} is missing from Settings - Example: exportInterval=5; modelIdentifier=Goslin; referenceAngleMeasurement=DEVARCHIVE:6; inputMeasurementKeys={{FILTER ActiveMeasurements WHERE Device='SHELBY' AND SignalType='FREQ'}}";
             string setting;
+
+            SignalType signalType;
             double seconds;
 
             // Load required parameters
@@ -217,22 +235,20 @@ namespace EpriExport
             if (m_exportInterval <= 0)
                 throw new ArgumentException("exportInterval should not be 0 - Example: exportInterval=5.5");
 
-            if (InputMeasurementKeys == null || InputMeasurementKeys.Length == 0)
+            if (InputSignalIDs.Count == 0)
                 throw new InvalidOperationException("There are no input measurements defined. You must define \"inputMeasurementKeys\" to define which measurements to export.");
 
             // Reference angle measurement has to be defined if using reference angle
             if (!settings.TryGetValue("referenceAngleMeasurement", out setting))
                 throw new ArgumentException(string.Format(errorMessage, "referenceAngleMeasurement"));
 
-            m_referenceAngleKey = MeasurementKey.Parse(setting);
+            m_referenceAngleID = AdapterBase.ParseFilterExpression(DataSource, true, setting).First();
 
             // Make sure reference angle is first angle of input measurement keys collection
-            InputMeasurementKeys = (new[] { m_referenceAngleKey }).Concat(InputMeasurementKeys).ToArray();
+            InputSignalIDs.Add(m_referenceAngleID);
 
             // Make sure sure reference angle key is actually an angle measurement
-            SignalType signalType = InputSignalTypes[InputMeasurementKeys.IndexOf(key => key == m_referenceAngleKey)];
-
-            if (signalType != SignalType.IPHA && signalType != SignalType.VPHA)
+            if (!this.TryGetSignalType(m_referenceAngleID, out signalType) || (signalType != SignalType.IPHA && signalType != SignalType.VPHA))
                 throw new InvalidOperationException(string.Format("Specified reference angle measurement key is a {0} signal, not a phase angle.", signalType.GetFormattedSignalTypeName()));
 
             Comments = settings.TryGetValue("comments", out setting) ? setting : "Comment section---";
@@ -259,60 +275,65 @@ namespace EpriExport
             DataTable measurements = DataSource.Tables["ActiveMeasurements"];
             int tieLines = 0;
             bool referenceAdded = false;
+            DataRow row;
 
-            for (int i = 0; i < InputMeasurementKeys.Length; i++)
+            foreach (Guid signalID in InputSignalIDs)
             {
-                // Lookup measurement key in active measurements table
-                DataRow row = measurements.Select(string.Format("ID='{0}'", InputMeasurementKeys[i]))[0];
-                string deviceName = row["Device"].ToNonNullString("UNDEFINED").ToUpper().Trim();
 
-                if (!referenceAdded && InputMeasurementKeys[i] == m_referenceAngleKey)
+                if (this.TryGetMetadata(signalID, out row))
                 {
-                    header.AppendFormat(",Ref. Angle of {0}", deviceName);
-                    referenceAdded = true;
-                }
-                else
-                    switch (InputSignalTypes[i])
+                    string deviceName = row["Device"].ToNonNullString("UNDEFINED").ToUpper().Trim();
+
+                    if (!referenceAdded && signalID == m_referenceAngleID)
                     {
-                        case SignalType.VPHM:
-                            header.AppendFormat(",{0} |V|", deviceName);
-                            tieLines++;
-
-                            //voltageMagnitudeKey = InputMeasurementKeys[i];
-
-                            //if (settings.TryGetValue(voltageMagnitudeKey + "BaseKV", out setting) && double.TryParse(setting, out baseKV))
-                            //{
-                            //    m_baseVoltages.Add(voltageMagnitudeKey, baseKV * SI.Kilo);
-                            //}
-                            //else
-                            //{
-                            //    int baseKVCode;
-
-                            //    // Second check if base KV can be inferred from device name suffixed KV index
-                            //    if (int.TryParse(deviceName[deviceName.Length - 1].ToString(), out baseKVCode) && baseKVCode > 1 && baseKVCode < BaseKVs.Length)
-                            //    {
-                            //        m_baseVoltages.Add(voltageMagnitudeKey, BaseKVs[baseKVCode]);
-                            //    }
-                            //    else
-                            //    {
-                            //        OnStatusMessage("WARNING: Did not find a valid base KV setting for voltage magnitude {0}, assumed 500KV", voltageMagnitudeKey.ToString());
-                            //        m_baseVoltages.Add(voltageMagnitudeKey, 500.0D * SI.Kilo);
-                            //    }
-                            //}
-                            break;
-                        case SignalType.VPHA:
-                            header.AppendFormat(",{0} Voltage Angle", deviceName);
-                            break;
-                        case SignalType.IPHM:
-                            header.AppendFormat(",{0} |I|", deviceName);
-                            break;
-                        case SignalType.IPHA:
-                            header.AppendFormat(",{0} Current Angle", deviceName);
-                            break;
-                        default:
-                            header.AppendFormat(",{0} ??", deviceName);
-                            break;
+                        header.AppendFormat(",Ref. Angle of {0}", deviceName);
+                        referenceAdded = true;
                     }
+                    else if (this.TryGetSignalType(signalID, out signalType))
+                    {
+                        switch (signalType)
+                        {
+                            case SignalType.VPHM:
+                                header.AppendFormat(",{0} |V|", deviceName);
+                                tieLines++;
+
+                                //voltageMagnitudeKey = InputMeasurementKeys[i];
+
+                                //if (settings.TryGetValue(voltageMagnitudeKey + "BaseKV", out setting) && double.TryParse(setting, out baseKV))
+                                //{
+                                //    m_baseVoltages.Add(voltageMagnitudeKey, baseKV * SI.Kilo);
+                                //}
+                                //else
+                                //{
+                                //    int baseKVCode;
+
+                                //    // Second check if base KV can be inferred from device name suffixed KV index
+                                //    if (int.TryParse(deviceName[deviceName.Length - 1].ToString(), out baseKVCode) && baseKVCode > 1 && baseKVCode < BaseKVs.Length)
+                                //    {
+                                //        m_baseVoltages.Add(voltageMagnitudeKey, BaseKVs[baseKVCode]);
+                                //    }
+                                //    else
+                                //    {
+                                //        OnStatusMessage("WARNING: Did not find a valid base KV setting for voltage magnitude {0}, assumed 500KV", voltageMagnitudeKey.ToString());
+                                //        m_baseVoltages.Add(voltageMagnitudeKey, 500.0D * SI.Kilo);
+                                //    }
+                                //}
+                                break;
+                            case SignalType.VPHA:
+                                header.AppendFormat(",{0} Voltage Angle", deviceName);
+                                break;
+                            case SignalType.IPHM:
+                                header.AppendFormat(",{0} |I|", deviceName);
+                                break;
+                            case SignalType.IPHA:
+                                header.AppendFormat(",{0} Current Angle", deviceName);
+                                break;
+                            default:
+                                header.AppendFormat(",{0} ??", deviceName);
+                                break;
+                        }
+                    }
+                }
             }
 
             string row5 = header.ToString();
@@ -327,8 +348,8 @@ namespace EpriExport
             // Add row 3
             header.Append("Datapoints,Tielines,TimeStep");
 
-            if (InputMeasurementKeys.Length - 3 > 0)
-                header.Append(new string(',', InputMeasurementKeys.Length - 3));
+            if (InputSignalIDs.Count - 3 > 0)
+                header.Append(new string(',', InputSignalIDs.Count - 3));
 
             header.AppendLine();
 
@@ -351,15 +372,12 @@ namespace EpriExport
         protected override void PublishFrame(IFrame frame, int index)
         {
             Ticks timestamp = frame.Timestamp;
-            IMeasurement measurement;
-            MeasurementKey inputMeasurementKey;
+            IMeasurement<double> measurement;
             SignalType signalType;
             double measurementValue;
             bool displayedWarning = false;
 
-            ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
-
-            if (measurements.Count > 0)
+            if (frame.Entities.Count > 0)
             {
                 if (m_fileData == null)
                 {
@@ -372,25 +390,38 @@ namespace EpriExport
                 m_fileData.AppendFormat("{0}", timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
 
                 // Export all defined input measurements
-                for (int i = 0; i < InputMeasurementKeys.Length; i++)
+                foreach (Guid signalID in InputSignalIDs)
                 {
                     m_fileData.Append(',');
-                    inputMeasurementKey = InputMeasurementKeys[i];
-                    signalType = InputSignalTypes[i];
 
-                    // Get measurement for this frame, falling back on latest value
-                    measurementValue = measurements.TryGetValue(inputMeasurementKey, out measurement) ? measurement.AdjustedValue : LatestEntities[inputMeasurementKey.SignalID];
+                    if (this.TryGetSignalType(signalID, out signalType))
+                    {
+                        // Get measurement for this frame, falling back on latest value
+                        if (frame.TryGetEntity(signalID, out measurement))
+                        {
+                            measurementValue = measurement.Value;
+                        }
+                        else
+                        {
+                            measurement = LatestEntities[signalID] as IMeasurement<double>;
 
-                    // Export measurement value making any needed adjustments based on signal type
-                    if (signalType == SignalType.VPHM)
-                    {
-                        // Convert voltages to base units
-                        m_fileData.Append(measurementValue / SI.Kilo);
-                    }
-                    else
-                    {
-                        // Export all other types of measurements as their raw value
-                        m_fileData.Append(measurementValue);
+                            if ((object)measurement != null)
+                                measurementValue = measurement.Value;
+                            else
+                                measurementValue = double.NaN;
+                        }
+
+                        // Export measurement value making any needed adjustments based on signal type
+                        if (signalType == SignalType.VPHM)
+                        {
+                            // Convert voltages to base units
+                            m_fileData.Append(measurementValue / SI.Kilo);
+                        }
+                        else
+                        {
+                            // Export all other types of measurements as their raw value
+                            m_fileData.Append(measurementValue);
+                        }
                     }
                 }
 
