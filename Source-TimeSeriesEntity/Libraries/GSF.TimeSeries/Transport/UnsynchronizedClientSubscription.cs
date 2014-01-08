@@ -484,7 +484,7 @@ namespace GSF.TimeSeries.Transport
         /// Measurements are filtered against the defined <see cref="AdapterBase.InputSignalIDs"/> so we override method
         /// so that dynamic updates to keys will be synchronized with filtering to prevent interference.
         /// </remarks>
-        public override void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
+        public override void ProcessEntities(IEnumerable<ITimeSeriesEntity> entities)
         {
             if ((object)entities == null)
                 return;

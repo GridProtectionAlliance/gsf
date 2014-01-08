@@ -1334,7 +1334,7 @@ namespace GSF.TimeSeries.Transport
         /// Queues a collection of measurements for processing to each <see cref="IActionAdapter"/> connected to this <see cref="DataPublisher"/>.
         /// </summary>
         /// <param name="entities">Measurements to queue for processing.</param>
-        public override void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
+        public override void ProcessEntities(IEnumerable<ITimeSeriesEntity> entities)
         {
             ITimeSeriesEntity cachedEntity;
 

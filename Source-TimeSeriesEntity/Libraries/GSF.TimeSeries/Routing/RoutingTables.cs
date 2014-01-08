@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using GSF.Collections;
+using GSF.Reflection;
 using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Routing
@@ -302,6 +303,7 @@ namespace GSF.TimeSeries.Routing
                 Dictionary<IAdapter, ICollection<SignalRoute>> routesLookup = new Dictionary<IAdapter, ICollection<SignalRoute>>();
                 Dictionary<Type, ICollection<SignalRoute>> routesLookupTemplates = new Dictionary<Type, ICollection<SignalRoute>>();
 
+                TimeSeriesProcessingMethodAttribute timeSeriesProcessingMethodAttribute;
                 Func<Type, ICollection<SignalRoute>> templateFactory;
                 ICollection<IAdapter> destinations;
                 ICollection<SignalRoute> routes;
@@ -311,9 +313,8 @@ namespace GSF.TimeSeries.Routing
 
                 // Factory method for creating templates for routes that can be looked up by adapter
                 // type so that reflection only needs to be performed once per adapter type
-                // TODO: Use an attribute or something to allow adapter writers to define what their processing functions should be
                 templateFactory = type => type.GetMethods()
-                    .Where(method => method.Name == "QueueEntriesForProcessing")
+                    .Where(method => method.TryGetAttribute(out timeSeriesProcessingMethodAttribute))
                     .Select(method => new SignalRoute(method))
                     .Where(route => (object)route.ListType != null)
                     .ToList();

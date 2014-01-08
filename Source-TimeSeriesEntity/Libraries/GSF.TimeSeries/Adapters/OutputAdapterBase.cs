@@ -546,7 +546,8 @@ namespace GSF.TimeSeries.Adapters
         /// Queues a collection of time-series entities for processing.
         /// </summary>
         /// <param name="entities">Entities to queue for processing.</param>
-        public virtual void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
+        [TimeSeriesProcessingMethod]
+        public void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
         {
             if (m_disposed)
                 return;

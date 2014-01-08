@@ -103,6 +103,7 @@
     <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
     <Compile Include="Adapters\CustomConfigurationEditorAttribute.cs" />
     <Compile Include="Adapters\IaonSession.cs" />
+    <Compile Include="Adapters\TimeSeriesProcessingMethodAttribute.cs" />
     <Compile Include="Routing\RoutingEventArgs.cs" />
     <Compile Include="Routing\RoutingTables.cs" />
     <Compile Include="Alarm.cs" />

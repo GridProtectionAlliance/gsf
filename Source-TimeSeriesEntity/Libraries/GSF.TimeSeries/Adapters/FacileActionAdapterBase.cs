@@ -463,7 +463,8 @@ namespace GSF.TimeSeries.Adapters
         /// Queues a collection of time-series entities for processing.
         /// </summary>
         /// <param name="entities">Entities to queue for processing.</param>
-        public virtual void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
+        [TimeSeriesProcessingMethod]
+        public void QueueEntitiesForProcessing(IEnumerable<ITimeSeriesEntity> entities)
         {
             ITimeSeriesEntity latestEntity;
 
@@ -485,6 +486,16 @@ namespace GSF.TimeSeries.Adapters
                         m_realTimeTicks = entity.Timestamp;
                 }
             }
+
+            ProcessEntities(entities);
+        }
+
+        /// <summary>
+        /// Processes a collection of time-series entities.
+        /// </summary>
+        /// <param name="entities">Entities to be processed.</param>
+        public virtual void ProcessEntities(IEnumerable<ITimeSeriesEntity> entities)
+        {
         }
 
         /// <summary>
