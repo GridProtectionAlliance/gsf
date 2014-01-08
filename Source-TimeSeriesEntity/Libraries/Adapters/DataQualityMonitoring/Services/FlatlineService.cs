@@ -131,10 +131,10 @@ namespace DataQualityMonitoring.Services
         private SerializableFlatlineTest ReadFlatlinedMeasurements()
         {
             SerializableFlatlineTest serializableTest = new SerializableFlatlineTest();
-            ICollection<IMeasurement> flatlinedMeasurements = m_test.GetFlatlinedMeasurements();
+            ICollection<IMeasurement<double>> flatlinedMeasurements = m_test.GetFlatlinedMeasurements();
 
             List<SerializableFlatlinedMeasurement> serializableFlatlinedMeasurements = new List<SerializableFlatlinedMeasurement>();
-            foreach (IMeasurement measurement in flatlinedMeasurements)
+            foreach (IMeasurement<double> measurement in flatlinedMeasurements)
             {
                 SerializableFlatlinedMeasurement serializableFlatlinedMeasurement = CreateSerializableFlatlinedMeasurement(measurement);
                 serializableFlatlinedMeasurements.Add(serializableFlatlinedMeasurement);
@@ -148,10 +148,10 @@ namespace DataQualityMonitoring.Services
         private SerializableFlatlineTest ReadFlatlinedMeasurements(string device)
         {
             SerializableFlatlineTest serializableTest = new SerializableFlatlineTest();
-            ICollection<IMeasurement> flatlinedMeasurements = m_test.GetFlatlinedMeasurements();
+            ICollection<IMeasurement<double>> flatlinedMeasurements = m_test.GetFlatlinedMeasurements();
 
             List<SerializableFlatlinedMeasurement> serializableFlatlinedMeasurements = new List<SerializableFlatlinedMeasurement>();
-            foreach (IMeasurement measurement in flatlinedMeasurements)
+            foreach (IMeasurement<double> measurement in flatlinedMeasurements)
             {
                 SerializableFlatlinedMeasurement serializableFlatlinedMeasurement = CreateSerializableFlatlinedMeasurement(measurement);
 
@@ -164,7 +164,7 @@ namespace DataQualityMonitoring.Services
         }
 
         // Properly creates a SerializableFlatlinedMeasurement by sending in TimeSinceLastChange, attaching to the exception event, and setting device and signal type.
-        private SerializableFlatlinedMeasurement CreateSerializableFlatlinedMeasurement(IMeasurement measurement)
+        private SerializableFlatlinedMeasurement CreateSerializableFlatlinedMeasurement(IMeasurement<double> measurement)
         {
             SerializableFlatlinedMeasurement serializableMeasurement = new SerializableFlatlinedMeasurement(measurement, m_test.RealTime - measurement.Timestamp);
             serializableMeasurement.ProcessException += serializableMeasurement_ProcessException;

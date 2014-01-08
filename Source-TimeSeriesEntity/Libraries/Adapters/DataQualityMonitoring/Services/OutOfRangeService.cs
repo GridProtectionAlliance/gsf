@@ -185,10 +185,10 @@ namespace DataQualityMonitoring.Services
             {
                 SerializableRangeTest serializableTest = new SerializableRangeTest(test.Name);
                 List<SerializableOutOfRangeMeasurement> serializableMeasurements = new List<SerializableOutOfRangeMeasurement>();
-                ICollection<IMeasurement> outOfRangeMeasurements = test.GetOutOfRangeMeasurements();
+                ICollection<IMeasurement<double>> outOfRangeMeasurements = test.GetOutOfRangeMeasurements();
 
                 // Convert IMeasurements to SerializableOutOfRangeMeasurements and add them to the list of serializable measurements.
-                foreach (IMeasurement measurement in outOfRangeMeasurements)
+                foreach (IMeasurement<double> measurement in outOfRangeMeasurements)
                 {
                     SerializableOutOfRangeMeasurement serializableMeasurement = CreateSerializableOutOfRangeMeasurement(test, measurement);
                     serializableMeasurements.Add(serializableMeasurement);
@@ -212,10 +212,10 @@ namespace DataQualityMonitoring.Services
             {
                 SerializableRangeTest serializableTest = new SerializableRangeTest(test.Name);
                 List<SerializableOutOfRangeMeasurement> serializableMeasurements = new List<SerializableOutOfRangeMeasurement>();
-                ICollection<IMeasurement> outOfRangeMeasurements = test.GetOutOfRangeMeasurements();
+                ICollection<IMeasurement<double>> outOfRangeMeasurements = test.GetOutOfRangeMeasurements();
 
                 // Convert IMeasurements to SerializableOutOfRangeMeasurements and add them to the list of serializable measurements.
-                foreach (IMeasurement measurement in outOfRangeMeasurements)
+                foreach (IMeasurement<double> measurement in outOfRangeMeasurements)
                 {
                     SerializableOutOfRangeMeasurement serializableMeasurement = CreateSerializableOutOfRangeMeasurement(test, measurement);
 
@@ -241,10 +241,10 @@ namespace DataQualityMonitoring.Services
             {
                 SerializableRangeTest serializableTest = new SerializableRangeTest(test.Name);
                 List<SerializableOutOfRangeMeasurement> serializableMeasurements = new List<SerializableOutOfRangeMeasurement>();
-                ICollection<IMeasurement> outOfRangeMeasurements = test.GetOutOfRangeMeasurements();
+                ICollection<IMeasurement<double>> outOfRangeMeasurements = test.GetOutOfRangeMeasurements();
 
                 // Convert IMeasurements to SerializableOutOfRangeMeasurements and add them to the list of serializable measurements.
-                foreach (IMeasurement measurement in outOfRangeMeasurements)
+                foreach (IMeasurement<double> measurement in outOfRangeMeasurements)
                 {
                     SerializableOutOfRangeMeasurement serializableMeasurement = CreateSerializableOutOfRangeMeasurement(test, measurement);
 
@@ -269,10 +269,10 @@ namespace DataQualityMonitoring.Services
             // Convert RangeTest to SerializableRangeTest and add it to the list of serializable tests.
             SerializableRangeTest serializableTest = new SerializableRangeTest(test.Name);
             List<SerializableOutOfRangeMeasurement> serializableMeasurements = new List<SerializableOutOfRangeMeasurement>();
-            ICollection<IMeasurement> outOfRangeMeasurements = test.GetOutOfRangeMeasurements();
+            ICollection<IMeasurement<double>> outOfRangeMeasurements = test.GetOutOfRangeMeasurements();
 
             // Convert IMeasurements to SerializableOutOfRangeMeasurements and add them to the list of serializable measurements.
-            foreach (IMeasurement measurement in outOfRangeMeasurements)
+            foreach (IMeasurement<double> measurement in outOfRangeMeasurements)
             {
                 SerializableOutOfRangeMeasurement serializableMeasurement = CreateSerializableOutOfRangeMeasurement(test, measurement);
                 serializableMeasurements.Add(serializableMeasurement);
@@ -285,7 +285,7 @@ namespace DataQualityMonitoring.Services
             return serializableCollection;
         }
 
-        private SerializableOutOfRangeMeasurement CreateSerializableOutOfRangeMeasurement(RangeTest test, IMeasurement measurement)
+        private SerializableOutOfRangeMeasurement CreateSerializableOutOfRangeMeasurement(RangeTest test, IMeasurement<double> measurement)
         {
             SerializableOutOfRangeMeasurement serializableMeasurement = new SerializableOutOfRangeMeasurement(measurement, test.LowRange, test.HighRange);
             serializableMeasurement.ProcessException += serializableMeasurement_ProcessException;

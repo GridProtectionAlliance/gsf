@@ -61,10 +61,10 @@ namespace DataQualityMonitoring.Services
         /// <param name="outOfRangeMeasurements">The collection of out-of-range measurements to be contained by this <see cref="SerializableRangeTest"/>.</param>
         /// <param name="lowRange">The lower boundary of the measurements' values.</param>
         /// <param name="highRange">The upper boundary of the measurements' values.</param>
-        public SerializableRangeTest(ICollection<IMeasurement> outOfRangeMeasurements, double lowRange, double highRange)
+        public SerializableRangeTest(ICollection<IMeasurement<double>> outOfRangeMeasurements, double lowRange, double highRange)
         {
             List<SerializableOutOfRangeMeasurement> serializableOutOfRangeMeasurements = new List<SerializableOutOfRangeMeasurement>();
-            foreach (IMeasurement measurement in outOfRangeMeasurements)
+            foreach (IMeasurement<double> measurement in outOfRangeMeasurements)
             {
                 serializableOutOfRangeMeasurements.Add(new SerializableOutOfRangeMeasurement(measurement, lowRange, highRange));
             }

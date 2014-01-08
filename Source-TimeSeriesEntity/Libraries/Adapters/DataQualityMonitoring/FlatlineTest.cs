@@ -29,7 +29,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Timers;
@@ -56,8 +55,8 @@ namespace DataQualityMonitoring
         private string m_adminEmailAddress;
         private string m_smtpServer;
 
-        private readonly Dictionary<MeasurementKey, IMeasurement> m_lastChange;
-        private readonly Dictionary<MeasurementKey, Ticks> m_lastNotified;
+        private readonly Dictionary<Guid, IMeasurement<double>> m_lastChange;
+        private readonly Dictionary<Guid, Ticks> m_lastNotified;
         private readonly Timer m_warningTimer;
         private FlatlineService m_flatlineService;
 
@@ -77,8 +76,8 @@ namespace DataQualityMonitoring
             m_emailInterval = Ticks.FromSeconds(3600);
             m_smtpServer = Mail.DefaultSmtpServer;
 
-            m_lastChange = new Dictionary<MeasurementKey, IMeasurement>();
-            m_lastNotified = new Dictionary<MeasurementKey, Ticks>();
+            m_lastChange = new Dictionary<Guid, IMeasurement<double>>();
+            m_lastNotified = new Dictionary<Guid, Ticks>();
             m_warningTimer = new Timer();
         }
 
@@ -254,17 +253,18 @@ namespace DataQualityMonitoring
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IMeasurement measurement = null;
+            Guid signalID;
+
             lock (m_lastChange)
             {
-                foreach (MeasurementKey key in frame.Entities.Keys)
+                foreach (IMeasurement<double> measurement in frame.Entities.Values.OfType<IMeasurement<double>>())
                 {
-                    measurement = frame.Entities[key];
+                    signalID = measurement.ID;
 
-                    if (!m_lastChange.ContainsKey(key))
-                        m_lastChange.Add(key, measurement);
-                    else if (m_lastChange[key].Value != measurement.Value)
-                        m_lastChange[key] = measurement;
+                    if (!m_lastChange.ContainsKey(signalID))
+                        m_lastChange.Add(signalID, measurement);
+                    else if (m_lastChange[signalID].Value != measurement.Value)
+                        m_lastChange[signalID] = measurement;
                 }
             }
 
@@ -275,18 +275,17 @@ namespace DataQualityMonitoring
         /// Returns a collection of measurements that are flatlined.
         /// </summary>
         /// <returns>A collection of flatlined measurements.</returns>
-        public ICollection<IMeasurement> GetFlatlinedMeasurements()
+        public ICollection<IMeasurement<double>> GetFlatlinedMeasurements()
         {
-            ICollection<IMeasurement> flatlinedMeasurements = new List<IMeasurement>();
+            ICollection<IMeasurement<double>> flatlinedMeasurements = new List<IMeasurement<double>>();
+            Ticks timeDiff;
 
             lock (m_lastChange)
             {
-                IMeasurement measurement = null;
-                foreach (MeasurementKey key in m_lastChange.Keys)
+                foreach (IMeasurement<double> measurement in m_lastChange.Values)
                 {
-                    measurement = m_lastChange[key];
+                    timeDiff = RealTime - measurement.Timestamp;
 
-                    Ticks timeDiff = base.RealTime - measurement.Timestamp;
                     if (timeDiff >= m_minFlatline)
                         flatlinedMeasurements.Add(measurement);
                 }
@@ -326,65 +325,37 @@ namespace DataQualityMonitoring
         // can detect measurements that have never been published
         private void InitializeLastChange()
         {
-            Ticks timestamp = base.RealTime;
+            Ticks timestamp = RealTime;
 
-            foreach (MeasurementKey key in InputSignalIDs)
-            {
-                // Try to find the signal ID and add the measurement to the m_lastChange collection
-                if (DataSource.Tables.Contains("ActiveMeasurements"))
-                {
-                    DataRow[] measurementRows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key.ToString()));
-
-                    if (measurementRows.Length > 0)
-                    {
-                        string signalID = measurementRows[0]["SignalID"].ToNonNullString();
-
-                        if (signalID != "")
-                        {
-                            m_lastChange.Add(key, new Measurement
-                                {
-                                ID = new Guid(signalID), Key = key, Value = double.NaN, Timestamp = timestamp
-                            });
-                        }
-                    }
-                }
-
-                // If the signal ID could not be found, add the measurement without it
-                if (!m_lastChange.ContainsKey(key))
-                {
-                    m_lastChange.Add(key, new Measurement
-                        {
-                        Key = key, Value = double.NaN, Timestamp = timestamp
-                    });
-                }
-            }
+            foreach (Guid signalID in InputSignalIDs)
+                m_lastChange.Add(signalID, new Measurement<double>(signalID, timestamp, double.NaN));
         }
 
         // Sends email notifications about changes in the flatlined status of measurements.
         private void SendEmailNotifications()
         {
             Ticks now = DateTime.Now.Ticks;
-            ICollection<IMeasurement> allFlatlinedMeasurements = GetFlatlinedMeasurements();
-            IEnumerable<IMeasurement> flatlined, noLongerFlatlined;
+            ICollection<IMeasurement<double>> allFlatlinedMeasurements = GetFlatlinedMeasurements();
+            IEnumerable<IMeasurement<double>> flatlined, noLongerFlatlined;
 
             lock (m_lastChange)
             {
                 flatlined = m_lastNotified
                     .Where(pair => now - pair.Value > m_emailInterval)
                     .Select(pair => m_lastChange[pair.Key])
-                    .Concat(allFlatlinedMeasurements.Where(measurement => !m_lastNotified.Keys.Contains(measurement.Key)))
+                    .Concat(allFlatlinedMeasurements.Where(measurement => !m_lastNotified.Keys.Contains(measurement.ID)))
                     .ToList();
 
                 noLongerFlatlined = m_lastNotified
-                    .Where(pair => !allFlatlinedMeasurements.Any(measurement => pair.Key == measurement.Key))
+                    .Where(pair => allFlatlinedMeasurements.All(measurement => pair.Key != measurement.ID))
                     .Select(pair => m_lastChange[pair.Key])
                     .ToList();
             }
 
-            if (flatlined.Count() > 0)
+            if (flatlined.Any())
                 SendEmailNotification(flatlined, true);
 
-            if (noLongerFlatlined.Count() > 0)
+            if (noLongerFlatlined.Any())
                 SendEmailNotification(noLongerFlatlined, false);
         }
 
@@ -392,41 +363,46 @@ namespace DataQualityMonitoring
         private void SendEmailNotification(IEnumerable<IMeasurement> measurements, bool flatlined)
         {
             Ticks now = DateTime.Now.Ticks;
-            Mail message = new Mail("notifications@company.com", m_adminEmailAddress, m_smtpServer);
             StringBuilder body = new StringBuilder();
+            MeasurementKey key;
 
-            body.AppendLine("Measurement Key, Value, Timestamp");
-
-            foreach (IMeasurement measurement in measurements)
+            using (Mail message = new Mail("notifications@company.com", m_adminEmailAddress, m_smtpServer))
             {
-                body.Append(measurement.Key);
-                body.Append(", ");
-                body.Append(measurement.AdjustedValue);
-                body.Append(", ");
-                body.Append(measurement.Timestamp);
-                body.AppendLine();
+                body.AppendLine("Measurement Key, Value, Timestamp");
+
+                foreach (IMeasurement measurement in measurements)
+                {
+                    if (this.TryGetMeasurementKey(measurement.ID, out key))
+                    {
+                        body.Append(key);
+                        body.Append(", ");
+                        body.Append(measurement.Value);
+                        body.Append(", ");
+                        body.Append(measurement.Timestamp);
+                        body.AppendLine();
+
+                        if (flatlined)
+                            m_lastNotified[measurement.ID] = now;
+                        else
+                            m_lastNotified.Remove(measurement.ID);
+                    }
+                }
 
                 if (flatlined)
-                    m_lastNotified[measurement.Key] = now;
+                    message.Subject = "Flatlined measurements";
                 else
-                    m_lastNotified.Remove(measurement.Key);
+                    message.Subject = "No longer flatlined measurements";
+
+                message.Body = body.ToString();
+                message.Send();
             }
-
-            if (flatlined)
-                message.Subject = "Flatlined measurements";
-            else
-                message.Subject = "No longer flatlined measurements";
-
-            message.Body = body.ToString();
-            message.Send();
-            message.Dispose();
         }
 
         private void m_warningTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            ICollection<IMeasurement> flatlinedMeasurements = GetFlatlinedMeasurements();
+            ICollection<IMeasurement<double>> flatlinedMeasurements = GetFlatlinedMeasurements();
 
-            foreach (IMeasurement measurement in flatlinedMeasurements)
+            foreach (IMeasurement<double> measurement in flatlinedMeasurements)
             {
                 Ticks timeDiff = RealTime - measurement.Timestamp;
                 OnStatusMessage(string.Format("{0} flatlined for {1} seconds.", measurement, (int)timeDiff.ToSeconds()));

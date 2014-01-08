@@ -47,55 +47,55 @@ namespace DataQualityMonitoring
         /// <summary>
         /// Default low range for frequency measurements.
         /// </summary>
-        public const double DEFAULT_FREQ_LOW_RANGE = 59.95;
+        public const double DefaultFREQLowRange = 59.95;
 
         /// <summary>
         /// Default high range for frequency measurements.
         /// </summary>
-        public const double DEFAULT_FREQ_HIGH_RANGE = 60.05;
+        public const double DefaultFREQHighRange = 60.05;
 
         /// <summary>
         /// Default low range for voltage phasor magnitudes.
         /// </summary>
-        public const double DEFAULT_VPHM_LOW_RANGE = 475000.0;
+        public const double DefaultVPHMLowRange = 475000.0;
 
         /// <summary>
         /// Default high range for voltage phasor magnitudes.
         /// </summary>
-        public const double DEFAULT_VPHM_HIGH_RANGE = 525000.0;
+        public const double DefaultVPHMHighRange = 525000.0;
 
         /// <summary>
         /// Default low range for current phasor magnitudes.
         /// </summary>
-        public const double DEFAULT_IPHM_LOW_RANGE = 0.0;
+        public const double DefaultIPHMLowRange = 0.0;
 
         /// <summary>
         /// Default high range for current phasor magnitudes.
         /// </summary>
-        public const double DEFAULT_IPHM_HIGH_RANGE = 3000.0;
+        public const double DefaultIPHMHighRange = 3000.0;
 
         /// <summary>
         /// Default low range for voltage phasor angles.
         /// </summary>
-        public const double DEFAULT_VPHA_LOW_RANGE = -180.0;
+        public const double DefaultVPHALowRange = -180.0;
 
         /// <summary>
         /// Default high range for voltage phasor angles.
         /// </summary>
-        public const double DEFAULT_VPHA_HIGH_RANGE = 180.0;
+        public const double DefaultVPHAHighRange = 180.0;
 
         /// <summary>
         /// Default low range for current phasor angles.
         /// </summary>
-        public const double DEFAULT_IPHA_LOW_RANGE = -180.0;
+        public const double DefaultIPHALowRange = -180.0;
 
         /// <summary>
         /// Default high range for current phasor angles.
         /// </summary>
-        public const double DEFAULT_IPHA_HIGH_RANGE = 180.0;
+        public const double DefaultIPHAHighRange = 180.0;
 
         // Fields
-        private readonly Dictionary<MeasurementKey, LinkedList<IMeasurement>> m_outOfRangeMeasurements;
+        private readonly Dictionary<Guid, LinkedList<IMeasurement<double>>> m_outOfRangeMeasurements;
         private string m_signalType;
         private double m_lowRange;
         private double m_highRange;
@@ -113,7 +113,7 @@ namespace DataQualityMonitoring
         /// </summary>
         public RangeTest()
         {
-            m_outOfRangeMeasurements = new Dictionary<MeasurementKey, LinkedList<IMeasurement>>();
+            m_outOfRangeMeasurements = new Dictionary<Guid, LinkedList<IMeasurement<double>>>();
             m_timeToPurge = Ticks.FromSeconds(1.0);
             m_warnInterval = Ticks.FromSeconds(4.0);
             m_warningTimer = new Timer();
@@ -236,7 +236,7 @@ namespace DataQualityMonitoring
         {
             base.Initialize();
 
-            string errorMessage = "{0} is missing from Settings - Example: lowRange=59.95; highRange=60.05";
+            const string ErrorMessage = "{0} is missing from Settings - Example: lowRange=59.95; highRange=60.05";
             bool rangeSet = false;
 
             Dictionary<string, string> settings = Settings;
@@ -249,16 +249,14 @@ namespace DataQualityMonitoring
             {
                 // Load required parameters
                 if (!settings.TryGetValue("lowRange", out setting))
-                    throw new ArgumentException(string.Format(errorMessage, "lowRange"));
+                    throw new ArgumentException(string.Format(ErrorMessage, "lowRange"));
 
                 m_lowRange = double.Parse(setting);
 
                 if (!settings.TryGetValue("highRange", out setting))
-                    throw new ArgumentException(string.Format(errorMessage, "highRange"));
+                    throw new ArgumentException(string.Format(ErrorMessage, "highRange"));
 
                 m_highRange = double.Parse(setting);
-
-                rangeSet = true;
             }
 
             // Load optional parameters
@@ -310,39 +308,33 @@ namespace DataQualityMonitoring
         /// </remarks>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IMeasurement measurement = null;
-
-            foreach (MeasurementKey key in frame.Entities.Keys)
+            foreach (IMeasurement<double> measurement in frame.Entities.Values)
             {
-                measurement = frame.Entities[key];
-
-                if (measurement.AdjustedValue < m_lowRange || measurement.AdjustedValue > m_highRange)
-                {
-                    AddOutOfRangeMeasurement(key, measurement);
-                }
+                if (measurement.Value < m_lowRange || measurement.Value > m_highRange)
+                    AddOutOfRangeMeasurement(measurement.ID, measurement);
             }
         }
 
         /// <summary>
-        /// Get a dictionary of <see cref="MeasurementKey"/>,<see cref="System.Int32"/> pairs representing
-        /// the number of times each key received has been out-of-range within the last <see cref="TimeToPurge"/> seconds.
+        /// Get a dictionary of (<see cref="Guid"/>,<see cref="System.Int32"/>) pairs representing the number of
+        /// times each signal received has been out-of-range within the last <see cref="TimeToPurge"/> seconds.
         /// </summary>
         /// <returns>A dictionary of count values for each out-of-range measurement.</returns>
-        public Dictionary<MeasurementKey, int> GetOutOfRangeCounts()
+        public Dictionary<Guid, int> GetOutOfRangeCounts()
         {
-            Dictionary<MeasurementKey, int> outOfRangeCounts = new Dictionary<MeasurementKey, int>();
+            Dictionary<Guid, int> outOfRangeCounts = new Dictionary<Guid, int>();
+            int count;
 
             lock (m_outOfRangeMeasurements)
             {
                 PurgeOldMeasurements();
 
-                int count = 0;
-                foreach (MeasurementKey key in m_outOfRangeMeasurements.Keys)
+                foreach (Guid signalID in m_outOfRangeMeasurements.Keys)
                 {
-                    count = m_outOfRangeMeasurements[key].Count;
+                    count = m_outOfRangeMeasurements[signalID].Count;
 
                     if (count > 0)
-                        outOfRangeCounts.Add(key, count);
+                        outOfRangeCounts.Add(signalID, count);
                 }
             }
 
@@ -353,20 +345,18 @@ namespace DataQualityMonitoring
         /// Get the full collection of out-of-range <see cref="IMeasurement"/>s.
         /// </summary>
         /// <returns>The full collection of out-of-range <see cref="IMeasurement"/>s.</returns>
-        public ICollection<IMeasurement> GetOutOfRangeMeasurements()
+        public ICollection<IMeasurement<double>> GetOutOfRangeMeasurements()
         {
-            ICollection<IMeasurement> allOutOfRangeMeasurements = new LinkedList<IMeasurement>();
+            ICollection<IMeasurement<double>> allOutOfRangeMeasurements = new LinkedList<IMeasurement<double>>();
 
             lock (m_outOfRangeMeasurements)
             {
                 PurgeOldMeasurements();
 
-                foreach (LinkedList<IMeasurement> measurementList in m_outOfRangeMeasurements.Values)
+                foreach (LinkedList<IMeasurement<double>> measurementList in m_outOfRangeMeasurements.Values)
                 {
-                    foreach (IMeasurement measurement in measurementList)
-                    {
+                    foreach (IMeasurement<double> measurement in measurementList)
                         allOutOfRangeMeasurements.Add(measurement);
-                    }
                 }
             }
 
@@ -374,16 +364,16 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
-        /// Get a collection of out-of-range <see cref="IMeasurement"/>s with the given key.
+        /// Get a collection of out-of-range <see cref="IMeasurement"/>s with the given signal ID.
         /// </summary>
-        /// <param name="key">The <see cref="MeasurementKey"/> corresponding to the desired measurements.</param>
+        /// <param name="signalID">The <see cref="Guid"/> identifying the signal that is producing the desired measurements.</param>
         /// <returns>A collection of out-of-range <see cref="IMeasurement"/>s.</returns>
-        public ICollection<IMeasurement> GetOutOfRangeMeasurements(MeasurementKey key)
+        public ICollection<IMeasurement> GetOutOfRangeMeasurements(Guid signalID)
         {
             lock (m_outOfRangeMeasurements)
             {
-                PurgeOldMeasurements(key);
-                return new LinkedList<IMeasurement>(m_outOfRangeMeasurements[key]);
+                PurgeOldMeasurements(signalID);
+                return new LinkedList<IMeasurement>(m_outOfRangeMeasurements[signalID]);
             }
         }
 
@@ -392,28 +382,26 @@ namespace DataQualityMonitoring
         {
             lock (m_outOfRangeMeasurements)
             {
-                foreach (MeasurementKey key in m_outOfRangeMeasurements.Keys)
-                {
-                    PurgeOldMeasurements(key);
-                }
+                foreach (Guid signalID in m_outOfRangeMeasurements.Keys)
+                    PurgeOldMeasurements(signalID);
             }
         }
 
-        // Purge old, out-of-range measurements with the given key.
-        private void PurgeOldMeasurements(MeasurementKey key)
+        // Purge old, out-of-range measurements with the given signal ID.
+        private void PurgeOldMeasurements(Guid signalID)
         {
             lock (m_outOfRangeMeasurements)
             {
-                LinkedList<IMeasurement> measurements = m_outOfRangeMeasurements[key];
+                LinkedList<IMeasurement<double>> measurements = m_outOfRangeMeasurements[signalID];
                 bool donePurging = false;
 
                 // Purge old measurements to prevent redundant warnings.
                 while (measurements.Count > 0 && !donePurging)
                 {
                     IMeasurement measurement = measurements.First.Value;
-                    Ticks diff = base.RealTime - measurement.Timestamp;
+                    Ticks diff = RealTime - measurement.Timestamp;
 
-                    if (diff >= base.LagTicks + m_timeToPurge)
+                    if (diff >= LagTicks + m_timeToPurge)
                         measurements.RemoveFirst();
                     else
                         donePurging = true;
@@ -427,28 +415,28 @@ namespace DataQualityMonitoring
             switch (signalType.ToUpper())
             {
                 case "FREQ":
-                    m_lowRange = DEFAULT_FREQ_LOW_RANGE;
-                    m_highRange = DEFAULT_FREQ_HIGH_RANGE;
+                    m_lowRange = DefaultFREQLowRange;
+                    m_highRange = DefaultFREQHighRange;
                     break;
 
                 case "VPHM":
-                    m_lowRange = DEFAULT_VPHM_LOW_RANGE;
-                    m_highRange = DEFAULT_VPHM_HIGH_RANGE;
+                    m_lowRange = DefaultVPHMLowRange;
+                    m_highRange = DefaultVPHMHighRange;
                     break;
 
                 case "IPHM":
-                    m_lowRange = DEFAULT_IPHM_LOW_RANGE;
-                    m_highRange = DEFAULT_IPHM_HIGH_RANGE;
+                    m_lowRange = DefaultIPHMLowRange;
+                    m_highRange = DefaultIPHMHighRange;
                     break;
 
                 case "VPHA":
-                    m_lowRange = DEFAULT_VPHA_LOW_RANGE;
-                    m_highRange = DEFAULT_VPHA_HIGH_RANGE;
+                    m_lowRange = DefaultVPHALowRange;
+                    m_highRange = DefaultVPHAHighRange;
                     break;
 
                 case "IPHA":
-                    m_lowRange = DEFAULT_IPHA_LOW_RANGE;
-                    m_highRange = DEFAULT_IPHA_HIGH_RANGE;
+                    m_lowRange = DefaultIPHALowRange;
+                    m_highRange = DefaultIPHAHighRange;
                     break;
 
                 default:
@@ -458,17 +446,17 @@ namespace DataQualityMonitoring
             return true;
         }
 
-        // Add a measurement to the list of out of range measurements corresponding to the given key.
-        private void AddOutOfRangeMeasurement(MeasurementKey key, IMeasurement measurement)
+        // Add a measurement to the list of out of range measurements corresponding to the given signal ID.
+        private void AddOutOfRangeMeasurement(Guid signalID, IMeasurement<double> measurement)
         {
             lock (m_outOfRangeMeasurements)
             {
-                LinkedList<IMeasurement> outOfRangeList;
+                LinkedList<IMeasurement<double>> outOfRangeList;
 
-                if (!m_outOfRangeMeasurements.TryGetValue(key, out outOfRangeList))
+                if (!m_outOfRangeMeasurements.TryGetValue(signalID, out outOfRangeList))
                 {
-                    outOfRangeList = new LinkedList<IMeasurement>();
-                    m_outOfRangeMeasurements.Add(key, outOfRangeList);
+                    outOfRangeList = new LinkedList<IMeasurement<double>>();
+                    m_outOfRangeMeasurements.Add(signalID, outOfRangeList);
                 }
 
                 outOfRangeList.AddLast(measurement);
@@ -477,9 +465,9 @@ namespace DataQualityMonitoring
 
         private void AttachToService()
         {
-            lock (s_service)
+            lock (Service)
             {
-                s_service.AttachRangeTest(this);
+                Service.AttachRangeTest(this);
 
                 if (s_exceptionProcessor == null)
                     s_exceptionProcessor = this;
@@ -488,13 +476,13 @@ namespace DataQualityMonitoring
 
         private void DetachFromService()
         {
-            lock (s_service)
+            lock (Service)
             {
-                s_service.DetachRangeTest(this);
+                Service.DetachRangeTest(this);
 
                 if (this == s_exceptionProcessor)
                 {
-                    ICollection<RangeTest> tests = s_service.Tests;
+                    ICollection<RangeTest> tests = Service.Tests;
 
                     if (tests.Count > 0)
                         s_exceptionProcessor = tests.GetEnumerator().Current;
@@ -507,12 +495,12 @@ namespace DataQualityMonitoring
         // Periodically send warnings to the console about out-of-range measurements.
         private void m_warningTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            Dictionary<MeasurementKey, int> measurementCounts = GetOutOfRangeCounts();
+            Dictionary<Guid, int> measurementCounts = GetOutOfRangeCounts();
 
-            foreach (MeasurementKey key in measurementCounts.Keys)
+            foreach (Guid signalID in measurementCounts.Keys)
             {
-                int count = measurementCounts[key];
-                OnStatusMessage("Measurement {0} arrived out-of-range {1} times within the last {2} seconds.", key, count, (int)m_timeToPurge.ToSeconds());
+                int count = measurementCounts[signalID];
+                OnStatusMessage("Measurement {0} arrived out-of-range {1} times within the last {2} seconds.", this.GetSignalInfo(signalID), count, (int)m_timeToPurge.ToSeconds());
             }
         }
 
@@ -527,15 +515,15 @@ namespace DataQualityMonitoring
         #region [ Static ]
 
         // Static Fields
-        private static readonly OutOfRangeService s_service;
+        private static readonly OutOfRangeService Service;
         private static RangeTest s_exceptionProcessor;
 
         // Static Constructor
         static RangeTest()
         {
-            s_service = new OutOfRangeService();
-            s_service.ServiceProcessException += s_service_ServiceProcessException;
-            s_service.Initialize();
+            Service = new OutOfRangeService();
+            Service.ServiceProcessException += s_service_ServiceProcessException;
+            Service.Initialize();
         }
 
         // Static Methods

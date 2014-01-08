@@ -51,10 +51,10 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="flatlinedMeasurements">The collection of flatlined measurements to be contained by this <see cref="SerializableFlatlineTest"/>.</param>
         /// <param name="currentTime">The current time in ticks.</param>
-        public SerializableFlatlineTest(ICollection<IMeasurement> flatlinedMeasurements, long currentTime)
+        public SerializableFlatlineTest(ICollection<IMeasurement<double>> flatlinedMeasurements, long currentTime)
         {
             List<SerializableFlatlinedMeasurement> serializableFlatlinedMeasurements = new List<SerializableFlatlinedMeasurement>();
-            foreach (IMeasurement measurement in flatlinedMeasurements)
+            foreach (IMeasurement<double> measurement in flatlinedMeasurements)
             {
                 long timeSinceLastChange = currentTime - measurement.Timestamp;
                 serializableFlatlinedMeasurements.Add(new SerializableFlatlinedMeasurement(measurement, timeSinceLastChange));

@@ -158,7 +158,7 @@ namespace GSF.TimeSeries
         private Ticks m_lastChanged;
 
         [NonSerialized]
-        private IMeasurement m_cause;
+        private IMeasurement<double> m_cause;
 
         #endregion
 
@@ -337,7 +337,7 @@ namespace GSF.TimeSeries
         /// Gets or sets the most recent measurement
         /// that caused the alarm to be raised.
         /// </summary>
-        public IMeasurement Cause
+        public IMeasurement<double> Cause
         {
             get
             {
@@ -362,7 +362,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="signal">The signal whose value is to be tested.</param>
         /// <returns>true if the alarm's state changed; false otherwise</returns>
-        public bool Test(IMeasurement signal)
+        public bool Test(IMeasurement<double> signal)
         {
             AlarmState previousState = State;
 

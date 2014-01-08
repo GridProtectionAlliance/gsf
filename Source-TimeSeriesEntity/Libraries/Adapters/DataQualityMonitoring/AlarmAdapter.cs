@@ -52,7 +52,7 @@ namespace DataQualityMonitoring
         private Dictionary<Guid, List<Alarm>> m_alarmLookup;
         private AlarmService m_alarmService;
 
-        private readonly AsyncDoubleBufferedQueue<IMeasurement> m_measurementQueue;
+        private readonly AsyncDoubleBufferedQueue<IMeasurement<double>> m_measurementQueue;
         private long m_eventCount;
         private int m_processThreadState;
 
@@ -68,7 +68,7 @@ namespace DataQualityMonitoring
         /// </summary>
         public AlarmAdapter()
         {
-            m_measurementQueue = new AsyncDoubleBufferedQueue<IMeasurement>();
+            m_measurementQueue = new AsyncDoubleBufferedQueue<IMeasurement<double>>();
             m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
         }
 
@@ -150,7 +150,8 @@ namespace DataQualityMonitoring
                     .Aggregate((list, id) => list + ";" + id);
 
                 // Set input measurement keys for measurement routing
-                InputMeasurementKeys = ParseFilterExpression(DataSource, true, filterExpression);
+                InputSignalIDs.Clear();
+                InputSignalIDs.UnionWith(ParseFilterExpression(DataSource, true, filterExpression));
             }
 
             try
@@ -207,9 +208,9 @@ namespace DataQualityMonitoring
         /// Queues a collection of measurements for processing.
         /// </summary>
         /// <param name="entities">Measurements to queue for processing.</param>
-        public override void QueueEntitiesForProcessing(IEnumerable<IMeasurement> entities)
+        public override void ProcessEntities(IEnumerable<ITimeSeriesEntity> entities)
         {
-            m_measurementQueue.Enqueue(entities);
+            m_measurementQueue.Enqueue(entities.OfType<IMeasurement<double>>());
         }
 
         /// <summary>
@@ -301,20 +302,18 @@ namespace DataQualityMonitoring
         // Processes measurements in the queue.
         private void ProcessMeasurements()
         {
-            IEnumerable<IMeasurement> measurements;
+            IEnumerable<IMeasurement<double>> measurements;
             SpinWait spinner;
-            int threadID;
 
             List<Alarm> alarms;
             List<Alarm> raisedAlarms;
 
-            List<IMeasurement> alarmEvents;
+            List<ITimeSeriesEntity> alarmEvents;
             IMeasurement alarmEvent;
             long processedMeasurements;
 
-            threadID = Thread.CurrentThread.ManagedThreadId;
             spinner = new SpinWait();
-            alarmEvents = new List<IMeasurement>();
+            alarmEvents = new List<ITimeSeriesEntity>();
 
             // If state is stopping (1), set it to stopped (0)
             // If state is running (2), continue looping
@@ -329,7 +328,7 @@ namespace DataQualityMonitoring
 
                     measurements = m_measurementQueue.Dequeue();
 
-                    foreach (IMeasurement measurement in measurements)
+                    foreach (IMeasurement<double> measurement in measurements)
                     {
                         lock (m_alarms)
                         {
@@ -344,18 +343,7 @@ namespace DataQualityMonitoring
                         // Create event measurements to be sent into the system
                         foreach (Alarm alarm in raisedAlarms)
                         {
-                            alarmEvent = new Measurement
-                            {
-                                Timestamp = measurement.Timestamp,
-                                Value = (int)alarm.State
-                            };
-
-                            if ((object)alarm.AssociatedMeasurementID != null)
-                            {
-                                alarmEvent.ID = alarm.AssociatedMeasurementID.GetValueOrDefault();
-                                alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
-                            }
-
+                            alarmEvent = new Measurement<double>(alarm.AssociatedMeasurementID.GetValueOrDefault(), measurement.Timestamp, (int)alarm.State);
                             alarmEvents.Add(alarmEvent);
                             m_eventCount++;
                         }

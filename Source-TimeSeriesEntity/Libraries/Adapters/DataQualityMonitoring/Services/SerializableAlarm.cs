@@ -58,7 +58,7 @@ namespace DataQualityMonitoring.Services
             State = sourceAlarm.State;
             SignalID = sourceAlarm.SignalID.ToString();
             TimeRaised = ((DateTime)sourceAlarm.Cause.Timestamp).ToString("MM/dd/yyyy HH:mm:ss");
-            ValueAtTimeRaised = sourceAlarm.Cause.AdjustedValue;
+            ValueAtTimeRaised = sourceAlarm.Cause.Value;
             Description = sourceAlarm.Description;
             Operation = (int)sourceAlarm.Operation;
             SetPoint = sourceAlarm.SetPoint ?? default(double);

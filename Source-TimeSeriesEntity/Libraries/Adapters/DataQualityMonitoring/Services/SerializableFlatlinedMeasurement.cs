@@ -55,7 +55,7 @@ namespace DataQualityMonitoring.Services
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement"/> from which <see cref="SerializableFlatlinedMeasurement"/> is to be initialized.</param>
         /// <param name="timeSinceLastChange">The amount of time since the flatlined measurement last changed in ticks.</param>
-        public SerializableFlatlinedMeasurement(IMeasurement measurement, long timeSinceLastChange)
+        public SerializableFlatlinedMeasurement(IMeasurement<double> measurement, long timeSinceLastChange)
             : base(measurement)
         {
             TimeSinceLastChange = Ticks.ToSeconds(timeSinceLastChange);

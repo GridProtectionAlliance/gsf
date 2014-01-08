@@ -504,9 +504,9 @@ namespace GSF.Collections
 
             // Raise collection changed notification based on if items were added or removed
             if (preCount < postCount)
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, (object)null));
             else if (preCount > postCount)
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, (object)null));
         }
 
         // Executes function and raises OnCollectionChanged event if items were added or removed as a result of function
@@ -526,9 +526,9 @@ namespace GSF.Collections
 
             // Raise collection changed notification based on if items were added or removed
             if (preCount < postCount)
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, (object)null));
             else if (preCount > postCount)
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, (object)null));
 
             return result;
         }

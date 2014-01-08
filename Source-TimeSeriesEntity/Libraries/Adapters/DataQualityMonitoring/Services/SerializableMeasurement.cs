@@ -38,7 +38,6 @@ namespace DataQualityMonitoring
     [XmlType("Measurement"), DataContract(Name = "Measurement", Namespace = "")]
     public class SerializableMeasurement
     {
-
         #region [ Members ]
 
         // Events
@@ -71,12 +70,12 @@ namespace DataQualityMonitoring
         /// Initializes a new instance of the <see cref="SerializableMeasurement"/> class.
         /// </summary>
         /// <param name="measurement"><see cref="IMeasurement"/> from which <see cref="SerializableMeasurement"/> is to be initialized.</param>
-        public SerializableMeasurement(IMeasurement measurement)
+        public SerializableMeasurement(IMeasurement<double> measurement)
         {
             m_sourceMeasurement = measurement;
-            Key = measurement.Key.ToString();
+            Key = string.Empty;
             SignalID = measurement.ID.ToString();
-            Value = measurement.AdjustedValue;
+            Value = measurement.Value;
             Timestamp = ((DateTime)measurement.Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff");
             SignalType = string.Empty;
             Device = string.Empty;
@@ -87,7 +86,7 @@ namespace DataQualityMonitoring
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="IMeasurement.Key"/>.
+        /// Gets or sets the <see cref="MeasurementKey"/> of the <see cref="IMeasurement"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 0)]
         public string Key
@@ -97,7 +96,7 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="ITimeSeriesValue.ID"/>.
+        /// Gets or sets the <see cref="ITimeSeriesEntity.ID"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 1)]
         public string SignalID
@@ -107,7 +106,7 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="IMeasurement.AdjustedValue"/>.
+        /// Gets or sets the <see cref="IMeasurement.Value"/>.
         /// </summary>
         [XmlAttribute, DataMember(Order = 2)]
         public double Value
@@ -117,7 +116,7 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="ITimeSeriesValue.Timestamp"/> in <see cref="DateTime"/> string format.
+        /// Gets or sets the <see cref="ITimeSeriesEntity.Timestamp"/> in <see cref="DateTime"/> string format.
         /// </summary>
         [XmlAttribute, DataMember(Order = 3)]
         public string Timestamp
@@ -158,7 +157,8 @@ namespace DataQualityMonitoring
         {
             try
             {
-                DataRow row = dataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", m_sourceMeasurement.Key.ToString()))[0];
+                DataRow row = dataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID = '{0}'", m_sourceMeasurement.ID))[0];
+                TrySetMeasurementKey(row);
                 TrySetDevice(row);
                 TrySetSignalType(row);
             }
@@ -176,6 +176,20 @@ namespace DataQualityMonitoring
         {
             if (ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(exception));
+        }
+
+        private bool TrySetMeasurementKey(DataRow row)
+        {
+            try
+            {
+                Key = row["ID"].ToString();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
+                return false;
+            }
         }
 
         private bool TrySetDevice(DataRow row)

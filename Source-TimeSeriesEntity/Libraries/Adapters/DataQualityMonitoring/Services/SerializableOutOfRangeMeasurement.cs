@@ -51,7 +51,7 @@ namespace DataQualityMonitoring.Services
         /// <param name="measurement"><see cref="IMeasurement"/> from which <see cref="SerializableOutOfRangeMeasurement"/> is to be initialized.</param>
         /// <param name="lowRange">The lower boundary of the <see cref="IMeasurement"/>'s value.</param>
         /// <param name="highRange">The upper boundary of the <see cref="IMeasurement"/>'s value.</param>
-        public SerializableOutOfRangeMeasurement(IMeasurement measurement, double lowRange, double highRange)
+        public SerializableOutOfRangeMeasurement(IMeasurement<double> measurement, double lowRange, double highRange)
             : base(measurement)
         {
             LowRange = lowRange;
