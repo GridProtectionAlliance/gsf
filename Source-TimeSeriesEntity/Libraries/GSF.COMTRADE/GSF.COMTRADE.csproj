@@ -103,6 +103,10 @@
       <Project>{54ca98cc-2f0a-41f2-879d-0e42b17e8544}</Project>
       <Name>GSF.PhasorProtocols</Name>
     </ProjectReference>
+    <ProjectReference Include="..\GSF.TimeSeries\GSF.TimeSeries.csproj">
+      <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
+      <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

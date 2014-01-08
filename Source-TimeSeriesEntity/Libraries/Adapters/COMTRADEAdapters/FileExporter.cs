@@ -38,7 +38,7 @@ namespace COMTRADEAdapters
     /// Represents an action adapter that exports measurements on an interval to a COMTRADE formatted file that can be imported into other systems for analysis.
     /// </summary>
     [Description("COMTRADE: exports measurements to a COMTRADE formatted file that can be imported into other systems for analysis")]
-    public class FileExporter : CalculatedMeasurementBase
+    public class FileExporter : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -152,7 +152,7 @@ namespace COMTRADEAdapters
             string setting;
 
             // Load required parameters
-            if (InputMeasurementKeys == null || InputMeasurementKeys.Length == 0)
+            if (InputSignalIDs.Count == 0)
                 throw new InvalidOperationException("There are no input measurements defined. You must define \"inputMeasurementKeys\" to define which measurements to export.");
 
             // Get station name
@@ -176,12 +176,8 @@ namespace COMTRADEAdapters
         /// <param name="index">Index of <see cref="IFrame"/> within one second of data ranging from zero to frames per second - 1.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            Ticks timestamp = frame.Timestamp;
-            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
-
-            if (measurements.Count > 0)
+            if (frame.Entities.Count > 0)
             {
-
                 // We display export status every other minute
                 if (new DateTime(frame.Timestamp).Minute % 2 == 0)
                 {

@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text;
 using Automatak.Archivist.Client;
 using Automatak.Archivist.Client.Impl;
@@ -58,7 +59,7 @@ namespace ArchivistAdapters
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CsvOutputAdapter"/> class.
+        /// Initializes a new instance of the <see cref="ArchivistOutputAdapter"/> class.
         /// </summary>
         public ArchivistOutputAdapter()
         {
@@ -110,7 +111,7 @@ namespace ArchivistAdapters
 
         /// <summary>
         /// Returns a flag that determines if measurements sent to this
-        /// <see cref="CsvOutputAdapter"/> are destined for archival.
+        /// <see cref="ArchivistOutputAdapter"/> are destined for archival.
         /// </summary>
         public override bool OutputIsForArchive
         {
@@ -121,7 +122,7 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Gets a flag that determines if this <see cref="CsvOutputAdapter"/>
+        /// Gets a flag that determines if this <see cref="ArchivistOutputAdapter"/>
         /// uses an asynchronous connection.
         /// </summary>
         protected override bool UseAsyncConnect
@@ -177,7 +178,7 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Attempts to connect to this <see cref="CsvOutputAdapter"/>.
+        /// Attempts to connect to this <see cref="ArchivistOutputAdapter"/>.
         /// </summary>
         protected override void AttemptConnection()
         {
@@ -185,7 +186,7 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Attempts to disconnect from this <see cref="CsvOutputAdapter"/>.
+        /// Attempts to disconnect from this <see cref="ArchivistOutputAdapter"/>.
         /// </summary>
         protected override void AttemptDisconnection()
         {
@@ -193,16 +194,16 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Archives <paramref name="measurements"/> to remote archivist instance.
+        /// Archives <paramref name="entities"/> to remote archivist instance.
         /// </summary>
-        /// <param name="measurements">Measurements to be archived.</param>
-        protected override void ProcessEntities(IMeasurement[] measurements)
+        /// <param name="entities">Measurements to be archived.</param>
+        protected override void ProcessEntities(ITimeSeriesEntity[] entities)
         {
-            if (measurements != null)
+            if (entities != null)
             {
                 try
                 {
-                    var meas = Convert(measurements);
+                    var meas = Convert(entities.OfType<IMeasurement<double>>().ToArray());
                     var result = m_client.Insert(meas).Await().Get(); // TODO - error handling here
                 }
                 catch (Exception ex)
@@ -213,7 +214,7 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="CsvOutputAdapter"/>.
+        /// Gets a short one-line status of this <see cref="ArchivistOutputAdapter"/>.
         /// </summary>
         /// <param name="maxLength">Maximum length of the status message.</param>
         /// <returns>Text of the status message.</returns>
@@ -222,11 +223,7 @@ namespace ArchivistAdapters
             return string.Format("Archived {0} measurements to Archive.", m_measurementCount).CenterText(maxLength);
         }
 
-        #endregion
-
-        #region Static Members
-
-        private static ICollection<MeasurementWithId> Convert(IMeasurement[] m)
+        private ICollection<MeasurementWithId> Convert(IMeasurement<double>[] m)
         { 
             var list = new List<MeasurementWithId>();
             for (int i = 0; i < m.Length; ++i)
@@ -236,17 +233,32 @@ namespace ArchivistAdapters
             return list;
         }
 
-        private static MeasurementWithId Convert(IMeasurement m)
+        private MeasurementWithId Convert(IMeasurement<double> m)
         {
-            var builder = Measurement.CreateBuilder();            
+            var builder = Measurement.CreateBuilder();
             builder.SetTime(m.Timestamp);
             builder.SetType(Type.FLOAT64);
             builder.SetDoubleValue(m.Value);            
             builder.SetQuality(0); // TODO - convert quality types
-            return MeasurementWithId.CreateBuilder().SetId(m.TagName).SetMeas(builder.Build()).Build();
+            return MeasurementWithId.CreateBuilder().SetId(GetTagName(m)).SetMeas(builder.Build()).Build();
+        }
+
+        private string GetTagName(IMeasurement<double> m)
+        {
+            string tagName;
+            MeasurementKey key;
+
+            if (!this.TryGetPointTag(m.ID, out tagName))
+            {
+                if (this.TryGetMeasurementKey(m.ID, out key))
+                    tagName = string.Format("KEY:{0}", key);
+                else
+                    tagName = string.Format("ID:{0}", m.ID);
+            }
+
+            return tagName;
         }
 
         #endregion
-
     }
 }

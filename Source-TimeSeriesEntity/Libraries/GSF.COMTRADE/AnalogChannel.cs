@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using GSF.Collections;
 using GSF.PhasorProtocols;
+using GSF.TimeSeries;
 
 namespace GSF.COMTRADE
 {

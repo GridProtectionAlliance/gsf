@@ -58,7 +58,7 @@ namespace AdoAdapters
         private string m_timestampFormat;
         private int m_framesPerSecond;
         private bool m_simulateTimestamps;
-        private IList<IMeasurement> m_dbMeasurements;
+        private IList<CompactMeasurement> m_dbMeasurements;
         private string m_cacheFileName;
         private int m_nextIndex;
 
@@ -72,7 +72,7 @@ namespace AdoAdapters
         public AdoInputAdapter()
         {
             m_fieldNames = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
-            m_dbMeasurements = new List<IMeasurement>();
+            m_dbMeasurements = new List<CompactMeasurement>();
         }
 
         #endregion
@@ -462,18 +462,13 @@ namespace AdoAdapters
                 {
                     OnStatusMessage("Loading database input data...");
 
-                    const string MeasurementTable = "ActiveMeasurements";
-
                     Dictionary<string, string> dataProviderSettings = m_dataProviderString.ParseKeyValuePairs();
                     Assembly assm = Assembly.Load(dataProviderSettings["AssemblyName"]);
                     Type connectionType = assm.GetType(dataProviderSettings["ConnectionType"]);
 
-                    Dictionary<Guid, MeasurementKey> lookupCache = new Dictionary<Guid, MeasurementKey>();
                     IDbCommand command;
                     IDataReader dbReader;
-                    MeasurementKey key;
                     Guid id;
-                    ushort index = 0;
 
                     connection = (IDbConnection)Activator.CreateInstance(connectionType);
                     connection.ConnectionString = m_dbConnectionString;
@@ -502,65 +497,12 @@ namespace AdoAdapters
                                             measurement.Timestamp = long.Parse(value.ToNonNullString());
                                         else
                                             measurement.Timestamp = DateTime.ParseExact(value.ToNonNullString(), m_timestampFormat, CultureInfo.CurrentCulture);
+
                                         break;
                                     case "ID":
                                         if (Guid.TryParse(value.ToString(), out id))
-                                        {
-                                            if (!lookupCache.TryGetValue(id, out key))
-                                            {
-                                                if (DataSource.Tables.Contains(MeasurementTable))
-                                                {
-                                                    DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("SignalID = '{0}'", id));
-
-                                                    if (filteredRows.Length > 0)
-                                                        MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
-                                                }
-
-                                                if (key != default(MeasurementKey))
-                                                {
-                                                    // Cache measurement key associated with ID
-                                                    lookupCache[id] = key;
-
-                                                    // Assign a runtime index optimization for distinct measurements
-                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(id, key.Source, key.PointID));
-                                                }
-                                            }
-
                                             measurement.ID = id;
-                                            measurement.Key = key;
-                                        }
-                                        break;
-                                    case "Key":
-                                        if (MeasurementKey.TryParse(value.ToString(), Guid.Empty, out key))
-                                        {
-                                            // Attempt to update empty signal ID if available
-                                            if (key.SignalID == Guid.Empty)
-                                            {
-                                                if (DataSource.Tables.Contains(MeasurementTable))
-                                                {
-                                                    DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
 
-                                                    if (filteredRows.Length > 0)
-                                                        key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                                                }
-                                            }
-
-                                            if (key.SignalID != Guid.Empty)
-                                            {
-                                                measurement.ID = key.SignalID;
-
-                                                if (!lookupCache.ContainsKey(measurement.ID))
-                                                {
-                                                    // Cache measurement key associated with ID
-                                                    lookupCache[measurement.ID] = key;
-
-                                                    // Assign a runtime index optimization for distinct measurements
-                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.PointID));
-                                                }
-                                            }
-
-                                            measurement.Key = key;
-                                        }
                                         break;
                                     case "Value":
                                         measurement.Value = Convert.ToDouble(value);
@@ -573,7 +515,7 @@ namespace AdoAdapters
                                             Type propertyType = property.PropertyType;
                                             Type valueType = value.GetType();
 
-                                            if (property.PropertyType.IsAssignableFrom(value.GetType()))
+                                            if (property.PropertyType.IsAssignableFrom(valueType))
                                             {
                                                 property.SetValue(measurement, value, null);
                                             }
@@ -704,7 +646,7 @@ namespace AdoAdapters
 
             while (Enabled)
             {
-                List<IMeasurement> measurements = new List<IMeasurement>();
+                List<ITimeSeriesEntity> measurements = new List<ITimeSeriesEntity>();
                 now = DateTime.UtcNow.Ticks;
 
                 // See if it is time to publish
@@ -722,10 +664,13 @@ namespace AdoAdapters
                     while (m_nextIndex < m_dbMeasurements.Count && Math.Abs((long)m_dbMeasurements[m_nextIndex].Timestamp - currentDataTime) < toleranceWindow)
                     {
                         // Clone the measurement so we can safely update the timestamp
-                        IMeasurement measurement = Measurement.Clone(m_dbMeasurements[m_nextIndex]);
+                        CompactMeasurement dbMeasurement = m_dbMeasurements[m_nextIndex];
+                        IMeasurement measurement;
 
                         if (m_simulateTimestamps)
-                            measurement.Timestamp = publicationTime;
+                            measurement = new Measurement<double>(dbMeasurement.ID, publicationTime, Convert.ToDouble(dbMeasurement.Value));
+                        else
+                            measurement = new Measurement<double>(dbMeasurement.ID, dbMeasurement.Timestamp, Convert.ToDouble(dbMeasurement.Value));
 
                         measurements.Add(measurement);
                         m_nextIndex++;

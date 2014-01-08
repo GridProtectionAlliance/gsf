@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text;
 using GSF;
 using GSF.PhasorProtocols;
+using GSF.TimeSeries;
 
 namespace GSF.COMTRADE
 {

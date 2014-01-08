@@ -308,18 +308,15 @@ namespace AdoAdapters
         }
 
         /// <summary>
-        /// Archives <paramref name="measurements"/> locally.
+        /// Archives <paramref name="entities"/> locally.
         /// </summary>
-        /// <param name="measurements">Measurements to be archived.</param>
-        protected override void ProcessEntities(IMeasurement[] measurements)
+        /// <param name="entities">Measurements to be archived.</param>
+        protected override void ProcessEntities(ITimeSeriesEntity[] entities)
         {
-            if ((object)measurements != null)
-            {
-                for (int i = 0; i < measurements.Length; i += m_bulkInsertLimit)
-                {
-                    BulkInsert(measurements.Skip(i).Take(m_bulkInsertLimit));
-                }
-            }
+            List<IMeasurement<double>> measurements = entities.OfType<IMeasurement<double>>().ToList();
+
+            for (int i = 0; i < measurements.Count; i += m_bulkInsertLimit)
+                BulkInsert(measurements.Skip(i).Take(m_bulkInsertLimit));
         }
 
         /// <summary>
@@ -350,22 +347,21 @@ namespace AdoAdapters
 
         private PropertyInfo[] GetAllProperties(Type type)
         {
-            List<Type> typeList = new List<Type>();
+            List<Type> typeList;
+            List<PropertyInfo> propertyList;
+
+            typeList = new List<Type>();
             typeList.Add(type);
 
             if (type.IsInterface)
-            {
                 typeList.AddRange(type.GetInterfaces());
-            }
 
-            List<PropertyInfo> propertyList = new List<PropertyInfo>();
+            propertyList = new List<PropertyInfo>();
 
             foreach (Type interfaceType in typeList)
             {
                 foreach (PropertyInfo property in interfaceType.GetProperties())
-                {
                     propertyList.Add(property);
-                }
             }
 
             return propertyList.ToArray();
@@ -402,7 +398,7 @@ namespace AdoAdapters
                     foreach (string fieldName in m_fieldList)
                     {
                         string propertyName = m_fieldNames[fieldName];
-                        object value = GetAllProperties(measurementType).FirstOrDefault(prop => prop.Name == propertyName).GetValue(measurement, null);
+                        object value = GetAllProperties(measurementType).First(prop => prop.Name == propertyName).GetValue(measurement, null);
 
                         if (valuesBuilder.Length > 0)
                             valuesBuilder.Append(',');
@@ -426,12 +422,7 @@ namespace AdoAdapters
                             case "id":
                                 parameter.Value = m_isJetEngine ? "{" + value + "}" : value;
                                 break;
-                            case "key":
-                                parameter.Value = value.ToString();
-                                break;
                             case "timestamp":
-                            case "publishedtimestamp":
-                            case "receivedtimestamp":
                                 Ticks timestamp = (Ticks)value;
 
                                 // If the value is a timestamp, use the timestamp format

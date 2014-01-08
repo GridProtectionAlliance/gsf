@@ -165,19 +165,19 @@ namespace CsvAdapters
         }
 
         /// <summary>
-        /// Archives <paramref name="measurements"/> locally.
+        /// Archives <paramref name="entities"/> locally.
         /// </summary>
-        /// <param name="measurements">Measurements to be archived.</param>
-        protected override void ProcessEntities(ITimeSeriesEntity[] measurements)
+        /// <param name="entities">Measurements to be archived.</param>
+        protected override void ProcessEntities(ITimeSeriesEntity[] entities)
         {
             StringBuilder builder;
             MeasurementKey key;
 
-            if ((object)measurements != null)
+            if ((object)entities != null)
             {
                 builder = new StringBuilder();
 
-                foreach (IMeasurement measurement in measurements)
+                foreach (IMeasurement measurement in entities)
                 {
                     if (this.TryGetMeasurementKey(measurement.ID, out key))
                     {
@@ -193,7 +193,7 @@ namespace CsvAdapters
                 }
 
                 m_outStream.Write(builder.ToString());
-                m_measurementCount += measurements.Length;
+                m_measurementCount += entities.Length;
             }           
         }
 
