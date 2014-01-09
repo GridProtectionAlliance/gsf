@@ -56,7 +56,7 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
             throw new NotImplementedException();
         }
 
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(ITimeSeriesEntity[] entities)
         {
             throw new NotImplementedException();
         }

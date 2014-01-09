@@ -27,7 +27,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for DataSubscriberTest and is intended
@@ -274,7 +274,7 @@ namespace TimeSeriesFramework.UnitTests
             bool allowSortsByArrival = false;
             long timeResolution = 0;
             bool allowPreemptivePublishing = false;
-            DownsamplingMethod downsamplingMethod = new DownsamplingMethod();
+            string downsamplingMethod ="LastReceived";
             string startTime = string.Empty;
             string stopTime = string.Empty;
             string constraintParameters = string.Empty;
@@ -283,7 +283,7 @@ namespace TimeSeriesFramework.UnitTests
             int waitHandleTimeout = 0;
             bool expected = false;
             bool actual;
-            actual = target.RemotelySynchronizedSubscribe(compactFormat, framesPerSecond, lagTime, leadTime, filterExpression, dataChannel, useLocalClockAsRealTime, ignoreBadTimestamps, allowSortsByArrival, timeResolution, allowPreemptivePublishing, downsamplingMethod, startTime, stopTime, constraintParameters, processingInterval, waitHandleNames, waitHandleTimeout);
+            actual = target.RemotelySynchronizedSubscribe(compactFormat, framesPerSecond, lagTime, leadTime, filterExpression, dataChannel, useLocalClockAsRealTime, ignoreBadTimestamps, allowSortsByArrival, timeResolution, allowPreemptivePublishing, downsamplingMethod, startTime, stopTime, constraintParameters, processingInterval, waitHandleNames, waitHandleTimeout);         
             Assert.AreEqual(expected, actual);
         }
 

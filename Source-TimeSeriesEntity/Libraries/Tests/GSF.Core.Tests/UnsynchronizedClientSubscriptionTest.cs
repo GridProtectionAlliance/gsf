@@ -31,7 +31,7 @@ using GSF.TimeSeries;
 using GSF;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for UnsynchronizedClientSubscriptionTest and is intended
@@ -174,15 +174,15 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for InputMeasurementKeys
         ///</summary>
-        [TestMethod()]
-        public void InputMeasurementKeysTest()
-        {
-            MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
-            MeasurementKey[] actual;
-            target.InputMeasurementKeys = expected;
-            actual = target.InputMeasurementKeys;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void InputMeasurementKeysTest()
+        //{
+        //    MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
+        //    MeasurementKey[] actual;
+        //    target.InputMeasurementKeys = expected;
+        //    actual = target.InputMeasurementKeys;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for ProcessingInterval
@@ -200,20 +200,20 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for QueueMeasurementsForProcessing
         ///</summary>
-        [TestMethod()]
-        public void QueueMeasurementsForProcessingTest()
-        {
-            IEnumerable<IMeasurement> measurements = m_IMeasurements.Measurements;
-            try
-            {
-                target.QueueMeasurementsForProcessing(measurements);
-                Assert.IsTrue(true);
-            }
-            catch
-            {
-                Assert.IsTrue(false);
-            }
-        }
+        //[TestMethod()]
+        //public void QueueMeasurementsForProcessingTest()
+        //{
+        //    IEnumerable<IMeasurement> measurements = m_IMeasurements.Measurements;
+        //    try
+        //    {
+        //        target.QueueMeasurementsForProcessing(measurements);
+        //        Assert.IsTrue(true);
+        //    }
+        //    catch
+        //    {
+        //        Assert.IsTrue(false);
+        //    }
+        //}
 
         /// <summary>
         ///A test for SignalIndexCache

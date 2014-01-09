@@ -30,7 +30,7 @@ using GSF.TimeSeries;
 using GSF.TestsSuite.TimeSeries.Cases;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for SynchronizedClientSubscriptionTest and is intended
@@ -115,15 +115,15 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for InputMeasurementKeys
         ///</summary>
-        [TestMethod()]
-        public void InputMeasurementKeysTest()
-        {
-            MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
-            MeasurementKey[] actual;
-            target.InputMeasurementKeys = expected;
-            actual = target.InputMeasurementKeys;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void InputMeasurementKeysTest()
+        //{
+        //    MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
+        //    MeasurementKey[] actual;
+        //    target.InputMeasurementKeys = expected;
+        //    actual = target.InputMeasurementKeys;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// Cleanup
@@ -209,14 +209,14 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for QueueMeasurementsForProcessing
         ///</summary>
-        [TestMethod()]
-        public void QueueMeasurementsForProcessingTest()
-        {
-            List<Measurement> items = new List<Measurement>();
-            items.Add(new Measurement());
-            IEnumerable<IMeasurement> measurements = items;
-            target.QueueMeasurementsForProcessing(measurements);
-        }
+        //[TestMethod()]
+        //public void QueueMeasurementsForProcessingTest()
+        //{
+        //    List<Measurement> items = new List<Measurement>();
+        //    items.Add(new Measurement<double>(m_guid, m_ticks,m_flags, m_value));
+        //    IEnumerable<IMeasurement> measurements = items;
+        //    target.QueueMeasurementsForProcessing(measurements);
+        //}
 
         /// <summary>
         ///A test for SignalIndexCache

@@ -30,7 +30,7 @@ using GSF.TimeSeries.Transport;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for SignalIndexCacheTest and is intended

@@ -30,7 +30,7 @@ using GSF;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for StatisticsEngineTest and is intended
@@ -99,14 +99,14 @@ namespace TimeSeriesFramework.UnitTests
         public void MyTestInitialize()
         {
             m_IAdapterCase = new IAllAdaptersCase();
-            measurement = new IMeasurementCase();
+            measurement= new IMeasurementCase();
             measurements = new IMeasurementsCase();
             target = new StatisticsEngine();
 
             target.DataSource = m_IAdapterCase.InputAdapter.DataSource;
             target.InitializationTimeout = 1000;
             target.Initialize();
-            target.QueueMeasurementsForProcessing(measurements.Measurements);
+             
             target.SetInitializedState(true);
             // target.Enabled = true;
         }

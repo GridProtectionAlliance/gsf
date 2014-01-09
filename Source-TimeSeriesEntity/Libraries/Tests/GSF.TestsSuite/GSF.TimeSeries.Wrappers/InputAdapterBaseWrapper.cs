@@ -42,6 +42,10 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
     /// </remarks>
     public abstract class InputAdapterBaseWrapper : AdapterBaseWrapper, IInputAdapter
     {
+        #region [ Events ]
+        public event EventHandler<GSF.TimeSeries.Routing.RoutingEventArgs> NewEntities;
+        #endregion
+
         #region [ Members ]
         // Events
 
@@ -91,6 +95,20 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
         #endregion
 
         #region [ Properties ]
+        /// <summary>
+        /// RequestedOutputSignals
+        /// </summary>
+        public ISet<Guid> RequestedOutputSignals
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
         /// <summary>
         /// Gets flag that determines if <see cref="InputAdapterBase"/> is connected.
         /// </summary>
@@ -190,8 +208,6 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
                 status.AppendFormat("    Connection established: {0}", IsConnected);
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
-                status.AppendLine();
-                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
 
                 return status.ToString();
@@ -371,8 +387,6 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
         {
             if (NewMeasurements != null)
                 NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
-
-            IncrementProcessedMeasurements(measurements.Count);
         }
 
         /// <summary>
@@ -415,6 +429,8 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
         }
 
         #endregion
+
+        
     }
     #endregion
 }

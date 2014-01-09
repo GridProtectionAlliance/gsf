@@ -281,8 +281,8 @@ namespace GSF.TestsSuite.PhasorProtocols.Cases.IEEE.C37118
             m_Concentrator.LeadTime = leadTime;
             //m_Concentrator.Initialize();
             // Using test measurement keys for concentrator.
-            m_Concentrator.InputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
-            m_Concentrator.RequestedOutputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
+            //m_Concentrator.InputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
+            //m_Concentrator.RequestedOutputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
             // Fill Concentrator with data source
             m_Concentrator.DataSource = m_IAllAdaptersCase.ActionAdapter.DataSource;
             m_Concentrator.Initialize();

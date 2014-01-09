@@ -28,7 +28,7 @@ using GSF;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for ServiceClientBaseTest and is intended

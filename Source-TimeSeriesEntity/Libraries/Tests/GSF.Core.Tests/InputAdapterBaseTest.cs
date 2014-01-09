@@ -28,7 +28,7 @@ using GSF.TestsSuite.TimeSeries.Wrappers;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for InputAdapterBaseTest and is intended

@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for GatewayStatisticsTest and is intended
@@ -62,7 +62,7 @@ namespace TimeSeriesFramework.UnitTests
 
         #endregion
 
-        #region
+        #region [ Methods ]
         //
         //You can use the following additional attributes as you write your tests:
         //

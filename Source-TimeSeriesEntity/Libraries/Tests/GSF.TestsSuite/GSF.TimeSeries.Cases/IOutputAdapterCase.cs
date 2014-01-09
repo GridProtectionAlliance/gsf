@@ -165,31 +165,21 @@ namespace GSF.TestsSuite.TimeSeries.Cases
         {
             m_outStream.Close();
         }
-
-        /// <summary>
-        /// Archives <paramref name="measurements"/> locally.
-        /// </summary>
-        /// <param name="measurements">Measurements to be archived.</param>
-        protected override void ProcessMeasurements(IMeasurement[] measurements)
+        protected override void ProcessEntities(ITimeSeriesEntity[] entities)
         {
             StringBuilder builder = new StringBuilder();
 
-            foreach (IMeasurement measurement in measurements)
+            foreach (IMeasurement measurement in entities)
             {
                 builder.Append(measurement.ID);
                 builder.Append(',');
-                builder.Append(measurement.Key);
-                builder.Append(',');
                 builder.Append((long)measurement.Timestamp);
-                builder.Append(',');
-                builder.Append(measurement.AdjustedValue);
                 builder.Append(System.Environment.NewLine);
             }
 
             m_outStream.Write(builder.ToString());
-            m_measurementCount += measurements.Length;
+            m_measurementCount += entities.Length;
         }
-
         #endregion
 
         #region [ Static ]
@@ -197,5 +187,7 @@ namespace GSF.TestsSuite.TimeSeries.Cases
         private static string s_fileHeader = "Signal ID,Measurement Key,Timestamp,Value";
 
         #endregion [ Static ]
+
+
     }
 }

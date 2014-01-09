@@ -109,7 +109,7 @@ namespace GSF.TestsSuite.TimeSeries.Cases
                 if (isDisposing)
                 {
                     m_waithandles.Dispose();
-                    m_datapublisher.Clear();
+                   // m_datapublisher.Clear();
                     m_datapublisher.Dispose();
                 }
                 isDisposed = false;

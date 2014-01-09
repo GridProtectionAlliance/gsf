@@ -32,7 +32,7 @@ using GSF;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for StatisticTest and is intended

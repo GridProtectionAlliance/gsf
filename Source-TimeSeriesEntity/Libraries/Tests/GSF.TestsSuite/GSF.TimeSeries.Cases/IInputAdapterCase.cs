@@ -203,7 +203,7 @@ namespace GSF.TestsSuite.TimeSeries.Cases
         /// <returns>Text of the status message.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} measurements read from CSV file.", ProcessedMeasurements).CenterText(maxLength);
+            return string.Format("{0} measurements read from CSV file.", ProcessedEntities).CenterText(maxLength);
         }
 
         /// <summary>
@@ -278,23 +278,13 @@ namespace GSF.TestsSuite.TimeSeries.Cases
 
             for (int i = 0; i < m_measurementsPerInterval; i++)
             {
-                IMeasurement measurement = new Measurement();
+                
                 string line = m_inStream.ReadLine();
                 string[] fields = line.Split(',');
 
-                if (m_columns.ContainsKey("Signal ID"))
-                    measurement.ID = new Guid(fields[m_columns["Signal ID"]]);
-
-                if (m_columns.ContainsKey("Measurement Key"))
-                    measurement.Key = MeasurementKey.Parse(fields[m_columns["Measurement Key"]], measurement.ID);
-
-                if (m_simulateTimestamp)
-                    measurement.Timestamp = currentTime;
-                else if (m_columns.ContainsKey("Timestamp"))
-                    measurement.Timestamp = long.Parse(fields[m_columns["Timestamp"]]);
-
-                if (m_columns.ContainsKey("Value"))
-                    measurement.Value = double.Parse(fields[m_columns["Value"]]);
+                IMeasurement measurement = new Measurement<double>(new Guid(fields[m_columns["Signal ID"]]), currentTime, double.Parse(fields[m_columns["Value"]]));
+                
+                
 
                 newMeasurements[i] = measurement;
             }

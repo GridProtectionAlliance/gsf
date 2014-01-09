@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GSF.TimeSeries.Transport;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for CommonTest and is intended
@@ -85,21 +85,21 @@ namespace TimeSeriesFramework.UnitTests
         public void CanUseManagedEncryptionTest()
         {
             bool actual;
-            actual = Common.CanUseManagedEncryption;
+            //actual = Common.CanUseManagedEncryption;
         }
 
         /// <summary>
         ///A test for IsSolicited
         ///</summary>
-        [TestMethod()]
-        public void IsSolicitedTest()
-        {
-            ServerResponse responseCode = new ServerResponse();
-            bool expected = false;
-            bool actual;
-            actual = Common.IsSolicited(responseCode);
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void IsSolicitedTest()
+        //{
+        //    ServerResponse responseCode = new ServerResponse();
+        //    bool expected = false;
+        //    bool actual;
+        //    //actual = Common.IsSolicited(responseCode);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         /// Cleanup
@@ -122,11 +122,11 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for SymmetricAlgorithm
         ///</summary>
-        [TestMethod()]
-        public void SymmetricAlgorithmTest()
-        {
-            System.Security.Cryptography.SymmetricAlgorithm actual;
-            actual = Common.SymmetricAlgorithm;
-        }
+        //[TestMethod()]
+        //public void SymmetricAlgorithmTest()
+        //{
+        //    System.Security.Cryptography.SymmetricAlgorithm actual;
+        //    actual = Common.SymmetricAlgorithm;
+        //}
     }
 }

@@ -28,7 +28,7 @@ using GSF.TimeSeries;
 using GSF;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for MeasurementStateMappingExtensionsTest and is intended

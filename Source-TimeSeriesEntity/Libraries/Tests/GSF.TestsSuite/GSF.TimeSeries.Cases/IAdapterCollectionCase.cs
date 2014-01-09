@@ -48,7 +48,7 @@ namespace GSF.TestsSuite.TimeSeries.Cases
             m_CsvOutputAdapter = new IOutputAdapterCase();
 
             //Initialize collection
-            m_InputAdapterCollection = new InputAdapterCollection();
+            m_InputAdapterCollection = new InputAdapterCollection(false);
             m_InputAdapterCollection.Add(m_CsvInputAdapter);
 
             //Initialize ReadOnly collection

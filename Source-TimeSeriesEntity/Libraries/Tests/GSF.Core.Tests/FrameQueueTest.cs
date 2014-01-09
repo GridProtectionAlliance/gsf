@@ -30,7 +30,7 @@ using GSF;
 
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for FrameQueueTest and is intended
@@ -109,7 +109,6 @@ namespace TimeSeriesFramework.UnitTests
             target = new FrameQueue(new FrameQueue.CreateNewFrameFunction(MyFrame));
             target.FramesPerSecond = 30;
             target.TimeResolution = Ticks.PerMillisecond;
-            target.DownsamplingMethod = DownsamplingMethod.BestQuality;
             target.GetFrame(Ticks.PerSecond);
         }
 
@@ -157,30 +156,30 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for DownsamplingMethod
         ///</summary>
-        [TestMethod()]
-        public void DownsamplingMethodTest()
-        {
-            DownsamplingMethod expected = new DownsamplingMethod();
-            DownsamplingMethod actual;
-            target.DownsamplingMethod = expected;
-            actual = target.DownsamplingMethod;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void DownsamplingMethodTest()
+        //{
+        //    DownsamplingMethod expected = new DownsamplingMethod();
+        //    DownsamplingMethod actual;
+        //    target.DownsamplingMethod = expected;
+        //    actual = target.DownsamplingMethod;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for GetFrame
         ///</summary>
-        [TestMethod()]
-        public void GetFrameTest()
-        {
-            long ticks = DateTime.UtcNow.Ticks;
-            Frame item = new Frame(ticks, -1);
-            TrackingFrame expected = new TrackingFrame(item, DownsamplingMethod.Closest);
-            TrackingFrame actual;
-            actual = target.GetFrame(ticks);
-            bool result = (actual.DownsampledMeasurements == expected.DownsampledMeasurements);
-            Assert.IsTrue(result);
-        }
+        //[TestMethod()]
+        //public void GetFrameTest()
+        //{
+        //    long ticks = DateTime.UtcNow.Ticks;
+        //    Frame item = new Frame(ticks, -1);
+        //    TrackingFrame expected = new TrackingFrame(item, DownsamplingMethod.Closest);
+        //    TrackingFrame actual;
+        //    actual = target.GetFrame(ticks);
+        //    bool result = (actual.DownsampledMeasurements == expected.DownsampledMeasurements);
+        //    Assert.IsTrue(result);
+        //}
 
         /// <summary>
         ///A test for Last

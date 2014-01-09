@@ -31,7 +31,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for ClientConnectionTest and is intended

@@ -1,4 +1,5 @@
 ﻿#region [ Modification History ]
+
 /*
  * 07/22/2012 Denis Kholine
  *  Generated Original version of source code.
@@ -6,9 +7,11 @@
  * 08/14/2012 Denis Kholine
  *  Update constructor with measurements initialization.
  */
+
 #endregion
 
 #region  [ UIUC NCSA Open Source License ]
+
 /*
 Copyright © <2012> <University of Illinois>
 All rights reserved.
@@ -22,39 +25,67 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 • Neither the names of <Name of Development Group, Name of Institution>, nor the names of its contributors may be used to endorse or promote products derived from this Software without specific prior written permission.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE SOFTWARE.
 */
+
 #endregion
 
 #region [ Using ]
+
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
+
 #endregion
 
 namespace GSF.TestsSuite.TimeSeries.Cases
 {
+
     #region [ Measurements Case ]
+
     public class IMeasurementsCase
     {
         #region [ Members ]
-        private bool isDisposed = false;
-        private List<Measurement> m_items;
-        private List<IMeasurement> m_items_core;
-        private MeasurementKey[] m_keys;
-        private IMeasurementCase m_measurement;
-        private System.Collections.ObjectModel.ReadOnlyCollection<IMeasurement> m_readonlyitems;
+
+        private readonly List<Measurement<double>> m_items;
+        private readonly List<IMeasurement> m_items_core;
+        private readonly MeasurementKey[] m_keys;
+        private readonly IMeasurementCase m_measurement;
+        private readonly ReadOnlyCollection<IMeasurement> m_readonlyitems;
+        private bool isDisposed;
+
         #endregion
 
         #region [ Properties ]
+
         public IMeasurementsCase()
         {
             m_measurement = new IMeasurementCase();
-            m_keys = new MeasurementKey[2] { m_measurement.MeasurementKey, m_measurement.MeasurementKey };
-            m_items = new List<Measurement>();
+            m_keys = new MeasurementKey[2] {m_measurement.MeasurementKey, m_measurement.MeasurementKey};
+            m_items = new List<Measurement<double>>();
             m_items.Add(m_measurement.Measurement);
             m_items.Add(m_measurement.Measurement);
             m_items_core = new List<IMeasurement>(Measurements);
-            m_readonlyitems = new System.Collections.ObjectModel.ReadOnlyCollection<IMeasurement>(m_items_core);
+            m_readonlyitems = new ReadOnlyCollection<IMeasurement>(m_items_core);
+        }
+
+        public MeasurementKey[] MeasurementKeys
+        {
+            get { return m_keys; }
+        }
+
+        public IMeasurement<double>[] MeasurementsArray
+        {
+            get { return m_items.ToArray(); }
+        }
+
+        public IEnumerable<IMeasurement> Measurements
+        {
+            get { return m_items; }
+        }
+
+        public ReadOnlyCollection<IMeasurement> ReadOnlyMeasurements
+        {
+            get { return m_readonlyitems; }
         }
 
         ~IMeasurementsCase()
@@ -62,45 +93,18 @@ namespace GSF.TestsSuite.TimeSeries.Cases
             Dispose(false);
         }
 
-        public MeasurementKey[] MeasurementKeys
-        {
-            get
-            {
-                return m_keys;
-            }
-        }
-        public IMeasurement[] MeasurementsArray
-        {
-            get
-            {
-                return m_items.ToArray();
-            }
-        }
-        public IEnumerable<IMeasurement> Measurements
-        {
-            get
-            {
-                return m_items;
-            }
-        }
-
-        public System.Collections.ObjectModel.ReadOnlyCollection<IMeasurement> ReadOnlyMeasurements
-        {
-            get
-            {
-                return m_readonlyitems;
-            }
-        }
-
         #endregion
 
         #region [ Constructors ]
+
         #endregion
 
         #region [ Methods ]
+
         #endregion
 
         #region [ Dispose ]
+
         public void Dispose()
         {
             Dispose(true);
@@ -132,5 +136,6 @@ namespace GSF.TestsSuite.TimeSeries.Cases
 
         #endregion
     }
+
     #endregion
 }

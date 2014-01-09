@@ -338,12 +338,6 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
             }
         }
 
-        event EventHandler<EventArgs<IMeasurement>> IAdapter.Notify
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
-
         event EventHandler<EventArgs<string>> IAdapter.StatusMessage
         {
             add { throw new NotImplementedException(); }
@@ -351,18 +345,6 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
         }
 
         event EventHandler<EventArgs<Exception>> IAdapter.ProcessException
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
-
-        event EventHandler IAdapter.InputMeasurementKeysUpdated
-        {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
-        }
-
-        event EventHandler IAdapter.OutputMeasurementsUpdated
         {
             add { throw new NotImplementedException(); }
             remove { throw new NotImplementedException(); }
@@ -451,18 +433,6 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
             }
         }
 
-        long IAdapter.DependencyTimeout
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         bool IAdapter.AutoStart
         {
             get
@@ -475,47 +445,7 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
             }
         }
 
-        bool IAdapter.ProcessMeasurementFilter
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        MeasurementKey[] IAdapter.InputMeasurementKeys
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        IMeasurement[] IAdapter.OutputMeasurements
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        long IAdapter.ProcessedMeasurements
-        {
-            get { throw new NotImplementedException(); }
-        }
-
+       
         bool IAdapter.SupportsTemporalProcessing
         {
             get { throw new NotImplementedException(); }
@@ -597,6 +527,28 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
         }
 
         string IProvideStatus.Status
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+
+        public event EventHandler InputSignalIDsUpdated;
+
+        public event EventHandler OutputSignalIDsUpdated;
+
+        public event EventHandler<EventArgs<IEnumerable<ITimeSeriesEntity>>> EntitiesDiscarded;
+
+        public ISet<Guid> InputSignalIDs
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ISet<Guid> OutputSignalIDs
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public long ProcessedEntities
         {
             get { throw new NotImplementedException(); }
         }

@@ -35,7 +35,7 @@ namespace GSF.TestsSuite.TimeSeries.Cases
     public class IAdapterCollectionBaseCase : AdapterCollectionBase<IAdapter>
     {
         public IAdapterCollectionBaseCase(ConcurrentDictionary<string, AutoResetEvent> item)
-            : base()//item)
+            : base(false)
         { }
     }
 }

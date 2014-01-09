@@ -34,7 +34,7 @@ using GSF.TimeSeries;
 using GSF;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for AdapterBaseTest and is intended
@@ -241,40 +241,40 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for InputMeasurementKeys
         ///</summary>
-        [TestMethod()]
-        public void InputMeasurementKeysTest()
-        {
-            MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
-            MeasurementKey[] actual;
-            target.InputMeasurementKeys = expected;
-            actual = target.InputMeasurementKeys;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void InputMeasurementKeysTest()
+        //{
+        //    MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
+        //    MeasurementKey[] actual;
+        //    target.InputMeasurementKeys = expected;
+        //    actual = target.InputMeasurementKeys;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for IsInputMeasurement
         ///</summary>
-        [TestMethod()]
-        public void IsInputMeasurementTest()
-        {
-            bool expected = true;
-            bool actual;
-            actual = target.IsInputMeasurement(m_IMeasurement.MeasurementKey);
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void IsInputMeasurementTest()
+        //{
+        //    bool expected = true;
+        //    bool actual;
+        //    actual = target.IsInputMeasurement(m_IMeasurement.MeasurementKey);
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for MeasurementReportingInterval
         ///</summary>
-        [TestMethod()]
-        public void MeasurementReportingIntervalTest()
-        {
-            int expected = 0;
-            int actual;
-            target.MeasurementReportingInterval = expected;
-            actual = target.MeasurementReportingInterval;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void MeasurementReportingIntervalTest()
+        //{
+        //    int expected = 0;
+        //    int actual;
+        //    target.MeasurementReportingInterval = expected;
+        //    actual = target.MeasurementReportingInterval;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for Name
@@ -292,25 +292,25 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for OutputMeasurements
         ///</summary>
-        [TestMethod()]
-        public void OutputMeasurementsTest()
-        {
-            IMeasurement[] expected = new IMeasurement[] { m_IMeasurement.Measurement };
-            IMeasurement[] actual;
-            target.OutputMeasurements = expected;
-            actual = target.OutputMeasurements;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void OutputMeasurementsTest()
+        //{
+        //    IMeasurement[] expected = new IMeasurement[] { m_IMeasurement.Measurement };
+        //    IMeasurement[] actual;
+        //    target.OutputMeasurements = expected;
+        //    actual = target.OutputMeasurements;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for ProcessedMeasurements
         ///</summary>
-        [TestMethod()]
-        public void ProcessedMeasurementsTest()
-        {
-            long actual;
-            actual = target.ProcessedMeasurements;
-        }
+        //[TestMethod()]
+        //public void ProcessedMeasurementsTest()
+        //{
+        //    long actual;
+        //    actual = target.ProcessedMeasurements;
+        //}
 
         /// <summary>
         ///A test for ProcessingInterval
@@ -328,15 +328,15 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for ProcessMeasurementFilter
         ///</summary>
-        [TestMethod()]
-        public void ProcessMeasurementFilterTest()
-        {
-            bool expected = false;
-            bool actual;
-            target.ProcessMeasurementFilter = expected;
-            actual = target.ProcessMeasurementFilter;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void ProcessMeasurementFilterTest()
+        //{
+        //    bool expected = false;
+        //    bool actual;
+        //    target.ProcessMeasurementFilter = expected;
+        //    actual = target.ProcessMeasurementFilter;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for RunTime

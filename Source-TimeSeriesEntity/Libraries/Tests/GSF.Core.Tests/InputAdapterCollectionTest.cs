@@ -30,7 +30,7 @@ using GSF.TimeSeries.Adapters;
 
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for InputAdapterCollectionTest and is intended
@@ -46,7 +46,7 @@ namespace TimeSeriesFramework.UnitTests
         public void InputAdapterCollectionConstructorTest()
         {
             ConcurrentDictionary<string, AutoResetEvent> waitHandles = waitHandlesCase.waitHandles;
-            InputAdapterCollection target = new InputAdapterCollection();//waitHandles);
+            InputAdapterCollection target = new InputAdapterCollection(false);//waitHandles);
             //target
             Assert.IsNotNull(target);
             Assert.IsInstanceOfType(target, typeof(InputAdapterCollection));
@@ -58,7 +58,7 @@ namespace TimeSeriesFramework.UnitTests
         [TestMethod()]
         public void InputAdapterCollectionConstructorTest1()
         {
-            InputAdapterCollection target = new InputAdapterCollection();
+            InputAdapterCollection target = new InputAdapterCollection(false);
             Assert.IsNotNull(target);
             Assert.IsInstanceOfType(target, typeof(InputAdapterCollection));
         }

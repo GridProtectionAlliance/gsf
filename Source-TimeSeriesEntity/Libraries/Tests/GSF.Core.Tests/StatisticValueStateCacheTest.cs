@@ -28,7 +28,7 @@ using GSF.TimeSeries.Statistics;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for StatisticValueStateCacheTest and is intended

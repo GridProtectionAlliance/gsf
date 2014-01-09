@@ -29,7 +29,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for CompactMeasurementTest and is intended
@@ -39,11 +39,16 @@ namespace TimeSeriesFramework.UnitTests
     public class CompactMeasurementTest
     {
         #region [ Members ]
-        private DateTime datetime1;
-        private Measurement measurement1;
-        private MeasurementKey measurementkey1;
-        private Guid signalid1;
+        private static Guid m_guid = new Guid("3647f729-d0ed-4f79-85ad-dae2149cd432");
+        private static Ticks m_ticks = DateTime.Now.Ticks;
+        private static double m_value = 10;
+        private static MeasurementStateFlags m_flags = MeasurementStateFlags.Normal;
+        #endregion
 
+        #region [ Members ]
+        private DateTime datetime1;
+        private Measurement<double> measurement1;
+        private MeasurementKey measurementkey1;
         #endregion
 
         #region [ Context ]
@@ -101,12 +106,12 @@ namespace TimeSeriesFramework.UnitTests
         }
 
         /// <summary>
-        ///A test for CompactMeasurement Constructor
+        ///A test for CompactMeasurement<double> Constructor
         ///</summary>
         [TestMethod()]
         public void CompactMeasurementConstructorTest()
         {
-            IMeasurement measurement = measurement1;
+            IMeasurement<double> measurement = measurement1;
             SignalIndexCache signalIndexCache = new SignalIndexCache();
             bool includeTime = false;
             long[] baseTimeOffsets = new long[8];
@@ -118,7 +123,7 @@ namespace TimeSeriesFramework.UnitTests
         }
 
         /// <summary>
-        ///A test for CompactMeasurement Constructor
+        ///A test for CompactMeasurement<double> Constructor
         ///</summary>
         [TestMethod()]
         public void CompactMeasurementConstructorTest1()
@@ -177,18 +182,7 @@ namespace TimeSeriesFramework.UnitTests
         [TestInitialize()]
         public void MyTestInitialize()
         {
-            datetime1 = DateTime.UtcNow;
-            signalid1 = Guid.NewGuid();
-            measurementkey1 = new MeasurementKey(signalid1, 10, "UnitTest");
-            measurement1 = new Measurement();
-            measurement1.Key = measurementkey1;
-            measurement1.StateFlags = MeasurementStateFlags.Normal;
-            measurement1.Value = 10;
-            measurement1.PublishedTimestamp = datetime1;
-            measurement1.ReceivedTimestamp = datetime1;
-            measurement1.Timestamp = datetime1;
-            measurement1.TagName = "M1";
-            measurement1.ID = Guid.NewGuid();
+            measurement1 = new Measurement<double>(m_guid, m_ticks,m_flags, m_value);
         }
 
         #endregion

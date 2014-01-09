@@ -201,13 +201,13 @@ namespace GSF.TestsSuite.TimeSeries.Cases
             m_OutputAdapter = new IOutputAdapterCase();
 
             // Set IDs
-            m_InputAdapter.InputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
+            //m_InputAdapter.InputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
             m_InputAdapter.OutputSourceIDs = new string[] { m_IMeasurementCase.MeasurementKey.ToString() };
 
-            m_ActionAdapter.InputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
+           // m_ActionAdapter.InputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
             m_ActionAdapter.InputSourceIDs = new string[] { m_IMeasurementCase.MeasurementKey.ToString() };
 
-            m_OutputAdapter.InputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
+            //m_OutputAdapter.InputMeasurementKeys = m_IMeasurementsCase.MeasurementKeys;
             m_OutputAdapter.InputSourceIDs = new string[] { m_IMeasurementCase.MeasurementKey.ToString() };
 
             // Set IDs
@@ -427,10 +427,10 @@ namespace GSF.TestsSuite.TimeSeries.Cases
             dtMeasurement.Dispose();
 
             //Input Adapter Collection Initialize
-            m_InputAdapterCollection = new InputAdapterCollection();
+            m_InputAdapterCollection = new InputAdapterCollection(false);
             m_InputAdapterCollection.Add(m_InputAdapter);
 
-            m_OutputAdapterCollection = new OutputAdapterCollection();
+            m_OutputAdapterCollection = new OutputAdapterCollection(false);
             m_OutputAdapterCollection.Add(OutputAdapter);
 
             //Initialize Input Read Only Collection

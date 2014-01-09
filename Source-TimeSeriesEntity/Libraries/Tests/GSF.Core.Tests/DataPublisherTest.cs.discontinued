@@ -34,7 +34,7 @@ using GSF;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for DataPublisherTest and is intended
@@ -298,7 +298,7 @@ namespace TimeSeriesFramework.UnitTests
         public void QueueMeasurementsForProcessingTest()
         {
             List<Measurement> items = new List<Measurement>();
-            items.Add(new Measurement());
+            items.Add(new Measurement<double>(m_guid, m_ticks,m_flags, m_value));
             IEnumerable<IMeasurement> measurements = items;
             try
             {

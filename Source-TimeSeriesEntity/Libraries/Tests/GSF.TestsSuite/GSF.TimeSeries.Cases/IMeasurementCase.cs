@@ -39,7 +39,7 @@ namespace GSF.TestsSuite.TimeSeries.Cases
         #region [ Members ]
         private DateTime datetime1;
         private bool isDisposed = false;
-        private Measurement measurement1;
+        private Measurement<double> measurement1;
         private MeasurementKey measurementkey1;
         private Guid signalid1;
 
@@ -50,16 +50,13 @@ namespace GSF.TestsSuite.TimeSeries.Cases
         {
             datetime1 = DateTime.UtcNow;
             signalid1 = Guid.NewGuid();
-            measurementkey1 = new MeasurementKey(signalid1, 10, "UnitTest");
-            measurement1 = new Measurement();
-            measurement1.Key = measurementkey1;
-            measurement1.StateFlags = MeasurementStateFlags.Normal;
-            measurement1.Value = 10;
-            measurement1.PublishedTimestamp = datetime1;
-            measurement1.ReceivedTimestamp = datetime1;
-            measurement1.Timestamp = datetime1;
-            measurement1.TagName = "M1";
-            measurement1.ID = Guid.NewGuid();
+           // measurementkey1 = new MeasurementKey(signalid1, 10, "UnitTest");
+            measurement1 = new Measurement<double>(signalid1,datetime1.Ticks,MeasurementStateFlags.Normal,10);
+           // measurement1.ID = measurementkey1;
+           // measurement1.StateFlags = MeasurementStateFlags.Normal;
+           // measurement1.Value = 10;
+            //measurement1.Timestamp = datetime1;
+           // measurement1.ID = Guid.NewGuid();
         }
 
         ~IMeasurementCase()
@@ -67,7 +64,7 @@ namespace GSF.TestsSuite.TimeSeries.Cases
             Dispose(false);
         }
 
-        public Measurement Measurement
+        public Measurement<double> Measurement
         {
             get
             {

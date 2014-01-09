@@ -29,7 +29,7 @@ using GSF.TimeSeries;
 using GSF;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for TemporalMeasurementTest and is intended
@@ -47,7 +47,7 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         /// Measurement
         /// </summary>
-        private IMeasurement m_measurement;
+        private IMeasurement<double> m_measurement;
 
         /// <summary>
         /// Dictionary of measurements to test frames
@@ -132,7 +132,7 @@ namespace TimeSeriesFramework.UnitTests
             }
         }
 
-        public IMeasurement Measurement
+        public IMeasurement<double> Measurement
         {
             get
             {
@@ -235,7 +235,7 @@ namespace TimeSeriesFramework.UnitTests
         {
             double lagTime = LagTimeSeconds;
             double leadTime = LeadTimeSeconds;
-            TemporalMeasurement target = new TemporalMeasurement(Measurement, lagTime, leadTime);
+            TemporalMeasurement<double> target = new TemporalMeasurement(Measurement, lagTime, leadTime);
             double expected = Value;
             double actual;
             actual = target.GetAdjustedValue(Ticks);
@@ -249,7 +249,7 @@ namespace TimeSeriesFramework.UnitTests
         {
             double lagTime = LagTimeSeconds;
             double leadTime = LeadTimeSeconds;
-            TemporalMeasurement target = new TemporalMeasurement(lagTime, leadTime);
+            TemporalMeasurement<double> target = new TemporalMeasurement(lagTime, leadTime);
             Ticks timestamp = new Ticks();
             double expected = 0F;
             double actual;
@@ -264,7 +264,7 @@ namespace TimeSeriesFramework.UnitTests
         {
             double lagTime = LagTimeSeconds;
             double leadTime = LeadTimeSeconds;
-            TemporalMeasurement target = new TemporalMeasurement(lagTime, leadTime);
+            TemporalMeasurement<double> target = new TemporalMeasurement(lagTime, leadTime);
             double expected = LagTimeSeconds;
             double actual;
             target.LagTime = expected;
@@ -279,7 +279,7 @@ namespace TimeSeriesFramework.UnitTests
         {
             double lagTime = LagTimeSeconds;
             double leadTime = LeadTimeSeconds;
-            TemporalMeasurement target = new TemporalMeasurement(lagTime, leadTime);
+            TemporalMeasurement<double> target = new TemporalMeasurement(lagTime, leadTime);
             double expected = LagTimeSeconds;
             double actual;
             target.LeadTime = expected;
@@ -302,7 +302,7 @@ namespace TimeSeriesFramework.UnitTests
         {
             this.m_UtcNow = new DateTime();
             this.m_UtcNow = DateTime.UtcNow;
-            this.m_measurement = new Measurement();
+            this.m_Measurement<double> = new Measurement<double>(m_guid, m_ticks,m_flags, m_value);
             this.m_measurement.ID = this.ID;
             this.m_measurement.Key = new MeasurementKey(this.SignalID, this.id, this.source);
             this.m_measurement.Value = this.Value;
@@ -313,7 +313,7 @@ namespace TimeSeriesFramework.UnitTests
             this.m_measurements = new Dictionary<MeasurementKey, IMeasurement>();
             this.m_measurements.Add(new MeasurementKey(), m_measurement);
             this.m_frame = new Frame(this.m_ticks, m_measurements);
-            this.m_frame.LastSortedMeasurement = this.m_measurement;
+            this.m_frame.LastSortedMeasurement<double> = this.m_measurement;
             this.m_SortedMeasurements = m_frame.SortedMeasurements;
         }
 
@@ -328,7 +328,7 @@ namespace TimeSeriesFramework.UnitTests
         {
             double lagTime = LagTimeSeconds;
             double leadTime = LeadTimeSeconds;
-            TemporalMeasurement target = new TemporalMeasurement(lagTime, leadTime);
+            TemporalMeasurement<double> target = new TemporalMeasurement(lagTime, leadTime);
             bool expected = true;
             bool actual;
             actual = target.SetValue(Ticks, Value);
@@ -336,28 +336,28 @@ namespace TimeSeriesFramework.UnitTests
         }
 
         /// <summary>
-        ///A test for TemporalMeasurement Constructor
+        ///A test for TemporalMeasurement<double> Constructor
         ///</summary>
         [TestMethod()]
         public void TemporalMeasurementConstructorTest()
         {
-            IMeasurement measurement = Measurement;
+            IMeasurement<double> Measurement<double> = Measurement;
             double lagTime = LagTimeSeconds;
             double leadTime = LeadTimeSeconds;
-            TemporalMeasurement target = new TemporalMeasurement(measurement, lagTime, leadTime);
+            TemporalMeasurement<double> target = new TemporalMeasurement(measurement, lagTime, leadTime);
             Assert.IsInstanceOfType(target, typeof(TemporalMeasurement));
             Assert.IsNotNull(target);
         }
 
         /// <summary>
-        ///A test for TemporalMeasurement Constructor
+        ///A test for TemporalMeasurement<double> Constructor
         ///</summary>
         [TestMethod()]
         public void TemporalMeasurementConstructorTest1()
         {
             double lagTime = LagTimeSeconds;
             double leadTime = LeadTimeSeconds;
-            TemporalMeasurement target = new TemporalMeasurement(lagTime, leadTime);
+            TemporalMeasurement<double> target = new TemporalMeasurement(lagTime, leadTime);
             Assert.IsInstanceOfType(target, typeof(TemporalMeasurement));
             Assert.IsNotNull(target);
         }

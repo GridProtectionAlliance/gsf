@@ -123,13 +123,13 @@
     <Compile Include="AdapterCollectionBaseTest.cs" />
     <Compile Include="AdapterCommandAttributeTest.cs" />
     <Compile Include="AlarmTest.cs" />
-    <Compile Include="AllAdaptersCollectionTest.cs" />
+    <None Include="AllAdaptersCollectionTest.cs.discontinued" />
     <Compile Include="ClientConnectionTest.cs" />
     <Compile Include="CommonTest.cs" />
     <Compile Include="CompactMeasurementTest.cs" />
     <Compile Include="ConcentratorBaseTest.cs" />
     <Compile Include="ConcentratorBase_FrameRateTimerTest.cs" />
-    <Compile Include="DataPublisherTest.cs" />
+    <None Include="DataPublisherTest.cs.discontinued" />
     <Compile Include="DataSetSerializationTest.cs" />
     <Compile Include="DataSubscriberTest.cs" />
     <Compile Include="DateTimeExtensionTest.cs" />
@@ -140,10 +140,10 @@
     <Compile Include="FrameTest.cs" />
     <Compile Include="GatewayStatisticsTest.cs" />
     <Compile Include="IaonSessionTest.cs" />
-    <Compile Include="ImmediateMeasurementsTest.cs" />
+    <None Include="ImmediateMeasurementsTest.cs.discontinued" />
     <Compile Include="InputAdapterBaseTest.cs" />
     <Compile Include="InputAdapterCollectionTest.cs" />
-    <Compile Include="MeasurementKeyComparerTest.cs" />
+    <None Include="MeasurementKeyComparerTest.cs.discontinued" />
     <Compile Include="MeasurementKeyTest.cs" />
     <Compile Include="MeasurementStateMappingExtensionsTest.cs" />
     <Compile Include="MeasurementTest.cs" />
@@ -179,7 +179,7 @@
     <Compile Include="GSF.Units\VolumeTest.cs" />
     <Compile Include="SynchronizedClientSubscriptionTest.cs" />
     <Compile Include="TemporalClientSubscriptionProxyTest.cs" />
-    <Compile Include="TemporalMeasurementTest.cs" />
+    <None Include="TemporalMeasurementTest.cs.discontinued" />
     <Compile Include="TimeSeriesStartupOperationsTest.cs" />
     <Compile Include="TrackingFrameTest.cs" />
     <Compile Include="UnsynchronizedClientSubscriptionTest.cs" />
@@ -204,6 +204,10 @@
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\GSF.TestsSuite\GSF.TestsSuite.csproj">
+      <Project>{13d1c7ae-a96d-4d13-8540-e87eedf1a971}</Project>
+      <Name>GSF.TestsSuite</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

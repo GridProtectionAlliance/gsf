@@ -38,7 +38,7 @@ using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for ActionAdapterCollectionTest and is intended
@@ -140,20 +140,27 @@ namespace TimeSeriesFramework.UnitTests
             #endregion
         }
         /// <summary>
-        /// Measurement Key Helper
+        /// Measurement<double> Key Helper
         /// </summary>
         private class MeasurementKeyHelper : IDisposable
         {
+            #region [ Static ]
+            private static Guid m_guid = new Guid("3647f729-d0ed-4f79-85ad-dae2149cd432");
+            private static Ticks m_ticks = DateTime.Now.Ticks;
+            private static double m_value = 10;
+            private static MeasurementStateFlags m_flags = MeasurementStateFlags.Normal;
+            #endregion
+
             #region [ Members ]
             private DateTime datetime1;
-            private Measurement measurement1;
+            private Measurement<double> measurement1;
             private MeasurementKey measurementkey1;
             private Guid signalid1;
 
             #endregion
 
             #region [ Properties ]
-            public Measurement Measurement
+            public Measurement<double> Measurement
             {
                 get
                 {
@@ -182,20 +189,8 @@ namespace TimeSeriesFramework.UnitTests
             #region [ Constructors ]
             public MeasurementKeyHelper()
             {
-                datetime1 = DateTime.UtcNow;
-                signalid1 = Guid.NewGuid();
-                measurementkey1 = new MeasurementKey(signalid1, 10, "UnitTest");
-                measurement1 = new Measurement();
-                measurement1.Key = measurementkey1;
-                measurement1.StateFlags = MeasurementStateFlags.Normal;
-                measurement1.Value = 10;
-                measurement1.PublishedTimestamp = datetime1;
-                measurement1.ReceivedTimestamp = datetime1;
-                measurement1.Timestamp = datetime1;
-                measurement1.TagName = "M1";
-                measurement1.ID = Guid.NewGuid();
+              measurement1 = new Measurement<double>(m_guid, m_ticks,m_flags, m_value);
             }
-
             #endregion
 
             #region [ Dispose ]
@@ -396,7 +391,7 @@ namespace TimeSeriesFramework.UnitTests
         [TestMethod()]
         public void ActionAdapterCollectionConstructorTest()
         {
-            ActionAdapterCollection target = new ActionAdapterCollection(); //waithandleshelper.waitHandles);
+            ActionAdapterCollection target = new ActionAdapterCollection(false); //waithandleshelper.waitHandles);
             Assert.IsInstanceOfType(target, typeof(ActionAdapterCollection));
             Assert.IsNotNull(target);
         }
@@ -407,7 +402,7 @@ namespace TimeSeriesFramework.UnitTests
         [TestMethod()]
         public void ActionAdapterCollectionConstructorTest1()
         {
-            ActionAdapterCollection target = new ActionAdapterCollection();
+            ActionAdapterCollection target = new ActionAdapterCollection(false);
             Assert.IsInstanceOfType(target, typeof(ActionAdapterCollection));
             Assert.IsNotNull(target);
         }
@@ -418,7 +413,7 @@ namespace TimeSeriesFramework.UnitTests
         [TestMethod()]
         public void InitializeTest()
         {
-            ActionAdapterCollection target = new ActionAdapterCollection();
+            ActionAdapterCollection target = new ActionAdapterCollection(false);
             target.DataSource = adapterinitializationhelper.DataSource;
             target.Initialize();
             bool expected = target.Initialized;
@@ -428,43 +423,43 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for QueueMeasurementsForProcessing
         ///</summary>
-        [TestMethod()]
-        public void QueueMeasurementsForProcessingTest()
-        {
-            List<Measurement> items = new List<Measurement>();
-            items.Add(measurementhelper.Measurement);
-            ActionAdapterCollection target = new ActionAdapterCollection();
-            IEnumerable<IMeasurement> measurements = new List<IMeasurement>(items);
-            target.QueueMeasurementsForProcessing(measurements);
-        }
+        //[TestMethod()]
+        //public void QueueMeasurementsForProcessingTest()
+        //{
+        //    List<Measurement<double>> items = new List<Measurement<double>>();
+        //    items.Add(measurementhelper.Measurement);
+        //    ActionAdapterCollection target = new ActionAdapterCollection(false);
+        //    IEnumerable<IMeasurement> measurements = new List<IMeasurement>(items);
+        //    target.QueueMeasurementsForProcessing(measurements);
+        //}
 
         /// <summary>
         ///A test for RespectInputDemands
         ///</summary>
-        [TestMethod()]
-        public void RespectInputDemandsTest()
-        {
-            ActionAdapterCollection target = new ActionAdapterCollection();
-            bool expected = false;
-            bool actual;
-            target.RespectInputDemands = expected;
-            actual = target.RespectInputDemands;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void RespectInputDemandsTest()
+        //{
+        //    ActionAdapterCollection target = new ActionAdapterCollection(false);
+        //    bool expected = false;
+        //    bool actual;
+        //    target.RespectInputDemands = expected;
+        //    actual = target.RespectInputDemands;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for RespectOutputDemands
         ///</summary>
-        [TestMethod()]
-        public void RespectOutputDemandsTest()
-        {
-            ActionAdapterCollection target = new ActionAdapterCollection();
-            bool expected = false;
-            bool actual;
-            target.RespectOutputDemands = expected;
-            actual = target.RespectOutputDemands;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void RespectOutputDemandsTest()
+        //{
+        //    ActionAdapterCollection target = new ActionAdapterCollection(false);
+        //    bool expected = false;
+        //    bool actual;
+        //    target.RespectOutputDemands = expected;
+        //    actual = target.RespectOutputDemands;
+        //    Assert.AreEqual(expected, actual);
+        //}
         #endregion
     }
 }

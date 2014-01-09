@@ -33,6 +33,7 @@ using System.ComponentModel;
 using System.Data;
 using GSF.Data;
 using System.Threading;
+using GSF.TimeSeries.Routing;
 using GSF.Units;
 using GSF.Adapters;
 using GSF.IO;
@@ -172,20 +173,20 @@ namespace GSF.TestsSuite.TimeSeries.Cases
              */
         }
 
-        /// <summary>
-        /// Queues a collection of measurements for processing.
-        /// </summary>
-        /// <param name="measurements">Measurements to queue for processing.</param>
-        public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
-        {
-            base.QueueMeasurementsForProcessing(measurements);
+        ///// <summary>
+        ///// Queues a collection of measurements for processing.
+        ///// </summary>
+        ///// <param name="measurements">Measurements to queue for processing.</param>
+        //public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        //{
+        //    base.QueueMeasurementsForProcessing(measurements);
 
-            foreach (IMeasurement measurement in measurements)
-            {
-                m_measurementQueue.Enqueue(measurement);
-                m_processSemaphore.Release();
-            }
-        }
+        //    foreach (IMeasurement measurement in measurements)
+        //    {
+        //        m_measurementQueue.Enqueue(measurement);
+        //        m_processSemaphore.Release();
+        //    }
+        //}
 
         /// <summary>
         /// Starts the <see cref="AlarmAdapter"/>, or restarts it if it is already running.
@@ -280,10 +281,10 @@ namespace GSF.TestsSuite.TimeSeries.Cases
 
         // Helper method to raise the NewMeasurements event
         // when only a single measurement is to be provided.
-        private void OnNewMeasurement(IMeasurement measurement)
-        {
-            OnNewMeasurements(new IMeasurement[] { measurement });
-        }
+        //private void OnNewMeasurement(IMeasurement measurement)
+        //{
+        //    NewEntities(this,new RoutingEventArgs()); 
+        //}
 
         // Processes measurements in the queue.
         private void ProcessMeasurements()
@@ -310,17 +311,19 @@ namespace GSF.TestsSuite.TimeSeries.Cases
                         // Create event measurements and send them into the system
                         foreach (Alarm alarm in events)
                         {
-                            alarmEvent = new Measurement()
-                            {
-                                Timestamp = measurement.Timestamp,
-                                Value = (int)alarm.State
-                            };
+                            //alarmEvent = new Measurement<double>()
+                            //{
+                           //     Timestamp = measurement.Timestamp,
+                           //     Value = (int)alarm.State
+                            //};
 
-                            if ((object)alarm.AssociatedMeasurementID != null)
-                                alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
+                            //if ((object)alarm.AssociatedMeasurementID != null)
+                              //  alarmEvent.ID = alarm.AssociatedMeasurementID.Value;
 
-                            OnNewMeasurement(alarmEvent);
-                            m_eventCount++;
+                            //NewEntities(this, new RoutingEventArgs()); 
+
+                            //OnNewMeasurement(alarmEvent);
+                          //  m_eventCount++;
                         }
                     }
                 }

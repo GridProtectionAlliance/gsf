@@ -41,6 +41,46 @@ using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries
 {
+
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Downsampling method enumeration.
+    /// </summary>
+    public enum DownsamplingMethod
+    {
+        /// <summary>
+        /// Downsamples to the last measurement received.
+        /// </summary>
+        /// <remarks>
+        /// Use this option if no downsampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
+        /// </remarks>
+        LastReceived,
+        /// <summary>
+        /// Downsamples to the measurement closest to frame time.
+        /// </summary>
+        /// <remarks>
+        /// This is the typical operation used when performing simple downsampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
+        /// </remarks>
+        Closest,
+        /// <summary>
+        /// Downsamples by applying a user-defined value filter over all received measurements to anti-alias the results.
+        /// </summary>
+        /// <remarks>
+        /// This option will produce the best result but has a processing penalty.
+        /// </remarks>
+        Filtered,
+        /// <summary>
+        /// Downsamples to the measurement that has the best quality closest to frame time.
+        /// </summary>
+        /// <remarks>
+        /// This option chooses the measurement closest to the frame time with the best quality.
+        /// </remarks>
+        BestQuality
+    }
+
+    #endregion
+
     /// <summary>
     /// Method signature for function used to apply a down-sampling filter over a sequence of <see cref="ITimeSeriesEntity"/> objects.
     /// </summary>

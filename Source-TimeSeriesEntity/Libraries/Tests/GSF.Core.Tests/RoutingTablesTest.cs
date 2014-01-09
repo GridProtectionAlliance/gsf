@@ -24,13 +24,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 #region [ Using ]
 using System;
 using System.Collections.Generic;
+using GSF.TimeSeries.Routing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GSF.TimeSeries.Adapters;
 using GSF.TestsSuite.TimeSeries.Cases;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for RoutingTablesTest and is intended
@@ -92,7 +93,7 @@ namespace TimeSeriesFramework.UnitTests
         public void ActionAdaptersTest()
         {
             RoutingTables target = new RoutingTables();
-            ActionAdapterCollection expected = new ActionAdapterCollection();
+            ActionAdapterCollection expected = new ActionAdapterCollection(false);
             ActionAdapterCollection actual;
             target.ActionAdapters = expected;
             actual = target.ActionAdapters;
@@ -102,13 +103,13 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for CalculateRoutingTables
         ///</summary>
-        [TestMethod()]
-        public void CalculateRoutingTablesTest()
-        {
-            RoutingTables target = new RoutingTables();
-            MeasurementKey[] inputMeasurementKeysRestriction = m_IMeasurements.MeasurementKeys;
-            target.CalculateRoutingTables(inputMeasurementKeysRestriction);
-        }
+        //[TestMethod()]
+        //public void CalculateRoutingTablesTest()
+        //{
+        //    RoutingTables target = new RoutingTables();
+        //    MeasurementKey[] inputMeasurementKeysRestriction = m_IMeasurements.MeasurementKeys;
+        //    target.CalculateRoutingTables(inputMeasurementKeysRestriction);
+        //}
 
         /// <summary>
         ///A test for Dispose
@@ -127,7 +128,7 @@ namespace TimeSeriesFramework.UnitTests
         public void InputAdaptersTest()
         {
             RoutingTables target = new RoutingTables();
-            InputAdapterCollection expected = new InputAdapterCollection();
+            InputAdapterCollection expected = new InputAdapterCollection(false);
             InputAdapterCollection actual;
             target.InputAdapters = expected;
             actual = target.InputAdapters;
@@ -163,7 +164,7 @@ namespace TimeSeriesFramework.UnitTests
         public void OutputAdaptersTest()
         {
             RoutingTables target = new RoutingTables();
-            OutputAdapterCollection expected = new OutputAdapterCollection();
+            OutputAdapterCollection expected = new OutputAdapterCollection(false);
             OutputAdapterCollection actual;
             target.OutputAdapters = expected;
             actual = target.OutputAdapters;
@@ -173,12 +174,12 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for RoutedMeasurementsHandler
         ///</summary>
-        [TestMethod()]
-        public void RoutedMeasurementsHandlerTest()
-        {
-            RoutingTables target = new RoutingTables();
-            IEnumerable<IMeasurement> newMeasurements = m_IMeasurements.Measurements;
-            target.RoutedMeasurementsHandler(newMeasurements);
-        }
+        //[TestMethod()]
+        //public void RoutedMeasurementsHandlerTest()
+        //{
+        //    RoutingTables target = new RoutingTables();
+        //    IEnumerable<IMeasurement> newMeasurements = m_IMeasurements.Measurements;
+        //    target.RoutedMeasurementsHandler(newMeasurements);
+        //}
     }
 }

@@ -48,6 +48,9 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
         public event EventHandler<EventArgs<string>> StatusMessage;
         public event EventHandler<EventArgs<IMeasurement>> Notify;
         public event EventHandler ConfigurationChanged;
+        public event EventHandler InputSignalsUpdated;
+        public event EventHandler OutputSignalsUpdated;
+        public event EventHandler<EventArgs<IEnumerable<ITimeSeriesEntity>>> EntitiesDiscarded;
         #endregion
 
         #region [ Events Handlers ]
@@ -315,7 +318,35 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
                 throw new NotImplementedException();
             }
         }
+        public long DependencyTimeout
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
 
+
+
+
+        public ISet<Guid> InputSignals
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ISet<Guid> OutputSignals
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public long ProcessedEntities
+        {
+            get { throw new NotImplementedException(); }
+        }
         #endregion
 
         #region [ Methods ]
@@ -419,18 +450,6 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
         }
         #endregion
 
-
-
-        public long DependencyTimeout
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        
     }
 }

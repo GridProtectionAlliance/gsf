@@ -31,10 +31,11 @@ using System.Data;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GSF.TimeSeries.Adapters;
-
+using GSF.TimeSeries;
+using GSF.TestsSuite;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for AllAdaptersCollectionTest and is intended

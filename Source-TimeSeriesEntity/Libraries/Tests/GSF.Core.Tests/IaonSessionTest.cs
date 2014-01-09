@@ -28,7 +28,7 @@ using GSF.TestsSuite.TimeSeries.Cases;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for IaonSessionTest and is intended
@@ -129,15 +129,15 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for InputMeasurementKeysRestriction
         ///</summary>
-        [TestMethod()]
-        public void InputMeasurementKeysRestrictionTest()
-        {
-            MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
-            MeasurementKey[] actual;
-            target.InputMeasurementKeysRestriction = expected;
-            actual = target.InputMeasurementKeysRestriction;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void InputMeasurementKeysRestrictionTest()
+        //{
+        //    MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
+        //    MeasurementKey[] actual;
+        //    target.InputMeasurementKeysRestriction = expected;
+        //    actual = target.InputMeasurementKeysRestriction;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for Name
@@ -168,13 +168,13 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for OutputMeasurementsUpdatedHandler
         ///</summary>
-        [TestMethod()]
-        public void OutputMeasurementsUpdatedHandlerTest()
-        {
-            object sender = new object();
-            System.EventArgs e = System.EventArgs.Empty;
-            target.OutputMeasurementsUpdatedHandler(sender, e);
-        }
+        //[TestMethod()]
+        //public void OutputMeasurementsUpdatedHandlerTest()
+        //{
+        //    object sender = new object();
+        //    System.EventArgs e = System.EventArgs.Empty;
+        //    target.OutputMeasurementsUpdatedHandler(sender, e);
+        //}
 
         /// <summary>
         ///A test for ProcessingCompleteHandler
@@ -212,15 +212,15 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for UseMeasurementRouting
         ///</summary>
-        [TestMethod()]
-        public void UseMeasurementRoutingTest()
-        {
-            bool expected = false;
-            bool actual;
-            target.UseMeasurementRouting = expected;
-            actual = target.UseMeasurementRouting;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void UseMeasurementRoutingTest()
+        //{
+        //    bool expected = false;
+        //    bool actual;
+        //    target.UseMeasurementRouting = expected;
+        //    actual = target.UseMeasurementRouting;
+        //    Assert.AreEqual(expected, actual);
+        //}
         #endregion
     }
 }

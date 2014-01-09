@@ -28,7 +28,7 @@ using GSF.TestsSuite.TimeSeries.Cases;
 using GSF.TimeSeries;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for OutputAdapterBaseTest and is intended
@@ -130,33 +130,33 @@ namespace TimeSeriesFramework.UnitTests
         /// <summary>
         ///A test for QueueMeasurementsForProcessing
         ///</summary>
-        [TestMethod()]
-        public void QueueMeasurementsForProcessingTest()
-        {
-            IEnumerable<IMeasurement> measurements = m_IMeasurements.Measurements;
-            try
-            {
-                target.QueueMeasurementsForProcessing(measurements);
-                Assert.IsTrue(true);
-            }
-            catch
-            {
-                Assert.IsTrue(false);
-            }
-        }
+        //[TestMethod()]
+        //public void QueueMeasurementsForProcessingTest()
+        //{
+        //    IEnumerable<IMeasurement> measurements = m_IMeasurements.Measurements;
+        //    try
+        //    {
+        //        target.QueueMeasurementsForProcessing(measurements);
+        //        Assert.IsTrue(true);
+        //    }
+        //    catch
+        //    {
+        //        Assert.IsTrue(false);
+        //    }
+        //}
 
         /// <summary>
         ///A test for RequestedInputMeasurementKeys
         ///</summary>
-        [TestMethod()]
-        public void RequestedInputMeasurementKeysTest()
-        {
-            MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
-            MeasurementKey[] actual;
-            target.RequestedInputMeasurementKeys = expected;
-            actual = target.RequestedInputMeasurementKeys;
-            Assert.AreEqual(expected, actual);
-        }
+        //[TestMethod()]
+        //public void RequestedInputMeasurementKeysTest()
+        //{
+        //    MeasurementKey[] expected = m_IMeasurements.MeasurementKeys;
+        //    MeasurementKey[] actual;
+        //    target.RequestedInputMeasurementKeys = expected;
+        //    actual = target.RequestedInputMeasurementKeys;
+        //    Assert.AreEqual(expected, actual);
+        //}
 
         /// <summary>
         ///A test for SupportsTemporalProcessing

@@ -30,7 +30,7 @@ using GSF;
 using GSF.Communication;
 #endregion
 
-namespace TimeSeriesFramework.UnitTests
+namespace GSF.Core.Tests
 {
     /// <summary>
     ///This is a test class for TemporalClientSubscriptionProxyTest and is intended
