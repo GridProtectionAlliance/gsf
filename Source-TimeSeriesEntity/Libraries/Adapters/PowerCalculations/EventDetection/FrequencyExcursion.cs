@@ -58,7 +58,7 @@ namespace PowerCalculations.EventDetection
     /// Represents an algorithm that detects frequency excursions.
     /// </summary>
     [Description("Frequency Excursion: detects frequency excursions")]
-    public class FrequencyExcursion : CalculatedMeasurementBase
+    public class FrequencyExcursion : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -75,19 +75,82 @@ namespace PowerCalculations.EventDetection
         private int m_minimumValidChannels;         // Minimum frequency values needed to perform a valid calculation
         private int m_detectedExcursions;           // Number of detected excursions
         private long m_count;                       // Published frame count
-
-        // Important: Make sure output definition defines points in the following order
-        private enum Output
-        {
-            WarningSignal,
-            FrequencyDelta,
-            TypeOfExcursion,
-            EstimatedSize
-        }
+        private Guid m_warningSignalID;             // The input signal ID for the warning signal measurement
+        private Guid m_frequencyDeltaID;            // The input signal ID for the frequency delta measurement
+        private Guid m_typeOfExcursionID;           // The input signal ID for the type-of-excursion measurement
+        private Guid m_estimatedSizeID;             // The input signal ID for the estimated size measurement
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the input signal ID for the warning signal measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the warning signal measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid WarningSignalID
+        {
+            get
+            {
+                return m_warningSignalID;
+            }
+            set
+            {
+                m_warningSignalID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the input signal ID for the frequency delta measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the frequency delta measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid FrequencyDeltaID
+        {
+            get
+            {
+                return m_frequencyDeltaID;
+            }
+            set
+            {
+                m_frequencyDeltaID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the input signal ID for the type-of-excursion measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the type-of-excursion measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid TypeOfExcursionID
+        {
+            get
+            {
+                return m_typeOfExcursionID;
+            }
+            set
+            {
+                m_typeOfExcursionID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the input signal ID for the estimated size measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the estimated size measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid EstimatedSizeID
+        {
+            get
+            {
+                return m_estimatedSizeID;
+            }
+            set
+            {
+                m_estimatedSizeID = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the threshold for detecting an abnormal excursion in frequency.
@@ -216,6 +279,17 @@ namespace PowerCalculations.EventDetection
         }
 
         /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Returns the detailed status of the <see cref="FrequencyExcursion"/> detector.
         /// </summary>
         public override string Status
@@ -259,6 +333,8 @@ namespace PowerCalculations.EventDetection
             Dictionary<string, string> settings = Settings;
             string setting;
 
+            SignalType signalType;
+
             //  <Parameters paraName="EstimateTriggerThreshold" value="0.0256" description="The threshold of estimation trigger"></Parameters>
             //  <Parameters paraName="AnalysisWindowSize" value="120" description="The sample size of the analysis window"></Parameters>
             //  <Parameters paraName="AnalysisInterval" value="30" description="The frame interval between two adjacent frequency testing"></Parameters>
@@ -268,6 +344,19 @@ namespace PowerCalculations.EventDetection
             //  <Parameters paraName="MinimumAlarmInterval" value="20" description="Minimum duration between alarms, in whole seconds"></Parameters>
 
             // Load required parameters
+            if (!this.TryParseSignalID("warningSignalID", out m_warningSignalID))
+                throw new InvalidOperationException("Warning signal output signal ID was not found - this is a required output signal for the frequency excursion detector.");
+
+            if (!this.TryParseSignalID("frequencyDeltaID", out m_frequencyDeltaID))
+                throw new InvalidOperationException("Frequency delta output signal ID was not found - this is a required output signal for the frequency excursion detector.");
+
+            if (!this.TryParseSignalID("typeOfExcursionID", out m_typeOfExcursionID))
+                throw new InvalidOperationException("Type-of-excursion output signal ID was not found - this is a required output signal for the frequency excursion detector.");
+
+            if (!this.TryParseSignalID("estimatedSizeID", out m_estimatedSizeID))
+                throw new InvalidOperationException("Estimated size output signal ID was not found - this is a required output signal for the frequency excursion detector.");
+
+            // Load optional parameters
             if (settings.TryGetValue("estimateTriggerThreshold", out setting))
                 m_estimateTriggerThreshold = double.Parse(setting);
             else
@@ -307,26 +396,16 @@ namespace PowerCalculations.EventDetection
             m_timeStamps = new List<DateTime>();
 
             // Validate input measurements
-            List<MeasurementKey> validInputMeasurementKeys = new List<MeasurementKey>();
+            InputSignalIDs.ExceptWith(InputSignalIDs.Where(signalID => !this.TryGetSignalType(signalID, out signalType) || signalType != SignalType.FREQ));
 
-            for (int i = 0; i < InputMeasurementKeys.Length; i++)
-            {
-                if (InputSignalTypes[i] == SignalType.FREQ)
-                    validInputMeasurementKeys.Add(InputMeasurementKeys[i]);
-            }
-
-            if (validInputMeasurementKeys.Count == 0)
+            if (InputSignalIDs.Count == 0)
                 throw new InvalidOperationException("No valid frequency measurements were specified as inputs to the frequency excursion detector.");
 
-            if (validInputMeasurementKeys.Count < m_minimumValidChannels)
-                throw new InvalidOperationException(string.Format("Minimum valid frequency measurements (i.e., \"minimumValidChannels\") for the frequency excursion detector is currently set to {0}, only {1} {2} defined.", m_minimumValidChannels, validInputMeasurementKeys.Count, (validInputMeasurementKeys.Count == 1 ? "was" : "were")));
-
-            // Make sure only frequencies are used as input
-            InputMeasurementKeys = validInputMeasurementKeys.ToArray();
+            if (InputSignalIDs.Count < m_minimumValidChannels)
+                throw new InvalidOperationException(string.Format("Minimum valid frequency measurements (i.e., \"minimumValidChannels\") for the frequency excursion detector is currently set to {0}, only {1} {2} defined.", m_minimumValidChannels, InputSignalIDs.Count, (InputSignalIDs.Count == 1 ? "was" : "were")));
 
             // Validate output measurements
-            if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the frequency excursion detector, expecting measurements for \"Warning Signal Status (0 = Not Signaled, 1 = Signaled)\", \"Frequency Delta\", \"Type of Excursion (0 = Gen Trip, 1 = Load Trip)\" and \"Estimated Size (MW)\" - in this order.");
+            OutputSignalIDs.UnionWith(new Guid[] { m_warningSignalID, m_frequencyDeltaID, m_typeOfExcursionID, m_estimatedSizeID });
         }
 
         /// <summary>
@@ -337,7 +416,6 @@ namespace PowerCalculations.EventDetection
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            MeasurementKey[] inputMeasurements = InputMeasurementKeys;
             double averageFrequency = double.NaN;
 
             // Increment frame counter
@@ -348,7 +426,7 @@ namespace PowerCalculations.EventDetection
 
             // Calculate the average of all the frequencies that arrived in this frame
             if (frame.Entities.Count > 0)
-                averageFrequency = frame.Entities.Select(m => m.Value.AdjustedValue).Average();
+                averageFrequency = frame.Entities.Values.OfType<IMeasurement<double>>().Select(m => m.Value).Average();
 
             // Track new frequency and its timestamp
             m_frequencies.Add(averageFrequency);
@@ -395,14 +473,12 @@ namespace PowerCalculations.EventDetection
                 }
 
                 // Expose output measurement values
-                IMeasurement[] outputMeasurements = OutputMeasurements;
-
-                OnNewEntities(new IMeasurement[]
+                OnNewEntities(new ITimeSeriesEntity[]
                 { 
-                    Measurement.Clone(outputMeasurements[(int)Output.WarningSignal], warningSignaled ? 1.0D : 0.0D, frame.Timestamp),
-                    Measurement.Clone(outputMeasurements[(int)Output.FrequencyDelta], frequencyDelta, frame.Timestamp),
-                    Measurement.Clone(outputMeasurements[(int)Output.TypeOfExcursion], (int)typeofExcursion, frame.Timestamp),
-                    Measurement.Clone(outputMeasurements[(int)Output.EstimatedSize], estimatedSize, frame.Timestamp)
+                    new Measurement<double>(m_warningSignalID, frame.Timestamp, warningSignaled ? 1.0D : 0.0D),
+                    new Measurement<double>(m_frequencyDeltaID, frame.Timestamp, frequencyDelta),
+                    new Measurement<double>(m_typeOfExcursionID, frame.Timestamp, (int)typeofExcursion),
+                    new Measurement<double>(m_estimatedSizeID, frame.Timestamp, estimatedSize)
                 });
             }
         }

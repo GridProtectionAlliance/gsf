@@ -44,7 +44,7 @@ namespace PowerCalculations.EventDetection
     /// Represents an algorithm that detects Loss of Field from a synchrophasor device.
     /// </summary>
     [Description("Loss of Field: detects Loss of Field from a synchrophasor device")]
-    public class LossOfField : CalculatedMeasurementBase
+    public class LossOfField : ActionAdapterBase
     {
         #region [ Members ]
 
@@ -61,17 +61,154 @@ namespace PowerCalculations.EventDetection
         private long m_count;                       // Running frame count
         private long m_count1;                      // Last frame count
         private long m_count2;                      // Current frame count
-        private MeasurementKey m_voltageMagnitude;  // Measurement input key for voltage magnitude
-        private MeasurementKey m_voltageAngle;      // Measurement input key for voltage angle
-        private MeasurementKey m_currentMagnitude;  // Measurement input key for current magnitude
-        private MeasurementKey m_currentAngle;      // Measurement input key for current angle
-
-        // Important: Make sure output definition defines points in the following order
-        private enum Output { WarningSignal, RealPower, ReactivePower, QAreaValue }
+        private Guid m_voltageMagnitudeID;          // Input signal ID for voltage magnitude
+        private Guid m_voltageAngleID;              // Input signal ID for voltage angle
+        private Guid m_currentMagnitudeID;          // Input signal ID for current magnitude
+        private Guid m_currentAngleID;              // Input signal ID for current angle
+        private Guid m_warningSignalID;             // Output signal ID for warning signal
+        private Guid m_realPowerID;                 // Output signal ID for real power
+        private Guid m_reactivePowerID;             // Output signal ID for reactive power
+        private Guid m_qAreaValueID;                  // Output signal ID for Q-area value
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the signal ID of the voltage magnitude measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the magnitude of the voltage phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid VoltageMagnitudeID
+        {
+            get
+            {
+                return m_voltageMagnitudeID;
+            }
+            set
+            {
+                m_voltageMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the voltage angle measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the angle of the voltage phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid VoltageAngleID
+        {
+            get
+            {
+                return m_voltageAngleID;
+            }
+            set
+            {
+                m_voltageAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the current magnitude measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the angle of the voltage phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid CurrentMagnitudeID
+        {
+            get
+            {
+                return m_currentMagnitudeID;
+            }
+            set
+            {
+                m_currentMagnitudeID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the current angle measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the angle of the current phasor measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid CurrentAngleID
+        {
+            get
+            {
+                return m_currentAngleID;
+            }
+            set
+            {
+                m_currentAngleID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the current angle measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the warning signal measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid WarningSignalID
+        {
+            get
+            {
+                return m_warningSignalID;
+            }
+            set
+            {
+                m_warningSignalID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the current angle measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the real component of the power measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid RealPowerID
+        {
+            get
+            {
+                return m_realPowerID;
+            }
+            set
+            {
+                m_realPowerID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the current angle measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the reactive component of the power measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid ReactivePowerID
+        {
+            get
+            {
+                return m_reactivePowerID;
+            }
+            set
+            {
+                m_reactivePowerID = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the signal ID of the current angle measurement.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the input signal ID for the Q-area value measurement; can be one of a filter expression, measurement key, point tag, or Guid.")]
+        public Guid QAreaValueID
+        {
+            get
+            {
+                return m_qAreaValueID;
+            }
+            set
+            {
+                m_qAreaValueID = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the threshold of Pset MW.
@@ -164,6 +301,17 @@ namespace PowerCalculations.EventDetection
         }
 
         /// <summary>
+        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// </summary>
+        public override bool SupportsTemporalProcessing
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Returns the detailed status of the <see cref="LossOfField"/> detector.
         /// </summary>
         public override string Status
@@ -200,12 +348,52 @@ namespace PowerCalculations.EventDetection
         /// </summary>
         public override void Initialize()
         {
-            base.Initialize();
-
-            Dictionary<string, string> settings = Settings;
+            Dictionary<string, string> settings;
+            SignalType signalType;
             string setting;
-            
-            // Load parameters
+
+            base.Initialize();
+            settings = Settings;
+
+            // Load required parameters
+            if (!this.TryParseSignalID("voltageMagnitudeID", out m_voltageMagnitudeID))
+                throw new InvalidOperationException("Voltage magnitude input signal ID was not found - this is a required input signal for the loss of field detector.");
+
+            if (!this.TryParseSignalID("voltageAngleID", out m_voltageAngleID))
+                throw new InvalidOperationException("Voltage angle input signal ID was not found - this is a required input signal for the loss of field detector.");
+
+            if (!this.TryParseSignalID("currentMagnitudeID", out m_currentMagnitudeID))
+                throw new InvalidOperationException("Current magnitude input signal ID was not found - this is a required input signal for the loss of field detector.");
+
+            if (!this.TryParseSignalID("currentAngleID", out m_currentAngleID))
+                throw new InvalidOperationException("Current angle input signal ID was not found - this is a required input signal for the loss of field detector.");
+
+            if (!this.TryParseSignalID("warningSignalID", out m_warningSignalID))
+                throw new InvalidOperationException("Warning signal output signal ID was not found - this is a required output signal for the loss of field detector.");
+
+            if (!this.TryParseSignalID("realPowerID", out m_realPowerID))
+                throw new InvalidOperationException("Real power output signal ID was not found - this is a required output signal for the loss of field detector.");
+
+            if (!this.TryParseSignalID("reactivePowerID", out m_reactivePowerID))
+                throw new InvalidOperationException("Reactive power output signal ID was not found - this is a required output signal for the loss of field detector.");
+
+            if (!this.TryParseSignalID("qAreaValue", out m_qAreaValueID))
+                throw new InvalidOperationException("Q-area value output signal ID was not found - this is a required output signal for the loss of field detector.");
+
+            // Validate signal types of input signals
+            if (!this.TryGetSignalType(m_voltageMagnitudeID, out signalType) || signalType != SignalType.VPHM)
+                throw new InvalidOperationException(string.Format("Signal type of voltage magnitude input is incorrect. Type is {0} - should be VPHM.", signalType));
+
+            if (!this.TryGetSignalType(m_voltageAngleID, out signalType) || signalType != SignalType.VPHA)
+                throw new InvalidOperationException(string.Format("Signal type of voltage angle input is incorrect. Type is {0} - should be VPHA.", signalType));
+
+            if (!this.TryGetSignalType(m_currentMagnitudeID, out signalType) || signalType != SignalType.IPHM)
+                throw new InvalidOperationException(string.Format("Signal type of current magnitude input is incorrect. Type is {0} - should be IPHM.", signalType));
+
+            if (!this.TryGetSignalType(m_currentAngleID, out signalType) || signalType != SignalType.IPHA)
+                throw new InvalidOperationException(string.Format("Signal type of current angle input is incorrect. Type is {0} - should be IPHA.", signalType));
+
+            // Load optional parameters
             if (settings.TryGetValue("pSet", out setting))
                 m_pSet = double.Parse(setting);
             else
@@ -235,43 +423,9 @@ namespace PowerCalculations.EventDetection
             m_count1 = 0;
             m_count2 = 0;
 
-            // Load needed measurement keys from defined InputMeasurementKeys
-            int index;
-
-            // Get expected voltage magnitude
-            index = InputSignalTypes.IndexOf(signalType => signalType == SignalType.VPHM);
-            if (index < 0)
-                throw new InvalidOperationException("No voltage magnitude input measurement key was not found - this is a required input measurement for the loss of field detector.");
-
-            m_voltageMagnitude = InputMeasurementKeys[index];
-
-            // Get expected voltage angle
-            index = InputSignalTypes.IndexOf(signalType => signalType == SignalType.VPHA);
-            if (index < 0)
-                throw new InvalidOperationException("No voltage angle input measurement key was not found - this is a required input measurement for the loss of field detector.");
-
-            m_voltageAngle = InputMeasurementKeys[index];
-
-            // Get expecpted current magnitude
-            index = InputSignalTypes.IndexOf(signalType => signalType == SignalType.IPHM);
-            if (index < 0)
-                throw new InvalidOperationException("No current magnitude input measurement key was not found - this is a required input measurement for the loss of field detector.");
-
-            m_currentMagnitude = InputMeasurementKeys[index];
-
-            // Get expected current angle
-            index = InputSignalTypes.IndexOf(signalType => signalType == SignalType.IPHA);
-            if (index < 0)
-                throw new InvalidOperationException("No current angle input measurement key was not found - this is a required input measurement for the loss of field detector.");
-
-            m_currentAngle = InputMeasurementKeys[index];
-
-            // Make sure only these phasor measurements are used as input
-            InputMeasurementKeys = new[] { m_voltageMagnitude, m_voltageAngle, m_currentMagnitude, m_currentAngle };
-
-            // Validate output measurements
-            if (OutputMeasurements.Length < Enum.GetValues(typeof(Output)).Length)
-                throw new InvalidOperationException("Not enough output measurements were specified for the loss of field detector, expecting measurements for \"Warning Signal Status (0 = Not Signaled, 1 = Signaled)\", \"Real Power\", \"Reactive Power\" and \"Q-Area Value\" - in this order.");
+            // Set input and output signals for routing
+            InputSignalIDs.UnionWith(new Guid[] { m_voltageMagnitudeID, m_voltageAngleID, m_currentMagnitudeID, m_currentAngleID });
+            OutputSignalIDs.UnionWith(new Guid[] { m_warningSignalID, m_realPowerID, m_reactivePowerID, m_qAreaValueID });
         }
 
         /// <summary>
@@ -287,12 +441,11 @@ namespace PowerCalculations.EventDetection
 
             if (m_count % m_analysisInterval == 0)
             {
-                IDictionary<MeasurementKey, IMeasurement> measurements = frame.Entities;
-                IMeasurement measurement;
-                double voltageMagnitude = 0.0D;
-                double voltageAngle = 0.0D;
-                double currentMagnitude = 0.0D;
-                double currentAngle = 0.0D;
+                IMeasurement<double> measurement;
+                double voltageMagnitude;
+                double voltageAngle;
+                double currentMagnitude;
+                double currentAngle;
                 double realPower;
                 double reactivePower;
                 double deltaT;
@@ -301,23 +454,23 @@ namespace PowerCalculations.EventDetection
                 m_count1 = m_count2;
                 m_count2 = m_count;
 
-                if (measurements.TryGetValue(m_voltageMagnitude, out measurement))
-                    voltageMagnitude = measurement.AdjustedValue;
+                if (frame.TryGetEntity(m_voltageMagnitudeID, out measurement))
+                    voltageMagnitude = measurement.Value;
                 else
                     return;
 
-                if (measurements.TryGetValue(m_voltageAngle, out measurement))
-                    voltageAngle = Angle.FromDegrees(measurement.AdjustedValue);
+                if (frame.TryGetEntity(m_voltageAngleID, out measurement))
+                    voltageAngle = Angle.FromDegrees(measurement.Value);
                 else
                     return;
 
-                if (measurements.TryGetValue(m_currentMagnitude, out measurement))
-                    currentMagnitude = measurement.AdjustedValue;
+                if (frame.TryGetEntity(m_currentMagnitudeID, out measurement))
+                    currentMagnitude = measurement.Value;
                 else
                     return;
 
-                if (measurements.TryGetValue(m_currentAngle, out measurement))
-                    currentAngle = Angle.FromDegrees(measurement.AdjustedValue);
+                if (frame.TryGetEntity(m_currentAngleID, out measurement))
+                    currentAngle = Angle.FromDegrees(measurement.Value);
                 else
                     return;
 
@@ -339,14 +492,12 @@ namespace PowerCalculations.EventDetection
                     m_qAreamVar = 0;
 
                 // Expose output measurement values
-                IMeasurement[] outputMeasurements = OutputMeasurements;
-
-                OnNewEntities(new IMeasurement[]
+                OnNewEntities(new ITimeSeriesEntity[]
                 {
-                    Measurement.Clone(outputMeasurements[(int)Output.WarningSignal], warningSignaled ? 1.0D : 0.0D, frame.Timestamp),
-                    Measurement.Clone(outputMeasurements[(int)Output.RealPower], realPower, frame.Timestamp),
-                    Measurement.Clone(outputMeasurements[(int)Output.ReactivePower], reactivePower, frame.Timestamp),
-                    Measurement.Clone(outputMeasurements[(int)Output.QAreaValue], m_qAreamVar, frame.Timestamp)
+                    new Measurement<double>(m_warningSignalID, frame.Timestamp, warningSignaled ? 1.0D : 0.0D),
+                    new Measurement<double>(m_realPowerID, frame.Timestamp, realPower),
+                    new Measurement<double>(m_reactivePowerID, frame.Timestamp, reactivePower),
+                    new Measurement<double>(m_qAreaValueID, frame.Timestamp, m_qAreamVar)
                 });
             }
         }
