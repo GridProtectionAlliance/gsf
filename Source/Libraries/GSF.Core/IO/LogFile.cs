@@ -204,6 +204,7 @@ namespace GSF.IO
             m_savedFilesWithTime = new Dictionary<DateTime, string>();
             m_logEntryQueue = ProcessList<string>.CreateRealTimeQueue(WriteLogEntries);
             m_flushTimer = new Timer();
+            m_flushTimerInterval = 10.0D;
 
             this.FileFull += LogFile_FileFull;
             m_logEntryQueue.ProcessException += ProcessExceptionHandler;
