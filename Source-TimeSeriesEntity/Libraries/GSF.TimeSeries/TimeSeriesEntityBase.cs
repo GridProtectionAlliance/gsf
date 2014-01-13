@@ -35,10 +35,7 @@ namespace GSF.TimeSeries
     {
         #region [ Members ]
 
-        // Fields
-        [ProtoMember(1)]
         private readonly Guid m_id;
-        [ProtoMember(2)]
         private readonly Ticks m_timestamp;
 
         #endregion
@@ -54,16 +51,6 @@ namespace GSF.TimeSeries
         {
             m_id = id;
             m_timestamp = timestamp;
-        }
-
-        /// <summary>
-        /// DO NOT USE.  ProtoBuf-net requires a parameterless constructor and 
-        /// can access it via reflection.  This is protected so that 
-        /// Measurement has access to it.  
-        /// </summary>
-        protected TimeSeriesEntityBase()
-        {
-            
         }
 
         #endregion

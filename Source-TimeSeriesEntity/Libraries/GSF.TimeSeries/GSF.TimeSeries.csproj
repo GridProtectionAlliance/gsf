@@ -138,6 +138,9 @@
     <Compile Include="NativeMethods.cs" />
     <Compile Include="PrecisionInputTimer.cs" />
     <Compile Include="Routing\SignalRoute.cs" />
+    <Compile Include="Serialization\ISerializer.cs" />
+    <Compile Include="Serialization\ProtoBufWrapper\ProtoBufSerializer.cs" />
+    <Compile Include="Serialization\ProtoBufWrapper\Surrogates.cs" />
     <Compile Include="SignalReference.cs" />
     <Compile Include="Statistics\GatewayStatistics.cs" />
     <Compile Include="Statistics\PerformanceStatistics.cs" />
@@ -240,6 +243,7 @@
     <Content Include="Data\SQLite\SampleDataSet.sql" />
     <Content Include="Data\SQLite\sqlite3.exe" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>CALL "$(ProjectDir)PostBuildSetup.bat" "$(TargetDir)Data" "$(ProjectDir)Data\*.*"</PostBuildEvent>

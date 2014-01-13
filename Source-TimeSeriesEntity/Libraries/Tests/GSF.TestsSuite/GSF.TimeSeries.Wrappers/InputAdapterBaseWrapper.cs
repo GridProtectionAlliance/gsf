@@ -28,7 +28,7 @@ using System.Text;
 using System.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using GSF.TestsSuite;
+using GSF.TimeSeries.Routing;
 #endregion
 
 namespace GSF.TestsSuite.TimeSeries.Wrappers
@@ -43,7 +43,7 @@ namespace GSF.TestsSuite.TimeSeries.Wrappers
     public abstract class InputAdapterBaseWrapper : AdapterBaseWrapper, IInputAdapter
     {
         #region [ Events ]
-        public event EventHandler<GSF.TimeSeries.Routing.RoutingEventArgs> NewEntities;
+        public event EventHandler<RoutingEventArgs> NewEntities;
         #endregion
 
         #region [ Members ]

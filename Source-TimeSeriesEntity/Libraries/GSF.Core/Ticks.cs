@@ -1050,16 +1050,6 @@ namespace GSF
         }
 
         /// <summary>
-        /// Implicitly converts value, represented as a <see cref="TimeTagBase"/>, to a <see cref="Ticks"/>.
-        /// </summary>
-        /// <param name="value"><see cref="TimeTagBase"/> value to convert.</param>
-        /// <returns><see cref="Ticks"/> value representing the result.</returns>
-        public static implicit operator Ticks(TimeTagBase value)
-        {
-            return new Ticks(value.ToDateTime());
-        }
-
-        /// <summary>
         /// Implicitly converts <see cref="Ticks"/>, represented in ticks, to an <see cref="Int64"/>.
         /// </summary>
         /// <param name="value"><see cref="Ticks"/> value to convert.</param>
@@ -1090,11 +1080,21 @@ namespace GSF
         }
 
         /// <summary>
+        /// Implicitly converts value, represented as a <see cref="TimeTagBase"/>, to a <see cref="Ticks"/>.
+        /// </summary>
+        /// <param name="value"><see cref="TimeTagBase"/> value to convert.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
+        public static explicit operator Ticks(TimeTagBase value)
+        {
+            return new Ticks(value.ToDateTime());
+        }
+
+        /// <summary>
         /// Implicitly converts <see cref="Ticks"/>, represented in ticks, to an <see cref="NtpTimeTag"/>.
         /// </summary>
         /// <param name="value"><see cref="Ticks"/> value to convert.</param>
         /// <returns><see cref="NtpTimeTag"/> value representing the result.</returns>
-        public static implicit operator NtpTimeTag(Ticks value)
+        public static explicit operator NtpTimeTag(Ticks value)
         {
             return new NtpTimeTag(new DateTime(value.m_value));
         }
@@ -1104,7 +1104,7 @@ namespace GSF
         /// </summary>
         /// <param name="value"><see cref="Ticks"/> value to convert.</param>
         /// <returns><see cref="UnixTimeTag"/> value representing the result.</returns>
-        public static implicit operator UnixTimeTag(Ticks value)
+        public static explicit operator UnixTimeTag(Ticks value)
         {
             return new UnixTimeTag(new DateTime(value.m_value));
         }
