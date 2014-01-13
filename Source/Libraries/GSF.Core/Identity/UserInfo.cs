@@ -108,18 +108,20 @@ using System.ComponentModel;
 using System.Configuration;
 using System.DirectoryServices;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
-using Microsoft.Win32;
 
 #if !MONO
 using System.Collections;
 using System.Management;
+using Microsoft.Win32;
 using GSF.Interop;
 #endif
 
@@ -729,7 +731,7 @@ namespace GSF.Identity
         }
 
         /// <summary>
-        /// Gets the groups associated with the user.
+        /// Gets all the groups associated with the user - this includes local groups and Active Directory groups if applicable.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -743,44 +745,119 @@ namespace GSF.Identity
         {
             get
             {
-                List<string> groups = new List<string>();
-
+                HashSet<string> groups = new HashSet<string>();
+                string groupName;
 #if !MONO
                 if (m_enabled)
                 {
+                    // Get fixed list of BUILTIN local groups
+                    string[] builtAccounts = GetBuiltInLocalGroups();
+
                     if (m_isWinNT)
                     {
-                        // Get local groups
+                        // Get local groups that local user is a member of
                         object localGroups = m_userEntry.Invoke("Groups");
 
                         foreach (object localGroup in (IEnumerable)localGroups)
                         {
                             using (DirectoryEntry groupEntry = new DirectoryEntry(localGroup))
                             {
-                                groups.Add(m_domain + "\\" + groupEntry.Name);
+                                groupName = groupEntry.Name;
+
+                                if (Array.BinarySearch(builtAccounts, groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                                    groups.Add(Environment.MachineName + "\\" + groupName);
+                                else
+                                    groups.Add("BUILTIN\\" + groupName);
                             }
                         }
                     }
                     else
                     {
-                        // Get active directory groups
+                        // Get active directory groups that active directory user is a member of
                         m_userEntry.RefreshCache(new[] { "TokenGroups" });
 
                         foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
                         {
                             try
                             {
-                                groups.Add(new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString());
+                                groupName = new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString();
+                                groups.Add(groupName);
                             }
                             catch
                             {
                                 // Ignoring group SID's that fail to translate to an active AD group, for whatever reason
                             }
                         }
+
+                        // Get local groups that active directory user is a member of - TokenGroups doesn't get all of these :-p
+                        DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
+                        string userPath = string.Format("WinNT://{0}/{1}", m_domain, m_username);
+
+                        // Have to scan each local group for the AD user...
+                        foreach (DirectoryEntry groupEntry in root.Children)
+                        {
+                            if (groupEntry.SchemaClassName != "Group")
+                                continue;
+
+                            if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }))
+                            {
+                                groupName = groupEntry.Name;
+
+                                if (Array.BinarySearch(builtAccounts, groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                                    groups.Add(Environment.MachineName + "\\" + groupName);
+                                else
+                                    groups.Add("BUILTIN\\" + groupName);
+                            }
+                        }
                     }
                 }
 #endif
+                return groups.ToArray();
+            }
+        }
 
+        /// <summary>
+        /// Gets the local groups associated with the user.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Groups names are prefixed with BUILTIN or computer name.
+        /// </para>
+        /// <para>
+        /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
+        /// </para>
+        /// </remarks>
+        public string[] LocalGroups
+        {
+            get
+            {
+                List<string> groups = new List<string>();
+#if !MONO
+                // Get local groups that user is a member of
+                DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
+                string userPath = string.Format("WinNT://{0}/{1}", m_domain, m_username);
+                string groupName;
+
+                List<string> builtAccounts = new List<string>(GetBuiltInLocalGroups());
+                builtAccounts.Sort();
+
+                // Have to scan each local group for the AD user...
+                foreach (DirectoryEntry groupEntry in root.Children)
+                {
+                    if (groupEntry.SchemaClassName != "Group")
+                        continue;
+
+                    if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }))
+                    {
+                        groupName = groupEntry.Name;
+
+                        if (builtAccounts.BinarySearch(groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                            groups.Add(Environment.MachineName + "\\" + groupName);
+                        else
+                            groups.Add("BUILTIN\\" + groupName);
+                    }
+                }
+#endif
                 return groups.ToArray();
             }
         }
@@ -1379,7 +1456,8 @@ namespace GSF.Identity
         public string GetUserPropertyValueAsString(string propertyName)
         {
             PropertyValueCollection value = GetUserPropertyValue(propertyName);
-            if (value != null && value.Count > 0)
+
+            if ((object)value != null && value.Count > 0)
                 return value[0].ToString().Replace("  ", " ").Trim();
 
             return string.Empty;
@@ -1388,10 +1466,12 @@ namespace GSF.Identity
         private DirectorySearcher CreateDirectorySearcher()
         {
             DirectorySearcher searcher;
+
             if (string.IsNullOrEmpty(m_ldapPath))
                 searcher = new DirectorySearcher();
             else
                 searcher = new DirectorySearcher(new DirectoryEntry(m_ldapPath));
+
             return searcher;
         }
 
@@ -1428,7 +1508,68 @@ namespace GSF.Identity
         #region [ Static ]
 
         // Static Fields
-        private static UserInfo s_currentUserInfo;
+        private static readonly UserInfo s_currentUserInfo;
+        private static readonly string[] s_builtInLocalGroups;
+
+        // Static constructor
+        static UserInfo()
+        {
+            string currentUserID = CurrentUserID;
+
+            if (!string.IsNullOrEmpty(currentUserID))
+            {
+                s_currentUserInfo = new UserInfo(currentUserID);
+                s_currentUserInfo.Initialize();
+            }
+
+            // Determine built-in group list - this is not expected to change so it is statically cached
+            List<string> groups = new List<string>();
+#if !MONO
+            WellKnownSidType[] builtInSids =
+            {
+                WellKnownSidType.BuiltinAccountOperatorsSid,
+                WellKnownSidType.BuiltinAdministratorsSid,
+                WellKnownSidType.BuiltinAuthorizationAccessSid,
+                WellKnownSidType.BuiltinBackupOperatorsSid,
+                WellKnownSidType.BuiltinDomainSid,
+                WellKnownSidType.BuiltinGuestsSid,
+                WellKnownSidType.BuiltinIncomingForestTrustBuildersSid,
+                WellKnownSidType.BuiltinNetworkConfigurationOperatorsSid,
+                WellKnownSidType.BuiltinPerformanceLoggingUsersSid,
+                WellKnownSidType.BuiltinPerformanceMonitoringUsersSid,
+                WellKnownSidType.BuiltinPowerUsersSid,
+                WellKnownSidType.BuiltinPreWindows2000CompatibleAccessSid,
+                WellKnownSidType.BuiltinPrintOperatorsSid,
+                WellKnownSidType.BuiltinRemoteDesktopUsersSid,
+                WellKnownSidType.BuiltinReplicatorSid,
+                WellKnownSidType.BuiltinSystemOperatorsSid,
+                WellKnownSidType.BuiltinUsersSid
+            };
+
+            SecurityIdentifier securityIdentifier;
+            NTAccount groupAccount;
+
+            foreach (WellKnownSidType builtInSid in builtInSids)
+            {
+                try
+                {
+                    // Attempt to translate well-known SID to a local NT group - if this fails, local group is not defined
+                    securityIdentifier = new SecurityIdentifier(builtInSid, null);
+                    groupAccount = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
+
+                    // Don't include "BUILTIN\" prefix for group names so they are easily comparable
+                    groups.Add(groupAccount.ToString().Substring(8));
+                }
+                catch (IdentityNotMappedException)
+                {
+                }
+            }
+
+            // Sort list so binary search can be used
+            groups.Sort(StringComparer.OrdinalIgnoreCase);
+#endif
+            s_builtInLocalGroups = groups.ToArray();
+        }
 
         // Static Properties
 
@@ -1442,12 +1583,19 @@ namespace GSF.Identity
         {
             get
             {
-                WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                try
+                {
+                    WindowsIdentity identity = WindowsIdentity.GetCurrent();
 
-                if ((object)identity != null)
-                    return identity.Name;
+                    if ((object)identity != null)
+                        return identity.Name;
 
-                return null;
+                    return null;
+                }
+                catch (SecurityException)
+                {
+                    return null;
+                }
             }
         }
 
@@ -1458,9 +1606,6 @@ namespace GSF.Identity
         {
             get
             {
-                if ((object)s_currentUserInfo == null)
-                    s_currentUserInfo = new UserInfo(CurrentUserID);
-
                 return s_currentUserInfo;
             }
         }
@@ -1495,6 +1640,23 @@ namespace GSF.Identity
 
                 return new UserInfo(RemoteUserID);
             }
+        }
+
+        /// <summary>
+        /// Returns a sorted list of the BUILTIN local groups.
+        /// </summary>
+        /// <returns>Sorted list of the BUILTIN local groups.</returns>
+        /// <remarks>
+        /// <para>
+        /// Names in this list do not have a "BUILTIN\" prefix.
+        /// </para>
+        /// <para>
+        /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
+        /// </para>
+        /// </remarks>
+        public static string[] GetBuiltInLocalGroups()
+        {
+            return s_builtInLocalGroups;
         }
 
         // Static Methods
@@ -2006,6 +2168,8 @@ namespace GSF.Identity
             if (groupName == string.Empty)
                 throw new ArgumentException("No group name was specified.", "groupName");
 
+            groupName = ValidateGroupName(groupName);
+
             // Create a directory entry for the local machine
             using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
             {
@@ -2043,6 +2207,8 @@ namespace GSF.Identity
 
             if (groupName == string.Empty)
                 throw new ArgumentException("Cannot create local group: no group name was specified.", "groupName");
+
+            groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
             using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
@@ -2099,6 +2265,8 @@ namespace GSF.Identity
 
             if (groupName == string.Empty)
                 throw new ArgumentException("Cannot remove local group: no group name was specified.", "groupName");
+
+            groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
             using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
@@ -2161,6 +2329,8 @@ namespace GSF.Identity
 
             if (userName == string.Empty)
                 throw new ArgumentException("Cannot determine if user is in local group: no user name was specified.", "userName");
+
+            groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
             using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
@@ -2254,6 +2424,8 @@ namespace GSF.Identity
 
             if (userName == string.Empty)
                 throw new ArgumentException("Cannot add user to local group: no user name was specified.", "userName");
+
+            groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
             using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
@@ -2351,6 +2523,8 @@ namespace GSF.Identity
             if (userName == string.Empty)
                 throw new ArgumentException("Cannot remove user from local group: no user name was specified.", "userName");
 
+            groupName = ValidateGroupName(groupName);
+
             // Create a directory entry for the local machine
             using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
             {
@@ -2442,7 +2616,6 @@ namespace GSF.Identity
 
             try
             {
-
                 accountParts = accountName.Split('\\');
 
                 if (accountParts.Length == 2)
@@ -2522,6 +2695,15 @@ namespace GSF.Identity
 
             return sid;
 #endif
+        }
+
+        // DirectoryEntry will only resolve "BUILTIN\" groups with a dot ".\"
+        private static string ValidateGroupName(string groupName)
+        {
+            if (groupName.StartsWith(@"BUILTIN\", StringComparison.OrdinalIgnoreCase))
+                return Regex.Replace(groupName, @"^BUILTIN\\", @".\", RegexOptions.IgnoreCase);
+
+            return groupName;
         }
 
         #endregion
