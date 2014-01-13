@@ -72,7 +72,7 @@ namespace GSF.TimeSeries.UI
             m_cachedStatus = string.Empty;
 
             // Initialize remoting client socket.
-            if (!settings.TryGetValue("enabledSslProtocols", out setting) || setting.Equals("None", StringComparison.OrdinalIgnoreCase))
+            if (!settings.TryGetValue("enabledSslProtocols", out setting) || !setting.Equals("None", StringComparison.OrdinalIgnoreCase))
                 m_remotingClient = InitializeTlsClient(connectionString);
             else
                 m_remotingClient = InitializeTcpClient(connectionString);
