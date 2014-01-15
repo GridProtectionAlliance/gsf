@@ -625,12 +625,29 @@ namespace GSF.Identity
         {
             get
             {
+                const string SecurityExceptionFormat = "{0} user account control information cannot be obtained. {1} may not have needed rights to {2}.";
+                const string UnknownErrorFormat = "Unknown error. Invalid value returned when querying user account control for {0}. Value: '{1}'";
+                string userPropertyValue;
+
                 if (m_enabled && m_userAccountControl == -1)
                 {
                     if (m_isWinNT)
-                        m_userAccountControl = int.Parse(GetUserPropertyValueAsString("userFlags"));
+                    {
+                        userPropertyValue = GetUserPropertyValueAsString("userFlags");
+
+                        if (string.IsNullOrEmpty(userPropertyValue))
+                            throw new SecurityException(string.Format(SecurityExceptionFormat, "Local", CurrentUserID, "local machine accounts"));
+                    }
                     else
-                        m_userAccountControl = int.Parse(GetUserPropertyValueAsString("userAccountControl"));
+                    {
+                        userPropertyValue = GetUserPropertyValueAsString("userAccountControl");
+
+                        if (string.IsNullOrEmpty(userPropertyValue))
+                            throw new SecurityException(string.Format(SecurityExceptionFormat, "Active directory", CurrentUserID, m_domain));
+                    }
+
+                    if (!int.TryParse(userPropertyValue, out m_userAccountControl))
+                        throw new InvalidOperationException(string.Format(UnknownErrorFormat, LoginID, userPropertyValue));
                 }
 
                 return m_userAccountControl;
@@ -807,8 +824,8 @@ namespace GSF.Identity
                                     groups.Add(Environment.MachineName + "\\" + groupName);
                                 else
                                     groups.Add("BUILTIN\\" + groupName);
-                            }
-                        }
+                    }
+                }
                     }
                 }
 #endif
@@ -1585,18 +1602,18 @@ namespace GSF.Identity
             {
                 try
                 {
-                    WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                WindowsIdentity identity = WindowsIdentity.GetCurrent();
 
-                    if ((object)identity != null)
-                        return identity.Name;
+                if ((object)identity != null)
+                    return identity.Name;
 
-                    return null;
+                return null;
                 }
                 catch (SecurityException)
                 {
                     return null;
-                }
             }
+        }
         }
 
         /// <summary>
