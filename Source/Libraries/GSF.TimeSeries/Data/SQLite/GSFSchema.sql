@@ -607,7 +607,8 @@ CREATE TABLE SecurityGroup (
     CreatedBy VARCHAR(200) NOT NULL DEFAULT '',
     UpdatedOn DATETIME NOT NULL DEFAULT '',
     UpdatedBy VARCHAR(200) NOT NULL DEFAULT '',
-    CONSTRAINT PK_SecurityGorup PRIMARY KEY (ID ASC)
+    CONSTRAINT PK_SecurityGorup PRIMARY KEY (ID ASC),
+    CONSTRAINT IX_SecurityGorup UNIQUE (Name)
 );
 
 CREATE TABLE ApplicationRole (

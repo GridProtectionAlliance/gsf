@@ -894,6 +894,8 @@ CREATE TABLE SecurityGroup (
 
 CREATE UNIQUE INDEX IX_SecurityGroup_ID ON SecurityGroup (ID ASC) TABLESPACE GSFSchema_INDEX;
 
+CREATE UNIQUE INDEX IX_SecurityGroup_Name ON SecurityGroup (Name ASC) TABLESPACE GSFSchema_INDEX;
+
 ALTER TABLE SecurityGroup ADD CONSTRAINT PK_SecurityGroup PRIMARY KEY (ID);
 
 CREATE TABLE ApplicationRole (

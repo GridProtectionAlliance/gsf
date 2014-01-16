@@ -1264,6 +1264,12 @@ CREATE TABLE [dbo].[SecurityGroup](
 
 GO
 
+CREATE UNIQUE NONCLUSTERED INDEX [IX_SecurityGroup] ON [dbo].[SecurityGroup]
+(
+    [Name] ASC
+)WITH (IGNORE_DUP_KEY = OFF) ON [PRIMARY]
+GO
+
 SET ANSI_PADDING OFF
 GO
 
