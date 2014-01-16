@@ -2842,7 +2842,7 @@ namespace GSF.TimeSeries.Transport
                                     if (Convert.ToInt32(command.ExecuteScalar(deviceExistsSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID))) == 0)
                                     {
                                         // Insert new device record
-                                        command.ExecuteNonQuery(insertDeviceSql, m_metadataSynchronizationTimeout, database.Guid(m_nodeID), parentID, historianID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, row.Field<int>("FramesPerSecond"),
+                                        command.ExecuteNonQuery(insertDeviceSql, m_metadataSynchronizationTimeout, database.Guid(m_nodeID), parentID, historianID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"),
                                                                 m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"), accessID, longitude, latitude, contactList.JoinKeyValuePairs());
 
                                         // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
@@ -2862,7 +2862,7 @@ namespace GSF.TimeSeries.Transport
                                         originalSource = m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym");
 
                                         // Update existing device record
-                                        command.ExecuteNonQuery(updateDeviceSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), originalSource, m_gatewayProtocolID, row.Field<int>("FramesPerSecond"), historianID, accessID, longitude, latitude, contactList.JoinKeyValuePairs(), database.Guid(uniqueID));
+                                        command.ExecuteNonQuery(updateDeviceSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), originalSource, m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"), historianID, accessID, longitude, latitude, contactList.JoinKeyValuePairs(), database.Guid(uniqueID));
                                     }
                                 }
 
