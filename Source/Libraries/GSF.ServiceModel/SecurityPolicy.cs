@@ -204,7 +204,10 @@ namespace GSF.ServiceModel
         /// </summary>
         public string Id
         {
-            get { return m_id.ToString(); }
+            get
+            {
+                return m_id.ToString();
+            }
         }
 
         /// <summary>
@@ -212,7 +215,10 @@ namespace GSF.ServiceModel
         /// </summary>
         public ClaimSet Issuer
         {
-            get { return ClaimSet.System; }
+            get
+            {
+                return ClaimSet.System;
+            }
         }
 
         #endregion
@@ -231,13 +237,14 @@ namespace GSF.ServiceModel
             // When this is done the caller's windows identity is available to us here and can be used to derive from 
             // it the security principal that can be used by WCF service code downstream for implementing security.
             object property;
+
             if (evaluationContext.Properties.TryGetValue("Identities", out property))
             {
                 // Extract and assign the caller's windows identity to current thread if available.
                 IList<IIdentity> identities = property as List<IIdentity>;
 
                 if ((object)identities == null)
-                    throw new SecurityException(string.Format("Null Dereterence Exception: '{0}'", Thread.CurrentPrincipal.Identity));
+                    throw new SecurityException(string.Format("Null Identities in Evaluation Context for '{0}'", Thread.CurrentPrincipal.Identity));
 
                 foreach (IIdentity identity in identities)
                 {
@@ -251,6 +258,7 @@ namespace GSF.ServiceModel
             }
 
             string resource = GetResourceName();
+
             if (SecurityProviderUtility.IsResourceSecurable(resource))
             {
                 // Initialize the security principal from caller's windows identity if uninitialized.
@@ -270,13 +278,10 @@ namespace GSF.ServiceModel
 
                 return true;
             }
-            else
-            {
-                // Setup the principal to be attached to the thread on which WCF service will execute.
-                evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
 
-                return true;
-            }
+            // Setup the principal to be attached to the thread on which WCF service will execute.
+            evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
+            return true;
         }
 
         /// <summary>

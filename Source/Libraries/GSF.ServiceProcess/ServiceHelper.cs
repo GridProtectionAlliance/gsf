@@ -89,16 +89,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Collections;
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Diagnostics;
-using GSF.ErrorManagement;
-using GSF.IO;
-using GSF.Reflection;
-using GSF.Scheduling;
-using GSF.Security;
-using GSF.Security.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -112,6 +102,16 @@ using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using GSF.Collections;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Diagnostics;
+using GSF.ErrorManagement;
+using GSF.IO;
+using GSF.Reflection;
+using GSF.Scheduling;
+using GSF.Security;
+using GSF.Security.Cryptography;
 
 namespace GSF.ServiceProcess
 {
@@ -1572,7 +1572,7 @@ namespace GSF.ServiceProcess
         {
             lock (m_processes)
             {
-                return m_processes.Find(process => string.Compare(process.Name, processName, true) == 0);
+                return m_processes.Find(process => string.Compare(process.Name, processName, StringComparison.OrdinalIgnoreCase) == 0);
             }
         }
 
@@ -1598,7 +1598,7 @@ namespace GSF.ServiceProcess
         {
             lock (m_clientRequestHandlers)
             {
-                return m_clientRequestHandlers.Find(handler => string.Compare(handler.Command, handlerCommand, true) == 0);
+                return m_clientRequestHandlers.Find(handler => string.Compare(handler.Command, handlerCommand, StringComparison.OrdinalIgnoreCase) == 0);
             }
         }
 
@@ -1829,14 +1829,14 @@ namespace GSF.ServiceProcess
                 SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             // Initialize security provider for the remote client's user from specified credentials.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated &&
-                !string.IsNullOrEmpty(client.ClientUserCredentials))
+            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated && !string.IsNullOrEmpty(client.ClientUserCredentials))
             {
                 string[] credentialParts = client.ClientUserCredentials.Split(':');
+
                 if (credentialParts.Length == 2)
                 {
                     ISecurityProvider provider = SecurityProviderUtility.CreateProvider(credentialParts[0]);
-                    provider.Initialize();
+
                     if (provider.Authenticate(credentialParts[1]))
                         SecurityProviderCache.CurrentProvider = provider;
                 }
@@ -2892,7 +2892,7 @@ namespace GSF.ServiceProcess
                     {
                         typedComponent = component as IPersistSettings;
 
-                        if ((object)typedComponent == null || string.Compare(categoryName, typedComponent.SettingsCategory, true) != 0)
+                        if ((object)typedComponent == null || string.Compare(categoryName, typedComponent.SettingsCategory, StringComparison.OrdinalIgnoreCase) != 0)
                             continue;
 
                         typedComponent.LoadSettings();
@@ -2962,7 +2962,7 @@ namespace GSF.ServiceProcess
                     {
                         typedComponent = component as IPersistSettings;
 
-                        if ((object)typedComponent == null || string.Compare(categoryName, typedComponent.SettingsCategory, true) != 0)
+                        if ((object)typedComponent == null || string.Compare(categoryName, typedComponent.SettingsCategory, StringComparison.OrdinalIgnoreCase) != 0)
                             continue;
 
                         ConfigurationFile config = ConfigurationFile.Current;
@@ -3210,7 +3210,7 @@ namespace GSF.ServiceProcess
                     // Abort system process.
                     Process processToAbort = null;
 
-                    if (string.Compare(processName, "Me", true) == 0)
+                    if (string.Compare(processName, "Me", StringComparison.OrdinalIgnoreCase) == 0)
                         processName = Process.GetCurrentProcess().ProcessName;
 
                     foreach (Process process in Process.GetProcessesByName(processName))
@@ -3707,7 +3707,7 @@ namespace GSF.ServiceProcess
                         UpdateStatus(requestinfo.Sender.ClientID, UpdateType.Alarm, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
                     }
                 }
-                else if (string.Compare(requestinfo.Request.Command, "Telnet", true) == 0 && (object)m_remoteCommandProcess != null && disconnectSession)
+                else if (string.Compare(requestinfo.Request.Command, "Telnet", StringComparison.OrdinalIgnoreCase) == 0 && (object)m_remoteCommandProcess != null && disconnectSession)
                 {
                     // User wants to terminate an established remote command session.                   
                     m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
