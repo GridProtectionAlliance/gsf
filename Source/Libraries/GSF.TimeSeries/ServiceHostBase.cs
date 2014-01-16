@@ -52,6 +52,7 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
+using GSF.Security;
 using GSF.ServiceProcess;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
@@ -967,6 +968,17 @@ namespace GSF.TimeSeries
 
                             DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
                         }
+
+                        DisplayStatusMessage("Preparing current security context...", UpdateType.Information);
+
+                        operationStartTime = DateTime.UtcNow.Ticks;
+
+                        // Extract and begin cache of current security context - this does not require an existing security provider
+                        AdoSecurityProvider.PrepareSecurityContext(connection);
+
+                        operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+
+                        DisplayStatusMessage("Security context prepared in {1}.", UpdateType.Information, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
                     }

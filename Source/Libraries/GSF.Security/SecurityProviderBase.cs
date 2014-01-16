@@ -284,7 +284,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets or sets <see cref="SecurePassword"/> as cleartext password.
+        /// Gets or sets <see cref="SecurePassword"/> as clear text password.
         /// </summary>
         public unsafe string Password
         {
@@ -314,7 +314,7 @@ namespace GSF.Security
             {
                 SecureString securePassword = new SecureString();
 
-                if (value == null)
+                if ((object)value == null)
                     value = string.Empty;
 
                 foreach (char c in value)
@@ -621,7 +621,7 @@ namespace GSF.Security
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
 
-                    if (Disposed != null)
+                    if ((object)Disposed != null)
                         Disposed(this, EventArgs.Empty);
                 }
             }

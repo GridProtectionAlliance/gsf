@@ -428,7 +428,7 @@ namespace GSF.Security.Cryptography
         static Cipher()
         {
             const string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
-            const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FIPSAlgorithmPolicy";
+            const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
 
             KeyIVCache localKeyIVCache;
             string localCacheFileName = DefaultCacheFileName;
@@ -447,7 +447,7 @@ namespace GSF.Security.Cryptography
             retryDelayInterval = settings["CacheRetryDelayInterval"].ValueAs(retryDelayInterval);
             maximumRetryAttempts = settings["CacheMaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
 
-            // Determine if the user needs to use FIPS-compliant algorithms.
+            // Determine if the user needs to use FIPS-compliant algorithms
             s_managedEncryption = (Registry.GetValue(fipsKeyNew, "Enabled", 0) ?? Registry.GetValue(fipsKeyOld, "FIPSAlgorithmPolicy", 0)).ToString() == "0";
 
             // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
@@ -473,8 +473,7 @@ namespace GSF.Security.Cryptography
             try
             {
                 // Validate that user has write access to the local cryptographic cache folder
-#if MONO
-                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid().ToString() + ".tmp";
+                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid() + ".tmp";
 
                 using (File.Create(tempFile))
                 {
@@ -482,9 +481,6 @@ namespace GSF.Security.Cryptography
 
                 if (File.Exists(tempFile))
                     File.Delete(tempFile);
-#else
-                Directory.GetAccessControl(FilePath.GetDirectoryName(localCacheFileName));
-#endif
 
                 // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
                 s_keyIVCache = localKeyIVCache;

@@ -124,6 +124,8 @@ namespace GSF.Data
             if ((object)obj == null)
                 throw new ArgumentNullException("obj");
 
+            // This method is required by IEqualityComparer<T> - although the following 
+            // should work, this is not likely the most efficient way to do this...
             foreach (DataTable table in obj.Tables)
             {
                 foreach (DataRow row in table.Rows)

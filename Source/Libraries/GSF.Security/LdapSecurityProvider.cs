@@ -285,7 +285,7 @@ namespace GSF.Security
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("EnableOfflineCaching", m_enableOfflineCaching, "True to enable caching of user information for authentication in offline state, otherwise False.");
+                settings.Add("EnableOfflineCaching", m_enableOfflineCaching, "True to enable caching of user group information for authentication in offline state, otherwise False.");
                 settings.Add("CacheRetryDelayInterval", m_cacheRetryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
                 settings.Add("CacheMaximumRetryAttempts", m_cacheMaximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
                 EnableOfflineCaching = settings["EnableOfflineCaching"].ValueAs(m_enableOfflineCaching);
@@ -312,15 +312,19 @@ namespace GSF.Security
             {
                 // Validate with current thread principal.
                 m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                UserData.IsAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(UserData.LoginID) &&
-                                                string.Compare(m_windowsPrincipal.Identity.Name, UserData.LoginID, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
+
+                UserData.IsAuthenticated =
+                    (object)m_windowsPrincipal != null &&
+                    !string.IsNullOrEmpty(UserData.LoginID) &&
+                    string.Compare(m_windowsPrincipal.Identity.Name, UserData.LoginID, StringComparison.OrdinalIgnoreCase) == 0 &&
+                    m_windowsPrincipal.Identity.IsAuthenticated;
             }
             else
             {
                 // Validate by performing network logon.
                 string[] userParts = UserData.LoginID.Split('\\');
                 m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
-                UserData.IsAuthenticated = m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
+                UserData.IsAuthenticated = (object)m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
             }
 
             return UserData.IsAuthenticated;
@@ -332,10 +336,10 @@ namespace GSF.Security
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         public override bool RefreshData()
         {
-            bool result;
-
             // For consistency with WindowIdentity principal, user groups are loaded into Roles collection
-            if (result = RefreshData(UserData.Roles, ProviderID))
+            bool result = RefreshData(UserData.Roles, ProviderID);
+
+            if (result)
             {
                 string[] parts;
 
@@ -360,7 +364,7 @@ namespace GSF.Security
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         protected virtual bool RefreshData(List<string> groupCollection, int providerID)
         {
-            if (groupCollection == null)
+            if ((object)groupCollection == null)
                 throw new ArgumentNullException("groupCollection");
 
             if (string.IsNullOrEmpty(UserData.Username))
@@ -393,6 +397,7 @@ namespace GSF.Security
 
                 // Create user info object using specified LDAP path if provided
                 string ldapPath = GetLdapPath();
+
                 if (string.IsNullOrEmpty(ldapPath))
                     user = new UserInfo(UserData.Username);
                 else
@@ -428,7 +433,7 @@ namespace GSF.Security
                                 groupCollection.Add(groupName);
                         }
 
-                        if (userDataCache != null)
+                        if ((object)userDataCache != null)
                         {
                             // Cache user data so that information can be loaded later if domain is unavailable
                             userDataCache[UserData.LoginID] = UserData;
@@ -440,8 +445,9 @@ namespace GSF.Security
                     else
                     {
                         // Attempt to load previously cached user information when domain is offline
-                        UserData cachedUserData = null;
-                        if (userDataCache != null && userDataCache.TryGetUserData(UserData.LoginID, out cachedUserData))
+                        UserData cachedUserData;
+
+                        if ((object)userDataCache != null && userDataCache.TryGetUserData(UserData.LoginID, out cachedUserData))
                         {
                             // Copy relevant cached user information
                             UserData.FirstName = cachedUserData.FirstName;
@@ -473,19 +479,19 @@ namespace GSF.Security
             }
             finally
             {
-                if (user != null)
+                if ((object)user != null)
                 {
                     user.PersistSettings = false;
                     user.Dispose();
                 }
 
-                if (userDataCache != null)
+                if ((object)userDataCache != null)
                     userDataCache.Dispose();
             }
         }
 
         /// <summary>
-        /// Changes user password in the backend datastore.
+        /// Changes user password in the backend data store.
         /// </summary>
         /// <param name="oldPassword">User's current password.</param>
         /// <param name="newPassword">User's new password.</param>
@@ -534,17 +540,17 @@ namespace GSF.Security
             catch (TargetInvocationException ex)
             {
                 // Propagate password change error
-                if (ex.InnerException == null)
+                if ((object)ex.InnerException == null)
                     throw new SecurityException(ex.Message, ex);
                 else
                     throw new SecurityException(ex.InnerException.Message, ex);
             }
             finally
             {
-                if (user != null)
+                if ((object)user != null)
                     user.Dispose();
 
-                if (context != null)
+                if ((object)context != null)
                     UserInfo.EndImpersonation(context);
 
                 RefreshData();
@@ -572,19 +578,14 @@ namespace GSF.Security
         /// <returns>The LDAP path.</returns>
         protected virtual string GetLdapPath()
         {
-            if (ConnectionString.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) ||
-                ConnectionString.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
-            {
+            if (ConnectionString.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) || ConnectionString.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
                 return ConnectionString;
-            }
-            else
+
+            foreach (KeyValuePair<string, string> pair in ConnectionString.ParseKeyValuePairs())
             {
-                foreach (KeyValuePair<string, string> pair in ConnectionString.ParseKeyValuePairs())
-                {
-                    if (pair.Value.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) ||
-                        pair.Value.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
-                        return pair.Value;
-                }
+                if (pair.Value.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) ||
+                    pair.Value.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
+                    return pair.Value;
             }
 
             return null;

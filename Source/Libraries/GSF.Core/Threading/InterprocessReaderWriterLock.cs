@@ -29,7 +29,7 @@ using System.Threading;
 namespace GSF.Threading
 {
     /// <summary>
-    /// Represents an interprocess reader/writer lock using <see cref="Semaphore"/> and <see cref="Mutex"/> native locking mechanisms.
+    /// Represents an inter-process reader/writer lock using <see cref="Semaphore"/> and <see cref="Mutex"/> native locking mechanisms.
     /// </summary>
     public class InterprocessReaderWriterLock : IDisposable
     {
@@ -43,9 +43,9 @@ namespace GSF.Threading
         public const int DefaultMaximumConcurrentLocks = 10;
 
         // Fields
-        private Mutex m_semaphoreLock;          // Mutex used to synchronize access to Semaphore
-        private Semaphore m_concurrencyLock;    // Semaphore used for reader/writer lock on consumer object
-        private readonly int m_maximumConcurrentLocks;
+        private Mutex m_semaphoreLock;                  // Mutex used to synchronize access to Semaphore
+        private Semaphore m_concurrencyLock;            // Semaphore used for reader/writer lock on consumer object
+        private readonly int m_maximumConcurrentLocks;  // Maximum number of concurrent locks before waiting
         private bool m_disposed;
 
         #endregion
@@ -56,7 +56,7 @@ namespace GSF.Threading
         /// Creates a new instance of the <see cref="InterprocessReaderWriterLock"/> associated with the specified
         /// <paramref name="name"/> that identifies a source object needing concurrency locking.
         /// </summary>
-        /// <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
+        /// <param name="name">Identifying name of source object needing concurrency locking (e.g., a path and file name).</param>
         public InterprocessReaderWriterLock(string name)
             : this(name, DefaultMaximumConcurrentLocks)
         {
@@ -66,7 +66,7 @@ namespace GSF.Threading
         /// Creates a new instance of the <see cref="InterprocessReaderWriterLock"/> associated with the specified
         /// <paramref name="name"/> that identifies a source object needing concurrency locking.
         /// </summary>
-        /// <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
+        /// <param name="name">Identifying name of source object needing concurrency locking (e.g., a path and file name).</param>
         /// <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
         /// <remarks>
         /// If more reader locks are requested than the <paramref name="maximumConcurrentLocks"/>, excess reader locks will simply
@@ -128,12 +128,16 @@ namespace GSF.Threading
                     if (disposing)
                     {
                         if ((object)m_concurrencyLock != null)
+                        {
                             m_concurrencyLock.Close();
-                        m_concurrencyLock = null;
+                            m_concurrencyLock = null;
+                        }
 
                         if ((object)m_semaphoreLock != null)
+                        {
                             m_semaphoreLock.Close();
-                        m_semaphoreLock = null;
+                            m_semaphoreLock = null;
+                        }
                     }
                 }
                 finally
@@ -147,7 +151,7 @@ namespace GSF.Threading
         /// Tries to enter the lock in read mode.
         /// </summary>
         /// <remarks>
-        /// Upon successful aquistion of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
+        /// Upon successful acquisition of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
         /// One <see cref="ExitReadLock"/> should be called for each <see cref="EnterReadLock"/> or <see cref="TryEnterReadLock"/>.
         /// </remarks>
         public void EnterReadLock()
@@ -159,7 +163,7 @@ namespace GSF.Threading
         /// Tries to enter the lock in write mode.
         /// </summary>
         /// <remarks>
-        /// Upon successful aquistion of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
+        /// Upon successful acquisition of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
         /// One <see cref="ExitWriteLock"/> should be called for each <see cref="EnterWriteLock"/> or <see cref="TryEnterWriteLock"/>.
         /// </remarks>
         public void EnterWriteLock()
@@ -171,7 +175,7 @@ namespace GSF.Threading
         /// Exits read mode and returns the prior read lock count.
         /// </summary>
         /// <remarks>
-        /// Upon successful aquistion of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
+        /// Upon successful acquisition of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
         /// One <see cref="ExitReadLock"/> should be called for each <see cref="EnterReadLock"/> or <see cref="TryEnterReadLock"/>.
         /// </remarks>
         public int ExitReadLock()
@@ -184,7 +188,7 @@ namespace GSF.Threading
         /// Exits write mode.
         /// </summary>
         /// <remarks>
-        /// Upon successful aquistion of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
+        /// Upon successful acquisition of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
         /// One <see cref="ExitWriteLock"/> should be called for each <see cref="EnterWriteLock"/> or <see cref="TryEnterWriteLock"/>.
         /// </remarks>
         public void ExitWriteLock()
@@ -199,12 +203,12 @@ namespace GSF.Threading
         /// <param name="millisecondsTimeout">The number of milliseconds to wait, or -1 (<see cref="Timeout.Infinite"/>) to wait indefinitely.</param>
         /// <returns><c>true</c> if the calling thread entered read mode, otherwise, <c>false</c>.</returns>
         /// <remarks>
-        /// Upon successful aquistion of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
+        /// Upon successful acquisition of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
         /// One <see cref="ExitReadLock"/> should be called for each <see cref="EnterReadLock"/> or <see cref="TryEnterReadLock"/>.
         /// </remarks>
         public bool TryEnterReadLock(int millisecondsTimeout)
         {
-            bool success = false;
+            bool success;
 
             try
             {
@@ -263,7 +267,9 @@ namespace GSF.Threading
                 // The only way to get a semaphore slot count is to execute a successful wait and release.
                 startTime = DateTime.UtcNow.Ticks;
 
-                if (success = m_concurrencyLock.WaitOne(millisecondsTimeout))
+                success = m_concurrencyLock.WaitOne(millisecondsTimeout);
+
+                if (success)
                 {
                     int count = m_concurrencyLock.Release();
                     int adjustedTimeout = millisecondsTimeout;
@@ -282,7 +288,9 @@ namespace GSF.Threading
                         if (adjustedTimeout < 0)
                             adjustedTimeout = 0;
 
-                        if (success = m_concurrencyLock.WaitOne(adjustedTimeout))
+                        success = m_concurrencyLock.WaitOne(adjustedTimeout);
+
+                        if (success)
                             count = m_concurrencyLock.Release();
                     }
                 }

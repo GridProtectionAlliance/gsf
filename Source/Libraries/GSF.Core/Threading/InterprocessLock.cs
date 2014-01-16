@@ -87,7 +87,7 @@ namespace GSF.Threading
             // Create a mutex name that is specific to an object (e.g., a path and file name).
             // Note that we use GetPasswordHash to create a short common name for the name parameter
             // that was passed into the function - this allows the parameter to be very long, e.g.,
-            // a file path, and still meet minimum semaphore name requirements.
+            // a file path, and still meet minimum mutex name requirements.
 
             // Prefix mutex name with "Global\" such that mutex will apply to all active
             // application sessions in case terminal services is running.
@@ -211,7 +211,7 @@ namespace GSF.Threading
                 catch (UnauthorizedAccessException)
                 {
                     // Named semaphore exists now but current user doesn't have full control, attempt to open with minimum needed rights
-                    namedSemaphore = Semaphore.OpenExisting(name, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
+                    namedSemaphore = Semaphore.OpenExisting(semaphoreName, SemaphoreRights.Synchronize | SemaphoreRights.Modify);
                 }
             }
 #endif
