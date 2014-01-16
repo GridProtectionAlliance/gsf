@@ -104,7 +104,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
 using System.DirectoryServices;
 using System.IO;
@@ -317,16 +316,7 @@ namespace GSF.Identity
 
         #region [ Properties ]
 
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the <see cref="UserInfo"/> object is currently enabled.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Enabled"/> property is not to be set by user-code directly.
-        /// </remarks>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool Enabled
+        bool ISupportLifecycle.Enabled
         {
             get
             {
@@ -456,7 +446,12 @@ namespace GSF.Identity
                         // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
                         // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
                         WindowsPrincipal windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                        exists = (object)windowsPrincipal != null && !string.IsNullOrEmpty(LoginID) && string.Compare(windowsPrincipal.Identity.Name, LoginID, StringComparison.OrdinalIgnoreCase) == 0 && windowsPrincipal.Identity.IsAuthenticated;
+
+                        exists =
+                            (object)windowsPrincipal != null &&
+                            !string.IsNullOrEmpty(LoginID) &&
+                            string.Compare(windowsPrincipal.Identity.Name, LoginID, StringComparison.OrdinalIgnoreCase) == 0 &&
+                            windowsPrincipal.Identity.IsAuthenticated;
                     }
                 }
 
@@ -625,29 +620,12 @@ namespace GSF.Identity
         {
             get
             {
-                const string SecurityExceptionFormat = "{0} user account control information cannot be obtained. {1} may not have needed rights to {2}.";
-                const string UnknownErrorFormat = "Unknown error. Invalid value returned when querying user account control for {0}. Value: '{1}'";
-                string userPropertyValue;
-
                 if (m_enabled && m_userAccountControl == -1)
                 {
                     if (m_isWinNT)
-                    {
-                        userPropertyValue = GetUserPropertyValueAsString("userFlags");
-
-                        if (string.IsNullOrEmpty(userPropertyValue))
-                            throw new SecurityException(string.Format(SecurityExceptionFormat, "Local", CurrentUserID, "local machine accounts"));
-                    }
+                        m_userAccountControl = int.Parse(GetUserPropertyValueAsString("userFlags"));
                     else
-                    {
-                        userPropertyValue = GetUserPropertyValueAsString("userAccountControl");
-
-                        if (string.IsNullOrEmpty(userPropertyValue))
-                            throw new SecurityException(string.Format(SecurityExceptionFormat, "Active directory", CurrentUserID, m_domain));
-                    }
-
-                    if (!int.TryParse(userPropertyValue, out m_userAccountControl))
-                        throw new InvalidOperationException(string.Format(UnknownErrorFormat, LoginID, userPropertyValue));
+                        m_userAccountControl = int.Parse(GetUserPropertyValueAsString("userAccountControl"));
                 }
 
                 return m_userAccountControl;
@@ -752,7 +730,7 @@ namespace GSF.Identity
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Groups names are prefixed with their associated domain or computer name.
+        /// Groups names are prefixed with their associated domain, computer name or BUILTIN.
         /// </para>
         /// <para>
         /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
@@ -767,11 +745,11 @@ namespace GSF.Identity
 #if !MONO
                 if (m_enabled)
                 {
-                    // Get fixed list of BUILTIN local groups
-                    string[] builtAccounts = GetBuiltInLocalGroups();
-
                     if (m_isWinNT)
                     {
+                        // Get fixed list of BUILTIN local groups
+                        string[] builtInGroups = GetBuiltInLocalGroups();
+
                         // Get local groups that local user is a member of
                         object localGroups = m_userEntry.Invoke("Groups");
 
@@ -781,12 +759,17 @@ namespace GSF.Identity
                             {
                                 groupName = groupEntry.Name;
 
-                                if (Array.BinarySearch(builtAccounts, groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                                if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
                                     groups.Add(Environment.MachineName + "\\" + groupName);
                                 else
                                     groups.Add("BUILTIN\\" + groupName);
                             }
                         }
+
+                        // Union this with a manual scan of local groups since "Groups" call will not derive
+                        // "NT AUTHORITY\Authenticated Users" which will miss "BUILTIN\Users" for authenticated
+                        // users. This will also catch other groups that may have been missed by "Groups" call.
+                        groups.UnionWith(LocalGroups);
                     }
                     else
                     {
@@ -800,32 +783,20 @@ namespace GSF.Identity
                                 groupName = new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString();
                                 groups.Add(groupName);
                             }
-                            catch
+                            catch (IdentityNotMappedException)
+                            {
+                                // This might happen when AD server is not accessible
+                            }
+                            catch (SystemException)
                             {
                                 // Ignoring group SID's that fail to translate to an active AD group, for whatever reason
                             }
                         }
 
-                        // Get local groups that active directory user is a member of - TokenGroups doesn't get all of these :-p
-                        DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
-                        string userPath = string.Format("WinNT://{0}/{1}", m_domain, m_username);
-
-                        // Have to scan each local group for the AD user...
-                        foreach (DirectoryEntry groupEntry in root.Children)
-                        {
-                            if (groupEntry.SchemaClassName != "Group")
-                                continue;
-
-                            if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }))
-                            {
-                                groupName = groupEntry.Name;
-
-                                if (Array.BinarySearch(builtAccounts, groupName, StringComparer.OrdinalIgnoreCase) < 0)
-                                    groups.Add(Environment.MachineName + "\\" + groupName);
-                                else
-                                    groups.Add("BUILTIN\\" + groupName);
-                    }
-                }
+                        // Union this with local groups that active directory user is a member of. The
+                        // "TokenGroups" call doesn't get all of these :-p, generally this call only
+                        // returns some of the common "BUILTIN\*" groups.
+                        groups.UnionWith(LocalGroups);
                     }
                 }
 #endif
@@ -834,7 +805,7 @@ namespace GSF.Identity
         }
 
         /// <summary>
-        /// Gets the local groups associated with the user.
+        /// Gets the local groups the user is a member of.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -850,13 +821,21 @@ namespace GSF.Identity
             {
                 List<string> groups = new List<string>();
 #if !MONO
+                const string authenticatedUsersGroupPath = "WinNT://NT AUTHORITY/Authenticated Users";
+
                 // Get local groups that user is a member of
                 DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
                 string userPath = string.Format("WinNT://{0}/{1}", m_domain, m_username);
                 string groupName;
+                bool userIsAuthenticated = false;
 
-                List<string> builtAccounts = new List<string>(GetBuiltInLocalGroups());
-                builtAccounts.Sort();
+                string[] builtInGroups = GetBuiltInLocalGroups();
+
+                // See if identity for current thread matches user information login ID - when this is true we can check 
+                // if the current user is authenticated. When a user is authenticated we will also need to validate if
+                // the local groups that contain the local "NT AUTHORITY\Authenticated Users" group.
+                if (string.Compare(Thread.CurrentPrincipal.Identity.Name, LoginID, StringComparison.OrdinalIgnoreCase) == 0)
+                    userIsAuthenticated = Thread.CurrentPrincipal.Identity.IsAuthenticated;
 
                 // Have to scan each local group for the AD user...
                 foreach (DirectoryEntry groupEntry in root.Children)
@@ -864,11 +843,12 @@ namespace GSF.Identity
                     if (groupEntry.SchemaClassName != "Group")
                         continue;
 
-                    if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }))
+                    if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }) ||
+                        (userIsAuthenticated && (bool)groupEntry.Invoke("IsMember", new object[] { authenticatedUsersGroupPath })))
                     {
                         groupName = groupEntry.Name;
 
-                        if (builtAccounts.BinarySearch(groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                        if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
                             groups.Add(Environment.MachineName + "\\" + groupName);
                         else
                             groups.Add("BUILTIN\\" + groupName);
@@ -1602,18 +1582,18 @@ namespace GSF.Identity
             {
                 try
                 {
-                WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                    WindowsIdentity identity = WindowsIdentity.GetCurrent();
 
-                if ((object)identity != null)
-                    return identity.Name;
+                    if ((object)identity != null)
+                        return identity.Name;
 
-                return null;
+                    return null;
                 }
                 catch (SecurityException)
                 {
                     return null;
+                }
             }
-        }
         }
 
         /// <summary>
