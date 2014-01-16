@@ -33,22 +33,28 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSystemStatistic_CPUUsage(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.CPUUsage.LastValue;
+            {
+                if ((object)perfMon.CPUUsage != null)
+                    statistic = perfMon.CPUUsage.LastValue;
+            }
 
             return statistic;
         }
 
         private static double GetSystemStatistic_AverageCPUUsage(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.CPUUsage.AverageValue;
+            {
+                if ((object)perfMon.CPUUsage != null)
+                    statistic = perfMon.CPUUsage.AverageValue;
+            }
 
             return statistic;
         }
@@ -59,22 +65,28 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSystemStatistic_MemoryUsage(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.MemoryUsage.LastValue;
+            {
+                if ((object)perfMon.MemoryUsage != null)
+                    statistic = perfMon.MemoryUsage.LastValue;
+            }
 
             return statistic;
         }
 
         private static double GetSystemStatistic_AverageMemoryUsage(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.MemoryUsage.AverageValue;
+            {
+                if ((object)perfMon.MemoryUsage != null)
+                    statistic = perfMon.MemoryUsage.AverageValue;
+            }
 
             return statistic;
         }
@@ -85,22 +97,28 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSystemStatistic_ThreadCount(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.ThreadCount.LastValue;
+            {
+                if ((object)perfMon.ThreadCount != null)
+                    statistic = perfMon.ThreadCount.LastValue;
+            }
 
             return statistic;
         }
 
         private static double GetSystemStatistic_AverageThreadCount(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.ThreadCount.AverageValue;
+            {
+                if ((object)perfMon.ThreadCount != null)
+                    statistic = perfMon.ThreadCount.AverageValue;
+            }
 
             return statistic;
         }
@@ -111,22 +129,28 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSystemStatistic_ThreadingContentionRate(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.ThreadingContentionRate.LastValue;
+            {
+                if ((object)perfMon.ThreadingContentionRate != null)
+                    statistic = perfMon.ThreadingContentionRate.LastValue;
+            }
 
             return statistic;
         }
 
         private static double GetSystemStatistic_AverageThreadingContentionRate(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.ThreadingContentionRate.AverageValue;
+            {
+                if ((object)perfMon.ThreadingContentionRate != null)
+                    statistic = perfMon.ThreadingContentionRate.AverageValue;
+            }
 
             return statistic;
         }
@@ -137,22 +161,28 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSystemStatistic_IOUsage(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.IOUsage.LastValue;
+            {
+                if ((object)perfMon.IOUsage != null)
+                    statistic = perfMon.IOUsage.LastValue;
+            }
 
             return statistic;
         }
 
         private static double GetSystemStatistic_AverageIOUsage(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.IOUsage.AverageValue;
+            {
+                if ((object)perfMon.IOUsage != null)
+                    statistic = perfMon.IOUsage.AverageValue;
+            }
 
             return statistic;
         }
@@ -163,22 +193,28 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSystemStatistic_DatagramSendRate(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.DatagramSendRate.LastValue;
+            {
+                if ((object)perfMon.DatagramSendRate != null)
+                    statistic = perfMon.DatagramSendRate.LastValue;
+            }
 
             return statistic;
         }
 
         private static double GetSystemStatistic_AverageDatagramSendRate(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.DatagramSendRate.AverageValue;
+            {
+                if (perfMon.DatagramSendRate != null)
+                    statistic = perfMon.DatagramSendRate.AverageValue;
+            }
 
             return statistic;
         }
@@ -189,22 +225,28 @@ namespace GSF.TimeSeries.Statistics
 
         private static double GetSystemStatistic_DatagramReceiveRate(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.DatagramReceiveRate.LastValue;
+            {
+                if ((object)perfMon.DatagramReceiveRate != null)
+                    statistic = perfMon.DatagramReceiveRate.LastValue;
+            }
 
             return statistic;
         }
 
         private static double GetSystemStatistic_AverageDatagramReceiveRate(object source, string arguments)
         {
-            double statistic = 0.0;
+            double statistic = double.NaN;
             PerformanceMonitor perfMon = source as PerformanceMonitor;
 
             if ((object)perfMon != null)
-                statistic = perfMon.DatagramReceiveRate.AverageValue;
+            {
+                if ((object)perfMon.DatagramReceiveRate != null)
+                    statistic = perfMon.DatagramReceiveRate.AverageValue;
+            }
 
             return statistic;
         }
