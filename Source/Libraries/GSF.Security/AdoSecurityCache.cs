@@ -39,8 +39,8 @@ namespace GSF.Security
     /// This is a system cache that contains the last known security information loaded from the database related to users,
     /// roles and groups. This cache allows the <see cref="AdoSecurityProvider"/> to start-up without database access
     /// using latest cached security context. Even though this cache contains role information for all users, it does
-    /// not overlap information in the <see cref="UserRoleCache"/> since the user role cache contains only the highest
-    /// order role assignment for a user at last login and is used for auditing.
+    /// not overlap information in the <see cref="UserRoleCache"/> since the user role cache contains role assignments
+    /// for a user at last login and is used for auditing.
     /// </remarks>
     public class AdoSecurityCache : InterprocessCache
     {

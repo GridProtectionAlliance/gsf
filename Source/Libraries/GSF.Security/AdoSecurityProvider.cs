@@ -855,6 +855,21 @@ namespace GSF.Security
             ApplicationRoleSecurityGroupTable   // Application role assignments for security groups
         };
 
+        static private readonly Guid s_nodeID;
+
+        // Static Constructor
+        static AdoSecurityProvider()
+        {
+            // Access configuration file system settings
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+
+            // Make sure NodeID setting exists
+            systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
+
+            // Get NodeID as currently defined in configuration file
+            s_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
+        }
+
         // Static Methods
 
         /// <summary>
@@ -878,18 +893,9 @@ namespace GSF.Security
         {
             DataSet securityContext = new DataSet("AdoSecurityContext");
 
-            // Access configuration file system settings
-            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
-
-            // Make sure NodeID setting exists
-            systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
-
-            // Get NodeID as currently defined in configuration file
-            Guid nodeID = systemSettings["NodeID"].ValueAs<Guid>();
-
             foreach (string securityTable in s_securityTables)
             {
-                AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? nodeID : default(Guid));
+                AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? s_nodeID : default(Guid));
             }
 
             return securityContext;

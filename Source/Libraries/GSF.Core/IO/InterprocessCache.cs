@@ -534,14 +534,14 @@ namespace GSF.IO
             }
             catch (UnauthorizedAccessException)
             {
-                // Release any threads waiting for file save in case of failure to write
+                // Release any threads waiting for file save in case of I/O or locking failures during write attempt
                 m_saveIsReady.Set();
                 throw;
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method,
-                // in this case, release any threads waiting for file save
+                // Other exceptions can happen, e.g., NullReferenceException if thread resumes and the class is disposed middle way through this method
+                // or other serialization issues in call to SaveFileData, in these cases, release any threads waiting for file save
                 m_saveIsReady.Set();
             }
         }
@@ -619,14 +619,14 @@ namespace GSF.IO
             }
             catch (UnauthorizedAccessException)
             {
-                // Release any threads waiting for file data in case of failure to read
+                // Release any threads waiting for file load in case of I/O or locking failures during read attempt
                 m_loadIsReady.Set();
                 throw;
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method,
-                // in this case release any threads waiting for file data
+                // Other exceptions can happen, e.g., NullReferenceException if thread resumes and the class is disposed middle way through this method
+                // or other deserialization issues in call to LoadFileData, in these cases, release any threads waiting for file load
                 m_loadIsReady.Set();
             }
         }

@@ -25,7 +25,7 @@
 //  02/14/2011 - J. Ritchie Carroll
 //       Modified provider to be able to use local accounts when user is not connected to a domain.
 //  06/09/2011 - Pinal C. Patel
-//       Fixed a bug in the caching logic of RefreshData() method.
+//       Fixed a issue in the caching logic of RefreshData() method.
 //  08/16/2011 - Pinal C. Patel
 //       Made offline caching of user data for authentication purpose optional and turned on by default.
 //  12/20/2012 - Starlynn Danyelle Gilliam
@@ -262,6 +262,7 @@ namespace GSF.Security
         public override void SaveSettings()
         {
             base.SaveSettings();
+
             if (PersistSettings)
             {
                 // Save settings under the specified category.
@@ -280,6 +281,7 @@ namespace GSF.Security
         public override void LoadSettings()
         {
             base.LoadSettings();
+
             if (PersistSettings)
             {
                 // Load settings from the specified category.
@@ -376,6 +378,7 @@ namespace GSF.Security
             // Populate user data
             UserInfo user = null;
             UserDataCache userDataCache = null;
+
             try
             {
                 // Get current local user data cache

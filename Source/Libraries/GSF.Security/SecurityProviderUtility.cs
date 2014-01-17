@@ -56,7 +56,6 @@ namespace GSF.Security
         #region [ Members ]
 
         //Constants
-
         private const string SettingsCategory = "SecurityProvider";
         private const string DefaultProviderType = "GSF.Security.LdapSecurityProvider, GSF.Security";
         private const string DefaultIncludedResources = "*=*";

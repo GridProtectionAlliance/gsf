@@ -36,11 +36,11 @@ namespace GSF.Security
     /// Represents a secured inter-process cache for a <see cref="Dictionary{TKey,TValue}"/> of serialized user role information.
     /// </summary>
     /// <remarks>
-    /// This is a system cache that contains the highest order role assignment for each user that has logged in successfully. This
-    /// cache is used to check for changes in role assignments for a user - that is, a role change in the database that may now be
-    /// different than what is in the current cache. Any kind of role changes are logged as security events in the Windows event
-    /// log for auditing. Note that this is kept as a separate cache from the <see cref="AdoSecurityCache"/> since the user role
-    /// cache is used for auditing and contains information relative to a user's role at last login.
+    /// This is a system cache that contains the role assignments for each user that has logged in successfully. This cache is used
+    /// to check for changes in role assignments for a user - that is, a role change in the database that may now be different than
+    /// what is in the current cache. Any kind of role changes are logged as security events in the Windows event log for auditing.
+    /// Note that this is kept as a separate cache from the <see cref="AdoSecurityCache"/> since the user role cache is used for
+    /// auditing and contains information relative to a user's roles at last login.
     /// </remarks>
     public class UserRoleCache : InterprocessCache
     {
