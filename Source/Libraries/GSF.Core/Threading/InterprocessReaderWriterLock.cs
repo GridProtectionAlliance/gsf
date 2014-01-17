@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/21/2011 - Ritchie
+//  03/21/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
@@ -203,8 +203,14 @@ namespace GSF.Threading
         /// <param name="millisecondsTimeout">The number of milliseconds to wait, or -1 (<see cref="Timeout.Infinite"/>) to wait indefinitely.</param>
         /// <returns><c>true</c> if the calling thread entered read mode, otherwise, <c>false</c>.</returns>
         /// <remarks>
+        /// <para>
         /// Upon successful acquisition of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
         /// One <see cref="ExitReadLock"/> should be called for each <see cref="EnterReadLock"/> or <see cref="TryEnterReadLock"/>.
+        /// </para>
+        /// <para>
+        /// Note that this function may wait as long as 2 * <paramref name="millisecondsTimeout"/> since the function first waits for synchronous access
+        /// to the semaphore, then waits again on an available semaphore slot.
+        /// </para>
         /// </remarks>
         public bool TryEnterReadLock(int millisecondsTimeout)
         {
@@ -213,7 +219,8 @@ namespace GSF.Threading
             try
             {
                 // Wait for system level mutex lock to synchronize access to semaphore
-                m_semaphoreLock.WaitOne();
+                if (!m_semaphoreLock.WaitOne(millisecondsTimeout))
+                    return false;
             }
             catch (AbandonedMutexException)
             {
@@ -241,8 +248,14 @@ namespace GSF.Threading
         /// <param name="millisecondsTimeout">The number of milliseconds to wait, or -1 (<see cref="Timeout.Infinite"/>) to wait indefinitely.</param>
         /// <returns><c>true</c> if the calling thread entered write mode, otherwise, <c>false</c>.</returns>
         /// <remarks>
-        /// Upon successful aquistion of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
+        /// <para>
+        /// Upon successful acquisition of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
         /// One <see cref="ExitWriteLock"/> should be called for each <see cref="EnterWriteLock"/> or <see cref="TryEnterWriteLock"/>.
+        /// </para>
+        /// <para>
+        /// Note that this function may wait as long as 2 * <paramref name="millisecondsTimeout"/> since the function first waits for synchronous access
+        /// to the semaphore, then waits again on an available semaphore slot.
+        /// </para>
         /// </remarks>
         public bool TryEnterWriteLock(int millisecondsTimeout)
         {
@@ -252,7 +265,8 @@ namespace GSF.Threading
             try
             {
                 // Wait for system level mutex lock to synchronize access to semaphore
-                m_semaphoreLock.WaitOne();
+                if (!m_semaphoreLock.WaitOne(millisecondsTimeout))
+                    return false;
             }
             catch (AbandonedMutexException)
             {
@@ -262,7 +276,7 @@ namespace GSF.Threading
 
             try
             {
-                // At this point no other threads can aquire read or write access since we own the mutex.
+                // At this point no other threads can acquire read or write access since we own the mutex.
                 // Other threads may be busy reading, so we wait until all semaphore slots become available.
                 // The only way to get a semaphore slot count is to execute a successful wait and release.
                 startTime = DateTime.UtcNow.Ticks;
@@ -281,7 +295,7 @@ namespace GSF.Threading
                         // Sleep to allow any remaining reads to complete
                         Thread.Sleep(1);
 
-                        // Continue to adjust remaining time to accomodate user specified millisecond timeout
+                        // Continue to adjust remaining time to accommodate user specified millisecond timeout
                         if (millisecondsTimeout > 0)
                             adjustedTimeout = millisecondsTimeout - (int)Ticks.ToMilliseconds(DateTime.UtcNow.Ticks - startTime);
 
@@ -302,7 +316,7 @@ namespace GSF.Threading
                     m_semaphoreLock.ReleaseMutex();
             }
 
-            // Successfully entering write lock leaves state of semphore locking mutex "owned", it is critical that
+            // Successfully entering write lock leaves state of semaphore locking mutex "owned", it is critical that
             // consumer call ExitWriteLock upon completion of write action to release mutex regardless of whether
             // their code succeeds or fails, that is, consumer should use the finally clause of a "try/finally"
             // expression to ExitWriteLock.

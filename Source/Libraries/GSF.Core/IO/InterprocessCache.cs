@@ -491,6 +491,8 @@ namespace GSF.IO
                                     m_fileWatcher.EnableRaisingEvents = false;
 
                                 SaveFileData(fileStream, m_fileData);
+
+                                // Release any threads waiting for file save
                                 m_saveIsReady.Set();
                             }
                             finally
@@ -526,12 +528,21 @@ namespace GSF.IO
             }
             catch (ThreadAbortException)
             {
-                // This is an normal exception
+                // Release any threads waiting for file save in case of thread abort
+                m_saveIsReady.Set();
+                throw;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Release any threads waiting for file save in case of failure to write
+                m_saveIsReady.Set();
                 throw;
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
+                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method,
+                // in this case, release any threads waiting for file save
+                m_saveIsReady.Set();
             }
         }
 
@@ -602,12 +613,21 @@ namespace GSF.IO
             }
             catch (ThreadAbortException)
             {
-                // This is an normal exception
+                // Release any threads waiting for file data in case of thread abort
+                m_loadIsReady.Set();
+                throw;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Release any threads waiting for file data in case of failure to read
+                m_loadIsReady.Set();
                 throw;
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
+                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method,
+                // in this case release any threads waiting for file data
+                m_loadIsReady.Set();
             }
         }
 
@@ -621,11 +641,8 @@ namespace GSF.IO
             if (m_disposed)
                 return;
 
-            // A retry is only being initiating for basic file I/O or locking errors, all other errors will initiate an unhandled
-            // exception causing system exit. It would be an error, IMO, for the system to create values then not be able to load
-            // them at next run or not be able to use values from last run because file could not be loaded.
-
-            // We monitor basic I/O and lock failures occurring in quick succession, we can't allow retry activity to go on forever
+            // A retry is only being initiating for basic file I/O or locking errors - monitor these failures occurring
+            // in quick succession so that retry activity is not allowed to go on forever...
             if (DateTime.UtcNow.Ticks - m_lastRetryTime > (long)Ticks.FromMilliseconds(m_retryTimer.Interval * m_maximumRetryAttempts))
             {
                 // Significant time has passed since last retry, so we reset counter
