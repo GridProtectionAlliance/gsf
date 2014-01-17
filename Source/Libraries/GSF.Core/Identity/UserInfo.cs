@@ -266,8 +266,9 @@ namespace GSF.Identity
             if (string.IsNullOrEmpty(loginID))
                 throw new ArgumentNullException("loginID");
 
-            string[] parts = loginID.Split('\\');
-            if (parts.Length != 2)
+            string[] accountParts = loginID.Split('\\');
+
+            if (accountParts.Length != 2)
             {
                 // Login ID is specified in 'username' format.
                 m_username = loginID;
@@ -275,8 +276,8 @@ namespace GSF.Identity
             else
             {
                 // Login ID is specified in 'domain\username' format.
-                m_domain = parts[0];
-                m_username = parts[1];
+                m_domain = accountParts[0];
+                m_username = accountParts[1];
             }
 
             m_ldapPath = ldapPath;
@@ -1949,8 +1950,32 @@ namespace GSF.Identity
         }
 
         // Determines if local account (e.g., user or group) exists using an existing directory entry
-        private static bool LocalAccountExists(DirectoryEntry localMachine, string accountName, string schemaType, out DirectoryEntry accountEntry)
+        private static bool LocalAccountExists(DirectoryEntry localMachine, string accountName, string schemaType, bool allowActiveDirectoryAccount, out DirectoryEntry accountEntry)
         {
+            if (allowActiveDirectoryAccount && accountName.Contains("\\"))
+            {
+                string[] accountParts = accountName.Split('\\');
+
+                if (accountParts.Length == 2)
+                {
+                    string domain = accountParts[0].Trim();
+                    string account = accountParts[1].Trim();
+
+                    // Check for non-local domain name
+                    if (!string.IsNullOrEmpty(domain) &&
+                        string.Compare(domain, ".", StringComparison.OrdinalIgnoreCase) != 0 &&
+                        string.Compare(domain, Environment.MachineName, StringComparison.OrdinalIgnoreCase) != 0)
+                    {
+                        // AD accounts that exist in local groups can be referenced by name
+                        accountEntry = new DirectoryEntry(string.Format("WinNT://{0}/{1}", domain, account));
+                        return true;
+                    }
+
+                    // Remove domain prefix for local accounts
+                    accountName = account;
+                }
+            }
+
             try
             {
                 accountEntry = localMachine.Children.Find(accountName, schemaType);
@@ -1987,7 +2012,7 @@ namespace GSF.Identity
                 DirectoryEntry userEntry;
 
                 // Determine if local user exists
-                bool userExists = LocalAccountExists(localMachine, userName, "user", out userEntry);
+                bool userExists = LocalAccountExists(localMachine, userName, "user", false, out userEntry);
 
                 if ((object)userEntry != null)
                     userEntry.Dispose();
@@ -2031,7 +2056,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local user exists
-                    if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
+                    if (!LocalAccountExists(localMachine, userName, "user", false, out userEntry))
                     {
                         using (DirectoryEntry newUserEntry = localMachine.Children.Add(userName, "user"))
                         {
@@ -2094,7 +2119,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local user exists
-                    if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
+                    if (!LocalAccountExists(localMachine, userName, "user", false, out userEntry))
                         throw new InvalidOperationException(string.Format("Cannot change password for local user \"{0}\": user does not exist.", userName));
 
                     userEntry.Invoke("SetPassword", new object[] { password });
@@ -2144,7 +2169,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local user exists
-                    if (LocalAccountExists(localMachine, userName, "user", out userEntry))
+                    if (LocalAccountExists(localMachine, userName, "user", false, out userEntry))
                     {
                         localMachine.Children.Remove(userEntry);
                         return true;
@@ -2190,7 +2215,7 @@ namespace GSF.Identity
                 DirectoryEntry groupEntry;
 
                 // Determine if local group exists
-                bool groupExists = LocalAccountExists(localMachine, groupName, "group", out groupEntry);
+                bool groupExists = LocalAccountExists(localMachine, groupName, "group", false, out groupEntry);
 
                 if ((object)groupEntry != null)
                     groupEntry.Dispose();
@@ -2232,7 +2257,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                     {
                         using (DirectoryEntry newGroupEntry = localMachine.Children.Add(groupName, "group"))
                         {
@@ -2290,7 +2315,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                     {
                         localMachine.Children.Remove(groupEntry);
                         return true;
@@ -2321,7 +2346,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not determine if user was in local group.</exception>
         /// <remarks>
         /// This function will handle Windows service virtual accounts by specifying the complete virtual account name,
-        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>.
+        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>. This function can also detect
+        /// Active Directory user accounts and groups that may exist in the local group when the <paramref name="userName"/>
+        /// is prefixed with a domain name and a backslash "\".
         /// </remarks>
         public static bool UserIsInLocalGroup(string groupName, string userName)
         {
@@ -2356,7 +2383,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": group does not exist.", userName, groupName));
 
                     // Check for Windows service virtual accounts
@@ -2367,7 +2394,7 @@ namespace GSF.Identity
                     else
                     {
                         // Determine if local user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
+                        if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
                             throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": user does not exist.", userName, groupName));
 
                         userPath = userEntry.Path;
@@ -2416,7 +2443,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not add user to local group.</exception>
         /// <remarks>
         /// This function will handle Windows service virtual accounts by specifying the complete virtual account name,
-        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>.
+        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>. This function can also add
+        /// Active Directory user accounts and groups to the local group the when the <paramref name="userName"/> is
+        /// prefixed with a domain name and a backslash "\".
         /// </remarks>
         public static bool AddUserToLocalGroup(string groupName, string userName)
         {
@@ -2451,7 +2480,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": group does not exist.", userName, groupName));
 
                     // Check for Windows service virtual accounts
@@ -2462,7 +2491,7 @@ namespace GSF.Identity
                     else
                     {
                         // Determine if user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
+                        if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
                             throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": user does not exist.", userName, groupName));
 
                         userPath = userEntry.Path;
@@ -2514,7 +2543,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not remove user from local group.</exception>
         /// <remarks>
         /// This function will handle Windows service virtual accounts by specifying the complete virtual account name,
-        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>.
+        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>. This function can also remove
+        /// Active Directory user accounts and groups from the local group the when the <paramref name="userName"/> is
+        /// prefixed with a domain name and a backslash "\".
         /// </remarks>
         public static bool RemoveUserFromLocalGroup(string groupName, string userName)
         {
@@ -2549,7 +2580,7 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": group does not exist.", userName, groupName));
 
                     // Check for Windows service virtual accounts
@@ -2560,7 +2591,7 @@ namespace GSF.Identity
                     else
                     {
                         // Determine if user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
+                        if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
                             throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": user does not exist.", userName, groupName));
 
                         userPath = userEntry.Path;
