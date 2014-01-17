@@ -27,6 +27,15 @@
 --       Added new field Type to ErrorLog table. Removed ExceptionLog table.
 --  ----------------------------------------------------------------------------------------------------
 
+-- *******************************************************************************************
+-- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
+--
+-- Search for:
+--     CREATE VIEW [dbo].[SchemaVersion] AS
+--     SELECT 1 AS VersionNumber
+--     GO
+-- *******************************************************************************************
+
 USE [master]
 GO
 CREATE DATABASE [GSFSchema];
@@ -102,6 +111,13 @@ GO
 --GO
 --EXEC sp_addrolemember N'db_datawriter', N'GSFSchemaManagerRole'
 --GO
+
+-- *******************************************************************************************
+-- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
+-- *******************************************************************************************
+CREATE VIEW [dbo].[SchemaVersion] AS
+SELECT 1 AS VersionNumber
+GO
 
 SET ANSI_NULLS ON
 GO
@@ -1225,6 +1241,13 @@ CREATE TABLE [dbo].[ApplicationRole](
 )WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 
+GO
+
+CREATE UNIQUE NONCLUSTERED INDEX [IX_ApplicationRole] ON [dbo].[Device]
+(
+    [NodeID] ASC,
+    [Name] ASC
+)WITH (IGNORE_DUP_KEY = OFF) ON [PRIMARY]
 GO
 
 SET ANSI_PADDING OFF

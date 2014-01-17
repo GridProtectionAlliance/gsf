@@ -34,6 +34,13 @@
 -- GRANT CREATE SESSION TO GSFSchema;
 -- ALTER SESSION SET CURRENT_SCHEMA = GSFSchema;
 
+-- *******************************************************************************************
+-- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
+-- *******************************************************************************************
+CREATE VIEW SchemaVersion AS
+SELECT 1 AS VersionNumber
+FROM dual;
+
 CREATE TABLE ErrorLog(
     ID NUMBER NOT NULL,
     Source VARCHAR2(200) NOT NULL,
@@ -909,7 +916,9 @@ CREATE TABLE ApplicationRole (
     UpdatedBy VARCHAR2(200) NOT NULL
 );
 
-CREATE UNIQUE INDEX IX_ApplicationRole ON ApplicationRole (ID ASC) TABLESPACE GSFSchema_INDEX;
+CREATE UNIQUE INDEX IX_ApplicationRole_ID ON ApplicationRole (ID ASC) TABLESPACE GSFSchema_INDEX;
+
+CREATE UNIQUE INDEX IX_ApplicationRole_NodeID_Name ON ApplicationRole (NodeID ASC, Name ASC) TABLESPACE GSFSchema_INDEX;
 
 ALTER TABLE ApplicationRole ADD CONSTRAINT PK_ApplicationRole PRIMARY KEY (ID);
 

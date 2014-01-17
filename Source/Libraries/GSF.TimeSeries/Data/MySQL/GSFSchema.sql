@@ -34,6 +34,12 @@ USE GSFSchema;
 -- CREATE USER NewUser IDENTIFIED BY 'MyPassword';
 -- GRANT SELECT, UPDATE, INSERT, DELETE ON GSFSchema.* TO NewUser;
 
+-- *******************************************************************************************
+-- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
+-- *******************************************************************************************
+CREATE VIEW SchemaVersion AS
+SELECT 1 AS VersionNumber;
+
 CREATE TABLE ErrorLog(
     ID INT AUTO_INCREMENT NOT NULL,
     Source VARCHAR(200) NOT NULL,
@@ -591,7 +597,7 @@ CREATE TABLE UserAccount (
     UpdatedOn DATETIME NOT NULL DEFAULT N'0000-00-00 00:00:00',
     UpdatedBy VARCHAR(200) NOT NULL DEFAULT N'',
     CONSTRAINT PK_UserAccount PRIMARY KEY (ID ASC),
-    CONSTRAINT IX_UserAccount UNIQUE KEY (Name)
+    CONSTRAINT IX_UserAccount UNIQUE KEY (Name ASC)
 );
 
 CREATE TABLE SecurityGroup (
@@ -603,7 +609,7 @@ CREATE TABLE SecurityGroup (
     UpdatedOn DATETIME NOT NULL DEFAULT N'0000-00-00 00:00:00',
     UpdatedBy VARCHAR(200) NOT NULL DEFAULT N'',
     CONSTRAINT PK_SecurityGroup PRIMARY KEY (ID ASC),
-    CONSTRAINT IX_SecurityGroup UNIQUE KEY (Name)
+    CONSTRAINT IX_SecurityGroup UNIQUE KEY (Name ASC)
 );
 
 CREATE TABLE ApplicationRole (
@@ -615,7 +621,8 @@ CREATE TABLE ApplicationRole (
     CreatedBy VARCHAR(200) NOT NULL DEFAULT N'',
     UpdatedOn DATETIME NOT NULL DEFAULT N'0000-00-00 00:00:00',
     UpdatedBy VARCHAR(200) NOT NULL DEFAULT N'',
-    CONSTRAINT PK_ApplicationRole PRIMARY KEY (ID ASC)  
+    CONSTRAINT PK_ApplicationRole PRIMARY KEY (ID ASC),
+    CONSTRAINT IX_ApplicationRole UNIQUE KEY (NodeID ASC, Name ASC)
 );
 
 CREATE TABLE ApplicationRoleSecurityGroup (
