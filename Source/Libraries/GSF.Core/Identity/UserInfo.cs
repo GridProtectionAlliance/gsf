@@ -2007,7 +2007,7 @@ namespace GSF.Identity
                 throw new ArgumentException("No user name was specified.", "userName");
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry userEntry;
 
@@ -2049,7 +2049,7 @@ namespace GSF.Identity
                 throw new ArgumentException("Cannot create local user: no user name was specified.", "userName");
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry userEntry = null;
 
@@ -2112,7 +2112,7 @@ namespace GSF.Identity
                 throw new ArgumentException("Cannot change password for local user: no user name was specified.", "userName");
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry userEntry = null;
 
@@ -2162,7 +2162,7 @@ namespace GSF.Identity
                 throw new ArgumentException("Cannot remove local user: no user name was specified.", "userName");
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry userEntry = null;
 
@@ -2210,7 +2210,7 @@ namespace GSF.Identity
             groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry;
 
@@ -2250,7 +2250,7 @@ namespace GSF.Identity
             groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
 
@@ -2308,7 +2308,7 @@ namespace GSF.Identity
             groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
 
@@ -2374,7 +2374,7 @@ namespace GSF.Identity
             groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
@@ -2386,19 +2386,11 @@ namespace GSF.Identity
                     if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": group does not exist.", userName, groupName));
 
-                    // Check for Windows service virtual accounts
-                    if (userName.StartsWith("NT SERVICE", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        userPath = "WinNT://" + userName.Replace('\\', '/');
-                    }
-                    else
-                    {
-                        // Determine if local user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
-                            throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": user does not exist.", userName, groupName));
+                    // Determine if local user exists
+                    if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": user does not exist.", userName, groupName));
 
-                        userPath = userEntry.Path;
-                    }
+                    userPath = userEntry.Path;
 
                     // See if user is in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -2471,7 +2463,7 @@ namespace GSF.Identity
             groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
@@ -2483,19 +2475,11 @@ namespace GSF.Identity
                     if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": group does not exist.", userName, groupName));
 
-                    // Check for Windows service virtual accounts
-                    if (userName.StartsWith("NT SERVICE", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        userPath = "WinNT://" + userName.Replace('\\', '/');
-                    }
-                    else
-                    {
-                        // Determine if user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
-                            throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": user does not exist.", userName, groupName));
+                    // Determine if user exists
+                    if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": user does not exist.", userName, groupName));
 
-                        userPath = userEntry.Path;
-                    }
+                    userPath = userEntry.Path;
 
                     // See if user is already in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -2571,7 +2555,7 @@ namespace GSF.Identity
             groupName = ValidateGroupName(groupName);
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
@@ -2583,19 +2567,11 @@ namespace GSF.Identity
                     if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": group does not exist.", userName, groupName));
 
-                    // Check for Windows service virtual accounts
-                    if (userName.StartsWith("NT SERVICE", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        userPath = "WinNT://" + userName.Replace('\\', '/');
-                    }
-                    else
-                    {
-                        // Determine if user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
-                            throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": user does not exist.", userName, groupName));
+                    // Determine if user exists
+                    if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": user does not exist.", userName, groupName));
 
-                        userPath = userEntry.Path;
-                    }
+                    userPath = userEntry.Path;
 
                     // See if user is in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
