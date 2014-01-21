@@ -328,35 +328,40 @@ namespace GSF.IO
                         {
                             m_fileWatcher.Changed -= m_fileWatcher_Changed;
                             m_fileWatcher.Dispose();
+                            m_fileWatcher = null;
                         }
-                        m_fileWatcher = null;
 
                         if ((object)m_retryTimer != null)
                         {
                             m_retryTimer.Elapsed -= m_retryTimer_Elapsed;
                             m_retryTimer.Dispose();
+                            m_retryTimer = null;
                         }
-                        m_retryTimer = null;
 
                         if ((object)m_loadIsReady != null)
+                        {
                             m_loadIsReady.Dispose();
-
-                        m_loadIsReady = null;
+                            m_loadIsReady = null;
+                        }
 
                         if ((object)m_saveIsReady != null)
+                        {
                             m_saveIsReady.Dispose();
-
-                        m_saveIsReady = null;
+                            m_saveIsReady = null;
+                        }
 
                         if ((object)m_dataLock != null)
+                        {
                             m_dataLock.Dispose();
-
-                        m_dataLock = null;
+                            m_dataLock = null;
+                        }
 
                         if ((object)m_fileLock != null)
+                        {
                             m_fileLock.Dispose();
+                            m_fileLock = null;
+                        }
 
-                        m_fileLock = null;
                         m_fileName = null;
                     }
                 }
@@ -375,6 +380,9 @@ namespace GSF.IO
         /// </remarks>
         public virtual void Save()
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(null);
+
             if ((object)m_fileName == null)
                 throw new NullReferenceException("FileName is null, cannot initiate save");
 
@@ -393,6 +401,9 @@ namespace GSF.IO
         /// </remarks>
         public virtual void Load()
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(null);
+
             if ((object)m_fileName == null)
                 throw new NullReferenceException("FileName is null, cannot initiate load");
 
@@ -414,6 +425,9 @@ namespace GSF.IO
         /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.</param>
         public virtual void WaitForLoad(int millisecondsTimeout)
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(null);
+
             // Calls to this method are blocked until data is available
             if (!m_loadIsReady.IsSet && !m_loadIsReady.Wait(millisecondsTimeout))
                 throw new TimeoutException("Timeout waiting to read data from " + m_fileName);
@@ -433,6 +447,9 @@ namespace GSF.IO
         /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.</param>
         public virtual void WaitForSave(int millisecondsTimeout)
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(null);
+
             // Calls to this method are blocked until data is saved
             if (!m_saveIsReady.IsSet && !m_saveIsReady.Wait(millisecondsTimeout))
                 throw new TimeoutException("Timeout waiting to save data to " + m_fileName);
@@ -529,20 +546,23 @@ namespace GSF.IO
             catch (ThreadAbortException)
             {
                 // Release any threads waiting for file save in case of thread abort
-                m_saveIsReady.Set();
+                if ((object)m_saveIsReady != null)
+                    m_saveIsReady.Set();
                 throw;
             }
             catch (UnauthorizedAccessException)
             {
                 // Release any threads waiting for file save in case of I/O or locking failures during write attempt
-                m_saveIsReady.Set();
+                if ((object)m_saveIsReady != null)
+                    m_saveIsReady.Set();
                 throw;
             }
             catch
             {
                 // Other exceptions can happen, e.g., NullReferenceException if thread resumes and the class is disposed middle way through this method
                 // or other serialization issues in call to SaveFileData, in these cases, release any threads waiting for file save
-                m_saveIsReady.Set();
+                if ((object)m_saveIsReady != null)
+                    m_saveIsReady.Set();
             }
         }
 
@@ -614,20 +634,23 @@ namespace GSF.IO
             catch (ThreadAbortException)
             {
                 // Release any threads waiting for file data in case of thread abort
-                m_loadIsReady.Set();
+                if ((object)m_loadIsReady != null)
+                    m_loadIsReady.Set();
                 throw;
             }
             catch (UnauthorizedAccessException)
             {
                 // Release any threads waiting for file load in case of I/O or locking failures during read attempt
-                m_loadIsReady.Set();
+                if ((object)m_loadIsReady != null)
+                    m_loadIsReady.Set();
                 throw;
             }
             catch
             {
                 // Other exceptions can happen, e.g., NullReferenceException if thread resumes and the class is disposed middle way through this method
                 // or other deserialization issues in call to LoadFileData, in these cases, release any threads waiting for file load
-                m_loadIsReady.Set();
+                if ((object)m_loadIsReady != null)
+                    m_loadIsReady.Set();
             }
         }
 

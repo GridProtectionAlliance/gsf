@@ -86,7 +86,7 @@ namespace GSF.Security
             settings.Add("NotificationSmtpServer", DefaultNotificationSmtpServer, "SMTP server to be used for sending out email notification messages.");
             settings.Add("NotificationSenderEmail", DefaultNotificationSenderEmail, "Email address of the sender of email notification messages.");
 
-            s_providerType = settings["ProviderType"].ToNonNullString(DefaultProviderType);
+            s_providerType = settings["ProviderType"].ValueAsString(DefaultProviderType);
             s_includedResources = settings["IncludedResources"].ValueAsString().ParseKeyValuePairs();
             s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
             s_notificationSmtpServer = settings["NotificationSmtpServer"].ValueAsString();

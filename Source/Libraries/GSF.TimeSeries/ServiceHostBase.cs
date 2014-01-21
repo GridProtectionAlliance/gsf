@@ -978,7 +978,7 @@ namespace GSF.TimeSeries
 
                         operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
-                        DisplayStatusMessage("Security context prepared in {1}.", UpdateType.Information, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
+                        DisplayStatusMessage("Security context prepared in {0}.", UpdateType.Information, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
                     }
@@ -1279,7 +1279,7 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        DisplayStatusMessage("Executing startup data operation \"{0}\".", UpdateType.Information, row["Description"].ToNonNullString("Unlabled"));
+                        DisplayStatusMessage("Executing startup data operation \"{0}\".", UpdateType.Information, row["Description"].ToNonNullString("Unlabeled"));
 
                         // Load data operation parameters
                         assemblyName = row["AssemblyName"].ToNonNullString();

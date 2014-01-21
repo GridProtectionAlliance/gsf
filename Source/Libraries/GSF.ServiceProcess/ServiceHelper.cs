@@ -174,6 +174,9 @@ namespace GSF.ServiceProcess
             public readonly string Message;
         }
 
+        // Delegates
+        private delegate bool TryGetClientPrincipalFunctionSignature(Guid clientID, out WindowsPrincipal clientPrincipal);
+
         // Constants
 
         /// <summary>
@@ -1818,6 +1821,38 @@ namespace GSF.ServiceProcess
             }
         }
 
+        private bool TryGetClientPrincipal(ClientInfo client, out WindowsPrincipal clientPrincipal)
+        {
+            if ((object)client == null)
+                throw new ArgumentNullException("client");
+
+            MethodInfo tryGetClientPrincipalInfo;
+            TryGetClientPrincipalFunctionSignature tryGetClientPrincipal = null;
+
+            // Attempt to find the TryGetClientPrincipal method using reflection - remoting server could be a TCP or TLS server
+            if ((object)m_remotingServer != null)
+            {
+                tryGetClientPrincipalInfo = m_remotingServer.GetType().GetMethod("TryGetClientPrincipal", new Type[] { typeof(Guid), typeof(WindowsPrincipal).MakeByRefType() });
+
+                if ((object)tryGetClientPrincipalInfo != null && tryGetClientPrincipalInfo.ReturnType == typeof(bool))
+                    tryGetClientPrincipal = (TryGetClientPrincipalFunctionSignature)Delegate.CreateDelegate(typeof(TryGetClientPrincipalFunctionSignature), m_remotingServer, tryGetClientPrincipalInfo);
+            }
+
+            // Attempt to get the client principal from the remoting server
+            if ((object)tryGetClientPrincipal != null && tryGetClientPrincipal(client.ClientID, out clientPrincipal))
+            {
+                if ((object)clientPrincipal != null)
+                    Thread.CurrentPrincipal = clientPrincipal;
+                else
+                    Thread.CurrentPrincipal = client.ClientUser;
+
+                return true;
+            }
+
+            clientPrincipal = null;
+            return false;
+        }
+
         private bool VerifySecurity(ClientInfo client)
         {
             // Set current thread principal to remote client's user principal.
@@ -1997,21 +2032,14 @@ namespace GSF.ServiceProcess
             UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
         }
 
-        private delegate bool TryGetClientPrincipal(Guid clientID, out WindowsPrincipal clientPrincipal);
-
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
-            ClientInfo requestSender = FindConnectedClient(e.Argument1);
-
-            MethodInfo tryGetClientPrincipalInfo;
-            TryGetClientPrincipal tryGetClientPrincipal = null;
+            ClientInfo client = FindConnectedClient(e.Argument1);
             WindowsPrincipal clientPrincipal;
 
-            if ((object)requestSender == null)
+            if ((object)client == null)
             {
                 // First message from a remote client should be its info.
-                ClientInfo client;
-
                 Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out client);
 
                 try
@@ -2021,38 +2049,27 @@ namespace GSF.ServiceProcess
                         client.ClientID = e.Argument1;
                         client.ConnectedAt = DateTime.Now;
 
-                        // Attempt to find the TryGetClientPrincipal method using reflection
-                        if ((object)m_remotingServer != null)
+                        if (TryGetClientPrincipal(client, out clientPrincipal))
                         {
-                            tryGetClientPrincipalInfo = m_remotingServer.GetType().GetMethod("TryGetClientPrincipal", new Type[] { typeof(Guid), typeof(WindowsPrincipal).MakeByRefType() });
-
-                            if ((object)tryGetClientPrincipalInfo != null && tryGetClientPrincipalInfo.ReturnType == typeof(bool))
-                                tryGetClientPrincipal = (TryGetClientPrincipal)Delegate.CreateDelegate(typeof(TryGetClientPrincipal), m_remotingServer, tryGetClientPrincipalInfo);
-                        }
-
-                        // Attempt to get the client principal from the remoting server
-                        if ((object)tryGetClientPrincipal != null && tryGetClientPrincipal(e.Argument1, out clientPrincipal))
-                        {
-                            if ((object)clientPrincipal != null)
-                                Thread.CurrentPrincipal = clientPrincipal;
-                            else
-                                Thread.CurrentPrincipal = client.ClientUser;
-                        }
-
-                        // Engage security for the remote client connection if configured.
-                        if (!m_secureRemoteInteractions || VerifySecurity(client))
-                        {
-                            lock (m_remoteClients)
+                            // Engage security for the remote client connection if configured.
+                            if (!m_secureRemoteInteractions || VerifySecurity(client))
                             {
-                                m_remoteClients.Add(client);
-                            }
+                                lock (m_remoteClients)
+                                {
+                                    m_remoteClients.Add(client);
+                                }
 
-                            SendAuthenticationSuccessResponse(client.ClientID);
-                            UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
+                                SendAuthenticationSuccessResponse(client.ClientID);
+                                UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
+                            }
+                            else
+                            {
+                                throw new SecurityException(string.Format("Failed to authenticate '{0}'", Thread.CurrentPrincipal.Identity.Name));
+                            }
                         }
                         else
                         {
-                            throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
+                            throw new SecurityException(string.Format("Failed to retrieve client principal from the socket connection: remote client '{0}' not found", client.ClientID));
                         }
                     }
                     else
@@ -2090,7 +2107,7 @@ namespace GSF.ServiceProcess
                 {
                     try
                     {
-                        ClientRequestInfo requestInfo = new ClientRequestInfo(requestSender, request);
+                        ClientRequestInfo requestInfo = new ClientRequestInfo(client, request);
                         string resource = requestInfo.Request.Command;
 
                         if (m_remoteCommandClientID == Guid.Empty)
@@ -2099,18 +2116,35 @@ namespace GSF.ServiceProcess
                             lock (m_clientRequestHistory)
                             {
                                 m_clientRequestHistory.Add(requestInfo);
+
                                 if (m_clientRequestHistory.Count > m_requestHistoryLimit)
                                     m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit));
                             }
 
                             // Check if remote client has permission to invoke the requested command.
-                            if (m_secureRemoteInteractions && VerifySecurity(requestInfo.Sender) &&
-                                SecurityProviderUtility.IsResourceSecurable(resource) &&
-                                !SecurityProviderUtility.IsResourceAccessible(resource))
-                                throw new SecurityException(string.Format("Access to '{0}' is denied", requestInfo.Request.Command));
+                            if (m_secureRemoteInteractions)
+                            {
+                                // Validate current client principal
+                                if (TryGetClientPrincipal(client, out clientPrincipal))
+                                {
+                                    if (VerifySecurity(requestInfo.Sender))
+                                    {
+                                        if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
+                                            throw new SecurityException(string.Format("Access to '{0}' is denied", requestInfo.Request.Command));
+                                    }
+                                    else
+                                    {
+                                        throw new SecurityException(string.Format("Failed to authenticate '{0}'", Thread.CurrentPrincipal.Identity.Name));
+                                    }
+                                }
+                                else
+                                {
+                                    throw new SecurityException(string.Format("Failed to retrieve client principal from the socket connection: remote client '{0}' not found", client.ClientID));
+                                }
+                            }
 
                             // Notify the consumer about the incoming request from client.
-                            OnReceivedClientRequest(request, requestSender);
+                            OnReceivedClientRequest(request, client);
 
                             ClientRequestHandler requestHandler = FindClientRequestHandler(request.Command);
 
@@ -2125,7 +2159,7 @@ namespace GSF.ServiceProcess
                                 throw new InvalidOperationException("Request is not supported");
                             }
                         }
-                        else if (requestSender.ClientID == m_remoteCommandClientID)
+                        else if (client.ClientID == m_remoteCommandClientID)
                         {
                             // Redirect requests to remote command session if requests are from its originator.
                             RemoteTelnetSession(requestInfo);
@@ -2139,12 +2173,12 @@ namespace GSF.ServiceProcess
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
-                        UpdateStatus(requestSender.ClientID, UpdateType.Alarm, "Failed to process request \"{0}\" - {1}.\r\n\r\n", request.Command, ex.Message);
+                        UpdateStatus(client.ClientID, UpdateType.Alarm, "Failed to process request \"{0}\" - {1}\r\n\r\n", request.Command, ex.Message);
                     }
                 }
                 else
                 {
-                    UpdateStatus(requestSender.ClientID, UpdateType.Alarm, "Failed to process request - Request could not be deserialized.\r\n\r\n");
+                    UpdateStatus(client.ClientID, UpdateType.Alarm, "Failed to process request - Request could not be deserialized.\r\n\r\n");
                 }
             }
         }

@@ -27,7 +27,7 @@
 //  06/24/2010 - Pinal C. Patel
 //       Added LogError() and LogLogin() methods.
 //  06/25/2010 - Pinal C. Patel
-//       Fixed a bug in the caching mechanism employed in Current static property.
+//       Fixed a issue in the caching mechanism employed in Current static property.
 //  12/03/2010 - Pinal C. Patel
 //       Added TranslateRole() to allow providers to perform translation on role name.
 //  01/05/2011 - Pinal C. Patel
@@ -53,7 +53,7 @@ namespace GSF.Security
     /// Base class for a provider of role-based security in applications.
     /// </summary>
     /// <example>
-    /// This examples shows how to extend <see cref="SecurityProviderBase"/> to use a flat-file for the security datastore:
+    /// This examples shows how to extend <see cref="SecurityProviderBase"/> to use a flat-file for the security data store:
     /// <code>
     /// using System.Data;
     /// using System.IO;
@@ -204,8 +204,8 @@ namespace GSF.Security
         /// Initializes a new instance of the security provider.
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
-        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend datastore, otherwise false.</param>
-        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend datastore, otherwise false.</param>
+        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend data store, otherwise false.</param>
+        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend data store, otherwise false.</param>
         /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         protected SecurityProviderBase(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
@@ -535,9 +535,12 @@ namespace GSF.Security
             if (!m_initialized)
             {
                 LoadSettings();             // Load settings from config file.
+
                 if (CanRefreshData)
-                    RefreshData();          // Load user data from datastore.
+                    RefreshData();          // Load user data from data store.
+
                 Authenticate(string.Empty); // Authenticate user credentials.
+
                 m_initialized = true;       // Initialize only once.
             }
         }
@@ -579,8 +582,8 @@ namespace GSF.Security
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("ApplicationName", m_applicationName, "Name of the application being secured as defined in the backend security datastore.");
-                settings.Add("ConnectionString", m_connectionString, "Connection string to be used for connection to the backend security datastore.");
+                settings.Add("ApplicationName", m_applicationName, "Name of the application being secured as defined in the backend security data store.");
+                settings.Add("ConnectionString", m_connectionString, "Connection string to be used for connection to the backend security data store.");
                 ApplicationName = settings["ApplicationName"].ValueAs(m_applicationName);
                 ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
             }

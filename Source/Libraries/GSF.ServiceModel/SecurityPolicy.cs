@@ -251,7 +251,6 @@ namespace GSF.ServiceModel
                     if (identity is WindowsIdentity)
                     {
                         Thread.CurrentPrincipal = new WindowsPrincipal((WindowsIdentity)identity);
-
                         break;
                     }
                 }

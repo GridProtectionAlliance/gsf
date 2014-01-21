@@ -282,6 +282,7 @@ namespace GSF.Security
             IsExternal = false;
             IsDisabled = false;
             IsLockedOut = false;
+            IsAuthenticated = false;
             Groups.Clear();
             Roles.Clear();
         }
