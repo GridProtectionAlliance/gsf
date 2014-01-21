@@ -3193,7 +3193,7 @@ namespace GSF.TimeSeries.Transport
             }
             else
             {
-                deserializedCache = Serialization.Deserialize<SignalIndexCache>(buffer, SerializationFormat.Binary);
+                deserializedCache = m_serializer.Deserialize<SignalIndexCache>(buffer, SerializationFormat.Binary);
             }
 
             return deserializedCache;

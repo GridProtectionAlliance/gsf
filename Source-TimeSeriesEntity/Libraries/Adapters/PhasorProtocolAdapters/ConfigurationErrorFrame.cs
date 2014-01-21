@@ -258,8 +258,10 @@ namespace PhasorProtocolAdapters
             return false;
         }
 
+        
         int IComparable<IFrame>.CompareTo(IFrame other)
         {
+            // I don't understand why ConfigurationErrorFrames can never be equal to other frames.  They should be equal to themselves, at least.
             return 1;
         }
 

@@ -518,10 +518,6 @@ namespace GSF
             // if ((int.MaxValue - sourceOffset - count) < 0)
             //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum buffer size");
 
-            // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
-            // if ((int.MaxValue - otherOffset - count) < 0)
-            //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum buffer size");
-
             int comparision = 0;
 
             // Compares elements of buffers that are of equal size.

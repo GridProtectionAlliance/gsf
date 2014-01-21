@@ -332,7 +332,7 @@ namespace GSF
         /// </returns>
         public bool Equals(ComplexNumber obj)
         {
-            return (this == obj);
+            return ((this.Real == obj.Real) && (this.Imaginary == obj.Imaginary));
         }
 
         /// <summary>

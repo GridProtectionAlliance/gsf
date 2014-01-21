@@ -99,6 +99,10 @@ namespace GSF.Historian
         /// </remarks>
         public int CompareTo(TimeTag other)
         {
+            if (other == null)
+            {
+                return 1;
+            }
             double tVal = Value;
             double oVal = other.Value;
             return tVal < oVal ? -1 : tVal > oVal ? 1 : 0;
