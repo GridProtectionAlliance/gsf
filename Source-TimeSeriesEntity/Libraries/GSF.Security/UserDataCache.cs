@@ -24,7 +24,7 @@
 //       Renamed RetryDelayInterval and MaximumRetryAttempts settings persisted to the config file 
 //       to CacheRetryDelayInterval and CacheMaximumRetryAttempts for clarity.
 //  08/12/2011 - J. Ritchie Carroll
-//       Modifed static GetCurrentCache to accept settings category of host security provider
+//       Modified static GetCurrentCache to accept settings category of host security provider
 //       implementation in case the category has been changed from the default value by the consumer.
 //  08/16/2011 - Pinal C. Patel
 //       Modified GetCurrentCache() to just set the FileName property and not the RetryDelayInterval, 
@@ -46,8 +46,19 @@ using GSF.Threading;
 namespace GSF.Security
 {
     /// <summary>
-    /// Represents a secured interprocess cache for a <see cref="Dictionary{TKey,TValue}"/> of serialized <see cref="UserData"/>.
+    /// Represents a secured inter-process cache for a <see cref="Dictionary{TKey,TValue}"/> of serialized <see cref="UserData"/>.
     /// </summary>
+    /// <remarks>
+    /// This is a personal user data cache that only contains basic LDAP information for the user. It is used to load the local and
+    /// Active Directory groups a user is associated with when the user no longer has access to its domain server. This can happen
+    /// when a laptop that is normally connected to the Active Directory domain gets shutdown then restarted without access to the
+    /// domain, for example, on an airplane - in this mode the user can successfully still login to the laptop to their using domain
+    /// account cached by Windows but the groups the user is in will no longer be accessible. If role based security happens to be
+    /// based on Active Directory groups, this cache will make sure the user can still have needed role based access even when the
+    /// domain is unavailable. This cache is maintained as a separate user cache from the system level <see cref="AdoSecurityCache"/>
+    /// since the user data cache only contains group information and is used by the <see cref="LdapSecurityProvider"/> which can be
+    /// used independently of the <see cref="AdoSecurityProvider"/>.
+    /// </remarks>
     public class UserDataCache : InterprocessCache
     {
         #region [ Members ]
@@ -59,7 +70,7 @@ namespace GSF.Security
 
         // Fields
         private Dictionary<string, UserData> m_userDataTable;   // Internal dictionary of serialized user data
-        private readonly object m_userDataTableLock;                     // Lock object
+        private readonly object m_userDataTableLock;            // Lock object for internal dictionary
         private int m_providerID;                               // Unique provider ID used to distinguish cached user data that may be different based on provider
 
         #endregion
@@ -108,7 +119,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets ot sets unique provider ID used to distinguish cached user data that may be different based on provider.
+        /// Gets or sets unique provider ID used to distinguish cached user data that may be different based on provider.
         /// </summary>
         public int ProviderID
         {
@@ -183,7 +194,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Initiates interprocess synchronized save of user data cache.
+        /// Initiates inter-process synchronized save of user data cache.
         /// </summary>
         public override void Save()
         {
@@ -195,7 +206,7 @@ namespace GSF.Security
                 serializedUserDataTable = Serialization.Serialize(m_userDataTable, SerializationFormat.Binary);
             }
 
-            // File data is the serialized user data table, assigmnent will initiate auto-save if needed
+            // File data is the serialized user data table, assignment will initiate auto-save if needed
             FileData = serializedUserDataTable;
         }
 
@@ -296,6 +307,5 @@ namespace GSF.Security
         }
 
         #endregion
-
     }
 }

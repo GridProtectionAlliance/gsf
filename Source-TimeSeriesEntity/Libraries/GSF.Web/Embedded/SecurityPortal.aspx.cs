@@ -26,7 +26,7 @@
 //       Added the ability to change and reset passwords.
 //       Updated UI for compatibility across multiple browsers including mobile devices.
 //  01/06/2011 - Pinal C. Patel
-//       Fixed a bug that required users to login before password could be reset.
+//       Fixed a issue that required users to login before password could be reset.
 //  07/20/2011 - Pinal C. Patel
 //       Added tracing for diagnosing unexpected error conditions.
 //  10/20/2011 - Pinal C. Patel
@@ -108,32 +108,36 @@ namespace GSF.Web.Embedded
         {
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-            CategorizedSettingsElement setting = null;
+            CategorizedSettingsElement setting;
 
             // Setup company logo.
             setting = settings["CompanyLogo"];
-            if (setting != null)
+
+            if ((object)setting != null)
                 LogoImage.ImageUrl = setting.Value;
             else
                 LogoImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedCompanyLogo);
 
             // Setup company link.
             setting = settings["CompanyLink"];
-            if (setting != null)
+
+            if ((object)setting != null)
                 LogoLink.NavigateUrl = setting.Value;
             else
                 LogoLink.NavigateUrl = DefaultCompanyLink;
 
             // Setup help link.
             setting = settings["HelpPage"];
-            if (setting != null)
+
+            if ((object)setting != null)
                 HelpLink.NavigateUrl = setting.Value;
             else
                 HelpLink.NavigateUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpFile);
 
             // Setup footer information.
             setting = settings["FooterText"];
-            if (setting != null)
+
+            if ((object)setting != null)
                 FooterLabel.Text = setting.Value;
             else
                 FooterLabel.Text = DefaultFooterText;
@@ -159,9 +163,11 @@ namespace GSF.Web.Embedded
                 // Setup UI.
                 ChangeButton.SetSubmitOnce();
                 ChangePasswordPanel.DefaultButton = ChangeButton.ID;
+
                 if (!Page.IsPostBack)
                 {
                     ChangePasswordUsername.Text = GetSavedUsername();
+
                     if (string.IsNullOrEmpty(ChangePasswordUsername.Text))
                         ChangePasswordUsername.Focus();
                     else
@@ -172,6 +178,7 @@ namespace GSF.Web.Embedded
             {
                 // Show reset password.
                 Page.Title = StaticPageTitle + " :: Reset Password";
+
                 if (ViewState[UsernameKey] == null)
                 {
                     // Check for reset support.
@@ -197,7 +204,7 @@ namespace GSF.Web.Embedded
                     MessageLabel.Text = string.Empty;
                 }
             }
-            else if (Request[StatusCodeRequestKey] == UnauthorizedStatusCode || SecurityProviderCache.CurrentProvider == null || !User.Identity.IsAuthenticated)
+            else if (Request[StatusCodeRequestKey] == UnauthorizedStatusCode || (object)SecurityProviderCache.CurrentProvider == null || !User.Identity.IsAuthenticated)
             {
                 // Show login.
                 Page.Title = StaticPageTitle + " :: Login";
@@ -209,9 +216,11 @@ namespace GSF.Web.Embedded
                 LoginPanel.DefaultButton = LoginButton.ID;
                 ForgotPassword.NavigateUrl = GetRedirectUrl(PasswordResetStatusCode);
                 ChangePassword.NavigateUrl = GetRedirectUrl(PasswordChangeStatusCode);
+
                 if (!Page.IsPostBack)
                 {
                     LoginUsername.Text = GetSavedUsername();
+
                     if (string.IsNullOrEmpty(LoginUsername.Text))
                     {
                         LoginUsername.Focus();
@@ -234,10 +243,12 @@ namespace GSF.Web.Embedded
                 // Setup UI.
                 UpdateButton.SetSubmitOnce();
                 MyAccountPanel.DefaultButton = UpdateButton.ID;
+
                 if (!Page.IsPostBack)
                 {
                     ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
                     ShowUserData(provider);
+
                     if (!provider.CanUpdateData)
                     {
                         AccountUserFirstName.Enabled = false;
@@ -262,7 +273,7 @@ namespace GSF.Web.Embedded
             {
                 // Initialize the security provider.
                 ISecurityProvider provider = SecurityProviderUtility.CreateProvider(LoginUsername.Text);
-                provider.Initialize();
+
                 if (provider.Authenticate(LoginPassword.Text))
                 {
                     // Credentials were authenticated successfully.
@@ -326,9 +337,11 @@ namespace GSF.Web.Embedded
         protected void UpdateButton_Click(object sender, EventArgs e)
         {
             ISecurityProvider provider = null;
+
             try
             {
                 provider = SecurityProviderCache.CurrentProvider;
+
                 if (provider.CanUpdateData)
                 {
                     provider.UserData.FirstName = AccountUserFirstName.Text;
@@ -373,7 +386,7 @@ namespace GSF.Web.Embedded
             {
                 // Initialize the security provider.
                 ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ChangePasswordUsername.Text);
-                provider.Initialize();
+
                 if (provider.CanChangePassword)
                 {
                     // Attempt to change password.
@@ -434,12 +447,11 @@ namespace GSF.Web.Embedded
             {
                 // Initialize the security provider.
                 ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ResetPasswordUsername.Text);
-                provider.Initialize();
+
                 if (provider.CanResetPassword)
                 {
                     // Proceed to resetting password.
-                    if (!string.IsNullOrEmpty(provider.UserData.SecurityQuestion) &&
-                        !string.IsNullOrEmpty(provider.UserData.SecurityAnswer))
+                    if (!string.IsNullOrEmpty(provider.UserData.SecurityQuestion) && !string.IsNullOrEmpty(provider.UserData.SecurityAnswer))
                     {
                         ViewState.Add(UsernameKey, ResetPasswordUsername.Text);
                         ViewState.Add("SecurityQuestion", provider.UserData.SecurityQuestion);
@@ -485,7 +497,7 @@ namespace GSF.Web.Embedded
             {
                 // Initialize the security provider.
                 ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ResetPasswordUsername.Text);
-                provider.Initialize();
+
                 if (provider.CanResetPassword)
                 {
                     // Attempt to reset password.
@@ -528,34 +540,37 @@ namespace GSF.Web.Embedded
         {
             if (Request.Cookies[CookieName] == null)
                 return string.Empty;
-            else
-                return Request.Cookies[CookieName][UsernameKey];
+
+            return Request.Cookies[CookieName][UsernameKey];
         }
 
         private string GetReferrerUrl()
         {
+            // Redirect to specified return URL.
             if (Request[ReturnUrlRequestKey] != null)
-                // Redirect to specified return URL.
                 return Request[ReturnUrlRequestKey];
-            else if (Request.UrlReferrer != null)
-                // Redirect to referring URL.
+
+            // Redirect to referring URL.
+            if (Request.UrlReferrer != null)
                 return VirtualPathUtility.ToAppRelative(Request.UrlReferrer.AbsolutePath);
-            else
-                // Redirect to self.
-                return VirtualPathUtility.ToAppRelative(Request.Url.AbsolutePath);
+
+            // Redirect to self.
+            return VirtualPathUtility.ToAppRelative(Request.Url.AbsolutePath);
         }
 
         private string GetRedirectUrl(string newStatusCode)
         {
             StringBuilder url = new StringBuilder();
             url.AppendFormat("{0}?", VirtualPathUtility.ToAppRelative(Request.Url.AbsolutePath));
+
             if (!string.IsNullOrEmpty(Request.Url.Query))
             {
                 // Query parameters are present in the current request.
                 foreach (string pair in Request.Url.Query.TrimStart('?').Split('&'))
                 {
                     string[] pairSplit = pair.Split('=');
-                    if (string.Compare(pairSplit[0], StatusCodeRequestKey, true) != 0)
+
+                    if (string.Compare(pairSplit[0], StatusCodeRequestKey, StringComparison.OrdinalIgnoreCase) != 0)
                         url.AppendFormat("{0}={1}&", pairSplit[0], pairSplit[1]);
                 }
             }
@@ -575,6 +590,7 @@ namespace GSF.Web.Embedded
             AccountUserLastName.Text = provider.UserData.LastName;
             AccountUserEmailAddress.Text = provider.UserData.EmailAddress;
             AccountUserPhoneNumber.Text = provider.UserData.PhoneNumber;
+
             if (string.IsNullOrEmpty(provider.UserData.SecurityQuestion))
             {
                 AccountUserSecurityQuestion.Visible = false;
@@ -591,6 +607,7 @@ namespace GSF.Web.Embedded
         private void ShowMessage(string message, bool isError)
         {
             MessageLabel.Text = string.Format("{0}<br /><br />", message);
+
             if (isError)
                 MessageLabel.CssClass = "ErrorMessage";
             else
@@ -600,14 +617,11 @@ namespace GSF.Web.Embedded
         private bool ShowFailureReason(ISecurityProvider provider)
         {
             if (!provider.UserData.IsDefined)
-                // No such account.
-                ShowMessage("Account does not exist.", true);
+                ShowMessage("Account does not exist.", true);           // No such account.
             else if (provider.UserData.IsDisabled)
-                // Account is disabled.
-                ShowMessage("Account is currently disabled.", true);
+                ShowMessage("Account is currently disabled.", true);    // Account is disabled.
             else if (provider.UserData.IsLockedOut)
-                // Account is locked.
-                ShowMessage("Account is currently locked.", true);
+                ShowMessage("Account is currently locked out.", true);  // Account is locked out.
             else
                 return false;
 

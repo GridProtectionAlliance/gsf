@@ -44,7 +44,7 @@ namespace GSF.TimeSeries.UI
         #region [ Members ]
 
         // Fields
-        private TlsClient m_remotingClient;
+        private ClientBase m_remotingClient;
         private ClientHelper m_clientHelper;
         private string m_cachedStatus;
         private readonly int m_statusBufferSize;
@@ -64,10 +64,6 @@ namespace GSF.TimeSeries.UI
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
             string setting;
 
-            SslProtocols enabledSslProtocols;
-            SslPolicyErrors validPolicyErrors;
-            X509ChainStatusFlags validChainFlags;
-
             if (settings.TryGetValue("statusBufferSize", out setting) && !string.IsNullOrWhiteSpace(setting))
                 m_statusBufferSize = int.Parse(setting);
             else
@@ -76,31 +72,10 @@ namespace GSF.TimeSeries.UI
             m_cachedStatus = string.Empty;
 
             // Initialize remoting client socket.
-            m_remotingClient = new TlsClient();
-            m_remotingClient.ConnectionString = connectionString;
-            m_remotingClient.PayloadAware = true;
-            m_remotingClient.IgnoreInvalidCredentials = true;
-            m_remotingClient.MaxConnectionAttempts = -1;
-            m_remotingClient.RemoteCertificateValidationCallback = RemoteCertificateValidationCallback;
-
-            // See if user wants to connect to remote service using integrated security
-            if (settings.TryGetValue("integratedSecurity", out setting) && !string.IsNullOrWhiteSpace(setting))
-                m_remotingClient.IntegratedSecurity = setting.ParseBoolean();
-
-            // See if the user has explicitly defined the set of enabled SslProtocols
-            if (settings.TryGetValue("enabledSslProtocols", out setting) && Enum.TryParse(setting, out enabledSslProtocols))
-                m_remotingClient.EnabledSslProtocols = enabledSslProtocols;
-
-            // See if the user has explicitly defined valid policy errors or valid chain flags
-            if (settings.TryGetValue("validPolicyErrors", out setting) && Enum.TryParse(setting, out validPolicyErrors))
-                m_remotingClient.ValidPolicyErrors = validPolicyErrors;
-
-            if (settings.TryGetValue("validChainFlags", out setting) && Enum.TryParse(setting, out validChainFlags))
-                m_remotingClient.ValidChainFlags = validChainFlags;
-
-            // See if the user has explicitly defined whether to execute revocation checks on server certificates
-            if (settings.TryGetValue("checkCertificateRevocation", out setting) && !string.IsNullOrWhiteSpace(setting))
-                m_remotingClient.CheckCertificateRevocation = setting.ParseBoolean();
+            if (!settings.TryGetValue("enabledSslProtocols", out setting) || !setting.Equals("None", StringComparison.OrdinalIgnoreCase))
+                m_remotingClient = InitializeTlsClient(connectionString);
+            else
+                m_remotingClient = InitializeTcpClient(connectionString);
 
             // Initialize windows service client.
             m_clientHelper = new ClientHelper();
@@ -190,27 +165,104 @@ namespace GSF.TimeSeries.UI
             }
         }
 
+        private TcpClient InitializeTcpClient(string connectionString)
+        {
+            Dictionary<string, string> settings;
+            string setting;
+
+            TcpClient remotingClient;
+
+            // Initialize remoting client socket.
+            remotingClient = new TcpClient();
+            remotingClient.ConnectionString = connectionString;
+            remotingClient.PayloadAware = true;
+            remotingClient.IgnoreInvalidCredentials = true;
+            remotingClient.MaxConnectionAttempts = -1;
+
+            // Parse connection string into key-value pairs
+            settings = connectionString.ParseKeyValuePairs();
+
+            // See if user wants to connect to remote service using integrated security
+            if (settings.TryGetValue("integratedSecurity", out setting) && !string.IsNullOrWhiteSpace(setting))
+                remotingClient.IntegratedSecurity = setting.ParseBoolean();
+
+            return remotingClient;
+        }
+
+        private TlsClient InitializeTlsClient(string connectionString)
+        {
+            Dictionary<string, string> settings;
+            string setting;
+
+            TlsClient remotingClient;
+            SslProtocols enabledSslProtocols;
+            SslPolicyErrors validPolicyErrors;
+            X509ChainStatusFlags validChainFlags;
+
+            // Initialize remoting client socket.
+            remotingClient = new TlsClient();
+            remotingClient.ConnectionString = connectionString;
+            remotingClient.PayloadAware = true;
+            remotingClient.IgnoreInvalidCredentials = true;
+            remotingClient.MaxConnectionAttempts = -1;
+            remotingClient.RemoteCertificateValidationCallback = RemoteCertificateValidationCallback;
+
+            // Parse connection string into key-value pairs
+            settings = connectionString.ParseKeyValuePairs();
+
+            // See if user wants to connect to remote service using integrated security
+            if (settings.TryGetValue("integratedSecurity", out setting) && !string.IsNullOrWhiteSpace(setting))
+                remotingClient.IntegratedSecurity = setting.ParseBoolean();
+
+            // See if the user has explicitly defined the set of enabled SslProtocols
+            if (settings.TryGetValue("enabledSslProtocols", out setting) && Enum.TryParse(setting, out enabledSslProtocols))
+                remotingClient.EnabledSslProtocols = enabledSslProtocols;
+
+            // See if the user has explicitly defined valid policy errors or valid chain flags
+            if (settings.TryGetValue("validPolicyErrors", out setting) && Enum.TryParse(setting, out validPolicyErrors))
+                remotingClient.ValidPolicyErrors = validPolicyErrors;
+
+            if (settings.TryGetValue("validChainFlags", out setting) && Enum.TryParse(setting, out validChainFlags))
+                remotingClient.ValidChainFlags = validChainFlags;
+
+            // See if the user has explicitly defined whether to execute revocation checks on server certificates
+            if (settings.TryGetValue("checkCertificateRevocation", out setting) && !string.IsNullOrWhiteSpace(setting))
+                remotingClient.CheckCertificateRevocation = setting.ParseBoolean();
+
+            return remotingClient;
+        }
+
         private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            IPEndPoint remoteEndPoint = m_remotingClient.Client.RemoteEndPoint as IPEndPoint;
+            TlsClient remotingClient;
+            IPEndPoint remoteEndPoint;
             IPHostEntry localhost;
             SimplePolicyChecker policyChecker;
 
-            if ((object)remoteEndPoint != null)
-            {
-                // Create an exception and do not check policy for localhost
-                localhost = Dns.GetHostEntry("localhost");
+            remotingClient = m_remotingClient as TlsClient;
 
-                if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
-                    return true;
+            if ((object)remotingClient != null)
+            {
+                remoteEndPoint = remotingClient.Client.RemoteEndPoint as IPEndPoint;
+
+                if ((object)remoteEndPoint != null)
+                {
+                    // Create an exception and do not check policy for localhost
+                    localhost = Dns.GetHostEntry("localhost");
+
+                    if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
+                        return true;
+                }
+
+                // Not connected to localhost, so use the policy checker
+                policyChecker = new SimplePolicyChecker();
+                policyChecker.ValidPolicyErrors = remotingClient.ValidPolicyErrors;
+                policyChecker.ValidChainFlags = remotingClient.ValidChainFlags;
+
+                return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
             }
 
-            // Not connected to localhost, so use the policy checker
-            policyChecker = new SimplePolicyChecker();
-            policyChecker.ValidPolicyErrors = m_remotingClient.ValidPolicyErrors;
-            policyChecker.ValidChainFlags = m_remotingClient.ValidChainFlags;
-
-            return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+            return false;
         }
 
         /// <summary>

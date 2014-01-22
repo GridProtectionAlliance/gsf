@@ -47,8 +47,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using GSF.Collections;
 using GSF.Configuration;
+using Timer = System.Timers.Timer;
 
 namespace GSF.IO
 {
@@ -139,6 +141,11 @@ namespace GSF.IO
         public const double DefaultLogFilesDuration = 0.0;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="FlushTimerInterval"/> property.
+        /// </summary>
+        public const double DefaultFlushTimerInterval = 10.0D;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
         public const string DefaultSettingsCategory = "LogFile";
@@ -167,12 +174,14 @@ namespace GSF.IO
         private bool m_persistSettings;
         private string m_settingsCategory;
         private FileStream m_fileStream;
-        private readonly ManualResetEvent m_operationWaitHandle;
-        private readonly ProcessList<string> m_logEntryQueue;
+        private ManualResetEvent m_operationWaitHandle;
+        private ProcessList<string> m_logEntryQueue;
+        private Timer m_flushTimer;
         private Encoding m_textEncoding;
         private bool m_disposed;
         private bool m_initialized;
         private double m_logFilesDuration;
+        private double m_flushTimerInterval;
         private readonly Dictionary<DateTime, string> m_savedFilesWithTime;
 
         #endregion
@@ -194,9 +203,13 @@ namespace GSF.IO
             m_operationWaitHandle = new ManualResetEvent(true);
             m_savedFilesWithTime = new Dictionary<DateTime, string>();
             m_logEntryQueue = ProcessList<string>.CreateRealTimeQueue(WriteLogEntries);
+            m_flushTimer = new Timer();
+            m_flushTimerInterval = 10.0D;
 
             this.FileFull += LogFile_FileFull;
             m_logEntryQueue.ProcessException += ProcessExceptionHandler;
+            m_flushTimer.Elapsed += FlushTimer_Elapsed;
+            m_flushTimer.AutoReset = false;
         }
 
         /// <summary>
@@ -292,6 +305,27 @@ namespace GSF.IO
             set
             {
                 m_logFilesDuration = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of seconds of inactivity before the <see cref="LogFile"/> automatically flushes the file stream.
+        /// </summary>
+        [Category("Behavior"),
+        DefaultValue(DefaultFlushTimerInterval),
+        Description("Number of seconds of inactivity before the log file automatically flushes the file stream.")]
+        public double FlushTimerInterval
+        {
+            get
+            {
+                return m_flushTimerInterval;
+            }
+            set
+            {
+                m_flushTimerInterval = value;
+
+                if (m_flushTimerInterval > 0.0D)
+                    m_flushTimer.Interval = m_flushTimerInterval * 1000.0D;
             }
         }
 
@@ -514,6 +548,7 @@ namespace GSF.IO
                 settings["FileSize", true].Update(m_fileSize);
                 settings["FileFullOperation", true].Update(m_fileFullOperation);
                 settings["LogFilesDuration", true].Update(m_logFilesDuration);
+                settings["FlushTimerInterval", true].Update(m_flushTimerInterval);
                 config.Save();
             }
         }
@@ -538,10 +573,12 @@ namespace GSF.IO
                 settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
                 settings.Add("FileFullOperation", m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
                 settings.Add("LogFilesDuration", m_logFilesDuration, "Time duration in hours to save the log files,files older than this duration are purged automatically");
+                settings.Add("FlushTimerInterval", m_flushTimerInterval, "Number of seconds of inactivity before the log file automatically flushes the file stream.");
                 FileName = settings["FileName"].ValueAs(m_fileName);
                 FileSize = settings["FileSize"].ValueAs(m_fileSize);
                 FileFullOperation = settings["FileFullOperation"].ValueAs(m_fileFullOperation);
                 LogFilesDuration = settings["LogFilesDuration"].ValueAs(m_logFilesDuration);
+                FlushTimerInterval = settings["FlushTimerInterval"].ValueAs(m_flushTimerInterval);
             }
         }
 
@@ -737,15 +774,29 @@ namespace GSF.IO
                         this.FileFull -= LogFile_FileFull;
 
                         if ((object)m_operationWaitHandle != null)
+                        {
                             m_operationWaitHandle.Close();
+                            m_operationWaitHandle = null;
+                        }
+
+                        if ((object)m_flushTimer != null)
+                        {
+                            m_flushTimer.Elapsed -= FlushTimer_Elapsed;
+                            m_flushTimer.Dispose();
+                            m_flushTimer = null;
+                        }
 
                         if ((object)m_fileStream != null)
+                        {
                             m_fileStream.Dispose();
+                            m_fileStream = null;
+                        }
 
                         if ((object)m_logEntryQueue != null)
                         {
                             m_logEntryQueue.ProcessException -= ProcessExceptionHandler;
                             m_logEntryQueue.Dispose();
+                            m_logEntryQueue = null;
                         }
                     }
                 }
@@ -773,6 +824,9 @@ namespace GSF.IO
         {
             long currentFileSize = 0;
             long maximumFileSize = (long)(m_fileSize * 1048576);
+
+            if ((object)m_flushTimer != null)
+                m_flushTimer.Stop();
 
             lock (m_fileStream)
             {
@@ -811,6 +865,24 @@ namespace GSF.IO
                         return;
                     }
                 }
+            }
+
+            if (m_flushTimerInterval > 0.0D && (object)m_flushTimer != null)
+                m_flushTimer.Start();
+        }
+
+        private void FlushTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        {
+            try
+            {
+                if ((object)m_fileStream != null)
+                    m_fileStream.Flush();
+            }
+            catch (ObjectDisposedException)
+            {
+                // If the file stream has been disposed,
+                // then we know it's already been flushed
+                // so we just go on with our lives
             }
         }
 

@@ -33,6 +33,7 @@ using System.Security.Principal;
 using System.Threading;
 using System.Timers;
 using System.Web;
+using GSF.Configuration;
 using Timer = System.Timers.Timer;
 
 namespace GSF.Security
@@ -52,7 +53,7 @@ namespace GSF.Security
         private class CacheContext
         {
             private readonly ISecurityProvider m_provider;
-            private DateTime m_lastAccessed;
+            private readonly DateTime m_cacheCreationTime;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="CacheContext"/> class.
@@ -60,7 +61,7 @@ namespace GSF.Security
             public CacheContext(ISecurityProvider provider)
             {
                 m_provider = provider;
-                m_lastAccessed = DateTime.Now;
+                m_cacheCreationTime = DateTime.UtcNow;
             }
 
             /// <summary>
@@ -70,19 +71,18 @@ namespace GSF.Security
             {
                 get
                 {
-                    m_lastAccessed = DateTime.Now;
                     return m_provider;
                 }
             }
 
             /// <summary>
-            /// Gets the <see cref="DateTime"/> of when the <see cref="Provider"/> was last accessed.
+            /// Gets the <see cref="DateTime"/> of when the <see cref="CacheContext"/> was created.
             /// </summary>
-            public DateTime LastAccessed
+            public DateTime CacheCreationTime
             {
                 get
                 {
-                    return m_lastAccessed;
+                    return m_cacheCreationTime;
                 }
             }
         }
@@ -90,9 +90,9 @@ namespace GSF.Security
         // Constants
 
         /// <summary>
-        /// Number of minutes upto which <see cref="ISecurityProvider"/>s are to be cached.
+        /// Number of minutes up to which <see cref="ISecurityProvider"/>s are to be cached.
         /// </summary>
-        private const int CachingTimeout = 20;
+        private const int UserCacheTimeout = 5;
 
         #endregion
 
@@ -101,16 +101,24 @@ namespace GSF.Security
         // Static Fields
         private static bool s_threadPolicySet;
         private static readonly IDictionary<string, CacheContext> s_cache;
-        private static readonly Timer s_cacheMonitorTimer;
+        private static readonly int s_userCacheTimeout;
 
         // Static Constructor
         static SecurityProviderCache()
         {
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
+            settings.Add("UserCacheTimeout", UserCacheTimeout, "Defines the timeout, in whole minutes, for a user's provider cache. Any value less than 1 will cause cache reset every minute.");
+
+            s_userCacheTimeout = settings["UserCacheTimeout"].ValueAs(UserCacheTimeout);
+
             // Initialize static variables.
             s_cache = new Dictionary<string, CacheContext>(StringComparer.CurrentCultureIgnoreCase);
-            s_cacheMonitorTimer = new Timer(60000);
-            s_cacheMonitorTimer.Elapsed += CacheMonitorTimer_Elapsed;
-            s_cacheMonitorTimer.Start();
+
+            Timer cacheMonitorTimer = new Timer(60000);
+            cacheMonitorTimer.Elapsed += CacheMonitorTimer_Elapsed;
+            cacheMonitorTimer.Start();
         }
 
         // Static Properties
@@ -130,77 +138,85 @@ namespace GSF.Security
                 //   This would essentially mean that we're either dealing with windows based application or WCF 
                 //   service hosted inside ASP.NET runtime without compatibility mode enabled.
                 SecurityPrincipal principal = Thread.CurrentPrincipal as SecurityPrincipal;
-                if (principal != null)
-                {
-                    // The provider we're looking for is available to us via the current thread principal. This means
-                    // that the current thread principal has already been set by a call to Current property setter.
-                    return ((SecurityIdentity)principal.Identity).Provider;
-                }
-                else
-                {
-                    // Since the provider is not available to us through the current thread principal, we check to see 
-                    // if it is available to us via one of the two caching mechanisms.
-                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
-                    {
-                        // Check session state.
-                        ISecurityProvider provider = HttpContext.Current.Session[typeof(ISecurityProvider).Name] as ISecurityProvider;
-                        if (provider == null)
-                            return null;
-                        else
-                            return SetupPrincipal(provider, false);
-                    }
-                    else
-                    {
-                        // Check in-process memory.
-                        CacheContext cache;
-                        lock (s_cache)
-                        {
-                            s_cache.TryGetValue(Thread.CurrentPrincipal.Identity.Name, out cache);
-                        }
 
-                        if (cache == null)
-                            return null;
-                        else
-                            return SetupPrincipal(cache.Provider, false);
-                    }
+                // The provider we're looking for is available to us via the current thread principal. This means
+                // that the current thread principal has already been set by a call to Current property setter.
+                if ((object)principal != null)
+                    return ((SecurityIdentity)principal.Identity).Provider;
+
+                // Since the provider is not available to us through the current thread principal, we check to see 
+                // if it is available to us via one of the two caching mechanisms.
+                if ((object)HttpContext.Current != null && (object)HttpContext.Current.Session != null)
+                {
+                    // Check session state.
+                    ISecurityProvider provider = HttpContext.Current.Session[typeof(ISecurityProvider).Name] as ISecurityProvider;
+
+                    if ((object)provider == null)
+                        return null;
+
+                    return SetupPrincipal(provider, false);
                 }
+
+                // Check in-process memory.
+                CacheContext cache;
+
+                lock (s_cache)
+                {
+                    s_cache.TryGetValue(Thread.CurrentPrincipal.Identity.Name, out cache);
+                }
+
+                if ((object)cache == null)
+                    return null;
+
+                return SetupPrincipal(cache.Provider, false);
             }
             set
             {
-                if (value != null)
+                if ((object)value != null)
                 {
                     // Login - Setup security principal.
                     value.Initialize();
+
                     SetupPrincipal(value, false);
-                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
-                        // Cache provider to session state.
+
+                    // Cache provider to session state.
+                    if ((object)HttpContext.Current != null && (object)HttpContext.Current.Session != null)
+                    {
                         HttpContext.Current.Session[typeof(ISecurityProvider).Name] = value;
+                    }
                     else if (!string.IsNullOrEmpty(value.UserData.LoginID))
+                    {
                         // Cache provider to in-process memory.
                         lock (s_cache)
                         {
                             s_cache[value.UserData.LoginID] = new CacheContext(value);
                         }
+                    }
                 }
                 else
                 {
                     // Logout - Restore original principal.
                     SecurityPrincipal principal = Thread.CurrentPrincipal as SecurityPrincipal;
-                    if (principal == null)
+
+                    if ((object)principal == null)
                         return;
 
                     SecurityIdentity identity = (SecurityIdentity)principal.Identity;
                     SetupPrincipal(identity.Provider, true);
 
-                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
+                    if ((object)HttpContext.Current != null && (object)HttpContext.Current.Session != null)
+                    {
                         // Remove previously cached provider from session state.
                         HttpContext.Current.Session[typeof(ISecurityProvider).Name] = null;
+                    }
                     else if (s_cache.ContainsKey(identity.Provider.UserData.LoginID))
+                    {
                         // Remove previously cached provider from in-process memory.
                         lock (s_cache)
                         {
                             s_cache.Remove(identity.Provider.UserData.LoginID);
                         }
+                    }
                 }
             }
         }
@@ -225,15 +241,21 @@ namespace GSF.Security
         {
             // Initialize the principal object.
             IPrincipal principal;
+
             if (restore)
+            {
                 // Set principal to anonymous WindowsPrincipal.
                 principal = new WindowsPrincipal(WindowsIdentity.GetAnonymous());
+            }
             else
+            {
                 // Set principal to SecurityPrincipal.
                 principal = new SecurityPrincipal(new SecurityIdentity(provider));
+            }
 
             // Setup the current thread principal.
             Thread.CurrentPrincipal = principal;
+
             if (!s_threadPolicySet)
             {
                 AppDomain.CurrentDomain.SetThreadPrincipal(Thread.CurrentPrincipal);
@@ -241,7 +263,7 @@ namespace GSF.Security
             }
 
             // Setup ASP.NET remote user principal.
-            if (HttpContext.Current != null)
+            if ((object)HttpContext.Current != null)
                 HttpContext.Current.User = Thread.CurrentPrincipal;
 
             return provider;
@@ -252,10 +274,18 @@ namespace GSF.Security
             lock (s_cache)
             {
                 List<string> cacheKeys = new List<string>(s_cache.Keys);
+
                 foreach (string cacheKey in cacheKeys)
                 {
-                    if (DateTime.Now.Subtract(s_cache[cacheKey].LastAccessed).TotalMinutes > CachingTimeout)
+                    CacheContext cache = s_cache[cacheKey];
+
+                    if (DateTime.UtcNow.Subtract(cache.CacheCreationTime).TotalMinutes > s_userCacheTimeout)
+                    {
+                        if ((object)cache.Provider != null && (object)cache.Provider.UserData != null)
+                            cache.Provider.UserData.Initialize();
+
                         s_cache.Remove(cacheKey);
+                    }
                 }
             }
         }

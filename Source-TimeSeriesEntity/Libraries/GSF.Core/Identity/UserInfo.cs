@@ -84,11 +84,11 @@
 //  09/21/2011 - J. Ritchie Carroll
 //       Added Mono implementation exception regions.
 //  11/23/2011 - J. Ritchie Carroll
-//       Modified to support new life cycle interface requirements (i.e., Diposed event).
+//       Modified to support new life cycle interface requirements (i.e., Disposed event).
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //  03/05/2013 - Joe France
-//      Prefer the lastlogontimestamp property over lastLogon property.
+//      Prefer the lastLogonTimestamp property over lastLogon property.
 //  03/06/2013 - Pinal C. Patel
 //       Added new GetUserPropertyValue() and GetUserPropertyValueAsString() methods to replace old
 //       GetUserProperty() method and marked GetUserPropertyValue() as obsolete.
@@ -97,27 +97,31 @@
 //       integer.
 //  06/03/2013 - J. Ritchie Carroll
 //       Added static local user/group manipulation functions.
+//  01/02/2014 - Stephen C. Wills
+//       Added static account-to-SID conversion functions.
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.IO;
-using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
 using System.DirectoryServices;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security;
 using System.Security.Principal;
+using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
+using GSF.IO;
 
 #if !MONO
-using GSF.Interop;
 using System.Collections;
 using System.Management;
+using Microsoft.Win32;
+using GSF.Interop;
 #endif
 
 namespace GSF.Identity
@@ -262,8 +266,9 @@ namespace GSF.Identity
             if (string.IsNullOrEmpty(loginID))
                 throw new ArgumentNullException("loginID");
 
-            string[] parts = loginID.Split('\\');
-            if (parts.Length != 2)
+            string[] accountParts = loginID.Split('\\');
+
+            if (accountParts.Length != 2)
             {
                 // Login ID is specified in 'username' format.
                 m_username = loginID;
@@ -271,8 +276,8 @@ namespace GSF.Identity
             else
             {
                 // Login ID is specified in 'domain\username' format.
-                m_domain = parts[0];
-                m_username = parts[1];
+                m_domain = accountParts[0];
+                m_username = accountParts[1];
             }
 
             m_ldapPath = ldapPath;
@@ -312,16 +317,7 @@ namespace GSF.Identity
 
         #region [ Properties ]
 
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the <see cref="UserInfo"/> object is currently enabled.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Enabled"/> property is not to be set by user-code directly.
-        /// </remarks>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool Enabled
+        bool ISupportLifecycle.Enabled
         {
             get
             {
@@ -427,7 +423,7 @@ namespace GSF.Identity
         /// </para>
         /// <para>
         /// If a laptop user that's normally connected to the domain takes their computer on the road without VPN or other
-        /// connectivity to the domain, the user can still login to the latop using cached credentials therefore they are
+        /// connectivity to the domain, the user can still login to the laptop using cached credentials therefore they are
         /// still considered to exist. Without access to the domain, no user information will be available (such as the
         /// <see cref="Groups"/> listing) - if this data is needed offline it will need to be cached by the application in
         /// anticipation of offline access.
@@ -451,7 +447,12 @@ namespace GSF.Identity
                         // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
                         // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
                         WindowsPrincipal windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                        exists = (object)windowsPrincipal != null && !string.IsNullOrEmpty(LoginID) && string.Compare(windowsPrincipal.Identity.Name, LoginID, true) == 0 && windowsPrincipal.Identity.IsAuthenticated;
+
+                        exists =
+                            (object)windowsPrincipal != null &&
+                            !string.IsNullOrEmpty(LoginID) &&
+                            string.Compare(windowsPrincipal.Identity.Name, LoginID, StringComparison.OrdinalIgnoreCase) == 0 &&
+                            windowsPrincipal.Identity.IsAuthenticated;
                     }
                 }
 
@@ -620,12 +621,29 @@ namespace GSF.Identity
         {
             get
             {
+                const string SecurityExceptionFormat = "{0} user account control information cannot be obtained. {1} may not have needed rights to {2}.";
+                const string UnknownErrorFormat = "Unknown error. Invalid value returned when querying user account control for {0}. Value: '{1}'";
+                string userPropertyValue;
+
                 if (m_enabled && m_userAccountControl == -1)
                 {
                     if (m_isWinNT)
-                        m_userAccountControl = int.Parse(GetUserPropertyValueAsString("userFlags"));
+                    {
+                        userPropertyValue = GetUserPropertyValueAsString("userFlags");
+
+                        if (string.IsNullOrEmpty(userPropertyValue))
+                            throw new SecurityException(string.Format(SecurityExceptionFormat, "Local", CurrentUserID, "local machine accounts"));
+                    }
                     else
-                        m_userAccountControl = int.Parse(GetUserPropertyValueAsString("userAccountControl"));
+                    {
+                        userPropertyValue = GetUserPropertyValueAsString("userAccountControl");
+
+                        if (string.IsNullOrEmpty(userPropertyValue))
+                            throw new SecurityException(string.Format(SecurityExceptionFormat, "Active directory", CurrentUserID, m_domain));
+                    }
+
+                    if (!int.TryParse(userPropertyValue, out m_userAccountControl))
+                        throw new InvalidOperationException(string.Format(UnknownErrorFormat, LoginID, userPropertyValue));
                 }
 
                 return m_userAccountControl;
@@ -677,7 +695,7 @@ namespace GSF.Identity
         }
 
         /// <summary>
-        /// Gets ths maximum password age for the user.
+        /// Gets this maximum password age for the user.
         /// </summary>
         public Ticks MaximumPasswordAge
         {
@@ -726,11 +744,11 @@ namespace GSF.Identity
         }
 
         /// <summary>
-        /// Gets the groups asscociated with the user.
+        /// Gets all the groups associated with the user - this includes local groups and Active Directory groups if applicable.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Groups names are prefixed with their associated domain or computer name.
+        /// Groups names are prefixed with their associated domain, computer name or BUILTIN.
         /// </para>
         /// <para>
         /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
@@ -740,44 +758,121 @@ namespace GSF.Identity
         {
             get
             {
-                List<string> groups = new List<string>();
-
+                HashSet<string> groups = new HashSet<string>();
+                string groupName;
 #if !MONO
                 if (m_enabled)
                 {
                     if (m_isWinNT)
                     {
-                        // Get local groups
+                        // Get fixed list of BUILTIN local groups
+                        string[] builtInGroups = GetBuiltInLocalGroups();
+
+                        // Get local groups that local user is a member of
                         object localGroups = m_userEntry.Invoke("Groups");
 
                         foreach (object localGroup in (IEnumerable)localGroups)
                         {
                             using (DirectoryEntry groupEntry = new DirectoryEntry(localGroup))
                             {
-                                groups.Add(m_domain + "\\" + groupEntry.Name);
+                                groupName = groupEntry.Name;
+
+                                if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                                    groups.Add(Environment.MachineName + "\\" + groupName);
+                                else
+                                    groups.Add("BUILTIN\\" + groupName);
                             }
                         }
+
+                        // Union this with a manual scan of local groups since "Groups" call will not derive
+                        // "NT AUTHORITY\Authenticated Users" which will miss "BUILTIN\Users" for authenticated
+                        // users. This will also catch other groups that may have been missed by "Groups" call.
+                        groups.UnionWith(LocalGroups);
                     }
                     else
                     {
-                        // Get active directory groups
+                        // Get active directory groups that active directory user is a member of
                         m_userEntry.RefreshCache(new[] { "TokenGroups" });
 
                         foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
                         {
                             try
                             {
-                                groups.Add(new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString());
+                                groupName = new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString();
+                                groups.Add(groupName);
                             }
-                            catch
+                            catch (IdentityNotMappedException)
+                            {
+                                // This might happen when AD server is not accessible
+                            }
+                            catch (SystemException)
                             {
                                 // Ignoring group SID's that fail to translate to an active AD group, for whatever reason
                             }
                         }
+
+                        // Union this with local groups that active directory user is a member of. The
+                        // "TokenGroups" call doesn't get all of these :-p, generally this call only
+                        // returns some of the common "BUILTIN\*" groups.
+                        groups.UnionWith(LocalGroups);
                     }
                 }
 #endif
+                return groups.ToArray();
+            }
+        }
 
+        /// <summary>
+        /// Gets the local groups the user is a member of.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Groups names are prefixed with BUILTIN or computer name.
+        /// </para>
+        /// <para>
+        /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
+        /// </para>
+        /// </remarks>
+        public string[] LocalGroups
+        {
+            get
+            {
+                List<string> groups = new List<string>();
+#if !MONO
+                const string authenticatedUsersGroupPath = "WinNT://NT AUTHORITY/Authenticated Users";
+
+                // Get local groups that user is a member of
+                DirectoryEntry root = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure);
+                string userPath = string.Format("WinNT://{0}/{1}", m_domain, m_username);
+                string groupName;
+                bool userIsAuthenticated = false;
+
+                string[] builtInGroups = GetBuiltInLocalGroups();
+
+                // See if identity for current thread matches user information login ID - when this is true we can check 
+                // if the current user is authenticated. When a user is authenticated we will also need to validate if
+                // the local groups that contain the local "NT AUTHORITY\Authenticated Users" group.
+                if (string.Compare(Thread.CurrentPrincipal.Identity.Name, LoginID, StringComparison.OrdinalIgnoreCase) == 0)
+                    userIsAuthenticated = Thread.CurrentPrincipal.Identity.IsAuthenticated;
+
+                // Have to scan each local group for the AD user...
+                foreach (DirectoryEntry groupEntry in root.Children)
+                {
+                    if (groupEntry.SchemaClassName != "Group")
+                        continue;
+
+                    if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }) ||
+                        (userIsAuthenticated && (bool)groupEntry.Invoke("IsMember", new object[] { authenticatedUsersGroupPath })))
+                    {
+                        groupName = groupEntry.Name;
+
+                        if (Array.BinarySearch(builtInGroups, groupName, StringComparer.OrdinalIgnoreCase) < 0)
+                            groups.Add(Environment.MachineName + "\\" + groupName);
+                        else
+                            groups.Add("BUILTIN\\" + groupName);
+                    }
+                }
+#endif
                 return groups.ToArray();
             }
         }
@@ -1120,7 +1215,7 @@ namespace GSF.Identity
                 m_domain = Environment.MachineName;
 
             // Use active directory domain account for user information lookup as long as domain is not the current machine
-            if (string.Compare(Environment.MachineName, m_domain, true) != 0)
+            if (string.Compare(Environment.MachineName, m_domain, StringComparison.OrdinalIgnoreCase) != 0)
             {
                 // Initialize the directory entry object used to retrieve active directory information
                 WindowsImpersonationContext currentContext = null;
@@ -1376,7 +1471,8 @@ namespace GSF.Identity
         public string GetUserPropertyValueAsString(string propertyName)
         {
             PropertyValueCollection value = GetUserPropertyValue(propertyName);
-            if (value != null && value.Count > 0)
+
+            if ((object)value != null && value.Count > 0)
                 return value[0].ToString().Replace("  ", " ").Trim();
 
             return string.Empty;
@@ -1385,10 +1481,12 @@ namespace GSF.Identity
         private DirectorySearcher CreateDirectorySearcher()
         {
             DirectorySearcher searcher;
+
             if (string.IsNullOrEmpty(m_ldapPath))
                 searcher = new DirectorySearcher();
             else
                 searcher = new DirectorySearcher(new DirectoryEntry(m_ldapPath));
+
             return searcher;
         }
 
@@ -1425,7 +1523,68 @@ namespace GSF.Identity
         #region [ Static ]
 
         // Static Fields
-        private static UserInfo s_currentUserInfo;
+        private static readonly UserInfo s_currentUserInfo;
+        private static readonly string[] s_builtInLocalGroups;
+
+        // Static constructor
+        static UserInfo()
+        {
+            string currentUserID = CurrentUserID;
+
+            if (!string.IsNullOrEmpty(currentUserID))
+            {
+                s_currentUserInfo = new UserInfo(currentUserID);
+                s_currentUserInfo.Initialize();
+            }
+
+            // Determine built-in group list - this is not expected to change so it is statically cached
+            List<string> groups = new List<string>();
+#if !MONO
+            WellKnownSidType[] builtInSids =
+            {
+                WellKnownSidType.BuiltinAccountOperatorsSid,
+                WellKnownSidType.BuiltinAdministratorsSid,
+                WellKnownSidType.BuiltinAuthorizationAccessSid,
+                WellKnownSidType.BuiltinBackupOperatorsSid,
+                WellKnownSidType.BuiltinDomainSid,
+                WellKnownSidType.BuiltinGuestsSid,
+                WellKnownSidType.BuiltinIncomingForestTrustBuildersSid,
+                WellKnownSidType.BuiltinNetworkConfigurationOperatorsSid,
+                WellKnownSidType.BuiltinPerformanceLoggingUsersSid,
+                WellKnownSidType.BuiltinPerformanceMonitoringUsersSid,
+                WellKnownSidType.BuiltinPowerUsersSid,
+                WellKnownSidType.BuiltinPreWindows2000CompatibleAccessSid,
+                WellKnownSidType.BuiltinPrintOperatorsSid,
+                WellKnownSidType.BuiltinRemoteDesktopUsersSid,
+                WellKnownSidType.BuiltinReplicatorSid,
+                WellKnownSidType.BuiltinSystemOperatorsSid,
+                WellKnownSidType.BuiltinUsersSid
+            };
+
+            SecurityIdentifier securityIdentifier;
+            NTAccount groupAccount;
+
+            foreach (WellKnownSidType builtInSid in builtInSids)
+            {
+                try
+                {
+                    // Attempt to translate well-known SID to a local NT group - if this fails, local group is not defined
+                    securityIdentifier = new SecurityIdentifier(builtInSid, null);
+                    groupAccount = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
+
+                    // Don't include "BUILTIN\" prefix for group names so they are easily comparable
+                    groups.Add(groupAccount.ToString().Substring(8));
+                }
+                catch (IdentityNotMappedException)
+                {
+                }
+            }
+
+            // Sort list so binary search can be used
+            groups.Sort(StringComparer.OrdinalIgnoreCase);
+#endif
+            s_builtInLocalGroups = groups.ToArray();
+        }
 
         // Static Properties
 
@@ -1439,12 +1598,19 @@ namespace GSF.Identity
         {
             get
             {
-                WindowsIdentity identity = WindowsIdentity.GetCurrent();
+                try
+                {
+                    WindowsIdentity identity = WindowsIdentity.GetCurrent();
 
-                if ((object)identity != null)
-                    return identity.Name;
+                    if ((object)identity != null)
+                        return identity.Name;
 
-                return null;
+                    return null;
+                }
+                catch (SecurityException)
+                {
+                    return null;
+                }
             }
         }
 
@@ -1455,9 +1621,6 @@ namespace GSF.Identity
         {
             get
             {
-                if ((object)s_currentUserInfo == null)
-                    s_currentUserInfo = new UserInfo(CurrentUserID);
-
                 return s_currentUserInfo;
             }
         }
@@ -1492,6 +1655,23 @@ namespace GSF.Identity
 
                 return new UserInfo(RemoteUserID);
             }
+        }
+
+        /// <summary>
+        /// Returns a sorted list of the BUILTIN local groups.
+        /// </summary>
+        /// <returns>Sorted list of the BUILTIN local groups.</returns>
+        /// <remarks>
+        /// <para>
+        /// Names in this list do not have a "BUILTIN\" prefix.
+        /// </para>
+        /// <para>
+        /// This method always returns an empty string array (i.e., a string array with no elements) under Mono deployments.
+        /// </para>
+        /// </remarks>
+        public static string[] GetBuiltInLocalGroups()
+        {
+            return s_builtInLocalGroups;
         }
 
         // Static Methods
@@ -1770,8 +1950,32 @@ namespace GSF.Identity
         }
 
         // Determines if local account (e.g., user or group) exists using an existing directory entry
-        private static bool LocalAccountExists(DirectoryEntry localMachine, string accountName, string schemaType, out DirectoryEntry accountEntry)
+        private static bool LocalAccountExists(DirectoryEntry localMachine, string accountName, string schemaType, bool allowActiveDirectoryAccount, out DirectoryEntry accountEntry)
         {
+            if (allowActiveDirectoryAccount && accountName.Contains("\\"))
+            {
+                string[] accountParts = accountName.Split('\\');
+
+                if (accountParts.Length == 2)
+                {
+                    string domain = accountParts[0].Trim();
+                    string account = accountParts[1].Trim();
+
+                    // Check for non-local domain name
+                    if (!string.IsNullOrEmpty(domain) &&
+                        string.Compare(domain, ".", StringComparison.OrdinalIgnoreCase) != 0 &&
+                        string.Compare(domain, Environment.MachineName, StringComparison.OrdinalIgnoreCase) != 0)
+                    {
+                        // AD accounts that exist in local groups can be referenced by name
+                        accountEntry = new DirectoryEntry(string.Format("WinNT://{0}/{1}", domain, account));
+                        return true;
+                    }
+
+                    // Remove domain prefix for local accounts
+                    accountName = account;
+                }
+            }
+
             try
             {
                 accountEntry = localMachine.Children.Find(accountName, schemaType);
@@ -1803,12 +2007,12 @@ namespace GSF.Identity
                 throw new ArgumentException("No user name was specified.", "userName");
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry userEntry;
 
                 // Determine if local user exists
-                bool userExists = LocalAccountExists(localMachine, userName, "user", out userEntry);
+                bool userExists = LocalAccountExists(localMachine, userName, "user", false, out userEntry);
 
                 if ((object)userEntry != null)
                     userEntry.Dispose();
@@ -1845,14 +2049,14 @@ namespace GSF.Identity
                 throw new ArgumentException("Cannot create local user: no user name was specified.", "userName");
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry userEntry = null;
 
                 try
                 {
                     // Determine if local user exists
-                    if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
+                    if (!LocalAccountExists(localMachine, userName, "user", false, out userEntry))
                     {
                         using (DirectoryEntry newUserEntry = localMachine.Children.Add(userName, "user"))
                         {
@@ -1908,14 +2112,14 @@ namespace GSF.Identity
                 throw new ArgumentException("Cannot change password for local user: no user name was specified.", "userName");
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry userEntry = null;
 
                 try
                 {
                     // Determine if local user exists
-                    if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
+                    if (!LocalAccountExists(localMachine, userName, "user", false, out userEntry))
                         throw new InvalidOperationException(string.Format("Cannot change password for local user \"{0}\": user does not exist.", userName));
 
                     userEntry.Invoke("SetPassword", new object[] { password });
@@ -1958,14 +2162,14 @@ namespace GSF.Identity
                 throw new ArgumentException("Cannot remove local user: no user name was specified.", "userName");
 
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry userEntry = null;
 
                 try
                 {
                     // Determine if local user exists
-                    if (LocalAccountExists(localMachine, userName, "user", out userEntry))
+                    if (LocalAccountExists(localMachine, userName, "user", false, out userEntry))
                     {
                         localMachine.Children.Remove(userEntry);
                         return true;
@@ -2003,13 +2207,15 @@ namespace GSF.Identity
             if (groupName == string.Empty)
                 throw new ArgumentException("No group name was specified.", "groupName");
 
+            groupName = ValidateGroupName(groupName);
+
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry;
 
                 // Determine if local group exists
-                bool groupExists = LocalAccountExists(localMachine, groupName, "group", out groupEntry);
+                bool groupExists = LocalAccountExists(localMachine, groupName, "group", false, out groupEntry);
 
                 if ((object)groupEntry != null)
                     groupEntry.Dispose();
@@ -2041,15 +2247,17 @@ namespace GSF.Identity
             if (groupName == string.Empty)
                 throw new ArgumentException("Cannot create local group: no group name was specified.", "groupName");
 
+            groupName = ValidateGroupName(groupName);
+
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
 
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                     {
                         using (DirectoryEntry newGroupEntry = localMachine.Children.Add(groupName, "group"))
                         {
@@ -2097,15 +2305,17 @@ namespace GSF.Identity
             if (groupName == string.Empty)
                 throw new ArgumentException("Cannot remove local group: no group name was specified.", "groupName");
 
+            groupName = ValidateGroupName(groupName);
+
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
 
                 try
                 {
                     // Determine if local group exists
-                    if (LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                     {
                         localMachine.Children.Remove(groupEntry);
                         return true;
@@ -2136,7 +2346,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not determine if user was in local group.</exception>
         /// <remarks>
         /// This function will handle Windows service virtual accounts by specifying the complete virtual account name,
-        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>.
+        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>. This function can also detect
+        /// Active Directory user accounts and groups that may exist in the local group when the <paramref name="userName"/>
+        /// is prefixed with a domain name and a backslash "\".
         /// </remarks>
         public static bool UserIsInLocalGroup(string groupName, string userName)
         {
@@ -2159,8 +2371,10 @@ namespace GSF.Identity
             if (userName == string.Empty)
                 throw new ArgumentException("Cannot determine if user is in local group: no user name was specified.", "userName");
 
+            groupName = ValidateGroupName(groupName);
+
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
@@ -2169,22 +2383,14 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": group does not exist.", userName, groupName));
 
-                    // Check for Windows service virtual accounts
-                    if (userName.StartsWith("NT SERVICE", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        userPath = "WinNT://" + userName.Replace('\\', '/');
-                    }
-                    else
-                    {
-                        // Determine if local user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
-                            throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": user does not exist.", userName, groupName));
+                    // Determine if local user exists
+                    if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot determine if user \"{0}\" is in local group \"{1}\": user does not exist.", userName, groupName));
 
-                        userPath = userEntry.Path;
-                    }
+                    userPath = userEntry.Path;
 
                     // See if user is in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -2229,7 +2435,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not add user to local group.</exception>
         /// <remarks>
         /// This function will handle Windows service virtual accounts by specifying the complete virtual account name,
-        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>.
+        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>. This function can also add
+        /// Active Directory user accounts and groups to the local group the when the <paramref name="userName"/> is
+        /// prefixed with a domain name and a backslash "\".
         /// </remarks>
         public static bool AddUserToLocalGroup(string groupName, string userName)
         {
@@ -2252,8 +2460,10 @@ namespace GSF.Identity
             if (userName == string.Empty)
                 throw new ArgumentException("Cannot add user to local group: no user name was specified.", "userName");
 
+            groupName = ValidateGroupName(groupName);
+
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
@@ -2262,22 +2472,14 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": group does not exist.", userName, groupName));
 
-                    // Check for Windows service virtual accounts
-                    if (userName.StartsWith("NT SERVICE", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        userPath = "WinNT://" + userName.Replace('\\', '/');
-                    }
-                    else
-                    {
-                        // Determine if user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
-                            throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": user does not exist.", userName, groupName));
+                    // Determine if user exists
+                    if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot add user \"{0}\" to local group \"{1}\": user does not exist.", userName, groupName));
 
-                        userPath = userEntry.Path;
-                    }
+                    userPath = userEntry.Path;
 
                     // See if user is already in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -2325,7 +2527,9 @@ namespace GSF.Identity
         /// <exception cref="InvalidOperationException">Could not remove user from local group.</exception>
         /// <remarks>
         /// This function will handle Windows service virtual accounts by specifying the complete virtual account name,
-        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>.
+        /// such as <c>@"NT SERVICE\MyService"</c>, as the <paramref name="userName"/>. This function can also remove
+        /// Active Directory user accounts and groups from the local group the when the <paramref name="userName"/> is
+        /// prefixed with a domain name and a backslash "\".
         /// </remarks>
         public static bool RemoveUserFromLocalGroup(string groupName, string userName)
         {
@@ -2348,8 +2552,10 @@ namespace GSF.Identity
             if (userName == string.Empty)
                 throw new ArgumentException("Cannot remove user from local group: no user name was specified.", "userName");
 
+            groupName = ValidateGroupName(groupName);
+
             // Create a directory entry for the local machine
-            using (DirectoryEntry localMachine = new DirectoryEntry(string.Format("WinNT://{0},computer", Environment.MachineName)))
+            using (DirectoryEntry localMachine = new DirectoryEntry("WinNT://.,computer", null, null, AuthenticationTypes.Secure))
             {
                 DirectoryEntry groupEntry = null;
                 DirectoryEntry userEntry = null;
@@ -2358,22 +2564,14 @@ namespace GSF.Identity
                 try
                 {
                     // Determine if local group exists
-                    if (!LocalAccountExists(localMachine, groupName, "group", out groupEntry))
+                    if (!LocalAccountExists(localMachine, groupName, "group", false, out groupEntry))
                         throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": group does not exist.", userName, groupName));
 
-                    // Check for Windows service virtual accounts
-                    if (userName.StartsWith("NT SERVICE", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        userPath = "WinNT://" + userName.Replace('\\', '/');
-                    }
-                    else
-                    {
-                        // Determine if user exists
-                        if (!LocalAccountExists(localMachine, userName, "user", out userEntry))
-                            throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": user does not exist.", userName, groupName));
+                    // Determine if user exists
+                    if (!LocalAccountExists(localMachine, userName, "user", true, out userEntry))
+                        throw new InvalidOperationException(string.Format("Cannot remove user \"{0}\" from local group \"{1}\": user does not exist.", userName, groupName));
 
-                        userPath = userEntry.Path;
-                    }
+                    userPath = userEntry.Path;
 
                     // See if user is in group
                     foreach (object adsUser in (IEnumerable)groupEntry.Invoke("Members"))
@@ -2409,6 +2607,124 @@ namespace GSF.Identity
 
             return false;
 #endif
+        }
+
+        /// <summary>
+        /// Converts the given account name to the SID corresponding to that account name.
+        /// </summary>
+        /// <param name="accountName">The account name for which to look up the SID.</param>
+        /// <returns>The SID for the given account name, or the account name if no SID can be found.</returns>
+        /// <remarks>
+        /// If the <paramref name="accountName"/> cannot be converted to a SID, <paramref name="accountName"/>
+        /// will be the return value.
+        /// </remarks>
+        public static string AccountNameToSID(string accountName)
+        {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
+            string[] accountParts;
+            NTAccount account;
+            SecurityIdentifier securityIdentifier;
+
+            string machineAlias;
+            string machineDomain;
+            string accountAlias;
+            string accountAliasSID;
+
+            if ((object)accountName == null)
+                throw new ArgumentNullException("accountName");
+
+            try
+            {
+                accountParts = accountName.Split('\\');
+
+                if (accountParts.Length == 2)
+                    account = new NTAccount(accountParts[0], accountParts[1]);
+                else
+                    account = new NTAccount(accountName);
+
+                securityIdentifier = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
+
+                return securityIdentifier.ToString();
+            }
+            catch (IdentityNotMappedException)
+            {
+                machineAlias = @".\";
+                machineDomain = Environment.MachineName + @"\";
+
+                if (accountName.StartsWith(machineAlias, StringComparison.OrdinalIgnoreCase))
+                {
+                    // If a '.' is specified as the domain, treat it as an alias for the machine domain and attempt the lookup again
+                    accountAlias = Regex.Replace(accountName, "^" + Regex.Escape(machineAlias), machineDomain, RegexOptions.IgnoreCase);
+                    accountAliasSID = AccountNameToSID(accountAlias);
+
+                    if (!ReferenceEquals(accountAlias, accountAliasSID))
+                        return accountAliasSID;
+                }
+                else if (accountName.StartsWith(machineDomain, StringComparison.OrdinalIgnoreCase))
+                {
+                    // If the machine domain is specified, attempt the lookup again using the BUILTIN domain instead
+                    accountAlias = Regex.Replace(accountName, "^" + Regex.Escape(machineDomain), @"BUILTIN\", RegexOptions.IgnoreCase);
+                    accountAliasSID = AccountNameToSID(accountAlias);
+
+                    if (!ReferenceEquals(accountAlias, accountAliasSID))
+                        return accountAliasSID;
+                }
+            }
+            catch (SystemException)
+            {
+            }
+
+            return accountName;
+#endif
+        }
+
+        /// <summary>
+        /// Converts the given SID to the corresponding account name.
+        /// </summary>
+        /// <param name="sid">The SID for which to look up the account name.</param>
+        /// <returns>The account name for the given SID, or the SID if no account name can be found.</returns>
+        /// <remarks>
+        /// If the <paramref name="sid"/> cannot be converted to an account name, <paramref name="sid"/>
+        /// will be the return value.
+        /// </remarks>
+        public static string SIDToAccountName(string sid)
+        {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
+            try
+            {
+                SecurityIdentifier securityIdentifier;
+                NTAccount account;
+
+                if ((object)sid == null)
+                    throw new ArgumentNullException("sid");
+
+                securityIdentifier = new SecurityIdentifier(sid);
+                account = (NTAccount)securityIdentifier.Translate(typeof(NTAccount));
+
+                return account.ToString();
+            }
+            catch (IdentityNotMappedException)
+            {
+            }
+            catch (SystemException)
+            {
+            }
+
+            return sid;
+#endif
+        }
+
+        // DirectoryEntry will only resolve "BUILTIN\" groups with a dot ".\"
+        private static string ValidateGroupName(string groupName)
+        {
+            if (groupName.StartsWith(@"BUILTIN\", StringComparison.OrdinalIgnoreCase))
+                return Regex.Replace(groupName, @"^BUILTIN\\", @".\", RegexOptions.IgnoreCase);
+
+            return groupName;
         }
 
         #endregion

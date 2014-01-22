@@ -39,6 +39,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime;
+using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -49,7 +50,9 @@ using GSF.Communication;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
+using GSF.Net.Security;
 using GSF.Reflection;
+using GSF.Security;
 using GSF.ServiceProcess;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
@@ -129,6 +132,11 @@ namespace GSF.TimeSeries
         private object m_systemConfigurationLoadLock;
         private object m_latestConfiguration;
 
+        private ServiceHelper m_serviceHelper;
+        private ServerBase m_remotingServer;
+
+        private bool m_disposed;
+
         #endregion
 
         #region [ Constructors ]
@@ -142,6 +150,7 @@ namespace GSF.TimeSeries
             GenerateLocalCertificate();
 
             InitializeComponent();
+            InitializeServiceHelper();
 
             // Register service level event handlers
             m_serviceHelper.ServiceStarting += ServiceStartingHandler;
@@ -195,7 +204,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets reference to the <see cref="TcpServer"/> based remoting server.
         /// </summary>
-        protected TlsServer RemotingServer
+        protected ServerBase RemotingServer
         {
             get
             {
@@ -374,7 +383,6 @@ namespace GSF.TimeSeries
             m_configurationCacheComplete = new AutoResetEvent(true);
             m_queuedConfigurationCachePending = new object();
             m_systemConfigurationLoadLock = new object();
-            m_remotingServer.RemoteCertificateValidationCallback = (o, certificate, chain, errors) => true;
 
             // Setup default thread pool size
             try
@@ -647,13 +655,9 @@ namespace GSF.TimeSeries
             ConfigurationFile configurationFile;
             CategorizedSettingsElementCollection remotingServer;
 
-            IPHostEntry hostEntry;
-            ProcessStartInfo processInfo;
-            Process makeCertProcess;
             string certificatePath;
-            string makeCertPath;
-            string commonNameList;
-            string certificateLocation;
+            CertificateGenerator certificateGenerator;
+            X509Certificate2 certificate = null;
 
             try
             {
@@ -662,41 +666,101 @@ namespace GSF.TimeSeries
                 configurationFile = ConfigurationFile.Current;
                 remotingServer = configurationFile.Settings["remotingServer"];
 
-                remotingServer.Add("CertificateFile", "Internal.cer", "Path to the local certificate used by this server for authentication.");
+                remotingServer.Add("CertificateFile", string.Format("{0}.cer", serviceName), "Path to the local certificate used by this server for authentication.");
                 certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
-                makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
 
-                if (!File.Exists(certificatePath) && File.Exists(makeCertPath))
+                certificateGenerator = new CertificateGenerator()
                 {
-                    hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+                    Issuer = serviceName,
+                    CertificatePath = certificatePath
+                };
 
-                    commonNameList = hostEntry.AddressList
-                        .Select(address => address.ToString())
-                        .Concat(hostEntry.Aliases)
-                        .Concat(new string[] { hostEntry.HostName })
-                        .Select(commonName => "CN=" + commonName)
-                        .Aggregate((list, name) => list + ", " + name);
+                if (File.Exists(certificatePath))
+                    certificate = new X509Certificate2(certificatePath);
 
-                    if (string.Compare(Environment.UserName, "SYSTEM", StringComparison.InvariantCultureIgnoreCase) == 0)
-                        certificateLocation = "LocalMachine";
-                    else
-                        certificateLocation = "CurrentUser";
-
-                    processInfo = new ProcessStartInfo(makeCertPath);
-                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr {1} \"{2}\"", commonNameList, certificateLocation, certificatePath);
-                    processInfo.UseShellExecute = true;
-
-                    makeCertProcess = Process.Start(processInfo);
-                    makeCertProcess.WaitForExit();
-                    makeCertProcess.Dispose();
-
+                if (!Equals(certificate, certificateGenerator.GenerateCertificate()))
                     EventLog.WriteEntry(serviceName, string.Format("Created self-signed certificate for service: \"{0}\"", certificatePath), EventLogEntryType.Information, 0);
-                }
             }
             catch (Exception ex)
             {
-                EventLog.WriteEntry(serviceName, string.Format("{0}{1}{2}", ex.Message, Environment.NewLine, ex.StackTrace), EventLogEntryType.Error, 0);
+                EventLog.WriteEntry(serviceName, string.Format("{0}{3}{1}{3}{2}", ex.Message, ex.GetType().FullName, ex.StackTrace, Environment.NewLine), EventLogEntryType.Error, 0);
             }
+        }
+
+        /// <summary>
+        /// Initializes the service helper.
+        /// </summary>
+        public void InitializeServiceHelper()
+        {
+            CategorizedSettingsElementCollection remotingServerSettings = ConfigurationFile.Current.Settings["remotingServer"];
+
+            m_serviceHelper = new ServiceHelper();
+            m_remotingServer = InitializeTlsServer();
+
+            if (remotingServerSettings.Cast<CategorizedSettingsElement>().Any(element => element.Name.Equals("EnabledSslProtocols", StringComparison.OrdinalIgnoreCase) && !element.Value.Equals("None", StringComparison.OrdinalIgnoreCase)))
+                m_remotingServer = InitializeTlsServer();
+                    else
+                m_remotingServer = InitializeTcpServer();
+
+            m_serviceHelper.ErrorLogger.ErrorLog.FileName = "ErrorLog.txt";
+            m_serviceHelper.ErrorLogger.ErrorLog.PersistSettings = true;
+            m_serviceHelper.ErrorLogger.ErrorLog.SettingsCategory = "ErrorLog";
+            m_serviceHelper.ErrorLogger.ErrorLog.Initialize();
+
+            m_serviceHelper.ErrorLogger.LogToEventLog = false;
+            m_serviceHelper.ErrorLogger.PersistSettings = true;
+            m_serviceHelper.ErrorLogger.SmtpServer = "";
+            m_serviceHelper.ErrorLogger.Initialize();
+
+            m_serviceHelper.ProcessScheduler.PersistSettings = true;
+            m_serviceHelper.ProcessScheduler.SettingsCategory = "ProcessScheduler";
+            m_serviceHelper.ProcessScheduler.Initialize();
+
+            m_serviceHelper.StatusLog.FileName = "StatusLog.txt";
+            m_serviceHelper.StatusLog.PersistSettings = true;
+            m_serviceHelper.StatusLog.SettingsCategory = "StatusLog";
+            m_serviceHelper.StatusLog.Initialize();
+
+            m_serviceHelper.ParentService = this;
+            m_serviceHelper.PersistSettings = true;
+            m_serviceHelper.RemotingServer = m_remotingServer;
+            m_serviceHelper.Initialize();
+
+            ServiceName = "IaonHost";
+                }
+
+        private TcpServer InitializeTcpServer()
+        {
+            TcpServer remotingServer;
+
+            remotingServer = new TcpServer();
+            remotingServer.ConfigurationString = "Port=8500";
+            remotingServer.IgnoreInvalidCredentials = true;
+            remotingServer.PayloadAware = true;
+            remotingServer.PersistSettings = true;
+            remotingServer.SettingsCategory = "RemotingServer";
+            remotingServer.Initialize();
+
+            return remotingServer;
+            }
+
+        private TlsServer InitializeTlsServer()
+            {
+            TlsServer remotingServer;
+
+            remotingServer = new TlsServer();
+            remotingServer.CertificateFile = "Internal.cer";
+            remotingServer.ConfigurationString = "Port=8500";
+            remotingServer.IgnoreInvalidCredentials = true;
+            remotingServer.PayloadAware = true;
+            remotingServer.PersistSettings = true;
+            remotingServer.SettingsCategory = "RemotingServer";
+            remotingServer.TrustedCertificatesPath = "Certs\\Remotes";
+            remotingServer.Initialize();
+
+            remotingServer.RemoteCertificateValidationCallback = (o, certificate, chain, errors) => true;
+
+            return remotingServer;
         }
 
         // Perform system initialization
@@ -893,6 +957,17 @@ namespace GSF.TimeSeries
 
                             DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
                         }
+
+                        DisplayStatusMessage("Preparing current security context...", UpdateType.Information);
+
+                        operationStartTime = DateTime.UtcNow.Ticks;
+
+                        // Extract and begin cache of current security context - this does not require an existing security provider
+                        AdoSecurityProvider.PrepareSecurityContext(connection);
+
+                        operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+
+                        DisplayStatusMessage("Security context prepared in {0}.", UpdateType.Information, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
                     }
@@ -1194,7 +1269,7 @@ namespace GSF.TimeSeries
                 {
                     try
                     {
-                        DisplayStatusMessage("Executing startup data operation \"{0}\".", UpdateType.Information, row["Description"].ToNonNullString("[Unlabeled]"));
+                        DisplayStatusMessage("Executing startup data operation \"{0}\".", UpdateType.Information, row["Description"].ToNonNullString("Unlabeled"));
 
                         // Load data operation parameters
                         assemblyName = row["AssemblyName"].ToNonNullString();
@@ -1402,6 +1477,100 @@ namespace GSF.TimeSeries
                 DisplayStatusMessage("Failed to backup last known cached {0} configuration due to exception: {1}", UpdateType.Warning, configType, ex.Message);
                 m_serviceHelper.ErrorLogger.Log(ex);
             }
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ServiceHostBase"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if ((object)components != null)
+                        {
+                            components.Dispose();
+                            components = null;
+                        }
+
+                        if ((object)m_serviceHelper != null)
+                        {
+                            m_serviceHelper.Dispose();
+                            m_serviceHelper = null;
+                        }
+
+                        if ((object)m_remotingServer != null)
+                        {
+                            m_remotingServer.Dispose();
+                            m_remotingServer = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
+
+        #endregion
+
+        #region [ Service Binding ]
+
+        internal void StartDebugging(string[] args)
+        {
+            OnStart(args);
+        }
+
+        internal void StopDebugging()
+        {
+            OnStop();
+        }
+
+        /// <summary>
+        /// Handles service start event.
+        /// </summary>
+        /// <param name="args">Service startup arguments, if any.</param>
+        protected override void OnStart(string[] args)
+        {
+            m_serviceHelper.OnStart(args);
+        }
+
+        /// <summary>
+        /// Handles service stop event.
+        /// </summary>
+        protected override void OnStop()
+        {
+            m_serviceHelper.OnStop();
+        }
+
+        /// <summary>
+        /// Handles service pause event.
+        /// </summary>
+        protected override void OnPause()
+        {
+            m_serviceHelper.OnPause();
+        }
+
+        /// <summary>
+        /// Handles service continue event.
+        /// </summary>
+        protected override void OnContinue()
+        {
+            m_serviceHelper.OnResume();
+        }
+
+        /// <summary>
+        /// Handles service shut down event.
+        /// </summary>
+        protected override void OnShutdown()
+        {
+            m_serviceHelper.OnShutdown();
         }
 
         #endregion

@@ -329,7 +329,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(null),
-        Description("Defines primary keys of output signals the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
+        Description("Defines primary keys of output signals the adapter will produce; can be one of a filter expression, measurement key, point tag or Guid."),
         CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public virtual ISet<Guid> OutputSignalIDs
         {
@@ -520,6 +520,20 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 return m_settings;
+            }
+        }
+
+        /// <summary>
+        /// Gets the settings object used to parse the connection string with the <see cref="ConnectionStringParser"/>.
+        /// </summary>
+        /// <remarks>
+        /// Return null to use the adapter itself as the settings object. This is the default.
+        /// </remarks>
+        public virtual object SettingsObject
+        {
+            get
+            {
+                return null;
             }
         }
 

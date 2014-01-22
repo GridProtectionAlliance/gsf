@@ -63,7 +63,7 @@ namespace GSF.COMTRADE
         private int m_version;
         private AnalogChannel[] m_analogChannels;
         private DigitalChannel[] m_digitalChannels;
-        private LineFrequency m_nominalFrequency;
+        private double m_nominalFrequency;
         private SampleRate[] m_sampleRates;
         private Timestamp m_startTime;
         private Timestamp m_triggerTime;
@@ -80,7 +80,7 @@ namespace GSF.COMTRADE
         public Schema()
         {
             m_version = 1999;
-            m_nominalFrequency = LineFrequency.Hz60;
+            m_nominalFrequency = 60.0D;
             m_fileType = FileType.Binary;
             m_timeFactor = 1.0D;
         }
@@ -139,7 +139,7 @@ namespace GSF.COMTRADE
             DigitalChannels = digitalChannels.ToArray();
 
             // Parse line frequency
-            NominalFrequency = (LineFrequency)int.Parse(lines[lineNumber++]);
+            NominalFrequency = double.Parse(lines[lineNumber++]);
 
             // Parse total number of sample rates
             int totalSampleRates = int.Parse(lines[lineNumber++]);
@@ -290,7 +290,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets nominal frequency of this <see cref="Schema"/>.
         /// </summary>
-        public LineFrequency NominalFrequency
+        public double NominalFrequency
         {
             get
             {
@@ -450,7 +450,7 @@ namespace GSF.COMTRADE
                 }
 
                 // Write line frequency
-                fileImage.AppendLine(((int)NominalFrequency).ToString());
+                fileImage.AppendLine(NominalFrequency.ToString());
 
                 // Write total number of sample rates
                 fileImage.AppendLine(TotalSampleRates.ToString());

@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdoSecurityProvider.cs" />
+    <Compile Include="AdoSecurityCache.cs" />
     <Compile Include="UserRoleCache.cs" />
     <Compile Include="LdapSecurityProvider.cs" />
     <Compile Include="RestrictAccessAttribute.cs" />

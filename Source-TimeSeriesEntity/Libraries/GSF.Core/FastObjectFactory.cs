@@ -20,6 +20,11 @@
 //       Generated original version of source code.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  12/20/2013 - Pinal C. Patel
+//       Updated the dictionary used for caching the activators returned by GetCreateObjectFunction<T>() 
+//       to not use Type for the key but instead use a combined hash of Type whose activator is to be
+//       created along with the Type being returned. This enables scenarios where multiple activators
+//       of the same type needs to be created but the return type needs to different.
 //
 //******************************************************************************************************
 
@@ -76,7 +81,7 @@ namespace GSF
     public static class FastObjectFactory
     {
         // We cache object creation functions by type so they are only created once
-        private static readonly ConcurrentDictionary<Type, Delegate> s_createObjectFunctions = new ConcurrentDictionary<Type, Delegate>();
+        private static readonly ConcurrentDictionary<int, Delegate> s_createObjectFunctions = new ConcurrentDictionary<int, Delegate>();
 
         /// <summary>
         /// Gets delegate that creates new instance of the <paramref name="type"/>.
@@ -106,22 +111,20 @@ namespace GSF
         {
             // Since user can call this function with any type, we verify that it is related to the return type. If return type
             // is a class, see if type derives from it, else if return type is an interface, see if type implements it.
-            if (!type.IsAbstract &&
-            (
-               (typeof(T).IsClass && type.IsSubclassOf(typeof(T))) ||
-               (typeof(T).IsInterface && (object)type.GetInterface(typeof(T).Name) != null))
-            )
+            Type typeT = typeof(T);
+            if (!type.IsAbstract && ((typeT.IsClass && type.IsSubclassOf(typeT)) || (typeT.IsInterface && (object)type.GetInterface(typeT.Name) != null)))
             {
-                return (Func<T>)s_createObjectFunctions.GetOrAdd(type, (objType) =>
+                int key = type.GUID.GetHashCode() ^ typeT.GUID.GetHashCode();
+                return (Func<T>)s_createObjectFunctions.GetOrAdd(key, k =>
                 {
                     // Get parameterless constructor for this type
-                    ConstructorInfo typeCtor = objType.GetConstructor(Type.EmptyTypes);
+                    ConstructorInfo typeCtor = type.GetConstructor(Type.EmptyTypes);
 
                     if ((object)typeCtor == null)
                         throw new InvalidOperationException("Specified type parameter does not support parameterless public constructor");
 
                     // This is markedly faster than using Activator.CreateInstance
-                    DynamicMethod dynMethod = new DynamicMethod("ctor_type$" + objType.Name, objType, null, objType);
+                    DynamicMethod dynMethod = new DynamicMethod("ctor_type$" + type.Name, type, null, type);
                     ILGenerator ilGen = dynMethod.GetILGenerator();
                     ilGen.Emit(OpCodes.Newobj, typeCtor);
                     ilGen.Emit(OpCodes.Ret);
@@ -129,7 +132,9 @@ namespace GSF
                 });
             }
             else
+            {
                 throw new InvalidOperationException("Specified type parameter is not a subclass or interface implementation of function type definition");
+            }
         }
     }
 }

@@ -199,9 +199,9 @@ namespace GSF.Windows
         protected virtual string GetResourceName()
         {
             if (!string.IsNullOrEmpty(this.Name))
-                return this.Name;
-            else
-                return this.GetType().Name;
+                return Name;
+
+            return GetType().Name;
         }
 
         private void SecureWindow_Initialized(object sender, EventArgs e)

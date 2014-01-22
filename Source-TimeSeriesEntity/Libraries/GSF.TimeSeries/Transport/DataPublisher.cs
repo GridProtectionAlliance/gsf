@@ -3242,7 +3242,7 @@ namespace GSF.TimeSeries.Transport
                 if (!useCommonSerializationFormat)
                 {
                     // Use standard .NET BinaryFormatter
-                    serializedSignalIndexCache = Serialization.Serialize(signalIndexCache, SerializationFormat.Binary);
+                    serializedSignalIndexCache = GSF.Serialization.Serialize(signalIndexCache, SerializationFormat.Binary);
                 }
                 else
                 {
@@ -3294,7 +3294,7 @@ namespace GSF.TimeSeries.Transport
 
                 if (!useCommonSerializationFormat)
                 {
-                    serializedMetadata = Serialization.Serialize(metadata, SerializationFormat.Binary);
+                    serializedMetadata = GSF.Serialization.Serialize(metadata, SerializationFormat.Binary);
                 }
                 else
                 {

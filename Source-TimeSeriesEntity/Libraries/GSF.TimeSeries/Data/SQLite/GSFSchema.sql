@@ -27,6 +27,12 @@
 --       Added new field Type to ErrorLog table. Removed ExceptionLog table.
 --  ----------------------------------------------------------------------------------------------------
 
+-- *******************************************************************************************
+-- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
+-- *******************************************************************************************
+CREATE VIEW SchemaVersion AS
+SELECT 1 AS VersionNumber;
+
 CREATE TABLE ErrorLog(
     ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     Source VARCHAR(200) NOT NULL,
@@ -595,7 +601,7 @@ CREATE TABLE UserAccount (
     UpdatedOn DATETIME NOT NULL DEFAULT '',
     UpdatedBy VARCHAR(200) NOT NULL DEFAULT '',
     CONSTRAINT PK_UserAccount PRIMARY KEY (ID ASC),
-    CONSTRAINT IX_UserAccount UNIQUE (Name),
+    CONSTRAINT IX_UserAccount UNIQUE (Name ASC),
     CONSTRAINT FK_useraccount FOREIGN KEY (DefaultNodeID) REFERENCES node (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -607,7 +613,8 @@ CREATE TABLE SecurityGroup (
     CreatedBy VARCHAR(200) NOT NULL DEFAULT '',
     UpdatedOn DATETIME NOT NULL DEFAULT '',
     UpdatedBy VARCHAR(200) NOT NULL DEFAULT '',
-    CONSTRAINT PK_SecurityGorup PRIMARY KEY (ID ASC)
+    CONSTRAINT PK_SecurityGorup PRIMARY KEY (ID ASC),
+    CONSTRAINT IX_SecurityGorup UNIQUE (Name ASC)
 );
 
 CREATE TABLE ApplicationRole (
@@ -620,6 +627,7 @@ CREATE TABLE ApplicationRole (
     UpdatedOn DATETIME NOT NULL DEFAULT '',
     UpdatedBy VARCHAR(200) NOT NULL DEFAULT 'Admin',
     CONSTRAINT PK_ApplicationRole PRIMARY KEY (ID ASC),
+    CONSTRAINT IX_ApplicationRole UNIQUE (NodeID ASC, Name ASC),
     CONSTRAINT FK_applicationrole FOREIGN KEY (NodeID) REFERENCES node (ID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 

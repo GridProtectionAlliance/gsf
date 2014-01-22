@@ -23,10 +23,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using GSF.Collections;
 
 namespace GSF.SELEventParser
 {
@@ -41,10 +43,17 @@ namespace GSF.SELEventParser
             public int StartIndex;
             public int EndIndex;
 
-            public bool Overlaps(Token t)
+            public double Distance(Token t)
             {
-                return (StartIndex >= t.StartIndex && StartIndex <= t.EndIndex)
-                    || (t.StartIndex >= StartIndex && t.StartIndex <= EndIndex);
+                return Math.Abs(StartIndex - t.StartIndex)
+                    + Math.Abs(EndIndex - t.EndIndex);
+            }
+
+            public Token JoinWith(Token t)
+            {
+                Text = Text + " " + t.Text;
+                EndIndex = StartIndex + Text.Length - 1;
+                return this;
             }
         }
 
@@ -252,7 +261,7 @@ namespace GSF.SELEventParser
 
         private static Header ParseHeader(string[] lines, ref int index)
         {
-            const string HeaderLine1 = @"(\S.*)\s+Date:\s+(\d{1,2}/\d{1,2}/\d{2,})\s+Time:\s+(\d{1,2}:\d{2}:\d{2}.\d{3})";
+            const string HeaderLine1 = @"(\S.*)\s+Date:\s+(\S+)\s+Time:\s+(\S+)";
             const string HeaderLine2 = @"(\S.*)(?:\s+Serial Number: (\d+))?";
 
             Header header = new Header();
@@ -265,7 +274,7 @@ namespace GSF.SELEventParser
             if (index < lines.Length)
             {
                 // Apply regex match to get information contained on first line of header
-                regexMatch = Regex.Match(lines[index++], HeaderLine1);
+                regexMatch = Regex.Match(lines[index], HeaderLine1);
 
                 if (regexMatch.Success)
                 {
@@ -276,7 +285,7 @@ namespace GSF.SELEventParser
                     eventTimeString = string.Format("{0} {1}", regexMatch.Groups[2].Value, regexMatch.Groups[3].Value);
 
                     // Get event time from line 1
-                    if (DateTime.TryParse(eventTimeString, out eventTime))
+                    if (TryParseDateTime(eventTimeString, out eventTime))
                         header.EventTime = eventTime;
 
                     // Advance to the next line
@@ -543,11 +552,13 @@ namespace GSF.SELEventParser
         {
             List<EventHistoryRecord> histories = new List<EventHistoryRecord>();
             EventHistoryRecord eventHistory;
-
-            List<Token> headers;
-            List<Token> fields;
-            Token fieldHeader;
             string currentLine;
+
+            List<Token> tokens;
+            List<Token> headers;
+            Dictionary<Token, Token> fields;
+            Token fieldHeader;
+            Token field;
 
             int eventNumber;
             DateTime dateTime;
@@ -578,93 +589,102 @@ namespace GSF.SELEventParser
                 eventHistory = new EventHistoryRecord();
 
                 // Parse fields
-                fields = Split(currentLine);
+                tokens = Split(currentLine);
 
                 // Initialize date and time variables
                 date = null;
                 time = null;
-                
-                foreach (Token field in fields)
+
+                fields = new Dictionary<Token, Token>();
+
+                foreach (Token token in tokens)
                 {
-                    // Get the header corresponding to the current field
-                    fieldHeader = headers.Single(header => header.Overlaps(field));
-
-                    switch (fieldHeader.Text.ToUpper())
+                    fieldHeader = headers.MinBy(header => token.Distance(header));
+                    fields.AddOrUpdate(fieldHeader, token, (key, value) => value.JoinWith(token));
+                }
+                
+                foreach (Token header in headers)
+                {
+                    if (fields.TryGetValue(header, out field))
                     {
-                        case "#":
-                        case "REC_NUM":
-                            // Parse the field as an event number
-                            if (int.TryParse(field.Text, out eventNumber))
-                                eventHistory.EventNumber = eventNumber;
 
-                            break;
+                        switch (header.Text.ToUpper())
+                        {
+                            case "#":
+                            case "REC_NUM":
+                                // Parse the field as an event number
+                                if (int.TryParse(field.Text, out eventNumber))
+                                    eventHistory.EventNumber = eventNumber;
 
-                        case "DATE":
-                            // Parse the field as a date value
-                            date = field.Text;
+                                break;
 
-                            // If both date and time have been provided, parse them as a DateTime
-                            if ((object)time != null && DateTime.TryParse(string.Format("{0} {1}", date, time), out dateTime))
-                                eventHistory.Time = dateTime;
+                            case "DATE":
+                                // Parse the field as a date value
+                                date = field.Text;
 
-                            break;
+                                // If both date and time have been provided, parse them as a DateTime
+                                if ((object)time != null && TryParseDateTime(string.Format("{0} {1}", date, time), out dateTime))
+                                    eventHistory.Time = dateTime;
 
-                        case "TIME":
-                            // Parse the field as a time value
-                            time = field.Text;
+                                break;
 
-                            // If both date and time have been provided, parse them as a DateTime
-                            if ((object)date != null && DateTime.TryParse(string.Format("{0} {1}", date, time), out dateTime))
-                                eventHistory.Time = dateTime;
+                            case "TIME":
+                                // Parse the field as a time value
+                                time = field.Text;
 
-                            break;
+                                // If both date and time have been provided, parse them as a DateTime
+                                if ((object)date != null && TryParseDateTime(string.Format("{0} {1}", date, time), out dateTime))
+                                    eventHistory.Time = dateTime;
 
-                        case "EVENT":
-                            // Parse the field as an event type
-                            eventHistory.EventType = field.Text;
-                            break;
+                                break;
 
-                        case "LOCAT":
-                        case "LOCATION":
-                            // Parse the field as a fault location value
-                            if (double.TryParse(field.Text, out faultLocation))
-                                eventHistory.FaultLocation = faultLocation;
+                            case "EVENT":
+                                // Parse the field as an event type
+                                eventHistory.EventType = field.Text;
+                                break;
 
-                            break;
+                            case "LOCAT":
+                            case "LOCATION":
+                                // Parse the field as a fault location value
+                                if (double.TryParse(field.Text, out faultLocation))
+                                    eventHistory.FaultLocation = faultLocation;
 
-                        case "CURR":
-                            // Parse the field as a current magnitude
-                            if (double.TryParse(field.Text, out current))
-                                eventHistory.Current = current;
+                                break;
 
-                            break;
+                            case "CURR":
+                                // Parse the field as a current magnitude
+                                if (double.TryParse(field.Text, out current))
+                                    eventHistory.Current = current;
 
-                        case "FREQ":
-                            // Parse the field as a frequency value
-                            if (double.TryParse(field.Text, out frequency))
-                                eventHistory.Frequency = frequency;
+                                break;
 
-                            break;
+                            case "FREQ":
+                                // Parse the field as a frequency value
+                                if (double.TryParse(field.Text, out frequency))
+                                    eventHistory.Frequency = frequency;
 
-                        case "GRP":
-                        case "GROUP":
-                            // Parse the field as a group number
-                            if (int.TryParse(field.Text, out group))
-                                eventHistory.Group = group;
+                                break;
 
-                            break;
+                            case "GRP":
+                            case "GROUP":
+                                // Parse the field as a group number
+                                if (int.TryParse(field.Text, out group))
+                                    eventHistory.Group = group;
 
-                        case "SHOT":
-                            // Parse the field as a shot number
-                            if (int.TryParse(field.Text, out shot))
-                                eventHistory.Shot = shot;
+                                break;
 
-                            break;
+                            case "SHOT":
+                                // Parse the field as a shot number
+                                if (int.TryParse(field.Text, out shot))
+                                    eventHistory.Shot = shot;
 
-                        case "TARGETS":
-                            // Parse the field as targets
-                            eventHistory.Targets = field.Text;
-                            break;
+                                break;
+
+                            case "TARGETS":
+                                // Parse the field as targets
+                                eventHistory.Targets = field.Text;
+                                break;
+                        }
                     }
                 }
 
@@ -712,7 +732,23 @@ namespace GSF.SELEventParser
                 }
             }
 
+            if (startIndex >= 0)
+            {
+                tokens.Add(new Token()
+                {
+                    Text = line.Substring(startIndex),
+                    StartIndex = startIndex,
+                    EndIndex = line.Length - 1
+                });
+            }
+
             return tokens;
+        }
+
+        private static bool TryParseDateTime(string dateTimeString, out DateTime dateTime)
+        {
+            return DateTime.TryParse(dateTimeString, out dateTime)
+                || DateTime.TryParseExact(dateTimeString, new string[] { "y/M/d H:mm:ss.fff", "y/M/d H:mm:ss" }, CultureInfo.CurrentCulture.DateTimeFormat, DateTimeStyles.None, out dateTime);
         }
 
         #endregion

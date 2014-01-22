@@ -37,11 +37,11 @@ using Timer = System.Timers.Timer;
 namespace GSF.IO
 {
     /// <summary>
-    /// Represents a serialized data cache that can be saved or read from multiple applications using interprocess synchronization.
+    /// Represents a serialized data cache that can be saved or read from multiple applications using inter-process synchronization.
     /// </summary>
     /// <remarks>
     /// Note that all file data in this class gets serialized to and from memory, as such, the design intention for this class is for
-    /// use with smaller data sets such as serialized lists or dictionaries that need interprocess synchronized loading and saving.
+    /// use with smaller data sets such as serialized lists or dictionaries that need inter-process synchronized loading and saving.
     /// </remarks>
     public class InterprocessCache : IDisposable
     {
@@ -62,18 +62,18 @@ namespace GSF.IO
         public const double DefaultRetryDelayInterval = 200.0D;
 
         // Fields
-        private string m_fileName;                          // Path and file name of file needing interprocess synchronization
+        private string m_fileName;                          // Path and file name of file needing inter-process synchronization
         private byte[] m_fileData;                          // Data loaded or to be saved
         private bool m_autoSave;                            // Flag to auto save when file data has changed
-        private InterprocessReaderWriterLock m_fileLock;    // Interprocess reader/writer lock used to synchronize file access
+        private InterprocessReaderWriterLock m_fileLock;    // Inter-process reader/writer lock used to synchronize file access
         private ReaderWriterLockSlim m_dataLock;            // Thread level reader/writer lock used to synchronize file data access
         private ManualResetEventSlim m_loadIsReady;         // Wait handle used so that system will wait for file data load
         private ManualResetEventSlim m_saveIsReady;         // Wait handle used so that system will wait for file data save
         private FileSystemWatcher m_fileWatcher;            // Optional file watcher used to reload changes
-        private readonly int m_maximumConcurrentLocks;               // Maximum concurrent reader locks allowed
+        private readonly int m_maximumConcurrentLocks;      // Maximum concurrent reader locks allowed
         private int m_maximumRetryAttempts;                 // Maximum retry attempts allowed for loading file
-        private readonly BitArray m_retryQueue;                      // Retry event queue
-        private Timer m_retryTimer;           // File I/O retry timer
+        private readonly BitArray m_retryQueue;             // Retry event queue
+        private Timer m_retryTimer;                         // File I/O retry timer
         private long m_lastRetryTime;                       // Time of last retry attempt
         private int m_retryCount;                           // Total number of retries attempted so far
         private bool m_disposed;                            // Class disposed flag
@@ -125,9 +125,9 @@ namespace GSF.IO
         #region [ Properties ]
 
         /// <summary>
-        /// Path and file name for the cache needing interprocess synchronization.
+        /// Path and file name for the cache needing inter-process synchronization.
         /// </summary>
-        public virtual string FileName
+        public string FileName
         {
             get
             {
@@ -136,7 +136,7 @@ namespace GSF.IO
             set
             {
                 if ((object)value == null)
-                    throw new ArgumentNullException("FileName", "FileName cannot be null");
+                    throw new NullReferenceException("FileName cannot be null");
 
                 m_fileName = FilePath.GetAbsolutePath(value);
 
@@ -154,7 +154,7 @@ namespace GSF.IO
         /// <remarks>
         /// Setting value to <c>null</c> will create a zero-length file.
         /// </remarks>
-        public virtual byte[] FileData
+        public byte[] FileData
         {
             get
             {
@@ -179,7 +179,7 @@ namespace GSF.IO
             set
             {
                 if ((object)m_fileName == null)
-                    throw new ArgumentNullException("FileName", "FileName property must be defined before setting FileData");
+                    throw new NullReferenceException("FileName property must be defined before setting FileData");
 
                 bool dataChanged = false;
 
@@ -213,7 +213,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets or sets flag that determines if <see cref="InterprocessCache"/> should automatically initiate a save when <see cref="FileData"/> has been updated.
         /// </summary>
-        public virtual bool AutoSave
+        public bool AutoSave
         {
             get
             {
@@ -228,7 +228,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets or sets flag that enables system to monitor for changes in <see cref="FileName"/> and automatically reload <see cref="FileData"/>.
         /// </summary>
-        public virtual bool ReloadOnChange
+        public bool ReloadOnChange
         {
             get
             {
@@ -239,7 +239,7 @@ namespace GSF.IO
                 if (value && (object)m_fileWatcher == null)
                 {
                     if ((object)m_fileName == null)
-                        throw new ArgumentNullException("FileName", "FileName property must be defined before enabling ReloadOnChange");
+                        throw new NullReferenceException("FileName property must be defined before enabling ReloadOnChange");
 
                     // Setup file watcher to monitor for external updates
                     m_fileWatcher = new FileSystemWatcher();
@@ -261,7 +261,7 @@ namespace GSF.IO
         /// <summary>
         /// Gets the maximum concurrent reader locks allowed.
         /// </summary>
-        public virtual int MaximumConcurrentLocks
+        public int MaximumConcurrentLocks
         {
             get
             {
@@ -272,7 +272,7 @@ namespace GSF.IO
         /// <summary>
         /// Maximum retry attempts allowed for loading or saving cache file data.
         /// </summary>
-        public virtual int MaximumRetryAttempts
+        public int MaximumRetryAttempts
         {
             get
             {
@@ -287,7 +287,7 @@ namespace GSF.IO
         /// <summary>
         /// Wait interval, in milliseconds, before retrying load or save of cache file data.
         /// </summary>
-        public virtual double RetryDelayInterval
+        public double RetryDelayInterval
         {
             get
             {
@@ -328,35 +328,40 @@ namespace GSF.IO
                         {
                             m_fileWatcher.Changed -= m_fileWatcher_Changed;
                             m_fileWatcher.Dispose();
+                            m_fileWatcher = null;
                         }
-                        m_fileWatcher = null;
 
                         if ((object)m_retryTimer != null)
                         {
                             m_retryTimer.Elapsed -= m_retryTimer_Elapsed;
                             m_retryTimer.Dispose();
+                            m_retryTimer = null;
                         }
-                        m_retryTimer = null;
 
                         if ((object)m_loadIsReady != null)
+                        {
                             m_loadIsReady.Dispose();
-
-                        m_loadIsReady = null;
+                            m_loadIsReady = null;
+                        }
 
                         if ((object)m_saveIsReady != null)
+                        {
                             m_saveIsReady.Dispose();
-
-                        m_saveIsReady = null;
+                            m_saveIsReady = null;
+                        }
 
                         if ((object)m_dataLock != null)
+                        {
                             m_dataLock.Dispose();
-
-                        m_dataLock = null;
+                            m_dataLock = null;
+                        }
 
                         if ((object)m_fileLock != null)
+                        {
                             m_fileLock.Dispose();
+                            m_fileLock = null;
+                        }
 
-                        m_fileLock = null;
                         m_fileName = null;
                     }
                 }
@@ -368,33 +373,39 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Initiates interprocess synchronized cache file save.
+        /// Initiates inter-process synchronized cache file save.
         /// </summary>
         /// <remarks>
         /// Subclasses should always call <see cref="WaitForLoad()"/> before calling this method.
         /// </remarks>
         public virtual void Save()
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(null);
+
             if ((object)m_fileName == null)
-                throw new ArgumentNullException("FileName", "FileName is null, cannot initiate save");
+                throw new NullReferenceException("FileName is null, cannot initiate save");
 
             if ((object)m_fileData == null)
-                throw new ArgumentNullException("FileData", "FileData is null, cannot initiate save");
+                throw new NullReferenceException("FileData is null, cannot initiate save");
 
             m_saveIsReady.Reset();
             ThreadPool.QueueUserWorkItem(SynchronizedWrite);
         }
 
         /// <summary>
-        /// Initiates interprocess synchronized cache file load.
+        /// Initiates inter-process synchronized cache file load.
         /// </summary>
         /// <remarks>
         /// Subclasses should always call <see cref="WaitForLoad()"/> before calling this method.
         /// </remarks>
         public virtual void Load()
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(null);
+
             if ((object)m_fileName == null)
-                throw new ArgumentNullException("FileName", "FileName is null, cannot initiate load");
+                throw new NullReferenceException("FileName is null, cannot initiate load");
 
             m_loadIsReady.Reset();
             ThreadPool.QueueUserWorkItem(SynchronizedRead);
@@ -414,6 +425,9 @@ namespace GSF.IO
         /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.</param>
         public virtual void WaitForLoad(int millisecondsTimeout)
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(null);
+
             // Calls to this method are blocked until data is available
             if (!m_loadIsReady.IsSet && !m_loadIsReady.Wait(millisecondsTimeout))
                 throw new TimeoutException("Timeout waiting to read data from " + m_fileName);
@@ -433,6 +447,9 @@ namespace GSF.IO
         /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.</param>
         public virtual void WaitForSave(int millisecondsTimeout)
         {
+            if (m_disposed)
+                throw new ObjectDisposedException(null);
+
             // Calls to this method are blocked until data is saved
             if (!m_saveIsReady.IsSet && !m_saveIsReady.Wait(millisecondsTimeout))
                 throw new TimeoutException("Timeout waiting to save data to " + m_fileName);
@@ -471,67 +488,81 @@ namespace GSF.IO
         {
             try
             {
-                if (!m_disposed)
+                if (m_disposed)
+                    return;
+
+                if (m_fileLock.TryEnterWriteLock((int)m_retryTimer.Interval))
                 {
-                    if (m_fileLock.TryEnterWriteLock((int)m_retryTimer.Interval))
+                    FileStream fileStream = null;
+
+                    try
                     {
-                        FileStream fileStream = null;
+                        fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.Write, FileShare.None);
 
-                        try
+                        if (m_dataLock.TryEnterReadLock((int)m_retryTimer.Interval))
                         {
-                            fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.Write, FileShare.None);
-
-                            if (m_dataLock.TryEnterReadLock((int)m_retryTimer.Interval))
+                            try
                             {
-                                try
-                                {
-                                    // Disable file watch notification before update
-                                    if ((object)m_fileWatcher != null)
-                                        m_fileWatcher.EnableRaisingEvents = false;
+                                // Disable file watch notification before update
+                                if ((object)m_fileWatcher != null)
+                                    m_fileWatcher.EnableRaisingEvents = false;
 
-                                    SaveFileData(fileStream, m_fileData);
-                                    m_saveIsReady.Set();
-                                }
-                                finally
-                                {
-                                    m_dataLock.ExitReadLock();
+                                SaveFileData(fileStream, m_fileData);
 
-                                    // Reenable file watch notification
-                                    if ((object)m_fileWatcher != null)
-                                        m_fileWatcher.EnableRaisingEvents = true;
-                                }
+                                // Release any threads waiting for file save
+                                m_saveIsReady.Set();
                             }
-                            else
+                            finally
                             {
-                                RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire read lock for local cache"), WriteEvent);
+                                m_dataLock.ExitReadLock();
+
+                                // Re-enable file watch notification
+                                if ((object)m_fileWatcher != null)
+                                    m_fileWatcher.EnableRaisingEvents = true;
                             }
                         }
-                        catch (IOException ex)
+                        else
                         {
-                            RetrySynchronizedEvent(ex, WriteEvent);
-                        }
-                        finally
-                        {
-                            m_fileLock.ExitWriteLock();
-
-                            if ((object)fileStream != null)
-                                fileStream.Close();
+                            RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire read lock for local cache"), WriteEvent);
                         }
                     }
-                    else
+                    catch (IOException ex)
                     {
-                        RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire write lock for " + m_fileName), WriteEvent);
+                        RetrySynchronizedEvent(ex, WriteEvent);
                     }
+                    finally
+                    {
+                        m_fileLock.ExitWriteLock();
+
+                        if ((object)fileStream != null)
+                            fileStream.Close();
+                    }
+                }
+                else
+                {
+                    RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire write lock for " + m_fileName), WriteEvent);
                 }
             }
             catch (ThreadAbortException)
             {
-                // This is an normal exception
+                // Release any threads waiting for file save in case of thread abort
+                if ((object)m_saveIsReady != null)
+                    m_saveIsReady.Set();
+                throw;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Release any threads waiting for file save in case of I/O or locking failures during write attempt
+                if ((object)m_saveIsReady != null)
+                    m_saveIsReady.Set();
                 throw;
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
+                // Other exceptions can happen, e.g., NullReferenceException if thread resumes and the class is disposed middle way through this method
+                // or other serialization issues in call to SaveFileData, in these cases, release any threads waiting for file save
+                if ((object)m_saveIsReady != null)
+                    m_saveIsReady.Set();
             }
         }
 
@@ -542,72 +573,84 @@ namespace GSF.IO
         {
             try
             {
-                if (!m_disposed)
+                if (m_disposed)
+                    return;
+
+                if (File.Exists(m_fileName))
                 {
-                    if (File.Exists(m_fileName))
+                    if (m_fileLock.TryEnterReadLock((int)m_retryTimer.Interval))
                     {
-                        if (m_fileLock.TryEnterReadLock((int)m_retryTimer.Interval))
+                        FileStream fileStream = null;
+
+                        try
                         {
-                            FileStream fileStream = null;
+                            fileStream = new FileStream(m_fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-                            try
+                            if (m_dataLock.TryEnterWriteLock((int)m_retryTimer.Interval))
                             {
-                                fileStream = new FileStream(m_fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-                                if (m_dataLock.TryEnterWriteLock((int)m_retryTimer.Interval))
+                                try
                                 {
-                                    try
-                                    {
-                                        m_fileData = LoadFileData(fileStream);
-                                    }
-                                    finally
-                                    {
-                                        m_dataLock.ExitWriteLock();
-                                    }
-
-                                    // Release any threads waiting for file data
-                                    m_loadIsReady.Set();
+                                    m_fileData = LoadFileData(fileStream);
                                 }
-                                else
+                                finally
                                 {
-                                    RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire write lock for local cache"), ReadEvent);
+                                    m_dataLock.ExitWriteLock();
                                 }
-                            }
-                            catch (IOException ex)
-                            {
-                                RetrySynchronizedEvent(ex, ReadEvent);
-                            }
-                            finally
-                            {
-                                m_fileLock.ExitReadLock();
 
-                                if ((object)fileStream != null)
-                                    fileStream.Close();
+                                // Release any threads waiting for file data
+                                m_loadIsReady.Set();
+                            }
+                            else
+                            {
+                                RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire write lock for local cache"), ReadEvent);
                             }
                         }
-                        else
+                        catch (IOException ex)
                         {
-                            RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire read lock for " + m_fileName), ReadEvent);
+                            RetrySynchronizedEvent(ex, ReadEvent);
+                        }
+                        finally
+                        {
+                            m_fileLock.ExitReadLock();
+
+                            if ((object)fileStream != null)
+                                fileStream.Close();
                         }
                     }
                     else
                     {
-                        // File doesn't exist, create ane empty array representing a zero-length file
-                        m_fileData = new byte[0];
-
-                        // Release any threads waiting for file data
-                        m_loadIsReady.Set();
+                        RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire read lock for " + m_fileName), ReadEvent);
                     }
+                }
+                else
+                {
+                    // File doesn't exist, create an empty array representing a zero-length file
+                    m_fileData = new byte[0];
+
+                    // Release any threads waiting for file data
+                    m_loadIsReady.Set();
                 }
             }
             catch (ThreadAbortException)
             {
-                // This is an normal exception
+                // Release any threads waiting for file data in case of thread abort
+                if ((object)m_loadIsReady != null)
+                    m_loadIsReady.Set();
+                throw;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Release any threads waiting for file load in case of I/O or locking failures during read attempt
+                if ((object)m_loadIsReady != null)
+                    m_loadIsReady.Set();
                 throw;
             }
             catch
             {
-                // Other exceptions can happen (e.g., NullReferenceException) if thread resumes and the class is disposed middle way through this method
+                // Other exceptions can happen, e.g., NullReferenceException if thread resumes and the class is disposed middle way through this method
+                // or other deserialization issues in call to LoadFileData, in these cases, release any threads waiting for file load
+                if ((object)m_loadIsReady != null)
+                    m_loadIsReady.Set();
             }
         }
 
@@ -618,34 +661,32 @@ namespace GSF.IO
         /// <param name="eventType">Event type to retry.</param>
         private void RetrySynchronizedEvent(Exception ex, int eventType)
         {
-            // A retry is only being initiating for basic file I/O or locking errors, all other errors will initiate an unhandled
-            // exception causing system exit. It would be an error, IMO, for the system to create values then not be able to load
-            // them at next run or not be able to use values from last run because file could not be loaded.
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            // A retry is only being initiating for basic file I/O or locking errors - monitor these failures occurring
+            // in quick succession so that retry activity is not allowed to go on forever...
+            if (DateTime.UtcNow.Ticks - m_lastRetryTime > (long)Ticks.FromMilliseconds(m_retryTimer.Interval * m_maximumRetryAttempts))
             {
-                // We monitor basic I/O and lock failures occurring in quick succession, we can't allow retry activity to go on forever
-                if (DateTime.UtcNow.Ticks - m_lastRetryTime > (long)Ticks.FromMilliseconds(m_retryTimer.Interval * m_maximumRetryAttempts))
-                {
-                    // Significant time has passed since last retry, so we reset counter
-                    m_retryCount = 0;
-                    m_lastRetryTime = DateTime.UtcNow.Ticks;
-                }
-                else
-                {
-                    m_retryCount++;
-
-                    if (m_retryCount >= m_maximumRetryAttempts)
-                        throw new UnauthorizedAccessException("Failed to " + (eventType == WriteEvent ? "write data to " : "read data from ") + m_fileName + " after " + m_maximumRetryAttempts + " attempts: " + ex.Message, ex);
-                }
-
-                // Technically the interprocess mutex will handle serialized access to the file, but if the OS or other process
-                // not participating with the mutex has the file locked, all we can do is queue up a retry for this event.
-                lock (m_retryQueue)
-                {
-                    m_retryQueue[eventType] = true;
-                }
-                m_retryTimer.Start();
+                // Significant time has passed since last retry, so we reset counter
+                m_retryCount = 0;
+                m_lastRetryTime = DateTime.UtcNow.Ticks;
             }
+            else
+            {
+                m_retryCount++;
+
+                if (m_retryCount >= m_maximumRetryAttempts)
+                    throw new UnauthorizedAccessException("Failed to " + (eventType == WriteEvent ? "write data to " : "read data from ") + m_fileName + " after " + m_maximumRetryAttempts + " attempts: " + ex.Message, ex);
+            }
+
+            // Technically the inter-process mutex will handle serialized access to the file, but if the OS or other process
+            // not participating with the mutex has the file locked, all we can do is queue up a retry for this event.
+            lock (m_retryQueue)
+            {
+                m_retryQueue[eventType] = true;
+            }
+            m_retryTimer.Start();
         }
 
         /// <summary>
@@ -653,34 +694,34 @@ namespace GSF.IO
         /// </summary>
         private void m_retryTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (!m_disposed)
+            if (m_disposed)
+                return;
+
+            WaitCallback callBackEvent = null;
+
+            lock (m_retryQueue)
             {
-                WaitCallback callBackEvent = null;
-
-                lock (m_retryQueue)
+                // Reads should always occur first since you may need to load any
+                // newly written data before saving new data. Users can override
+                // load and save behavior to "merge" data sets if needed.
+                if (m_retryQueue[ReadEvent])
                 {
-                    // Reads should always occur first since you may need to load any
-                    // newly written data before saving new data. Users can override
-                    // load and save behavior to "merge" data sets if needed.
-                    if (m_retryQueue[ReadEvent])
-                    {
-                        callBackEvent = SynchronizedRead;
-                        m_retryQueue[ReadEvent] = false;
-                    }
-                    else if (m_retryQueue[WriteEvent])
-                    {
-                        callBackEvent = SynchronizedWrite;
-                        m_retryQueue[WriteEvent] = false;
-                    }
-
-                    // If any events remain queued for retry, start timer for next event
-                    if (m_retryQueue.Any(true))
-                        m_retryTimer.Start();
+                    callBackEvent = SynchronizedRead;
+                    m_retryQueue[ReadEvent] = false;
+                }
+                else if (m_retryQueue[WriteEvent])
+                {
+                    callBackEvent = SynchronizedWrite;
+                    m_retryQueue[WriteEvent] = false;
                 }
 
-                if ((object)callBackEvent != null)
-                    ThreadPool.QueueUserWorkItem(callBackEvent);
+                // If any events remain queued for retry, start timer for next event
+                if (m_retryQueue.Any(true))
+                    m_retryTimer.Start();
             }
+
+            if ((object)callBackEvent != null)
+                ThreadPool.QueueUserWorkItem(callBackEvent);
         }
 
         /// <summary>

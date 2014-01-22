@@ -133,8 +133,8 @@ namespace GSF.Interop
 
             for (int i = 0; i < m_arrayDimensionDescriptors.Count; i++)
             {
-                Buffer.BlockCopy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].Length), 0, buffer, (i * DimensionDescriptor.BinaryLength) + 2, 4);
-                Buffer.BlockCopy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].LowerBound), 0, buffer, (i * DimensionDescriptor.BinaryLength) + 6, 4);
+                Buffer.BlockCopy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].Length), 0, buffer, startIndex + (i * DimensionDescriptor.BinaryLength) + 2, 4);
+                Buffer.BlockCopy(BitConverter.GetBytes(m_arrayDimensionDescriptors[i].LowerBound), 0, buffer, startIndex + (i * DimensionDescriptor.BinaryLength) + 6, 4);
             }
 
             return length;

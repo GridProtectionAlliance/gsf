@@ -56,7 +56,6 @@ namespace GSF.Security
         #region [ Members ]
 
         //Constants
-
         private const string SettingsCategory = "SecurityProvider";
         private const string DefaultProviderType = "GSF.Security.LdapSecurityProvider, GSF.Security";
         private const string DefaultIncludedResources = "*=*";
@@ -86,7 +85,8 @@ namespace GSF.Security
             settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
             settings.Add("NotificationSmtpServer", DefaultNotificationSmtpServer, "SMTP server to be used for sending out email notification messages.");
             settings.Add("NotificationSenderEmail", DefaultNotificationSenderEmail, "Email address of the sender of email notification messages.");
-            s_providerType = settings["ProviderType"].ValueAsString();
+
+            s_providerType = settings["ProviderType"].ValueAsString(DefaultProviderType);
             s_includedResources = settings["IncludedResources"].ValueAsString().ParseKeyValuePairs();
             s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
             s_notificationSmtpServer = settings["NotificationSmtpServer"].ValueAsString();
@@ -106,13 +106,17 @@ namespace GSF.Security
             if (string.IsNullOrEmpty(username))
                 username = Thread.CurrentPrincipal.Identity.Name;
 
-            // If an application is being launched from an installer it will have the NT Authority\System identity which
+            // If an application is being launched from an installer it will have the NT AUTHORITY\System Identity which
             // will not have available user information - so we pickup username from Environment instead
-            if (username.IndexOf("NT AUTHORITY", StringComparison.InvariantCultureIgnoreCase) >= 0)
+            if (username.StartsWith("NT AUTHORITY\\", StringComparison.InvariantCultureIgnoreCase))
                 username = Environment.UserDomainName + "\\" + Environment.UserName;
 
             // Instantiate the provider.
+            // ReSharper disable once AssignNullToNotNullAttribute
             ISecurityProvider provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as ISecurityProvider;
+
+            if ((object)provider == null)
+                throw new InvalidOperationException(string.Format("Failed to acquire security provider from '{0}'. Specified class does not implement ISecurityProvider.", s_providerType));
 
             // Initialize the provider.
             if ((object)provider != null)

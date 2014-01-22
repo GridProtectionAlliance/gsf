@@ -34,9 +34,10 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyProduct("Grid Solutions Framework")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")] 
-[assembly: InternalsVisibleTo("GSF.TestsSuite")]
+[assembly: AssemblyCulture("")]
+// Open internals for unit tests.
 [assembly: InternalsVisibleTo("GSF.Core.Tests")]
+[assembly: InternalsVisibleTo("GSF.TestsSuite")]
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]
@@ -61,6 +62,6 @@ using System.Runtime.CompilerServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("2.0.113.0")]
-[assembly: AssemblyVersion("2.0.113.0")]
+// [assembly: AssemblyVersion("2.0.119.0")]
+[assembly: AssemblyVersion("2.0.119.0")]
 

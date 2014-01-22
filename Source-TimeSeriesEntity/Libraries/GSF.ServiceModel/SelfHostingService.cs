@@ -54,6 +54,9 @@
 //       web services (enables access to clientaccesspolicy.xml and crossdomain.xml).
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  12/11/2013 - Pinal C. Patel
+//       Added WindowsAuthentication property to allow Windows Authentication to be enabled explicitly
+//       even if SecurityPolicy is not configured to allow for more flexibility.
 //
 //******************************************************************************************************
 
@@ -213,6 +216,7 @@ namespace GSF.ServiceModel
         private bool m_publishMetadata;
         private bool m_allowCrossDomainAccess;
         private string m_allowedDomainList;
+        private bool m_windowsAuthentication;
         private bool m_serviceEnabled;
         private bool m_disposed;
         private bool m_initialized;
@@ -387,6 +391,21 @@ namespace GSF.ServiceModel
             set
             {
                 m_allowedDomainList = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether Windows Authentication is to be enabled.
+        /// </summary>
+        public bool WindowsAuthentication 
+        {
+            get
+            {
+                return m_windowsAuthentication;
+            }
+            set
+            {
+                m_windowsAuthentication = value;
             }
         }
 
@@ -597,10 +616,14 @@ namespace GSF.ServiceModel
                 ServiceEndpoint serviceEndpoint;
                 serviceAddresses = m_endpoints.Split(';');
 
+                // Enable Windows Authentication if authroization policy is configured.
+                if (!string.IsNullOrEmpty(m_securityPolicy))
+                    m_windowsAuthentication = true;
+
                 for (int i = 0; i < serviceAddresses.Length; i++)
                 {
                     serviceAddress = serviceAddresses[i].Trim();
-                    serviceBinding = Service.CreateServiceBinding(ref serviceAddress, !string.IsNullOrEmpty(m_securityPolicy));
+                    serviceBinding = Service.CreateServiceBinding(ref serviceAddress, m_windowsAuthentication);
                     if (serviceBinding != null)
                     {
                         serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_contract), serviceBinding, serviceAddress);

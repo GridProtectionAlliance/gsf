@@ -222,9 +222,9 @@ namespace GSF.Core.Tests
         [TestMethod]
         public void FromDegreesTest()
         {
-            Angle target = Angle.FromDegrees(10F);
+            Angle target = Angle.FromDegrees(10D);
             Angle expected = new Angle(0.174532925199433);
-            Assert.AreEqual(target, expected);
+            Assert.AreEqual(expected, target, 0.000000000000001);
         }
 
         /// <summary>

@@ -27,10 +27,14 @@
 //       Modified database queries to work with Oracle database.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  01/16/2014 - J. Ritchie Carroll
+//       Added security context caching so security system can load without database access
+//       using last cached security state.
 //
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
@@ -39,17 +43,19 @@ using System.Security;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web.Security;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Identity;
 
 namespace GSF.Security
 {
     /// <summary>
-    /// Represents an <see cref="ISecurityProvider"/> that uses ADO.NET data source (SQL Server, MySQL, Microsoft Access etc) for its
+    /// Represents an <see cref="ISecurityProvider"/> that uses ADO.NET data source (SQL Server, MySQL, Oracle, etc.) for its
     /// backend data store and authenticates internal users against Active Directory and external users against the database.
     /// </summary>
     /// <example>
-    /// Required config file entries:
+    /// Required config file entries (automatically added):
     /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
@@ -88,16 +94,84 @@ namespace GSF.Security
     /// ]]>
     /// </code>
     /// </example>
+    /// <remarks>
+    /// Minimum expected table schema for ADO Security Provider:
+    /// <code>
+    /// <![CDATA[
+    /// CREATE TABLE UserAccount
+    /// (
+    ///     ID UNIQUEINDENTIFIER NOT NULL DEFAULT NEWID(),
+    ///     Name VARCHAR(200) NOT NULL,
+    ///     Password VARCHAR(200) DEFAULT NULL,
+    ///     FirstName VARCHAR(200) DEFAULT NULL,
+    ///     LastName VARCHAR(200) DEFAULT NULL,
+    ///     Phone VARCHAR(200) DEFAULT NULL,
+    ///     Email VARCHAR(200) DEFAULT NULL,
+    ///     LockedOut TINYINT NOT NULL DEFAULT 0,
+    ///     UseADAuthentication TINYINT NOT NULL DEFAULT 1,
+    ///     ChangePasswordOn DATETIME DEFAULT NULL,
+    ///     CONSTRAINT PK_UserAccount PRIMARY KEY (ID ASC),
+    ///     CONSTRAINT IX_UserAccount UNIQUE KEY (Name)
+    /// );
+    /// 
+    /// CREATE TABLE SecurityGroup
+    /// (
+    ///     ID UNIQUEINDENTIFIER NOT NULL DEFAULT NEWID(),
+    ///     Name VARCHAR(200) NOT NULL,
+    ///     CONSTRAINT PK_SecurityGroup PRIMARY KEY (ID ASC),
+    ///     CONSTRAINT IX_SecurityGroup UNIQUE KEY (Name)
+    /// );
+    /// 
+    /// CREATE TABLE SecurityGroupUserAccount
+    /// (
+    ///     SecurityGroupID UNIQUEINDENTIFIER NOT NULL,
+    ///     UserAccountID UNIQUEINDENTIFIER NOT NULL
+    /// );
+    /// 
+    /// CREATE TABLE ApplicationRole
+    /// (
+    ///     ID UNIQUEINDENTIFIER NOT NULL DEFAULT NEWID(),
+    ///     Name VARCHAR(200) NOT NULL,
+    ///     NodeID UNIQUEINDENTIFIER NOT NULL,
+    ///     CONSTRAINT PK_ApplicationRole PRIMARY KEY (ID ASC),
+    ///     CONSTRAINT IX_ApplicationRole UNIQUE KEY (NodeID, Name)
+    /// );
+    /// 
+    /// CREATE TABLE ApplicationRoleUserAccount
+    /// (
+    ///     ApplicationRoleID UNIQUEINDENTIFIER NOT NULL,
+    ///     UserAccountID UNIQUEINDENTIFIER NOT NULL  
+    /// );
+    /// 
+    /// CREATE TABLE ApplicationRoleSecurityGroup
+    /// (
+    ///     ApplicationRoleID UNIQUEINDENTIFIER NOT NULL,
+    ///     SecurityGroupID UNIQUEINDENTIFIER NOT NULL  
+    /// );
+    /// ]]>
+    /// </code>
+    /// </remarks>
     public class AdoSecurityProvider : LdapSecurityProvider
     {
         #region [ Members ]
 
         // Constants
+        private const string UserAccountTable = "UserAccount";                                      // Table name for user accounts
+        private const string SecurityGroupTable = "SecurityGroup";                                  // Table name for security groups
+        private const string SecurityGroupUserAccountTable = "SecurityGroupUserAccount";            // Table name for security group user accounts
+        private const string ApplicationRoleTable = "ApplicationRole";                              // Table name for application roles
+        private const string ApplicationRoleUserAccountTable = "ApplicationRoleUserAccount";        // Table name for application role assignments for user accounts
+        private const string ApplicationRoleSecurityGroupTable = "ApplicationRoleSecurityGroup";    // Table name for application role assignments for security groups
 
-        // TODO: Store these in the config file and load as member variables so these values can be tweaked by implementation
-        private const int MinimumPasswordLength = 8;
-        private const string PasswordRequirementRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
-        private const string PasswordRequirementError = "Invalid Password: Password must be at least 8 characters; must contain at least 1 number, 1 upper case letter, and 1 lower case letter";
+        /// <summary>
+        /// Default regular expression used to validate new database user passwords.
+        /// </summary>
+        public const string DefaultPasswordRequirementsRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
+
+        /// <summary>
+        /// Default error message displayed when databases users fail regular expression test.
+        /// </summary>
+        public const string DefaultPasswordRequirementsError = "Invalid Password: Password must be at least 8 characters; must contain at least 1 number, 1 upper case letter, and 1 lower case letter";
 
         /// <summary>
         /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
@@ -106,6 +180,8 @@ namespace GSF.Security
 
         private Exception m_lastException;
         private bool m_successfulPassThroughAuthentication;
+        private string m_passwordRequirementsRegex;
+        private string m_passwordRequirementsError;
 
         #endregion
 
@@ -132,6 +208,9 @@ namespace GSF.Security
             : base(username, canRefreshData, canUpdateData, canResetPassword, canChangePassword)
         {
             base.ConnectionString = "Eval(systemSettings.ConnectionString)";
+
+            m_passwordRequirementsRegex = DefaultPasswordRequirementsRegex;
+            m_passwordRequirementsError = DefaultPasswordRequirementsError;
         }
 
         #endregion
@@ -139,20 +218,20 @@ namespace GSF.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a a boolean value that indicates whether <see cref="SecurityProviderBase.UpdateData"/> operation is supported.
+        /// Gets a boolean value that indicates whether <see cref="SecurityProviderBase.UpdateData"/> operation is supported.
         /// </summary>
         public override bool CanUpdateData
         {
             get
             {
-                // Data update supported on external user accounts.
+                    // Data update supported on external user accounts.
                 if (UserData.IsDefined && UserData.IsExternal)
                     return true;
 
-                // Data update not supported on internal user accounts.
-                return false;
+                    // Data update not supported on internal user accounts.
+                    return false;
+                }
             }
-        }
 
         /// <summary>
         /// Gets last exception reported by the <see cref="AdoSecurityProvider"/>.
@@ -184,8 +263,14 @@ namespace GSF.Security
             // Make sure default settings exist
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+
             settings.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security data store.");
             settings.Add("LdapPath", "", "Specifies the LDAP path used to initialize the security provider.");
+            settings.Add("PasswordRequirementsRegex", DefaultPasswordRequirementsRegex, "Regular expression used to validate new passwords for database users.");
+            settings.Add("PasswordRequirementsError", DefaultPasswordRequirementsError, "Error message to be displayed when new database user password fails regular expression test.");
+
+            m_passwordRequirementsRegex = settings["PasswordRequirementsRegex"].ValueAs(m_passwordRequirementsRegex);
+            m_passwordRequirementsError = settings["PasswordRequirementsError"].ValueAs(m_passwordRequirementsError);
         }
 
         /// <summary>
@@ -206,65 +291,84 @@ namespace GSF.Security
                 //   Table1: Information about the user.
                 //   Table2: Groups the user is a member of.
                 //   Table3: Roles that are assigned to the user either implicitly (NT groups) or explicitly (database) or through a group.
-                AdoDataConnection database = new AdoDataConnection(SettingsCategory);
-                DataTable userDataTable = new DataTable();
-                DataTable userGroupDataTable = new DataTable();
-                DataTable userRoleDataTable = new DataTable();
-                DataRow userDataRow = null;
-                string groupName, roleName;
-                string query;
 
-                using (IDbConnection dbConnection = database.Connection)
+                DataSet securityContext;
+
+                try
                 {
-                    if (dbConnection == null)
-                        return false;
-
-                    query = database.ParameterizedQueryString("SELECT ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn FROM UserAccount WHERE Name = {0}", "name");
-
-                    using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                    // Attempt to extract current security context from the database
+                    using (AdoDataConnection database = new AdoDataConnection(SettingsCategory))
                     {
-                        userDataTable.Load(reader);
+                        securityContext = ExtractSecurityContext(database.Connection);
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Failed to open ADO connection, attempt to fall back on using security context from last known cached information
+                    securityContext = AdoSecurityCache.GetCurrentCache().DataSet;
+                }
+
+                // Validate that needed security tables exist in the data set
+                const string SecurityContextError = "Failed to load a valid security context. Cannot proceed with user authentication.";
+
+                if ((object)securityContext == null)
+                    throw new SecurityException(SecurityContextError);
+
+                foreach (string securityTable in s_securityTables)
+                    {
+                    if (!securityContext.Tables.Contains(securityTable))
+                        throw new SecurityException(SecurityContextError);
                     }
 
-                    if (userDataTable.Rows.Count <= 0)
+                DataRow userAccount = null;
+                Guid userAccountID = Guid.Empty;
+                string userSID = UserInfo.AccountNameToSID(UserData.Username);
+
+                // Filter user account data for the current user
+                DataRow[] userAccounts = securityContext.Tables[UserAccountTable].Select(string.Format("Name = '{0}'", userSID));
+
+                if (userAccounts.Length == 0)
                     {
-                        // User doesn't exist in the database, however, user may exist in an NT authentication group which may have an explicit role assignment. To test for this case
-                        // we make the assumption that this is a Windows authenticated user and test for rights within groups
+                    // User doesn't exist in the database, however, user may exist in an NT authentication group which
+                    // may have an explicit role assignment. To test for this case we make the assumption that this is
+                    // a Windows authenticated user and test for rights within groups
                         UserData.IsDefined = true;
                         UserData.IsExternal = false;
                     }
                     else
                     {
-                        userDataRow = userDataTable.Rows[0];
+                    userAccount = userAccounts[0];
                         UserData.IsDefined = true;
-                        UserData.IsExternal = !Convert.ToBoolean(userDataRow["UseADAuthentication"]);
+                    UserData.IsExternal = !Convert.ToBoolean(userAccount["UseADAuthentication"]);
+                    userAccountID = Guid.Parse(Convert.ToString(userAccount["ID"]));
                     }
 
-                    if (UserData.IsExternal && (object)userDataRow != null)
+                if (UserData.IsExternal && (object)userAccount != null)
                     {
+                    // Load database user details
                         if (string.IsNullOrEmpty(UserData.LoginID))
                             UserData.LoginID = UserData.Username;
 
-                        if (!Convert.IsDBNull(userDataRow["Password"]))
-                            UserData.Password = Convert.ToString(userDataRow["Password"]);
+                    if (!Convert.IsDBNull(userAccount["Password"]))
+                        UserData.Password = Convert.ToString(userAccount["Password"]);
 
-                        if (!Convert.IsDBNull(userDataRow["FirstName"]))
-                            UserData.FirstName = Convert.ToString(userDataRow["FirstName"]);
+                    if (!Convert.IsDBNull(userAccount["FirstName"]))
+                        UserData.FirstName = Convert.ToString(userAccount["FirstName"]);
 
-                        if (!Convert.IsDBNull(userDataRow["LastName"]))
-                            UserData.LastName = Convert.ToString(userDataRow["LastName"]);
+                    if (!Convert.IsDBNull(userAccount["LastName"]))
+                        UserData.LastName = Convert.ToString(userAccount["LastName"]);
 
-                        if (!Convert.IsDBNull(userDataRow["Phone"]))
-                            UserData.PhoneNumber = Convert.ToString(userDataRow["Phone"]);
+                    if (!Convert.IsDBNull(userAccount["Phone"]))
+                        UserData.PhoneNumber = Convert.ToString(userAccount["Phone"]);
 
-                        if (!Convert.IsDBNull(userDataRow["Email"]))
-                            UserData.EmailAddress = Convert.ToString(userDataRow["Email"]);
+                    if (!Convert.IsDBNull(userAccount["Email"]))
+                        UserData.EmailAddress = Convert.ToString(userAccount["Email"]);
 
-                        if (!Convert.IsDBNull(userDataRow["ChangePasswordOn"]))
-                            UserData.PasswordChangeDateTime = Convert.ToDateTime(userDataRow["ChangePasswordOn"]);
+                    if (!Convert.IsDBNull(userAccount["ChangePasswordOn"]))
+                        UserData.PasswordChangeDateTime = Convert.ToDateTime(userAccount["ChangePasswordOn"]);
 
-                        if (!Convert.IsDBNull(userDataRow["CreatedOn"]))
-                            UserData.AccountCreatedDateTime = Convert.ToDateTime(userDataRow["CreatedOn"]);
+                    if (!Convert.IsDBNull(userAccount["CreatedOn"]))
+                        UserData.AccountCreatedDateTime = Convert.ToDateTime(userAccount["CreatedOn"]);
 
                         // For possible future use:
                         //if (!Convert.IsDBNull(userDataRow["UserCompanyName"]))
@@ -276,83 +380,122 @@ namespace GSF.Security
                     }
                     else
                     {
-                        // Load implicitly assigned groups - this happens via NT user groups that get loaded into user data
-                        // group collection. When group definitions are defined with the same name as their NT equivalents,
-                        // this will allow automatic external group management from within NT group management (AD or local).
+                    // Load implicitly assigned groups - this happens via user's NT/AD groups that get loaded into the
+                    // user data group collection. When database group definitions are defined with the same name as
+                    // their NT/AD equivalents, this will allow automatic external group management.
                         base.RefreshData(UserData.Groups, ProviderID);
                     }
 
-                    // Administrator can lock out NT user as well as database-only user via database
-                    if (!UserData.IsLockedOut && userDataRow != null && !Convert.IsDBNull(userDataRow["LockedOut"]))
-                        UserData.IsLockedOut = Convert.ToBoolean(userDataRow["LockedOut"]);
+                // Administrator can lock out NT/AD user as well as database-only user via database
+                if (!UserData.IsLockedOut && (object)userAccount != null && !Convert.IsDBNull(userAccount["LockedOut"]))
+                    UserData.IsLockedOut = Convert.ToBoolean(userAccount["LockedOut"]);
 
-                    // Load explicitly assigned groups
-                    query = database.ParameterizedQueryString("SELECT SecurityGroupID, SecurityGroupName, SecurityGroupDescription FROM SecurityGroupUserAccountDetail WHERE UserName = {0}", "name");
+                // At this point an NT/AD based user will have a list of groups that is known to be available to the user. A database
+                // user will have no groups defined yet. The next step will be to load any explicitly assigned groups the user is a
+                // member of. Users can be explicitly assigned to any group, database or NT/AD group. This allows flexibility for
+                // local database users to be assigned to an NT/AD group (in the database) as well as NT/AD users to be a member of
+                // local database groups - allowing customizable role assignments to be fully managed via groups.
 
-                    using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                if (userAccountID != Guid.Empty)
                     {
-                        userGroupDataTable.Load(reader);
-                    }
+                    // Filter explicitly assigned security groups for current user
+                    DataRow[] userGroups = securityContext.Tables[SecurityGroupUserAccountTable].Select(string.Format("UserAccountID = '{0}'", userAccountID));
 
-                    foreach (DataRow group in userGroupDataTable.Rows)
+                    foreach (DataRow row in userGroups)
                     {
-                        if (!Convert.IsDBNull(group["SecurityGroupName"]))
+                        // Locate associated security group record
+                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("ID = '{0}'", row["SecurityGroupID"]));
+
+                        if (securityGroups.Length > 0)
+                    {
+                            DataRow securityGroup = securityGroups[0];
+
+                            if (!Convert.IsDBNull(securityGroup["Name"]))
                         {
-                            groupName = Convert.ToString(group["SecurityGroupName"]);
+                                // Just in case a database user was manually assigned to an NT/AD group, make sure to convert
+                                // the group name back to it's human readable name (from a SID). The UserInfo.SIDToAccountName
+                                // function will return the original parameter value if name cannot be converted - this allows
+                                // the function to work for database group names as well.
+                                string groupName = UserInfo.SIDToAccountName(Convert.ToString(securityGroup["Name"]));
 
-                            if (!UserData.Groups.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
+                                if (!UserData.Groups.Contains(groupName, StringComparer.OrdinalIgnoreCase))
                                 UserData.Groups.Add(groupName);
                         }
                     }
+                    }
+                }
 
+                // Explicitly assigned user roles will take precedence over any roles that may be implicitly available to the
+                // user based on what group they may be a member of. In practice this means even though a user may be a member
+                // of a group with role assignments, if there are any roles directly assigned to the user these will be their
+                // effective roles. For example, if a user is in a group that is in the "Administrator" role and the user has
+                // an explicit role assignment for the "Viewer" role - the user will be in the "Viewer" role only. This allows
+                // individual users to have overridden role assignments even though they may also be part of a group.
                     UserData.Roles.Clear();
 
-                    // Load explicitly assigned roles
-                    query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleUserAccountDetail WHERE UserName = {0}", "name");
+                // Filter explicitly assigned application roles for current user - this will return an empty set if no
+                // explicitly defined roles exist for the user -or- user doesn't exist in the database.
+                DataRow[] userApplicationRoles = securityContext.Tables[ApplicationRoleUserAccountTable].Select(string.Format("UserAccountID = '{0}'", userAccountID));
 
-                    using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                // If no explicitly assigned application roles are found for the current user, we check for implicitly assigned
+                // application roles based on the role assignments of the groups the user is a member of.
+                if (userApplicationRoles.Length == 0)
                     {
-                        userRoleDataTable.Load(reader);
-                    }
+                    List<DataRow> implicitRoles = new List<DataRow>();
 
-                    if (userRoleDataTable.Rows.Count == 0)
+                    // Filter implicitly assigned application roles for each of the user's database and NT/AD groups. Note that
+                    // even if user is not defined in the database, an NT/AD group they are a member of may be associated with
+                    // a role - this allows the user to get a role assignment based on this group.
+                    foreach (string groupName in UserData.Groups)
                     {
-                        // Load implicitly assigned roles
-                        query = database.ParameterizedQueryString("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM AppRoleSecurityGroupDetail WHERE SecurityGroupName = {0}", "groupName");
+                        // Convert NT/AD group names back to SIDs for lookup in the database
+                        string groupSID = UserInfo.AccountNameToSID(groupName);
 
-                        foreach (string group in UserData.Groups)
-                        {
-                            using (IDataReader reader = dbConnection.ExecuteReader(query, group))
+                        // Locate associated security group record
+                        DataRow[] securityGroups = securityContext.Tables[SecurityGroupTable].Select(string.Format("Name = '{0}'", groupSID));
+
+                        if (securityGroups.Length > 0)
                             {
-                                userRoleDataTable.Load(reader);
+                            // Found security group by name, access group ID to lookup application roles defined for the group
+                            DataRow securityGroup = securityGroups[0];
+
+                            if (!Convert.IsDBNull(securityGroup["ID"]))
+                                implicitRoles.AddRange(securityContext.Tables[ApplicationRoleSecurityGroupTable].Select(string.Format("SecurityGroupID = '{0}'", securityGroup["ID"])));
                             }
                         }
 
-                        query = database.ParameterizedQueryString("SELECT AppRoleSecurityGroupDetail.ApplicationRoleID AS ApplicationRoleID, AppRoleSecurityGroupDetail.ApplicationRoleName AS ApplicationRoleName, AppRoleSecurityGroupDetail.ApplicationRoleDescription AS ApplicationRoleDescription FROM AppRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE AppRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = {0}", "name");
+                    userApplicationRoles = implicitRoles.ToArray();
+                }
 
-                        using (IDataReader reader = dbConnection.ExecuteReader(query, UserData.Username))
+                // Populate user roles collection - both ApplicationRoleUserAccount and ApplicationRoleSecurityGroup tables contain ApplicationRoleID column
+                foreach (DataRow role in userApplicationRoles)
+                {
+                    if (!Convert.IsDBNull(role["ApplicationRoleID"]))
                         {
-                            userRoleDataTable.Load(reader);
-                        }
-                    }
+                        // Locate associated application role record
+                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select(string.Format("ID = '{0}'", role["ApplicationRoleID"]));
 
-                    foreach (DataRow role in userRoleDataTable.Rows)
+                        if (applicationRoles.Length > 0)
                     {
-                        if (!Convert.IsDBNull(role["ApplicationRoleName"]))
-                        {
-                            roleName = Convert.ToString(role["ApplicationRoleName"]);
+                            // Found application role by ID, add role name to user roles if not already defined
+                            DataRow applicationRole = applicationRoles[0];
 
-                            if (!UserData.Roles.Contains(roleName, StringComparer.InvariantCultureIgnoreCase))
+                            if (!Convert.IsDBNull(applicationRole["Name"]))
+                        {
+                                string roleName = Convert.ToString(applicationRole["Name"]);
+
+                                if (!UserData.Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
                                 UserData.Roles.Add(roleName);
                         }
                     }
+                    }
+                }
 
                     // Cache last user roles
-                    ThreadPool.QueueUserWorkItem(CacheLastUserRole);
+                ThreadPool.QueueUserWorkItem(CacheLastUserRoles);
 
                     return true;
                 }
-            }
             catch (Exception ex)
             {
                 m_lastException = ex;
@@ -470,22 +613,23 @@ namespace GSF.Security
                 if (oldPassword == newPassword)
                     throw new Exception("New password cannot be same as old password.");
 
-                // Perform password change for internal users.
+                // If needed, perform password change for internal NT/AD users.
                 if (!UserData.IsExternal)
                     return base.ChangePassword(oldPassword, newPassword);
 
                 // Verify old password.
                 UserData.PasswordChangeDateTime = DateTime.MinValue;
+
                 if (!Authenticate(oldPassword))
                     return false;
 
                 // Verify new password.
-                if (!Regex.IsMatch(newPassword, PasswordRequirementRegex))
-                    throw new SecurityException(PasswordRequirementError);
+                if (!Regex.IsMatch(newPassword, m_passwordRequirementsRegex))
+                    throw new SecurityException(m_passwordRequirementsError);
 
                 using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
                 {
-                    if (dbConnection == null)
+                    if ((object)dbConnection == null)
                         return false;
 
                     bool oracle = dbConnection.GetType().Name == "OracleConnection";
@@ -548,7 +692,7 @@ namespace GSF.Security
         /// <returns>true if logging was successful, otherwise false.</returns>
         protected virtual bool LogAuthenticationAttempt(bool loginSuccess)
         {
-            if (UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
+            if ((object)UserData != null && !string.IsNullOrWhiteSpace(UserData.Username))
             {
                 string message = string.Format("User \"{0}\" login attempt {1}.", UserData.Username, loginSuccess ? "succeeded using " + (m_successfulPassThroughAuthentication ? "pass-through authentication" : "user acquired password") : "failed");
                 EventLogEntryType entryType = loginSuccess ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit;
@@ -629,50 +773,43 @@ namespace GSF.Security
             return configSettings["LdapPath"].Value;
         }
 
-        // Cache last user role and monitor for changes
-        private void CacheLastUserRole(object state)
+        // Cache last user roles and monitor for changes
+        private void CacheLastUserRoles(object state)
         {
             try
             {
                 // Using an inter-process cache for user roles
                 UserRoleCache userRoleCache = UserRoleCache.GetCurrentCache();
-                string cachedRole, currentRole;
+                HashSet<string> currentRoles;
+                string[] cachedRoles;
 
-                // Attempt to retrieve cached user role
-                cachedRole = userRoleCache[UserData.Username];
+                // Retrieve current user roles
+                currentRoles = new HashSet<string>(UserData.Roles, StringComparer.OrdinalIgnoreCase);
 
-                // Determine current role with maximum rights for user
-                string[] roles = UserData.Roles.ToArray();
+                // Attempt to retrieve cached user roles
+                cachedRoles = userRoleCache[UserData.Username];
 
-                // Technically a user can be granted multiple roles, pick the highest ordered role
-                if (roles.Contains("Administrator", StringComparer.InvariantCultureIgnoreCase))
-                    currentRole = "Administrator";
-                else if (roles.Contains("Editor", StringComparer.InvariantCultureIgnoreCase))
-                    currentRole = "Editor";
-                else
-                    currentRole = "Viewer";
-
-                bool roleChanged = false;
+                bool rolesChanged = false;
                 string message;
                 EventLogEntryType entryType;
 
-                if (string.IsNullOrEmpty(cachedRole))
+                if ((object)cachedRoles == null || cachedRoles.Length == 0)
                 {
                     // New user access granted
-                    message = string.Format("New user \"{0}\" granted access with role \"{1}\".", UserData.Username, currentRole);
+                    message = string.Format("New user \"{0}\" granted access with role{1} \"{2}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
                     entryType = EventLogEntryType.Information;
-                    roleChanged = true;
+                    rolesChanged = true;
                 }
-                else if (string.Compare(cachedRole, currentRole, true) != 0)
+                else if (!currentRoles.SetEquals(cachedRoles))
                 {
                     // User role access changed
-                    message = string.Format("Existing user \"{0}\" granted access with new role \"{1}\" - role assignment is different from last login, was \"{2}\".", UserData.Username, currentRole, cachedRole);
+                    message = string.Format("Existing user \"{0}\" granted access with new role{1} \"{2}\" - role assignment is different from last login, was \"{3}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "), cachedRoles.ToDelimitedString(", "));
                     entryType = EventLogEntryType.Warning;
-                    roleChanged = true;
+                    rolesChanged = true;
                 }
                 else
                 {
-                    message = string.Format("Existing user \"{0}\" granted access with role \"{1}\" - role assignment is the same as last login.", UserData.Username, currentRole);
+                    message = string.Format("Existing user \"{0}\" granted access with role{1} \"{2}\" - role assignment is the same as last login.", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
                     entryType = EventLogEntryType.SuccessAudit;
                 }
 
@@ -687,8 +824,8 @@ namespace GSF.Security
                 }
 
                 // If role has changed, update cache
-                if (roleChanged)
-                    userRoleCache[UserData.Username] = currentRole;
+                if (rolesChanged)
+                    userRoleCache[UserData.Username] = currentRoles.ToArray();
             }
             catch (Exception ex)
             {
@@ -701,6 +838,82 @@ namespace GSF.Security
         {
 #pragma warning disable 612, 618
             return FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + password, "SHA1");
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        static private readonly string[] s_securityTables =
+        {
+            UserAccountTable,                   // User accounts
+            SecurityGroupTable,                 // Security groups
+            SecurityGroupUserAccountTable,      // Security group user accounts (i.e., users in a group)
+            ApplicationRoleTable,               // Application roles (node specific)
+            ApplicationRoleUserAccountTable,    // Application role assignments for user accounts
+            ApplicationRoleSecurityGroupTable   // Application role assignments for security groups
+        };
+
+        static private readonly Guid s_nodeID;
+
+        // Static Constructor
+        static AdoSecurityProvider()
+        {
+            // Access configuration file system settings
+            CategorizedSettingsElementCollection systemSettings = ConfigurationFile.Current.Settings["systemSettings"];
+
+            // Make sure NodeID setting exists
+            systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
+
+            // Get NodeID as currently defined in configuration file
+            s_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
+        }
+
+        // Static Methods
+
+        /// <summary>
+        /// Extracts the current security context from the database and kicks off a background caching operation.
+        /// </summary>
+        /// <param name="connection">Existing database connection used to extract security context.</param>
+        public static void PrepareSecurityContext(IDbConnection connection)
+        {
+            DataSet securityContext = ExtractSecurityContext(connection);
+            Thread cacheSecurityContext = new Thread(() => AdoSecurityCache.GetCurrentCache().DataSet = securityContext);
+            cacheSecurityContext.IsBackground = true;
+            cacheSecurityContext.Start();
+        }
+
+        /// <summary>
+        /// Extracts the current security context from the database.
+        /// </summary>
+        /// <param name="connection">Existing database connection used to extract security context.</param>
+        /// <returns>A new <see cref="DataSet"/> containing the latest security context.</returns>
+        public static DataSet ExtractSecurityContext(IDbConnection connection)
+        {
+            DataSet securityContext = new DataSet("AdoSecurityContext");
+
+            foreach (string securityTable in s_securityTables)
+            {
+                AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? s_nodeID : default(Guid));
+            }
+
+            return securityContext;
+        }
+
+        private static void AddSecurityContextTable(IDbConnection connection, DataSet securityContext, string tableName, Guid nodeID)
+        {
+            string tableQuery;
+
+            if (nodeID == default(Guid))
+                tableQuery = string.Format("SELECT * FROM {0}", tableName);
+            else
+                tableQuery = string.Format("SELECT * FROM {0} WHERE NodeID = '{1}'", tableName, nodeID);
+
+            using (IDataReader reader = connection.ExecuteReader(tableQuery))
+            {
+                securityContext.Tables.Add(tableName).Load(reader);
+            }
         }
 
         #endregion

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,16 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="m_clientHelper.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
-  </metadata>
-  <metadata name="m_remotingClient.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 95</value>
-  </metadata>
-  <metadata name="m_errorLogger.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
-  </metadata>
-  <metadata name="$this.TrayLargeIcon" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
+  <data name="SecurityInfoTextBox.Text" xml:space="preserve">
+    <value>IMPORTANT SECURITY INFORMATION: These fixes are designed to work around issues on systems which do not have internet connectivity. Enabling these fixes is not recommended on systems that do have internet connectivity.
+
+OID stands for "object identifier." These are used by both client and server to query additional information during a TLS handshake. Registering an OID will cache this information in the Windows registry in order by bypass web requests that could otherwise take more than 15 seconds to time out.
+
+The root certificate list is used when securing network connections using TLS to determine the authenticity of the remote entity that the system is connecting to. Windows will automatically access Windows Update servers to update this list when making TLS connections. Disabling Windows Update will not disable this functionality. This fix disables this functionality which could otherwise take more than 15 seconds to time out.</value>
+  </data>
 </root>

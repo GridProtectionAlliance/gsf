@@ -45,7 +45,7 @@ namespace GSF.COMTRADE
         private char m_phaseDesignation;
         private SignalKind m_signalKind;
         private PhasorType m_phasorType;
-        private LineFrequency m_nominalFrequency;
+        private double m_nominalFrequency;
         private CoordinateFormat m_coordinateFormat;
         private string m_circuitComponent;
         private string m_units;
@@ -72,7 +72,7 @@ namespace GSF.COMTRADE
             m_coordinateFormat = CoordinateFormat.Polar;
             m_multipler = 0.04;
             m_adder = 0.0;
-            m_nominalFrequency = LineFrequency.Hz60;
+            m_nominalFrequency = 60.0D;
             m_minValue = -99999;
             m_maxValue = 99998;
             m_primaryRatio = 1.0;
@@ -306,9 +306,6 @@ namespace GSF.COMTRADE
                 {
                     char phaseDesignation = char.ToUpper(value[0]);
 
-                    if (s_validPhaseDesignations.BinarySearch(phaseDesignation) < 0)
-                        throw new ArgumentException(value + " is not a valid phase designation.");
-
                     switch (phaseDesignation)
                     {
                         case 'A':
@@ -364,7 +361,7 @@ namespace GSF.COMTRADE
         /// <summary>
         /// Gets or sets nominal frequency of this <see cref="AnalogChannel"/>.
         /// </summary>
-        public LineFrequency NominalFrequency
+        public double NominalFrequency
         {
             get
             {

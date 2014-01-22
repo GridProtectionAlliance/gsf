@@ -285,12 +285,14 @@
     <Compile Include="Net\Security\CertificatePolicy.cs" />
     <Compile Include="Net\Security\CertificatePolicyChecker.cs" />
     <Compile Include="Net\Security\ICertificateChecker.cs" />
+    <Compile Include="Net\Security\CertificateGenerator.cs" />
     <Compile Include="Net\Security\SimpleCertificateChecker.cs" />
     <Compile Include="Net\Security\SimplePolicyChecker.cs" />
     <Compile Include="Net\Smtp\Mail.cs" />
     <Compile Include="Net\Smtp\NamespaceDoc.cs" />
     <Compile Include="NtpTimeTag.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
+    <Compile Include="NumericalAnalysis\Euclidean.cs" />
     <Compile Include="NumericalAnalysis\NamespaceDoc.cs" />
     <Compile Include="NumericalAnalysis\NumericalAnalysisExtensions.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />

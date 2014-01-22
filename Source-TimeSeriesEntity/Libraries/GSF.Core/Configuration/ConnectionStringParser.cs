@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using GSF.Reflection;
 
 namespace GSF.Configuration
@@ -467,5 +468,105 @@ namespace GSF.Configuration
         };
 
         #endregion
+    }
+
+    /// <summary>
+    /// Parses connection strings based on a settings object whose properties are annotated with
+    /// <typeparamref name="TParameterAttribute"/> and <typeparamref name="TNestedSettingsAttribute"/>.
+    /// </summary>
+    /// <typeparam name="TParameterAttribute">
+    /// The type of the attribute to search for when determining whether
+    /// to serialize a property to the connection string.
+    /// </typeparam>
+    /// <typeparam name="TNestedSettingsAttribute">
+    /// The type of the attribute to search for when determining which
+    /// parameters are to be parsed recursively as connection strings.
+    /// </typeparam>
+    public class ConnectionStringParser<TParameterAttribute, TNestedSettingsAttribute> : ConnectionStringParser<TParameterAttribute>
+        where TParameterAttribute : Attribute
+        where TNestedSettingsAttribute : Attribute
+    {
+        /// <summary>
+        /// Serializes the given <paramref name="settingsObject"/> into a connection string.
+        /// </summary>
+        /// <param name="settingsObject">The object whose properties are to be serialized.</param>
+        /// <returns>A connection string containing the serialized properties.</returns>
+        public override string ComposeConnectionString(object settingsObject)
+        {
+            StringBuilder builder = new StringBuilder();
+            object nestedSettingsObject;
+
+            if (settingsObject == null)
+                return string.Empty;
+
+            builder.Append(base.ComposeConnectionString(settingsObject));
+
+            foreach (PropertyInfo property in GetNestedSettingsProperties(settingsObject))
+            {
+                nestedSettingsObject = property.GetValue(settingsObject);
+
+                if (nestedSettingsObject != null)
+                    builder.Append(string.Format("; {0}={{ {1} }}", GetNames(property).First(), ComposeConnectionString(nestedSettingsObject)));
+            }
+
+            return builder.ToString().Trim(';', ' ');
+        }
+
+        /// <summary>
+        /// Deserializes the connection string parameters into the given <paramref name="settingsObject"/>.
+        /// </summary>
+        /// <param name="connectionString">The connection string to be parsed.</param>
+        /// <param name="settingsObject">The object whose properties are to be populated with values from the connection string.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="settingsObject"/> is null.</exception>
+        /// <exception cref="ArgumentException">A required connection string parameter cannot be found in the connection string.</exception>
+        public override void ParseConnectionString(string connectionString, object settingsObject)
+        {
+            Dictionary<string, string> settings;
+            object nestedSettingsObject;
+            string nestedSettings;
+
+            base.ParseConnectionString(connectionString, settingsObject);
+            settings = connectionString.ParseKeyValuePairs();
+
+            foreach (PropertyInfo property in GetNestedSettingsProperties(settingsObject))
+            {
+                nestedSettingsObject = property.GetValue(settingsObject);
+
+                if (nestedSettingsObject != null)
+                {
+                    foreach (string name in GetNames(property))
+                    {
+                        if (settings.TryGetValue(name, out nestedSettings))
+                        {
+                            ParseConnectionString(nestedSettings, nestedSettingsObject);
+                            break;
+                        }
+                    }
+
+                }
+            }
+        }
+
+        // Gets a collection of properties from the settings object which represent the nested connection strings
+        private static PropertyInfo[] GetNestedSettingsProperties(object settingsObject)
+        {
+            TNestedSettingsAttribute nestedSettingsAttribute;
+
+            return settingsObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.TryGetAttribute(out nestedSettingsAttribute))
+                .ToArray();
+        }
+
+        // Gets a collection of names for the given property which can
+        // be used during parsing or composing of connection strings
+        private static string[] GetNames(PropertyInfo property)
+        {
+            SettingNameAttribute settingNameAttribute;
+
+            if (property.TryGetAttribute(out settingNameAttribute))
+                return settingNameAttribute.Names;
+
+            return new string[] { property.Name };
+        }
     }
 }

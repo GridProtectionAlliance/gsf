@@ -25,15 +25,18 @@ using System;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.0.113.0")]
+[assembly: AssemblyVersion("2.0.119.0")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
-
+// Open internals for unit tests.
+[assembly: InternalsVisibleTo("GSF.Core.Tests")]
+[assembly: InternalsVisibleTo("GSF.TestsSuite")]
 // Assembly manifest attributes.
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]

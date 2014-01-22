@@ -23,7 +23,10 @@
 //
 //******************************************************************************************************
 
+using GSF.Communication;
+using GSF.Configuration;
 using GSF.Console;
+using GSF.ErrorManagement;
 using GSF.Identity;
 using GSF.Net.Security;
 using GSF.Reflection;
@@ -45,7 +48,7 @@ namespace GSF.TimeSeries
     /// <summary>
     /// Represents a client that can remotely access the time-series framework service host.
     /// </summary>
-    public partial class ServiceClientBase : Component
+    public class ServiceClientBase : IDisposable
     {
         #region [ Members ]
 
@@ -60,6 +63,12 @@ namespace GSF.TimeSeries
         private readonly ConsoleColor m_originalFgColor;
         private readonly ManualResetEvent m_authenticationWaitHandle;
 
+        private ClientBase m_remotingClient;
+        private ClientHelper m_clientHelper;
+        private ErrorLogger m_errorLogger;
+
+        private bool m_disposed;
+
         #endregion
 
         #region [ Constructors ]
@@ -69,7 +78,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public ServiceClientBase()
         {
-            InitializeComponent();
+            Initialize();
 
             // Save the color scheme.
             m_originalBgColor = System.Console.BackgroundColor;
@@ -86,9 +95,45 @@ namespace GSF.TimeSeries
             m_authenticationWaitHandle = new ManualResetEvent(true);
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="ServiceClientBase"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~ServiceClientBase()
+        {
+            Dispose(false);
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Initializes the remoting client, client helper, and error logger.
+        /// </summary>
+        public void Initialize()
+        {
+            CategorizedSettingsElementCollection remotingClientSettings = ConfigurationFile.Current.Settings["remotingClient"];
+
+            m_remotingClient = InitializeTlsClient();
+
+            if (remotingClientSettings.Cast<CategorizedSettingsElement>().Any(element => element.Name.Equals("EnabledSslProtocols", StringComparison.OrdinalIgnoreCase) && !element.Value.Equals("None", StringComparison.OrdinalIgnoreCase)))
+                m_remotingClient = InitializeTlsClient();
+            else
+                m_remotingClient = InitializeTcpClient();
+
+            m_clientHelper = new ClientHelper();
+            m_clientHelper.PersistSettings = true;
+            m_clientHelper.RemotingClient = m_remotingClient;
+            m_clientHelper.Initialize();
+
+            m_errorLogger = new ErrorLogger();
+            m_errorLogger.ErrorLog.FileName = "ServiceClient.ErrorLog.txt";
+            m_errorLogger.LogToEventLog = false;
+            m_errorLogger.LogToUI = true;
+            m_errorLogger.PersistSettings = true;
+            m_errorLogger.ErrorLog.Initialize();
+            m_errorLogger.Initialize();
+        }
 
         /// <summary>
         /// Handles service start event.
@@ -190,10 +235,6 @@ namespace GSF.TimeSeries
                     m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
                 }
 
-                // Override remote certificate validation so that we always
-                // accept localhost, but fall back on SimplePolicyChecker.
-                m_remotingClient.RemoteCertificateValidationCallback = RemoteCertificateValidationCallback;
-
                 // Connect to service and send commands.
                 while (!m_clientHelper.Enabled)
                 {
@@ -243,27 +284,141 @@ namespace GSF.TimeSeries
             }
         }
 
+        /// <summary>
+        /// Releases all the resources used by the <see cref="ServiceClientBase"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ServiceClientBase"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if ((object)m_clientHelper != null)
+                        {
+                            m_clientHelper.Dispose();
+                            m_clientHelper = null;
+                        }
+
+                        if ((object)m_remotingClient != null)
+                        {
+                            m_remotingClient.Dispose();
+                            m_remotingClient = null;
+                        }
+
+                        if ((object)m_errorLogger != null)
+                        {
+                            m_errorLogger.Dispose();
+                            m_errorLogger = null;
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        private TcpClient InitializeTcpClient()
+        {
+            TcpClient remotingClient;
+
+            remotingClient = new TcpClient();
+            remotingClient.ConnectionString = "Server=localhost:8500";
+            remotingClient.IgnoreInvalidCredentials = true;
+            remotingClient.PayloadAware = true;
+            remotingClient.PersistSettings = true;
+            remotingClient.SettingsCategory = "RemotingClient";
+            remotingClient.Initialize();
+
+            return remotingClient;
+        }
+
+        private TlsClient InitializeTlsClient()
+        {
+            TlsClient remotingClient;
+
+            remotingClient = new TlsClient();
+            remotingClient.ConnectionString = "Server=localhost:8500";
+            remotingClient.IgnoreInvalidCredentials = true;
+            remotingClient.PayloadAware = true;
+            remotingClient.PersistSettings = true;
+            remotingClient.SettingsCategory = "RemotingClient";
+            remotingClient.TrustedCertificatesPath = "Certs\\Remotes";
+            remotingClient.ValidChainFlags = X509ChainStatusFlags.UntrustedRoot;
+            remotingClient.ValidPolicyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
+            remotingClient.Initialize();
+
+            // Override remote certificate validation so that we always
+            // accept localhost, but fall back on SimplePolicyChecker.
+            remotingClient.RemoteCertificateValidationCallback = RemoteCertificateValidationCallback;
+
+            return remotingClient;
+        }
+
+        private void SetNetworkCredential(NetworkCredential credential)
+        {
+            TcpClient tcpClient;
+            TlsClient tlsClient;
+
+            tcpClient = m_remotingClient as TcpClient;
+
+            if ((object)tcpClient != null)
+            {
+                tcpClient.NetworkCredential = credential;
+            }
+            else
+            {
+                tlsClient = m_remotingClient as TlsClient;
+
+                if ((object)tlsClient != null)
+                    tlsClient.NetworkCredential = credential;
+            }
+        }
+
         private bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            IPEndPoint remoteEndPoint = m_remotingClient.Client.RemoteEndPoint as IPEndPoint;
+            TlsClient remotingClient;
+            IPEndPoint remoteEndPoint;
             IPHostEntry localhost;
             SimplePolicyChecker policyChecker;
 
-            if ((object)remoteEndPoint != null)
-            {
-                // Create an exception and do not check policy for localhost
-                localhost = Dns.GetHostEntry("localhost");
+            remotingClient = m_remotingClient as TlsClient;
 
-                if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
-                    return true;
+            if ((object)remotingClient != null)
+            {
+                remoteEndPoint = remotingClient.Client.RemoteEndPoint as IPEndPoint;
+
+                if ((object)remoteEndPoint != null)
+                {
+                    // Create an exception and do not check policy for localhost
+                    localhost = Dns.GetHostEntry("localhost");
+
+                    if (localhost.AddressList.Any(address => address.Equals(remoteEndPoint.Address)))
+                        return true;
+                }
+
+                // Not connected to localhost, so use the policy checker
+                policyChecker = new SimplePolicyChecker();
+                policyChecker.ValidPolicyErrors = remotingClient.ValidPolicyErrors;
+                policyChecker.ValidChainFlags = remotingClient.ValidChainFlags;
+
+                return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
             }
 
-            // Not connected to localhost, so use the policy checker
-            policyChecker = new SimplePolicyChecker();
-            policyChecker.ValidPolicyErrors = m_remotingClient.ValidPolicyErrors;
-            policyChecker.ValidChainFlags = m_remotingClient.ValidChainFlags;
-
-            return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+            return false;
         }
 
         private void DisplayHelp()
@@ -342,7 +497,7 @@ namespace GSF.TimeSeries
             // Set network credentials used when attempting AD authentication
             userInfo = new UserInfo(username);
             userInfo.Initialize();
-            m_remotingClient.NetworkCredential = new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString());
+            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString()));
 
             // Set the user name on the client helper.
             m_clientHelper.Username = username;

@@ -24,10 +24,12 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Identity;
 
 namespace GSF.TimeSeries
 {
@@ -58,6 +60,7 @@ namespace GSF.TimeSeries
             // Run data operations
             ValidateDefaultNode(connection, nodeIDQueryString);
             ValidateActiveMeasurements(connection, nodeIDQueryString);
+            ValidateAccountsAndGroups(connection, nodeIDQueryString);
             ValidateDataPublishers(connection, nodeIDQueryString);
             ValidateStatistics(connection, nodeIDQueryString);
             ValidateAlarming(connection, nodeIDQueryString);
@@ -100,6 +103,71 @@ namespace GSF.TimeSeries
 
             if (measurementConfigEntityCount == 0)
                 connection.ExecuteNonQuery(MeasurementConfigEntityInsertFormat);
+        }
+
+        /// <summary>
+        /// Data operation to validate accounts and groups to ensure
+        /// that account names and group names are converted to SIDs.
+        /// </summary>
+        private static void ValidateAccountsAndGroups(IDbConnection connection, string nodeIDQueryString)
+        {
+            const string SelectUserAccountQuery = "SELECT ID, Name, UseADAuthentication FROM UserAccount";
+            const string SelectSecurityGroupQuery = "SELECT ID, Name FROM SecurityGroup";
+            const string UpdateUserAccountFormat = "UPDATE UserAccount SET Name = '{0}' WHERE ID = '{1}'";
+            const string UpdateSecurityGroupFormat = "UPDATE SecurityGroup SET Name = '{0}' WHERE ID = '{1}'";
+
+            string id;
+            string sid;
+            string accountName;
+            Dictionary<string, string> updateMap;
+
+            updateMap = new Dictionary<string, string>();
+
+            // Find user accounts that need to be updated
+            using (IDataReader userAccountReader = connection.ExecuteReader(SelectUserAccountQuery))
+            {
+                while (userAccountReader.Read())
+                {
+                    id = userAccountReader["ID"].ToNonNullString();
+                    accountName = userAccountReader["Name"].ToNonNullString();
+
+                    if (userAccountReader["UseADAuthentication"].ToNonNullString().ParseBoolean())
+                    {
+                        sid = UserInfo.AccountNameToSID(accountName);
+
+                        if (!ReferenceEquals(accountName, sid))
+                            updateMap.Add(id, sid);
+                    }
+                }
+            }
+
+            // Update user accounts
+            foreach (KeyValuePair<string, string> pair in updateMap)
+                connection.ExecuteNonQuery(string.Format(UpdateUserAccountFormat, pair.Value, pair.Key));
+
+            updateMap.Clear();
+
+            // Find security groups that need to be updated
+            using (IDataReader securityGroupReader = connection.ExecuteReader(SelectSecurityGroupQuery))
+            {
+                while (securityGroupReader.Read())
+                {
+                    id = securityGroupReader["ID"].ToNonNullString();
+                    accountName = securityGroupReader["Name"].ToNonNullString();
+
+                    if (accountName.Contains('\\'))
+                    {
+                        sid = UserInfo.AccountNameToSID(accountName);
+
+                        if (!ReferenceEquals(accountName, sid))
+                            updateMap.Add(id, sid);
+                    }
+                }
+            }
+
+            // Update security groups
+            foreach (KeyValuePair<string, string> pair in updateMap)
+                connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
         }
 
         /// <summary>

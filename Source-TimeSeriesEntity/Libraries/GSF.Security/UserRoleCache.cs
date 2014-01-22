@@ -35,6 +35,13 @@ namespace GSF.Security
     /// <summary>
     /// Represents a secured inter-process cache for a <see cref="Dictionary{TKey,TValue}"/> of serialized user role information.
     /// </summary>
+    /// <remarks>
+    /// This is a system cache that contains the role assignments for each user that has logged in successfully. This cache is used
+    /// to check for changes in role assignments for a user - that is, a role change in the database that may now be different than
+    /// what is in the current cache. Any kind of role changes are logged as security events in the Windows event log for auditing.
+    /// Note that this is kept as a separate cache from the <see cref="AdoSecurityCache"/> since the user role cache is used for
+    /// auditing and contains information relative to a user's roles at last login.
+    /// </remarks>
     public class UserRoleCache : InterprocessCache
     {
         #region [ Members ]
@@ -45,8 +52,8 @@ namespace GSF.Security
         private const string DefaultCacheFileName = "UserRoleCache.bin";
 
         // Fields
-        private Dictionary<string, string> m_userRoles; // Internal dictionary of serialized user roles
-        private readonly object m_userRolesLock;        // Lock object
+        private Dictionary<string, string[]> m_userRoles;   // Internal dictionary of serialized user roles
+        private readonly object m_userRolesLock;            // Lock object for internal dictionary
 
         #endregion
 
@@ -57,7 +64,7 @@ namespace GSF.Security
         public UserRoleCache(int maximumConcurrentLocks = InterprocessReaderWriterLock.DefaultMaximumConcurrentLocks)
             : base(maximumConcurrentLocks)
         {
-            m_userRoles = new Dictionary<string, string>();
+            m_userRoles = new Dictionary<string, string[]>();
             m_userRolesLock = new object();
         }
 
@@ -66,11 +73,11 @@ namespace GSF.Security
         /// <summary>
         /// Gets a copy of the internal user role dictionary.
         /// </summary>
-        public Dictionary<string, string> UserRoles
+        public Dictionary<string, string[]> UserRoles
         {
             get
             {
-                Dictionary<string, string> userRoles;
+                Dictionary<string, string[]> userRoles;
 
                 // We wait until the user roles cache is loaded before attempting to access it
                 WaitForDataReady();
@@ -78,8 +85,8 @@ namespace GSF.Security
                 // Wait for thread level lock on dictionary
                 lock (m_userRolesLock)
                 {
-                    // Make a copy of the user role table for external use
-                    userRoles = new Dictionary<string, string>(m_userRoles);
+                    // Make a copy of the user role dictionary for external use
+                    userRoles = new Dictionary<string, string[]>(m_userRoles);
                 }
 
                 return userRoles;
@@ -87,17 +94,17 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets or sets access role for given <paramref name="userName"/>.
+        /// Gets or sets access roles for given <paramref name="userName"/>.
         /// </summary>
         /// <param name="userName">User name for associated access role to load or save.</param>
-        /// <returns>Access role for given <paramref name="userName"/> if found; otherwise <c>null</c>.</returns>
-        public string this[string userName]
+        /// <returns>Access roles for given <paramref name="userName"/> if found; otherwise <c>null</c>.</returns>
+        public string[] this[string userName]
         {
             get
             {
-                string role;
-                TryGetUserRole(userName, out role);
-                return role;
+                string[] roles;
+                TryGetUserRole(userName, out roles);
+                return roles;
             }
             set
             {
@@ -113,9 +120,9 @@ namespace GSF.Security
         /// Attempts to retrieve access role for given <paramref name="userName"/>.
         /// </summary>
         /// <param name="userName">User name associated with access role to retrieve.</param>
-        /// <param name="role">Access role to populate if found.</param>
-        /// <returns><c>true</c> if access role for given <paramref name="userName"/> was retrieved; otherwise <c>false</c>.</returns>
-        public bool TryGetUserRole(string userName, out string role)
+        /// <param name="roles">Access roles to populate if found.</param>
+        /// <returns><c>true</c> if access roles for given <paramref name="userName"/> were retrieved; otherwise <c>false</c>.</returns>
+        public bool TryGetUserRole(string userName, out string[] roles)
         {
             string hash = HashLoginID(userName);
             bool result;
@@ -123,42 +130,42 @@ namespace GSF.Security
             // We wait until the cache is loaded before attempting to access it
             WaitForDataReady();
 
-            // Wait for thread level lock on user info table
+            // Wait for thread level lock on user info dictionary
             lock (m_userRolesLock)
             {
                 // Attempt to lookup persisted access role based on hash of user name
-                result = m_userRoles.TryGetValue(hash, out role);
+                result = m_userRoles.TryGetValue(hash, out roles);
             }
 
             return result;
         }
 
         /// <summary>
-        /// Serializes the <paramref name="role"/> for the given <paramref name="userName"/> into the <see cref="UserRoleCache"/>.
+        /// Serializes the <paramref name="roles"/> for the given <paramref name="userName"/> into the <see cref="UserRoleCache"/>.
         /// </summary>
         /// <param name="userName">User name associated with access role to retrieve.</param>
-        /// <param name="role">Access role to update or populate.</param>
+        /// <param name="roles">Access roles to update or populate.</param>
         /// <remarks>
         /// <para>
-        /// This will add an entry into the user info cache for <paramref name="userName"/> if it doesn't exist;
+        /// This will add an entry into the user roles cache for <paramref name="userName"/> if it doesn't exist;
         /// otherwise existing entry will be updated.
         /// </para>
         /// <para>
         /// Updates are automatically queued up for serialization so user does not need to call <see cref="Save"/>.
         /// </para>
         /// </remarks>
-        public void SaveUserRole(string userName, string role)
+        public void SaveUserRole(string userName, string[] roles)
         {
             string hash = HashLoginID(userName);
 
             // We wait until the cache is loaded before attempting to access it
             WaitForDataReady();
 
-            // Wait for thread level lock on user data table
+            // Wait for thread level lock on user data dictionary
             lock (m_userRolesLock)
             {
-                // Assign new user information to user data table
-                m_userRoles[hash] = role;
+                // Assign new user information to user data dictionary
+                m_userRoles[hash] = roles;
             }
 
             // Queue up a serialization for this new user information
@@ -172,7 +179,7 @@ namespace GSF.Security
         public void MergeLeft(UserRoleCache other)
         {
             // Merge other roles into local ones
-            Dictionary<string, string> mergedUserRoles = UserRoles.Merge(other.UserRoles);
+            Dictionary<string, string[]> mergedUserRoles = UserRoles.Merge(other.UserRoles);
 
             // Wait for thread level lock on dictionary
             lock (m_userRolesLock)
@@ -192,7 +199,7 @@ namespace GSF.Security
         public void MergeRight(UserRoleCache other)
         {
             // Merge other roles into local ones
-            Dictionary<string, string> mergedUserRoles = other.UserRoles.Merge(UserRoles);
+            Dictionary<string, string[]> mergedUserRoles = other.UserRoles.Merge(UserRoles);
 
             // Wait for thread level lock on dictionary
             lock (m_userRolesLock)
@@ -248,7 +255,7 @@ namespace GSF.Security
         {
             // Decrypt data that was encrypted local to this machine
             byte[] serializedUserRoles = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
-            Dictionary<string, string> userRoles = Serialization.Deserialize<Dictionary<string, string>>(serializedUserRoles, SerializationFormat.Binary);
+            Dictionary<string, string[]> userRoles = Serialization.Deserialize<Dictionary<string, string[]>>(serializedUserRoles, SerializationFormat.Binary);
 
             // Wait for thread level lock on user role dictionary
             lock (m_userRolesLock)
@@ -266,7 +273,7 @@ namespace GSF.Security
         /// <param name="userName">User name to hash.</param>
         /// <returns>The Base64 encoded calculated SHA-2 hash of the <paramref name="userName"/> used as the key for the user roles dictionary.</returns>
         /// <remarks>
-        /// For added security, a hash of the <paramref name="userName"/> is used as the key for access roles
+        /// For added security, a hash of the <paramref name="userName"/> is used as the key for accessing roles
         /// in the user roles cache instead of the actual <paramref name="userName"/>. This method allows the
         /// consumer to properly calculate this hash when directly using the user data cache.
         /// </remarks>
@@ -324,8 +331,8 @@ namespace GSF.Security
 
             try
             {
-                // Validate that user has write access to the local cryptographic cache folder
-                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid().ToString() + ".tmp";
+                // Validate that user has write access to the local cache folder
+                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid() + ".tmp";
 
                 using (File.Create(tempFile))
                 {
@@ -334,13 +341,13 @@ namespace GSF.Security
                 if (File.Exists(tempFile))
                     File.Delete(tempFile);
 
-                // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
+                // No access issues exist, use local cache as the primary cache
                 currentCache = localUserRoleCache;
                 currentCache.AutoSave = true;
             }
             catch (UnauthorizedAccessException)
             {
-                // User does not have needed serialization access to common cryptographic cache folder,
+                // User does not have needed serialization access to common cache folder,
                 // use a path where user will have rights
                 string userCacheFolder = FilePath.AddPathSuffix(FilePath.GetApplicationDataFolder());
                 string userCacheFileName = userCacheFolder + FilePath.GetFileName(localCacheFileName);
@@ -349,11 +356,11 @@ namespace GSF.Security
                 if (!Directory.Exists(userCacheFolder))
                     Directory.CreateDirectory(userCacheFolder);
 
-                // Copy existing common cryptographic cache if none exists
+                // Copy existing common cache if none exists
                 if (File.Exists(localCacheFileName) && !File.Exists(userCacheFileName))
                     File.Copy(localCacheFileName, userCacheFileName);
 
-                // Initialize primary cryptographic key and initialization vector cache within user folder
+                // Initialize primary cache within user folder
                 currentCache = new UserRoleCache
                 {
                     FileName = userCacheFileName,
@@ -367,10 +374,10 @@ namespace GSF.Security
                     AutoSave = true
                 };
 
-                // Load initial keys
+                // Load initial roles
                 currentCache.Load();
 
-                // Merge new or updated keys, protected folder keys taking precedence over user keys
+                // Merge new or updated roles, protected folder roles taking precedence over user folder roles
                 currentCache.MergeRight(localUserRoleCache);
             }
 
