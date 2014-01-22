@@ -232,6 +232,7 @@ namespace GSF.ServiceModel
         protected SelfHostingService()
         {
             Type type = this.GetType();
+            m_endpoints = string.Empty;
             m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.ToNonNullString().Split(',')[1].Trim();
             m_allowCrossDomainAccess = false;
             m_allowedDomainList = "*";
