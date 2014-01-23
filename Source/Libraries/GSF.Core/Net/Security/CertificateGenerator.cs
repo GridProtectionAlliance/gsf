@@ -113,6 +113,8 @@ namespace GSF.Net.Security
 
             X509Certificate2 certificate = null;
             string certificatePath;
+            string commonNameList;
+            byte[] certificateData;
 
             ProcessStartInfo processInfo;
             string makeCertPath;
@@ -153,26 +155,23 @@ namespace GSF.Net.Security
                         return certificate;
                 }
 
-                // Certificate generator no longer searches stores for a matching issuer
-                // because the user may have deleted their certificate file intentionally
-                // in order to generate a new one.
-                //
-                //// Search the certificate stores for certificates
-                //// with a matching issuer and accessible private keys
-                //storedCertificates = stores.SelectMany(store => store.Certificates.Cast<X509Certificate2>()).ToList();
-                //certificate = storedCertificates.FirstOrDefault(storedCertificate => storedCertificate.Issuer.Split(',')[0].Equals("CN=" + Issuer) && CanAccessPrivateKey(storedCertificate));
+                // Search the certificate stores for certificates
+                // with a matching issuer and accessible private keys
+                commonNameList = GetCommonNameList();
+                storedCertificates = stores.SelectMany(store => store.Certificates.Cast<X509Certificate2>()).ToList();
+                certificate = storedCertificates.FirstOrDefault(storedCertificate => storedCertificate.Issuer.Equals(commonNameList) && CanAccessPrivateKey(storedCertificate));
 
-                //// If such a certificate exists, generate the certificate file and return the result
-                //if ((object)certificate != null)
-                //{
-                //    using (FileStream certificateStream = File.OpenWrite(certificatePath))
-                //    {
-                //        certificateData = certificate.Export(X509ContentType.Cert);
-                //        certificateStream.Write(certificateData, 0, certificateData.Length);
-                //    }
+                // If such a certificate exists, generate the certificate file and return the result
+                if ((object)certificate != null)
+                {
+                    using (FileStream certificateStream = File.OpenWrite(certificatePath))
+                    {
+                        certificateData = certificate.Export(X509ContentType.Cert);
+                        certificateStream.Write(certificateData, 0, certificateData.Length);
+                    }
 
-                //    return new X509Certificate2(certificatePath);
-                //}
+                    return new X509Certificate2(certificatePath);
+                }
             }
             finally
             {
@@ -187,7 +186,7 @@ namespace GSF.Net.Security
                 if (File.Exists(makeCertPath))
                 {
                     processInfo = new ProcessStartInfo(makeCertPath);
-                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr {1} \"{2}\"", GetCommonNameList(), store.Location, certificatePath);
+                    processInfo.Arguments = string.Format("-r -pe -n \"{0}\" -ss My -sr {1} \"{2}\"", commonNameList, store.Location, certificatePath);
                     processInfo.UseShellExecute = true;
 
                     using (Process makeCertProcess = Process.Start(processInfo))
