@@ -178,6 +178,17 @@ namespace GSF.Net.Security
                 CloseStores(stores);
             }
 
+            try
+            {
+                // Ensure that we can write to the certificate
+                // stores before generating a new certificate
+                TryOpenStores(stores, OpenFlags.ReadWrite);
+            }
+            finally
+            {
+                CloseStores(stores);
+            }
+
             // Attempt to use makecert to create a new self-signed certificate
             makeCertPath = FilePath.GetAbsolutePath("makecert.exe");
 

@@ -662,7 +662,6 @@ namespace GSF.TimeSeries
 
         private void GenerateLocalCertificate()
         {
-            string serviceName = "IaonHost";
             ConfigurationFile configurationFile;
             CategorizedSettingsElementCollection remotingServer;
 
@@ -672,17 +671,15 @@ namespace GSF.TimeSeries
 
             try
             {
-                serviceName = FilePath.GetFileNameWithoutExtension(AssemblyInfo.EntryAssembly.Location);
-
                 configurationFile = ConfigurationFile.Current;
                 remotingServer = configurationFile.Settings["remotingServer"];
 
-                remotingServer.Add("CertificateFile", string.Format("{0}.cer", serviceName), "Path to the local certificate used by this server for authentication.");
+                remotingServer.Add("CertificateFile", string.Format("{0}.cer", ServiceName), "Path to the local certificate used by this server for authentication.");
                 certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
 
                 certificateGenerator = new CertificateGenerator()
                 {
-                    Issuer = serviceName,
+                    Issuer = ServiceName,
                     CertificatePath = certificatePath
                 };
 
@@ -690,11 +687,11 @@ namespace GSF.TimeSeries
                     certificate = new X509Certificate2(certificatePath);
 
                 if (!Equals(certificate, certificateGenerator.GenerateCertificate()))
-                    EventLog.WriteEntry(serviceName, string.Format("Created self-signed certificate for service: \"{0}\"", certificatePath), EventLogEntryType.Information, 0);
+                    EventLog.WriteEntry(ServiceName, string.Format("Created self-signed certificate for service: \"{0}\"", certificatePath), EventLogEntryType.Information, 0);
             }
             catch (Exception ex)
             {
-                EventLog.WriteEntry(serviceName, string.Format("{0}{3}{1}{3}{2}", ex.Message, ex.GetType().FullName, ex.StackTrace, Environment.NewLine), EventLogEntryType.Error, 0);
+                EventLog.WriteEntry(ServiceName, string.Format("{0}{3}{1}{3}{2}", ex.Message, ex.GetType().FullName, ex.StackTrace, Environment.NewLine), EventLogEntryType.Error, 0);
             }
         }
 
