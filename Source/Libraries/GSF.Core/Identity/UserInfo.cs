@@ -1540,8 +1540,14 @@ namespace GSF.Identity
 
             if (!string.IsNullOrEmpty(currentUserID))
             {
-                s_currentUserInfo = new UserInfo(currentUserID);
-                s_currentUserInfo.Initialize();
+                try
+                {
+                    s_currentUserInfo = new UserInfo(currentUserID);
+                    s_currentUserInfo.Initialize();
+                }
+                catch (InitializationException)
+                {
+                }
             }
 
             // Determine built-in group list - this is not expected to change so it is statically cached

@@ -476,7 +476,7 @@ namespace GSF.Security
                     if (!Convert.IsDBNull(role["ApplicationRoleID"]))
                     {
                         // Locate associated application role record
-                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select(string.Format("ID = '{0}'", role["ApplicationRoleID"].ToString().ToUpper()));
+                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select(string.Format("ID = '{0}'", role["ApplicationRoleID"]));
 
                         if (applicationRoles.Length > 0)
                         {

@@ -146,22 +146,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public ServiceHostBase()
         {
-            // Generate local certificate for remoting server
-            GenerateLocalCertificate();
-
             InitializeComponent();
-            InitializeServiceHelper();
-
-            // Register service level event handlers
-            m_serviceHelper.ServiceStarting += ServiceStartingHandler;
-            m_serviceHelper.ServiceStarted += ServiceStartedHandler;
-            m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
-
-            if (m_serviceHelper.StatusLog != null)
-                m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
-
-            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
-                m_serviceHelper.ErrorLogger.ErrorLog.LogException += LogExceptionHandler;
+            ServiceName = "IaonHost";
         }
 
         /// <summary>
@@ -669,6 +655,9 @@ namespace GSF.TimeSeries
             CertificateGenerator certificateGenerator;
             X509Certificate2 certificate = null;
 
+            if (string.IsNullOrWhiteSpace(ServiceName))
+                throw new InvalidOperationException("EstablishServiceProperties must be overridden and ServiceName must be set");
+
             try
             {
                 configurationFile = ConfigurationFile.Current;
@@ -733,8 +722,6 @@ namespace GSF.TimeSeries
             m_serviceHelper.PersistSettings = true;
             m_serviceHelper.RemotingServer = m_remotingServer;
             m_serviceHelper.Initialize();
-
-            ServiceName = "IaonHost";
         }
 
         private TcpServer InitializeTcpServer()
@@ -1545,6 +1532,20 @@ namespace GSF.TimeSeries
         /// <param name="args">Service startup arguments, if any.</param>
         protected override void OnStart(string[] args)
         {
+            GenerateLocalCertificate();
+            InitializeServiceHelper();
+
+            // Register service level event handlers
+            m_serviceHelper.ServiceStarting += ServiceStartingHandler;
+            m_serviceHelper.ServiceStarted += ServiceStartedHandler;
+            m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
+
+            if (m_serviceHelper.StatusLog != null)
+                m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
+
+            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+                m_serviceHelper.ErrorLogger.ErrorLog.LogException += LogExceptionHandler;
+
             m_serviceHelper.OnStart(args);
         }
 
