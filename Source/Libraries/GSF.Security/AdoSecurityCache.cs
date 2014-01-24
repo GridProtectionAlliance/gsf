@@ -284,7 +284,7 @@ namespace GSF.Security
                 currentCache.Load();
 
                 // Update user located security cache if locally located security cache is newer
-                if (File.GetLastWriteTime(localCacheFileName) > File.GetLastWriteTime(userCacheFileName))
+                if (File.Exists(localCacheFileName) && File.Exists(userCacheFileName) && File.GetLastWriteTime(localCacheFileName) > File.GetLastWriteTime(userCacheFileName))
                     currentCache.DataSet = localSecurityCache.DataSet;
             }
 
