@@ -32,6 +32,11 @@
 //       to the subscribers of a topic.
 //  12/20/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  01/2/2014 - Pinal C. Patel
+//       Updated to support publishing locally from inheriting class without establishing a communications 
+//       channel over the web service interface.
+//       Added bubbling up of exception encountered when publishing messages.
+//       Updated Status to include information about clients, queues and topics.
 //
 //******************************************************************************************************
 
@@ -533,37 +538,8 @@ namespace GSF.ServiceBus
                 status.Append("           Processing mode: ");
                 status.Append(m_processingMode);
                 status.AppendLine();
-                m_clientsLock.EnterReadLock();
-                try
-                {
-                    status.AppendFormat("         Number of clients: {0}", m_clients.Count);
-                }
-                finally
-                {
-                    m_clientsLock.ExitReadLock();
-                }
-                status.AppendLine();
-                m_queuesLock.EnterReadLock();
-                try
-                {
-                    status.AppendFormat("          Number of queues: {0}", m_queues.Count);
-                }
-                finally
-                {
-                    m_queuesLock.ExitReadLock();
-                }
-                status.AppendLine();
-                m_topicsLock.EnterReadLock();
-                try
-                {
-                    status.AppendFormat("          Number of topics: {0}", m_topics.Count);
-                }
-                finally
-                {
-                    m_topicsLock.ExitReadLock();
-                }
-                status.AppendLine();
 
+                // Show publish queue statistics.
                 if (m_publishQueue != null)
                 {
                     ProcessQueueStatistics statistics = m_publishQueue.CurrentStatistics;
@@ -579,6 +555,101 @@ namespace GSF.ServiceBus
                     status.Append("  Messages being processed: ");
                     status.Append(statistics.ItemsBeingProcessed);
                     status.AppendLine();
+                }
+
+                // Show connected clients.
+                m_clientsLock.EnterReadLock();
+                try
+                {
+                    status.AppendFormat("         Number of clients: {0}", m_clients.Count);
+                    status.AppendLine();
+                    foreach (ClientInfo client in m_clients.Values)
+                    {
+                        status.AppendLine();
+                        status.AppendFormat("                 Client Id: {0}", client.SessionId);
+                        status.AppendLine();
+                        status.AppendFormat("              Connected at: {0}", client.ConnectedAt);
+                        status.AppendLine();
+                        status.AppendFormat("         Messages produced: {0}", client.MessagesProduced);
+                        status.AppendLine();
+                        status.AppendFormat("         Messages consumed: {0}", client.MessagesConsumed);
+                        status.AppendLine();
+                    }
+
+                    if (m_clients.Count > 0)
+                        status.AppendLine();
+                }
+                finally
+                {
+                    m_clientsLock.ExitReadLock();
+                }
+
+                // Show registered queues.
+                m_queuesLock.EnterReadLock();
+                try
+                {
+                    status.AppendFormat("          Number of queues: {0}", m_queues.Count);
+                    status.AppendLine();
+                    foreach (RegistrationInfo queue in m_queues.Values)
+                    {
+                        status.AppendLine();
+                        status.AppendFormat("                Queue name: {0}", queue.MessageName);
+                        status.AppendLine();
+                        status.AppendFormat("       Number of producers: {0}", queue.Producers.Count);
+                        status.AppendLine();
+                        status.AppendFormat("       Number of consumers: {0}", queue.Consumers.Count);
+                        status.AppendLine();
+                        status.AppendFormat("         Messages received: {0}", queue.MessagesReceived);
+                        status.AppendLine();
+                        status.AppendFormat("        Messages processed: {0}", queue.MessagesProcessed);
+                        status.AppendLine();
+                        if (queue.LatestMessage != null)
+                        {
+                            status.AppendFormat("       Latest message time: {0}", queue.LatestMessage.Time);
+                            status.AppendLine();
+                        }
+                    }
+
+                    if (m_queues.Count > 0)
+                        status.AppendLine();
+                }
+                finally
+                {
+                    m_queuesLock.ExitReadLock();
+                }
+
+                // Show registered topics.
+                m_topicsLock.EnterReadLock();
+                try
+                {
+                    status.AppendFormat("          Number of topics: {0}", m_topics.Count);
+                    status.AppendLine();
+                    foreach (RegistrationInfo topic in m_topics.Values)
+                    {
+                        status.AppendLine();
+                        status.AppendFormat("                Topic name: {0}", topic.MessageName);
+                        status.AppendLine();
+                        status.AppendFormat("       Number of producers: {0}", topic.Producers.Count);
+                        status.AppendLine();
+                        status.AppendFormat("       Number of consumers: {0}", topic.Consumers.Count);
+                        status.AppendLine();
+                        status.AppendFormat("         Messages received: {0}", topic.MessagesReceived);
+                        status.AppendLine();
+                        status.AppendFormat("        Messages processed: {0}", topic.MessagesProcessed);
+                        status.AppendLine();
+                        if (topic.LatestMessage != null)
+                        {
+                            status.AppendFormat("       Latest message time: {0}", topic.LatestMessage.Time);
+                            status.AppendLine();
+                        }
+                    }
+
+                    if (m_topics.Count > 0)
+                        status.AppendLine();
+                }
+                finally
+                {
+                    m_topicsLock.ExitReadLock();
                 }
 
                 return status.ToString();
@@ -642,6 +713,7 @@ namespace GSF.ServiceBus
                     throw new NotSupportedException(string.Format("Processing mode '{0}' is not supported", m_processingMode));
 
                 // Start the process queue.
+                m_publishQueue.ProcessException += OnProcessException;
                 m_publishQueue.Start();
             }
         }
@@ -691,33 +763,36 @@ namespace GSF.ServiceBus
             Initialize();
 
             // Save client information if not already present.
-            ClientInfo client;
-            m_clientsLock.EnterUpgradeableReadLock();
-            try
+            ClientInfo client = null;
+            if (OperationContext.Current != null)
             {
-                if (!m_clients.TryGetValue(OperationContext.Current.SessionId, out client))
+                m_clientsLock.EnterUpgradeableReadLock();
+                try
                 {
-                    m_clientsLock.EnterWriteLock();
-                    try
+                    if (!m_clients.TryGetValue(OperationContext.Current.SessionId, out client))
                     {
-                        client = new ClientInfo(OperationContext.Current);
-                        m_clients.Add(client.SessionId, client);
-                        client.OperationContext.Channel.Faulted += OnChannelFaulted;
-                        client.OperationContext.Channel.Closing += OnChannelClosing;
-                    }
-                    finally
-                    {
-                        m_clientsLock.ExitWriteLock();
+                        m_clientsLock.EnterWriteLock();
+                        try
+                        {
+                            client = new ClientInfo(OperationContext.Current);
+                            m_clients.Add(client.SessionId, client);
+                            client.OperationContext.Channel.Faulted += OnChannelFaulted;
+                            client.OperationContext.Channel.Closing += OnChannelClosing;
+                        }
+                        finally
+                        {
+                            m_clientsLock.ExitWriteLock();
+                        }
                     }
                 }
-            }
-            finally
-            {
-                m_clientsLock.ExitUpgradeableReadLock();
+                finally
+                {
+                    m_clientsLock.ExitUpgradeableReadLock();
+                }
             }
 
             // Retrieve registration information.
-            RegistrationInfo registration;
+            RegistrationInfo registration = null;
             if (request.MessageType == MessageType.Queue)
             {
                 // Queue
@@ -775,7 +850,7 @@ namespace GSF.ServiceBus
             }
 
             // Update registration information.
-            if (registration != null)
+            if (registration != null && client != null)
             {
                 List<ClientInfo> clients = (request.RegistrationType == RegistrationType.Produce ? registration.Producers : registration.Consumers);
                 lock (clients)
@@ -793,7 +868,7 @@ namespace GSF.ServiceBus
         public virtual void Unregister(RegistrationRequest request)
         {
             // Retrieve registration information.
-            RegistrationInfo registration;
+            RegistrationInfo registration = null;
             if (request.MessageType == MessageType.Queue)
             {
                 // Queue
@@ -827,7 +902,7 @@ namespace GSF.ServiceBus
             }
 
             // Update registration information.
-            if (registration != null)
+            if (registration != null && OperationContext.Current != null)
             {
                 List<ClientInfo> clients = (request.RegistrationType == RegistrationType.Produce ? registration.Producers : registration.Consumers);
                 lock (clients)
@@ -844,21 +919,24 @@ namespace GSF.ServiceBus
         public virtual void Publish(Message message)
         {
             // Retrieve publisher information.
-            ClientInfo client;
-            m_clientsLock.EnterReadLock();
-            try
+            ClientInfo client = null;
+            if (OperationContext.Current != null)
             {
-                // Update statistics data.
-                if (m_clients.TryGetValue(OperationContext.Current.SessionId, out client))
-                    Interlocked.Increment(ref client.MessagesProduced);
-            }
-            finally
-            {
-                m_clientsLock.ExitReadLock();
+                m_clientsLock.EnterReadLock();
+                try
+                {
+                    // Update statistics data.
+                    if (m_clients.TryGetValue(OperationContext.Current.SessionId, out client))
+                        Interlocked.Increment(ref client.MessagesProduced);
+                }
+                finally
+                {
+                    m_clientsLock.ExitReadLock();
+                }
             }
 
             // Retrieve registration information.
-            RegistrationInfo registration;
+            RegistrationInfo registration = null;
             if (message.Type == MessageType.Queue)
             {
                 // Queue
@@ -1036,7 +1114,10 @@ namespace GSF.ServiceBus
                         }
 
                         if (m_publishQueue != null)
+                        {
+                            m_publishQueue.ProcessException -= OnProcessException;
                             m_publishQueue.Dispose();
+                        }
 
                         if (m_clientsLock != null)
                             m_clientsLock.Dispose();
@@ -1229,6 +1310,11 @@ namespace GSF.ServiceBus
         private void OnChannelFaulted(object sender, EventArgs e)
         {
             DisconnectClient(((IContextChannel)sender).SessionId);
+        }
+
+        private void OnProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnExecutionException("Error publishing messages", e.Argument);
         }
 
         #endregion
