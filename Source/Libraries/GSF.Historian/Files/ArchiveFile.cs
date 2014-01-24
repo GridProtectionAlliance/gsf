@@ -1405,7 +1405,7 @@ namespace GSF.Historian.Files
 
                 settings.Add("FileName", m_fileName, "Name of the file including its path.");
                 settings.Add("FileType", m_fileType, "Type (Active; Standby; Historic) of the file.");
-                settings.Add("FileSize", m_fileSize, "Size (in MB) of the file - recommended size = 2048.");
+                settings.Add("FileSize", m_fileSize, "Size (in MB) of the file. Typical size = 100.");
                 settings.Add("DataBlockSize", m_dataBlockSize, "Size (in KB) of the data blocks in the file.");
                 settings.Add("RolloverPreparationThreshold", m_rolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
                 settings.Add("ArchiveOffloadLocation", m_archiveOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full. Set to *DELETE* to remove files instead of offloading.");

@@ -320,6 +320,9 @@ namespace GSF.Security
                         throw new SecurityException(SecurityContextError);
                 }
 
+                if (securityContext.Tables[ApplicationRoleTable].Rows.Count == 0)
+                    throw new SecurityException(string.Format("No application roles were found for node ID '{0}' - please check the node ID in the config file.", s_nodeID));
+
                 DataRow userAccount = null;
                 Guid userAccountID = Guid.Empty;
                 string userSID = UserInfo.AccountNameToSID(UserData.Username);
@@ -473,7 +476,7 @@ namespace GSF.Security
                     if (!Convert.IsDBNull(role["ApplicationRoleID"]))
                     {
                         // Locate associated application role record
-                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select(string.Format("ID = '{0}'", role["ApplicationRoleID"]));
+                        DataRow[] applicationRoles = securityContext.Tables[ApplicationRoleTable].Select(string.Format("ID = '{0}'", role["ApplicationRoleID"].ToString().ToUpper()));
 
                         if (applicationRoles.Length > 0)
                         {
@@ -795,22 +798,52 @@ namespace GSF.Security
 
                 if ((object)cachedRoles == null || cachedRoles.Length == 0)
                 {
-                    // New user access granted
-                    message = string.Format("New user \"{0}\" granted access with role{1} \"{2}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
-                    entryType = EventLogEntryType.Information;
-                    rolesChanged = true;
+                    if (currentRoles.Count == 0)
+                    {
+                        // New user access granted
+                        message = string.Format("Initial Encounter: user \"{0}\" attempted login with no assigned roles.", UserData.Username);
+                        entryType = EventLogEntryType.Information;
+                        rolesChanged = true;
+                    }
+                    else
+                    {
+                        // New user access granted
+                        message = string.Format("Initial Encounter: user \"{0}\" granted access with role{1} \"{2}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
+                        entryType = EventLogEntryType.Information;
+                        rolesChanged = true;
+                    }
                 }
                 else if (!currentRoles.SetEquals(cachedRoles))
                 {
-                    // User role access changed
-                    message = string.Format("Existing user \"{0}\" granted access with new role{1} \"{2}\" - role assignment is different from last login, was \"{3}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "), cachedRoles.ToDelimitedString(", "));
-                    entryType = EventLogEntryType.Warning;
-                    rolesChanged = true;
+                    if (currentRoles.Count == 0)
+                    {
+                        // New user access granted
+                        message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - role assignment that existed at last login was \"{1}\".", UserData.Username, cachedRoles.ToDelimitedString(", "));
+                        entryType = EventLogEntryType.Information;
+                        rolesChanged = true;
+                    }
+                    else
+                    {
+                        // User role access changed
+                        message = string.Format("Subsequent Encounter: user \"{0}\" granted access with new role{1} \"{2}\" - role assignment is different from last login, was \"{3}\".", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "), cachedRoles.ToDelimitedString(", "));
+                        entryType = EventLogEntryType.Warning;
+                        rolesChanged = true;
+                    }
                 }
                 else
                 {
-                    message = string.Format("Existing user \"{0}\" granted access with role{1} \"{2}\" - role assignment is the same as last login.", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
-                    entryType = EventLogEntryType.SuccessAudit;
+                    if (currentRoles.Count == 0)
+                    {
+                        // New user access granted
+                        message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - same as last login attempt.", UserData.Username);
+                        entryType = EventLogEntryType.Information;
+                        rolesChanged = true;
+                    }
+                    else
+                    {
+                        message = string.Format("Subsequent Encounter: user \"{0}\" granted access with role{1} \"{2}\" - role assignment is the same as last login.", UserData.Username, currentRoles.Count == 1 ? "" : "s", currentRoles.ToDelimitedString(", "));
+                        entryType = EventLogEntryType.SuccessAudit;
+                    }
                 }
 
                 // Log granted role access to event log
