@@ -27,13 +27,13 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using GSF.Configuration;
 
 namespace GSF.Data
 {
@@ -483,18 +483,9 @@ namespace GSF.Data
         /// <summary>
         /// Returns current UTC time in an implementation that is proper for connected <see cref="AdoDataConnection"/> database type.
         /// </summary>
-        /// <param name="usePrecisionTime">Set to <c>true</c> to use precision time.</param>
         /// <returns>Current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.</returns>
-        public object UtcNow(bool usePrecisionTime = false)
+        public object UtcNow()
         {
-            if (usePrecisionTime)
-            {
-                if (IsJetEngine)
-                    return DateTime.UtcNow.ToOADate();
-
-                return DateTime.UtcNow;
-            }
-
             if (IsJetEngine)
                 return DateTime.UtcNow.ToOADate();
 

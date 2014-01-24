@@ -96,9 +96,8 @@ namespace GSF.Historian.Files
         /// <param name="parent">An <see cref="ArchiveFile"/> object.</param>
         /// <param name="index">0-based index of the <see cref="ArchiveDataBlock"/>.</param>
         /// <param name="historianID">Historian identifier whose <see cref="ArchiveDataPoint"/> is stored in the <see cref="ArchiveDataBlock"/>.</param>
-        /// <param name="reset">true if the <see cref="ArchiveDataBlock"/> is to be <see cref="Reset()"/>; otherwise false.</param>
         /// <param name="preRead">true to pre-read data to locate write cursor.</param>
-        internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID, bool reset, bool preRead = true)
+        internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID, bool preRead = true)
         {
             m_parent = parent;
             m_index = index;
@@ -107,15 +106,11 @@ namespace GSF.Historian.Files
             m_writeCursor = Location;
             m_lastActivityTime = DateTime.Now;
 
-            if (reset)
+            // Scan through existing data to locate write cursor
+            if (preRead)
             {
-                // Clear existing data.
-                Reset();
-            }
-            else if (preRead)
-            {
-                // Scan through existing data to locate write cursor
-                foreach (ArchiveDataPoint dataPoint in Read())
+                // ReSharper disable once UnusedVariable
+                foreach (IDataPoint dataPoint in Read())
                 {
                 }
             }
@@ -188,15 +183,12 @@ namespace GSF.Historian.Files
             get
             {
                 double inactivity = DateTime.Now.Subtract(m_lastActivityTime).TotalSeconds;
+
                 if (inactivity <= InactivityPeriod)
-                {
                     return true;
-                }
-                else
-                {
-                    Trace.WriteLine(string.Format("Inactive for {0} seconds (Last activity = {1}; Time now = {2})", inactivity, m_lastActivityTime, DateTime.Now));
-                    return false;
-                }
+
+                Trace.WriteLine(string.Format("Inactive for {0} seconds (Last activity = {1}; Time now = {2})", inactivity, m_lastActivityTime, DateTime.Now));
+                return false;
             }
         }
 
@@ -288,10 +280,12 @@ namespace GSF.Historian.Files
         public void Reset()
         {
             m_writeCursor = Location;
+
             for (int i = 1; i <= Capacity; i++)
             {
                 Write(new ArchiveDataPoint(m_historianID));
             }
+
             m_writeCursor = Location;
         }
 

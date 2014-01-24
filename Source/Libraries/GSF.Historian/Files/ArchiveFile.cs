@@ -84,6 +84,8 @@
 //       Modified to support resumable read after roll-over completes.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  01/22/2014 - J. Ritchie Carroll
+//       Fixed issue with *DELETE* setting for ArchiveOffloadLocation.
 //
 //******************************************************************************************************
 
@@ -164,33 +166,28 @@ namespace GSF.Historian.Files
             public int CompareTo(object obj)
             {
                 Info other = obj as Info;
-                if (other == null)
-                {
+
+                if ((object)other == null)
                     return 1;
-                }
-                else
-                {
-                    int result = StartTimeTag.CompareTo(other.StartTimeTag);
-                    if (result != 0)
-                        return result;
-                    else
-                        return EndTimeTag.CompareTo(other.EndTimeTag);
-                }
+
+                int result = StartTimeTag.CompareTo(other.StartTimeTag);
+
+                if (result != 0)
+                    return result;
+
+                return EndTimeTag.CompareTo(other.EndTimeTag);
             }
 
             public override bool Equals(object obj)
             {
                 Info other = obj as Info;
-                if (other == null)
-                {
+
+                if ((object)other == null)
                     return false;
-                }
-                else
-                {
-                    // We will only compare file name for equality because the result will be incorrect if one of
-                    // the ArchiveFileInfo instance is created from the filename by GetHistoricFileInfo() function.
-                    return string.Compare(FilePath.GetFileName(FileName), FilePath.GetFileName(other.FileName), true) == 0;
-                }
+
+                // We will only compare file name for equality because the result will be incorrect if one of
+                // the ArchiveFileInfo instance is created from the filename by GetHistoricFileInfo() function.
+                return string.Compare(FilePath.GetFileName(FileName), FilePath.GetFileName(other.FileName), StringComparison.OrdinalIgnoreCase) == 0;
             }
 
             public override int GetHashCode()
@@ -484,6 +481,7 @@ namespace GSF.Historian.Files
         private bool m_persistSettings;
         private string m_settingsCategory;
         private ArchiveFileAllocationTable m_fat;
+
         // Operational
         private bool m_disposed;
         private bool m_initialized;
@@ -493,10 +491,12 @@ namespace GSF.Historian.Files
         private readonly Dictionary<int, double> m_delayedAlarmProcessing;
         private volatile bool m_rolloverInProgress;
         private long m_activeFileReaders;
+
         // Threading
         private Thread m_rolloverPreparationThread;
         private Thread m_buildHistoricFileListThread;
         private readonly ManualResetEvent m_rolloverWaitHandle;
+
         // Components
         private StateFile m_stateFile;
         private IntercomFile m_intercomFile;
@@ -561,7 +561,7 @@ namespace GSF.Historian.Files
         public ArchiveFile(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -588,8 +588,8 @@ namespace GSF.Historian.Files
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException("value");
 
-                if (string.Compare(FilePath.GetExtension(value), FileExtension, true) != 0 &&
-                    string.Compare(FilePath.GetExtension(value), StandbyFileExtension, true) != 0)
+                if (string.Compare(FilePath.GetExtension(value), FileExtension, StringComparison.OrdinalIgnoreCase) != 0 &&
+                    string.Compare(FilePath.GetExtension(value), StandbyFileExtension, StringComparison.OrdinalIgnoreCase) != 0)
                     throw (new ArgumentException(string.Format("{0} must have an extension of {1} or {2}.", this.GetType().Name, FileExtension, StandbyFileExtension)));
 
                 m_fileName = value;
@@ -670,16 +670,10 @@ namespace GSF.Historian.Files
             {
                 // This is the only redundant property between the ArchiveFile component and the FAT, so
                 // we ensure that this information is synched at least at run time if not at design time.
-                if (m_fat == null)
-                {
-                    // Design time.
-                    return m_dataBlockSize;
-                }
-                else
-                {
-                    // Run time.
-                    return m_fat.DataBlockSize;
-                }
+                if ((object)m_fat == null)
+                    return m_dataBlockSize; // Design time.
+
+                return m_fat.DataBlockSize; // Run time.
             }
             set
             {
@@ -706,7 +700,7 @@ namespace GSF.Historian.Files
             set
             {
                 if (value < 1 || value > 95)
-                    throw new ArgumentOutOfRangeException("RolloverPreparationThreshold", "Value must be between 1 and 95");
+                    throw new ArgumentOutOfRangeException("value", "RolloverPreparationThreshold value must be between 1 and 95");
 
                 m_rolloverPreparationThreshold = value;
             }
@@ -769,7 +763,7 @@ namespace GSF.Historian.Files
             set
             {
                 if (value < 1 || value > 99)
-                    throw new ArgumentOutOfRangeException("ArchiveOffloadThreshold", "Value must be between 1 and 99");
+                    throw new ArgumentOutOfRangeException("value", "ArchiveOffloadThreshold value must be between 1 and 99");
 
                 m_archiveOffloadThreshold = value;
             }
@@ -942,7 +936,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (m_metadataFile != null)
+                if ((object)m_metadataFile != null)
                 {
                     // Detach events from any existing instance
                     m_metadataFile.FileModified -= MetadataFile_FileModified;
@@ -950,7 +944,7 @@ namespace GSF.Historian.Files
 
                 m_metadataFile = value;
 
-                if (m_metadataFile != null)
+                if ((object)m_metadataFile != null)
                 {
                     // Attach events to new instance
                     m_metadataFile.FileModified += MetadataFile_FileModified;
@@ -1060,6 +1054,7 @@ namespace GSF.Historian.Files
             get
             {
                 StringBuilder status = new StringBuilder();
+
                 status.Append("                 File name: ");
                 status.Append(FilePath.TrimFileName(m_fileName, 30));
                 status.AppendLine();
@@ -1069,9 +1064,11 @@ namespace GSF.Historian.Files
                 status.Append("          File access mode: ");
                 status.Append(m_fileAccessMode);
                 status.AppendLine();
+
                 if (IsOpen)
                 {
                     ArchiveFileStatistics statistics = Statistics;
+
                     status.Append("                File usage: ");
                     status.Append(statistics.FileUsage.ToString("0.00") + "%");
                     status.AppendLine();
@@ -1090,13 +1087,16 @@ namespace GSF.Historian.Files
                     status.Append("          Averaging window: ");
                     status.Append(statistics.AveragingWindow.ToString());
                     status.AppendLine();
-                    if (m_historicArchiveFiles != null)
+
+                    if ((object)m_historicArchiveFiles != null)
                     {
                         status.Append("    Historic archive files: ");
+
                         lock (m_historicArchiveFiles)
                         {
                             status.Append(m_historicArchiveFiles.Count);
                         }
+
                         status.AppendLine();
                     }
                 }
@@ -1113,7 +1113,7 @@ namespace GSF.Historian.Files
         {
             get
             {
-                return (m_fileStream != null & m_fat != null);
+                return ((object)m_fileStream != null && (object)m_fat != null);
             }
         }
 
@@ -1155,7 +1155,8 @@ namespace GSF.Historian.Files
                 {
                     // Calculate file usage.
                     IntercomRecord system = m_intercomFile.Read(1);
-                    if (m_fileType == ArchiveFileType.Active && system != null)
+
+                    if (m_fileType == ArchiveFileType.Active && (object)system != null)
                         statistics.FileUsage = ((float)system.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
                     else
                         statistics.FileUsage = ((float)m_fat.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
@@ -1167,13 +1168,15 @@ namespace GSF.Historian.Files
                     if (m_currentDataQueue.RunTime >= 1.0D)
                     {
                         statistics.AveragingWindow = m_currentDataQueue.RunTime;
-                        statistics.AverageWriteSpeed = (int)((m_currentDataQueue.CurrentStatistics.TotalProcessedItems -
-                                                             (m_historicDataQueue.CurrentStatistics.TotalProcessedItems +
-                                                              m_historicDataQueue.CurrentStatistics.QueueCount +
-                                                              m_historicDataQueue.CurrentStatistics.ItemsBeingProcessed +
-                                                              m_outOfSequenceDataQueue.CurrentStatistics.TotalProcessedItems +
-                                                              m_outOfSequenceDataQueue.CurrentStatistics.QueueCount +
-                                                              m_outOfSequenceDataQueue.CurrentStatistics.ItemsBeingProcessed)) / (long)statistics.AveragingWindow);
+
+                        statistics.AverageWriteSpeed =
+                            (int)((m_currentDataQueue.CurrentStatistics.TotalProcessedItems -
+                            (m_historicDataQueue.CurrentStatistics.TotalProcessedItems +
+                            m_historicDataQueue.CurrentStatistics.QueueCount +
+                            m_historicDataQueue.CurrentStatistics.ItemsBeingProcessed +
+                            m_outOfSequenceDataQueue.CurrentStatistics.TotalProcessedItems +
+                            m_outOfSequenceDataQueue.CurrentStatistics.QueueCount +
+                            m_outOfSequenceDataQueue.CurrentStatistics.ItemsBeingProcessed)) / (long)statistics.AveragingWindow);
                     }
                 }
 
@@ -1276,6 +1279,7 @@ namespace GSF.Historian.Files
             if (!m_initialized)
             {
                 LoadSettings();         // Load settings from the config file.
+
                 m_initialized = true;   // Initialize only once.
 
                 if (m_monitorNewArchiveFiles)
@@ -1308,10 +1312,10 @@ namespace GSF.Historian.Files
             {
                 try
                 {
-                    //if (m_currentLocationFileWatcher != null)
+                    //if ((object)m_currentLocationFileWatcher != null)
                     //    m_currentLocationFileWatcher.BeginInit();
 
-                    //if (m_offloadLocationFileWatcher != null)
+                    //if ((object)m_offloadLocationFileWatcher != null)
                     //    m_offloadLocationFileWatcher.BeginInit();
                 }
                 catch
@@ -1362,6 +1366,7 @@ namespace GSF.Historian.Files
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
                 settings["FileName", true].Update(m_fileName);
                 settings["FileType", true].Update(m_fileType);
                 settings["FileSize", true].Update(m_fileSize);
@@ -1377,6 +1382,7 @@ namespace GSF.Historian.Files
                 settings["CacheWrites", true].Update(m_cacheWrites);
                 settings["ConserveMemory", true].Update(m_conserveMemory);
                 settings["MonitorNewArchiveFiles", true].Update(m_monitorNewArchiveFiles);
+
                 config.Save();
             }
         }
@@ -1396,9 +1402,10 @@ namespace GSF.Historian.Files
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
                 settings.Add("FileName", m_fileName, "Name of the file including its path.");
                 settings.Add("FileType", m_fileType, "Type (Active; Standby; Historic) of the file.");
-                settings.Add("FileSize", m_fileSize, "Size (in MB) of the file.");
+                settings.Add("FileSize", m_fileSize, "Size (in MB) of the file - recommended size = 2048.");
                 settings.Add("DataBlockSize", m_dataBlockSize, "Size (in KB) of the data blocks in the file.");
                 settings.Add("RolloverPreparationThreshold", m_rolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
                 settings.Add("ArchiveOffloadLocation", m_archiveOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full. Set to *DELETE* to remove files instead of offloading.");
@@ -1406,11 +1413,12 @@ namespace GSF.Historian.Files
                 settings.Add("ArchiveOffloadThreshold", m_archiveOffloadThreshold, "Percentage disk full when the historic files should be moved to the offload location.");
                 settings.Add("MaxHistoricArchiveFiles", m_maxHistoricArchiveFiles, "Maximum number of historic files to be kept at both the primary and offload locations combined.");
                 settings.Add("LeadTimeTolerance", m_leadTimeTolerance, "Number of minutes by which incoming data points can be ahead of local system clock and still be considered valid.");
-                settings.Add("CompressData", m_compressData, "True if compression is to be performed on the incoming data points; otherwise False.");
+                settings.Add("CompressData", m_compressData, "True if compression (swinging door - lossy) is to be performed on the incoming data points; otherwise False.");
                 settings.Add("DiscardOutOfSequenceData", m_discardOutOfSequenceData, "True if out-of-sequence data points are to be discarded; otherwise False.");
                 settings.Add("CacheWrites", m_cacheWrites, "True if writes are to be cached for performance; otherwise False.");
                 settings.Add("ConserveMemory", m_conserveMemory, "True if attempts are to be made to conserve memory; otherwise False.");
                 settings.Add("MonitorNewArchiveFiles", m_monitorNewArchiveFiles, "True to monitor and load newly encountered archive files; otherwise False.");
+
                 FileName = settings["FileName"].ValueAs(m_fileName);
                 FileType = settings["FileType"].ValueAs(m_fileType);
                 FileSize = settings["FileSize"].ValueAs(m_fileSize);
@@ -1437,11 +1445,12 @@ namespace GSF.Historian.Files
             if (!IsOpen)
             {
                 // Check for the existance of dependencies.
-                if (m_stateFile == null || m_intercomFile == null | m_metadataFile == null)
+                if ((object)m_stateFile == null || (object)m_intercomFile == null | (object)m_metadataFile == null)
                     throw (new InvalidOperationException("One or more of the dependency files are not specified."));
 
                 // Validate file type against its name.
                 m_fileName = m_fileName.ToLower();
+
                 if (Path.GetExtension(m_fileName) == StandbyFileExtension)
                     m_fileType = ArchiveFileType.Standby;
                 else if (Regex.IsMatch(m_fileName, string.Format(".+_.+_to_.+\\{0}$", FileExtension)))
@@ -1451,6 +1460,7 @@ namespace GSF.Historian.Files
 
                 // Get the absolute path for the file name.
                 m_fileName = FilePath.GetAbsolutePath(m_fileName);
+
                 // Create the directory if it does not exist.
                 if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
                     Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
@@ -1469,9 +1479,11 @@ namespace GSF.Historian.Files
                 // Open state file if closed.
                 if (!m_stateFile.IsOpen)
                     m_stateFile.Open();
+
                 //Open intercom file if closed.
                 if (!m_intercomFile.IsOpen)
                     m_intercomFile.Open();
+
                 // Open metadata file if closed.
                 if (!m_metadataFile.IsOpen)
                     m_metadataFile.Open();
@@ -1484,12 +1496,15 @@ namespace GSF.Historian.Files
 
                 // Validate the dependency files.
                 SyncStateFile(null);
+
                 if (m_intercomFile.FileAccessMode != FileAccess.Read)
                 {
                     // Ensure that "rollover in progress" is not set.
                     IntercomRecord system = m_intercomFile.Read(1);
-                    if (system == null)
+
+                    if ((object)system == null)
                         system = new IntercomRecord(1);
+
                     system.RolloverInProgress = false;
                     m_intercomFile.Write(1, system);
                 }
@@ -1511,14 +1526,14 @@ namespace GSF.Historian.Files
                     // Start file watchers to monitor file system changes.
                     if (m_monitorNewArchiveFiles)
                     {
-                        if (m_currentLocationFileWatcher != null)
+                        if ((object)m_currentLocationFileWatcher != null)
                         {
                             m_currentLocationFileWatcher.Filter = HistoricFilesSearchPattern;
                             m_currentLocationFileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
                             m_currentLocationFileWatcher.EnableRaisingEvents = true;
                         }
 
-                        if (Directory.Exists(m_archiveOffloadLocation) && m_offloadLocationFileWatcher != null)
+                        if (Directory.Exists(m_archiveOffloadLocation) && (object)m_offloadLocationFileWatcher != null)
                         {
                             m_offloadLocationFileWatcher.Filter = HistoricFilesSearchPattern;
                             m_offloadLocationFileWatcher.Path = m_archiveOffloadLocation;
@@ -1550,7 +1565,7 @@ namespace GSF.Historian.Files
 
                 CloseStream();
 
-                if (m_dataBlocks != null)
+                if ((object)m_dataBlocks != null)
                 {
                     lock (m_dataBlocks)
                     {
@@ -1560,14 +1575,14 @@ namespace GSF.Historian.Files
                 }
 
                 // Stop watching for historic archive files.
-                if (m_currentLocationFileWatcher != null)
+                if ((object)m_currentLocationFileWatcher != null)
                     m_currentLocationFileWatcher.EnableRaisingEvents = false;
 
-                if (m_offloadLocationFileWatcher != null)
+                if ((object)m_offloadLocationFileWatcher != null)
                     m_offloadLocationFileWatcher.EnableRaisingEvents = false;
 
                 // Clear the list of historic archive files.
-                if (m_historicArchiveFiles != null)
+                if ((object)m_historicArchiveFiles != null)
                 {
                     lock (m_historicArchiveFiles)
                     {
@@ -1623,17 +1638,21 @@ namespace GSF.Historian.Files
                 // Figure out the end date for this file.
                 StateRecord state;
                 TimeTag endTime = m_fat.FileEndTime;
+
                 for (int i = 1; i <= m_stateFile.RecordsOnDisk; i++)
                 {
                     state = m_stateFile.Read(i);
                     state.ActiveDataBlockIndex = -1;
                     state.ActiveDataBlockSlot = 1;
+
                     if (state.ArchivedData.Time.CompareTo(endTime) > 0)
                         endTime = state.ArchivedData.Time;
 
                     m_stateFile.Write(state.HistorianID, state);
                 }
+
                 m_fat.FileEndTime = endTime;
+
                 m_stateFile.Save();
                 Save();
 
@@ -1651,6 +1670,7 @@ namespace GSF.Historian.Files
 
                 string historyFileName = HistoryArchiveFileName;
                 string standbyFileName = StandbyArchiveFileName;
+
                 CloseStream();
 
                 // CRITICAL: Exception can be encountered if exclusive lock to the current file cannot be obtained.
@@ -1683,6 +1703,7 @@ namespace GSF.Historian.Files
                 try
                 {
                     OpenStream();
+
                     m_fat.FileStartTime = endTime;
                     m_fat.Save();
 
@@ -1982,7 +2003,7 @@ namespace GSF.Historian.Files
 
                 try
                 {
-                    if (string.Compare(dataFile.FileName, m_fileName, true) == 0)
+                    if (string.Compare(dataFile.FileName, m_fileName, StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         // Read data from current file.
                         usingActiveFile = true;
@@ -2062,7 +2083,7 @@ namespace GSF.Historian.Files
         {
             MetadataRecord record = MetadataFile.Read(historianID);
 
-            if (record == null)
+            if ((object)record == null)
                 return null;
 
             return record.BinaryImage();
@@ -2077,7 +2098,7 @@ namespace GSF.Historian.Files
         {
             StateRecord record = StateFile.Read(historianID);
 
-            if (record == null)
+            if ((object)record == null)
                 return null;
 
             return record.BinaryImage();
@@ -2092,7 +2113,7 @@ namespace GSF.Historian.Files
         {
             MetadataRecord record = MetadataFile.Read(historianID);
 
-            if (record == null)
+            if ((object)record == null)
                 return null;
 
             return record.Summary.BinaryImage();
@@ -2107,7 +2128,7 @@ namespace GSF.Historian.Files
         {
             StateRecord record = StateFile.Read(historianID);
 
-            if (record == null)
+            if ((object)record == null)
                 return null;
 
             return record.Summary.BinaryImage();
@@ -2138,7 +2159,7 @@ namespace GSF.Historian.Files
         /// </summary>
         protected virtual void OnFileFull()
         {
-            if (FileFull != null)
+            if ((object)FileFull != null)
                 FileFull(this, EventArgs.Empty);
         }
 
@@ -2149,7 +2170,7 @@ namespace GSF.Historian.Files
         {
             m_rolloverInProgress = true;
 
-            if (RolloverStart != null)
+            if ((object)RolloverStart != null)
                 RolloverStart(this, EventArgs.Empty);
         }
 
@@ -2160,7 +2181,7 @@ namespace GSF.Historian.Files
         {
             m_rolloverInProgress = false;
 
-            if (RolloverComplete != null)
+            if ((object)RolloverComplete != null)
                 RolloverComplete(this, EventArgs.Empty);
         }
 
@@ -2172,7 +2193,7 @@ namespace GSF.Historian.Files
         {
             m_rolloverInProgress = false;
 
-            if (RolloverException != null)
+            if ((object)RolloverException != null)
                 RolloverException(this, new EventArgs<Exception>(ex));
         }
 
@@ -2181,7 +2202,7 @@ namespace GSF.Historian.Files
         /// </summary>
         protected virtual void OnOffloadStart()
         {
-            if (OffloadStart != null)
+            if ((object)OffloadStart != null)
                 OffloadStart(this, EventArgs.Empty);
         }
 
@@ -2190,7 +2211,7 @@ namespace GSF.Historian.Files
         /// </summary>
         protected virtual void OnOffloadComplete()
         {
-            if (OffloadComplete != null)
+            if ((object)OffloadComplete != null)
                 OffloadComplete(this, EventArgs.Empty);
         }
 
@@ -2200,7 +2221,7 @@ namespace GSF.Historian.Files
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="OffloadException"/> event.</param>
         protected virtual void OnOffloadException(Exception ex)
         {
-            if (OffloadException != null)
+            if ((object)OffloadException != null)
                 OffloadException(this, new EventArgs<Exception>(ex));
         }
 
@@ -2210,7 +2231,7 @@ namespace GSF.Historian.Files
         /// <param name="offloadProgress"><see cref="ProcessProgress{T}"/> to send to <see cref="OffloadProgress"/> event.</param>
         protected virtual void OnOffloadProgress(ProcessProgress<int> offloadProgress)
         {
-            if (OffloadProgress != null)
+            if ((object)OffloadProgress != null)
                 OffloadProgress(this, new EventArgs<ProcessProgress<int>>(offloadProgress));
         }
 
@@ -2219,7 +2240,7 @@ namespace GSF.Historian.Files
         /// </summary>
         protected virtual void OnRolloverPreparationStart()
         {
-            if (RolloverPreparationStart != null)
+            if ((object)RolloverPreparationStart != null)
                 RolloverPreparationStart(this, EventArgs.Empty);
         }
 
@@ -2228,7 +2249,7 @@ namespace GSF.Historian.Files
         /// </summary>
         protected virtual void OnRolloverPreparationComplete()
         {
-            if (RolloverPreparationComplete != null)
+            if ((object)RolloverPreparationComplete != null)
                 RolloverPreparationComplete(this, EventArgs.Empty);
         }
 
@@ -2238,7 +2259,7 @@ namespace GSF.Historian.Files
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="RolloverPreparationException"/> event.</param>
         protected virtual void OnRolloverPreparationException(Exception ex)
         {
-            if (RolloverPreparationException != null)
+            if ((object)RolloverPreparationException != null)
                 RolloverPreparationException(this, new EventArgs<Exception>(ex));
         }
 
@@ -2247,7 +2268,7 @@ namespace GSF.Historian.Files
         /// </summary>
         protected virtual void OnHistoricFileListBuildStart()
         {
-            if (HistoricFileListBuildStart != null)
+            if ((object)HistoricFileListBuildStart != null)
                 HistoricFileListBuildStart(this, EventArgs.Empty);
         }
 
@@ -2256,7 +2277,7 @@ namespace GSF.Historian.Files
         /// </summary>
         protected virtual void OnHistoricFileListBuildComplete()
         {
-            if (HistoricFileListBuildComplete != null)
+            if ((object)HistoricFileListBuildComplete != null)
                 HistoricFileListBuildComplete(this, EventArgs.Empty);
         }
 
@@ -2266,7 +2287,7 @@ namespace GSF.Historian.Files
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="HistoricFileListBuildException"/> event.</param>
         protected virtual void OnHistoricFileListBuildException(Exception ex)
         {
-            if (HistoricFileListBuildException != null)
+            if ((object)HistoricFileListBuildException != null)
                 HistoricFileListBuildException(this, new EventArgs<Exception>(ex));
         }
 
@@ -2275,7 +2296,7 @@ namespace GSF.Historian.Files
         /// </summary>
         protected virtual void OnHistoricFileListUpdated()
         {
-            if (HistoricFileListUpdated != null)
+            if ((object)HistoricFileListUpdated != null)
                 HistoricFileListUpdated(this, EventArgs.Empty);
         }
 
@@ -2285,7 +2306,7 @@ namespace GSF.Historian.Files
         /// <param name="dataPoint"><see cref="IDataPoint"/> to send to <see cref="OrphanDataReceived"/> event.</param>
         protected virtual void OnOrphanDataReceived(IDataPoint dataPoint)
         {
-            if (OrphanDataReceived != null)
+            if ((object)OrphanDataReceived != null)
                 OrphanDataReceived(this, new EventArgs<IDataPoint>(dataPoint));
         }
 
@@ -2295,7 +2316,7 @@ namespace GSF.Historian.Files
         /// <param name="dataPoint"><see cref="IDataPoint"/> to send to <see cref="FutureDataReceived"/> event.</param>
         protected virtual void OnFutureDataReceived(IDataPoint dataPoint)
         {
-            if (FutureDataReceived != null)
+            if ((object)FutureDataReceived != null)
                 FutureDataReceived(this, new EventArgs<IDataPoint>(dataPoint));
         }
 
@@ -2305,7 +2326,7 @@ namespace GSF.Historian.Files
         /// <param name="dataPoint"><see cref="IDataPoint"/> to send to <see cref="HistoricDataReceived"/> event.</param>
         protected virtual void OnHistoricDataReceived(IDataPoint dataPoint)
         {
-            if (HistoricDataReceived != null)
+            if ((object)HistoricDataReceived != null)
                 HistoricDataReceived(this, new EventArgs<IDataPoint>(dataPoint));
         }
 
@@ -2315,7 +2336,7 @@ namespace GSF.Historian.Files
         /// <param name="dataPoint"><see cref="IDataPoint"/> to send to <see cref="OutOfSequenceDataReceived"/> event.</param>
         protected virtual void OnOutOfSequenceDataReceived(IDataPoint dataPoint)
         {
-            if (OutOfSequenceDataReceived != null)
+            if ((object)OutOfSequenceDataReceived != null)
                 OutOfSequenceDataReceived(this, new EventArgs<IDataPoint>(dataPoint));
         }
 
@@ -2325,7 +2346,7 @@ namespace GSF.Historian.Files
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="DataReadException"/> event.</param>
         protected virtual void OnDataReadException(Exception ex)
         {
-            if (DataReadException != null)
+            if ((object)DataReadException != null)
                 DataReadException(this, new EventArgs<Exception>(ex));
         }
 
@@ -2335,7 +2356,7 @@ namespace GSF.Historian.Files
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="DataWriteException"/> event.</param>
         protected virtual void OnDataWriteException(Exception ex)
         {
-            if (DataWriteException != null)
+            if ((object)DataWriteException != null)
                 DataWriteException(this, new EventArgs<Exception>(ex));
         }
 
@@ -2345,7 +2366,7 @@ namespace GSF.Historian.Files
         /// <param name="pointState"><see cref="StateRecord"/> to send to <see cref="ProcessAlarmNotification"/> event.</param>
         protected virtual void OnProcessAlarmNotification(StateRecord pointState)
         {
-            if (ProcessAlarmNotification != null)
+            if ((object)ProcessAlarmNotification != null)
                 ProcessAlarmNotification(this, new EventArgs<StateRecord>(pointState));
         }
 
@@ -2366,34 +2387,34 @@ namespace GSF.Historian.Files
                         Close();
                         SaveSettings();
 
-                        if (m_rolloverWaitHandle != null)
+                        if ((object)m_rolloverWaitHandle != null)
                             m_rolloverWaitHandle.Close();
 
-                        if (m_conserveMemoryTimer != null)
+                        if ((object)m_conserveMemoryTimer != null)
                         {
                             m_conserveMemoryTimer.Elapsed -= ConserveMemoryTimer_Elapsed;
                             m_conserveMemoryTimer.Dispose();
                         }
 
-                        if (m_currentDataQueue != null)
+                        if ((object)m_currentDataQueue != null)
                         {
                             m_currentDataQueue.ProcessException -= CurrentDataQueue_ProcessException;
                             m_currentDataQueue.Dispose();
                         }
 
-                        if (m_historicDataQueue != null)
+                        if ((object)m_historicDataQueue != null)
                         {
                             m_historicDataQueue.ProcessException -= HistoricDataQueue_ProcessException;
                             m_historicDataQueue.Dispose();
                         }
 
-                        if (m_outOfSequenceDataQueue != null)
+                        if ((object)m_outOfSequenceDataQueue != null)
                         {
                             m_outOfSequenceDataQueue.ProcessException -= OutOfSequenceDataQueue_ProcessException;
                             m_outOfSequenceDataQueue.Dispose();
                         }
 
-                        if (m_currentLocationFileWatcher != null)
+                        if ((object)m_currentLocationFileWatcher != null)
                         {
                             m_currentLocationFileWatcher.Renamed -= FileWatcher_Renamed;
                             m_currentLocationFileWatcher.Deleted -= FileWatcher_Deleted;
@@ -2401,7 +2422,7 @@ namespace GSF.Historian.Files
                             m_currentLocationFileWatcher.Dispose();
                         }
 
-                        if (m_offloadLocationFileWatcher != null)
+                        if ((object)m_offloadLocationFileWatcher != null)
                         {
                             m_offloadLocationFileWatcher.Renamed -= FileWatcher_Renamed;
                             m_offloadLocationFileWatcher.Deleted -= FileWatcher_Deleted;
@@ -2463,7 +2484,7 @@ namespace GSF.Historian.Files
                 // File does not exist, so we have to create it and initialize it.
                 m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                 m_fat = new ArchiveFileAllocationTable(this);
-                m_fat.Save();
+                m_fat.Save(true);
 
                 // Manually call file monitoring event if file watchers are not enabled
                 if (!m_monitorNewArchiveFiles)
@@ -2475,7 +2496,7 @@ namespace GSF.Historian.Files
         {
             m_fat = null;
 
-            if (m_fileStream != null)
+            if ((object)m_fileStream != null)
             {
                 lock (m_fileStream)
                 {
@@ -2491,12 +2512,12 @@ namespace GSF.Historian.Files
         {
             lock (this)
             {
-                if (m_stateFile.IsOpen && m_metadataFile.IsOpen &&
+                if ((object)m_dataBlocks != null && m_stateFile.IsOpen && m_metadataFile.IsOpen &&
                     m_stateFile.FileAccessMode != FileAccess.Read &&
                     m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk)
                 {
                     // Since we have more number of records in the Metadata File than in the State File we'll synchronize
-                    // the number of records in both the files (very important) by writting a new records to the State
+                    // the number of records in both the files (very important) by writing a new record to the State
                     // File with an ID same as the number of records on disk for Metadata File. Doing so will cause the
                     // State File to grow in-memory or on-disk depending on how it's configured.
                     m_stateFile.Write(m_metadataFile.RecordsOnDisk, new StateRecord(m_metadataFile.RecordsOnDisk));
@@ -2513,7 +2534,7 @@ namespace GSF.Historian.Files
 
         private void BuildHistoricFileList()
         {
-            if (m_historicArchiveFiles == null)
+            if ((object)m_historicArchiveFiles == null)
             {
                 // The list of historic files has not been created, so we'll create it.
                 try
@@ -2524,7 +2545,7 @@ namespace GSF.Historian.Files
 
                     // We can safely assume that we'll always get information about the historic file because, the
                     // the search pattern ensures that we only can a list of historic archive files and not all files.
-                    Info historicFileInfo = null;
+                    Info historicFileInfo;
 
                     // Prevent the historic file list from being updated by the file watchers.
                     lock (m_historicArchiveFiles)
@@ -2532,7 +2553,7 @@ namespace GSF.Historian.Files
                         foreach (string historicFileName in Directory.GetFiles(FilePath.GetDirectoryName(m_fileName), HistoricFilesSearchPattern))
                         {
                             historicFileInfo = GetHistoricFileInfo(historicFileName);
-                            if (historicFileInfo != null)
+                            if ((object)historicFileInfo != null)
                             {
                                 m_historicArchiveFiles.Add(historicFileInfo);
                             }
@@ -2543,7 +2564,7 @@ namespace GSF.Historian.Files
                             foreach (string historicFileName in Directory.GetFiles(m_archiveOffloadLocation, HistoricFilesSearchPattern))
                             {
                                 historicFileInfo = GetHistoricFileInfo(historicFileName);
-                                if (historicFileInfo != null)
+                                if ((object)historicFileInfo != null)
                                 {
                                     m_historicArchiveFiles.Add(historicFileInfo);
                                 }
@@ -2568,13 +2589,11 @@ namespace GSF.Historian.Files
         {
             try
             {
-                DriveInfo archiveDrive = new DriveInfo(Path.GetPathRoot(m_fileName));
+                DriveInfo archiveDrive = new DriveInfo(Path.GetPathRoot(m_fileName).ToNonNullString());
 
+                // We'll start offloading historic files if we've reached the offload threshold.
                 if (archiveDrive.AvailableFreeSpace < archiveDrive.TotalSize * (1 - ((double)m_archiveOffloadThreshold / 100)))
-                {
-                    // We'll start offloading historic files if we've reached the offload threshold.
                     OffloadHistoricFiles();
-                }
 
                 // Maintain maximum number of historic files, if configured to do so
                 MaintainMaximumNumberOfHistoricFiles();
@@ -2598,6 +2617,7 @@ namespace GSF.Historian.Files
                 {
                     string standbyFileName = standbyArchiveFile.FileName;
                     standbyArchiveFile.Close();
+
                     // We didn't succeed in creating a "standby" archive file, so we'll delete it if it was created
                     // partially (might happen if there isn't enough disk space or thread is aborted). This is to
                     // ensure that this preparation processes is kicked off again until a valid "standby" archive
@@ -2637,7 +2657,8 @@ namespace GSF.Historian.Files
 
                     // The offload path that is specified is a valid one so we'll gather a list of all historic
                     // files in the directory where the current (active) archive file is located.
-                    List<Info> newHistoricFiles = null;
+                    List<Info> newHistoricFiles;
+
                     lock (m_historicArchiveFiles)
                     {
                         newHistoricFiles = m_historicArchiveFiles.FindAll(info => IsNewHistoricArchiveFile(info, m_fileName));
@@ -2650,17 +2671,31 @@ namespace GSF.Historian.Files
                     // number of historic files is more than the offload count or all of the historic files if the
                     // offload count is smaller the available number of historic files.
                     ProcessProgress<int> offloadProgress = new ProcessProgress<int>("FileOffload");
+
                     offloadProgress.Total = (newHistoricFiles.Count < m_archiveOffloadCount ? newHistoricFiles.Count : m_archiveOffloadCount);
+
                     for (int i = 0; i < offloadProgress.Total; i++)
                     {
-                        string destinationFileName = FilePath.AddPathSuffix(m_archiveOffloadLocation) + FilePath.GetFileName(newHistoricFiles[i].FileName);
-                        DeleteFile(destinationFileName);
+                        // Don't attempt to offload active file
+                        if (string.Compare(newHistoricFiles[i].FileName, m_fileName, StringComparison.OrdinalIgnoreCase) != 0)
+                        {
+                            string destinationFileName = FilePath.AddPathSuffix(m_archiveOffloadLocation) + FilePath.GetFileName(newHistoricFiles[i].FileName);
 
-                        MoveFile(newHistoricFiles[i].FileName, destinationFileName);
+                            try
+                            {
+                                DeleteFile(destinationFileName);
+                                MoveFile(newHistoricFiles[i].FileName, destinationFileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                OnOffloadException(new InvalidOperationException(string.Format("Failed to offload historic file \"{0}\": {1}", FilePath.GetFileName(newHistoricFiles[i].FileName), ex.Message), ex));
+                            }
 
-                        offloadProgress.Complete++;
-                        offloadProgress.ProgressMessage = FilePath.GetFileName(newHistoricFiles[i].FileName);
-                        OnOffloadProgress(offloadProgress);
+                            offloadProgress.Complete++;
+                            offloadProgress.ProgressMessage = FilePath.GetFileName(newHistoricFiles[i].FileName);
+
+                            OnOffloadProgress(offloadProgress);
+                        }
                     }
 
                     OnOffloadComplete();
@@ -2674,7 +2709,7 @@ namespace GSF.Historian.Files
                     OnOffloadException(ex);
                 }
             }
-            else if (string.Compare(m_archiveOffloadLocation.ToNonNullString().Trim(), "*DELETE*", true) == 0)
+            else if (string.Compare(m_archiveOffloadLocation.ToNonNullString().Trim(), "*DELETE*", StringComparison.OrdinalIgnoreCase) == 0)
             {
                 // Handle case where user has requested historic files be deleted instead of offloaded
 
@@ -2687,7 +2722,7 @@ namespace GSF.Historian.Files
                     OnOffloadStart();
 
                     // Get a local copy of all the historic archive files.
-                    List<Info> allHistoricFiles = null;
+                    List<Info> allHistoricFiles;
 
                     lock (m_historicArchiveFiles)
                     {
@@ -2705,18 +2740,23 @@ namespace GSF.Historian.Files
 
                     for (int i = 0; i < filesToDelete; i++)
                     {
-                        try
+                        // Don't attempt to offload active file
+                        if (string.Compare(allHistoricFiles[i].FileName, m_fileName, StringComparison.OrdinalIgnoreCase) != 0)
                         {
-                            DeleteFile(allHistoricFiles[i].FileName);
+                            try
+                            {
+                                DeleteFile(allHistoricFiles[i].FileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                OnOffloadException(new InvalidOperationException(string.Format("Failed to remove historic file \"{0}\": {1}", FilePath.GetFileName(allHistoricFiles[i].FileName), ex.Message), ex));
+                            }
+                        }
 
-                            offloadProgress.Complete++;
-                            offloadProgress.ProgressMessage = FilePath.GetFileName(allHistoricFiles[i].FileName);
-                            OnOffloadProgress(offloadProgress);
-                        }
-                        catch (Exception ex)
-                        {
-                            OnOffloadException(new InvalidOperationException(string.Format("Failed to remove historic file \"{0}\": {1}", FilePath.GetFileName(allHistoricFiles[i].FileName), ex.Message), ex));
-                        }
+                        offloadProgress.Complete++;
+                        offloadProgress.ProgressMessage = FilePath.GetFileName(allHistoricFiles[i].FileName);
+
+                        OnOffloadProgress(offloadProgress);
                     }
 
                     OnOffloadComplete();
@@ -2741,7 +2781,7 @@ namespace GSF.Historian.Files
                     m_buildHistoricFileListThread.Join();
 
                 // Get a local copy of all the historic archive files.
-                List<Info> allHistoricFiles = null;
+                List<Info> allHistoricFiles;
 
                 lock (m_historicArchiveFiles)
                 {
@@ -2759,9 +2799,9 @@ namespace GSF.Historian.Files
                         {
                             DeleteFile(allHistoricFiles[0].FileName);
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // Just keep going if we fail to delete file at this time...
+                            OnOffloadException(new InvalidOperationException(string.Format("Failed during attempt to maintain maximum number of historic files - file \"{0}\" could not be deleted: {1}", FilePath.GetFileName(allHistoricFiles[0].FileName), ex.Message), ex));
                         }
                         finally
                         {
@@ -2775,12 +2815,14 @@ namespace GSF.Historian.Files
         private Info GetHistoricFileInfo(string fileName)
         {
             Info fileInfo = null;
+
             try
             {
                 if (File.Exists(fileName))
                 {
                     // We'll open the file and get relevant information about it.
                     ArchiveFile historicArchiveFile = new ArchiveFile();
+
                     historicArchiveFile.FileName = fileName;
                     historicArchiveFile.StateFile = m_stateFile;
                     historicArchiveFile.IntercomFile = m_intercomFile;
@@ -2790,6 +2832,7 @@ namespace GSF.Historian.Files
                     try
                     {
                         historicArchiveFile.Open();
+
                         fileInfo = new Info();
                         fileInfo.FileName = fileName;
                         fileInfo.StartTimeTag = historicArchiveFile.Fat.FileStartTime;
@@ -2797,33 +2840,34 @@ namespace GSF.Historian.Files
                     }
                     catch (Exception ex)
                     {
-                        OnHistoricFileListBuildException(new InvalidOperationException(string.Format("Failed to access historic data file \"{0}\" due to exception: {1}", FilePath.GetFileName(fileName), ex.Message), ex));
+                        OnHistoricFileListBuildException(new InvalidOperationException(string.Format("Failed to open historic data file \"{0}\" due to exception: {1}", FilePath.GetFileName(fileName), ex.Message), ex));
                     }
                     finally
                     {
                         historicArchiveFile.Dispose();
                     }
                 }
-                //else
-                //{
-                //    // We'll resolve to getting the file information from its name only if the file no longer exists
-                //    // at the location. This will be the case when file is moved to a different location. In this
-                //    // case the file information we provide is only as good as the file name.
-                //    string datesString = FilePath.GetFileNameWithoutExtension(fileName).Substring((FilePath.GetFileNameWithoutExtension(m_fileName) + "_").Length);
-                //    string[] fileStartEndDates = datesString.Split(new string[] { "_to_" }, StringSplitOptions.None);
+                else
+                {
+                    // We'll resolve to getting the file information from its name only if the file no longer exists
+                    // at the location. This will be the case when file is moved to a different location. In this
+                    // case the file information we provide is only as good as the file name.
+                    string datesString = FilePath.GetFileNameWithoutExtension(fileName).Substring((FilePath.GetFileNameWithoutExtension(m_fileName) + "_").Length);
+                    string[] fileStartEndDates = datesString.Split(new string[] { "_to_" }, StringSplitOptions.None);
 
-                //    fileInfo = new Info();
-                //    fileInfo.FileName = fileName;
-                //    if (fileStartEndDates.Length == 2)
-                //    {
-                //        fileInfo.StartTimeTag = new TimeTag(Convert.ToDateTime(fileStartEndDates[0].Replace('!', ':')));
-                //        fileInfo.EndTimeTag = new TimeTag(Convert.ToDateTime(fileStartEndDates[1].Replace('!', ':')));
-                //    }
-                //}
+                    fileInfo = new Info();
+                    fileInfo.FileName = fileName;
+
+                    if (fileStartEndDates.Length == 2)
+                    {
+                        fileInfo.StartTimeTag = new TimeTag(Convert.ToDateTime(fileStartEndDates[0].Replace('!', ':')));
+                        fileInfo.EndTimeTag = new TimeTag(Convert.ToDateTime(fileStartEndDates[1].Replace('!', ':')));
+                    }
+                }
             }
-            catch
+            catch (Exception ex)
             {
-
+                OnHistoricFileListBuildException(new InvalidOperationException(string.Format("Failed during information access attempt for historic data file \"{0}\" due to exception: {1}", FilePath.GetFileName(fileName), ex.Message), ex));
             }
 
             return fileInfo;
@@ -2851,7 +2895,7 @@ namespace GSF.Historian.Files
         private bool IsNewHistoricArchiveFile(Info fileInfo, string fileName)
         {
             return ((object)fileInfo != null &&
-                    string.Compare(FilePath.GetDirectoryName(fileName), FilePath.GetDirectoryName(fileInfo.FileName), true) == 0);
+                    string.Compare(FilePath.GetDirectoryName(fileName), FilePath.GetDirectoryName(fileInfo.FileName), StringComparison.OrdinalIgnoreCase) == 0);
         }
 
         //private bool IsOldHistoricArchiveFile(Info fileInfo)
@@ -2868,31 +2912,31 @@ namespace GSF.Historian.Files
         private void WriteToCurrentArchiveFile(IDataPoint[] items)
         {
             Dictionary<int, List<IDataPoint>> sortedDataPoints = new Dictionary<int, List<IDataPoint>>();
+
             // First we'll separate all point data by ID.
             for (int i = 0; i < items.Length; i++)
             {
                 if (!sortedDataPoints.ContainsKey(items[i].HistorianID))
-                {
                     sortedDataPoints.Add(items[i].HistorianID, new List<IDataPoint>());
-                }
 
                 sortedDataPoints[items[i].HistorianID].Add(items[i]);
             }
 
             IntercomRecord system = m_intercomFile.Read(1);
+
             foreach (int pointID in sortedDataPoints.Keys)
             {
                 // Initialize local variables.
                 StateRecord state = m_stateFile.Read(pointID);
                 MetadataRecord metadata = m_metadataFile.Read(pointID);
-
                 IDataPoint dataPoint;
+
                 for (int i = 0; i < sortedDataPoints[pointID].Count; i++)
                 {
                     dataPoint = sortedDataPoints[pointID][i];
 
                     // Ensure that the received data is to be archived.
-                    if (state == null || metadata == null || !metadata.GeneralFlags.Enabled)
+                    if ((object)state == null || (object)metadata == null || !metadata.GeneralFlags.Enabled)
                     {
                         OnOrphanDataReceived(dataPoint);
                         continue;
@@ -2977,6 +3021,7 @@ namespace GSF.Historian.Files
                         compressionLimit = 0.000000001f;
 
                     state.CurrentData = new StateRecordDataPoint(dataPoint);
+
                     if (state.ArchivedData.IsEmpty)
                     {
                         // This is the first time data is received.
@@ -3090,6 +3135,7 @@ namespace GSF.Historian.Files
 
                     // [BEGIN]   Data archival
                     m_fat.DataPointsReceived++;
+
                     if (archiveData)
                     {
                         if (dataPoint.Time.CompareTo(m_fat.FileStartTime) >= 0)
@@ -3101,14 +3147,11 @@ namespace GSF.Historian.Files
                                 dataBlock = m_dataBlocks[dataPoint.HistorianID - 1];
                             }
 
-                            if (dataBlock == null || dataBlock.SlotsAvailable == 0)
+                            if ((object)dataBlock == null || dataBlock.SlotsAvailable == 0)
                             {
                                 // Need to find a data block for writting the data.
-                                if (dataBlock != null)
-                                {
-                                    dataBlock = null;
+                                if ((object)dataBlock != null)
                                     state.ActiveDataBlockIndex = -1;
-                                }
 
                                 if (state.ActiveDataBlockIndex >= 0)
                                 {
@@ -3121,7 +3164,7 @@ namespace GSF.Historian.Files
                                     dataBlock = m_fat.RequestDataBlock(dataPoint.HistorianID, dataPoint.Time, system.DataBlocksUsed);
                                 }
 
-                                if (dataBlock != null)
+                                if ((object)dataBlock != null)
                                 {
                                     // Update the total number of data blocks used.
                                     if (dataBlock.SlotsUsed == 0 && system.DataBlocksUsed == dataBlock.Index)
@@ -3149,7 +3192,7 @@ namespace GSF.Historian.Files
                                 }
                             }
 
-                            if (dataBlock != null)
+                            if ((object)dataBlock != null)
                             {
                                 // Write data to the data block.
                                 dataBlock.Write(dataPoint);
@@ -3213,6 +3256,7 @@ namespace GSF.Historian.Files
                 m_buildHistoricFileListThread.Join();
 
             Dictionary<int, List<IDataPoint>> sortedPointData = new Dictionary<int, List<IDataPoint>>();
+
             // First we'll separate all point data by ID.
             for (int i = 0; i < items.Length; i++)
             {
@@ -3231,11 +3275,12 @@ namespace GSF.Historian.Files
 
                 ArchiveFile historicFile = null;
                 ArchiveDataBlock historicFileBlock = null;
+
                 try
                 {
                     for (int i = 0; i < sortedPointData[pointID].Count; i++)
                     {
-                        if (historicFile == null)
+                        if ((object)historicFile == null)
                         {
                             // We'll try to find a historic file when the current point data belongs.
                             Info historicFileInfo;
@@ -3245,7 +3290,7 @@ namespace GSF.Historian.Files
                                 historicFileInfo = m_historicArchiveFiles.Find(info => FindHistoricArchiveFileForWrite(info, sortedPointData[pointID][i].Time));
                             }
 
-                            if (historicFileInfo != null)
+                            if ((object)historicFileInfo != null)
                             {
                                 // Found a historic file where the data can be written.
                                 historicFile = new ArchiveFile();
@@ -3257,19 +3302,21 @@ namespace GSF.Historian.Files
                             }
                         }
 
-                        if (historicFile != null)
+                        if ((object)historicFile != null)
                         {
                             if (sortedPointData[pointID][i].Time.CompareTo(historicFile.Fat.FileStartTime) >= 0 && sortedPointData[pointID][i].Time.CompareTo(historicFile.Fat.FileEndTime) <= 0)
                             {
                                 // The current point data belongs to the current historic archive file.
-                                if (historicFileBlock == null || historicFileBlock.SlotsAvailable == 0)
+                                if ((object)historicFileBlock == null || historicFileBlock.SlotsAvailable == 0)
                                 {
                                     // Request a new or previously used data block for point data.
                                     historicFileBlock = historicFile.Fat.RequestDataBlock(pointID, sortedPointData[pointID][i].Time, -1);
                                 }
+
                                 historicFileBlock.Write(sortedPointData[pointID][i]);
                                 historicFile.Fat.DataPointsReceived++;
                                 historicFile.Fat.DataPointsArchived++;
+
                                 if (i == sortedPointData[pointID].Count() - 1)
                                 {
                                     // Last piece of data for the point, so we close the currently open file.
@@ -3294,7 +3341,7 @@ namespace GSF.Historian.Files
                 catch (Exception ex)
                 {
                     // Free-up used memory.
-                    if (historicFile != null)
+                    if ((object)historicFile != null)
                     {
                         try
                         {
@@ -3302,7 +3349,6 @@ namespace GSF.Historian.Files
                         }
                         catch
                         {
-
                         }
                     }
 
@@ -3333,7 +3379,7 @@ namespace GSF.Historian.Files
                 // Go through all data blocks and remove that are inactive.
                 for (int i = 0; i < m_dataBlocks.Count; i++)
                 {
-                    if ((m_dataBlocks[i] != null) && !(m_dataBlocks[i].IsActive))
+                    if ((object)m_dataBlocks[i] != null && !m_dataBlocks[i].IsActive)
                     {
                         m_dataBlocks[i] = null;
                         //Trace.WriteLine(string.Format("Inactive block for Point ID {0} disposed", i + 1));
@@ -3376,7 +3422,7 @@ namespace GSF.Historian.Files
             // Manually call file monitoring events if file watchers are not enabled
             if (!m_monitorNewArchiveFiles)
             {
-                if (string.Compare(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)).Trim(), FilePath.GetDirectoryName(FilePath.GetAbsolutePath(destinationFileName)).Trim(), true) == 0)
+                if (string.Compare(FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)).Trim(), FilePath.GetDirectoryName(FilePath.GetAbsolutePath(destinationFileName)).Trim(), StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     //FileWatcher_Renamed(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(sourceFileName)), FilePath.GetFileName(sourceFileName), FilePath.GetFileName(destinationFileName)));
                     FileWatcher_Renamed(this, new RenamedEventArgs(WatcherChangeTypes.Renamed, FilePath.GetDirectoryName(FilePath.GetAbsolutePath(destinationFileName)), FilePath.GetFileName(destinationFileName), FilePath.GetFileName(sourceFileName)));
@@ -3391,18 +3437,20 @@ namespace GSF.Historian.Files
 
         private void FileWatcher_Created(object sender, FileSystemEventArgs e)
         {
-            if (m_historicArchiveFiles != null)
+            if ((object)m_historicArchiveFiles != null)
             {
                 bool historicFileListUpdated = false;
                 Info historicFileInfo = GetHistoricFileInfo(e.FullPath);
+
                 lock (m_historicArchiveFiles)
                 {
-                    if ((historicFileInfo != null) && !m_historicArchiveFiles.Contains(historicFileInfo))
+                    if ((object)historicFileInfo != null && !m_historicArchiveFiles.Contains(historicFileInfo))
                     {
                         m_historicArchiveFiles.Add(historicFileInfo);
                         historicFileListUpdated = true;
                     }
                 }
+
                 if (historicFileListUpdated)
                     OnHistoricFileListUpdated();
             }
@@ -3410,18 +3458,20 @@ namespace GSF.Historian.Files
 
         private void FileWatcher_Deleted(object sender, FileSystemEventArgs e)
         {
-            if (m_historicArchiveFiles != null)
+            if ((object)m_historicArchiveFiles != null)
             {
                 bool historicFileListUpdated = false;
                 Info historicFileInfo = GetHistoricFileInfo(e.FullPath);
+
                 lock (m_historicArchiveFiles)
                 {
-                    if ((historicFileInfo != null) && m_historicArchiveFiles.Contains(historicFileInfo))
+                    if ((object)historicFileInfo != null && m_historicArchiveFiles.Contains(historicFileInfo))
                     {
                         m_historicArchiveFiles.Remove(historicFileInfo);
                         historicFileListUpdated = true;
                     }
                 }
+
                 if (historicFileListUpdated)
                     OnHistoricFileListUpdated();
             }
@@ -3429,22 +3479,24 @@ namespace GSF.Historian.Files
 
         private void FileWatcher_Renamed(object sender, RenamedEventArgs e)
         {
-            if (m_historicArchiveFiles != null)
+            if ((object)m_historicArchiveFiles != null)
             {
-                if (string.Compare(FilePath.GetExtension(e.OldFullPath), FileExtension, true) == 0)
+                if (string.Compare(FilePath.GetExtension(e.OldFullPath), FileExtension, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     try
                     {
                         bool historicFileListUpdated = false;
                         Info oldFileInfo = GetHistoricFileInfo(e.OldFullPath);
+
                         lock (m_historicArchiveFiles)
                         {
-                            if ((oldFileInfo != null) && m_historicArchiveFiles.Contains(oldFileInfo))
+                            if ((object)oldFileInfo != null && m_historicArchiveFiles.Contains(oldFileInfo))
                             {
                                 m_historicArchiveFiles.Remove(oldFileInfo);
                                 historicFileListUpdated = true;
                             }
                         }
+
                         if (historicFileListUpdated)
                             OnHistoricFileListUpdated();
                     }
@@ -3455,20 +3507,22 @@ namespace GSF.Historian.Files
                     }
                 }
 
-                if (string.Compare(FilePath.GetExtension(e.FullPath), FileExtension, true) == 0)
+                if (string.Compare(FilePath.GetExtension(e.FullPath), FileExtension, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     try
                     {
                         bool historicFileListUpdated = false;
                         Info newFileInfo = GetHistoricFileInfo(e.FullPath);
+
                         lock (m_historicArchiveFiles)
                         {
-                            if ((newFileInfo != null) && !m_historicArchiveFiles.Contains(newFileInfo))
+                            if ((object)newFileInfo != null && !m_historicArchiveFiles.Contains(newFileInfo))
                             {
                                 m_historicArchiveFiles.Add(newFileInfo);
                                 historicFileListUpdated = true;
                             }
                         }
+
                         if (historicFileListUpdated)
                             OnHistoricFileListUpdated();
                     }

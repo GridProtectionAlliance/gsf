@@ -187,7 +187,7 @@ namespace GSF.Historian.Files
         /// <returns>The <see cref="ArchiveDataBlock"/> associated with this <see cref="ArchiveDataBlockPointer"/>.</returns>
         public ArchiveDataBlock GetDataBlock(bool preRead)
         {
-            return new ArchiveDataBlock(m_parent, m_index, m_historianID, false, preRead);
+            return new ArchiveDataBlock(m_parent, m_index, m_historianID, preRead);
         }
 
         /// <summary>
@@ -216,11 +216,9 @@ namespace GSF.Historian.Files
 
                 return FixedLength;
             }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
+
+            // Binary image does not have sufficient data.
+            return 0;
         }
 
         /// <summary>
@@ -258,18 +256,16 @@ namespace GSF.Historian.Files
         public virtual int CompareTo(object obj)
         {
             ArchiveDataBlockPointer other = obj as ArchiveDataBlockPointer;
-            if (other == null)
-            {
+
+            if ((object)other == null)
                 return 1;
-            }
-            else
-            {
-                int result = m_historianID.CompareTo(other.HistorianID);
-                if (result != 0)
-                    return result;
-                else
-                    return m_startTime.CompareTo(other.StartTime);
-            }
+
+            int result = m_historianID.CompareTo(other.HistorianID);
+
+            if (result != 0)
+                return result;
+
+            return m_startTime.CompareTo(other.StartTime);
         }
 
         /// <summary>
@@ -318,16 +314,16 @@ namespace GSF.Historian.Files
         /// <returns><c>true</c> if the specified <paramref name="dataBlockPointer"/> is for <paramref name="historianID"/> and falls within the <paramref name="startTime"/> and <paramref name="endTime"/>; otherwise <c>false</c>.</returns>
         public static bool Matches(this ArchiveDataBlockPointer dataBlockPointer, int historianID, TimeTag startTime, TimeTag endTime)
         {
-            if (dataBlockPointer != null)
-                // Note: The StartTime value of the pointer is ignored if m_searchStartTime = TimeTag.MinValue and
-                //       m_searchEndTime = TimeTag.MaxValue. In this case only the PointID value is compared. This
-                //       comes in handy when the first or last pointer is to be found from the list of pointers for
-                //       a point ID in addition to all the pointers for a point ID.
+            // Note: The StartTime value of the pointer is ignored if m_searchStartTime = TimeTag.MinValue and
+            //       m_searchEndTime = TimeTag.MaxValue. In this case only the PointID value is compared. This
+            //       comes in handy when the first or last pointer is to be found from the list of pointers for
+            //       a point ID in addition to all the pointers for a point ID.
+            if ((object)dataBlockPointer != null)
                 return dataBlockPointer.HistorianID == historianID &&
                         (startTime.CompareTo(TimeTag.MinValue) == 0 || dataBlockPointer.StartTime.CompareTo(startTime) >= 0) &&
                         (endTime.CompareTo(TimeTag.MaxValue) == 0 || dataBlockPointer.StartTime.CompareTo(endTime) <= 0);
-            else
-                return false;
+
+            return false;
         }
     }
 }

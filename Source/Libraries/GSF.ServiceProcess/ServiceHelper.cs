@@ -346,6 +346,7 @@ namespace GSF.ServiceProcess
         private readonly List<ClientRequestInfo> m_clientRequestHistory;
         private readonly List<ClientRequestHandler> m_clientRequestHandlers;
         private readonly Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
+        private TryGetClientPrincipalFunctionSignature m_tryGetClientPrincipalFunction;
         private readonly ProcessQueue<StatusUpdate> m_statusUpdateQueue;
         private bool m_enabled;
         private bool m_disposed;
@@ -678,6 +679,7 @@ namespace GSF.ServiceProcess
                 }
 
                 m_remotingServer = value;
+                m_tryGetClientPrincipalFunction = null;
 
                 if ((object)m_remotingServer == null)
                     return;
@@ -1821,25 +1823,24 @@ namespace GSF.ServiceProcess
             }
         }
 
-        private bool TryGetClientPrincipal(ClientInfo client, out WindowsPrincipal clientPrincipal)
+        private bool TrySetCurrentThreadPrincipal(ClientInfo client)
         {
             if ((object)client == null)
                 throw new ArgumentNullException("client");
 
-            MethodInfo tryGetClientPrincipalInfo;
-            TryGetClientPrincipalFunctionSignature tryGetClientPrincipal = null;
+            WindowsPrincipal clientPrincipal;
 
             // Attempt to find the TryGetClientPrincipal method using reflection - remoting server could be a TCP or TLS server
-            if ((object)m_remotingServer != null)
+            if ((object)m_remotingServer != null && (object)m_tryGetClientPrincipalFunction == null)
             {
-                tryGetClientPrincipalInfo = m_remotingServer.GetType().GetMethod("TryGetClientPrincipal", new Type[] { typeof(Guid), typeof(WindowsPrincipal).MakeByRefType() });
+                MethodInfo tryGetClientPrincipalInfo = m_remotingServer.GetType().GetMethod("TryGetClientPrincipal", new[] { typeof(Guid), typeof(WindowsPrincipal).MakeByRefType() });
 
                 if ((object)tryGetClientPrincipalInfo != null && tryGetClientPrincipalInfo.ReturnType == typeof(bool))
-                    tryGetClientPrincipal = (TryGetClientPrincipalFunctionSignature)Delegate.CreateDelegate(typeof(TryGetClientPrincipalFunctionSignature), m_remotingServer, tryGetClientPrincipalInfo);
+                    m_tryGetClientPrincipalFunction = (TryGetClientPrincipalFunctionSignature)Delegate.CreateDelegate(typeof(TryGetClientPrincipalFunctionSignature), m_remotingServer, tryGetClientPrincipalInfo);
             }
 
             // Attempt to get the client principal from the remoting server
-            if ((object)tryGetClientPrincipal != null && tryGetClientPrincipal(client.ClientID, out clientPrincipal))
+            if ((object)m_tryGetClientPrincipalFunction != null && m_tryGetClientPrincipalFunction(client.ClientID, out clientPrincipal))
             {
                 if ((object)clientPrincipal != null)
                     Thread.CurrentPrincipal = clientPrincipal;
@@ -1849,7 +1850,6 @@ namespace GSF.ServiceProcess
                 return true;
             }
 
-            clientPrincipal = null;
             return false;
         }
 
@@ -2035,7 +2035,6 @@ namespace GSF.ServiceProcess
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
             ClientInfo client = FindConnectedClient(e.Argument1);
-            WindowsPrincipal clientPrincipal;
 
             if ((object)client == null)
             {
@@ -2049,7 +2048,7 @@ namespace GSF.ServiceProcess
                         client.ClientID = e.Argument1;
                         client.ConnectedAt = DateTime.Now;
 
-                        if (TryGetClientPrincipal(client, out clientPrincipal))
+                        if (TrySetCurrentThreadPrincipal(client))
                         {
                             // Engage security for the remote client connection if configured.
                             if (!m_secureRemoteInteractions || VerifySecurity(client))
@@ -2125,7 +2124,7 @@ namespace GSF.ServiceProcess
                             if (m_secureRemoteInteractions)
                             {
                                 // Validate current client principal
-                                if (TryGetClientPrincipal(client, out clientPrincipal))
+                                if (TrySetCurrentThreadPrincipal(client))
                                 {
                                     if (VerifySecurity(requestInfo.Sender))
                                     {

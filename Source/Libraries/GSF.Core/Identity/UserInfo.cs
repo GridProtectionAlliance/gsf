@@ -1210,12 +1210,45 @@ namespace GSF.Identity
             if (string.IsNullOrEmpty(m_domain))
                 m_domain = Environment.MachineName;
 
-            // Handle special case - '.' is an alias for local system
-            if (m_domain == ".")
-                m_domain = Environment.MachineName;
+            // WinNT directory entries will only resolve "BUILTIN" local prefixes with a "."
+            if (m_domain.Equals("BUILTIN", StringComparison.OrdinalIgnoreCase))
+                m_domain = ".";
 
-            // Use active directory domain account for user information lookup as long as domain is not the current machine
-            if (string.Compare(Environment.MachineName, m_domain, StringComparison.OrdinalIgnoreCase) != 0)
+            // Determine if "domain" is for local machine or active directory
+            if (m_domain.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
+                m_domain.Equals("NT SERVICE", StringComparison.OrdinalIgnoreCase) ||
+                m_domain.Equals("NT AUTHORITY", StringComparison.OrdinalIgnoreCase) ||
+                m_domain.Equals(".", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    // Initialize the directory entry object used to retrieve local account information
+                    m_userEntry = new DirectoryEntry("WinNT://" + m_domain + "/" + m_username);
+                    m_isWinNT = true;
+                    m_userAccountControl = -1;
+                    m_enabled = true;
+
+                    if (m_domain.Equals("NT SERVICE", StringComparison.OrdinalIgnoreCase) || m_domain.Equals("NT AUTHORITY", StringComparison.OrdinalIgnoreCase))
+                        m_domainAvailable = true;
+                    else
+                        m_domainAvailable = DirectoryEntry.Exists("WinNT://" + m_domain + "/" + m_username);
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    if ((object)m_userEntry != null)
+                        m_userEntry.Dispose();
+
+                    m_userEntry = null;
+                    m_domainAvailable = false;
+
+                    throw new InitializationException(string.Format("Failed to initialize directory entry for user '{0}'", LoginID), ex);
+                }
+            }
+            else
             {
                 // Initialize the directory entry object used to retrieve active directory information
                 WindowsImpersonationContext currentContext = null;
@@ -1257,32 +1290,6 @@ namespace GSF.Identity
                 {
                     // Undo impersonation if it was performed
                     EndImpersonation(currentContext);
-                }
-            }
-            else
-            {
-                try
-                {
-                    // Initialize the directory entry object used to retrieve local account information
-                    m_userEntry = new DirectoryEntry("WinNT://" + m_domain + "/" + m_username);
-                    m_isWinNT = true;
-                    m_userAccountControl = -1;
-                    m_enabled = true;
-                    m_domainAvailable = DirectoryEntry.Exists("WinNT://" + m_domain + "/" + m_username);
-                }
-                catch (ThreadAbortException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    if ((object)m_userEntry != null)
-                        m_userEntry.Dispose();
-
-                    m_userEntry = null;
-                    m_domainAvailable = false;
-
-                    throw new InitializationException(string.Format("Failed to initialize directory entry for user '{0}'", LoginID), ex);
                 }
             }
         }

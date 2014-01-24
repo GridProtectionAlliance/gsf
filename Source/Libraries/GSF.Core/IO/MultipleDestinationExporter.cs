@@ -138,7 +138,7 @@ namespace GSF.IO
         /// <summary>
         /// Defines state information for an export.
         /// </summary>
-        private class ExportState : IDisposable
+        private sealed class ExportState : IDisposable
         {
             #region [ Members ]
 
@@ -222,7 +222,7 @@ namespace GSF.IO
             /// Releases the unmanaged resources used by the <see cref="ExportState"/> object and optionally releases the managed resources.
             /// </summary>
             /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            protected virtual void Dispose(bool disposing)
+            private void Dispose(bool disposing)
             {
                 if (!m_disposed)
                 {
@@ -766,7 +766,7 @@ namespace GSF.IO
         /// <remarks>
         /// If not being used as a component (i.e., user creates their own instance of this class), this method
         /// must be called in order to initialize exports.  Event if used as a component this method can be
-        /// called at anytime to reintialize the exports with new configuration information.
+        /// called at anytime to reinitialize the exports with new configuration information.
         /// </remarks>
         public void Initialize()
         {
@@ -781,7 +781,7 @@ namespace GSF.IO
         /// <remarks>
         /// If not being used as a component (i.e., user creates their own instance of this class), this method
         /// must be called in order to initialize exports.  Even if used as a component this method can be
-        /// called at anytime to reintialize the exports with new configuration information.
+        /// called at anytime to reinitialize the exports with new configuration information.
         /// </remarks>
         public void Initialize(IEnumerable<ExportDestination> defaultDestinations)
         {
@@ -803,6 +803,9 @@ namespace GSF.IO
             lock (this)
             {
                 m_exportDestinations = state as List<ExportDestination>;
+
+                if ((object)m_exportDestinations == null)
+                    m_exportDestinations = new List<ExportDestination>();
             }
 
             // Load export destinations from the config file - if nothing is in config file yet,
@@ -943,14 +946,10 @@ namespace GSF.IO
                 lock (m_exportInProgressLock)
                 {
                     if (m_exportInProgress)
-                    {
                         throw new InvalidOperationException("Export failed: cannot export data while another export attempt is already in progress.");
-                    }
-                    else
-                    {
-                        m_exportInProgress = true;
-                        ThreadPool.QueueUserWorkItem(ExecuteExports, fileData);
-                    }
+
+                    m_exportInProgress = true;
+                    ThreadPool.QueueUserWorkItem(ExecuteExports, fileData);
                 }
             }
             else
@@ -1007,7 +1006,7 @@ namespace GSF.IO
 
                         // Wait for exports to complete - even if user specifies to wait indefinitely spooled copy routines
                         // will eventually return since there is a specified maximum retry count
-                        if (!WaitHandle.WaitAll(exportStates.Select(exportState => exportState.WaitHandle).ToArray(), m_exportTimeout))
+                        if (!WaitHandle.WaitAll(exportStates.Select(exportState => exportState.WaitHandle).ToArray<WaitHandle>(), m_exportTimeout))
                         {
                             // Exports failed to complete in specified allowed time, set timeout flag for each export state
                             Array.ForEach(exportStates, exportState => exportState.Timeout = true);
@@ -1086,8 +1085,8 @@ namespace GSF.IO
                             // Abort retry attempts if export has timed out or maximum exports have been attempted
                             if (!m_enabled || exportState.Timeout || attempt >= m_maximumRetryAttempts)
                                 throw exportException;
-                            else
-                                Thread.Sleep(m_retryDelayInterval);
+
+                            Thread.Sleep(m_retryDelayInterval);
                         }
                     }
 

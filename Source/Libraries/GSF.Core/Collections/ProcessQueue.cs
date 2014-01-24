@@ -214,7 +214,7 @@ namespace GSF.Collections
                     {
                         if (disposing)
                         {
-                            if (m_task != null)
+                            if ((object)m_task != null && (m_task.Status == TaskStatus.RanToCompletion || m_task.Status == TaskStatus.Faulted || m_task.Status == TaskStatus.Canceled))
                                 m_task.Dispose();
 
                             m_task = null;
