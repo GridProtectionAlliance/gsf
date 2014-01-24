@@ -116,11 +116,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using GSF.Configuration;
 using GSF.IO;
+using Microsoft.Win32;
 
 #if !MONO
 using System.Collections;
 using System.Management;
-using Microsoft.Win32;
 using GSF.Interop;
 #endif
 
