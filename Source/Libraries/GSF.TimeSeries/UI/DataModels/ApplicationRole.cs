@@ -35,6 +35,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using GSF.Data;
+using GSF.Identity;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -328,7 +329,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in currentUsersTable.Rows)
-                    currentUsers[database.Guid(row, "UserAccountID")] = row.Field<string>("UserName");
+                    currentUsers[database.Guid(row, "UserAccountID")] = UserInfo.SIDToAccountName(row.Field<string>("UserName"));
 
                 return currentUsers;
             }
@@ -357,7 +358,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in possibleUsersTable.Rows)
-                    possibleUsers[database.Guid(row, "ID")] = row.Field<string>("Name");
+                    possibleUsers[database.Guid(row, "ID")] = UserInfo.SIDToAccountName(row.Field<string>("Name"));
 
                 return possibleUsers;
             }
@@ -386,7 +387,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable currentGroupsTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in currentGroupsTable.Rows)
-                    currentGroups[database.Guid(row, "SecurityGroupID")] = row.Field<string>("SecurityGroupName");
+                    currentGroups[database.Guid(row, "SecurityGroupID")] = UserInfo.SIDToAccountName(row.Field<string>("SecurityGroupName"));
 
                 return currentGroups;
             }
@@ -415,7 +416,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable possibleGroupsTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in possibleGroupsTable.Rows)
-                    possibleGroups[database.Guid(row, "ID")] = row.Field<string>("Name");
+                    possibleGroups[database.Guid(row, "ID")] = UserInfo.SIDToAccountName(row.Field<string>("Name"));
 
                 return possibleGroups;
             }

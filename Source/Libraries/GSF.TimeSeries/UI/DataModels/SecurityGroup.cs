@@ -38,6 +38,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using GSF.Data;
+using GSF.Identity;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -242,7 +243,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     securityGroupList.Add(new SecurityGroup()
                     {
                         ID = database.Guid(row, "ID"),
-                        Name = row.Field<string>("Name"),
+                        Name = UserInfo.SIDToAccountName(row.Field<string>("Name")),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
                         CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
                         CreatedBy = row.Field<string>("CreatedBy"),
@@ -443,7 +444,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     query = database.ParameterizedQueryString("INSERT INTO SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, " +
                         "{2}, {3}, {4}, {5})", "name", "description", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, UserInfo.AccountNameToSID(securityGroup.Name), securityGroup.Description.ToNotNull(),
                         CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
 
                     CommonFunctions.LogEvent(string.Format("Security group \"{0}\" created successfully by user \"{1}\".", securityGroup.Name, CommonFunctions.CurrentUser), 6);
@@ -453,7 +454,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     query = database.ParameterizedQueryString("UPDATE SecurityGroup SET Name = {0}, Description = {1}, UpdatedBy = {2}, UpdatedOn = {3} " +
                         "WHERE ID = {4}", "name", "description", "updatedBy", "updatedOn", "id");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, UserInfo.AccountNameToSID(securityGroup.Name), securityGroup.Description.ToNotNull(),
                         CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
 
                     CommonFunctions.LogEvent(string.Format("Information about security group \"{0}\" updated successfully by user \"{1}\".", securityGroup.Name, CommonFunctions.CurrentUser), 7);

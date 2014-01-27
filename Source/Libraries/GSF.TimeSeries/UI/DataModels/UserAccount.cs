@@ -38,6 +38,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using GSF.Data;
+using GSF.Identity;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -346,7 +347,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     userAccountList.Add(new UserAccount()
                     {
                         ID = database.Guid(row, "ID"),
-                        Name = row.Field<string>("Name"),
+                        Name = UserInfo.SIDToAccountName(row.Field<string>("Name")),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
                         FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
                         LastName = row.Field<object>("LastName") == null ? string.Empty : row.Field<string>("LastName"),
@@ -438,7 +439,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         "{9}, {10}, {11}, {12}, {13})", "name", "password", "firstName", "lastName", "defaultNodeID", "phone", "email", "lockedOut", "useADAuthentication",
                         "changePasswordOn", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccount.Name,
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, UserInfo.AccountNameToSID(userAccount.Name),
                         userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.CurrentNodeID(),
                         userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                         changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
@@ -452,7 +453,7 @@ namespace GSF.TimeSeries.UI.DataModels
                             "UpdatedOn = {11} WHERE ID = {12}", "name", "password", "firstName", "lastName", "defaultNodeID", "phone", "email", "lockedOut",
                             "useADAuthentication", "changePasswordOn", "updatedBy", "updatedOn", "id");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccount.Name,
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, UserInfo.AccountNameToSID(userAccount.Name),
                             userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
                             userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                             changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
