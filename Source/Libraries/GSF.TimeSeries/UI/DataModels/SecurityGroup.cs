@@ -344,7 +344,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), groupID).ToNonNullString();
                     query = database.ParameterizedQueryString("INSERT INTO SecurityGroupUserAccount (SecurityGroupID, UserAccountID) VALUES ({0}, {1})", "groupID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(groupID), database.Guid(id));
-                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully added to security group \"{1}\" by user \"{2}\".", userName, securityGroupName, CommonFunctions.CurrentUser), 8);
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully added to security group \"{1}\" by user \"{2}\".", UserInfo.SIDToAccountName(userName), UserInfo.SIDToAccountName(securityGroupName), CommonFunctions.CurrentUser), 8);
                 }
 
                 return "User accounts added to group successfully";
@@ -379,7 +379,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), groupID).ToNonNullString();
                     query = database.ParameterizedQueryString("DELETE FROM SecurityGroupUserAccount WHERE SecurityGroupID = {0} AND UserAccountID = {1}", "groupID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(groupID), database.Guid(id));
-                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully removed from security group \"{1}\" by user \"{2}\".", userName, securityGroupName, CommonFunctions.CurrentUser), 9);
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully removed from security group \"{1}\" by user \"{2}\".", UserInfo.SIDToAccountName(userName), UserInfo.SIDToAccountName(securityGroupName), CommonFunctions.CurrentUser), 9);
                 }
 
                 return "User accounts deleted from group successfully";
@@ -494,7 +494,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), DefaultTimeout, database.Guid(securityGroupID));
 
                 // Write to the event log
-                CommonFunctions.LogEvent(string.Format("Security group \"{0}\" deleted successfully by user \"{1}\".", securityGroupName, CommonFunctions.CurrentUser), 13);
+                CommonFunctions.LogEvent(string.Format("Security group \"{0}\" deleted successfully by user \"{1}\".", UserInfo.SIDToAccountName(securityGroupName), CommonFunctions.CurrentUser), 13);
 
                 return "Security group deleted successfully";
             }
