@@ -906,18 +906,6 @@ namespace GSF.Security
         // Static Methods
 
         /// <summary>
-        /// Extracts the current security context from the database and kicks off a background caching operation.
-        /// </summary>
-        /// <param name="connection">Existing database connection used to extract security context.</param>
-        public static void PrepareSecurityContext(IDbConnection connection)
-        {
-            DataSet securityContext = ExtractSecurityContext(connection);
-            Thread cacheSecurityContext = new Thread(() => AdoSecurityCache.GetCurrentCache().DataSet = securityContext);
-            cacheSecurityContext.IsBackground = true;
-            cacheSecurityContext.Start();
-        }
-
-        /// <summary>
         /// Extracts the current security context from the database.
         /// </summary>
         /// <param name="connection">Existing database connection used to extract security context.</param>
@@ -930,6 +918,11 @@ namespace GSF.Security
             {
                 AddSecurityContextTable(connection, securityContext, securityTable, securityTable == ApplicationRoleTable ? s_nodeID : default(Guid));
             }
+
+            // Always cache security context after successful extraction
+            Thread cacheSecurityContext = new Thread(() => AdoSecurityCache.GetCurrentCache().DataSet = securityContext);
+            cacheSecurityContext.IsBackground = true;
+            cacheSecurityContext.Start();
 
             return securityContext;
         }

@@ -22,7 +22,9 @@
 //******************************************************************************************************
 
 using System;
+using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using GSF.Configuration;
@@ -199,44 +201,54 @@ namespace GSF.Security
         public static AdoSecurityCache GetCurrentCache()
         {
             AdoSecurityCache currentCache;
-            AdoSecurityCache localSecurityCache;
+            AdoSecurityCache localSecurityCache = null;
 
             // Define default cache path
-            string cachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
+            string cachePath = null;
 
-            // Make sure configuration cache path setting exists
-            ConfigurationFile configFile = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-            systemSettings.Add("ConfigurationCachePath", cachePath, "Defines the path used to cache serialized configurations");
+            try
+            {
+                // Attempt to retrieve configuration cache path as defined in the config file
+                ConfigurationFile configFile = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+                CategorizedSettingsElement configurationCachePathSetting = systemSettings["ConfigurationCachePath"];
 
-            // Retrieve configuration cache path as defined in the config file
-            cachePath = systemSettings["ConfigurationCachePath"].Value;
+                if ((object)configurationCachePathSetting != null)
+                    cachePath = FilePath.GetAbsolutePath(systemSettings["ConfigurationCachePath"].Value);
 
-            // Make sure configuration cache path exists
-            if (!Directory.Exists(cachePath))
-                Directory.CreateDirectory(cachePath);
+                if (string.IsNullOrEmpty(cachePath))
+                    cachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
+            }
+            catch (ConfigurationErrorsException)
+            {
+                cachePath = string.Format("{0}\\ConfigurationCache\\", FilePath.GetAbsolutePath(""));
+            }
 
             string localCacheFileName = Path.Combine(cachePath, DefaultCacheFileName);
 
-            // Initialize local ADO security cache (application may only have read-only access to this cache)
-            localSecurityCache = new AdoSecurityCache
+            try
             {
-                FileName = localCacheFileName,
+                // Make sure configuration cache path exists
+                if (!Directory.Exists(cachePath))
+                    Directory.CreateDirectory(cachePath);
+
+                // Initialize local ADO security cache (application may only have read-only access to this cache)
+                localSecurityCache = new AdoSecurityCache
+                {
+                    FileName = localCacheFileName,
 #if DNF45
-                ReloadOnChange = true,
+                    ReloadOnChange = true,
 #else
                 // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
                 // automatic runtime reloading of key/iv data cached by another application.
                 ReloadOnChange = false,
 #endif
-                AutoSave = false
-            };
+                    AutoSave = false
+                };
 
-            // Load initial ADO security data set
-            localSecurityCache.Load();
+                // Load initial ADO security data set
+                localSecurityCache.Load();
 
-            try
-            {
                 // Validate that current user has write access to the local cache folder
                 string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid() + ".tmp";
 
@@ -284,7 +296,7 @@ namespace GSF.Security
                 currentCache.Load();
 
                 // Update user located security cache if locally located security cache is newer
-                if (File.Exists(localCacheFileName) && File.Exists(userCacheFileName) && File.GetLastWriteTime(localCacheFileName) > File.GetLastWriteTime(userCacheFileName))
+                if ((object)localSecurityCache != null && File.Exists(localCacheFileName) && File.Exists(userCacheFileName) && File.GetLastWriteTime(localCacheFileName) > File.GetLastWriteTime(userCacheFileName))
                     currentCache.DataSet = localSecurityCache.DataSet;
             }
 

@@ -353,7 +353,7 @@ namespace GSF.TimeSeries
             exampleSettings.Add("XmlFile.ConnectionString", "SystemConfiguration.xml", "Example XML configuration file connection string");
 
             // Retrieve configuration cache directory as defined in the config file
-            cachePath = systemSettings["ConfigurationCachePath"].Value;
+            cachePath = FilePath.GetAbsolutePath(systemSettings["ConfigurationCachePath"].Value);
 
             // Make sure configuration cache directory exists
             try
@@ -958,7 +958,7 @@ namespace GSF.TimeSeries
                         operationStartTime = DateTime.UtcNow.Ticks;
 
                         // Extract and begin cache of current security context - this does not require an existing security provider
-                        AdoSecurityProvider.PrepareSecurityContext(connection);
+                        AdoSecurityProvider.ExtractSecurityContext(connection);
 
                         operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
@@ -1652,13 +1652,13 @@ namespace GSF.TimeSeries
         /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void HealthMonitorProcessHandler(string name, object[] parameters)
         {
-            const string requestCommand = "Health";
-            ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(requestCommand);
+            const string RequestCommand = "Health";
+            ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(RequestCommand);
 
             if (requestHandler != null)
             {
                 // We pretend to be a client and send a "Health" command to ourselves...
-                requestHandler.HandlerMethod(ClientHelper.PretendRequest(requestCommand));
+                requestHandler.HandlerMethod(ClientHelper.PretendRequest(RequestCommand));
 
                 // We also export human readable health information to a text file for external display
                 m_healthExporter.ExportData(m_serviceHelper.PerformanceMonitor.Status);
