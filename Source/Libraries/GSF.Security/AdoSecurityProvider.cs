@@ -811,7 +811,7 @@ namespace GSF.Security
                 string message;
                 EventLogEntryType entryType;
 
-                if ((object)cachedRoles == null || cachedRoles.Length == 0)
+                if ((object)cachedRoles == null)
                 {
                     if (currentRoles.Count == 0)
                     {

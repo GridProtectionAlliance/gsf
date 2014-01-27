@@ -101,16 +101,18 @@ namespace GSF.TimeSeries.UI
                     if ((object)identity != null)
                         password = identity.Provider.Password;
 
-                    // Get current provider (associated with current identity)
-                    ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
-
-                    // Initialize a new security principal from caller's identity
+                    // Reset the current principal
                     Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-                    provider.RefreshData();
+
+                    // Create a new provider associated with current identity
+                    ISecurityProvider provider = SecurityProviderUtility.CreateProvider(s_currentPrincipal.Identity.Name);
+
+                    // Re-authenticate user
                     provider.Authenticate(password);
 
                     // Re-cache current provider for user
                     SecurityProviderCache.CurrentProvider = provider;
+                    s_currentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
                 }
 
                 return s_currentPrincipal;
