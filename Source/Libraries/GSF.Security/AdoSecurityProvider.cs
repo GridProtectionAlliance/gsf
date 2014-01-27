@@ -309,19 +309,19 @@ namespace GSF.Security
                 }
 
                 // Validate that needed security tables exist in the data set
-                const string SecurityContextError = "Failed to load a valid security context. Cannot proceed with user authentication.";
+                const string securityContextError = "Failed to load a valid security context - missing table '{0}'. Cannot proceed with user authentication.";
 
                 if ((object)securityContext == null)
-                    throw new SecurityException(SecurityContextError);
+                    throw new SecurityException(securityContextError);
 
                 foreach (string securityTable in s_securityTables)
                 {
                     if (!securityContext.Tables.Contains(securityTable))
-                        throw new SecurityException(SecurityContextError);
+                        throw new SecurityException(string.Format(securityContextError, securityTable));
                 }
 
                 if (securityContext.Tables[ApplicationRoleTable].Rows.Count == 0)
-                    throw new SecurityException(string.Format("No application roles were found for node ID '{0}' - please check the node ID in the config file.", s_nodeID));
+                    throw new SecurityException(string.Format("Failed to load a valid security context - no application roles were found for node ID '{0}', verify the node ID in the config file '{1}'. Cannot proceed with user authentication.", s_nodeID, ConfigurationFile.Current.Configuration.FilePath));
 
                 DataRow userAccount = null;
                 Guid userAccountID = Guid.Empty;
