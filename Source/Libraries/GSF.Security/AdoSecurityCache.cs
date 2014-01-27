@@ -24,7 +24,6 @@
 using System;
 using System.Configuration;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using GSF.Configuration;
@@ -239,9 +238,9 @@ namespace GSF.Security
 #if DNF45
                     ReloadOnChange = true,
 #else
-                // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
-                // automatic runtime reloading of key/iv data cached by another application.
-                ReloadOnChange = false,
+                    // Reload on change is disabled to eliminate GC handle leaks on .NET 4.0, this prevents
+                    // automatic runtime reloading of key/iv data cached by another application.
+                    ReloadOnChange = false,
 #endif
                     AutoSave = false
                 };

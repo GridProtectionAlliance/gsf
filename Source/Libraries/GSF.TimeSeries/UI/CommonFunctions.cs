@@ -29,6 +29,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Net;
+using System.Security.Principal;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -64,6 +65,7 @@ namespace GSF.TimeSeries.UI
         #region [ Static ]
 
         // Static Fields
+        private static SecurityPrincipal s_currentPrincipal;
         private static Guid s_currentNodeID;
         private static string s_serviceConnectionString;
         private static string s_dataPublisherConnectionString;
@@ -79,7 +81,45 @@ namespace GSF.TimeSeries.UI
         /// <summary>
         /// Defines the current principal for the thread owning the common functions.
         /// </summary>
-        public static SecurityPrincipal CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+        public static SecurityPrincipal CurrentPrincipal
+        {
+            get
+            {
+                if ((object)s_currentPrincipal == null)
+                    s_currentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+
+                if ((object)s_currentPrincipal == null)
+                    return null;
+
+                // If user is no longer authenticated, provider session may have expired so provider session will
+                // now be reinitialized. This step will "re-validate" user's current state (e.g., locked-out).
+                if (!s_currentPrincipal.Identity.IsAuthenticated)
+                {
+                    string password = null;
+                    SecurityIdentity identity = s_currentPrincipal.Identity as SecurityIdentity;
+
+                    if ((object)identity != null)
+                        password = identity.Provider.Password;
+
+                    // Get current provider (associated with current identity)
+                    ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
+
+                    // Initialize a new security principal from caller's identity
+                    Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+                    provider.RefreshData();
+                    provider.Authenticate(password);
+
+                    // Re-cache current provider for user
+                    SecurityProviderCache.CurrentProvider = provider;
+                }
+
+                return s_currentPrincipal;
+            }
+            set
+            {
+                s_currentPrincipal = value;
+            }
+        }
 
         /// <summary>
         /// Defines the current user name as defined in the Thread.CurrentPrincipal.Identity.
@@ -152,7 +192,7 @@ namespace GSF.TimeSeries.UI
             {
                 if (!string.IsNullOrEmpty(CurrentUser))
                 {
-                    if (database == null)
+                    if ((object)database == null)
                     {
                         database = new AdoDataConnection(DefaultSettingsCategory);
                         createdConnection = true;
@@ -166,7 +206,7 @@ namespace GSF.TimeSeries.UI
                     switch (connectionType)
                     {
                         case "sqlconnection":
-                            string contextSql = "DECLARE @context VARBINARY(128)\n SELECT @context = CONVERT(VARBINARY(128), CONVERT(VARCHAR(128), @userName))\n SET CONTEXT_INFO @context";
+                            const string contextSql = "DECLARE @context VARBINARY(128)\n SELECT @context = CONVERT(VARBINARY(128), CONVERT(VARCHAR(128), @userName))\n SET CONTEXT_INFO @context";
                             command = database.Connection.CreateCommand();
                             command.CommandText = contextSql;
                             command.AddParameterWithValue("@userName", CurrentUser);
@@ -182,14 +222,12 @@ namespace GSF.TimeSeries.UI
                             command.CommandText = "BEGIN context.set_current_user('" + CurrentUser + "'); END;";
                             command.ExecuteNonQuery();
                             break;
-                        default:
-                            break;
                     }
                 }
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection)
                     database.Dispose();
             }
         }
@@ -310,14 +348,14 @@ namespace GSF.TimeSeries.UI
 
                         if (serviceSettings.ContainsKey("datapublisherport"))
                         {
-                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + serviceSettings["datapublisherport"];
+                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":", StringComparison.OrdinalIgnoreCase) + 1) + serviceSettings["datapublisherport"];
 
                             if (!string.IsNullOrEmpty(interfaceValue))
                                 s_dataPublisherConnectionString += ";interface=" + interfaceValue;
                         }
                         else if (settings.ContainsKey("datapublisherport"))
                         {
-                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + settings["datapublisherport"];
+                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":", StringComparison.OrdinalIgnoreCase) + 1) + settings["datapublisherport"];
 
                             if (!string.IsNullOrEmpty(interfaceValue))
                                 s_dataPublisherConnectionString += ";interface=" + interfaceValue;
@@ -664,8 +702,8 @@ namespace GSF.TimeSeries.UI
 
                 return "Successfully sent " + command + " command.";
             }
-            else
-                throw new ApplicationException("Application is currently disconnected from service.");
+
+            throw new ApplicationException("Application is currently disconnected from service.");
         }
 
         /// <summary>
@@ -803,7 +841,7 @@ namespace GSF.TimeSeries.UI
                     // If this is not a local address - we will also send event to be logged on the server
                     if (!string.IsNullOrEmpty(remotingAddress) && !Communication.Transport.IsLocalAddress(remotingAddress))
                     {
-                        string message = "";
+                        string message;
                         EventLogEntryType eventType;
                         int eventID;
 
@@ -961,11 +999,15 @@ namespace GSF.TimeSeries.UI
 
                 // Get the next page and instantiate the user control
                 s_currentPage = s_currentPage.Next;
-                userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
+
+                if ((object)s_currentPage == null)
+                    userControl = null;
+                else
+                    userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
 
                 if ((object)userControl != null)
                 {
-                    // Display the user contro
+                    // Display the user control
                     panel.Children.Clear();
                     panel.Children.Add(userControl);
 
@@ -1016,7 +1058,11 @@ namespace GSF.TimeSeries.UI
 
                 // Get the previous page and instantiate the user control
                 s_currentPage = s_currentPage.Previous;
-                userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
+
+                if ((object)s_currentPage == null)
+                    userControl = null;
+                else
+                    userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
 
                 if ((object)userControl != null)
                 {

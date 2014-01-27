@@ -69,11 +69,12 @@ namespace GSF.Security
     ///     <securityProvider>
     ///       <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
     ///         encrypted="false" />
-    ///       <add name="ConnectionString" value="LDAP://DC=COMPANY,DC=COM"
-    ///         description="Connection string to be used for connection to the backend security data store."
+    ///       <add name="ConnectionString" value="LDAP://DC=COMPANY,DC=COM" description="Connection string to be used for connection to the backend security data store."
     ///         encrypted="false" />
-    ///       <add name="ProviderType" value="GSF.Security.LdapSecurityProvider, GSF.Security"
-    ///         description="The type to be used for enforcing security." encrypted="false" />
+    ///       <add name="ProviderType" value="GSF.Security.LdapSecurityProvider, GSF.Security" description="The type to be used for enforcing security."
+    ///         encrypted="false" />
+    ///       <add name="UserCacheTimeout" value="5" description="Defines the timeout, in whole minutes, for a user's provider cache. Any value less than 1 will cause cache reset every minute."
+    ///         encrypted="false" />
     ///       <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
     ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
