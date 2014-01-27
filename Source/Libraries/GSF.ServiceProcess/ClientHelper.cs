@@ -329,8 +329,8 @@ namespace GSF.ServiceProcess
             {
                 if (m_remotingClient == null)
                     return false;
-                else
-                    return m_remotingClient.Enabled;
+
+                return m_remotingClient.Enabled;
             }
             set
             {
@@ -546,9 +546,10 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnAuthenticationSuccess()
         {
-            m_authenticationComplete = true;
             if (AuthenticationSuccess != null)
                 AuthenticationSuccess(this, EventArgs.Empty);
+
+            m_authenticationComplete = true;
         }
 
         /// <summary>
@@ -557,6 +558,7 @@ namespace GSF.ServiceProcess
         protected virtual void OnAuthenticationFailure()
         {
             CancelEventArgs args = new CancelEventArgs(true);
+
             if (AuthenticationFailure != null)
                 AuthenticationFailure(this, args);
 
@@ -666,17 +668,16 @@ namespace GSF.ServiceProcess
 
             // Attempt reconnection on a separate thread.
             if (m_attemptReconnection)
-                new Thread((ThreadStart)delegate
-                {
-                    Connect();
-                }).Start();
+                new Thread(Connect).Start();
         }
 
         private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
-            ServiceResponse response = null;
+            ServiceResponse response;
+
             Serialization.TryDeserialize(e.Argument1.BlockCopy(0, e.Argument2), SerializationFormat.Binary, out response);
-            if (response != null)
+
+            if ((object)response != null)
             {
                 switch (response.Type)
                 {

@@ -2079,6 +2079,8 @@ namespace GSF.ServiceProcess
                 }
                 catch (Exception ex)
                 {
+                    m_errorLogger.Log(ex);
+
                     try
                     {
                         SendResponse(e.Argument1, new ServiceResponse("AuthenticationFailure"), false);
@@ -2088,11 +2090,10 @@ namespace GSF.ServiceProcess
 
                         if ((object)client != null)
                             UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
-
-                        m_errorLogger.Log(ex);
                     }
-                    catch
+                    catch (Exception ex2)
                     {
+                        m_errorLogger.Log(ex2);
                     }
                 }
             }

@@ -33,7 +33,6 @@ using GSF.Reflection;
 using GSF.Security;
 using GSF.ServiceProcess;
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -41,7 +40,6 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
-using System.Threading;
 
 namespace GSF.TimeSeries
 {
@@ -52,16 +50,12 @@ namespace GSF.TimeSeries
     {
         #region [ Members ]
 
-        // Constants
-        private const int VK_RETURN = 0x0D;
-        private const int WM_KEYDOWN = 0x100;
-
         // Fields
-        private bool m_innerLoopActive;
         private bool m_telnetActive;
+        private volatile bool m_authenticated;
+
         private readonly ConsoleColor m_originalBgColor;
         private readonly ConsoleColor m_originalFgColor;
-        private readonly ManualResetEvent m_authenticationWaitHandle;
 
         private ClientBase m_remotingClient;
         private ClientHelper m_clientHelper;
@@ -85,14 +79,11 @@ namespace GSF.TimeSeries
             m_originalFgColor = System.Console.ForegroundColor;
 
             // Register event handlers.
-            m_clientHelper.AuthenticationFailure += ClientHelper_AuthenticationFailure;
+            m_clientHelper.AuthenticationSuccess += ClientHelper_AuthenticationSuccess;
             m_clientHelper.ReceivedServiceUpdate += ClientHelper_ReceivedServiceUpdate;
             m_clientHelper.ReceivedServiceResponse += ClientHelper_ReceivedServiceResponse;
             m_clientHelper.TelnetSessionEstablished += ClientHelper_TelnetSessionEstablished;
             m_clientHelper.TelnetSessionTerminated += ClientHelper_TelnetSessionTerminated;
-
-            // Authentication wait handle.
-            m_authenticationWaitHandle = new ManualResetEvent(true);
         }
 
         /// <summary>
@@ -236,50 +227,92 @@ namespace GSF.TimeSeries
                 }
 
                 // Connect to service and send commands.
-                while (!m_clientHelper.Enabled)
+                while (!string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                 {
-                    m_authenticationWaitHandle.WaitOne();
-                    m_clientHelper.Connect();
-
-                    while (m_clientHelper.Enabled && string.Compare(userInput, "Exit", true) != 0)
+                    try
                     {
-                        m_innerLoopActive = true;
+                        m_clientHelper.Connect();
 
-                        // Wait for a command from the user. 
-                        userInput = System.Console.ReadLine();
-
-                        // Write a blank line to the console.
-                        System.Console.WriteLine();
-
-                        if (!string.IsNullOrWhiteSpace(userInput))
+                        if (!m_authenticated)
                         {
-                            // The user typed in a command and didn't just hit <ENTER>. 
-                            switch (userInput.ToUpper())
-                            {
-                                case "CLS":
-                                    // User wants to clear the console window. 
-                                    System.Console.Clear();
-                                    break;
-                                case "EXIT":
-                                    // User wants to exit the telnet session with the service. 
-                                    if (m_telnetActive)
-                                    {
-                                        userInput = string.Empty;
-                                        m_clientHelper.SendRequest("Telnet -disconnect");
-                                    }
-                                    break;
-                                default:
-                                    // User wants to send a request to the service. 
-                                    m_clientHelper.SendRequest(userInput);
-                                    if (string.Compare(userInput, "Help", true) == 0)
-                                        DisplayHelp();
+                            string username;
+                            UserInfo userInfo;
+                            StringBuilder passwordBuilder = new StringBuilder();
+                            StringBuilder prompt = new StringBuilder();
 
-                                    break;
+                            prompt.AppendLine();
+                            prompt.AppendLine();
+                            prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
+                            prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
+                            prompt.AppendLine();
+                            System.Console.Write(prompt.ToString());
+
+                            // Capture the user name.
+                            System.Console.Write("Enter user name: ");
+                            username = System.Console.ReadLine();
+
+                            // Capture the password.
+                            ConsoleKeyInfo key;
+                            System.Console.Write("Enter password: ");
+                            while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
+                            {
+                                passwordBuilder.Append(key.KeyChar);
+                            }
+
+                            // Set network credentials used when attempting AD authentication
+                            userInfo = new UserInfo(username);
+                            userInfo.Initialize();
+                            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString()));
+
+                            // Set the user name on the client helper.
+                            m_clientHelper.Username = username;
+                            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
+                        }
+
+                        while (m_authenticated && m_clientHelper.Enabled && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Wait for a command from the user. 
+                            userInput = System.Console.ReadLine();
+
+                            // Write a blank line to the console.
+                            System.Console.WriteLine();
+
+                            if (!string.IsNullOrWhiteSpace(userInput))
+                            {
+                                // The user typed in a command and didn't just hit <ENTER>. 
+                                switch (userInput.ToUpper())
+                                {
+                                    case "CLS":
+                                        // User wants to clear the console window. 
+                                        System.Console.Clear();
+                                        break;
+                                    case "EXIT":
+                                        // User wants to exit the telnet session with the service. 
+                                        if (m_telnetActive)
+                                        {
+                                            userInput = string.Empty;
+                                            m_clientHelper.SendRequest("Telnet -disconnect");
+                                        }
+                                        break;
+                                    default:
+                                        // User wants to send a request to the service. 
+                                        m_clientHelper.SendRequest(userInput);
+                                        if (string.Compare(userInput, "Help", true) == 0)
+                                            DisplayHelp();
+
+                                        break;
+                                }
                             }
                         }
-                    }
 
-                    m_innerLoopActive = false;
+                        m_clientHelper.Disconnect();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Errors during the outer connection loop
+                        // should simply force an attempt to reconnect
+                        m_clientHelper.Disconnect();
+                    }
                 }
             }
         }
@@ -450,66 +483,14 @@ namespace GSF.TimeSeries
             System.Console.Write(help.ToString());
         }
 
-        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e)
+        /// <summary>
+        /// Client helper service update reception handler.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event argument containing update type and associated message data.</param>
+        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e)
         {
-            // Prompt for credentials.
-            StringBuilder prompt = new StringBuilder();
-
-            UserInfo userInfo;
-            string username;
-            StringBuilder passwordBuilder = new StringBuilder();
-
-            prompt.AppendLine();
-            prompt.AppendLine();
-            prompt.Append("Connection to the service was rejected due to authentication failure. \r\n");
-            prompt.Append("Enter the credentials to be used for authentication with the service.");
-            prompt.AppendLine();
-            prompt.AppendLine();
-            System.Console.Write(prompt.ToString());
-
-            // Tell outer connect loop to wait for authentication.
-            m_authenticationWaitHandle.Reset();
-
-            // If the inner loop is active, post enter to the console
-            // to escape the Console.ReadLine() in the inner loop.
-            if (m_innerLoopActive)
-            {
-                m_remotingClient.Enabled = false;
-#if !MONO
-                IntPtr hWnd = Process.GetCurrentProcess().MainWindowHandle;
-                NativeMethods.PostMessage(hWnd, WM_KEYDOWN, VK_RETURN, 0);
-                Thread.Sleep(500);
-#endif
-            }
-
-            // Capture the user name.
-            System.Console.Write("Enter user name: ");
-            username = System.Console.ReadLine();
-
-            // Capture the password.
-            ConsoleKeyInfo key;
-            System.Console.Write("Enter password: ");
-            while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
-            {
-                passwordBuilder.Append(key.KeyChar);
-            }
-
-            // Set network credentials used when attempting AD authentication
-            userInfo = new UserInfo(username);
-            userInfo.Initialize();
-            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString()));
-
-            // Set the user name on the client helper.
-            m_clientHelper.Username = username;
-            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
-
-            // Done with the console; signal reconnect.
-            m_authenticationWaitHandle.Set();
-
-            // Re-attempt connection with new credentials.
-            e.Cancel = true;
-            System.Console.WriteLine();
-            System.Console.WriteLine();
+            m_authenticated = true;
         }
 
         /// <summary>
