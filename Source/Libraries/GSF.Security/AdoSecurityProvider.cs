@@ -570,7 +570,9 @@ namespace GSF.Security
                         Password = password;
 
                         // Authenticate against backend data store
-                        UserData.IsAuthenticated =
+                        UserData.IsAuthenticated = UserData.Roles.Count > 0;
+
+                        UserData.IsAuthenticated &=
                             UserData.Password == password ||
                             UserData.Password == SecurityProviderUtility.EncryptPassword(password) ||
                             UserData.Password == EncryptBackwardsCompatible(password);
