@@ -23,11 +23,10 @@
 
 using System;
 using System.ComponentModel;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Web.Security;
 using System.Windows;
 using System.Windows.Controls;
+using GSF.Configuration;
 using GSF.Security;
 using GSF.TimeSeries.UI.ViewModels;
 
@@ -44,8 +43,8 @@ namespace GSF.TimeSeries.UI.UserControls
         private UserAccounts m_userAccounts;
         private SecurityGroups m_securityGroups;
         private ApplicationRoles m_applicationRoles;
-        private string m_strongPasswordRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
-        readonly StringBuilder m_invalidPasswordMessage;
+        private string m_passwordRequirementsRegex;
+        private string m_passwordRequirementsError;
 
         #endregion
 
@@ -56,28 +55,40 @@ namespace GSF.TimeSeries.UI.UserControls
         /// </summary>
         public SecurityUserControl()
         {
+            ConfigurationFile config;
+            CategorizedSettingsElementCollection settings;
+
             InitializeComponent();
+
+            config = ConfigurationFile.Current;
+            settings = config.Settings["securityProvider"];
+
+            // Set up defaults for config file settings
+            m_passwordRequirementsRegex = AdoSecurityProvider.DefaultPasswordRequirementsRegex;
+            m_passwordRequirementsError = AdoSecurityProvider.DefaultPasswordRequirementsError;
+
+            // Make sure default config file settings exist
+            settings.Add("PasswordRequirementsRegex", m_passwordRequirementsRegex, "Regular expression used to validate new passwords for database users.");
+            settings.Add("PasswordRequirementsError", m_passwordRequirementsError, "Error message to be displayed when new database user password fails regular expression test.");
+
+            // Read settings from config file
+            m_passwordRequirementsRegex = settings["PasswordRequirementsRegex"].ValueAs(m_passwordRequirementsRegex);
+            m_passwordRequirementsError = settings["PasswordRequirementsError"].ValueAs(m_passwordRequirementsError);
+
+            // Initialize view models
             m_userAccounts = new UserAccounts(1, false);
             m_securityGroups = new SecurityGroups(1, false);
             m_applicationRoles = new ApplicationRoles(1, true);
+
             RefreshBindings();
-            this.Unloaded += SecurityUserControl_Unloaded;
+
+            // Attach to events
+            Unloaded += SecurityUserControl_Unloaded;
             m_userAccounts.BeforeSave += m_userAccounts_BeforeSave;
             m_userAccounts.Saved += m_userAccounts_Changed;
             m_userAccounts.Deleted += m_userAccounts_Changed;
             m_securityGroups.Saved += m_securityGroups_Changed;
             m_securityGroups.Deleted += m_securityGroups_Changed;
-
-            m_invalidPasswordMessage = new StringBuilder();
-            m_invalidPasswordMessage.Append("Password does not meet the following criteria:");
-            m_invalidPasswordMessage.AppendLine();
-            m_invalidPasswordMessage.Append("- Password must be at least 8 characters");
-            m_invalidPasswordMessage.AppendLine();
-            m_invalidPasswordMessage.Append("- Password must contain at least 1 digit");
-            m_invalidPasswordMessage.AppendLine();
-            m_invalidPasswordMessage.Append("- Password must contain at least 1 upper case letter");
-            m_invalidPasswordMessage.AppendLine();
-            m_invalidPasswordMessage.Append("- Password must contain at least 1 lower case letter");
         }
 
         #endregion
@@ -86,14 +97,15 @@ namespace GSF.TimeSeries.UI.UserControls
 
         private void m_userAccounts_BeforeSave(object sender, CancelEventArgs e)
         {
-            m_userAccounts.CurrentItem.UseADAuthentication = (bool)RadioButtonWindows.IsChecked;
+            m_userAccounts.CurrentItem.UseADAuthentication = RadioButtonWindows.IsChecked.GetValueOrDefault();
+
             if (m_userAccounts.IsNewRecord)
             {
-                if ((bool)RadioButtonDatabase.IsChecked)
+                if (RadioButtonDatabase.IsChecked.GetValueOrDefault())
                 {
-                    if (string.IsNullOrEmpty(TextBoxPassword.Password) || !Regex.IsMatch(TextBoxPassword.Password, m_strongPasswordRegex))
+                    if (string.IsNullOrEmpty(TextBoxPassword.Password) || !Regex.IsMatch(TextBoxPassword.Password, m_passwordRequirementsRegex))
                     {
-                        MessageBox.Show("Please provide valid password value." + Environment.NewLine + m_invalidPasswordMessage, "Invalid Password", MessageBoxButton.OK);
+                        MessageBox.Show(m_passwordRequirementsError, "Invalid Password", MessageBoxButton.OK);
                         e.Cancel = true;
                     }
                     else
@@ -106,13 +118,13 @@ namespace GSF.TimeSeries.UI.UserControls
             {
                 if (!string.IsNullOrEmpty(TextBoxPassword.Password))
                 {
-                    if (Regex.IsMatch(TextBoxPassword.Password, m_strongPasswordRegex))
+                    if (Regex.IsMatch(TextBoxPassword.Password, m_passwordRequirementsRegex))
                     {
                         m_userAccounts.CurrentItem.Password = SecurityProviderUtility.EncryptPassword(TextBoxPassword.Password);
                     }
                     else
                     {
-                        MessageBox.Show("Please provide valid password value or leave it blank to retain old password." + Environment.NewLine + m_invalidPasswordMessage, "Invalid Password", MessageBoxButton.OK);
+                        MessageBox.Show("Please provide valid password value or leave it blank to retain old password." + Environment.NewLine + m_passwordRequirementsError, "Invalid Password", MessageBoxButton.OK);
                         e.Cancel = true;
                     }
                 }
