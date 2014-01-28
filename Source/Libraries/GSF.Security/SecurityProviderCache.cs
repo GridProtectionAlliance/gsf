@@ -237,6 +237,44 @@ namespace GSF.Security
             return result;
         }
 
+        /// <summary>
+        /// Attempts to reauthenticate the current thread principal
+        /// after their provider has been removed from the cache.
+        /// </summary>
+        /// <returns>True if the user successfully reauthenticated; false otherwise.</returns>
+        public static bool ReauthenticateCurrentPrincipal()
+        {
+            SecurityIdentity identity;
+            ISecurityProvider provider = null;
+            string password = null;
+            bool authenticated;
+
+            if ((object)Thread.CurrentPrincipal == null)
+                return false;
+
+            identity = Thread.CurrentPrincipal.Identity as SecurityIdentity;
+
+            if ((object)identity != null)
+                provider = identity.Provider;
+
+            if ((object)provider != null)
+                password = provider.Password;
+
+            // Reset the current principal
+            Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+            // Create a new provider associated with current identity
+            provider = SecurityProviderUtility.CreateProvider(Thread.CurrentPrincipal.Identity.Name);
+
+            // Re-authenticate user
+            authenticated = provider.Authenticate(password);
+
+            // Re-cache current provider for user
+            CurrentProvider = provider;
+
+            return authenticated;
+        }
+
         private static ISecurityProvider SetupPrincipal(ISecurityProvider provider, bool restore)
         {
             // Initialize the principal object.

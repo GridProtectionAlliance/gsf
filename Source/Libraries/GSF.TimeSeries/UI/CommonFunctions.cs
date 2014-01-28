@@ -98,23 +98,8 @@ namespace GSF.TimeSeries.UI
                 // now be reinitialized. This step will "re-validate" user's current state (e.g., locked-out).
                 if (!s_currentPrincipal.Identity.IsAuthenticated && !SecurityProviderCache.TryGetCachedProvider(s_currentPrincipal.Identity.Name, out provider))
                 {
-                    string password = null;
-                    SecurityIdentity identity = s_currentPrincipal.Identity as SecurityIdentity;
-
-                    if ((object)identity != null)
-                        password = identity.Provider.Password;
-
-                    // Reset the current principal
-                    Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-                    // Create a new provider associated with current identity
-                    provider = SecurityProviderUtility.CreateProvider(s_currentPrincipal.Identity.Name);
-
-                    // Re-authenticate user
-                    provider.Authenticate(password);
-
-                    // Re-cache current provider for user
-                    SecurityProviderCache.CurrentProvider = provider;
+                    Thread.CurrentPrincipal = s_currentPrincipal;
+                    SecurityProviderCache.ReauthenticateCurrentPrincipal();
                     s_currentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
 
                     // Rights may have changed -- notify for revalidation of menu commands
