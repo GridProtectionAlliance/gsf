@@ -44,6 +44,7 @@ namespace GSF.TimeSeries.UI
         private string m_roles;
         private string m_userControlAssembly;
         private string m_userControlPath;
+        private MenuCommand m_command;
         private ObservableCollection<MenuDataItem> m_subMenuItems;
 
         #endregion
@@ -154,13 +155,15 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
-                return new MenuCommand
-                    {
-                    Roles = this.Roles,
-                    UserControlAssembly = this.UserControlAssembly,
-                    UserControlPath = this.UserControlPath,
-                    Description = this.Description
-                };
+                if ((object)m_command == null)
+                    m_command = new MenuCommand();
+
+                m_command.Roles = Roles;
+                m_command.UserControlAssembly = UserControlAssembly;
+                m_command.UserControlPath = UserControlPath;
+                m_command.Description = Description;
+
+                return m_command;
             }
         }
 

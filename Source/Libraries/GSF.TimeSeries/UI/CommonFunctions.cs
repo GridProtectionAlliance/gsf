@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO.Ports;
+using System.Linq;
 using System.Net;
 using System.Security.Principal;
 using System.Threading;
@@ -85,6 +86,8 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
+                ISecurityProvider provider;
+
                 if ((object)s_currentPrincipal == null)
                     s_currentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
 
@@ -93,7 +96,7 @@ namespace GSF.TimeSeries.UI
 
                 // If user is no longer authenticated, provider session may have expired so provider session will
                 // now be reinitialized. This step will "re-validate" user's current state (e.g., locked-out).
-                if (!s_currentPrincipal.Identity.IsAuthenticated)
+                if (!s_currentPrincipal.Identity.IsAuthenticated && !SecurityProviderCache.TryGetCachedProvider(s_currentPrincipal.Identity.Name, out provider))
                 {
                     string password = null;
                     SecurityIdentity identity = s_currentPrincipal.Identity as SecurityIdentity;
@@ -105,7 +108,7 @@ namespace GSF.TimeSeries.UI
                     Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
                     // Create a new provider associated with current identity
-                    ISecurityProvider provider = SecurityProviderUtility.CreateProvider(s_currentPrincipal.Identity.Name);
+                    provider = SecurityProviderUtility.CreateProvider(s_currentPrincipal.Identity.Name);
 
                     // Re-authenticate user
                     provider.Authenticate(password);
@@ -113,6 +116,9 @@ namespace GSF.TimeSeries.UI
                     // Re-cache current provider for user
                     SecurityProviderCache.CurrentProvider = provider;
                     s_currentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+
+                    // Rights may have changed -- notify for revalidation of menu commands
+                    OnCurrentPrincipalRefreshed();
                 }
 
                 return s_currentPrincipal;
@@ -135,7 +141,13 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
-                return ((object)s_currentPage != null) && ((object)s_currentPage.Next != null);
+                SecurityPrincipal currentPrincipal = CurrentPrincipal;
+                ISecurityProvider securityProvider;
+
+                if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
+                    securityProvider = SecurityProviderCache.CurrentProvider;
+
+                return ((object)s_currentPage != null) && ((object)s_currentPage.Next != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any();
             }
         }
 
@@ -146,7 +158,13 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
-                return ((object)s_currentPage != null) && ((object)s_currentPage.Previous != null);
+                SecurityPrincipal currentPrincipal = CurrentPrincipal;
+                ISecurityProvider securityProvider;
+
+                if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
+                    securityProvider = SecurityProviderCache.CurrentProvider;
+
+                return ((object)s_currentPage != null) && ((object)s_currentPage.Previous != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any();
             }
         }
 
@@ -158,6 +176,12 @@ namespace GSF.TimeSeries.UI
         public static event EventHandler ServiceConnectionRefreshed = delegate
         {
         };
+
+        /// <summary>
+        /// Event raised when the <see cref="CurrentPrincipal"/> property changes as
+        /// a result of its security provider expiring from the security provider cache.
+        /// </summary>
+        public static event EventHandler CurrentPrincipalRefreshed;
 
         /// <summary>
         /// Triggered when the flag that indicates whether we can move forward in page history changes.
@@ -1098,6 +1122,15 @@ namespace GSF.TimeSeries.UI
                     }
                 }
             }
+        }
+
+        private static void OnCurrentPrincipalRefreshed()
+        {
+            if ((object)CurrentPrincipalRefreshed != null)
+                CurrentPrincipalRefreshed(null, EventArgs.Empty);
+
+            OnCanGoForwardChanged();
+            OnCanGoBackChanged();
         }
 
         private static void OnCanGoForwardChanged()
