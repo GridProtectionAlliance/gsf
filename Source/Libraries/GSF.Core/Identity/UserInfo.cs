@@ -1299,7 +1299,7 @@ namespace GSF.Identity
         private void SystemEvents_PowerModeChanged(object sender, PowerModeChangedEventArgs e)
         {
             if (e.Mode == PowerModes.Resume)
-                ThreadPool.QueueUserWorkItem(Initialize);
+                m_initialized = false;
         }
 
         /// <summary>

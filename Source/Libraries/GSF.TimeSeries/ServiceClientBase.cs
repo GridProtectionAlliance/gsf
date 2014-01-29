@@ -307,7 +307,7 @@ namespace GSF.TimeSeries
 
                         m_clientHelper.Disconnect();
                     }
-                    catch (InvalidOperationException)
+                    catch (Exception)
                     {
                         // Errors during the outer connection loop
                         // should simply force an attempt to reconnect
