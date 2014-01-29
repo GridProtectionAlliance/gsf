@@ -84,7 +84,6 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GSF.TimeSeries.Cases\MeasurementProtoBufCase.cs" />
     <Compile Include="QA\QA.cs" />
     <Compile Include="TimeSeries.Cases\IActionAdapterCase.cs" />
     <Compile Include="TimeSeries.Cases\IAdapterBaseCase.cs" />
@@ -106,6 +105,7 @@
     <Compile Include="PhasorProtocols.Cases\IEEE.C37118\DataCellCase.cs" />
     <Compile Include="PhasorProtocols.Cases\IEEE.C37118\DataFrameCase.cs" />
     <Compile Include="PhasorProtocols.Wrappers\BinaryImageBaseWrapper.cs" />
+    <Compile Include="TimeSeries.Cases\MeasurementProtoBufCase.cs" />
     <Compile Include="TimeSeries.Wrappers\AdapterBaseWrapper.cs" />
     <Compile Include="TimeSeries.Wrappers\IAdapterCollectionWrapper.cs" />
     <Compile Include="TimeSeries.Wrappers\IAdapterWrapper.cs" />
