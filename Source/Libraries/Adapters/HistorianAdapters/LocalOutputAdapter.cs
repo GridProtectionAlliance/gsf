@@ -440,7 +440,6 @@ namespace HistorianAdapters
             m_archive.OffloadException += m_archive_OffloadException;
 
             m_archive.FutureDataReceived += m_archive_FutureDataReceived;
-            m_archive.OrphanDataReceived += m_archive_OrphanDataReceived;
             m_archive.OutOfSequenceDataReceived += m_archive_OutOfSequenceDataReceived;
 
             m_archive.Initialize();
@@ -532,7 +531,6 @@ namespace HistorianAdapters
                             m_archive.OffloadException -= m_archive_OffloadException;
 
                             m_archive.FutureDataReceived -= m_archive_FutureDataReceived;
-                            m_archive.OrphanDataReceived -= m_archive_OrphanDataReceived;
                             m_archive.OutOfSequenceDataReceived -= m_archive_OutOfSequenceDataReceived;
 
                             m_archive.Dispose();
@@ -700,13 +698,7 @@ namespace HistorianAdapters
 
         private void m_archive_FutureDataReceived(object sender, EventArgs<GSF.Historian.IDataPoint> e)
         {
-            OnStatusMessage("Received data for point {0}:{1} with an unreasonable future timestamp. Data with a timestamp beyond {2:0.00} minutes of the local clock will not be archived. Check local clock and clock of data source for accuracy.", m_instanceName, e.Argument.HistorianID, m_archive.LeadTimeTolerance);
-        }
-
-        private void m_archive_OrphanDataReceived(object sender, EventArgs<GSF.Historian.IDataPoint> e)
-        {
-            if ((object)m_metadataRefreshComplete != null && m_metadataRefreshComplete.WaitOne(0))
-                OnStatusMessage("Received data for undefined point {0}:{1}. No meta-data is defined for this point, data will not be archived.", m_instanceName, e.Argument.HistorianID);
+            OnStatusMessage("Received data for point {0}:{1} with an unreasonable future timestamp. Data with a timestamp beyond {2:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, e.Argument.HistorianID, m_archive.LeadTimeTolerance);
         }
 
         private void m_archive_OutOfSequenceDataReceived(object sender, EventArgs<GSF.Historian.IDataPoint> e)
