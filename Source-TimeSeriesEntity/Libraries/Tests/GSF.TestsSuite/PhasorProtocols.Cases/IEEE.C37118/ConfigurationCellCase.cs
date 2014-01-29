@@ -376,7 +376,6 @@ namespace GSF.TestsSuite.PhasorProtocols.Cases.IEEE.C37118
             m_PhasorValue.Angle = new global::GSF.Units.Angle(10);
             m_PhasorValue.Magnitude = 10;
             #endregion
-
             
             #region [ Digital Definition ]
             m_DigitalDefinition = new DigitalDefinition(m_IConfigurationCell);

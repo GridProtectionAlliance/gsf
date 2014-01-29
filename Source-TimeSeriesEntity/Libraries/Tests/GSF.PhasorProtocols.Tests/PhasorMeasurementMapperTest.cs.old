@@ -1,0 +1,531 @@
+﻿
+#region [ Using ]
+using GSF.PhasorProtocols;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using GSF.TestsSuite.PhasorProtocols.Cases.IEEE.C37118;
+#endregion
+
+namespace GSF.PhasorProtocols.Tests
+{
+    /// <summary>
+    ///This is a test class for PhasorMeasurementMapperTest and is intended
+    ///to contain all PhasorMeasurementMapperTest Unit Tests
+    ///</summary>
+    [TestClass()]
+    public class PhasorMeasurementMapperTest
+    {
+        #region [ Members ]
+        ConfigurationCellCase m_ConfigurationCellCase;
+        GSF.PhasorProtocols.PhasorMeasurementMapper target;
+        #endregion
+
+        #region [ Context ]
+        private TestContext testContextInstance;
+
+        /// <summary>
+        ///Gets or sets the test context which provides
+        ///information about and functionality for the current test run.
+        ///</summary>
+        public TestContext TestContext
+        {
+            get
+            {
+                return testContextInstance;
+            }
+            set
+            {
+                testContextInstance = value;
+            }
+        }
+        #endregion
+
+        #region [ Additional test attributes ]
+        //
+        //You can use the following additional attributes as you write your tests:
+        //
+        //Use ClassInitialize to run code before running the first test in the class
+        //[ClassInitialize()]
+        //public static void MyClassInitialize(TestContext testContext)
+        //{
+        //}
+        //
+        //Use ClassCleanup to run code after all tests in a class have run
+        //[ClassCleanup()]
+        //public static void MyClassCleanup()
+        //{
+        //}
+        //
+        //Use TestInitialize to run code before running each test
+        [TestInitialize()]
+        public void MyTestInitialize()
+        {
+            m_ConfigurationCellCase = new ConfigurationCellCase();
+            target = new PhasorMeasurementMapper();
+        }
+        //
+        //Use TestCleanup to run code after each test has run
+        [TestCleanup()]
+        public void MyTestCleanup()
+        {
+        }
+        //
+        #endregion
+
+        #region [ Methods ]
+        /// <summary>
+        ///A test for PhasorMeasurementMapper Constructor
+        ///</summary>
+        [TestMethod()]
+        public void PhasorMeasurementMapperConstructorTest()
+        {
+            Assert.IsInstanceOfType(target, typeof(PhasorMeasurementMapper));
+            Assert.IsNotNull(target);
+        }
+
+        /// <summary>
+        ///A test for DeleteCachedConfiguration
+        ///</summary>
+        [TestMethod()]
+        public void DeleteCachedConfigurationTest()
+        {
+            target.DeleteCachedConfiguration();
+        }
+
+        /// <summary>
+        ///A test for GetHashCode
+        ///TODO: Running concentrator required for testing
+        ///</summary>
+        //[TestMethod()]
+        //public void GetHashCodeTest()
+        //{
+        //    int expected = -774526909;
+        //    int actual;
+        //    actual = target.GetHashCode();
+        //    Assert.AreEqual(expected, actual);
+        //}
+
+        /// <summary>
+        ///A test for GetShortStatus
+        ///</summary>
+        [TestMethod()]
+        public void GetShortStatusTest()
+        {
+            int maxLength = 100;
+            string expected = "  ** Not connected";
+            string actual;
+            actual = target.GetShortStatus(maxLength);
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for GetSignalReference
+        ///</summary>
+        [TestMethod()]
+        public void GetSignalReferenceTest()
+        {
+            GSF.PhasorProtocols.SignalKind type = new GSF.PhasorProtocols.SignalKind();
+            string expected = "PhasorMeasurementMapper!IS-PA";
+            string actual;
+            actual = target.GetSignalReference(type);
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for GetSignalReference
+        ///TODO: Running concentrator required for testing
+        ///</summary>
+        //[TestMethod()]
+        //public void GetSignalReferenceTest1()
+        //{
+        //    GSF.PhasorProtocols.SignalKind type = new GSF.PhasorProtocols.SignalKind();
+        //    int index = 0;
+        //    int count = 0;
+        //    string expected = string.Empty;
+        //    string actual;
+        //    actual = target.GetSignalReference(type, index, count);
+        //    Assert.AreEqual(expected, actual);
+        //}
+
+        /// <summary>
+        ///A test for Initialize
+        ///TODO: Running concentrator required for testing
+        ///</summary>
+        //[TestMethod()]
+        //public void InitializeTest()
+        //{
+        //    target.Initialize();
+        //}
+
+        /// <summary>
+        ///A test for LoadCachedConfiguration
+        ///</summary>
+        [TestMethod()]
+        public void LoadCachedConfigurationTest()
+        {
+            target.LoadCachedConfiguration();
+        }
+
+        /// <summary>
+        ///A test for LoadConfiguration
+        ///</summary>
+        [TestMethod()]
+        public void LoadConfigurationTest()
+        {
+            string configurationFileName = string.Empty;
+            target.LoadConfiguration(configurationFileName);
+        }
+
+        /// <summary>
+        ///A test for RequestCurrentConfiguration
+        ///TODO: Running concentrator required
+        ///</summary>
+        //[TestMethod()]
+        //public void RequestCurrentConfigurationTest()
+        //{
+        //    GSF.PhasorProtocols.IConfigurationFrame expected = null;
+        //    GSF.PhasorProtocols.IConfigurationFrame actual;
+        //    actual = target.RequestCurrentConfiguration();
+        //    Assert.AreEqual(expected, actual);
+        //}
+
+        /// <summary>
+        ///A test for ResetDeviceStatistics
+        ///</summary>
+        [TestMethod()]
+        public void ResetDeviceStatisticsTest()
+        {
+            ushort idCode = 0;
+            target.ResetDeviceStatistics(idCode);
+        }
+
+        /// <summary>
+        ///A test for ResetLatencyCounters
+        ///</summary>
+        [TestMethod()]
+        public void ResetLatencyCountersTest()
+        {
+            target.ResetLatencyCounters();
+        }
+
+        /// <summary>
+        ///A test for ResetStatistics
+        ///</summary>
+        [TestMethod()]
+        public void ResetStatisticsTest()
+        {
+            target.ResetStatistics();
+        }
+
+        /// <summary>
+        ///A test for SendCommand
+        ///</summary>
+        [TestMethod()]
+        public void SendCommandTest()
+        {
+            GSF.PhasorProtocols.DeviceCommand command = new GSF.PhasorProtocols.DeviceCommand();
+            target.SendCommand(command);
+        }
+
+        /// <summary>
+        ///A test for Start
+        ///</summary>
+        [TestMethod()]
+        public void StartTest()
+        {
+            target.Start();
+        }
+
+        /// <summary>
+        ///A test for AccessID
+        ///</summary>
+        [TestMethod()]
+        public void AccessIDTest()
+        {
+            ushort expected = 0;
+            ushort actual;
+            target.AccessID = expected;
+            actual = target.AccessID;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for ActualDataRate
+        ///</summary>
+        [TestMethod()]
+        public void ActualDataRateTest()
+        {
+            double actual;
+            actual = target.ActualDataRate;
+        }
+
+        /// <summary>
+        ///A test for ActualFrameRate
+        ///</summary>
+        [TestMethod()]
+        public void ActualFrameRateTest()
+        {
+            double actual;
+            actual = target.ActualFrameRate;
+        }
+
+        /// <summary>
+        ///A test for AllowUseOfCachedConfiguration
+        ///</summary>
+        [TestMethod()]
+        public void AllowUseOfCachedConfigurationTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.AllowUseOfCachedConfiguration = expected;
+            actual = target.AllowUseOfCachedConfiguration;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for AverageLatency
+        ///</summary>
+        [TestMethod()]
+        public void AverageLatencyTest()
+        {
+            int actual;
+            actual = target.AverageLatency;
+        }
+
+        /// <summary>
+        ///A test for CRCErrors
+        ///</summary>
+        [TestMethod()]
+        public void CRCErrorsTest()
+        {
+            long actual;
+            actual = target.CRCErrors;
+        }
+
+        /// <summary>
+        ///A test for ConfigurationCacheFileName
+        ///</summary>
+        [TestMethod()]
+        public void ConfigurationCacheFileNameTest()
+        {
+            string actual;
+            actual = target.ConfigurationCacheFileName;
+        }
+
+        /// <summary>
+        ///A test for ConfigurationChanges
+        ///</summary>
+        [TestMethod()]
+        public void ConfigurationChangesTest()
+        {
+            long actual;
+            actual = target.ConfigurationChanges;
+        }
+
+        /// <summary>
+        ///A test for ConnectionAttempts
+        ///</summary>
+        [TestMethod()]
+        public void ConnectionAttemptsTest()
+        {
+            long actual;
+            actual = target.ConnectionAttempts;
+        }
+
+        /// <summary>
+        ///A test for DefinedDevices
+        ///TODO: Running concentrator required for testing
+        ///</summary>
+        //[TestMethod()]
+        //public void DefinedDevicesTest()
+        //{
+        //    System.Collections.Generic.IEnumerable<GSF.PhasorProtocols.Anonymous.ConfigurationCell> actual;
+        //    actual = target.DefinedDevices;
+        //}
+
+        /// <summary>
+        ///A test for DefinedFrameRate
+        ///</summary>
+        [TestMethod()]
+        public void DefinedFrameRateTest()
+        {
+            int actual;
+            actual = target.DefinedFrameRate;
+        }
+
+        /// <summary>
+        ///A test for IsConcentrator
+        ///</summary>
+        [TestMethod()]
+        public void IsConcentratorTest()
+        {
+            bool actual;
+            actual = target.IsConcentrator;
+        }
+
+        /// <summary>
+        ///A test for LastReportTime
+        ///</summary>
+        [TestMethod()]
+        public void LastReportTimeTest()
+        {
+            GSF.Ticks expected = new GSF.Ticks();
+            GSF.Ticks actual;
+            target.LastReportTime = expected;
+            actual = target.LastReportTime;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for MaximumLatency
+        ///</summary>
+        [TestMethod()]
+        public void MaximumLatencyTest()
+        {
+            int actual;
+            actual = target.MaximumLatency;
+        }
+
+        /// <summary>
+        ///A test for MinimumLatency
+        ///</summary>
+        [TestMethod()]
+        public void MinimumLatencyTest()
+        {
+            int actual;
+            actual = target.MinimumLatency;
+        }
+
+        /// <summary>
+        ///A test for MissingFrames
+        ///</summary>
+        [TestMethod()]
+        public void MissingFramesTest()
+        {
+            long actual;
+            actual = target.MissingFrames;
+        }
+
+        /// <summary>
+        ///A test for OutOfOrderFrames
+        ///</summary>
+        [TestMethod()]
+        public void OutOfOrderFramesTest()
+        {
+            long actual;
+            actual = target.OutOfOrderFrames;
+        }
+
+        /// <summary>
+        ///A test for SharedMapping
+        ///</summary>
+        [TestMethod()]
+        public void SharedMappingTest()
+        {
+            string expected = string.Empty;
+            string actual;
+            target.SharedMapping = expected;
+            actual = target.SharedMapping;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for SharedMappingID
+        ///</summary>
+        [TestMethod()]
+        public void SharedMappingIDTest()
+        {
+            uint actual;
+            actual = target.SharedMappingID;
+        }
+
+        /// <summary>
+        ///A test for Status
+        ///TODO: Running concentrator required for testing
+        ///</summary>
+        //[TestMethod()]
+        //public void StatusTest()
+        //{
+        //    string actual;
+        //    actual = target.Status;
+        //}
+
+        /// <summary>
+        ///A test for SupportsTemporalProcessing
+        ///</summary>
+        [TestMethod()]
+        public void SupportsTemporalProcessingTest()
+        {
+            bool actual;
+            actual = target.SupportsTemporalProcessing;
+        }
+
+        /// <summary>
+        ///A test for TimeAdjustmentTicks
+        ///</summary>
+        [TestMethod()]
+        public void TimeAdjustmentTicksTest()
+        {
+            GSF.Ticks expected = new GSF.Ticks();
+            GSF.Ticks actual;
+            target.TimeAdjustmentTicks = expected;
+            actual = target.TimeAdjustmentTicks;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for TimeZone
+        ///</summary>
+        [TestMethod()]
+        public void TimeZoneTest()
+        {
+            System.TimeZoneInfo expected = null;
+            System.TimeZoneInfo actual;
+            target.TimeZone = expected;
+            actual = target.TimeZone;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for TotalConfigurationFrames
+        ///</summary>
+        [TestMethod()]
+        public void TotalConfigurationFramesTest()
+        {
+            long actual;
+            actual = target.TotalConfigurationFrames;
+        }
+
+        /// <summary>
+        ///A test for TotalDataFrames
+        ///</summary>
+        [TestMethod()]
+        public void TotalDataFramesTest()
+        {
+            long actual;
+            actual = target.TotalDataFrames;
+        }
+
+        /// <summary>
+        ///A test for TotalFrames
+        ///</summary>
+        [TestMethod()]
+        public void TotalFramesTest()
+        {
+            long actual;
+            actual = target.TotalFrames;
+        }
+
+        /// <summary>
+        ///A test for TotalHeaderFrames
+        ///</summary>
+        [TestMethod()]
+        public void TotalHeaderFramesTest()
+        {
+            long actual;
+            actual = target.TotalHeaderFrames;
+        }
+        #endregion
+    }
+}

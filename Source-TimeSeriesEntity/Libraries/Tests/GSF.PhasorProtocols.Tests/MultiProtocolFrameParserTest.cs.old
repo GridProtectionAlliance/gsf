@@ -1,0 +1,571 @@
+﻿using GSF.PhasorProtocols;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+
+namespace GSF.PhasorProtocols.Tests
+{
+
+
+    /// <summary>
+    ///This is a test class for MultiProtocolFrameParserTest and is intended
+    ///to contain all MultiProtocolFrameParserTest Unit Tests
+    ///</summary>
+    [TestClass()]
+    public class MultiProtocolFrameParserTest
+    {
+        #region [ Members ]
+        private GSF.PhasorProtocols.MultiProtocolFrameParser target;
+        #endregion
+
+        #region [ Context ]
+        private TestContext testContextInstance;
+
+
+        /// <summary>
+        ///Gets or sets the test context which provides
+        ///information about and functionality for the current test run.
+        ///</summary>
+        public TestContext TestContext
+        {
+            get
+            {
+                return testContextInstance;
+            }
+            set
+            {
+                testContextInstance = value;
+            }
+        }
+        #endregion
+
+        #region [ Additional test attributes ]
+        //
+        //You can use the following additional attributes as you write your tests:
+        //
+        //Use ClassInitialize to run code before running the first test in the class
+        //[ClassInitialize()]
+        //public static void MyClassInitialize(TestContext testContext)
+        //{
+        //}
+        //
+        //Use ClassCleanup to run code after all tests in a class have run
+        //[ClassCleanup()]
+        //public static void MyClassCleanup()
+        //{
+        //}
+        //
+        //Use TestInitialize to run code before running each test
+        [TestInitialize()]
+        public void MyTestInitialize()
+        {
+            target = new GSF.PhasorProtocols.MultiProtocolFrameParser();
+        }
+        //
+        //Use TestCleanup to run code after each test has run
+        [TestCleanup()]
+        public void MyTestCleanup()
+        {
+        }
+        //
+        #endregion
+
+        #region [ Methods ]
+        /// <summary>
+        ///A test for MultiProtocolFrameParser Constructor
+        ///</summary>
+        [TestMethod()]
+        public void MultiProtocolFrameParserConstructorTest()
+        {
+            Assert.IsNotNull(target);
+            Assert.IsInstanceOfType(target, typeof(MultiProtocolFrameParser));
+        }
+
+        /// <summary>
+        ///A test for Dispose
+        ///</summary>
+        [TestMethod()]
+        public void DisposeTest()
+        {
+            target.Dispose();
+        }
+
+        /// <summary>
+        ///A test for SendDeviceCommand
+        ///</summary>
+        [TestMethod()]
+        public void SendDeviceCommandTest()
+        {
+            GSF.PhasorProtocols.DeviceCommand command = new GSF.PhasorProtocols.DeviceCommand();
+            System.Threading.WaitHandle expected = null;
+            System.Threading.WaitHandle actual;
+            actual = target.SendDeviceCommand(command);
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for Start
+        ///</summary>
+        [TestMethod()]
+        public void StartTest()
+        {
+            target.Start();
+        }
+
+        /// <summary>
+        ///A test for Stop
+        ///</summary>
+        [TestMethod()]
+        public void StopTest()
+        {
+            target.Stop();
+        }
+
+        /// <summary>
+        ///A test for Write
+        ///</summary>
+        [TestMethod()]
+        public void WriteTest()
+        {
+            byte[] buffer = new byte[8];
+            int offset = 1;
+            int count = 7;
+            target.Start();
+            target.Write(buffer, offset, count);
+            target.Stop();
+        }
+
+        /// <summary>
+        ///A test for AllowedParsingExceptions
+        ///</summary>
+        [TestMethod()]
+        public void AllowedParsingExceptionsTest()
+        {
+            int expected = 0;
+            int actual;
+            target.AllowedParsingExceptions = expected;
+            actual = target.AllowedParsingExceptions;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for AutoRepeatCapturedPlayback
+        ///</summary>
+        [TestMethod()]
+        public void AutoRepeatCapturedPlaybackTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.AutoRepeatCapturedPlayback = expected;
+            actual = target.AutoRepeatCapturedPlayback;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for AutoStartDataParsingSequence
+        ///</summary>
+        [TestMethod()]
+        public void AutoStartDataParsingSequenceTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.AutoStartDataParsingSequence = expected;
+            actual = target.AutoStartDataParsingSequence;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for BitRate
+        ///</summary>
+        [TestMethod()]
+        public void BitRateTest()
+        {
+            double actual;
+            actual = target.BitRate;
+        }
+
+        /// <summary>
+        ///A test for BufferSize
+        ///TODO:
+        ///</summary>
+        //[TestMethod()]
+        //public void BufferSizeTest()
+        //{
+        //    int expected = 0;
+        //    int actual;
+        //    target.BufferSize = expected;
+        //    actual = target.BufferSize;
+        //    Assert.AreEqual(expected, actual);
+        //}
+
+        /// <summary>
+        ///A test for ByteRate
+        ///</summary>
+        [TestMethod()]
+        public void ByteRateTest()
+        {
+            double actual;
+            actual = target.ByteRate;
+        }
+
+        /// <summary>
+        ///A test for CalculatedFrameRate
+        ///</summary>
+        [TestMethod()]
+        public void CalculatedFrameRateTest()
+        {
+            double actual;
+            actual = target.CalculatedFrameRate;
+        }
+
+        /// <summary>
+        ///A test for ConfigurationFrame
+        ///</summary>
+        [TestMethod()]
+        public void ConfigurationFrameTest()
+        {
+            GSF.PhasorProtocols.IConfigurationFrame expected = null;
+            GSF.PhasorProtocols.IConfigurationFrame actual;
+            target.ConfigurationFrame = expected;
+            actual = target.ConfigurationFrame;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for ConfiguredFrameRate
+        ///</summary>
+        [TestMethod()]
+        public void ConfiguredFrameRateTest()
+        {
+            int actual;
+            actual = target.ConfiguredFrameRate;
+        }
+
+        /// <summary>
+        ///A test for ConnectionParameters
+        ///</summary>
+        [TestMethod()]
+        public void ConnectionParametersTest()
+        {
+            GSF.PhasorProtocols.IConnectionParameters expected = null;
+            GSF.PhasorProtocols.IConnectionParameters actual;
+            target.ConnectionParameters = expected;
+            actual = target.ConnectionParameters;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for ConnectionString
+        ///</summary>
+        [TestMethod()]
+        public void ConnectionStringTest()
+        {
+            string expected = string.Empty;
+            string actual;
+            target.ConnectionString = expected;
+            actual = target.ConnectionString;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for ConnectionTime
+        ///</summary>
+        [TestMethod()]
+        public void ConnectionTimeTest()
+        {
+            GSF.Units.Time actual;
+            actual = target.ConnectionTime;
+        }
+
+        /// <summary>
+        ///A test for ConnectionType
+        ///</summary>
+        [TestMethod()]
+        public void ConnectionTypeTest()
+        {
+            string actual;
+            actual = target.ConnectionType;
+        }
+
+        /// <summary>
+        ///A test for DataChannelIsServerBased
+        ///</summary>
+        [TestMethod()]
+        public void DataChannelIsServerBasedTest()
+        {
+            bool actual;
+            actual = target.DataChannelIsServerBased;
+        }
+
+        /// <summary>
+        ///A test for DefinedFrameRate
+        ///</summary>
+        [TestMethod()]
+        public void DefinedFrameRateTest()
+        {
+            int expected = 0;
+            int actual;
+            target.DefinedFrameRate = expected;
+            actual = target.DefinedFrameRate;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for DeviceID
+        ///</summary>
+        [TestMethod()]
+        public void DeviceIDTest()
+        {
+            ushort expected = 0;
+            ushort actual;
+            target.DeviceID = expected;
+            actual = target.DeviceID;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for DeviceSupportsCommands
+        ///</summary>
+        [TestMethod()]
+        public void DeviceSupportsCommandsTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.DeviceSupportsCommands = expected;
+            actual = target.DeviceSupportsCommands;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for Enabled
+        ///</summary>
+        [TestMethod()]
+        public void EnabledTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.Enabled = expected;
+            actual = target.Enabled;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for ExecuteParseOnSeparateThread
+        ///</summary>
+        [TestMethod()]
+        public void ExecuteParseOnSeparateThreadTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.ExecuteParseOnSeparateThread = expected;
+            actual = target.ExecuteParseOnSeparateThread;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for InjectSimulatedTimestamp
+        ///</summary>
+        [TestMethod()]
+        public void InjectSimulatedTimestampTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.InjectSimulatedTimestamp = expected;
+            actual = target.InjectSimulatedTimestamp;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for IsConnected
+        ///</summary>
+        [TestMethod()]
+        public void IsConnectedTest()
+        {
+            bool actual;
+            actual = target.IsConnected;
+        }
+
+        /// <summary>
+        ///A test for IsIEEEProtocol
+        ///</summary>
+        [TestMethod()]
+        public void IsIEEEProtocolTest()
+        {
+            bool actual;
+            actual = target.IsIEEEProtocol;
+        }
+
+        /// <summary>
+        ///A test for MaximumConnectionAttempts
+        ///TODO:
+        ///</summary>
+        //[TestMethod()]
+        //public void MaximumConnectionAttemptsTest()
+        //{
+        //    int expected = 0;
+        //    int actual;
+        //    target.MaximumConnectionAttempts = expected;
+        //    actual = target.MaximumConnectionAttempts;
+        //    Assert.AreEqual(expected, actual);
+        //}
+
+        /// <summary>
+        ///A test for MegaBitRate
+        ///</summary>
+        [TestMethod()]
+        public void MegaBitRateTest()
+        {
+            double actual;
+            actual = target.MegaBitRate;
+        }
+
+        /// <summary>
+        ///A test for Name
+        ///</summary>
+        [TestMethod()]
+        public void NameTest()
+        {
+            string actual;
+            actual = target.Name;
+        }
+
+        /// <summary>
+        ///A test for ParsingExceptionWindow
+        ///</summary>
+        [TestMethod()]
+        public void ParsingExceptionWindowTest()
+        {
+            GSF.Ticks expected = new GSF.Ticks();
+            GSF.Ticks actual;
+            target.ParsingExceptionWindow = expected;
+            actual = target.ParsingExceptionWindow;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for PhasorProtocol
+        ///</summary>
+        [TestMethod()]
+        public void PhasorProtocolTest()
+        {
+            GSF.PhasorProtocols.PhasorProtocol expected = new GSF.PhasorProtocols.PhasorProtocol();
+            GSF.PhasorProtocols.PhasorProtocol actual;
+            target.PhasorProtocol = expected;
+            actual = target.PhasorProtocol;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for QueuedBuffers
+        ///</summary>
+        [TestMethod()]
+        public void QueuedBuffersTest()
+        {
+            int actual;
+            actual = target.QueuedBuffers;
+        }
+
+        /// <summary>
+        ///A test for SkipDisableRealTimeData
+        ///</summary>
+        [TestMethod()]
+        public void SkipDisableRealTimeDataTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.SkipDisableRealTimeData = expected;
+            actual = target.SkipDisableRealTimeData;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for SourceName
+        ///</summary>
+        [TestMethod()]
+        public void SourceNameTest()
+        {
+            string expected = string.Empty;
+            string actual;
+            target.SourceName = expected;
+            actual = target.SourceName;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for Status
+        ///</summary>
+        [TestMethod()]
+        public void StatusTest()
+        {
+            string actual;
+            actual = target.Status;
+        }
+
+        /// <summary>
+        ///A test for TotalBytesReceived
+        ///</summary>
+        [TestMethod()]
+        public void TotalBytesReceivedTest()
+        {
+            long actual;
+            actual = target.TotalBytesReceived;
+        }
+
+        /// <summary>
+        ///A test for TotalCrcExceptions
+        ///</summary>
+        [TestMethod()]
+        public void TotalCrcExceptionsTest()
+        {
+            long actual;
+            actual = target.TotalCrcExceptions;
+        }
+
+        /// <summary>
+        ///A test for TotalFramesReceived
+        ///</summary>
+        [TestMethod()]
+        public void TotalFramesReceivedTest()
+        {
+            long actual;
+            actual = target.TotalFramesReceived;
+        }
+
+        /// <summary>
+        ///A test for TotalMissingFrames
+        ///</summary>
+        [TestMethod()]
+        public void TotalMissingFramesTest()
+        {
+            long actual;
+            actual = target.TotalMissingFrames;
+        }
+
+        /// <summary>
+        ///A test for TransportProtocol
+        ///</summary>
+        [TestMethod()]
+        public void TransportProtocolTest()
+        {
+            GSF.Communication.TransportProtocol expected = new GSF.Communication.TransportProtocol();
+            GSF.Communication.TransportProtocol actual;
+            target.TransportProtocol = expected;
+            actual = target.TransportProtocol;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for UseHighResolutionInputTimer
+        ///</summary>
+        [TestMethod()]
+        public void UseHighResolutionInputTimerTest()
+        {
+            bool expected = false;
+            bool actual;
+            target.UseHighResolutionInputTimer = expected;
+            actual = target.UseHighResolutionInputTimer;
+            Assert.AreEqual(expected, actual);
+        }
+        #endregion
+
+    }
+}

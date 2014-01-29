@@ -1,0 +1,732 @@
+﻿#region [ Using ]
+using GSF.PhasorProtocols;
+using GSF.TestsSuite.TimeSeries.Cases;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using GSF.TestsSuite.PhasorProtocols.Cases.IEEE.C37118;
+using GSF.TestsSuite.TimeSeries.Cases;
+using System.Runtime.Serialization;
+using GSF;
+#endregion
+
+namespace GSF.PhasorProtocols.Tests
+{
+
+    /// <summary>
+    ///This is a test class for DataCellBaseTest and is intended
+    ///to contain all DataCellBaseTest Unit Tests
+    ///</summary>
+    [TestClass()]
+    public class DataCellBaseTest
+    {
+        #region [ Classes ]
+        private class DataCellBaseWrapper : DataCellBase
+        {
+            #region [ Members ]
+            private bool m_DataIsValid;
+            private DataSortingType m_DataSortingType;
+            private bool m_DeviceError;
+            private bool m_SynchronizationIsValid;
+            #endregion
+
+            #region [ Constructors ]
+            public DataCellBaseWrapper(IDataFrame parent, IConfigurationCell configurationCell, ushort statusFlags, int maximumPhasors, int maximumAnalogs, int maximumDigitals) :
+                base(parent,configurationCell,statusFlags,maximumPhasors,maximumAnalogs,maximumDigitals)
+            { }
+            public DataCellBaseWrapper(SerializationInfo info, StreamingContext context)
+                : base(info,context)
+            {}
+            #endregion
+
+            #region [ Members ]
+            public override bool DataIsValid
+            {
+                get
+                {
+                    return m_DataIsValid;
+                }
+                set
+                {
+                    m_DataIsValid = value;
+                }
+            }
+            public override DataSortingType DataSortingType
+            {
+                get
+                {
+                    return m_DataSortingType;
+                }
+                set
+                {
+                    m_DataSortingType = value;
+                }
+            }
+            public override bool DeviceError
+            {
+                get
+                {
+                    return m_DeviceError;
+                }
+                set
+                {
+                    m_DeviceError = value;
+                }
+            }
+            public override bool SynchronizationIsValid
+            {
+                get
+                {
+                    return m_SynchronizationIsValid;
+                }
+                set
+                {
+                    m_SynchronizationIsValid=value;
+                }
+            }
+            #endregion
+        }
+        #endregion
+
+        #region [ Members ]
+        private IFormatterConverter m_converter;
+        private IMeasurementCase m_IMeasurementCase;
+        private DataCellBaseWrapper target;
+        private SerializationInfo info;
+        private StreamingContext m_context;
+        private ConfigurationCellCase m_ConfigurationCellCase;
+        private ITimeSeriesValue m_ITimeSeriesValue;
+        #endregion
+
+        #region [ Context ]
+        private TestContext testContextInstance;
+
+        /// <summary>
+        ///Gets or sets the test context which provides
+        ///information about and functionality for the current test run.
+        ///</summary>
+        public TestContext TestContext
+        {
+            get
+            {
+                return testContextInstance;
+            }
+            set
+            {
+                testContextInstance = value;
+            }
+        }
+        #endregion
+
+        #region [ Additional test attributes ]
+        //
+        //You can use the following additional attributes as you write your tests:
+        //
+        //Use ClassInitialize to run code before running the first test in the class
+        //[ClassInitialize()]
+        //public static void MyClassInitialize(TestContext testContext)
+        //{
+        //}
+        //
+        //Use ClassCleanup to run code after all tests in a class have run
+        //[ClassCleanup()]
+        //public static void MyClassCleanup()
+        //{
+        //}
+        //
+        //Use TestInitialize to run code before running each test
+        [TestInitialize()]
+        public void MyTestInitialize()
+        {
+            m_converter = new FormatterConverter();
+            info = new SerializationInfo(typeof(IChannelFrame), m_converter);
+            m_ConfigurationCellCase = new ConfigurationCellCase();
+
+
+            info.AddValue("parent",target,typeof(IChannelFrame));
+            info.AddValue("id",(UInt16)10);
+            info.AddValue("configurationCell", (IConfigurationCell)m_ConfigurationCellCase.ConfigurationCell, typeof(IConfigurationCell));
+            info.AddValue("statusFlags", (UInt16)1);
+            info.AddValue("phasorValues", m_ConfigurationCellCase.PhasorValueCollection, typeof(PhasorValueCollection));
+            info.AddValue("frequencyValue",(IFrequencyValue)m_ConfigurationCellCase.FrequencyValue,typeof(IFrequencyValue));
+            info.AddValue("analogValues",m_ConfigurationCellCase.AnalogValueCollection,typeof(AnalogValueCollection));
+            info.AddValue("digitalValues",m_ConfigurationCellCase.DigitalValueCollection,typeof(DigitalValueCollection));
+
+            m_context = new StreamingContext(StreamingContextStates.CrossAppDomain,target);
+
+
+            //target.StatusFlags = m_ConfigurationCellCase.
+
+            target = new DataCellBaseWrapper(info, m_context);
+            m_IMeasurementCase = new IMeasurementCase();
+
+        }
+        //
+        //Use TestCleanup to run code after each test has run
+        [TestCleanup()]
+        public void MyTestCleanup()
+        {
+        }
+        //
+        #endregion
+
+        #region [ Methods ]
+        /// <summary>
+        ///A test for Equals
+        ///TODO: Passing measurement into target induce self referenced call.
+        ///</summary>
+        [TestMethod()]
+        public void EqualsTest()
+        {
+
+            //object obj = target;
+            //bool expected = true;
+            //bool actual;
+            // actual = target.Equals(obj);
+            //Assert.AreEqual(expected, actual);
+            Assert.IsTrue(false);
+
+        }
+
+        /// <summary>
+        ///A test for GetHashCode
+        ///</summary>
+        [TestMethod()]
+        public void GetHashCodeTest()
+        {
+            int expected = 0;
+            int actual;
+            actual = target.GetHashCode();
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for GetObjectData
+        ///</summary>
+        [TestMethod()]
+        public void GetObjectDataTest()
+        {
+            SerializationInfo info = new SerializationInfo(typeof(DataCellBase),m_converter);
+            StreamingContext context = new StreamingContext();
+            try
+            {
+                target.GetObjectData(info, context);
+                Assert.IsTrue(true);
+            }
+            catch
+            {
+                Assert.IsTrue(false);
+            }
+
+        }
+
+        /// <summary>
+        ///A test for System.IComparable.CompareTo
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void CompareToTest()
+        {
+            System.IComparable target = this.target;
+            object obj = target;
+            int expected = 0;
+            int actual;
+            actual = target.CompareTo(obj);
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for System.IComparable<TimeSeriesFramework.ITimeSeriesValue>.CompareTo
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void CompareToTest1()
+        {
+            System.IComparable<TimeSeriesFramework.ITimeSeriesValue> target = m_IMeasurementCase.Measurement;
+            TimeSeriesFramework.ITimeSeriesValue other = m_IMeasurementCase.Measurement;
+            int expected = 0;
+            int actual;
+            actual = target.CompareTo(other);
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for System.IEquatable<TimeSeriesFramework.ITimeSeriesValue>.Equals
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void EqualsTest1()
+        {
+            System.IEquatable<TimeSeriesFramework.ITimeSeriesValue> target = m_IMeasurementCase.Measurement;
+            TimeSeriesFramework.ITimeSeriesValue other = m_IMeasurementCase.Measurement;
+            bool expected = true;
+            bool actual;
+            actual = target.Equals(other);
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.ITimeSeriesValue.GetHashCode
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void GetHashCodeTest1()
+        {
+            TimeSeriesFramework.ITimeSeriesValue target = m_IMeasurementCase.Measurement;
+            int expected = m_IMeasurementCase.Measurement.ID.GetHashCode();
+            int actual;
+            actual = target.GetHashCode();
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for ToString
+        ///</summary>
+        [TestMethod()]
+        public void ToStringTest()
+        {
+            string expected = "PMU.001 [:0]";
+            string actual;
+            actual = target.ToString();
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for AllValuesAssigned
+        ///</summary>
+        [TestMethod()]
+        public void AllValuesAssignedTest()
+        {
+
+            bool actual;
+            actual = target.AllValuesAssigned;
+
+        }
+
+        /// <summary>
+        ///A test for AnalogValues
+        ///</summary>
+        [TestMethod()]
+        public void AnalogValuesTest()
+        {
+
+            GSF.PhasorProtocols.AnalogValueCollection actual;
+            actual = target.AnalogValues;
+
+        }
+
+        /// <summary>
+        ///A test for Attributes
+        ///</summary>
+        [TestMethod()]
+        public void AttributesTest()
+        {
+
+            System.Collections.Generic.Dictionary<string, string> actual;
+            actual = target.Attributes;
+
+        }
+
+        /// <summary>
+        ///A test for CommonStatusFlags
+        ///</summary>
+        [TestMethod()]
+        public void CommonStatusFlagsTest()
+        {
+
+            uint expected = 0;
+            uint actual;
+            target.CommonStatusFlags = expected;
+            actual = target.CommonStatusFlags;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for ConfigurationCell
+        ///</summary>
+        [TestMethod()]
+        public void ConfigurationCellTest()
+        {
+
+            GSF.PhasorProtocols.IConfigurationCell expected = m_ConfigurationCellCase.ConfigurationCell;
+            GSF.PhasorProtocols.IConfigurationCell actual;
+            target.ConfigurationCell = expected;
+            actual = target.ConfigurationCell;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for DataIsValid
+        ///</summary>
+        [TestMethod()]
+        public void DataIsValidTest()
+        {
+
+            bool expected = false;
+            bool actual;
+            target.DataIsValid = expected;
+            actual = target.DataIsValid;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for DataSortingType
+        ///</summary>
+        [TestMethod()]
+        public void DataSortingTypeTest()
+        {
+
+            GSF.PhasorProtocols.DataSortingType expected = new GSF.PhasorProtocols.DataSortingType();
+            GSF.PhasorProtocols.DataSortingType actual;
+            target.DataSortingType = expected;
+            actual = target.DataSortingType;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for DeviceError
+        ///</summary>
+        [TestMethod()]
+        public void DeviceErrorTest()
+        {
+
+            bool expected = false;
+            bool actual;
+            target.DeviceError = expected;
+            actual = target.DeviceError;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for DigitalValues
+        ///</summary>
+        [TestMethod()]
+        public void DigitalValuesTest()
+        {
+
+            GSF.PhasorProtocols.DigitalValueCollection actual;
+            actual = target.DigitalValues;
+
+        }
+
+        /// <summary>
+        ///A test for FrequencyValue
+        ///</summary>
+        [TestMethod()]
+        public void FrequencyValueTest()
+        {
+
+            GSF.PhasorProtocols.IFrequencyValue expected = m_ConfigurationCellCase.FrequencyValue;
+            GSF.PhasorProtocols.IFrequencyValue actual;
+            target.FrequencyValue = expected;
+            actual = target.FrequencyValue;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for IDCode
+        ///</summary>
+        [TestMethod()]
+        public void IDCodeTest()
+        {
+            ushort expected = 1;
+            ushort actual;
+            actual = target.IDCode;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for IDLabel
+        ///</summary>
+        [TestMethod()]
+        public void IDLabelTest()
+        {
+
+            string actual;
+            actual = target.IDLabel;
+
+        }
+
+        /// <summary>
+        ///A test for Parent
+        ///</summary>
+        [TestMethod()]
+        public void ParentTest()
+        {
+
+            GSF.PhasorProtocols.IDataFrame expected = m_ConfigurationCellCase.DataFrame;
+            GSF.PhasorProtocols.IDataFrame actual;
+            target.Parent = expected;
+            actual = target.Parent;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for PhasorValues
+        ///</summary>
+        [TestMethod()]
+        public void PhasorValuesTest()
+        {
+
+            GSF.PhasorProtocols.PhasorValueCollection actual;
+            actual = target.PhasorValues;
+
+        }
+
+        /// <summary>
+        ///A test for State
+        ///</summary>
+        [TestMethod()]
+        public void StateTest()
+        {
+
+            GSF.PhasorProtocols.IDataCellParsingState expected = m_ConfigurationCellCase.DataCell.State;
+            GSF.PhasorProtocols.IDataCellParsingState actual;
+            target.State = expected;
+            actual = target.State;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for StationName
+        ///</summary>
+        [TestMethod()]
+        public void StationNameTest()
+        {
+            string expected = "PMU.001";
+            string actual = target.StationName;
+            Assert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        ///A test for StatusFlags
+        ///</summary>
+        [TestMethod()]
+        public void StatusFlagsTest()
+        {
+
+            ushort expected = 0;
+            ushort actual;
+            target.StatusFlags = expected;
+            actual = target.StatusFlags;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for SynchronizationIsValid
+        ///</summary>
+        [TestMethod()]
+        public void SynchronizationIsValidTest()
+        {
+
+            bool expected = false;
+            bool actual;
+            target.SynchronizationIsValid = expected;
+            actual = target.SynchronizationIsValid;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.Adder
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void AdderTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            double expected = 0F;
+            double actual;
+            target.Adder = expected;
+            actual = target.Adder;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.AdjustedValue
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void AdjustedValueTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            double actual;
+            actual = target.AdjustedValue;
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.Key
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void KeyTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            TimeSeriesFramework.MeasurementKey expected = new TimeSeriesFramework.MeasurementKey();
+            TimeSeriesFramework.MeasurementKey actual;
+            target.Key = expected;
+            actual = target.Key;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.MeasurementValueFilter
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void MeasurementValueFilterTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            TimeSeriesFramework.MeasurementValueFilterFunction expected = null;
+            TimeSeriesFramework.MeasurementValueFilterFunction actual;
+            target.MeasurementValueFilter = expected;
+            actual = target.MeasurementValueFilter;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.Multiplier
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void MultiplierTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            double expected = 0F;
+            double actual;
+            target.Multiplier = expected;
+            actual = target.Multiplier;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.PublishedTimestamp
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void PublishedTimestampTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            GSF.Ticks expected = new GSF.Ticks();
+            GSF.Ticks actual;
+            target.PublishedTimestamp = expected;
+            actual = target.PublishedTimestamp;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.ReceivedTimestamp
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void ReceivedTimestampTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            GSF.Ticks expected = new GSF.Ticks();
+            GSF.Ticks actual;
+            target.ReceivedTimestamp = expected;
+            actual = target.ReceivedTimestamp;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.StateFlags
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void StateFlagsTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            TimeSeriesFramework.MeasurementStateFlags expected = new TimeSeriesFramework.MeasurementStateFlags();
+            TimeSeriesFramework.MeasurementStateFlags actual;
+            target.StateFlags = expected;
+            actual = target.StateFlags;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.IMeasurement.TagName
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void TagNameTest()
+        {
+            TimeSeriesFramework.IMeasurement target = m_IMeasurementCase.Measurement;
+            string expected = string.Empty;
+            string actual;
+            target.TagName = expected;
+            actual = target.TagName;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.ITimeSeriesValue.ID
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void IDTest()
+        {
+            TimeSeriesFramework.ITimeSeriesValue target = this.target;
+            System.Guid expected = new System.Guid();
+            System.Guid actual;
+            target.ID = expected;
+            actual = target.ID;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.ITimeSeriesValue.Timestamp
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void TimestampTest()
+        {
+            TimeSeriesFramework.ITimeSeriesValue target = m_IMeasurementCase.Measurement;
+            GSF.Ticks expected = new GSF.Ticks();
+            GSF.Ticks actual;
+            target.Timestamp = expected;
+            actual = target.Timestamp;
+            Assert.AreEqual(expected, actual);
+
+        }
+
+        /// <summary>
+        ///A test for TimeSeriesFramework.ITimeSeriesValue<System.Double>.Value
+        ///</summary>
+        [TestMethod()]
+        [DeploymentItem("GSF.PhasorProtocols.dll")]
+        public void ValueTest1()
+        {
+            TimeSeriesFramework.ITimeSeriesValue<double> target = m_IMeasurementCase.Measurement;
+            double expected = 10F;
+            double actual;
+            target.Value = expected;
+            actual = target.Value;
+            Assert.AreEqual(expected, actual);
+
+        }
+        #endregion
+    }
+}

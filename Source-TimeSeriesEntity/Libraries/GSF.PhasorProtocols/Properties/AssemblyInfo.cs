@@ -23,6 +23,7 @@
 
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
@@ -32,6 +33,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
+// Make internals visible due to unit testing.
+[assembly: InternalsVisibleTo("GSF.TestsSuite")]
+[assembly: InternalsVisibleTo("GSF.Core.Tests")]
+[assembly: InternalsVisibleTo("GSF.PhasorProtocols.Tests")]
 
 // Assembly manifest attributes.
 #if DEBUG
