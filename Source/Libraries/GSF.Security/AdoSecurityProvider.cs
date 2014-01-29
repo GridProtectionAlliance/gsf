@@ -821,7 +821,7 @@ namespace GSF.Security
                     {
                         // New user access granted
                         message = string.Format("Initial Encounter: user \"{0}\" attempted login with no assigned roles.", UserData.Username);
-                        entryType = EventLogEntryType.Information;
+                        entryType = EventLogEntryType.FailureAudit;
                         rolesChanged = true;
                     }
                     else
@@ -838,7 +838,7 @@ namespace GSF.Security
                     {
                         // New user access granted
                         message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - role assignment that existed at last login was \"{1}\".", UserData.Username, cachedRoles.ToDelimitedString(", "));
-                        entryType = EventLogEntryType.Information;
+                        entryType = EventLogEntryType.FailureAudit;
                         rolesChanged = true;
                     }
                     else
@@ -855,7 +855,7 @@ namespace GSF.Security
                     {
                         // New user access granted
                         message = string.Format("Subsequent Encounter: user \"{0}\" attempted login with no assigned roles - same as last login attempt.", UserData.Username);
-                        entryType = EventLogEntryType.Information;
+                        entryType = EventLogEntryType.FailureAudit;
                         rolesChanged = true;
                     }
                     else
