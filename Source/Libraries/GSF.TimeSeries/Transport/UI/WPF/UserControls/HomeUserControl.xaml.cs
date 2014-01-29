@@ -40,6 +40,7 @@ using GSF.Communication;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
+using GSF.Identity;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.Reflection;
 using GSF.ServiceProcess;
@@ -191,7 +192,18 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 }
             }
 
-            TextBlockUser.Text = CommonFunctions.CurrentUser;
+            try
+            {
+                using (UserInfo info = new UserInfo(CommonFunctions.CurrentUser))
+                {
+                    info.Initialize();
+                    TextBlockUser.Text = info.LoginID;
+                }
+            }
+            catch
+            {
+                TextBlockUser.Text = CommonFunctions.CurrentUser;
+            }
 
             ((HorizontalAxis)ChartPlotterDynamic.MainHorizontalAxis).LabelProvider.LabelStringFormat = "";
 

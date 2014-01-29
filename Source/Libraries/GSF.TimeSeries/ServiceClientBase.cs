@@ -53,6 +53,7 @@ namespace GSF.TimeSeries
         // Fields
         private bool m_telnetActive;
         private volatile bool m_authenticated;
+        private readonly object m_displayLock;
 
         private readonly ConsoleColor m_originalBgColor;
         private readonly ConsoleColor m_originalFgColor;
@@ -77,6 +78,7 @@ namespace GSF.TimeSeries
             // Save the color scheme.
             m_originalBgColor = System.Console.BackgroundColor;
             m_originalFgColor = System.Console.ForegroundColor;
+            m_displayLock = new object();
 
             // Register event handlers.
             m_clientHelper.AuthenticationSuccess += ClientHelper_AuthenticationSuccess;
@@ -148,7 +150,7 @@ namespace GSF.TimeSeries
                     {
                         if (serviceController.Status == ServiceControllerStatus.Running)
                         {
-                            System.Console.WriteLine("Attempting to stop the {0} Windows service...", serviceName);
+                            WriteLine("Attempting to stop the {0} Windows service...", serviceName);
 
                             serviceController.Stop();
 
@@ -156,17 +158,17 @@ namespace GSF.TimeSeries
                             serviceController.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20.0D));
 
                             if (serviceController.Status == ServiceControllerStatus.Stopped)
-                                System.Console.WriteLine("Successfully stopped the {0} Windows service.", serviceName);
+                                WriteLine("Successfully stopped the {0} Windows service.", serviceName);
                             else
-                                System.Console.WriteLine("Failed to stop the {0} Windows service after trying for 20 seconds...", serviceName);
+                                WriteLine("Failed to stop the {0} Windows service after trying for 20 seconds...", serviceName);
 
                             // Add an extra line for visual separation of service termination status
-                            System.Console.WriteLine("");
+                            WriteLine("");
                         }
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine("Failed to stop the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                        WriteLine("Failed to stop the {0} Windows service: {1}\r\n", serviceName, ex.Message);
                     }
                 }
 
@@ -178,7 +180,7 @@ namespace GSF.TimeSeries
                     if (instances.Length > 0)
                     {
                         int total = 0;
-                        System.Console.WriteLine("Attempting to stop running instances of the {0}...", serviceName);
+                        WriteLine("Attempting to stop running instances of the {0}...", serviceName);
 
                         // Terminate all instances of service running on the local computer
                         foreach (Process process in instances)
@@ -188,15 +190,15 @@ namespace GSF.TimeSeries
                         }
 
                         if (total > 0)
-                            System.Console.WriteLine("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : "");
+                            WriteLine("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : "");
 
                         // Add an extra line for visual separation of process termination status
-                        System.Console.WriteLine("");
+                        WriteLine("");
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Console.WriteLine("Failed to terminate running instances of the {0}: {1}\r\n", serviceName, ex.Message);
+                    WriteLine("Failed to terminate running instances of the {0}: {1}\r\n", serviceName, ex.Message);
                 }
 
                 // Attempt to restart Windows service...
@@ -212,7 +214,7 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine("Failed to restart the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                        WriteLine("Failed to restart the {0} Windows service: {1}\r\n", serviceName, ex.Message);
                     }
                 }
             }
@@ -245,15 +247,15 @@ namespace GSF.TimeSeries
                             prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
                             prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
                             prompt.AppendLine();
-                            System.Console.Write(prompt.ToString());
+                            Write(prompt.ToString());
 
                             // Capture the user name.
-                            System.Console.Write("Enter user name: ");
+                            Write("Enter user name: ");
                             username = System.Console.ReadLine();
 
                             // Capture the password.
                             ConsoleKeyInfo key;
-                            System.Console.Write("Enter password: ");
+                            Write("Enter password: ");
                             while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
                             {
                                 passwordBuilder.Append(key.KeyChar);
@@ -275,7 +277,7 @@ namespace GSF.TimeSeries
                             userInput = System.Console.ReadLine();
 
                             // Write a blank line to the console.
-                            System.Console.WriteLine();
+                            WriteLine();
 
                             if (!string.IsNullOrWhiteSpace(userInput))
                             {
@@ -480,7 +482,7 @@ namespace GSF.TimeSeries
             help.AppendLine();
             help.AppendLine();
 
-            System.Console.Write(help.ToString());
+            Write(help.ToString());
         }
 
         /// <summary>
@@ -500,22 +502,25 @@ namespace GSF.TimeSeries
         /// <param name="e">Event argument containing update type and associated message data.</param>
         protected virtual void ClientHelper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
         {
-            // Output status updates from the service to the console window.
-            switch (e.Argument1)
+            lock (m_displayLock)
             {
-                case UpdateType.Alarm:
-                    System.Console.ForegroundColor = ConsoleColor.Red;
-                    break;
-                case UpdateType.Information:
-                    System.Console.ForegroundColor = m_originalFgColor;
-                    break;
-                case UpdateType.Warning:
-                    System.Console.ForegroundColor = ConsoleColor.Yellow;
-                    break;
-            }
+                // Output status updates from the service to the console window.
+                switch (e.Argument1)
+                {
+                    case UpdateType.Alarm:
+                        System.Console.ForegroundColor = ConsoleColor.Red;
+                        break;
+                    case UpdateType.Information:
+                        System.Console.ForegroundColor = m_originalFgColor;
+                        break;
+                    case UpdateType.Warning:
+                        System.Console.ForegroundColor = ConsoleColor.Yellow;
+                        break;
+                }
 
-            System.Console.Write(e.Argument2);
-            System.Console.ForegroundColor = m_originalFgColor;
+                Write(e.Argument2);
+                System.Console.ForegroundColor = m_originalFgColor;
+            }
         }
 
         /// <summary>
@@ -532,23 +537,26 @@ namespace GSF.TimeSeries
             {
                 string message = e.Argument.Message;
 
-                if (responseSuccess)
+                lock (m_displayLock)
                 {
-                    if (string.IsNullOrWhiteSpace(message))
-                        System.Console.Write("{0} command processed successfully.\r\n\r\n", sourceCommand);
+                    if (responseSuccess)
+                    {
+                        if (string.IsNullOrWhiteSpace(message))
+                            Write("{0} command processed successfully.\r\n\r\n", sourceCommand);
+                        else
+                            Write("{0}\r\n\r\n", message);
+                    }
                     else
-                        System.Console.Write("{0}\r\n\r\n", message);
-                }
-                else
-                {
-                    System.Console.ForegroundColor = ConsoleColor.Red;
+                    {
+                        System.Console.ForegroundColor = ConsoleColor.Red;
 
-                    if (string.IsNullOrWhiteSpace(message))
-                        System.Console.Write("{0} failure.\r\n\r\n", sourceCommand);
-                    else
-                        System.Console.Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
+                        if (string.IsNullOrWhiteSpace(message))
+                            Write("{0} failure.\r\n\r\n", sourceCommand);
+                        else
+                            Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
 
-                    System.Console.ForegroundColor = m_originalFgColor;
+                        System.Console.ForegroundColor = m_originalFgColor;
+                    }
                 }
             }
         }
@@ -562,9 +570,13 @@ namespace GSF.TimeSeries
         {
             // Change the console color scheme to indicate active telnet session.
             m_telnetActive = true;
-            System.Console.BackgroundColor = ConsoleColor.Blue;
-            System.Console.ForegroundColor = ConsoleColor.Gray;
-            System.Console.Clear();
+
+            lock (m_displayLock)
+            {
+                System.Console.BackgroundColor = ConsoleColor.Blue;
+                System.Console.ForegroundColor = ConsoleColor.Gray;
+                System.Console.Clear();
+            }
         }
 
         /// <summary>
@@ -576,9 +588,43 @@ namespace GSF.TimeSeries
         {
             // Revert to original color scheme to indicate end of telnet session.
             m_telnetActive = false;
-            System.Console.BackgroundColor = m_originalBgColor;
-            System.Console.ForegroundColor = m_originalFgColor;
-            System.Console.Clear();
+
+            lock (m_displayLock)
+            {
+                System.Console.BackgroundColor = m_originalBgColor;
+                System.Console.ForegroundColor = m_originalFgColor;
+                System.Console.Clear();
+            }
+        }
+
+        private void Write(string format, params object[] args)
+        {
+            lock (m_displayLock)
+            {
+                if (args.Length == 0)
+                    System.Console.Write(format);
+                else
+                    System.Console.Write(format, args);
+            }
+        }
+
+        private void WriteLine()
+        {
+            lock (m_displayLock)
+            {
+                System.Console.WriteLine();
+            }
+        }
+
+        private void WriteLine(string format, params object[] args)
+        {
+            lock (m_displayLock)
+            {
+                if (args.Length == 0)
+                    System.Console.WriteLine(format);
+                else
+                    System.Console.WriteLine(format, args);
+            }
         }
 
         #endregion
