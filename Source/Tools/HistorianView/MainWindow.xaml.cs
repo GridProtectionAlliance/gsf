@@ -342,6 +342,7 @@ namespace HistorianView
         private DateTime m_startTime;
         private DateTime m_endTime;
         private string[] m_tokens;
+        private bool m_showDisabledPoints;
 
         private readonly ICollection<MenuItem> m_contextMenuItems;
         private readonly ICollection<string> m_visibleColumns;
@@ -416,6 +417,7 @@ namespace HistorianView
 
                 m_exportButton.IsEnabled = value;
                 m_exportMenuItem.IsEnabled = value;
+                ShowDisabledMenuItem.IsEnabled = value;
             }
         }
 
@@ -511,8 +513,7 @@ namespace HistorianView
             {
                 foreach (MetadataRecord record in reader.MetadataFile.Read())
                 {
-                    if (record.GeneralFlags.Enabled)
-                        m_metadata.Add(new MetadataWrapper(record));
+                    m_metadata.Add(new MetadataWrapper(record));
                 }
             }
 
@@ -735,7 +736,7 @@ namespace HistorianView
         {
             m_tokens = m_searchBox.Text.Split(' ');
 
-            m_dataGrid.ItemsSource = m_metadata.Where(metadata => !string.IsNullOrEmpty(metadata.Name))
+            m_dataGrid.ItemsSource = m_metadata.Where(metadata => !string.IsNullOrEmpty(metadata.Name) && (m_showDisabledPoints || metadata.GetMetadata().GeneralFlags.Enabled))
                 .Select(metadata => new Tuple<MetadataWrapper, bool>(metadata, SearchProperties(metadata, m_tokens)))
                 .Where(tuple => tuple.Item1.Export || tuple.Item2)
                 .OrderByDescending(tuple => tuple.Item2)
@@ -1413,6 +1414,14 @@ namespace HistorianView
         private void ExportControl_Click(object sender, RoutedEventArgs e)
         {
             ExportRequested();
+        }
+
+        // Shows or hides disabled points in the grid.
+        private void ShowDisabledControl_Click(object sender, RoutedEventArgs e)
+        {
+            m_showDisabledPoints = !m_showDisabledPoints;
+            ShowDisabledCheckMark.Visibility = m_showDisabledPoints ? Visibility.Visible : Visibility.Collapsed;
+            FilterBySearchResults();
         }
 
         // Displays the chart window.

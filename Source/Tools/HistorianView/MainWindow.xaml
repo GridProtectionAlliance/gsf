@@ -99,6 +99,12 @@
                         <Image Source="/HistorianView;component/Icons/table_edit.png" MaxWidth="20" MaxHeight="20" />
                     </MenuItem.Icon>
                 </MenuItem>
+                <Separator />
+                <MenuItem Header="Show Disabled Points" Name="ShowDisabledMenuItem" IsEnabled="False" Click="ShowDisabledControl_Click">
+                    <MenuItem.Icon>
+                        <Image Name="ShowDisabledCheckMark" Source="/HistorianView;component/Icons/navigate_check.png" MaxWidth="20" MaxHeight="20" Visibility="Collapsed" />
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
         </Menu>
         <ToolBarTray DockPanel.Dock="Top">
