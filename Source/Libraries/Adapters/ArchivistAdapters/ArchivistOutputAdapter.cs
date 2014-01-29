@@ -58,7 +58,7 @@ namespace ArchivistAdapters
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CsvOutputAdapter"/> class.
+        /// Initializes a new instance of the <see cref="ArchivistOutputAdapter"/> class.
         /// </summary>
         public ArchivistOutputAdapter()
         {
@@ -110,7 +110,7 @@ namespace ArchivistAdapters
 
         /// <summary>
         /// Returns a flag that determines if measurements sent to this
-        /// <see cref="CsvOutputAdapter"/> are destined for archival.
+        /// <see cref="ArchivistOutputAdapter"/> are destined for archival.
         /// </summary>
         public override bool OutputIsForArchive
         {
@@ -121,7 +121,7 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Gets a flag that determines if this <see cref="CsvOutputAdapter"/>
+        /// Gets a flag that determines if this <see cref="ArchivistOutputAdapter"/>
         /// uses an asynchronous connection.
         /// </summary>
         protected override bool UseAsyncConnect
@@ -177,7 +177,7 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Attempts to connect to this <see cref="CsvOutputAdapter"/>.
+        /// Attempts to connect to this <see cref="ArchivistOutputAdapter"/>.
         /// </summary>
         protected override void AttemptConnection()
         {
@@ -185,7 +185,7 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Attempts to disconnect from this <see cref="CsvOutputAdapter"/>.
+        /// Attempts to disconnect from this <see cref="ArchivistOutputAdapter"/>.
         /// </summary>
         protected override void AttemptDisconnection()
         {
@@ -213,7 +213,7 @@ namespace ArchivistAdapters
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="CsvOutputAdapter"/>.
+        /// Gets a short one-line status of this <see cref="ArchivistOutputAdapter"/>.
         /// </summary>
         /// <param name="maxLength">Maximum length of the status message.</param>
         /// <returns>Text of the status message.</returns>
