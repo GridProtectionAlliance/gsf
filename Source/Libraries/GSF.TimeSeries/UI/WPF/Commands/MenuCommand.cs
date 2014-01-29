@@ -150,7 +150,7 @@ namespace GSF.TimeSeries.UI.Commands
             if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
                 securityProvider = SecurityProviderCache.CurrentProvider;
 
-            return currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any() &&
+            return ((object)securityProvider != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any() &&
                 (string.IsNullOrEmpty(Roles) || Roles == "*" || currentPrincipal.IsInRole(Roles));
         }
 

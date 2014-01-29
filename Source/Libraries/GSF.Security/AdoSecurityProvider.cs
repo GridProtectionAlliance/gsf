@@ -554,6 +554,10 @@ namespace GSF.Security
             {
                 AuthenticationFailureReason = string.Format("User \"{0}\" has an expired password or password has not been set.", UserData.LoginID);
             }
+            else if (UserData.Roles.Count == 0)
+            {
+                AuthenticationFailureReason = string.Format("User \"{0}\" has not been assigned any roles and therefore has no rights. Contact your administrator.", UserData.LoginID);
+            }
             else
             {
                 try
@@ -563,16 +567,14 @@ namespace GSF.Security
                     {
                         // Authenticate against active directory (via LDAP base class) - in context of ADO security
                         // provisions, you are only authenticated if you are in a role!
-                        UserData.IsAuthenticated = (base.Authenticate(password) && UserData.Roles.Count > 0);
+                        UserData.IsAuthenticated = (base.Authenticate(password));
                     }
                     else
                     {
                         Password = password;
 
                         // Authenticate against backend data store
-                        UserData.IsAuthenticated = UserData.Roles.Count > 0;
-
-                        UserData.IsAuthenticated &=
+                        UserData.IsAuthenticated =
                             UserData.Password == password ||
                             UserData.Password == SecurityProviderUtility.EncryptPassword(password) ||
                             UserData.Password == EncryptBackwardsCompatible(password);
