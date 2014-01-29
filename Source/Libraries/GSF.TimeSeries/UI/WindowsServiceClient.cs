@@ -194,18 +194,22 @@ namespace GSF.TimeSeries.UI
             Dictionary<string, string> settings;
             string setting;
 
+            SimplePolicyChecker certificateChecker;
             TlsClient remotingClient;
+
             SslProtocols enabledSslProtocols;
             SslPolicyErrors validPolicyErrors;
             X509ChainStatusFlags validChainFlags;
 
             // Initialize remoting client socket.
+            certificateChecker = new SimplePolicyChecker();
             remotingClient = new TlsClient();
             remotingClient.ConnectionString = connectionString;
             remotingClient.PayloadAware = true;
             remotingClient.IgnoreInvalidCredentials = true;
             remotingClient.MaxConnectionAttempts = -1;
             remotingClient.RemoteCertificateValidationCallback = RemoteCertificateValidationCallback;
+            remotingClient.CertificateChecker = certificateChecker;
 
             // Parse connection string into key-value pairs
             settings = connectionString.ParseKeyValuePairs();
@@ -220,10 +224,10 @@ namespace GSF.TimeSeries.UI
 
             // See if the user has explicitly defined valid policy errors or valid chain flags
             if (settings.TryGetValue("validPolicyErrors", out setting) && Enum.TryParse(setting, out validPolicyErrors))
-                remotingClient.ValidPolicyErrors = validPolicyErrors;
+                certificateChecker.ValidPolicyErrors = validPolicyErrors;
 
             if (settings.TryGetValue("validChainFlags", out setting) && Enum.TryParse(setting, out validChainFlags))
-                remotingClient.ValidChainFlags = validChainFlags;
+                certificateChecker.ValidChainFlags = validChainFlags;
 
             // See if the user has explicitly defined whether to execute revocation checks on server certificates
             if (settings.TryGetValue("checkCertificateRevocation", out setting) && !string.IsNullOrWhiteSpace(setting))
@@ -237,7 +241,6 @@ namespace GSF.TimeSeries.UI
             TlsClient remotingClient;
             IPEndPoint remoteEndPoint;
             IPHostEntry localhost;
-            SimplePolicyChecker policyChecker;
 
             remotingClient = m_remotingClient as TlsClient;
 
@@ -254,12 +257,8 @@ namespace GSF.TimeSeries.UI
                         return true;
                 }
 
-                // Not connected to localhost, so use the policy checker
-                policyChecker = new SimplePolicyChecker();
-                policyChecker.ValidPolicyErrors = remotingClient.ValidPolicyErrors;
-                policyChecker.ValidChainFlags = remotingClient.ValidChainFlags;
-
-                return policyChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
+                // Not connected to localhost, so use the certificate checker
+                return remotingClient.CertificateChecker.ValidateRemoteCertificate(sender, certificate, chain, sslPolicyErrors);
             }
 
             return false;
