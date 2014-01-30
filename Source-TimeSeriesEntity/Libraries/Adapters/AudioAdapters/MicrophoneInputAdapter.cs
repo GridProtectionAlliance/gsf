@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using GSF;
@@ -140,7 +141,7 @@ namespace AudioAdapters
             Interlocked.Exchange(ref m_lastSampleTime, 0L);
             m_samplesProcessed = 0L;
 
-            if (m_channels != OutputMeasurements.Length)
+            if (m_channels != OutputSignalIDs.Count)
                 OnStatusMessage("WARNING: Number of output measurements does not match the number of channels.");
 
             m_waveIn.DataAvailable += WaveIn_DataAvailable;
@@ -249,10 +250,12 @@ namespace AudioAdapters
         {
             int index = 0;
             int numSamples = waveInEventArgs.BytesRecorded / m_sampleSize / m_channels;
-            List<IMeasurement> measurements = new List<IMeasurement>();
+            List<ITimeSeriesEntity> measurements = new List<ITimeSeriesEntity>();
 
-            long sampleTime;
+            Guid channelID;
+            SignalReference signalReference;
             LittleBinaryValue sampleValue;
+            long sampleTime;
 
             // Get the timestamp for the first recorded sample
             if (Interlocked.Read(ref m_lastSampleTime) == 0L)
@@ -267,11 +270,16 @@ namespace AudioAdapters
                 // Parse one value per channel per sample
                 for (int channelIndex = 0; channelIndex < m_channels; channelIndex++)
                 {
-                    if (channelIndex < OutputMeasurements.Length)
+                    if (channelIndex < OutputSignalIDs.Count)
                     {
                         // Create a measurement for this value
-                        sampleValue = new LittleBinaryValue(m_sampleTypeCode, waveInEventArgs.Buffer, index + (channelIndex * m_sampleSize), m_sampleSize);
-                        measurements.Add(Measurement.Clone(OutputMeasurements[channelIndex], ConvertToPCM16(sampleValue.ConvertToType(TypeCode.Double).ToDouble()), sampleTime));
+                        channelID = OutputSignalIDs.FirstOrDefault(signalID => this.TryGetSignalReference(signalID, out signalReference) && (signalReference.Index - 1) == channelIndex);
+
+                        if (channelID != Guid.Empty)
+                        {
+                            sampleValue = new LittleBinaryValue(m_sampleTypeCode, waveInEventArgs.Buffer, index + (channelIndex * m_sampleSize), m_sampleSize);
+                            measurements.Add(new Measurement<double>(channelID, sampleTime, ConvertToPCM16(sampleValue.ConvertToType(TypeCode.Double).ToDouble())));
+                        }
                     }
                 }
 
@@ -286,7 +294,7 @@ namespace AudioAdapters
             }
 
             // Publish streaming microphone data
-            OnNewMeasurements(measurements);
+            OnNewEntities(measurements);
             m_samplesProcessed += numSamples;
         }
 

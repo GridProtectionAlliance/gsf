@@ -558,6 +558,33 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Attempts to lookup meta-data associated with the specified <paramref name="signalID"/>.
+        /// </summary>
+        /// <param name="adapter">Adapter to get meta-data for.</param>
+        /// <param name="signalID">The <see cref="Guid"/> for the signal to look up the meta-data.</param>
+        /// <param name="signalReference">The signal reference to return.</param>
+        /// <param name="measurementTable">Measurement table name to search for meta-data.</param>
+        /// <param name="signalReferenceColumn">Name of column that contains the data to parse as a signal reference.</param>
+        /// <returns><c>true</c> if meta-data record for <paramref name="signalID"/> was found; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="adapter"/> is <c>null</c>.</exception>
+        public static bool TryGetSignalReference(this IAdapter adapter, Guid signalID, out SignalReference signalReference, string measurementTable = "ActiveMeasurements", string signalReferenceColumn = "ID")
+        {
+            DataRow row;
+
+            if (adapter.TryGetMetadata(signalID, out row, measurementTable))
+            {
+                if (row.Table.Columns.Contains("SignalReference"))
+                {
+                    signalReference = new SignalReference(row["SignalReference"].ToNonNullString());
+                    return true;
+                }
+            }
+
+            signalReference = default(SignalReference);
+            return false;
+        }
+
+        /// <summary>
         /// Gets a formatted string representing the <paramref name="signalID"/> in human identifiable form.
         /// </summary>
         /// <param name="adapter">Adapter to get meta-data for.</param>

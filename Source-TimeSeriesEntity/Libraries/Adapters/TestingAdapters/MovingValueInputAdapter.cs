@@ -346,7 +346,7 @@ namespace TestingAdapters
         /// </returns>
         public override string GetShortStatus(int maxLength)
         {
-            return string.Format("{0} values generated between {1} and {2} so far...", ProcessedMeasurements, m_minValue, m_maxValue).CenterText(maxLength);
+            return string.Format("{0} values generated between {1} and {2} so far...", ProcessedEntities, m_minValue, m_maxValue).CenterText(maxLength);
         }
 
         /// <summary>
@@ -354,20 +354,20 @@ namespace TestingAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_values = Enumerable.Repeat(m_maxValue - m_minValue, OutputMeasurements.Length)
+            m_values = Enumerable.Repeat(m_maxValue - m_minValue, OutputSignalIDs.Count)
                 .Select(range => Generator.NextDouble() * range + m_minValue)
                 .ToArray();
 
-            m_countdowns = Enumerable.Repeat(m_maxHoldTime - m_minHoldTime, OutputMeasurements.Length)
+            m_countdowns = Enumerable.Repeat(m_maxHoldTime - m_minHoldTime, OutputSignalIDs.Count)
                 .Select(range => Generator.NextDouble() * range + m_minHoldTime)
                 .ToArray();
 
-            m_moveFlags = new bool[OutputMeasurements.Length];
+            m_moveFlags = new bool[OutputSignalIDs.Count];
             m_lastPublication = ToPublicationTime(DateTime.Now.Ticks);
 
-            m_totalMoveTimes = new double[OutputMeasurements.Length];
-            m_accelerations = new double[OutputMeasurements.Length];
-            m_lastHoldValues = new double[OutputMeasurements.Length];
+            m_totalMoveTimes = new double[OutputSignalIDs.Count];
+            m_accelerations = new double[OutputSignalIDs.Count];
+            m_lastHoldValues = new double[OutputSignalIDs.Count];
 
             using (Timer timer = m_timer)
             {
@@ -431,12 +431,12 @@ namespace TestingAdapters
             {
                 delta = Ticks.ToSeconds(nextPublication - m_lastPublication);
 
-                for (int i = 0; i < OutputMeasurements.Length; i++)
+                for (int i = 0; i < OutputSignalIDs.Count; i++)
                     Advance(i, delta);
 
-                OnNewMeasurements(OutputMeasurements
-                    .Select((measurement, index) => Measurement.Clone(measurement, GetWrappedValue(index), nextPublication))
-                    .ToList<IMeasurement>());
+                OnNewEntities(OutputSignalIDs
+                    .Select((signalID, index) => new Measurement<double>(signalID, nextPublication, GetWrappedValue(index)))
+                    .ToList<ITimeSeriesEntity>());
 
                 m_lastPublication = nextPublication;
                 nextPublication = GetNextPublicationTime(m_lastPublication);
