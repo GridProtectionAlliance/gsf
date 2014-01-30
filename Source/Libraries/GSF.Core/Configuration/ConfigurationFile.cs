@@ -69,6 +69,7 @@ using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Xml;
 using GSF.IO;
+using GSF.Threading;
 using GSF.Xml;
 
 namespace GSF.Configuration
@@ -270,8 +271,8 @@ namespace GSF.Configuration
         private CultureInfo m_culture;
         private System.Configuration.Configuration m_configuration;
         private UserConfigurationFile m_userConfiguration;
-        private readonly object m_queuedConfigurationSavePending;
-        private readonly AutoResetEvent m_configurationSaveComplete;
+        private volatile ConfigurationSaveMode m_saveMode;
+        private SynchronizedOperation m_saveOperation;
 
         #endregion
 
@@ -283,8 +284,7 @@ namespace GSF.Configuration
         internal ConfigurationFile(string configFilePath)
         {
             m_culture = CultureInfo.InvariantCulture;
-            m_queuedConfigurationSavePending = new object();
-            m_configurationSaveComplete = new AutoResetEvent(true);
+            m_saveOperation = new SynchronizedOperation(ExecuteConfigurationSave);
 
             m_configuration = GetConfiguration(configFilePath);
 
@@ -373,44 +373,21 @@ namespace GSF.Configuration
         /// <param name="saveMode">One of the <see cref="ConfigurationSaveMode"/> values.</param>
         public void Save(ConfigurationSaveMode saveMode)
         {
+            if (m_saveMode == ConfigurationSaveMode.Minimal || saveMode == ConfigurationSaveMode.Full)
+                m_saveMode = saveMode;
+
             // Since the static open method always returns the same instance for the same configuration files,
             // synchronizing the instance will sync all saves.
-            ThreadPool.QueueUserWorkItem(QueueConfigurationSave, saveMode);
+            m_saveOperation.RunOnceAsync();
         }
 
-        private void QueueConfigurationSave(object state)
+        private void ExecuteConfigurationSave()
         {
-            // Queue up a configuration save unless another thread has already requested one
-            if (Monitor.TryEnter(m_queuedConfigurationSavePending))
-            {
-                try
-                {
-                    // Queue new configuration save after waiting for any prior save to complete
-                    if (m_configurationSaveComplete.WaitOne())
-                        ThreadPool.QueueUserWorkItem(ExecuteConfigurationSave, state);
-                }
-                finally
-                {
-                    Monitor.Exit(m_queuedConfigurationSavePending);
-                }
-            }
-        }
-
-        private void ExecuteConfigurationSave(object state)
-        {
-            try
-            {
-                // Perform configuration save
-                ConfigurationSaveMode saveMode = (ConfigurationSaveMode)state;
-                m_configuration.Save(saveMode);
-                m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
-            }
-            finally
-            {
-                // Release waiting thread
-                if (m_configurationSaveComplete != null)
-                    m_configurationSaveComplete.Set();
-            }
+            // Perform configuration save
+            ConfigurationSaveMode saveMode = m_saveMode;
+            m_configuration.Save(saveMode);
+            m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
+            m_saveMode = ConfigurationSaveMode.Minimal;
         }
 
         /// <summary>

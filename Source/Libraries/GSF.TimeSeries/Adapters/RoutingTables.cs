@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using GSF.Collections;
+using GSF.Threading;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -76,8 +77,8 @@ namespace GSF.TimeSeries.Adapters
         private Dictionary<Guid, ISet<IAdapter>> m_measurementRoutes;
         private List<IAdapter> m_broadcastRoutes;
         private ReaderWriterLockSlim m_adapterRoutesCacheLock;
-        private AutoResetEvent m_calculationComplete;
-        private readonly object m_queuedCalculationPending;
+        private SynchronizedOperation m_calculateRoutingTablesOperation;
+        private volatile MeasurementKey[] m_inputMeasurementKeysRestriction;
 
         private readonly AsyncQueue<Tuple<IAdapter, object>> m_dependencyOperationQueue;
         private volatile Dictionary<IAdapter, ISet<IAdapter>> m_dependencies;
@@ -98,8 +99,7 @@ namespace GSF.TimeSeries.Adapters
         public RoutingTables()
         {
             m_adapterRoutesCacheLock = new ReaderWriterLockSlim();
-            m_calculationComplete = new AutoResetEvent(true);
-            m_queuedCalculationPending = new object();
+            m_calculateRoutingTablesOperation = new SynchronizedOperation(CalculateRoutingTables);
 
             m_dependencyOperationQueue = new AsyncQueue<Tuple<IAdapter, object>>();
             m_dependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
@@ -202,15 +202,6 @@ namespace GSF.TimeSeries.Adapters
                             m_adapterRoutesCacheLock.Dispose();
 
                         m_adapterRoutesCacheLock = null;
-
-                        if ((object)m_calculationComplete != null)
-                        {
-                            // Release any waiting threads before disposing wait handle
-                            m_calculationComplete.Set();
-                            m_calculationComplete.Dispose();
-                        }
-
-                        m_calculationComplete = null;
                     }
                 }
                 finally
@@ -231,7 +222,8 @@ namespace GSF.TimeSeries.Adapters
         {
             try
             {
-                ThreadPool.QueueUserWorkItem(QueueRoutingTableCalculation, inputMeasurementKeysRestriction);
+                m_inputMeasurementKeysRestriction = inputMeasurementKeysRestriction;
+                m_calculateRoutingTablesOperation.RunOnceAsync();
             }
             catch (Exception ex)
             {
@@ -240,33 +232,7 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        private void QueueRoutingTableCalculation(object state)
-        {
-            try
-            {
-                // Queue up a routing table calculation unless another thread has already requested one
-                if (!m_disposed && Monitor.TryEnter(m_queuedCalculationPending))
-                {
-                    try
-                    {
-                        // Queue new routing table calculation after waiting for any prior calculation to complete
-                        if (m_calculationComplete.WaitOne())
-                            ThreadPool.QueueUserWorkItem(CalculateRoutingTables, state);
-                    }
-                    finally
-                    {
-                        Monitor.Exit(m_queuedCalculationPending);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue routing table calculation: " + ex.Message, ex));
-            }
-        }
-
-        private void CalculateRoutingTables(object state)
+        private void CalculateRoutingTables()
         {
             long startTime = DateTime.UtcNow.Ticks;
             double elapsedTime;
@@ -411,7 +377,7 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Start or stop any connect on demand adapters
-                HandleConnectOnDemandAdapters((MeasurementKey[])state, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                HandleConnectOnDemandAdapters(m_inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
 
                 elapsedTime = Ticks.ToSeconds(DateTime.UtcNow.Ticks - startTime);
 
@@ -433,11 +399,6 @@ namespace GSF.TimeSeries.Adapters
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException("Routing tables calculation error: " + ex.Message, ex));
-            }
-            finally
-            {
-                if ((object)m_calculationComplete != null)
-                    m_calculationComplete.Set();
             }
         }
 

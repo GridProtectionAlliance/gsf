@@ -74,6 +74,7 @@ using GSF.Historian.Files;
 using GSF.Historian.MetadataProviders;
 using GSF.Historian.Replication;
 using GSF.IO;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -92,8 +93,7 @@ namespace HistorianAdapters
         private DataServices m_dataServices;
         private MetadataProviders m_metadataProviders;
         private ReplicationProviders m_replicationProviders;
-        private readonly object m_queuedMetadataRefreshPending;
-        private AutoResetEvent m_metadataRefreshComplete;
+        private SynchronizedOperation m_metadataRefreshOperation;
         private bool m_autoRefreshMetadata;
         private string m_instanceName;
         private string m_archivePath;
@@ -111,12 +111,11 @@ namespace HistorianAdapters
         public LocalOutputAdapter()
         {
             m_autoRefreshMetadata = true;
-            m_queuedMetadataRefreshPending = new object();
-            m_metadataRefreshComplete = new AutoResetEvent(true);
             m_archive = new ArchiveFile();
             m_archive.MetadataFile = new MetadataFile();
             m_archive.StateFile = new StateFile();
             m_archive.IntercomFile = new IntercomFile();
+            m_metadataRefreshOperation = new SynchronizedOperation(ExecuteMetadataRefresh, OnProcessException);
         }
 
         #endregion
@@ -285,91 +284,49 @@ namespace HistorianAdapters
         [AdapterCommand("Refreshes metadata using all available and enabled providers.", "Administrator", "Editor")]
         public override void RefreshMetadata()
         {
-            ThreadPool.QueueUserWorkItem(QueueMetadataRefresh);
+            m_metadataRefreshOperation.RunOnceAsync();
         }
 
-        private void QueueMetadataRefresh(object state)
+        private void ExecuteMetadataRefresh()
         {
+            bool queueEnabled = false;
+
             try
             {
-                // Queue up a metadata refresh unless another thread has already requested one
-                if (Monitor.TryEnter(m_queuedMetadataRefreshPending))
+                base.RefreshMetadata();
+
+                if ((object)m_archive != null && m_archive.IsOpen && (object)m_archive.StateFile != null && m_archive.StateFile.IsOpen && (object)m_archive.MetadataFile != null && m_archive.MetadataFile.IsOpen)
                 {
-                    try
+                    queueEnabled = InternalProcessQueue.Enabled;
+                    InternalProcessQueue.Stop();
+
+                    // Synchronously refresh the meta-base.
+                    lock (m_metadataProviders.Adapters)
                     {
-                        // Queue new metadata refresh after waiting for any prior refresh to complete
-                        if (m_metadataRefreshComplete.WaitOne())
-                            ThreadPool.QueueUserWorkItem(ExecuteMetadataRefresh);
-                    }
-                    finally
-                    {
-                        Monitor.Exit(m_queuedMetadataRefreshPending);
-                    }
-                }
-            }
-            catch (ThreadAbortException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
-            }
-        }
-
-        private void ExecuteMetadataRefresh(object state)
-        {
-            try
-            {
-                bool queueEnabled = false;
-
-                try
-                {
-                    base.RefreshMetadata();
-
-                    if ((object)m_archive != null && m_archive.IsOpen && m_archive.StateFile != null && m_archive.StateFile.IsOpen && m_archive.MetadataFile != null && m_archive.MetadataFile.IsOpen)
-                    {
-                        queueEnabled = InternalProcessQueue.Enabled;
-                        InternalProcessQueue.Stop();
-
-                        // Synchronously refresh the meta-base.
-                        lock (m_metadataProviders.Adapters)
+                        foreach (IMetadataProvider provider in m_metadataProviders.Adapters)
                         {
-                            foreach (IMetadataProvider provider in m_metadataProviders.Adapters)
-                            {
-                                if (provider.Enabled)
-                                    provider.Refresh();
-                            }
-                        }
-
-                        // Request a state file synchronization in case file watchers are disabled
-                        m_archive.SynchronizeStateFile();
-
-                        // Wait for the meta-base to synchronize, up to five seconds
-                        int waitCounts = 0;
-
-                        while (m_archive.StateFile.RecordsOnDisk != m_archive.MetadataFile.RecordsOnDisk || waitCounts < 50)
-                        {
-                            Thread.Sleep(100);
-                            waitCounts++;
+                            if (provider.Enabled)
+                                provider.Refresh();
                         }
                     }
-                }
-                finally
-                {
-                    m_metadataRefreshComplete.Set();
 
-                    if (queueEnabled)
-                        InternalProcessQueue.Start();
+                    // Request a state file synchronization in case file watchers are disabled
+                    m_archive.SynchronizeStateFile();
+
+                    // Wait for the meta-base to synchronize, up to five seconds
+                    int waitCounts = 0;
+
+                    while (m_archive.StateFile.RecordsOnDisk != m_archive.MetadataFile.RecordsOnDisk && waitCounts < 50)
+                    {
+                        Thread.Sleep(100);
+                        waitCounts++;
+                    }
                 }
             }
-            catch (ThreadAbortException)
+            finally
             {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
+                if (queueEnabled)
+                    InternalProcessQueue.Start();
             }
         }
 
@@ -552,11 +509,6 @@ namespace HistorianAdapters
                                 m_archive.IntercomFile.Dispose();
                                 m_archive.IntercomFile = null;
                             }
-
-                            if ((object)m_metadataRefreshComplete != null)
-                                m_metadataRefreshComplete.Dispose();
-
-                            m_metadataRefreshComplete = null;
                         }
                     }
                 }

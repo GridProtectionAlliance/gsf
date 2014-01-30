@@ -34,6 +34,7 @@ using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
+using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using System;
@@ -226,8 +227,6 @@ namespace GSF.TimeSeries.Transport
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
         private readonly List<ServerCommand> m_requests;
-        private AutoResetEvent m_synchronizationComplete;
-        private readonly object m_queuedSynchronizationPending;
         private SecurityMode m_securityMode;
         private bool m_synchronizedSubscription;
         private bool m_useMillisecondResolution;
@@ -245,8 +244,8 @@ namespace GSF.TimeSeries.Transport
         private bool m_autoSynchronizeMetadata;
         private bool m_useTransactionForMetadata;
         private int m_metadataSynchronizationTimeout;
-        private readonly object m_receivedMetadataLock;
-        private DataSet m_receivedMetadata;
+        private SynchronizedOperation m_synchronizeMetadataOperation;
+        private volatile DataSet m_receivedMetadata;
         private DataSet m_synchronizedMetadata;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
@@ -283,9 +282,7 @@ namespace GSF.TimeSeries.Transport
         public DataSubscriber()
         {
             m_requests = new List<ServerCommand>();
-            m_synchronizationComplete = new AutoResetEvent(true);
-            m_queuedSynchronizationPending = new object();
-            m_receivedMetadataLock = new object();
+            m_synchronizeMetadataOperation = new SynchronizedOperation(SynchronizeMetadata);
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
@@ -959,15 +956,6 @@ namespace GSF.TimeSeries.Transport
                         CommandChannel = null;
                         DataChannel = null;
                         DisposeLocalConcentrator();
-
-                        if ((object)m_synchronizationComplete != null)
-                        {
-                            // Release any waiting threads before disposing wait handle
-                            m_synchronizationComplete.Set();
-                            m_synchronizationComplete.Dispose();
-                        }
-
-                        m_synchronizationComplete = null;
                     }
                 }
                 finally
@@ -1114,7 +1102,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.SendBufferSize = bufferSize;
 
                 // Assign command channel client reference and attach to needed events
-                this.CommandChannel = commandChannel;
+                CommandChannel = commandChannel;
             }
             else
             {
@@ -1138,7 +1126,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.SendBufferSize = bufferSize;
 
                 // Assign command channel client reference and attach to needed events
-                this.CommandChannel = commandChannel;
+                CommandChannel = commandChannel;
             }
 
             // Get proper connection string - either from specified command channel
@@ -1888,7 +1876,7 @@ namespace GSF.TimeSeries.Transport
                     }
 
                     // Assign data channel client reference and attach to needed events
-                    this.DataChannel = dataChannel;
+                    DataChannel = dataChannel;
 
                     // Setup subscription packet
                     using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
@@ -2000,12 +1988,8 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                lock (m_receivedMetadataLock)
-                {
-                    m_receivedMetadata = metadata;
-                }
-
-                ThreadPool.QueueUserWorkItem(QueueMetaDataSynchronization);
+                m_receivedMetadata = metadata;
+                m_synchronizeMetadataOperation.RunOnceAsync();
             }
             catch (Exception ex)
             {
@@ -2613,56 +2597,21 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        // Queues meta-data synchronization one at a time
-        private void QueueMetaDataSynchronization(object state)
-        {
-            try
-            {
-                // Queue up a synchronization unless another thread has already requested one
-                if (!m_disposed && Monitor.TryEnter(m_queuedSynchronizationPending))
-                {
-                    try
-                    {
-                        // Queue new synchronization after waiting for any prior synchronization to complete
-                        if (m_synchronizationComplete.WaitOne())
-                            ThreadPool.QueueUserWorkItem(SynchronizeMetadata);
-                    }
-                    finally
-                    {
-                        Monitor.Exit(m_queuedSynchronizationPending);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue meta-data synchronization: " + ex.Message, ex));
-            }
-        }
-
-
         /// <summary>
         /// Handles meta-data synchronization to local system.
         /// </summary>
-        /// <param name="state"><see cref="DataSet"/> meta-data collection passed into state parameter.</param>
         /// <remarks>
         /// This function should only be initiated from call to <see cref="SynchronizeMetadata(DataSet)"/> to make
         /// sure only one meta-data synchronization happens at once. Users can override this method to customize
         /// process of meta-data synchronization.
         /// </remarks>
-        protected virtual void SynchronizeMetadata(object state)
+        protected virtual void SynchronizeMetadata()
         {
             // TODO: This function is complex and very closely tied to the current time-series data schema - perhaps it should be moved outside this class and referenced
             // TODO: as a delegate that can be assigned and called to allow other schemas as well. DataPublisher is already very flexible in what data it can deliver.
             try
             {
-                DataSet metadata;
-
-                lock (m_receivedMetadataLock)
-                {
-                    metadata = m_receivedMetadata;
-                    m_receivedMetadata = null;
-                }
+                DataSet metadata = m_receivedMetadata;
 
                 // Only perform database synchronization if meta-data has changed since last update
                 if (!SynchronizedMetadataChanged(metadata))
@@ -3156,11 +3105,6 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
-            }
-            finally
-            {
-                if ((object)m_synchronizationComplete != null)
-                    m_synchronizationComplete.Set();
             }
         }
 

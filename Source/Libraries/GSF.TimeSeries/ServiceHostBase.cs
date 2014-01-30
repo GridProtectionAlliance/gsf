@@ -54,6 +54,7 @@ using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security;
 using GSF.ServiceProcess;
+using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
 using Microsoft.Win32;
@@ -127,10 +128,9 @@ namespace GSF.TimeSeries
         private Timer m_gcCollectTimer;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
-        private AutoResetEvent m_configurationCacheComplete;
-        private object m_queuedConfigurationCachePending;
+        private SynchronizedOperation m_configurationCacheOperation;
+        private volatile DataSet m_latestConfiguration;
         private object m_systemConfigurationLoadLock;
-        private object m_latestConfiguration;
 
         private ServiceHelper m_serviceHelper;
         private ServerBase m_remotingServer;
@@ -377,8 +377,7 @@ namespace GSF.TimeSeries
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
-            m_configurationCacheComplete = new AutoResetEvent(true);
-            m_queuedConfigurationCachePending = new object();
+            m_configurationCacheOperation = new SynchronizedOperation(ExecuteConfigurationCache);
             m_systemConfigurationLoadLock = new object();
 
             // Setup default thread pool size
@@ -607,15 +606,6 @@ namespace GSF.TimeSeries
                 m_serviceHelper.ErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
             }
-
-            if ((object)m_configurationCacheComplete != null)
-            {
-                // Release any waiting threads before disposing wait handle
-                m_configurationCacheComplete.Set();
-                m_configurationCacheComplete.Dispose();
-            }
-
-            m_configurationCacheComplete = null;
 
             // Unattach from handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
@@ -1311,119 +1301,61 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void CacheCurrentConfiguration(DataSet configuration)
         {
-            try
-            {
-                // Queue configuration serialization using latest dataset
-                ThreadPool.QueueUserWorkItem(QueueConfigurationCache, configuration);
-            }
-            catch (Exception ex)
-            {
-                DisplayStatusMessage("Failed to queue configuration caching due to exception: {0}", UpdateType.Alarm, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
-            }
-        }
-
-        // Since configuration serialization may take a while, we queue-up activity for one-at-a-time processing using latest dataset
-        private void QueueConfigurationCache(object state)
-        {
-            // Always attempt cache for most recent configuration
-            Interlocked.Exchange(ref m_latestConfiguration, state);
-
-            // Queue up a configuration cache unless another thread has already requested one
-            if (Monitor.TryEnter(m_queuedConfigurationCachePending, 500))
-            {
-                try
-                {
-                    // Queue new configuration cache after waiting for any prior cache operation to complete
-                    if (m_configurationCacheComplete.WaitOne())
-                    {
-                        object latestConfiguration = null;
-
-                        // Get latest configuration
-                        Interlocked.Exchange(ref latestConfiguration, m_latestConfiguration);
-
-                        try
-                        {
-                            // Queue up task to to execute cache of the latest configuration
-                            ThreadPool.QueueUserWorkItem(ExecuteConfigurationCache, latestConfiguration);
-                        }
-                        catch (Exception ex)
-                        {
-                            DisplayStatusMessage("Failed to queue configuration caching due to exception: {0}", UpdateType.Alarm, ex.Message);
-                            m_serviceHelper.ErrorLogger.Log(ex);
-                        }
-
-                        // Dereference data set configuration if another one hasn't been queued-up in the mean time
-                        Interlocked.CompareExchange(ref m_latestConfiguration, null, latestConfiguration);
-                    }
-                }
-                finally
-                {
-                    Monitor.Exit(m_queuedConfigurationCachePending);
-                }
-            }
+            m_latestConfiguration = configuration;
+            m_configurationCacheOperation.RunOnceAsync();
         }
 
         // Executes actual serialization of current configuration
-        private void ExecuteConfigurationCache(object state)
+        private void ExecuteConfigurationCache()
         {
-            try
-            {
-                DataSet configuration = state as DataSet;
+            DataSet configuration = m_latestConfiguration;
 
-                if ((object)configuration != null)
+            if ((object)configuration != null)
+            {
+                // Create backups of binary configurations
+                BackupConfiguration(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile);
+
+                // Create backups of XML configurations
+                BackupConfiguration(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile);
+
+                try
                 {
-                    // Create backups of binary configurations
-                    BackupConfiguration(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile);
+                    // Wait a moment for write lock in case binary file is open by another process
+                    if (File.Exists(m_cachedBinaryConfigurationFile))
+                        FilePath.WaitForWriteLock(m_cachedBinaryConfigurationFile);
 
-                    // Create backups of XML configurations
-                    BackupConfiguration(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile);
-
-                    try
+                    // Cache binary serialized version of data set
+                    using (FileStream configurationFileStream = File.OpenWrite(m_cachedBinaryConfigurationFile))
                     {
-                        // Wait a moment for write lock in case binary file is open by another process
-                        if (File.Exists(m_cachedBinaryConfigurationFile))
-                            FilePath.WaitForWriteLock(m_cachedBinaryConfigurationFile);
-
-                        // Cache binary serialized version of data set
-                        using (FileStream configurationFileStream = File.OpenWrite(m_cachedBinaryConfigurationFile))
-                        {
-                            configuration.SerializeToStream(configurationFileStream);
-                        }
-
-                        DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
+                        configuration.SerializeToStream(configurationFileStream);
                     }
 
-                    // Serialize current data set to configuration files
-                    try
-                    {
-
-                        // Wait a moment for write lock in case XML file is open by another process
-                        if (File.Exists(m_cachedXmlConfigurationFile))
-                            FilePath.WaitForWriteLock(m_cachedXmlConfigurationFile);
-
-                        // Cache XML serialized version of data set
-                        configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
-
-                        DisplayStatusMessage("Successfully cached current configuration to XML.", UpdateType.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                    }
+                    DisplayStatusMessage("Successfully cached current configuration to binary.", UpdateType.Information);
                 }
-            }
-            finally
-            {
-                // Release any waiting threads
-                if ((object)m_configurationCacheComplete != null)
-                    m_configurationCacheComplete.Set();
+                catch (Exception ex)
+                {
+                    DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
+                    m_serviceHelper.ErrorLogger.Log(ex);
+                }
+
+                // Serialize current data set to configuration files
+                try
+                {
+
+                    // Wait a moment for write lock in case XML file is open by another process
+                    if (File.Exists(m_cachedXmlConfigurationFile))
+                        FilePath.WaitForWriteLock(m_cachedXmlConfigurationFile);
+
+                    // Cache XML serialized version of data set
+                    configuration.WriteXml(m_cachedXmlConfigurationFile, XmlWriteMode.WriteSchema);
+
+                    DisplayStatusMessage("Successfully cached current configuration to XML.", UpdateType.Information);
+                }
+                catch (Exception ex)
+                {
+                    DisplayStatusMessage("Failed to cache last known configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
+                    m_serviceHelper.ErrorLogger.Log(ex);
+                }
             }
         }
 

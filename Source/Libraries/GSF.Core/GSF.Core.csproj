@@ -336,6 +336,7 @@
     <Compile Include="Threading\ManagedThreads.cs" />
     <Compile Include="Threading\NamespaceDoc.cs" />
     <Compile Include="Threading\ReaderWriterSpinLock.cs" />
+    <Compile Include="Threading\SynchronizedOperation.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="TimeTagBase.cs" />
