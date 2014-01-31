@@ -196,8 +196,10 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             {
                 using (UserInfo info = new UserInfo(CommonFunctions.CurrentUser))
                 {
-                    info.Initialize();
-                    TextBlockUser.Text = info.LoginID;
+                    if (info.Exists)
+                        TextBlockUser.Text = info.LoginID;
+                    else
+                        TextBlockUser.Text = CommonFunctions.CurrentUser;
                 }
             }
             catch

@@ -241,7 +241,10 @@ namespace GSF.TimeSeries
                             UserInfo userInfo;
                             StringBuilder passwordBuilder = new StringBuilder();
                             StringBuilder prompt = new StringBuilder();
+                            ConsoleKeyInfo key;
 
+                            lock (m_displayLock)
+                            {
                             prompt.AppendLine();
                             prompt.AppendLine();
                             prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
@@ -255,13 +258,12 @@ namespace GSF.TimeSeries
                             username = System.Console.ReadLine();
 
                             // Capture the password.
-                            ConsoleKeyInfo key;
-
                             Write("Enter password: ");
 
                             while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
-                            {
                                 passwordBuilder.Append(key.KeyChar);
+
+                                WriteLine();
                             }
 
                             // Set network credentials used when attempting AD authentication

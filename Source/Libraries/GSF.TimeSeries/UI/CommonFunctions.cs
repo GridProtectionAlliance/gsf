@@ -604,7 +604,7 @@ namespace GSF.TimeSeries.UI
                     {
                         s_windowsServiceClient = new WindowsServiceClient(connectionString);
 
-                        if (SecurityProviderCache.TryGetCachedProvider(CurrentUser, out provider))
+                        if (SecurityProviderCache.TryGetCachedProvider(CurrentPrincipal.Identity.Name, out provider))
                         {
                             userData = provider.UserData;
 

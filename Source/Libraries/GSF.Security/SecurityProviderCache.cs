@@ -244,15 +244,18 @@ namespace GSF.Security
         /// <returns>True if the user successfully reauthenticated; false otherwise.</returns>
         public static bool ReauthenticateCurrentPrincipal()
         {
+            IPrincipal currentPrincipal;
             SecurityIdentity identity;
             ISecurityProvider provider = null;
             string password = null;
             bool authenticated;
 
-            if ((object)Thread.CurrentPrincipal == null)
+            currentPrincipal = Thread.CurrentPrincipal;
+
+            if ((object)currentPrincipal == null)
                 return false;
 
-            identity = Thread.CurrentPrincipal.Identity as SecurityIdentity;
+            identity = currentPrincipal.Identity as SecurityIdentity;
 
             if ((object)identity != null)
                 provider = identity.Provider;
@@ -264,7 +267,7 @@ namespace GSF.Security
             Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
             // Create a new provider associated with current identity
-            provider = SecurityProviderUtility.CreateProvider(Thread.CurrentPrincipal.Identity.Name);
+            provider = SecurityProviderUtility.CreateProvider(currentPrincipal.Identity.Name);
 
             // Re-authenticate user
             authenticated = provider.Authenticate(password);
