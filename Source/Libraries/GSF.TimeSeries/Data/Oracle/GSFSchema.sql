@@ -850,7 +850,7 @@ CREATE TABLE AccessLog (
     ID NUMBER NOT NULL,
     UserName VARCHAR2(200) NOT NULL,
     AccessGranted NUMBER NOT NULL,
-    "Comment" VARCHAR2(4000),
+    "COMMENT" VARCHAR2(4000),
     CreatedOn DATE NOT NULL
 );
 
