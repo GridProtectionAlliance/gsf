@@ -2489,8 +2489,8 @@ namespace DataMigrationUtility
                 case DatabaseType.Access:
                 case DatabaseType.SQLServer:
                     return "[" + name + "]";
-                case DatabaseType.MySQL:
-                    return "`" + name + "`";
+                case DatabaseType.Oracle:
+                    return "\"" + name.ToUpper() + "\"";
             }
 
             return "\"" + name + "\"";
@@ -2518,6 +2518,10 @@ namespace DataMigrationUtility
                 // Update database type and force re-evaluation of SQL identity statements
                 m_databaseType = databaseType;
                 m_tables.Parent = this;
+
+                // Set normal ANSI SQL quotes mode for MySQL
+                if (databaseType == DatabaseType.MySQL)
+                    m_schemaConnection.ExecuteNonQuery("SET sql_mode='ANSI_QUOTES'");
 
                 // Check to see if user requested to keep connection open, this is just for convience...
                 if (m_immediateClose)
