@@ -54,7 +54,6 @@ namespace DataMigrationUtility
         private ApplicationSettings m_applicationSettings;
         private bool m_exceptionsEncountered;
         private bool m_verifiedConnectionStringReplacement;
-        private int m_connectionStringType;
         private long m_yieldIndex;
 
         public DataMigrationUtilityScreen()
@@ -323,36 +322,30 @@ namespace DataMigrationUtility
 
             if (m_verifiedConnectionStringReplacement)
             {
-                if (m_connectionStringType == 0)
-                {
-                    if (MessageBox.Show("Do you want to show example standard ADO connections (select yes), or otherwise use example OLE DB style connection strings (select no)?", "Verify Connection String Type", MessageBoxButtons.YesNo) == DialogResult.Yes)
-                        m_connectionStringType = -1;
-                    else
-                        m_connectionStringType = 1;
-                }
+                bool useOleDB = MessageBox.Show("Do you want to show example standard ADO connections (select yes), or otherwise use example OLE DB style connection strings (select no)?", "Verify Connection String Type", MessageBoxButtons.YesNo) == DialogResult.No;
 
                 switch ((DatabaseType)index)
                 {
                     case DatabaseType.Access:
-                        if (m_connectionStringType > 0)
+                        if (useOleDB)
                             destination.Text = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=C:\\Program Files\\myApp\\myAppConfig.mdb";
                         else
                             destination.Text = "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=C:\\Program Files\\myApp\\myAppConfig.mdb; DataProviderString={AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.OleDb.OleDbConnection; AdapterType=System.Data.OleDb.OleDbDataAdapter}";
                         break;
                     case DatabaseType.SQLServer:
-                        if (m_connectionStringType > 0)
+                        if (useOleDB)
                             destination.Text = "Provider=SQLOLEDB; Data Source=localhost; Initial Catalog=myApp; User Id=myUsername; Password=myPassword;";
                         else
-                            destination.Text = "Data Source=serverName; Initial Catalog=databaseName; User ID=userName; Password=password; DataProviderString={AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter}";
+                            destination.Text = "Data Source=localhost\\SQLEXPRESS; Initial Catalog=databaseName; User ID=userName; Password=password; DataProviderString={AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.SqlClient.SqlConnection; AdapterType=System.Data.SqlClient.SqlDataAdapter}";
                         break;
                     case DatabaseType.MySQL:
-                        if (m_connectionStringType > 0)
-                            destination.Text = "Provider=MySQLProv; location=MACHINE; Data Source=myApp; User Id=myUsername; Password=myPassword;";
+                        if (useOleDB)
+                            destination.Text = "Provider=MySQLProv; location=localhost; Data Source=myApp; User Id=root; Password=myPassword;";
                         else
-                            destination.Text = "Server=serverName; Database=databaseName; Uid=root; Pwd=password; allow user variables = true; DataProviderString={AssemblyName={MySql.Data, Version=6.7.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter}";
+                            destination.Text = "Server=localhost; Database=databaseName; Uid=root; Pwd=password; allow user variables = true; DataProviderString={AssemblyName={MySql.Data, Version=6.7.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter}";
                         break;
                     case DatabaseType.Oracle:
-                        if (m_connectionStringType > 0)
+                        if (useOleDB)
                             destination.Text = "Provider=MySQLProv; location=MACHINE; Data Source=myApp; User Id=myUsername; Password=myPassword;";
                         else
                             destination.Text = "Data Source=tnsName; User ID=schemaUserName; Password=schemaPassword; DataProviderString={AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; ConnectionType=Oracle.DataAccess.Client.OracleConnection; AdapterType=Oracle.DataAccess.Client.OracleDataAdapter}";
@@ -427,7 +420,7 @@ namespace DataMigrationUtility
         {
             if (e.Argument3 == e.Argument4 && e.Argument1.Length == 0)
             {
-                UpdateProgress("Processing complete. (" + e.Argument2 + " / " + e.Argument4 + " )");
+                UpdateProgress("Processing complete. (" + e.Argument3 + " / " + e.Argument4 + " )");
             }
             else
             {
