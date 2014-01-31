@@ -966,7 +966,7 @@ namespace GSF.IO
                 // Dereference file bytes to be exported
                 byte[] fileData = state as byte[];
 
-                if (m_enabled && (object)fileData != null)
+                if (m_enabled && (object)fileData != null && m_exportDestinations.Count > 0)
                 {
                     string filename = null;
                     ExportState[] exportStates = null;
