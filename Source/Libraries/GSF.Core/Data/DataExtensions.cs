@@ -613,12 +613,12 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
         public static object ExecuteScalar<TConnection>(this TConnection connection, string sql, params object[] parameters) where TConnection : IDbConnection
         {
@@ -627,13 +627,13 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
         public static object ExecuteScalar<TConnection>(this TConnection connection, string sql, int timeout, params object[] parameters) where TConnection : IDbConnection
         {
@@ -646,12 +646,12 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this OleDbConnection connection, string sql, params object[] parameters)
         {
             return connection.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
@@ -659,13 +659,13 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (OleDbCommand command = new OleDbCommand(sql, connection))
@@ -678,12 +678,12 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this OdbcConnection connection, string sql, params object[] parameters)
         {
             return connection.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
@@ -691,13 +691,13 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (OdbcCommand command = new OdbcCommand(sql, connection))
@@ -710,12 +710,12 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this SqlConnection connection, string sql, params object[] parameters)
         {
             return connection.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
@@ -723,13 +723,13 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -742,12 +742,12 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this IDbCommand command, string sql, params object[] parameters)
         {
             return command.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
@@ -755,13 +755,13 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this IDbCommand command, string sql, int timeout, params object[] parameters)
         {
             command.CommandTimeout = timeout;
@@ -772,12 +772,12 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this OleDbCommand command, string sql, params object[] parameters)
         {
             return command.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
@@ -785,13 +785,13 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this OleDbCommand command, string sql, int timeout, params object[] parameters)
         {
             command.CommandTimeout = timeout;
@@ -802,12 +802,12 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this OdbcCommand command, string sql, params object[] parameters)
         {
             return command.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
@@ -815,13 +815,13 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this OdbcCommand command, string sql, int timeout, params object[] parameters)
         {
             command.CommandTimeout = timeout;
@@ -832,12 +832,12 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this SqlCommand command, string sql, params object[] parameters)
         {
             return command.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
@@ -845,13 +845,13 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
+        /// of the first row in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
+        /// <returns>Value in the first column of the first row in the result set.</returns>
         public static object ExecuteScalar(this SqlCommand command, string sql, int timeout, params object[] parameters)
         {
             command.CommandTimeout = timeout;
@@ -865,48 +865,48 @@ namespace GSF.Data
         #region [ RetrieveRow Overloaded Extensions ]
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OleDbConnection connection, string sql)
         {
             return connection.RetrieveRow(sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OleDbConnection connection, string sql, int timeout)
         {
             return connection.RetrieveRow(sql, timeout, null);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OleDbConnection connection, string sql, params object[] parameters)
         {
             return connection.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = connection.RetrieveData(sql, 0, 1, timeout, parameters);
@@ -918,48 +918,48 @@ namespace GSF.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OdbcConnection connection, string sql)
         {
             return connection.RetrieveRow(sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OdbcConnection connection, string sql, int timeout)
         {
             return connection.RetrieveRow(sql, timeout, null);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OdbcConnection connection, string sql, params object[] parameters)
         {
             return connection.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = connection.RetrieveData(sql, 0, 1, timeout, parameters);
@@ -971,48 +971,48 @@ namespace GSF.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this SqlConnection connection, string sql)
         {
             return connection.RetrieveRow(sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this SqlConnection connection, string sql, int timeout)
         {
             return connection.RetrieveRow(sql, timeout, null);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this SqlConnection connection, string sql, params object[] parameters)
         {
             return connection.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = connection.RetrieveData(sql, 0, 1, timeout, parameters);
@@ -1024,27 +1024,27 @@ namespace GSF.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql, params object[] parameters)
         {
             return connection.RetrieveRow(dataAdapterType, sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = connection.RetrieveData(dataAdapterType, sql, timeout, parameters);
@@ -1056,48 +1056,48 @@ namespace GSF.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OleDbCommand command, string sql)
         {
             return command.RetrieveRow(sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OleDbCommand command, string sql, int timeout)
         {
             return command.RetrieveRow(sql, timeout, null);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OleDbCommand command, string sql, params object[] parameters)
         {
             return command.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OleDbCommand command, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = command.RetrieveData(sql, 0, 1, timeout, parameters);
@@ -1109,48 +1109,48 @@ namespace GSF.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OdbcCommand command, string sql)
         {
             return command.RetrieveRow(sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OdbcCommand command, string sql, int timeout)
         {
             return command.RetrieveRow(sql, timeout, null);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OdbcCommand command, string sql, params object[] parameters)
         {
             return command.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this OdbcCommand command, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = command.RetrieveData(sql, 0, 1, timeout, parameters);
@@ -1162,48 +1162,48 @@ namespace GSF.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this SqlCommand command, string sql)
         {
             return command.RetrieveRow(sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this SqlCommand command, string sql, int timeout)
         {
             return command.RetrieveRow(sql, timeout, null);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this SqlCommand command, string sql, params object[] parameters)
         {
             return command.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this SqlCommand command, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = command.RetrieveData(sql, 0, 1, timeout, parameters);
@@ -1215,27 +1215,27 @@ namespace GSF.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this IDbCommand command, Type dataAdapterType, string sql, params object[] parameters)
         {
             return command.RetrieveRow(dataAdapterType, sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataRow"/> in the result set.
         /// </summary>
         /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
-        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         public static DataRow RetrieveRow(this IDbCommand command, Type dataAdapterType, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = command.RetrieveData(dataAdapterType, sql, timeout, parameters);
@@ -1252,7 +1252,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
@@ -1264,7 +1264,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
@@ -1279,7 +1279,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
@@ -1292,7 +1292,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
@@ -1308,7 +1308,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
@@ -1320,7 +1320,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
@@ -1335,7 +1335,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
@@ -1348,7 +1348,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
@@ -1364,7 +1364,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
@@ -1376,7 +1376,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
@@ -1391,7 +1391,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
@@ -1404,7 +1404,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
@@ -1420,7 +1420,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
@@ -1434,7 +1434,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
@@ -1449,7 +1449,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
@@ -1461,7 +1461,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
@@ -1476,7 +1476,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
@@ -1489,7 +1489,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OleDbCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OleDbCommand"/> to use for executing the SQL statement.</param>
@@ -1505,7 +1505,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
@@ -1517,7 +1517,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
@@ -1532,7 +1532,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
@@ -1545,7 +1545,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="OdbcCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="OdbcCommand"/> to use for executing the SQL statement.</param>
@@ -1561,7 +1561,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
@@ -1573,7 +1573,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
@@ -1588,7 +1588,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
@@ -1601,7 +1601,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="SqlCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="command">The <see cref="SqlCommand"/> to use for executing the SQL statement.</param>
@@ -1617,7 +1617,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
@@ -1631,7 +1631,7 @@ namespace GSF.Data
 
         /// <summary>
         /// Executes the SQL statement using <see cref="IDbCommand"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
+        /// of result set, if the result set contains multiple tables.
         /// </summary>
         /// <param name="command">The <see cref="IDbCommand"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
@@ -2610,12 +2610,12 @@ namespace GSF.Data
 
         ///// <summary>
         ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the value in the first column 
-        ///// of the first row in the resultset.
+        ///// of the first row in the result set.
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        ///// <returns>Value in the first column of the first row in the resultset.</returns>
+        ///// <returns>Value in the first column of the first row in the result set.</returns>
         //public static object ExecuteScalar(this OracleConnection connection, string sql, params object[] parameters)
         //{
         //    OracleCommand command = new OracleCommand(sql, connection);
@@ -2624,23 +2624,23 @@ namespace GSF.Data
         //}
 
         ///// <summary>
-        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        ///// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        ///// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         //public static DataRow RetrieveRow(this OracleConnection connection, string sql)
         //{
         //    return connection.RetrieveRow(sql, null);
         //}
 
         ///// <summary>
-        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataRow"/> in the result set.
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
-        ///// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        ///// <returns>The first <see cref="DataRow"/> in the result set.</returns>
         //public static DataRow RetrieveRow(this OracleConnection connection, string sql, params object[] parameters)
         //{
         //    DataTable dataTable = connection.RetrieveData(sql, 0, 1, parameters);
@@ -2653,7 +2653,7 @@ namespace GSF.Data
 
         ///// <summary>
         ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
-        ///// of resultset, if the resultset contains multiple tables.
+        ///// of result set, if the result set contains multiple tables.
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
@@ -2665,7 +2665,7 @@ namespace GSF.Data
 
         ///// <summary>
         ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
-        ///// of resultset, if the resultset contains multiple tables.
+        ///// of result set, if the result set contains multiple tables.
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
@@ -2679,7 +2679,7 @@ namespace GSF.Data
 
         ///// <summary>
         ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
-        ///// of resultset, if the resultset contains multiple tables.
+        ///// of result set, if the result set contains multiple tables.
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
@@ -2692,7 +2692,7 @@ namespace GSF.Data
 
         ///// <summary>
         ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
-        ///// of resultset, if the resultset contains multiple tables.
+        ///// of result set, if the result set contains multiple tables.
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>

@@ -32,49 +32,26 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
-using System.Drawing;
+using System.IO;
 using System.Text;
+using GSF;
 using GSF.Data;
+using GSF.IO;
+using SerializationFormat = GSF.SerializationFormat;
+
+namespace DataMigrationUtility
+{
     // James Ritchie Carroll - 2003
 
-namespace Database
-{
     #region [ Enumerations ]
-
-    /// <summary>
-    /// Specifies the type of Database
-    /// </summary>
-    public enum DatabaseType
-    {
-        /// <summary>
-        /// Database is sql server
-        /// </summary>
-        SqlServer,
-        /// <summary>
-        /// Database is oracle
-        /// </summary>
-        Oracle,
-        /// <summary>
-        /// Database is MySQL
-        /// </summary>
-        MySQL,
-        /// <summary>
-        /// Database is MS-Access
-        /// </summary>
-        Access,
-        /// <summary>
-        /// Database is not specified
-        /// </summary>
-        Unspecified
-    }
 
     /// <summary>
     /// Specifies the type of object in database
     /// </summary>
     [Flags]
+    [Serializable]
     public enum TableType
     {
         /// <summary>
@@ -110,7 +87,7 @@ namespace Database
         /// </summary>
         LocalTemp = 128,
         /// <summary>
-        /// Dataobase object is Link
+        /// Database object is Link
         /// </summary>
         Link = 256,
         /// <summary>
@@ -120,12 +97,13 @@ namespace Database
     }
 
     /// <summary>
-    /// Specified the type of Referentail Action on Database object/Tables
+    /// Specified the type of referential action on database object/Tables
     /// </summary>
+    [Serializable]
     public enum ReferentialAction
     {
         /// <summary>
-        /// Action Type is Casecase
+        /// Action Type is cascade
         /// </summary>
         Cascade,
         /// <summary>
@@ -133,7 +111,7 @@ namespace Database
         /// </summary>
         SetNull,
         /// <summary>
-        /// Action Type is to set Default
+        /// Action Type is to set default
         /// </summary>
         SetDefault,
         /// <summary>
@@ -147,30 +125,15 @@ namespace Database
     /// <summary>
     /// Represents a database field.
     /// </summary>
+    [Serializable]
     public class Field : IComparable
     {
         #region [ Members ]
 
         //Fields
-        private readonly Fields m_parentField;
-        private readonly string m_fieldName;
-        private readonly OleDbType m_DataType;
-
-        //internal int intOrdinal;
-        //internal bool flgAllowsNulls;
-        //internal bool flgAutoInc;
-        //internal int intAutoIncSeed;
-        //internal int intAutoIncStep;
-        //internal bool flgHasDefault;
-        //internal object objDefaultValue;
-        //internal int intMaxLength;
-        //internal int intNumericPrecision;
-        //internal int intNumericScale;
-        //internal int intDateTimePrecision;
-        //internal bool flgReadOnly;
-        //internal bool flgUnique;
-        //internal string m_description;
-        //internal Hashtable tblAutoIncTranslations;
+        private readonly Fields m_parent;
+        private readonly string m_name;
+        private readonly OleDbType m_dataType;
 
         private int m_ordinal;
         private bool m_allowsNulls;
@@ -188,18 +151,11 @@ namespace Database
         private string m_description;
         private Hashtable m_autoIncrementTranslations;
 
-        // This allows user to store a field value if desired
-        //public object Value;
-        //public bool IsPrimaryKey;
-        //public int PrimaryKeyOrdinal;
-        //public string PrimaryKeyName;
-        //public ForeignKeyFields ForeignKeys;
-        //public Field ReferencedBy;
-
         private object m_value;
         private bool m_isPrimaryKey;
         private int m_primaryKeyOrdinal;
         private string m_primaryKeyName;
+
         private ForeignKeyFields m_foreignKeys;
         private Field m_referencedBy;
 
@@ -210,9 +166,9 @@ namespace Database
         internal Field(Fields Parent, string Name, OleDbType Type)
         {
             // We only allow internal creation of this object
-            m_parentField = Parent;
-            m_fieldName = Name;
-            m_DataType = Type;
+            m_parent = Parent;
+            m_name = Name;
+            m_dataType = Type;
             ForeignKeys = new ForeignKeyFields(this);
 
         }
@@ -228,7 +184,18 @@ namespace Database
         {
             get
             {
-                return m_fieldName;
+                return m_name;
+            }
+        }
+
+        /// <summary>
+        /// Get SQL escaped name of <see cref="Table"/>
+        /// </summary>
+        public string SQLEscapedName
+        {
+            get
+            {
+                return m_parent.Parent.Parent.Parent.SQLEscapeName(m_name);
             }
         }
 
@@ -239,7 +206,7 @@ namespace Database
         {
             get
             {
-                return m_DataType;
+                return m_dataType;
             }
         }
 
@@ -251,7 +218,6 @@ namespace Database
             get
             {
                 return m_ordinal;
-                //intOrdinal; 
             }
             internal set
             {
@@ -260,7 +226,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set Allow Null flag
+        /// Get or set Allow Null flag
         /// </summary>
         public bool AllowsNulls
         {
@@ -275,7 +241,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set Auto increment flag
+        /// Get or set Auto increment flag
         /// </summary>
         public bool AutoIncrement
         {
@@ -290,7 +256,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set Auto increment seed
+        /// Get or set Auto increment seed
         /// </summary>
         public int AutoIncrementSeed
         {
@@ -305,7 +271,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set Auto increment step
+        /// Get or set Auto increment step
         /// </summary>
         public int AutoIncrementStep
         {
@@ -321,7 +287,7 @@ namespace Database
 
 
         /// <summary>
-        /// Get or Set has defult value flag
+        /// Get or set has default value flag
         /// </summary>
         public bool HasDefault
         {
@@ -337,7 +303,7 @@ namespace Database
 
 
         /// <summary>
-        /// Get or Set default value
+        /// Get or set default value
         /// </summary>
         public object DefaultValue
         {
@@ -352,7 +318,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set maximum length of field
+        /// Get or set maximum length of field
         /// </summary>
         public int MaxLength
         {
@@ -368,7 +334,7 @@ namespace Database
 
 
         /// <summary>
-        /// Get or Set numeric precision
+        /// Get or set numeric precision
         /// </summary>
         public int NumericPrecision
         {
@@ -383,7 +349,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set Numeric scale
+        /// Get or set Numeric scale
         /// </summary>
         public int NumericScale
         {
@@ -398,7 +364,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set date time precision
+        /// Get or set date time precision
         /// </summary>
         public int DateTimePrecision
         {
@@ -414,7 +380,7 @@ namespace Database
 
 
         /// <summary>
-        /// Get or Set readonly flag
+        /// Get or set read-only flag
         /// </summary>
         public bool ReadOnly
         {
@@ -429,7 +395,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set for unique
+        /// Get or set for unique
         /// </summary>
         public bool Unique
         {
@@ -444,7 +410,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set description
+        /// Get or set description
         /// </summary>
         public string Description
         {
@@ -459,7 +425,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set auto increment translation
+        /// Get or set auto increment translation
         /// </summary>
         internal Hashtable AutoIncrementTranslations
         {
@@ -475,7 +441,7 @@ namespace Database
 
 
         /// <summary>
-        /// Get or Set value of <see cref="Field"/>
+        /// Get or set value of <see cref="Field"/>
         /// </summary>
         public object Value
         {
@@ -490,7 +456,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set flag to check <see cref="Field"/> is primary key or not
+        /// Get or set flag to check <see cref="Field"/> is primary key or not
         /// </summary>
         public bool IsPrimaryKey
         {
@@ -505,7 +471,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set ordinal for Primary key field
+        /// Get or set ordinal for Primary key field
         /// </summary>
         public int PrimaryKeyOrdinal
         {
@@ -520,7 +486,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set primary key name
+        /// Get or set primary key name
         /// </summary>
         public string PrimaryKeyName
         {
@@ -535,7 +501,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set list of <see cref="ForeignKeyFields"/>
+        /// Get or set list of <see cref="ForeignKeyFields"/>
         /// </summary>
         public ForeignKeyFields ForeignKeys
         {
@@ -550,7 +516,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set - check <see cref="Field"/> is reference by
+        /// Get or set - check <see cref="Field"/> is reference by
         /// </summary>
         public Field ReferencedBy
         {
@@ -565,24 +531,24 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set foreign key flag. if <see cref="Field"/> is <see cref="ReferencedBy"/> then true else false
+        /// Get or set foreign key flag. if <see cref="Field"/> is <see cref="ReferencedBy"/> then true else false
         /// </summary>
         public bool IsForeignKey
         {
             get
             {
-                return (m_referencedBy != null);
+                return ((object)m_referencedBy != null);
             }
         }
 
         /// <summary>
-        /// Get or Set <see cref="Fields"/> parent
+        /// Get or set <see cref="Fields"/> parent
         /// </summary>
         public Fields Parent
         {
             get
             {
-                return m_parentField;
+                return m_parent;
             }
         }
 
@@ -593,7 +559,7 @@ namespace Database
         {
             get
             {
-                return m_parentField.Parent;
+                return m_parent.Parent;
             }
         }
 
@@ -610,34 +576,29 @@ namespace Database
         {
             // Fields are sorted in ordinal position order
             if (obj is Field)
-            {
-                //return intOrdinal.CompareTo(((Field)obj).intOrdinal);
                 return m_ordinal.CompareTo(((Field)obj).m_ordinal);
-            }
-            else
-            {
-                throw new ArgumentException("Field can only be compared to other Fields");
-            }
+
+            throw new ArgumentException("Field can only be compared to other Fields");
         }
 
         /// <summary>
         /// Change <see cref="Field"/> value to encoded string. It will check <see cref="Type"/>  and <see cref="Parent"/> value before convert to <see cref="OleDbType"/> compatible value
         /// </summary>
-        public string SqlEncodedValue
+        public string SQLEncodedValue
         {
             get
             {
-                string strValue = "";
-                //long tempValue;
+                string encodedValue = "";
+
                 if (!Convert.IsDBNull(m_value))
                 {
                     try
                     {
                         // Attempt to get string based source field value
-                        strValue = m_value.ToString().Trim();
+                        encodedValue = m_value.ToString().Trim();
 
                         // Format field value based on field's data type
-                        switch (m_DataType)
+                        switch (m_dataType)
                         {
                             case OleDbType.BigInt:
                             case OleDbType.Integer:
@@ -648,97 +609,100 @@ namespace Database
                             case OleDbType.UnsignedSmallInt:
                             case OleDbType.UnsignedTinyInt:
                             case OleDbType.Error:
-                                if (strValue.Length == 0)
+                                if (encodedValue.Length == 0)
                                 {
-                                    if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                    if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                     {
-                                        strValue = "NULL";
+                                        encodedValue = "NULL";
                                     }
                                     else
                                     {
-                                        strValue = "0";
+                                        encodedValue = "0";
                                     }
                                 }
                                 else
                                 {
-                                    Int64 tempValue = 0;
+                                    Int64 tempValue;
+
                                     if (Int64.TryParse(m_value.ToString(), out tempValue)) //(Information.IsNumeric(Value))
                                     {
-                                        strValue = Convert.ToInt64(Value).ToString().Trim();
+                                        encodedValue = Convert.ToInt64(Value).ToString().Trim();
                                     }
                                     else
                                     {
-                                        if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                        if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                         {
-                                            strValue = "NULL";
+                                            encodedValue = "NULL";
                                         }
                                         else
                                         {
-                                            strValue = "0";
+                                            encodedValue = "0";
                                         }
                                     }
                                 }
                                 break;
                             case OleDbType.Single:
-                                if (strValue.Length == 0)
+                                if (encodedValue.Length == 0)
                                 {
-                                    if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                    if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                     {
-                                        strValue = "NULL";
+                                        encodedValue = "NULL";
                                     }
                                     else
                                     {
-                                        strValue = "0.0";
+                                        encodedValue = "0.0";
                                     }
                                 }
                                 else
                                 {
-                                    Single tempValue = 0;
+                                    Single tempValue;
+
                                     if (Single.TryParse(m_value.ToString(), out tempValue)) //if (Information.IsNumeric(Value))
                                     {
-                                        strValue = Convert.ToSingle(Value).ToString().Trim();
+                                        encodedValue = Convert.ToSingle(Value).ToString().Trim();
                                     }
                                     else
                                     {
-                                        if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                        if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                         {
-                                            strValue = "NULL";
+                                            encodedValue = "NULL";
                                         }
                                         else
                                         {
-                                            strValue = "0.0";
+                                            encodedValue = "0.0";
                                         }
                                     }
                                 }
                                 break;
                             case OleDbType.Double:
-                                if (strValue.Length == 0)
+                                if (encodedValue.Length == 0)
                                 {
-                                    if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                    if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                     {
-                                        strValue = "NULL";
+                                        encodedValue = "NULL";
                                     }
                                     else
                                     {
-                                        strValue = "0.0";
+                                        encodedValue = "0.0";
                                     }
                                 }
                                 else
                                 {
-                                    Double tempValue = 0;
+                                    Double tempValue;
+
                                     if (Double.TryParse(m_value.ToString(), out tempValue)) //if (Information.IsNumeric(Value))
                                     {
-                                        strValue = Convert.ToDouble(Value).ToString().Trim();
+                                        encodedValue = Convert.ToDouble(Value).ToString().Trim();
                                     }
                                     else
                                     {
-                                        if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                        if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                         {
-                                            strValue = "NULL";
+                                            encodedValue = "NULL";
                                         }
                                         else
                                         {
-                                            strValue = "0.0";
+                                            encodedValue = "0.0";
                                         }
                                     }
                                 }
@@ -747,83 +711,85 @@ namespace Database
                             case OleDbType.Decimal:
                             case OleDbType.Numeric:
                             case OleDbType.VarNumeric:
-                                if (strValue.Length == 0)
+                                if (encodedValue.Length == 0)
                                 {
-                                    if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                    if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                     {
-                                        strValue = "NULL";
+                                        encodedValue = "NULL";
                                     }
                                     else
                                     {
-                                        strValue = "0.00";
+                                        encodedValue = "0.00";
                                     }
                                 }
                                 else
                                 {
-                                    Decimal tempValue = 0;
+                                    Decimal tempValue;
+
                                     if (Decimal.TryParse(m_value.ToString(), out tempValue)) //if (Information.IsNumeric(Value))
                                     {
-                                        strValue = Convert.ToDecimal(Value).ToString().Trim();
+                                        encodedValue = Convert.ToDecimal(Value).ToString().Trim();
                                     }
                                     else
                                     {
-                                        if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                        if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                         {
-                                            strValue = "NULL";
+                                            encodedValue = "NULL";
                                         }
                                         else
                                         {
-                                            strValue = "0.00";
+                                            encodedValue = "0.00";
                                         }
                                     }
                                 }
                                 break;
                             case OleDbType.Boolean:
-                                if (strValue.Length == 0)
+                                if (encodedValue.Length == 0)
                                 {
-                                    if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                    if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                     {
-                                        strValue = "NULL";
+                                        encodedValue = "NULL";
                                     }
                                     else
                                     {
-                                        strValue = "0";
+                                        encodedValue = "0";
                                     }
                                 }
                                 else
                                 {
-                                    long tempValue = 0;
+                                    long tempValue;
+
                                     if (long.TryParse(m_value.ToString(), out tempValue)) //if (Information.IsNumeric(strValue))
                                     {
                                         if (tempValue == 0)
                                         {
-                                            strValue = "0";
+                                            encodedValue = "0";
                                         }
                                         else
                                         {
-                                            strValue = "1";
+                                            encodedValue = "1";
                                         }
                                     }
                                     else
                                     {
-                                        switch (char.ToUpper(strValue.Trim()[0]))
+                                        switch (char.ToUpper(encodedValue.Trim()[0]))
                                         {
                                             case 'Y':
                                             case 'T':
-                                                strValue = "1";
+                                                encodedValue = "1";
                                                 break;
                                             case 'N':
                                             case 'F':
-                                                strValue = "0";
+                                                encodedValue = "0";
                                                 break;
                                             default:
-                                                if (m_parentField.Parent.Parent.Parent.AllowNumericNulls)
+                                                if (m_parent.Parent.Parent.Parent.AllowNumericNulls)
                                                 {
-                                                    strValue = "NULL";
+                                                    encodedValue = "NULL";
                                                 }
                                                 else
                                                 {
-                                                    strValue = "0";
+                                                    encodedValue = "0";
                                                 }
                                                 break;
                                         }
@@ -837,94 +803,96 @@ namespace Database
                             case OleDbType.LongVarChar:
                             case OleDbType.LongVarWChar:
                             case OleDbType.BSTR:
-                                if (strValue.Length == 0)
+                                if (encodedValue.Length == 0)
                                 {
-                                    if (m_parentField.Parent.Parent.Parent.AllowTextNulls)
+                                    if (m_parent.Parent.Parent.Parent.AllowTextNulls)
                                     {
-                                        strValue = "NULL";
+                                        encodedValue = "NULL";
                                     }
                                     else
                                     {
-                                        strValue = "''";
+                                        encodedValue = "''";
                                     }
                                 }
                                 else
                                 {
-                                    strValue = "'" + strValue.SqlEncode() + "'";
+                                    encodedValue = "'" + encodedValue.SqlEncode() + "'";
                                 }
                                 break;
                             case OleDbType.DBTimeStamp:
                             case OleDbType.DBDate:
                             case OleDbType.Date:
-                                if (strValue.Length > 0)
+                                if (encodedValue.Length > 0)
                                 {
                                     DateTime tempDateTimeValue;
+
                                     if (DateTime.TryParse(m_value.ToString(), out tempDateTimeValue)) //if (Information.IsDate(strValue))
                                     {
-                                        switch (m_parentField.Parent.Parent.Parent.DataSourceType)
+                                        switch (m_parent.Parent.Parent.Parent.DataSourceType)
                                         {
-                                            case DatabaseType.SqlServer:
-                                                strValue = "'" + tempDateTimeValue.ToString("MM/dd/yyyy HH:mm:ss") + "'"; // Strings.Format((DateTime)strValue, "MM/dd/yyyy HH:mm:ss") + "'";
-                                                break;
                                             case DatabaseType.Access:
-                                                strValue = "#" + tempDateTimeValue.ToString("MM/dd/yyyy HH:mm:ss") + "#"; //+ Strings.Format((DateTime)strValue, "MM/dd/yyyy HH:mm:ss") + "#";
+                                                encodedValue = "#" + tempDateTimeValue.ToString("MM/dd/yyyy HH:mm:ss") + "#";
+                                                break;
+                                            case DatabaseType.SQLite:
+                                                encodedValue = "'" + tempDateTimeValue.ToString("yyyy-MM-dd HH:mm:ss") + "'";
                                                 break;
                                             default:
-                                                strValue = "'" + tempDateTimeValue.ToString("dd-MMM-yyyy HH:mm:ss") + "'"; //+ Strings.Format((DateTime)strValue, "dd-MMM-yyyy HH:mm:ss") + "'";
+                                                encodedValue = "'" + tempDateTimeValue.ToString("dd-MMM-yyyy HH:mm:ss") + "'";
                                                 break;
                                         }
                                     }
                                     else
                                     {
-                                        strValue = "NULL";
+                                        encodedValue = "NULL";
                                     }
                                 }
                                 else
                                 {
-                                    strValue = "NULL";
+                                    encodedValue = "NULL";
                                 }
                                 break;
                             case OleDbType.DBTime:
-                                if (strValue.Length > 0)
+                                if (encodedValue.Length > 0)
                                 {
                                     DateTime tempDateTimeValue;
+
                                     if (DateTime.TryParse(m_value.ToString(), out tempDateTimeValue)) //if (Information.IsDate(strValue))
                                     {
-                                        strValue = "'" + tempDateTimeValue.ToString("HH:mm:ss") + "'"; // Strings.Format((DateTime)strValue, "HH:mm:ss") + "'";
+                                        encodedValue = "'" + tempDateTimeValue.ToString("HH:mm:ss") + "'"; // Strings.Format((DateTime)strValue, "HH:mm:ss") + "'";
                                     }
                                     else
                                     {
-                                        strValue = "NULL";
+                                        encodedValue = "NULL";
                                     }
                                 }
                                 else
                                 {
-                                    strValue = "NULL";
+                                    encodedValue = "NULL";
                                 }
                                 break;
                             case OleDbType.Filetime:
-                                if (strValue.Length > 0)
+                                if (encodedValue.Length > 0)
                                 {
-                                    strValue = "'" + strValue + "'";
+                                    encodedValue = "'" + encodedValue + "'";
                                 }
                                 else
                                 {
-                                    strValue = "NULL";
+                                    encodedValue = "NULL";
                                 }
                                 break;
                             case OleDbType.Guid:
-                                if (strValue.Length == 0)
+                                if (encodedValue.Length == 0)
                                 {
-                                    strValue = (new Guid()).ToString();
+                                    encodedValue = (new Guid()).ToString().ToLower();
                                 }
 
-                                if (m_parentField.Parent.Parent.Parent.DataSourceType == DatabaseType.Access)
+                                if (m_parent.Parent.Parent.Parent.DataSourceType == DatabaseType.Access)
                                 {
-                                    strValue = "{" + strValue + "}";
+                                    encodedValue = "{" + encodedValue.ToLower() + "}";
                                 }
                                 else
                                 {
-                                    strValue = "'" + strValue + "'";
+                                    encodedValue = "'" + encodedValue.ToLower() + "'";
                                 }
                                 break;
                         }
@@ -932,26 +900,99 @@ namespace Database
                     catch //(Exception ex)
                     {
                         // We'll default to NULL if we failed to evaluate field data
-                        strValue = "NULL";
+                        encodedValue = "NULL";
                     }
                 }
 
-                if (strValue.Length == 0)
-                    strValue = "NULL";
+                if (encodedValue.Length == 0)
+                    encodedValue = "NULL";
 
-                return strValue;
+                return encodedValue;
+            }
+        }
+
+        /// <summary>
+        /// Gets the native value for the field (SQL Encoded).
+        /// </summary>
+        public string NonNullNativeValue
+        {
+            get
+            {
+                string encodedValue = "";
+
+                // Format field value based on field's data type
+                switch (m_dataType)
+                {
+                    case OleDbType.BigInt:
+                    case OleDbType.Integer:
+                    case OleDbType.SmallInt:
+                    case OleDbType.TinyInt:
+                    case OleDbType.UnsignedBigInt:
+                    case OleDbType.UnsignedInt:
+                    case OleDbType.UnsignedSmallInt:
+                    case OleDbType.UnsignedTinyInt:
+                    case OleDbType.Error:
+                    case OleDbType.Boolean:
+                        encodedValue = "0";
+                        break;
+                    case OleDbType.Single:
+                    case OleDbType.Double:
+                    case OleDbType.Currency:
+                    case OleDbType.Decimal:
+                    case OleDbType.Numeric:
+                    case OleDbType.VarNumeric:
+                        encodedValue = "0.00";
+                        break;
+                    case OleDbType.Char:
+                    case OleDbType.WChar:
+                    case OleDbType.VarChar:
+                    case OleDbType.VarWChar:
+                    case OleDbType.LongVarChar:
+                    case OleDbType.LongVarWChar:
+                    case OleDbType.BSTR:
+                    case OleDbType.Filetime:
+                        encodedValue = "''";
+                        break;
+                    case OleDbType.DBTimeStamp:
+                    case OleDbType.DBDate:
+                    case OleDbType.Date:
+                        switch (m_parent.Parent.Parent.Parent.DataSourceType)
+                        {
+                            case DatabaseType.Access:
+                                encodedValue = "#" + DateTime.UtcNow.ToString("MM/dd/yyyy HH:mm:ss") + "#";
+                                break;
+                            case DatabaseType.SQLite:
+                                encodedValue = "'" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                                break;
+                            default:
+                                encodedValue = "'" + DateTime.UtcNow.ToString("dd-MMM-yyyy HH:mm:ss") + "'";
+                                break;
+                        }
+                        break;
+                    case OleDbType.DBTime:
+                        encodedValue = "'" + DateTime.UtcNow.ToString("HH:mm:ss") + "'";
+                        break;
+                    case OleDbType.Guid:
+                        encodedValue = (new Guid()).ToString().ToLower();
+                        if (m_parent.Parent.Parent.Parent.DataSourceType == DatabaseType.Access)
+                            encodedValue = "{" + encodedValue + "}";
+                        else
+                            encodedValue = "'" + encodedValue + "'";
+                        break;
+                }
+
+                return encodedValue;
             }
         }
 
         /// <summary>
         /// Get information about referential action
         /// </summary>
-        /// <param name="RefAction">check <paramref name="RefAction"/> and return to appropriate <see cref="ReferentialAction"/>.</param>
+        /// <param name="action">check <paramref name="action"/> and return to appropriate <see cref="ReferentialAction"/>.</param>
         /// <returns></returns>
-        static internal ReferentialAction GetReferentialAction(string RefAction)
+        static internal ReferentialAction GetReferentialAction(string action)
         {
-
-            switch (RefAction.Trim().ToUpper())
+            switch (action.Trim().ToUpper())
             {
                 case "CASCADE":
                     return ReferentialAction.Cascade;
@@ -964,7 +1005,6 @@ namespace Database
                 default:
                     return ReferentialAction.NoAction;
             }
-
         }
 
         #endregion
@@ -973,6 +1013,7 @@ namespace Database
     /// <summary>
     /// Represents a database foreign key field.
     /// </summary>
+    [Serializable]
     public class ForeignKeyField
     {
         #region [ Members ]
@@ -1013,7 +1054,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set Primary key field
+        /// Get or set Primary key field
         /// </summary>
         public Field PrimaryKey
         {
@@ -1028,7 +1069,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set Foreign key field
+        /// Get or set Foreign key field
         /// </summary>
         public Field ForeignKey
         {
@@ -1043,7 +1084,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set ordinal of <see cref="Field"/>
+        /// Get or set ordinal of <see cref="Field"/>
         /// </summary>
         public int Ordinal
         {
@@ -1058,7 +1099,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set name of key
+        /// Get or set name of key
         /// </summary>
         public string KeyName
         {
@@ -1073,7 +1114,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set update rule for <see cref="ReferentialAction"/> for <see cref="Field"/>
+        /// Get or set update rule for <see cref="ReferentialAction"/> for <see cref="Field"/>
         /// </summary>
         public ReferentialAction UpdateRule
         {
@@ -1088,7 +1129,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set delete rule for <see cref="ReferentialAction"/> for <see cref="Field"/>
+        /// Get or set delete rule for <see cref="ReferentialAction"/> for <see cref="Field"/>
         /// </summary>
         public ReferentialAction DeleteRule
         {
@@ -1108,15 +1149,14 @@ namespace Database
     /// <summary>
     /// Represents a collection of <see cref="ForeignKeyField"/> values.
     /// </summary>
+    [Serializable]
     public class ForeignKeyFields
     {
         #region [ Members ]
 
         private readonly Field m_parent;
-        // Used for field name lookups
-        private readonly Dictionary<string, ForeignKeyField> m_fields;
-        // Used for field index lookups
-        private readonly List<ForeignKeyField> m_fieldList;
+        private readonly Dictionary<string, ForeignKeyField> m_fields;      // Used for field name lookups
+        private readonly List<ForeignKeyField> m_fieldList;                 // Used for field index lookups
 
         #endregion
 
@@ -1128,7 +1168,6 @@ namespace Database
             m_parent = Parent;
             m_fields = new Dictionary<string, ForeignKeyField>(StringComparer.OrdinalIgnoreCase);
             m_fieldList = new List<ForeignKeyField>();
-
         }
 
         #endregion
@@ -1162,7 +1201,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set field indexs to lookups
+        /// Get or set field indexes to lookups
         /// </summary>
         internal List<ForeignKeyField> FieldsList
         {
@@ -1173,7 +1212,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get the current index of foreignkey field information
+        /// Get the current index of foreign key field information
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
@@ -1181,14 +1220,10 @@ namespace Database
         {
             get
             {
-                if (index < 0 | index >= m_fieldList.Count)
-                {
+                if (index < 0 || index >= m_fieldList.Count)
                     return null;
-                }
-                else
-                {
-                    return m_fieldList[index];
-                }
+
+                return m_fieldList[index];
             }
         }
 
@@ -1224,7 +1259,7 @@ namespace Database
         #region [ Methods ]
 
         /// <summary>
-        /// Get <see cref="IEnumarator"/> of field lists
+        /// Get <see cref="IEnumerator"/> of field lists
         /// </summary>
         /// <returns></returns>
         public IEnumerator GetEnumerator()
@@ -1243,19 +1278,19 @@ namespace Database
         }
 
         /// <summary>
-        /// Get comma seperated <see cref="string"/> of <see cref="ForeignKeyField"/>
+        /// Get comma separated <see cref="string"/> of <see cref="ForeignKeyField"/>
         /// </summary>
         /// <returns></returns>
         public string GetList()
         {
             StringBuilder fieldList = new StringBuilder();
 
-            foreach (ForeignKeyField fld in m_fieldList)
+            foreach (ForeignKeyField field in m_fieldList)
             {
                 if (fieldList.Length > 0)
                     fieldList.Append(',');
                 fieldList.Append('[');
-                fieldList.Append(fld.ForeignKey.Name);
+                fieldList.Append(field.ForeignKey.Name);
                 fieldList.Append(']');
             }
 
@@ -1269,13 +1304,16 @@ namespace Database
     /// <summary>
     /// Represents a collection of <see cref="Field"/> values.
     /// </summary>
+    [Serializable]
     public class Fields
     {
         #region [ Members ]
 
         private readonly Table m_parent;
+
         // Used for field name lookups
         private readonly Dictionary<string, Field> m_fields;
+
         // Used for field index lookups
         private readonly List<Field> m_fieldList;
 
@@ -1308,7 +1346,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set to fields lookup 
+        /// Get or set to fields lookup 
         /// </summary>
         internal Dictionary<string, Field> FieldDictionary
         {
@@ -1319,7 +1357,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set Fields index lookup
+        /// Get or set Fields index lookup
         /// </summary>
         internal List<Field> FieldList
         {
@@ -1338,14 +1376,10 @@ namespace Database
         {
             get
             {
-                if (index < 0 | index >= m_fieldList.Count)
-                {
+                if (index < 0 || index >= m_fieldList.Count)
                     return null;
-                }
-                else
-                {
-                    return m_fieldList[index];
-                }
+
+                return m_fieldList[index];
             }
         }
 
@@ -1382,11 +1416,11 @@ namespace Database
         /// <summary>
         /// Add new <see cref="Field"/> to this collection
         /// </summary>
-        /// <param name="NewField"></param>
-        internal void Add(Field NewField)
+        /// <param name="newField"></param>
+        internal void Add(Field newField)
         {
-            m_fields.Add(NewField.Name, NewField);
-            m_fieldList.Add(NewField);
+            m_fields.Add(newField.Name, newField);
+            m_fieldList.Add(newField);
         }
 
         /// <summary>
@@ -1399,24 +1433,22 @@ namespace Database
         }
 
         /// <summary>
-        /// Get comma seperated list of <see cref="Field"/>
+        /// Get comma separated list of <see cref="Field"/>
         /// </summary>
-        /// <param name="ReturnAutoInc"></param>
+        /// <param name="returnAutoInc"></param>
         /// <returns></returns>
-        public string GetList(bool ReturnAutoInc = true)
+        public string GetList(bool returnAutoInc = true)
         {
-            //var _with2 = new StringBuilder();
             StringBuilder fieldList = new StringBuilder();
 
-            foreach (Field fld in m_fieldList)
+            foreach (Field field in m_fieldList)
             {
-                if (!fld.AutoIncrement | ReturnAutoInc)
+                if (!field.AutoIncrement || returnAutoInc)
                 {
                     if (fieldList.Length > 0)
-                        fieldList.Append(',');
-                    fieldList.Append('[');
-                    fieldList.Append(fld.Name);
-                    fieldList.Append(']');
+                        fieldList.Append(", ");
+
+                    fieldList.Append(field.SQLEscapedName);
                 }
             }
 
@@ -1430,6 +1462,7 @@ namespace Database
     /// <summary>
     /// Get data table information for data processing
     /// </summary>
+    [Serializable]
     public class Table : IComparable, IComparable<Table>
     {
         #region [ Members ]
@@ -1440,35 +1473,39 @@ namespace Database
         private readonly string m_name;
         private readonly TableType m_tableType;
         private readonly string m_description;
-        private readonly int m_rows;
+        private int m_rows;
 
         private Fields m_fields;
+
         // This is the name that will be used during table mapping when using a data handler
         private string m_mapName;
+
         // This flag allows users to override whether or not table will be processed in a data operation
         private bool m_process;
+
         // This is the user-overridable I/O process priority for a table
         private int m_priority;
-        // User definable Sql used to retrieve last auto-inc value from identity column
-        private string m_identitySql = "SELECT @@IDENTITY";
+
+        // User definable SQL used to retrieve last auto-inc value from identity column
+        private string m_identitySQL = "SELECT @@IDENTITY";
 
         #endregion
 
         #region [ Consturctors ]
 
-        internal Table(Tables Parent, string Catalog, string Schema, string Name, string Type, string Description, int Rows)
+        internal Table(Tables parent, string catalog, string schema, string name, string type, string description, int rows)
         {
             // We only allow internal creation of this object
-            m_parent = Parent;
+            m_parent = parent;
             m_fields = new Fields(this);
 
-            m_catalog = Catalog;
-            m_schema = Schema;
-            m_name = Name;
-            m_mapName = Name;
-            m_description = Description;
+            m_catalog = catalog;
+            m_schema = schema;
+            m_name = name;
+            m_mapName = name;
+            m_description = description;
 
-            switch (Type.Trim().ToUpper())
+            switch (type.Trim().ToUpper())
             {
                 case "TABLE":
                     m_tableType = TableType.Table;
@@ -1502,29 +1539,12 @@ namespace Database
                     break;
             }
 
-            if (Rows == 0 && m_tableType == TableType.Table)
-            {
-                try
-                {
-                    //m_rows = m_Parent.Parent.Connection.ExecuteScalar("SELECT COUNT(*) FROM " + FullName);
-                    OleDbCommand oCMD = Parent.Parent.Connection.CreateCommand();
-                    oCMD.CommandText = "SELECT COUNT(*) FROM " + FullName;
-                    oCMD.CommandType = CommandType.Text;
-                    m_rows = Convert.ToInt32(oCMD.ExecuteScalar());
-                }
-                catch
-                {
-                    m_rows = 0;
-                }
-            }
+            if (rows == 0)
+                CalculateRowCount();
             else
-            {
-                m_rows = Rows;
-            }
+                m_rows = rows;
 
-            if (m_parent.Parent.DataSourceType == DatabaseType.SqlServer)
-                m_identitySql = "SELECT IDENT_CURRENT('" + Name + "')";
-
+            ReevalulateIdentitySQL();
         }
 
         #endregion
@@ -1532,7 +1552,7 @@ namespace Database
         #region [ Properties ]
 
         /// <summary>
-        /// Get or Set list of <see cref="Fields"/> for <see cref="Table"/>
+        /// Get or set list of <see cref="Fields"/> for <see cref="Table"/>
         /// </summary>
         public Fields Fields
         {
@@ -1545,8 +1565,9 @@ namespace Database
                 m_fields = value;
             }
         }
+
         /// <summary>
-        /// Get or Set name of <see cref="Table"/>
+        /// Get or set name of <see cref="Table"/>
         /// </summary>
         public string MapName
         {
@@ -1561,7 +1582,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set process flag
+        /// Get or set process flag
         /// </summary>
         public bool Process
         {
@@ -1591,22 +1612,22 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set identitysql for <see cref="Table"/>
+        /// Get or set identity SQL for <see cref="Table"/>
         /// </summary>
-        public string IdentitySql
+        public string IdentitySQL
         {
             get
             {
-                return m_identitySql;
+                return m_identitySQL;
             }
             set
             {
-                m_identitySql = value;
+                m_identitySQL = value;
             }
         }
 
         /// <summary>
-        /// Get or Set name of <see cref="Table"/>
+        /// Get name of <see cref="Table"/>
         /// </summary>
         public string Name
         {
@@ -1617,26 +1638,41 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set full name of <see cref="Table"/>
+        /// Get SQL escaped name of <see cref="Table"/>
+        /// </summary>
+        public string SQLEscapedName
+        {
+            get
+            {
+                return m_parent.Parent.SQLEscapeName(m_name);
+            }
+        }
+
+        /// <summary>
+        /// Get or set full name of <see cref="Table"/>
         /// </summary>
         public string FullName
         {
             get
             {
+                Schema schema = m_parent.Parent;
+
                 string strFullName = "";
 
-                if (m_catalog.Length > 0)
-                    strFullName += "[" + m_catalog + "].";
-                if (m_schema.Length > 0)
-                    strFullName += "[" + m_schema + "].";
-                strFullName += "[" + m_name + "]";
+                if (!string.IsNullOrWhiteSpace(m_catalog))
+                    strFullName += schema.SQLEscapeName(m_catalog) + ".";
+
+                if (!string.IsNullOrWhiteSpace(m_schema))
+                    strFullName += schema.SQLEscapeName(m_schema) + ".";
+
+                strFullName += schema.SQLEscapeName(m_name);
 
                 return strFullName;
             }
         }
 
         /// <summary>
-        /// Get or Set catalog information for <see cref="Table"/>
+        /// Get or set catalog information for <see cref="Table"/>
         /// </summary>
         public string Catalog
         {
@@ -1647,7 +1683,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set schema name
+        /// Get or set schema name
         /// </summary>
         public string Schema
         {
@@ -1669,7 +1705,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set description
+        /// Get or set description
         /// </summary>
         public string Description
         {
@@ -1702,9 +1738,9 @@ namespace Database
         }
 
         /// <summary>
-        /// Get <see cref="OleDbConnection"/> of object
+        /// Get <see cref="IDbConnection"/> of object
         /// </summary>
-        public OleDbConnection Connection
+        public IDbConnection Connection
         {
             get
             {
@@ -1757,21 +1793,21 @@ namespace Database
         }
 
         /// <summary>
-        /// Get count for primay key <see cref="Field"/>
+        /// Get count for primary key <see cref="Field"/>
         /// </summary>
         public int PrimaryKeyFieldCount
         {
             get
             {
-                int iCount = 0;
+                int count = 0;
 
-                foreach (Field fld in m_fields)
+                foreach (Field field in m_fields)
                 {
-                    if (fld.IsPrimaryKey)
-                        iCount += 1;
+                    if (field.IsPrimaryKey)
+                        count += 1;
                 }
 
-                return iCount;
+                return count;
             }
         }
 
@@ -1782,9 +1818,9 @@ namespace Database
         {
             get
             {
-                foreach (Field fld in m_fields)
+                foreach (Field field in m_fields)
                 {
-                    if (fld.IsForeignKey)
+                    if (field.IsForeignKey)
                         return true;
                 }
                 return false;
@@ -1798,9 +1834,9 @@ namespace Database
         {
             get
             {
-                foreach (Field fld in m_fields)
+                foreach (Field field in m_fields)
                 {
-                    if (fld.AutoIncrement)
+                    if (field.AutoIncrement)
                         return true;
                 }
                 return false;
@@ -1817,10 +1853,10 @@ namespace Database
         /// <returns></returns>
         public bool UsesDefaultSchema()
         {
-            if (Parent.Parent.DataSourceType == DatabaseType.SqlServer)
-                return (string.Compare(m_schema, "dbo", true) == 0);
-            else
-                return (Schema.Length == 0);
+            if (Parent.Parent.DataSourceType == DatabaseType.SQLServer)
+                return (string.Compare(m_schema, "dbo", StringComparison.OrdinalIgnoreCase) == 0);
+
+            return (Schema.Length == 0);
         }
 
         /// <summary>
@@ -1841,12 +1877,12 @@ namespace Database
             // Tables are sorted in priority order
             if (obj is Table)
                 return CompareTo(obj as Table);
-            else
-                throw new ArgumentException("Table can only be compared to other Tables");
+
+            throw new ArgumentException("Table can only be compared to other Tables");
         }
 
         /// <summary>
-        /// Compare <paramref name="Table"/> with other <see cref="Table"/> object <see cref="Priority"/>
+        /// Compare Table with other <see cref="Table"/> object <see cref="Priority"/>
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
@@ -1863,10 +1899,10 @@ namespace Database
         /// <returns></returns>
         internal bool IsReferencedBy(Table otherTable, List<Table> tableStack)
         {
-            Table table = null;
-            bool tableIsInStack = false;
+            Table table;
+            bool tableIsInStack;
 
-            if (tableStack == null)
+            if ((object)tableStack == null)
                 tableStack = new List<Table>();
 
             tableStack.Add(this);
@@ -1877,18 +1913,19 @@ namespace Database
                 {
                     // We don't want to circle back on ourselves
                     table = foreignKey.ForeignKey.Table;
-                    tableIsInStack = tableStack.Exists(tbl => string.Compare(tbl.Name, table.Name, true) == 0);
+                    tableIsInStack = tableStack.Exists(tbl => string.Compare(tbl.Name, table.Name, StringComparison.OrdinalIgnoreCase) == 0);
 
                     if (tableIsInStack)
                     {
-                        if (string.Compare(table.Name, otherTable.Name, true) == 0)
+                        if (string.Compare(table.Name, otherTable.Name, StringComparison.OrdinalIgnoreCase) == 0)
                             return true;
                     }
                     else
                     {
                         if (table.IsReferencedBy(otherTable, tableStack))
                             return true;
-                        else if (string.Compare(table.Name, otherTable.Name, true) == 0)
+
+                        if (string.Compare(table.Name, otherTable.Name, StringComparison.OrdinalIgnoreCase) == 0)
                             return true;
                     }
                 }
@@ -1909,7 +1946,7 @@ namespace Database
 
         public bool IsReferencedVia(Table otherTable)
         {
-            Table table = null;
+            Table table;
 
             foreach (Field field in otherTable.Fields)
             {
@@ -1918,7 +1955,7 @@ namespace Database
                     table = foreignKey.ForeignKey.Table;
 
                     // Not a direct relation, but children are related
-                    if (string.Compare(m_name, table.Name, true) != 0 && IsReferencedBy(table))
+                    if (string.Compare(m_name, table.Name, StringComparison.OrdinalIgnoreCase) != 0 && IsReferencedBy(table))
                         return true;
                 }
             }
@@ -1929,22 +1966,21 @@ namespace Database
         /// <summary>
         /// check for primary key field in <see cref="Table"/>
         /// </summary>
-        /// <param name="FieldName"></param>
-        /// <param name="PrimaryKeyOrdinal"></param>
-        /// <param name="PrimaryKeyName"></param>
+        /// <param name="fieldName"></param>
+        /// <param name="primaryKeyOrdinal"></param>
+        /// <param name="primaryKeyName"></param>
         /// <returns></returns>
-        public bool DefinePrimaryKey(string FieldName, int PrimaryKeyOrdinal = -1, string PrimaryKeyName = "")
+        public bool DefinePrimaryKey(string fieldName, int primaryKeyOrdinal = -1, string primaryKeyName = "")
         {
+            Field lookupField;
 
-            Field fldLookup;// = null;
+            lookupField = m_fields[fieldName];
 
-            fldLookup = m_fields[FieldName];
-            if ((fldLookup != null))
+            if ((object)lookupField != null)
             {
-                //var _with3 = fldLookup;
-                fldLookup.IsPrimaryKey = true;
-                fldLookup.PrimaryKeyOrdinal = (PrimaryKeyOrdinal == -1 ? PrimaryKeyFieldCount + 1 : PrimaryKeyOrdinal);
-                fldLookup.PrimaryKeyName = PrimaryKeyName;
+                lookupField.IsPrimaryKey = true;
+                lookupField.PrimaryKeyOrdinal = (primaryKeyOrdinal == -1 ? PrimaryKeyFieldCount + 1 : primaryKeyOrdinal);
+                lookupField.PrimaryKeyName = primaryKeyName;
                 return true;
             }
             return false;
@@ -1953,45 +1989,88 @@ namespace Database
         /// <summary>
         /// Check for <see cref="ForeignKeyField"/>
         /// </summary>
-        /// <param name="PrimaryKeyFieldName"></param>
-        /// <param name="ForeignKeyTableName"></param>
-        /// <param name="ForeignKeyFieldName"></param>
-        /// <param name="ForeignKeyOrdinal"></param>
-        /// <param name="ForeignKeyName"></param>
-        /// <param name="ForeignKeyUpdateRule"></param>
-        /// <param name="ForeignKeyDeleteRule"></param>
+        /// <param name="primaryKeyFieldName"></param>
+        /// <param name="foreignKeyTableName"></param>
+        /// <param name="foreignKeyFieldName"></param>
+        /// <param name="foreignKeyOrdinal"></param>
+        /// <param name="foreignKeyName"></param>
+        /// <param name="foreignKeyUpdateRule"></param>
+        /// <param name="foreignKeyDeleteRule"></param>
         /// <returns></returns>
-        public bool DefineForeignKey(string PrimaryKeyFieldName, string ForeignKeyTableName, string ForeignKeyFieldName, int ForeignKeyOrdinal = -1, string ForeignKeyName = "", ReferentialAction ForeignKeyUpdateRule = ReferentialAction.NoAction, ReferentialAction ForeignKeyDeleteRule = ReferentialAction.NoAction)
+        public bool DefineForeignKey(string primaryKeyFieldName, string foreignKeyTableName, string foreignKeyFieldName, int foreignKeyOrdinal = -1, string foreignKeyName = "", ReferentialAction foreignKeyUpdateRule = ReferentialAction.NoAction, ReferentialAction foreignKeyDeleteRule = ReferentialAction.NoAction)
         {
+            Field lookupField;
+            Table lookupTable;
+            Field parentLookupField;
 
-            Field fldLookup = null;
-            Table tblLookup = null;
-            Field fldParentLookup = null;
+            lookupField = m_fields[primaryKeyFieldName];
 
-            fldLookup = m_fields[PrimaryKeyFieldName];
-            if ((fldLookup != null))
+            if ((object)lookupField != null)
             {
-                tblLookup = m_parent[ForeignKeyTableName];
-                if ((tblLookup != null))
+                lookupTable = m_parent[foreignKeyTableName];
+
+                if ((object)lookupTable != null)
                 {
-                    fldParentLookup = tblLookup.Fields[ForeignKeyFieldName];
-                    if ((fldParentLookup != null))
+                    parentLookupField = lookupTable.Fields[foreignKeyFieldName];
+
+                    if ((object)parentLookupField != null)
                     {
-                        ForeignKeyField fkFld = new ForeignKeyField(fldLookup.ForeignKeys);
-                        //var _with4 = fkFld;
-                        fkFld.PrimaryKey = fldLookup;
-                        fkFld.ForeignKey = fldParentLookup;
-                        fkFld.ForeignKey.ReferencedBy = fkFld.PrimaryKey;
-                        fkFld.Ordinal = (ForeignKeyOrdinal == -1 ? fldLookup.ForeignKeys.Count + 1 : ForeignKeyOrdinal);
-                        fkFld.KeyName = ForeignKeyName;
-                        fkFld.UpdateRule = ForeignKeyUpdateRule;
-                        fkFld.DeleteRule = ForeignKeyDeleteRule;
-                        fldLookup.ForeignKeys.Add(fkFld);
+                        ForeignKeyField foreignKeyField = new ForeignKeyField(lookupField.ForeignKeys);
+
+                        foreignKeyField.PrimaryKey = lookupField;
+                        foreignKeyField.ForeignKey = parentLookupField;
+                        foreignKeyField.ForeignKey.ReferencedBy = foreignKeyField.PrimaryKey;
+                        foreignKeyField.Ordinal = (foreignKeyOrdinal == -1 ? lookupField.ForeignKeys.Count + 1 : foreignKeyOrdinal);
+                        foreignKeyField.KeyName = foreignKeyName;
+                        foreignKeyField.UpdateRule = foreignKeyUpdateRule;
+                        foreignKeyField.DeleteRule = foreignKeyDeleteRule;
+
+                        lookupField.ForeignKeys.Add(foreignKeyField);
+
                         return true;
                     }
                 }
             }
             return false;
+        }
+
+        public void ReevalulateIdentitySQL()
+        {
+            switch (m_parent.Parent.DataSourceType)
+            {
+                case DatabaseType.SQLServer:
+                    m_identitySQL = "SELECT IDENT_CURRENT('" + Name + "')";
+                    break;
+                case DatabaseType.Oracle:
+                    m_identitySQL = "SELECT SEQ_" + Name + ".CURRVAL from dual";
+                    break;
+                case DatabaseType.SQLite:
+                    m_identitySQL = "SELECT last_insert_rowid()";
+                    break;
+                default:
+                    m_identitySQL = "SELECT @@IDENTITY";
+                    break;
+            }
+        }
+
+        public void CalculateRowCount()
+        {
+            if (m_tableType == TableType.Table)
+            {
+                try
+                {
+                    IDbCommand command = m_parent.Parent.Connection.CreateCommand();
+
+                    command.CommandText = "SELECT COUNT(*) FROM " + SQLEscapedName;
+                    command.CommandType = CommandType.Text;
+
+                    m_rows = Convert.ToInt32(command.ExecuteScalar());
+                }
+                catch
+                {
+                    m_rows = 0;
+                }
+            }
         }
 
         #endregion
@@ -2000,14 +2079,17 @@ namespace Database
     /// <summary>
     /// List of <see cref="Table"/> collection
     /// </summary>
+    [Serializable]
     public class Tables
     {
         #region [ Memebers ]
 
         //Fields
-        private readonly Schema m_parent;
+        private Schema m_parent;
+
         // Used for table name lookups
         private readonly Dictionary<string, Table> m_tables;
+
         // Used for table index lookups
         private readonly List<Table> m_tableList;
 
@@ -2057,6 +2139,15 @@ namespace Database
             {
                 return m_parent;
             }
+            internal set
+            {
+                m_parent = value;
+
+                foreach (Table table in m_tableList)
+                {
+                    table.ReevalulateIdentitySQL();
+                }
+            }
         }
 
         #endregion
@@ -2073,14 +2164,10 @@ namespace Database
         {
             get
             {
-                if (index < 0 | index >= m_tableList.Count)
-                {
+                if (index < 0 || index >= m_tableList.Count)
                     return null;
-                }
-                else
-                {
-                    return m_tableList[index];
-                }
+
+                return m_tableList[index];
             }
         }
 
@@ -2088,7 +2175,7 @@ namespace Database
         {
             get
             {
-                Table lookup;                
+                Table lookup;
                 m_tables.TryGetValue(name, out lookup);
                 return lookup;
             }
@@ -2099,10 +2186,8 @@ namespace Database
 
             foreach (Table table in m_tableList)
             {
-                if (string.Compare(table.MapName, mapName, true) == 0)
-                {
+                if (string.Compare(table.MapName, mapName, StringComparison.OrdinalIgnoreCase) == 0)
                     return table;
-                }
             }
 
             return null;
@@ -2124,7 +2209,8 @@ namespace Database
             {
                 if (fieldList.Length > 0)
                     fieldList.Append(',');
-                fieldList.Append(tbl.FullName);
+
+                fieldList.Append(tbl.SQLEscapedName);
             }
 
             return fieldList.ToString();
@@ -2136,7 +2222,7 @@ namespace Database
         #region [ Inner Class ]
 
         /// <summary>
-        /// Check for referentail order of <see cref="Table"/>
+        /// Check for referential order of <see cref="Table"/>
         /// </summary>
         public class ReferentialOrderComparer : IComparer<Table>
         {
@@ -2155,31 +2241,31 @@ namespace Database
             /// <summary>
             /// Allows tables to be sorted in proper referential integrity process object
             /// </summary>
-            /// <param name="item1"></param>
-            /// <param name="item2"></param>
+            /// <param name="table1">First table to compare.</param>
+            /// <param name="table2">Second table to compare.</param>
             /// <returns></returns>
             public int Compare(Table table1, Table table2)
             {
                 // This function allows tables to be sorted in proper referential integrity process order
-                int intCompare = 0;
+                int result = 0;
 
                 if (table1 == table2)
                     return 0;
 
                 if (table1.IsReferencedBy(table2))// || table1.IsReferencedVia(table2))
-                    intCompare = -1;
+                    result = -1;
                 else if (table2.IsReferencedBy(table1))// || table2.IsReferencedVia(table1))
-                    intCompare = 1;
+                    result = 1;
 
                 // Sort by existence of foreign key fields, if defined
-                if (intCompare == 0)
-                    intCompare = ForeignKeyCompare(table1, table2);
+                if (result == 0)
+                    result = ForeignKeyCompare(table1, table2);
 
-                return intCompare;
+                return result;
             }
 
             /// <summary>
-            /// Compare foreign key comparation of tables
+            /// Compare foreign key comparison of tables
             /// </summary>
             /// <param name="table1"></param>
             /// <param name="table2"></param>
@@ -2187,29 +2273,19 @@ namespace Database
             private int ForeignKeyCompare(Table table1, Table table2)
             {
                 if (table1.IsForeignKeyTable && table2.IsForeignKeyTable)
-                {
-                    // Both tables have foreign key fields, consider them equal
-                    return 0;
-                }
-                else if (!table1.IsForeignKeyTable && !table2.IsForeignKeyTable)
-                {
-                    // Neither table has foreign key fields, consider them equal
-                    return 0;
-                }
-                else if (table1.IsForeignKeyTable)
-                {
-                    // Table1 has foreign key fields and Table2 does not, sort it below
-                    return 1;
-                }
-                else
-                {
-                    // Table2 has foreign key fields and Table1 does not, sort it below
-                    return -1;
-                }
+                    return 0;   // Both tables have foreign key fields, consider them equal
+
+                if (!table1.IsForeignKeyTable && !table2.IsForeignKeyTable)
+                    return 0;   // Neither table has foreign key fields, consider them equal
+
+                if (table1.IsForeignKeyTable)
+                    return 1;   // Table1 has foreign key fields and Table2 does not, sort it below
+
+                return -1;      // Table2 has foreign key fields and Table1 does not, sort it below
             }
 
             ///// <summary>
-            ///// We compare based on the existance of AutoInc fields as a secondary compare in case user
+            ///// We compare based on the existence of AutoInc fields as a secondary compare in case user
             ///// has no defined relational integrity - lastly we just sort by table name
             ///// </summary>
             ///// <param name="tbl1"></param>
@@ -2229,18 +2305,22 @@ namespace Database
     /// <summary>
     /// Get information about database schema
     /// </summary>
-    [ToolboxBitmap(typeof(Schema), "Database.Schema.bmp"), DefaultProperty("SourceSchema")]
-    public partial class Schema : Component
+    [Serializable]
+    public class Schema
     {
         #region [ Members ]
 
-        //Fields
+        // Fields
         private Tables m_tables;
 
         public const TableType NoRestriction = TableType.Table | TableType.View | TableType.SystemTable | TableType.SystemView | TableType.Alias | TableType.Synonym | TableType.GlobalTemp | TableType.LocalTemp | TableType.Link | TableType.Undetermined;
 
-        private OleDbConnection m_schemaConnection;
-        private string m_connectString;
+        [NonSerialized]
+        private IDbConnection m_schemaConnection;
+
+        [NonSerialized]
+        private string m_connectionString;
+
         private DatabaseType m_databaseType;
         private TableType m_restriction;
         private bool m_immediateClose;
@@ -2253,42 +2333,24 @@ namespace Database
 
         public Schema()
         {
-            InitializeComponent();
-            m_connectString = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\\SourceDB.mdb";
-            m_databaseType = DatabaseType.Unspecified;
+            m_connectionString = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\\SourceDB.mdb";
+            m_databaseType = DatabaseType.Other;
             m_restriction = NoRestriction;
             m_immediateClose = true;
             m_allowTextNulls = false;
             m_allowNumericNulls = false;
         }
 
-
-        public Schema(string ConnectString, TableType TableTypeRestriction = NoRestriction, bool ImmediateClose = true, bool AnaylzeNow = true)
+        public Schema(string connectionString, TableType tableTypeRestriction = NoRestriction, bool immediateClose = true, bool anaylzeNow = true)
         {
-            InitializeComponent();
-            m_connectString = ConnectString;
-            m_restriction = TableTypeRestriction;
-            m_immediateClose = ImmediateClose;
+            m_connectionString = connectionString;
+            m_restriction = tableTypeRestriction;
+            m_immediateClose = immediateClose;
             m_allowTextNulls = false;
             m_allowNumericNulls = false;
-            if (AnaylzeNow)
+
+            if (anaylzeNow)
                 Analyze();
-
-
-        }
-
-        public Schema(IContainer container)
-        {
-            container.Add(this);
-            InitializeComponent();
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the <see cref="Schema"/> object is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~Schema()
-        {
-            Dispose(false);
         }
 
         #endregion
@@ -2296,9 +2358,8 @@ namespace Database
         #region [ Properties ]
 
         /// <summary>
-        /// Get or Set - information to process <see cref="Tables"/>
+        /// Get or set - information to process <see cref="Tables"/>
         /// </summary>
-        [Browsable(false)]
         public Tables Tables
         {
             get
@@ -2312,25 +2373,23 @@ namespace Database
         }
 
         /// <summary>
-        /// OLEDB connection string to datasource to analyze.
+        /// OLEDB connection string to data source to analyze.
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("OLEDB connection string to datasource to analyze.")]
-        public string ConnectString
+        public string ConnectionString
         {
             get
             {
-                return m_connectString;
+                return m_connectionString;
             }
             set
             {
-                m_connectString = value;
+                m_connectionString = value;
             }
         }
 
         /// <summary>
         /// Set this value to restrict the types of tables returned in your schema.  Table types can be OR'd together to create this table type restriction.
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Set this value to restrict the types of tables returned in your schema.  Table types can be OR'd together to create this table type restriction."), DefaultValue(NoRestriction)]
         public TableType TableTypeRestriction
         {
             get
@@ -2346,7 +2405,6 @@ namespace Database
         /// <summary>
         /// Set this value to False to keep the schema connection used during analysis open after analysis is complete.
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Set this value to False to keep the schema connection used during analysis open after analysis is complete."), DefaultValue(true)]
         public bool ImmediateClose
         {
             get
@@ -2362,7 +2420,6 @@ namespace Database
         /// <summary>
         /// Type of database specified in connect string.
         /// </summary>
-        [Browsable(true), Category("Sql Encoding"), Description("Type of database specified in connect string."), DefaultValue(DatabaseType.Unspecified)]
         public DatabaseType DataSourceType
         {
             get
@@ -2378,7 +2435,6 @@ namespace Database
         /// <summary>
         /// Set this value to False to convert all Null values encountered in character fields to empty strings.
         /// </summary>
-        [Browsable(true), Category("Sql Encoding"), Description("Set this value to False to convert all Null values encountered in character fields to empty strings."), DefaultValue(false)]
         public bool AllowTextNulls
         {
             get
@@ -2387,14 +2443,13 @@ namespace Database
             }
             set
             {
-                m_allowTextNulls = true;
+                m_allowTextNulls = value;
             }
         }
 
         /// <summary>
         /// Set this value to False to convert all Null values encountered in numeric fields to zeros.
         /// </summary>
-        [Browsable(true), Category("Sql Encoding"), Description("Set this value to False to convert all Null values encountered in numeric fields to zeros."), DefaultValue(false)]
         public bool AllowNumericNulls
         {
             get
@@ -2403,26 +2458,18 @@ namespace Database
             }
             set
             {
-                m_allowNumericNulls = true;
+                m_allowNumericNulls = value;
             }
         }
 
         /// <summary>
-        /// <see cref="OleDbConnection"/> to open a database connection
+        /// <see cref="IDbConnection"/> to open a database connection
         /// </summary>
-        [Browsable(false)]
-        public OleDbConnection Connection
+        public IDbConnection Connection
         {
             get
             {
-                if (DesignMode)
-                {
-                    return null;
-                }
-                else
-                {
-                    return m_schemaConnection;
-                }
+                return m_schemaConnection;
             }
         }
 
@@ -2431,158 +2478,215 @@ namespace Database
         #region [ Methods ]
 
         /// <summary>
+        /// Escapes a field or table name.
+        /// </summary>
+        /// <param name="name">Name to escape.</param>
+        /// <returns>Escaped <paramref name="name"/>.</returns>
+        public string SQLEscapeName(string name)
+        {
+            switch (m_databaseType)
+            {
+                case DatabaseType.Access:
+                case DatabaseType.SQLServer:
+                    return "[" + name + "]";
+                case DatabaseType.MySQL:
+                    return "`" + name + "`";
+            }
+
+            return "\"" + name + "\"";
+        }
+
+        /// <summary>
         /// Analyze data schema for processing data
         /// </summary>
         public void Analyze()
         {
-            DataRow row;
-            Table tbl;
-            Field fld;
-            int x = 0;
-            int y = 0;
+            DatabaseType databaseType;
+            Schema deserializedSchema;
+            bool isAdoConnection;
 
-            // Check http://msdn.microsoft.com/library/default.asp?url=/library/en-us/oledb/htm/olprappendixb.asp
-            // for detailed OLEDB schema rowset information
+            m_schemaConnection = OpenConnection(m_connectionString, out databaseType, out deserializedSchema, out isAdoConnection);
+
+            if (isAdoConnection)
+            {
+                if ((object)deserializedSchema == null)
+                    throw new InvalidOperationException("Cannot use an ADO style connection with out a serialized schema.\r\nValidate that the \"serializedSchema\" connection string parameter exists and refers to an existing file.");
+
+                // Reference table collection from deserialized collection
+                m_tables = deserializedSchema.Tables;
+
+                // Update database type and force re-evaluation of SQL identity statements
+                m_databaseType = databaseType;
+                m_tables.Parent = this;
+
+                // Check to see if user requested to keep connection open, this is just for convience...
+                if (m_immediateClose)
+                    Close();
+
+                return;
+            }
+
+            DataRow row;
+            Table table;
+            Field field;
+            int x;
+            int y;
+
+            // See http://technet.microsoft.com/en-us/library/ms131488.aspx for detailed OLEDB schema row set information
             m_tables = new Tables(this);
-            m_schemaConnection = new OleDbConnection(m_connectString);
-            m_schemaConnection.StateChange += SchemaConnection_StateChange;
-            m_schemaConnection.Open();
+
+            OleDbConnection oledbSchemaConnection = m_schemaConnection as OleDbConnection;
+
+            if ((object)oledbSchemaConnection == null)
+                throw new NullReferenceException("Current connection is an ADO style connection, OLE DB connection expected");
+
+            // Attach to schema connection state change event
+            oledbSchemaConnection.StateChange += SchemaConnection_StateChange;
 
             // Load all tables and views into the schema
-            DataTable schemaTable = m_schemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables_Info, null);
+            DataTable schemaTable = oledbSchemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables_Info, null);
+
+            if ((object)schemaTable == null)
+                throw new NullReferenceException("Failed to retrieve OLE DB schema table for OleDbSchemaGuid.Tables_Info");
+
             for (x = 0; x < schemaTable.Rows.Count; x++)
             {
                 row = schemaTable.Rows[x];
-                tbl = new Table(m_tables, Common.NotNull(row["TABLE_CATALOG"]),
+
+                table = new Table(m_tables, Common.NotNull(row["TABLE_CATALOG"]),
                                 Common.NotNull(row["TABLE_SCHEMA"]),
                                 row["TABLE_NAME"].ToString(),
                                 row["TABLE_TYPE"].ToString(),
                                 Common.NotNull(row["DESCRIPTION"], ""), 0);
 
-                if ((tbl.Type & m_restriction) == m_restriction)
+                if ((table.Type & m_restriction) == m_restriction)
                 {
-                    // Both the data adapter and the OleDB schema rowsets provide column properties
+                    // Both the data adapter and the OleDB schema row sets provide column properties
                     // that the other doesn't - so we use both to get a very complete schema                        
                     DataSet data = new DataSet();
                     OleDbDataAdapter adapter = new OleDbDataAdapter();
 
-                    if (tbl.Name.IndexOf(' ') == -1 & tbl.UsesDefaultSchema())
+                    if (table.Name.IndexOf(' ') == -1 & table.UsesDefaultSchema())
                     {
                         try
                         {
                             // For standard table names we can use direct table commands for speed
-                            adapter.SelectCommand = new OleDbCommand(tbl.Name, m_schemaConnection);
+                            adapter.SelectCommand = new OleDbCommand(table.Name, oledbSchemaConnection);
                             adapter.SelectCommand.CommandType = CommandType.TableDirect;
                             adapter.FillSchema(data, SchemaType.Mapped);
                         }
                         catch
                         {
                             // We'll fall back on the standard method (maybe provider doesn't support TableDirect)
-                            adapter.SelectCommand = new OleDbCommand("SELECT TOP 1 * FROM " + tbl.FullName, m_schemaConnection);
+                            adapter.SelectCommand = new OleDbCommand("SELECT TOP 1 * FROM " + table.FullName, oledbSchemaConnection);
                             adapter.FillSchema(data, SchemaType.Mapped);
                         }
                     }
                     else
                     {
                         // For schema based databases and non-standard table names we must use a regular select command
-                        adapter.SelectCommand = new OleDbCommand("SELECT TOP 1 * FROM " + tbl.FullName, m_schemaConnection);
+                        adapter.SelectCommand = new OleDbCommand("SELECT TOP 1 * FROM " + table.FullName, oledbSchemaConnection);
                         adapter.FillSchema(data, SchemaType.Mapped);
                     }
 
                     // Load all column data into the schema
-                    DataTable currentTable = m_schemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, new object[] {
+                    DataTable currentTable = oledbSchemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, new object[] {
                         null,
                         null,
-                        tbl.Name
+                        table.Name
                     });
 
-                    //var _with7 = m_schemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, new object[] {
-                    //    null,
-                    //    null,
-                    //    tbl.Name
-                    //});
-                    for (y = 0; y < currentTable.Rows.Count; y++)
+                    if ((object)currentTable != null)
                     {
-                        row = currentTable.Rows[y];
+                        for (y = 0; y < currentTable.Rows.Count; y++)
+                        {
+                            row = currentTable.Rows[y];
 
-                        // New field encountered, create new field
-                        fld = new Field(tbl.Fields, row["COLUMN_NAME"].ToString(), (OleDbType)row["DATA_TYPE"]);
-                        fld.HasDefault = Convert.ToBoolean(Common.NotNull(row["COLUMN_HASDEFAULT"], "0"));  ///Common.NotNull(row["COLUMN_HASDEFAULT"], false);
-                        fld.NumericPrecision = Convert.ToInt32(Common.NotNull(row["NUMERIC_PRECISION"], "0"));
-                        fld.NumericScale = Convert.ToInt32(Common.NotNull(row["NUMERIC_SCALE"], "0"));
-                        fld.DateTimePrecision = Convert.ToInt32(Common.NotNull(row["DATETIME_PRECISION"], "0"));
-                        fld.Description = Common.NotNull(row["DESCRIPTION"], "");
+                            // New field encountered, create new field
+                            field = new Field(table.Fields, row["COLUMN_NAME"].ToString(), (OleDbType)row["DATA_TYPE"]);
+                            field.HasDefault = Convert.ToBoolean(Common.NotNull(row["COLUMN_HASDEFAULT"], "0"));
+                            field.NumericPrecision = Convert.ToInt32(Common.NotNull(row["NUMERIC_PRECISION"], "0"));
+                            field.NumericScale = Convert.ToInt32(Common.NotNull(row["NUMERIC_SCALE"], "0"));
+                            field.DateTimePrecision = Convert.ToInt32(Common.NotNull(row["DATETIME_PRECISION"], "0"));
+                            field.Description = Common.NotNull(row["DESCRIPTION"], "");
 
-                        // We also use as many properties as we can from data adapter schema
-                        //var _with8 = data.Tables[0].Columns[fld.Name];
-                        //fld.intOrdinal = data.Tables[0].Columns[fld.Name].Ordinal;
-                        fld.Ordinal = data.Tables[0].Columns[fld.Name].Ordinal;
+                            // We also use as many properties as we can from data adapter schema
+                            field.Ordinal = data.Tables[0].Columns[field.Name].Ordinal;
 
-                        fld.AllowsNulls = data.Tables[0].Columns[fld.Name].AllowDBNull;
-                        fld.DefaultValue = data.Tables[0].Columns[fld.Name].DefaultValue;
-                        fld.MaxLength = data.Tables[0].Columns[fld.Name].MaxLength;
-                        fld.AutoIncrement = data.Tables[0].Columns[fld.Name].AutoIncrement;
-                        fld.AutoIncrementSeed = Convert.ToInt32(data.Tables[0].Columns[fld.Name].AutoIncrementSeed);
-                        fld.AutoIncrementStep = Convert.ToInt32(data.Tables[0].Columns[fld.Name].AutoIncrementStep);
-                        fld.ReadOnly = data.Tables[0].Columns[fld.Name].ReadOnly;
-                        fld.Unique = data.Tables[0].Columns[fld.Name].Unique;
+                            field.AllowsNulls = data.Tables[0].Columns[field.Name].AllowDBNull;
+                            field.DefaultValue = data.Tables[0].Columns[field.Name].DefaultValue;
+                            field.MaxLength = data.Tables[0].Columns[field.Name].MaxLength;
+                            field.AutoIncrement = data.Tables[0].Columns[field.Name].AutoIncrement;
+                            field.AutoIncrementSeed = Convert.ToInt32(data.Tables[0].Columns[field.Name].AutoIncrementSeed);
+                            field.AutoIncrementStep = Convert.ToInt32(data.Tables[0].Columns[field.Name].AutoIncrementStep);
+                            field.ReadOnly = data.Tables[0].Columns[field.Name].ReadOnly;
+                            field.Unique = data.Tables[0].Columns[field.Name].Unique;
 
-                        // Add field to table's field collection
-                        tbl.Fields.Add(fld);
+                            // Add field to table's field collection
+                            table.Fields.Add(field);
+                        }
                     }
 
                     // Sort all loaded fields in ordinal order
-                    tbl.Fields.FieldList.Sort();
+                    table.Fields.FieldList.Sort();
 
                     // Define primary keys
                     try
                     {
-                        DataTable primaryKeyTable = m_schemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new object[] {
+                        DataTable primaryKeyTable = oledbSchemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Primary_Keys, new object[] {
                             null,
                             null,
-                            tbl.Name
+                            table.Name
                         });
-                        for (y = 0; y <= primaryKeyTable.Rows.Count - 1; y++)
+
+                        if ((object)primaryKeyTable != null)
                         {
-                            row = primaryKeyTable.Rows[y];
-                            tbl.DefinePrimaryKey(row["COLUMN_NAME"].ToString(), Convert.ToInt32(Common.NotNull(row["ORDINAL"], "-1")), Common.NotNull(row["PK_NAME"], ""));
+                            for (y = 0; y <= primaryKeyTable.Rows.Count - 1; y++)
+                            {
+                                row = primaryKeyTable.Rows[y];
+                                table.DefinePrimaryKey(row["COLUMN_NAME"].ToString(), Convert.ToInt32(Common.NotNull(row["ORDINAL"], "-1")), Common.NotNull(row["PK_NAME"], ""));
+                            }
                         }
                     }
                     catch
                     {
-                        // It's possible that the data source doesn't provide a primary keys rowset
+                        // It's possible that the data source doesn't provide a primary keys row set
                     }
 
                     // Add table to schema's table collection
-                    m_tables.Add(tbl);
+                    m_tables.Add(table);
                 }
             }
 
             // Define foreign keys (must be done after all tables are defined so relations can be properly established)
-            //foreach (tbl in Tables)
             for (int i = 0; i < m_tables.Count; i++)
             {
-                tbl = m_tables[i];
+                table = m_tables[i];
+
                 try
                 {
-                    DataTable foreignKeyTable = m_schemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new object[] {
+                    DataTable foreignKeyTable = oledbSchemaConnection.GetOleDbSchemaTable(OleDbSchemaGuid.Foreign_Keys, new object[] {
                         null,
                         null,
-                        tbl.Name
+                        table.Name
                     });
-                    for (x = 0; x <= foreignKeyTable.Rows.Count - 1; x++)
+
+                    if ((object)foreignKeyTable != null)
                     {
-                        row = foreignKeyTable.Rows[x];
-                        tbl.DefineForeignKey(row["PK_COLUMN_NAME"].ToString(),
-                                    row["FK_TABLE_NAME"].ToString(), row["FK_COLUMN_NAME"].ToString(),
-                                    Convert.ToInt32(Common.NotNull(row["ORDINAL"], "-1")), Common.NotNull(row["FK_NAME"], ""),
-                                    Field.GetReferentialAction(Common.NotNull(row["UPDATE_RULE"], "")),
-                                    Field.GetReferentialAction(Common.NotNull(row["DELETE_RULE"], "")));
+                        for (x = 0; x <= foreignKeyTable.Rows.Count - 1; x++)
+                        {
+                            row = foreignKeyTable.Rows[x];
+                            table.DefineForeignKey(row["PK_COLUMN_NAME"].ToString(),
+                                        row["FK_TABLE_NAME"].ToString(), row["FK_COLUMN_NAME"].ToString(),
+                                        Convert.ToInt32(Common.NotNull(row["ORDINAL"], "-1")), Common.NotNull(row["FK_NAME"], ""),
+                                        Field.GetReferentialAction(Common.NotNull(row["UPDATE_RULE"], "")),
+                                        Field.GetReferentialAction(Common.NotNull(row["DELETE_RULE"], "")));
+                        }
                     }
                 }
                 catch
                 {
-                    // It's possible that the data source doesn't provide a foreign keys rowset
+                    // It's possible that the data source doesn't provide a foreign keys row set
                 }
             }
 
@@ -2591,7 +2695,7 @@ namespace Database
             // comparisons based on perfect equality (i.e., if A > B and B > C then A > C - this may
             // not be true in terms of referential integrity)
             List<Table> sortedList = new List<Table>(m_tables.TableList);
-            Table temp = null;
+            Table temp;
 
             for (x = 0; x < sortedList.Count; x++)
             {
@@ -2606,21 +2710,23 @@ namespace Database
                 }
             }
 
-            // Set initial I/O processing priorties for tables based on this order.  Processing tables
+            // Set initial I/O processing priorities for tables based on this order.  Processing tables
             // based on the "Priority" field allows user to have final say in processing order
             for (x = 0; x < sortedList.Count; x++)
             {
-                m_tables.TableList.Find(table => string.Compare(table.Name, sortedList[x].Name, true) == 0).Priority = x;
+                m_tables.TableList.Find(tbl => string.Compare(tbl.Name, sortedList[x].Name, StringComparison.OrdinalIgnoreCase) == 0).Priority = x;
             }
+
+            // Detach from schema connection state change event
+            oledbSchemaConnection.StateChange -= SchemaConnection_StateChange;
 
             // Check to see if user requested to keep connection open, this is just for convience...
             if (m_immediateClose)
                 Close();
-
         }
 
         /// <summary>
-        /// <see cref="OleDbConnection"/> state change event will fire if it unexpectedbly close connection while processing.
+        /// <see cref="IDbConnection"/> state change event will fire if it unexpectedly close connection while processing.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -2632,15 +2738,14 @@ namespace Database
         }
 
         /// <summary>
-        /// Close <see cref="OleDbConnection"/> 
+        /// Close <see cref="IDbConnection"/> 
         /// </summary>
         public void Close()
         {
-            if ((m_schemaConnection != null))
+            if ((object)m_schemaConnection != null)
             {
                 try
                 {
-                    m_schemaConnection.StateChange -= SchemaConnection_StateChange;
                     m_schemaConnection.Close();
                 }
                 catch
@@ -2648,8 +2753,69 @@ namespace Database
                     // Keep on going here...
                 }
             }
-            m_schemaConnection = null;
 
+            m_schemaConnection = null;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        public static IDbConnection OpenConnection(string connectionString)
+        {
+            DatabaseType databaseType;
+            Schema schema;
+            bool isAdoConnection;
+            return OpenConnection(connectionString, out databaseType, out schema, out isAdoConnection);
+        }
+
+        public static IDbConnection OpenConnection(string connectionString, out DatabaseType databaseType, out Schema deserializedSchema, out bool isAdoConnection)
+        {
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+
+            deserializedSchema = null;
+            databaseType = DatabaseType.Other;
+            isAdoConnection = false;
+
+            if (settings.ContainsKey("DataProviderString"))
+            {
+                // Assuming ADO connection
+                string dataProviderString = settings["DataProviderString"];
+
+                settings.Remove("DataProviderString");
+
+                if (settings.ContainsKey("serializedSchema"))
+                {
+                    string serializedSchemaFileName = FilePath.GetAbsolutePath(settings["serializedSchema"]);
+
+                    if (File.Exists(serializedSchemaFileName))
+                    {
+                        using (FileStream stream = new FileStream(serializedSchemaFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        {
+                            deserializedSchema = Serialization.Deserialize<Schema>(stream, SerializationFormat.Binary);
+                        }
+                    }
+
+                    settings.Remove("serializedSchema");
+                }
+
+                // Create updated connection string with removed settings
+                connectionString = settings.JoinKeyValuePairs();
+
+                AdoDataConnection database = new AdoDataConnection(connectionString, dataProviderString);
+
+                databaseType = database.DatabaseType;
+                isAdoConnection = true;
+
+                return database.Connection;
+            }
+
+            // Assuming OLEDB connection
+            OleDbConnection connection = new OleDbConnection(connectionString);
+            connection.Open();
+            return connection;
         }
 
         #endregion

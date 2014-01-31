@@ -29,12 +29,10 @@
 
 using System;
 using System.Collections;
-using System.ComponentModel;
-using System.Data.OleDb;
-using System.Drawing;
+using System.Data;
 using System.Text;
 
-namespace Database
+namespace DataMigrationUtility
 {
     /// <summary>
     /// Common database functions
@@ -42,59 +40,45 @@ namespace Database
     public static class Common
     {
         /// <summary>
-        ///  Converts value to string, null objects (or DBNull objects) will return an empty string (""). 
+        /// Converts value to string, null objects (or DBNull objects) will return an empty string (""). 
         /// </summary>
         /// <param name="value">Value of <see cref="object"/> to convert to string.</param>
         /// <param name="nonNullValue"><see cref="string"/> to return if <paramref name="value"/> is null.</param>
         /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, <paramref name="nonNullValue"/> will be returned.</returns>
         public static string NotNull(object value, string nonNullValue = null)
         {
-            if (nonNullValue == null)
-            {
+            if ((object)nonNullValue == null)
                 return GSF.Common.ToNonNullString(value);
-            }
-            else
-            {
-                return GSF.Common.ToNonNullString(value, nonNullValue);
-            }
-        }
 
+            return GSF.Common.ToNonNullString(value, nonNullValue);
+        }
     }
 
     /// <summary>
-    /// Generates a sql statement for data processing.
+    /// Generates a SQL statement for data processing.
     /// </summary>
-    [ToolboxBitmap(typeof(sqlGenerator), "Database.SqlGenerator.bmp"), DefaultProperty("SourceSchema")]
-    public partial class sqlGenerator : Component
+    public class SQLGenerator
     {
         #region [ Members ]
 
         private Schema m_sourceSchema;
         private Table m_currentTable;
         private readonly ArrayList m_fieldList = new ArrayList();
-        private string m_whereSql;
+        private string m_whereSQL;
         private bool m_includeNulls;
 
         #endregion
 
         #region [ Constructors ]
 
-        public sqlGenerator()
+        public SQLGenerator()
         {
-            InitializeComponent();
-            m_whereSql = "";
+            m_whereSQL = "";
             m_includeNulls = false;
         }
 
-        public sqlGenerator(IContainer container)
+        public SQLGenerator(Schema SourceSchema)
         {
-            container.Add(this);
-            InitializeComponent();
-        }
-
-        public sqlGenerator(Schema SourceSchema)
-        {
-            InitializeComponent();
             m_sourceSchema = SourceSchema;
         }
 
@@ -103,9 +87,8 @@ namespace Database
         #region [ Properties ]
 
         /// <summary>
-        /// Get or Set Source <see cref="Schema"/> object to use for Sql generation.
+        /// Get or set Source <see cref="Schema"/> object to use for SQL generation.
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Source Schema object to use for Sql generation.")]
         public Schema SourceSchema
         {
             get
@@ -119,25 +102,23 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set - WHERE clause Sql to append to generated Sql statements.
+        /// Get or set - WHERE clause SQL to append to generated SQL statements.
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("WHERE clause Sql to append to generated Sql statements."), DefaultValue("")]
-        public string WhereSql
+        public string WhereSQL
         {
             get
             {
-                return m_whereSql;
+                return m_whereSQL;
             }
             set
             {
-                m_whereSql = value;
+                m_whereSQL = value;
             }
         }
 
         /// <summary>
-        /// Get or Set - to include NULL values in generated Sql statements.
+        /// Get or set - to include NULL values in generated SQL statements.
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Set to True to include NULL values in generated Sql statements."), DefaultValue(false)]
         public bool IncludeNulls
         {
             get
@@ -152,10 +133,9 @@ namespace Database
 
 
         /// <summary>
-        /// Get <see cref="OleDbConnection"/> setting for source <see cref="Schema"/>
+        /// Get <see cref="IDbConnection"/> setting for source <see cref="Schema"/>
         /// </summary>
-        [Browsable(false)]
-        public OleDbConnection Connection
+        public IDbConnection Connection
         {
             get
             {
@@ -164,9 +144,8 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or Set source <see cref="Schema"/> table name.
+        /// Get or set source <see cref="Schema"/> table name.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TableName
         {
             get
@@ -178,20 +157,20 @@ namespace Database
                 // Lookup table in collection
                 m_currentTable = m_sourceSchema.Tables[value];
 
-                if (m_currentTable != null)
+                if ((object)m_currentTable != null)
                 {
                     // Clear any existing field values
-                    // Field fld = default(Field);
-                    foreach (Field fld in m_currentTable.Fields)
+                    // Field field = default(Field);
+                    foreach (Field field in m_currentTable.Fields)
                     {
-                        fld.Value = null;
+                        field.Value = null;
                     }
 
                     m_fieldList.Clear();
                 }
                 else
                 {
-                    throw new InvalidOperationException("Table [" + value + "] not found in schema");
+                    throw new InvalidOperationException("Table '" + value + "' not found in schema");
                 }
             }
         }
@@ -217,108 +196,105 @@ namespace Database
         }
 
         /// <summary>
-        /// Generate insert sql statement
+        /// Generate insert SQL statement
         /// </summary>
-        /// <returns>insert Sql statment for current table to process</returns>
-        public string InsertSql()
+        /// <returns>insert SQL statement for current table to process</returns>
+        public string InsertSQL()
         {
-            StringBuilder insertSql = new StringBuilder();
-            string fieldName = null;
+            StringBuilder insertSQL = new StringBuilder();
+            string fieldName;
             bool setComma = false;
 
-            insertSql.Append("INSERT INTO ");
-            insertSql.Append(m_currentTable.FullName);
-            insertSql.Append(" (");
+            insertSQL.Append("INSERT INTO ");
+            insertSQL.Append(m_currentTable.SQLEscapedName);
+            insertSQL.Append(" (");
 
             foreach (string currentFieldName in m_fieldList)
             {
                 fieldName = currentFieldName;
-                if (m_includeNulls || (Common.NotNull(m_currentTable.Fields[fieldName].Value) != null))
+
+                if (m_includeNulls || !Convert.IsDBNull(m_currentTable.Fields[fieldName].Value))
                 {
                     if (setComma)
-                        insertSql.Append(", [");
-                    else
-                        insertSql.Append("[");
+                        insertSQL.Append(", ");
 
-                    insertSql.Append(m_currentTable.Fields[fieldName].Name);
-                    insertSql.Append("]");
+                    insertSQL.Append(m_currentTable.Fields[fieldName].SQLEscapedName);
                     setComma = true;
                 }
             }
 
-            insertSql.Append(") VALUES (");
+            insertSQL.Append(") VALUES (");
             setComma = false;
 
             foreach (string currentFieldName in m_fieldList)
             {
                 fieldName = currentFieldName;
 
-                if (m_includeNulls | (Common.NotNull(m_currentTable.Fields[fieldName].Value) != null))
+                if (m_includeNulls || !Convert.IsDBNull(m_currentTable.Fields[fieldName].Value))
                 {
                     if (setComma)
-                        insertSql.Append(", ");
+                        insertSQL.Append(", ");
 
-                    insertSql.Append(m_currentTable.Fields[fieldName].SqlEncodedValue);
+                    insertSQL.Append(m_currentTable.Fields[fieldName].SQLEncodedValue);
                     setComma = true;
                 }
             }
 
-            insertSql.Append(")");
+            insertSQL.Append(")");
 
             if (!setComma)
-                throw new InvalidOperationException("No field values were specified in insert Sql");
+                throw new InvalidOperationException("No field values were specified in insert SQL");
 
-            if (m_whereSql.Length > 0)
+            if (m_whereSQL.Length > 0)
             {
-                insertSql.Append(" ");
-                insertSql.Append(m_whereSql);
+                insertSQL.Append(" ");
+                insertSQL.Append(m_whereSQL);
             }
 
-            return insertSql.ToString();
+            return insertSQL.ToString();
 
         }
 
         /// <summary>
-        /// Generate update sql statement
+        /// Generate update SQL statement
         /// </summary>
-        /// <returns>Update sql statement to data processing</returns>
-        public string UpdateSql()
+        /// <returns>Update SQL statement to data processing</returns>
+        public string UpdateSQL()
         {
-            StringBuilder updateSql = new StringBuilder();
-            string fieldName = null;
+            StringBuilder updateSQL = new StringBuilder();
+            string fieldName;
             bool setComma = false;
 
-            updateSql.Append("UPDATE ");
-            updateSql.Append(m_currentTable.FullName);
-            updateSql.Append(" SET ");
+            updateSQL.Append("UPDATE ");
+            updateSQL.Append(m_currentTable.SQLEscapedName);
+            updateSQL.Append(" SET ");
 
             foreach (string currentFieldName in m_fieldList)
             {
                 fieldName = currentFieldName;
-                if (m_includeNulls | (Common.NotNull(m_currentTable.Fields[fieldName].Value) != null))
+
+                if (m_includeNulls || !Convert.IsDBNull(m_currentTable.Fields[fieldName].Value))
                 {
                     if (setComma)
-                        updateSql.Append(", [");
-                    else
-                        updateSql.Append("[");
+                        updateSQL.Append(", ");
 
-                    updateSql.Append(m_currentTable.Fields[fieldName].Name);
-                    updateSql.Append("] = ");
-                    updateSql.Append(m_currentTable.Fields[fieldName].SqlEncodedValue);
+                    updateSQL.Append(m_currentTable.Fields[fieldName].SQLEscapedName);
+                    updateSQL.Append(" = ");
+                    updateSQL.Append(m_currentTable.Fields[fieldName].SQLEncodedValue);
                     setComma = true;
                 }
             }
 
             if (!setComma)
-                throw new InvalidOperationException("No field values were specified in update Sql");
+                throw new InvalidOperationException("No field values were specified in update SQL");
 
-            if (m_whereSql.Length > 0)
+            if (m_whereSQL.Length > 0)
             {
-                updateSql.Append(" ");
-                updateSql.Append(m_whereSql);
+                updateSQL.Append(" ");
+                updateSQL.Append(m_whereSQL);
             }
 
-            return updateSql.ToString();
+            return updateSQL.ToString();
 
         }
 

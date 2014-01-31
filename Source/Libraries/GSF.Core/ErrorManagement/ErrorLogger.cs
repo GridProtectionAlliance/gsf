@@ -63,13 +63,6 @@
 
 #endregion
 
-using GSF.Collections;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Identity;
-using GSF.IO;
-using GSF.Net.Smtp;
-using GSF.Reflection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -81,6 +74,13 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Web;
+using GSF.Collections;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.Identity;
+using GSF.IO;
+using GSF.Net.Smtp;
+using GSF.Reflection;
 using Timer = System.Timers.Timer;
 
 namespace GSF.ErrorManagement
@@ -1879,7 +1879,7 @@ namespace GSF.ErrorManagement
         /// <returns>Application information in text.</returns>
         private static string GetApplicationInfo()
         {
-            Assembly parentAssembly = null;
+            Assembly parentAssembly;
 
             switch (Common.GetApplicationType())
             {

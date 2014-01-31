@@ -23,7 +23,7 @@
 
 namespace DataMigrationUtility
 {
-    partial class DataMigrationUtility
+    partial class DataMigrationUtilityScreen
     {
         /// <summary>
         /// Required designer variable.
@@ -36,7 +36,7 @@ namespace DataMigrationUtility
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && ((object)components != null))
             {
                 components.Dispose();
             }
@@ -52,7 +52,7 @@ namespace DataMigrationUtility
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataMigrationUtility));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataMigrationUtilityScreen));
             this.GroupBox = new System.Windows.Forms.GroupBox();
             this.ExampleConnectionStringLinkLabel = new System.Windows.Forms.LinkLabel();
             this.ToConnectString = new System.Windows.Forms.TextBox();
@@ -80,16 +80,14 @@ namespace DataMigrationUtility
             this.ProgressBar = new System.Windows.Forms.ProgressBar();
             this.ProgressLabel = new System.Windows.Forms.Label();
             this.chkPreservePrimaryKey = new System.Windows.Forms.CheckBox();
-            this.FromSchema = new Database.Schema(this.components);
-            this.DataInserter = new Database.DataInserter();
-            this.ToSchema = new Database.Schema(this.components);
+            this.Serialize = new System.Windows.Forms.Button();
             this.GroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // GroupBox
             // 
             this.GroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.GroupBox.Controls.Add(this.ExampleConnectionStringLinkLabel);
             this.GroupBox.Controls.Add(this.ToConnectString);
             this.GroupBox.Controls.Add(this.ToDataType);
@@ -128,7 +126,7 @@ namespace DataMigrationUtility
             // ToConnectString
             // 
             this.ToConnectString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.ToConnectString.Location = new System.Drawing.Point(16, 122);
             this.ToConnectString.Multiline = true;
             this.ToConnectString.Name = "ToConnectString";
@@ -139,7 +137,7 @@ namespace DataMigrationUtility
             // ToDataType
             // 
             this.ToDataType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.ToDataType.FormattingEnabled = true;
             this.ToDataType.Location = new System.Drawing.Point(314, 96);
             this.ToDataType.Name = "ToDataType";
@@ -164,7 +162,7 @@ namespace DataMigrationUtility
             // FromConnectString
             // 
             this.FromConnectString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.FromConnectString.Location = new System.Drawing.Point(16, 37);
             this.FromConnectString.Multiline = true;
             this.FromConnectString.Name = "FromConnectString";
@@ -175,7 +173,7 @@ namespace DataMigrationUtility
             // FromDataType
             // 
             this.FromDataType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.FromDataType.FormattingEnabled = true;
             this.FromDataType.Location = new System.Drawing.Point(314, 11);
             this.FromDataType.Name = "FromDataType";
@@ -240,26 +238,26 @@ namespace DataMigrationUtility
             this.WarningLabel.Size = new System.Drawing.Size(120, 74);
             this.WarningLabel.TabIndex = 17;
             this.WarningLabel.Text = "                  To maintain data integrity, ensure you have selected the correc" +
-                "t source and destination databases.";
+    "t source and destination databases.";
             // 
             // UseToForRI
             // 
             this.UseToForRI.Checked = true;
-            this.UseToForRI.Location = new System.Drawing.Point(176, 98);
+            this.UseToForRI.Location = new System.Drawing.Point(125, 99);
             this.UseToForRI.Name = "UseToForRI";
-            this.UseToForRI.Size = new System.Drawing.Size(80, 16);
+            this.UseToForRI.Size = new System.Drawing.Size(130, 18);
             this.UseToForRI.TabIndex = 7;
             this.UseToForRI.TabStop = true;
-            this.UseToForRI.Text = "Use for RI";
+            this.UseToForRI.Text = "Use for Ref. Integrity";
             // 
             // UseFromForRI
             // 
-            this.UseFromForRI.Location = new System.Drawing.Point(176, 13);
+            this.UseFromForRI.Location = new System.Drawing.Point(125, 14);
             this.UseFromForRI.Name = "UseFromForRI";
-            this.UseFromForRI.Size = new System.Drawing.Size(80, 17);
+            this.UseFromForRI.Size = new System.Drawing.Size(130, 18);
             this.UseFromForRI.TabIndex = 3;
             this.UseFromForRI.TabStop = true;
-            this.UseFromForRI.Text = "Use for RI";
+            this.UseFromForRI.Text = "Use for Ref. Integrity";
             // 
             // Cancel
             // 
@@ -318,9 +316,9 @@ namespace DataMigrationUtility
             this.ToConnectStringLabel.Location = new System.Drawing.Point(16, 99);
             this.ToConnectStringLabel.Name = "ToConnectStringLabel";
             this.ToConnectStringLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.ToConnectStringLabel.Size = new System.Drawing.Size(168, 17);
+            this.ToConnectStringLabel.Size = new System.Drawing.Size(117, 18);
             this.ToConnectStringLabel.TabIndex = 6;
-            this.ToConnectStringLabel.Text = "&To Connect String (OLEDB):";
+            this.ToConnectStringLabel.Text = "&To Connect String:";
             this.ToConnectStringLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // FromConnectStringLabel
@@ -332,15 +330,15 @@ namespace DataMigrationUtility
             this.FromConnectStringLabel.Location = new System.Drawing.Point(16, 14);
             this.FromConnectStringLabel.Name = "FromConnectStringLabel";
             this.FromConnectStringLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.FromConnectStringLabel.Size = new System.Drawing.Size(176, 17);
+            this.FromConnectStringLabel.Size = new System.Drawing.Size(117, 18);
             this.FromConnectStringLabel.TabIndex = 2;
-            this.FromConnectStringLabel.Text = "&From Connect String (OLEDB):";
+            this.FromConnectStringLabel.Text = "&From Connect String:";
             this.FromConnectStringLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // ExcludedTablesTextBox
             // 
             this.ExcludedTablesTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.ExcludedTablesTextBox.Location = new System.Drawing.Point(95, 220);
             this.ExcludedTablesTextBox.Name = "ExcludedTablesTextBox";
             this.ExcludedTablesTextBox.Size = new System.Drawing.Size(535, 20);
@@ -376,8 +374,8 @@ namespace DataMigrationUtility
             // Messages
             // 
             this.Messages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.Messages.Location = new System.Drawing.Point(9, 368);
             this.Messages.Multiline = true;
             this.Messages.Name = "Messages";
@@ -389,7 +387,7 @@ namespace DataMigrationUtility
             // OverallProgress
             // 
             this.OverallProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OverallProgress.Location = new System.Drawing.Point(9, 336);
             this.OverallProgress.Name = "OverallProgress";
             this.OverallProgress.Size = new System.Drawing.Size(621, 24);
@@ -398,7 +396,7 @@ namespace DataMigrationUtility
             // ProgressBar
             // 
             this.ProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.ProgressBar.Location = new System.Drawing.Point(9, 304);
             this.ProgressBar.Name = "ProgressBar";
             this.ProgressBar.Size = new System.Drawing.Size(621, 24);
@@ -407,7 +405,7 @@ namespace DataMigrationUtility
             // ProgressLabel
             // 
             this.ProgressLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.ProgressLabel.BackColor = System.Drawing.SystemColors.Control;
             this.ProgressLabel.Cursor = System.Windows.Forms.Cursors.Default;
             this.ProgressLabel.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -432,46 +430,32 @@ namespace DataMigrationUtility
             this.chkPreservePrimaryKey.Text = "Preserve auto-increment field values while migrating database.";
             this.chkPreservePrimaryKey.UseVisualStyleBackColor = true;
             // 
-            // FromSchema
+            // Serialize
             // 
-            this.FromSchema.ConnectString = "";
-            this.FromSchema.ImmediateClose = false;
-            this.FromSchema.Tables = null;
-            this.FromSchema.TableTypeRestriction = Database.TableType.Table;
+            this.Serialize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Serialize.BackColor = System.Drawing.SystemColors.Control;
+            this.Serialize.Cursor = System.Windows.Forms.Cursors.Default;
+            this.Serialize.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.Serialize.Font = new System.Drawing.Font("Arial", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Serialize.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.Serialize.Location = new System.Drawing.Point(505, 257);
+            this.Serialize.Name = "Serialize";
+            this.Serialize.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.Serialize.Size = new System.Drawing.Size(105, 25);
+            this.Serialize.TabIndex = 39;
+            this.Serialize.Text = "&Serialize";
+            this.Serialize.UseVisualStyleBackColor = false;
+            this.Serialize.Visible = false;
+            this.Serialize.Click += new System.EventHandler(this.Serialize_Click);
             // 
-            // DataInserter
-            // 
-            this.DataInserter.BulkInsertFilePath = "c:\\users\\mihir brahmbhatt\\appdata\\local\\microsoft\\visualstudio\\10.0\\projectassemb" +
-                "lies\\ohajtk7e01\\datamigrationutility.exe";
-            this.DataInserter.BulkInsertSettings = "FIELDTERMINATOR = \'\\t\', ROWTERMINATOR = \'\\n\', CODEPAGE = \'OEM\', FIRE_TRIGGERS, KE" +
-                "EPNULLS";
-            this.DataInserter.DelimeterReplacement = " - ";
-            this.DataInserter.FromSchema = this.FromSchema;
-            this.DataInserter.RowReportInterval = 500;
-            this.DataInserter.ToSchema = this.ToSchema;
-            this.DataInserter.TableCleared += new Database.DataInserter.TableClearedEventHandler(this.DataHandler_TableCleared);
-            this.DataInserter.BulkInsertExecuting += new Database.DataInserter.BulkInsertExecutingEventHandler(this.DataHandler_BulkInsertExecuting);
-            this.DataInserter.BulkInsertCompleted += new Database.DataInserter.BulkInsertCompletedEventHandler(this.DataHandler_BulkInsertCompleted);
-            this.DataInserter.BulkInsertException += new Database.DataInserter.BulkInsertExceptionEventHandler(this.DataHandler_BulkInsertException);
-            this.DataInserter.TableProgress += new System.EventHandler<Database.TableProgressEventHandler<string, bool, int, int>>(this.DataHandler_TableProgress);
-            this.DataInserter.RowProgress += new System.EventHandler<Database.RowProgressEventHandler<string, int, int>>(this.DataHandler_RowProgress);
-            this.DataInserter.OverallProgress += new System.EventHandler<Database.OverallProgressEventHandler<int, int>>(this.DataInserter_OverallProgress);
-            this.DataInserter.SqlFailure += new System.EventHandler<Database.SqlFailureEventHandler<string, System.Exception>>(this.DataHandler_SqlFailure);
-            // 
-            // ToSchema
-            // 
-            this.ToSchema.ConnectString = "";
-            this.ToSchema.ImmediateClose = false;
-            this.ToSchema.Tables = null;
-            this.ToSchema.TableTypeRestriction = Database.TableType.Table;
-            // 
-            // DataMigrationUtility
+            // DataMigrationUtilityScreen
             // 
             this.AcceptButton = this.Import;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.Cancel;
             this.ClientSize = new System.Drawing.Size(639, 507);
+            this.Controls.Add(this.Serialize);
             this.Controls.Add(this.chkPreservePrimaryKey);
             this.Controls.Add(this.ExcludedTablesTextBox);
             this.Controls.Add(this.CommaSeparateValuesLabel);
@@ -484,7 +468,7 @@ namespace DataMigrationUtility
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimumSize = new System.Drawing.Size(655, 545);
-            this.Name = "DataMigrationUtility";
+            this.Name = "DataMigrationUtilityScreen";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Data Migration Utility";
             this.Closed += new System.EventHandler(this.DataMigrationUtility_Closed);
@@ -523,11 +507,9 @@ namespace DataMigrationUtility
         internal System.Windows.Forms.TextBox Messages;
         internal System.Windows.Forms.ProgressBar OverallProgress;
         internal System.Windows.Forms.ProgressBar ProgressBar;
-        public System.Windows.Forms.Label ProgressLabel;
-        private Database.Schema FromSchema;
-        private Database.DataInserter DataInserter;
-        private Database.Schema ToSchema;
-        private System.Windows.Forms.CheckBox chkPreservePrimaryKey;
+        internal System.Windows.Forms.Label ProgressLabel;
+        internal System.Windows.Forms.CheckBox chkPreservePrimaryKey;
+        internal System.Windows.Forms.Button Serialize;
     }
 }
 
