@@ -185,7 +185,7 @@ namespace GSF.ServiceProcess
         public ClientHelper(IContainer container)
             : this()
         {
-            if (container != null)
+            if ((object)container != null)
                 container.Add(this);
         }
 
@@ -206,7 +206,7 @@ namespace GSF.ServiceProcess
             }
             set
             {
-                if (m_remotingClient != null)
+                if ((object)m_remotingClient != null)
                 {
                     // Detach events from any existing instance
                     m_remotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
@@ -218,7 +218,7 @@ namespace GSF.ServiceProcess
 
                 m_remotingClient = value;
 
-                if (m_remotingClient != null)
+                if ((object)m_remotingClient != null)
                 {
                     // Attach events to new instance
                     m_remotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
@@ -245,7 +245,7 @@ namespace GSF.ServiceProcess
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_username = value;
@@ -267,7 +267,7 @@ namespace GSF.ServiceProcess
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_password = value;
@@ -327,14 +327,14 @@ namespace GSF.ServiceProcess
         {
             get
             {
-                if (m_remotingClient == null)
+                if ((object)m_remotingClient == null)
                     return false;
 
                 return m_remotingClient.Enabled;
             }
             set
             {
-                if (m_remotingClient != null)
+                if ((object)m_remotingClient != null)
                     m_remotingClient.Enabled = value;
             }
         }
@@ -420,8 +420,14 @@ namespace GSF.ServiceProcess
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
                 settings["Username", true].Update(m_username);
                 settings["Password", true].Update(m_password);
+
+                settings["Username"].Scope = SettingScope.User;
+                settings["Password"].Scope = SettingScope.User;
+                settings["Password"].Encrypted = true;
+
                 config.Save();
             }
         }
@@ -441,8 +447,10 @@ namespace GSF.ServiceProcess
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("Username", m_username, "Username to be used for authentication with the service.");
-                settings.Add("Password", m_password, "Password to be used for authentication with the service.", true);
+
+                settings.Add("Username", m_username, "Username to be used for authentication with the service.", false, SettingScope.User);
+                settings.Add("Password", m_password, "Password to be used for authentication with the service.", true, SettingScope.User);
+
                 Username = settings["Username"].ValueAs(m_username);
                 Password = settings["Password"].ValueAs(m_password);
             }
@@ -453,17 +461,20 @@ namespace GSF.ServiceProcess
         /// </summary>
         public void Connect()
         {
-            if (m_remotingClient == null)
+            if ((object)m_remotingClient == null)
                 throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set");
 
             m_attemptReconnection = true;
             m_authenticationComplete = false;
-            m_remotingClient.Connect();                                     // Wait for connection.
+
+            // Wait for connection.
+            m_remotingClient.Connect();
 
             while (!m_authenticationComplete && m_remotingClient.Enabled)
             {
+                // Wait for authentication.
                 Thread.Sleep(100);
-            } // Wait for authentication.
+            }
         }
 
         /// <summary>
@@ -473,7 +484,7 @@ namespace GSF.ServiceProcess
         {
             m_attemptReconnection = false;
 
-            if (m_remotingClient != null)
+            if ((object)m_remotingClient != null)
                 m_remotingClient.Disconnect();
         }
 
@@ -485,7 +496,7 @@ namespace GSF.ServiceProcess
         {
             ClientRequest requestInstance = ClientRequest.Parse(request);
 
-            if (requestInstance != null)
+            if ((object)requestInstance != null)
                 SendRequest(requestInstance);
             else
                 UpdateStatus(UpdateType.Warning, string.Format("Request command \"{0}\" is invalid\r\n\r\n", request));
@@ -507,7 +518,7 @@ namespace GSF.ServiceProcess
         /// <param name="update">Update message received.</param>
         protected virtual void OnReceivedServiceUpdate(UpdateType type, string update)
         {
-            if (ReceivedServiceUpdate != null)
+            if ((object)ReceivedServiceUpdate != null)
                 ReceivedServiceUpdate(this, new EventArgs<UpdateType, string>(type, update));
         }
 
@@ -517,7 +528,7 @@ namespace GSF.ServiceProcess
         /// <param name="response"><see cref="ServiceResponse"/> received.</param>
         protected virtual void OnReceivedServiceResponse(ServiceResponse response)
         {
-            if (ReceivedServiceResponse != null)
+            if ((object)ReceivedServiceResponse != null)
                 ReceivedServiceResponse(this, new EventArgs<ServiceResponse>(response));
         }
 
@@ -527,7 +538,7 @@ namespace GSF.ServiceProcess
         /// <param name="state">New <see cref="ServiceState"/>.</param>
         protected virtual void OnServiceStateChanged(ObjectState<ServiceState> state)
         {
-            if (ServiceStateChanged != null)
+            if ((object)ServiceStateChanged != null)
                 ServiceStateChanged(this, new EventArgs<ObjectState<ServiceState>>(state));
         }
 
@@ -537,7 +548,7 @@ namespace GSF.ServiceProcess
         /// <param name="state">New <see cref="ServiceProcessState"/>.</param>
         protected virtual void OnProcessStateChanged(ObjectState<ServiceProcessState> state)
         {
-            if (ProcessStateChanged != null)
+            if ((object)ProcessStateChanged != null)
                 ProcessStateChanged(this, new EventArgs<ObjectState<ServiceProcessState>>(state));
         }
 
@@ -546,7 +557,7 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnAuthenticationSuccess()
         {
-            if (AuthenticationSuccess != null)
+            if ((object)AuthenticationSuccess != null)
                 AuthenticationSuccess(this, EventArgs.Empty);
 
             m_authenticationComplete = true;
@@ -559,7 +570,7 @@ namespace GSF.ServiceProcess
         {
             CancelEventArgs args = new CancelEventArgs(true);
 
-            if (AuthenticationFailure != null)
+            if ((object)AuthenticationFailure != null)
                 AuthenticationFailure(this, args);
 
             // Continue connection attempts if requested.
@@ -575,7 +586,7 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnTelnetSessionEstablished()
         {
-            if (TelnetSessionEstablished != null)
+            if ((object)TelnetSessionEstablished != null)
                 TelnetSessionEstablished(this, EventArgs.Empty);
         }
 
@@ -584,7 +595,7 @@ namespace GSF.ServiceProcess
         /// </summary>
         protected virtual void OnTelnetSessionTerminated()
         {
-            if (TelnetSessionTerminated != null)
+            if ((object)TelnetSessionTerminated != null)
                 TelnetSessionTerminated(this, EventArgs.Empty);
         }
 
@@ -701,7 +712,7 @@ namespace GSF.ServiceProcess
                         {
                             ObjectState<ServiceState> state = response.Attachments[0] as ObjectState<ServiceState>;
 
-                            if (state != null)
+                            if ((object)state != null)
                             {
                                 // Notify change in service state by raising an event.
                                 OnServiceStateChanged(state);
@@ -725,7 +736,7 @@ namespace GSF.ServiceProcess
                         {
                             ObjectState<ServiceProcessState> state = response.Attachments[0] as ObjectState<ServiceProcessState>;
 
-                            if (state != null)
+                            if ((object)state != null)
                             {
                                 // Notify change in process state by raising an event.
                                 OnProcessStateChanged(state);
@@ -807,7 +818,7 @@ namespace GSF.ServiceProcess
                     if (parts.Length > 1)
                     {
                         sourceCommand = parts[0].Trim().ToTitleCase();
-                        responseSuccess = (string.Compare(parts[1].Trim(), "Success", true) == 0);
+                        responseSuccess = (string.Compare(parts[1].Trim(), "Success", StringComparison.OrdinalIgnoreCase) == 0);
                         parseSucceeded = true;
                     }
                 }

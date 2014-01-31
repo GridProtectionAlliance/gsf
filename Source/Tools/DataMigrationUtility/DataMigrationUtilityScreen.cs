@@ -349,7 +349,7 @@ namespace DataMigrationUtility
                         if (m_connectionStringType > 0)
                             destination.Text = "Provider=MySQLProv; location=MACHINE; Data Source=myApp; User Id=myUsername; Password=myPassword;";
                         else
-                            destination.Text = "Server=serverName; Database=databaseName; Uid=root; Pwd=password; allow user variables = true; DataProviderString={AssemblyName={MySql.Data, Version=6.3.6.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter}";
+                            destination.Text = "Server=serverName; Database=databaseName; Uid=root; Pwd=password; allow user variables = true; DataProviderString={AssemblyName={MySql.Data, Version=6.7.4.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter}";
                         break;
                     case DatabaseType.Oracle:
                         if (m_connectionStringType > 0)

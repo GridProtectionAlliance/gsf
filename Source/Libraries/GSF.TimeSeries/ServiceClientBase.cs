@@ -23,6 +23,14 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.ServiceProcess;
+using System.Text;
 using GSF.Communication;
 using GSF.Configuration;
 using GSF.Console;
@@ -32,14 +40,6 @@ using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security;
 using GSF.ServiceProcess;
-using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.ServiceProcess;
-using System.Text;
 
 namespace GSF.TimeSeries
 {
@@ -142,7 +142,7 @@ namespace GSF.TimeSeries
                 string serviceName = arguments["OrderedArg1"];
 
                 // Attempt to access service controller for the specified Windows service
-                ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, true) == 0);
+                ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, StringComparison.OrdinalIgnoreCase) == 0);
 
                 if (serviceController != null)
                 {
@@ -251,11 +251,14 @@ namespace GSF.TimeSeries
 
                             // Capture the user name.
                             Write("Enter user name: ");
+
                             username = System.Console.ReadLine();
 
                             // Capture the password.
                             ConsoleKeyInfo key;
+
                             Write("Enter password: ");
+
                             while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
                             {
                                 passwordBuilder.Append(key.KeyChar);
@@ -296,10 +299,15 @@ namespace GSF.TimeSeries
                                             m_clientHelper.SendRequest("Telnet -disconnect");
                                         }
                                         break;
+                                    case "LOGIN":
+                                        m_clientHelper.Username = null;
+                                        m_clientHelper.Password = null;
+                                        m_authenticated = false;
+                                        break;
                                     default:
                                         // User wants to send a request to the service. 
                                         m_clientHelper.SendRequest(userInput);
-                                        if (string.Compare(userInput, "Help", true) == 0)
+                                        if (string.Compare(userInput, "Help", StringComparison.OrdinalIgnoreCase) == 0)
                                             DisplayHelp();
 
                                         break;
