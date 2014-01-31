@@ -581,7 +581,7 @@ CREATE TABLE AccessLog (
 );
 
 CREATE TABLE UserAccount (
-    ID NCHAR(36) NOT NULL DEFAULT N'',
+    ID NCHAR(36) NULL,
     Name VARCHAR(200) NOT NULL,
     Password VARCHAR(200) DEFAULT NULL,
     FirstName VARCHAR(200) DEFAULT NULL,
@@ -601,7 +601,7 @@ CREATE TABLE UserAccount (
 );
 
 CREATE TABLE SecurityGroup (
-    ID NCHAR(36) NOT NULL DEFAULT N'',
+    ID NCHAR(36) NULL,
     Name VARCHAR(200) NOT NULL,
     Description TEXT NULL,
     CreatedOn DATETIME NOT NULL DEFAULT N'0000-00-00 00:00:00',
@@ -613,7 +613,7 @@ CREATE TABLE SecurityGroup (
 );
 
 CREATE TABLE ApplicationRole (
-    ID NCHAR(36) NOT NULL DEFAULT N'',
+    ID NCHAR(36) NULL,
     Name VARCHAR(200) NOT NULL,
     Description TEXT NULL,
     NodeID NCHAR(36) NOT NULL,
@@ -644,7 +644,7 @@ CREATE TABLE SecurityGroupUserAccount (
 
 CREATE TABLE Subscriber (
     NodeID NCHAR(36) NOT NULL,
-    ID NCHAR(36) NOT NULL DEFAULT N'',
+    ID NCHAR(36) NULL,
     Acronym VARCHAR(200) NOT NULL,
     Name VARCHAR(200) NULL,
     SharedSecret VARCHAR(200) NULL,
@@ -1294,13 +1294,13 @@ CREATE TRIGGER AccessLog_InsertDefault BEFORE INSERT ON AccessLog
 FOR EACH ROW SET NEW.CreatedOn = UTC_TIMESTAMP();
 
 CREATE TRIGGER ApplicationRole_InsertDefault BEFORE INSERT ON ApplicationRole 
-FOR EACH ROW SET NEW.ID = UUID(), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
+FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
 
 CREATE TRIGGER SecurityGroup_InsertDefault BEFORE INSERT ON SecurityGroup 
-FOR EACH ROW SET NEW.ID = UUID(), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
+FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
 
 CREATE TRIGGER UserAccount_InsertDefault BEFORE INSERT ON UserAccount 
-FOR EACH ROW SET NEW.ID = UUID(), NEW.ChangePasswordOn = ADDDATE(UTC_TIMESTAMP(), 90), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
+FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.ChangePasswordOn = ADDDATE(UTC_TIMESTAMP(), 90), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
 
 CREATE TRIGGER CalculatedMeasurement_InsertDefault BEFORE INSERT ON CalculatedMeasurement
 FOR EACH ROW SET NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
@@ -1324,13 +1324,13 @@ CREATE TRIGGER Historian_InsertDefault BEFORE INSERT ON Historian
 FOR EACH ROW SET NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
 
 CREATE TRIGGER Subscriber_InsertDefault BEFORE INSERT ON Subscriber
-FOR EACH ROW SET NEW.ID = UUID(), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
+FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
 
 CREATE TRIGGER Measurement_InsertDefault BEFORE INSERT ON Measurement
-FOR EACH ROW SET NEW.SignalID = UUID(), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
+FOR EACH ROW SET NEW.SignalID = COALESCE(NEW.SignalID, UUID()), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
 
 CREATE TRIGGER Node_InsertDefault BEFORE INSERT ON Node
-FOR EACH ROW SET NEW.ID = UUID(), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
+FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
 
 CREATE TRIGGER OtherDevice_InsertDefault BEFORE INSERT ON OtherDevice
 FOR EACH ROW SET NEW.CreatedBy = USER(), NEW.CreatedOn = UTC_TIMESTAMP(), NEW.UpdatedBy = USER(), NEW.UpdatedOn = UTC_TIMESTAMP();
