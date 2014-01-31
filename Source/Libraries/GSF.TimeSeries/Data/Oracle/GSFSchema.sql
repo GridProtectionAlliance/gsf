@@ -1684,76 +1684,178 @@ CREATE TRIGGER Historian_RuntimeSync_Delete BEFORE DELETE ON Historian
 END;
 /
 
-CREATE TRIGGER AccessLog_InsertDefault BEFORE INSERT ON AccessLog 
-    FOR EACH ROW BEGIN SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+CREATE TRIGGER AccessLog_InsertDefault BEFORE INSERT ON AccessLog FOR EACH ROW BEGIN
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER ApplicationRole_InsertDefault BEFORE INSERT ON ApplicationRole FOR EACH ROW BEGIN
-    SELECT NEW_GUID() INTO :NEW.ID FROM dual;
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.ID IS NULL THEN
+        SELECT NEW_GUID() INTO :NEW.ID FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER SecurityGroup_InsertDefault BEFORE INSERT ON SecurityGroup FOR EACH ROW BEGIN
-    SELECT NEW_GUID() INTO :NEW.ID FROM dual;
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.ID IS NULL THEN
+        SELECT NEW_GUID() INTO :NEW.ID FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER UserAccount_InsertDefault BEFORE INSERT ON UserAccount FOR EACH ROW BEGIN
-    SELECT NEW_GUID() INTO :NEW.ID FROM dual;
-    SELECT SYSDATE + 90 INTO :NEW.ChangePasswordOn FROM dual;
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.ID IS NULL THEN
+        SELECT NEW_GUID() INTO :NEW.ID FROM dual;
+    END IF;
+    
+    IF :NEW.ChangePasswordOn IS NULL THEN
+        SELECT SYSDATE + 90 INTO :NEW.ChangePasswordOn FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER CalcMeasurement_InsertDefault BEFORE INSERT ON CalculatedMeasurement FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER Company_InsertDefault BEFORE INSERT ON Company FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER CustomActAdapter_InsertDefault BEFORE INSERT ON CustomActionAdapter FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER CustInputAdapter_InsertDefault BEFORE INSERT ON CustomInputAdapter FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER CustomOutAdapter_InsertDefault BEFORE INSERT ON CustomOutputAdapter FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
@@ -1762,143 +1864,332 @@ CREATE TRIGGER Device_InsertDefault BEFORE INSERT ON Device FOR EACH ROW BEGIN
         SELECT NEW_GUID() INTO :NEW.UniqueID FROM dual;
     END IF;
 
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER Historian_InsertDefault BEFORE INSERT ON Historian FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER Subscriber_InsertDefault BEFORE INSERT ON Subscriber FOR EACH ROW BEGIN
-    SELECT NEW_GUID() INTO :NEW.ID FROM dual;
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.ID IS NULL THEN
+        SELECT NEW_GUID() INTO :NEW.ID FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER Measurement_InsertDefault BEFORE INSERT ON Measurement FOR EACH ROW BEGIN
-    SELECT NEW_GUID() INTO :NEW.SignalID FROM dual;
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.SignalID IS NULL THEN
+        SELECT NEW_GUID() INTO :NEW.SignalID FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER Node_InsertDefault BEFORE INSERT ON Node FOR EACH ROW BEGIN
-    SELECT NEW_GUID() INTO :NEW.ID FROM dual;
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.ID IS NULL THEN
+        SELECT NEW_GUID() INTO :NEW.ID FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER OtherDevice_InsertDefault BEFORE INSERT ON OtherDevice FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER OutputStream_InsertDefault BEFORE INSERT ON OutputStream FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER OutStreamDevice_InsertDefault BEFORE INSERT ON OutputStreamDevice FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER OutStrDevAnalog_InsrtDefault BEFORE INSERT ON OutputStreamDeviceAnalog FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER OutStrDevDigital_InsrtDefault BEFORE INSERT ON OutputStreamDeviceDigital FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER OutStrDevPhasor_InsrtDefault BEFORE INSERT ON OutputStreamDevicePhasor FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER OutStrMeasurement_InsrtDefault BEFORE INSERT ON OutputStreamMeasurement FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER Phasor_InsertDefault BEFORE INSERT ON Phasor FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER Alarm_InsertDefault BEFORE INSERT ON Alarm FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER Vendor_InsertDefault BEFORE INSERT ON Vendor FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
 CREATE TRIGGER VendorDevice_InsertDefault BEFORE INSERT ON VendorDevice FOR EACH ROW BEGIN
-    SELECT USER INTO :NEW.CreatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
-    SELECT USER INTO :NEW.UpdatedBy FROM dual;
-    SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    IF :NEW.CreatedBy IS NULL THEN
+        SELECT USER INTO :NEW.CreatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedBy IS NULL THEN
+        SELECT USER INTO :NEW.UpdatedBy FROM dual;
+    END IF;
+    
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
-CREATE TRIGGER ErrorLog_InsertDefault BEFORE INSERT ON ErrorLog
-    FOR EACH ROW BEGIN SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+CREATE TRIGGER ErrorLog_InsertDefault BEFORE INSERT ON ErrorLog FOR EACH ROW BEGIN
+    IF :NEW.CreatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.CreatedOn FROM dual;
+    END IF;
 END;
 /
 
-CREATE TRIGGER AuditLog_InsertDefault BEFORE INSERT ON AuditLog
-    FOR EACH ROW BEGIN SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+CREATE TRIGGER AuditLog_InsertDefault BEFORE INSERT ON AuditLog FOR EACH ROW BEGIN
+    IF :NEW.UpdatedOn IS NULL THEN
+        SELECT SYSDATE INTO :NEW.UpdatedOn FROM dual;
+    END IF;
 END;
 /
 
