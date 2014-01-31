@@ -69,11 +69,15 @@ namespace DataMigrationUtility
             m_fromSchema.ImmediateClose = false;
             m_fromSchema.Tables = null;
             m_fromSchema.TableTypeRestriction = TableType.Table;
+            m_fromSchema.AllowNumericNulls = true;
+            m_fromSchema.AllowTextNulls = true;
 
             m_toSchema.ConnectionString = "";
             m_toSchema.ImmediateClose = false;
             m_toSchema.Tables = null;
             m_toSchema.TableTypeRestriction = TableType.Table;
+            m_toSchema.AllowNumericNulls = true;
+            m_toSchema.AllowTextNulls = true;
 
             m_dataInserter.BulkInsertFilePath = "c:\\";
             m_dataInserter.BulkInsertSettings = "FIELDTERMINATOR = \'\\t\', ROWTERMINATOR = \'\\n\', CODEPAGE = \'OEM\', FIRE_TRIGGERS, KEEPNULLS";

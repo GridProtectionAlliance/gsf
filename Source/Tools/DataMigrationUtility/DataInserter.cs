@@ -474,8 +474,7 @@ namespace DataMigrationUtility
 
                     if ((object)lookupField != null)
                     {
-                        //var _with2 = fldLookup;
-                        // We need only track autoinc translations when field is referenced by foreign keys
+                        // We need only track auto inc translations when field is referenced by foreign keys
                         if (lookupField.AutoIncrement & lookupField.ForeignKeys.Count > 0)
                         {
                             // Create a new hashtable to hold autoinc translations
@@ -597,7 +596,7 @@ namespace DataMigrationUtility
                                     {
                                         int tempValue;
 
-                                        if (int.TryParse(value, out tempValue)) //if (Information.IsNumeric(strValue))
+                                        if (int.TryParse(value, out tempValue))
                                         {
                                             if (Convert.ToInt32(tempValue) == 0)
                                             {
@@ -727,8 +726,8 @@ namespace DataMigrationUtility
                                     if (!lookupField.AllowsNulls && value.Equals("NULL", StringComparison.CurrentCultureIgnoreCase))
                                         value = lookupField.NonNullNativeValue;
 
-                                    // Check for alternate NULL values in null-able foreign key fields (SQLite doesn't report NULLs)
-                                    if (lookupField.IsForeignKey && lookupField.AllowsNulls && value.Equals(lookupField.NonNullNativeValue, StringComparison.OrdinalIgnoreCase))
+                                    // Check for possible values that should be interpreted as NULL values in nullable foreign key fields
+                                    if (lookupField.AllowsNulls && lookupField.IsForeignKey && value.Equals(lookupField.NonNullNativeValue, StringComparison.OrdinalIgnoreCase))
                                         value = "NULL";
 
                                     // Check to see if this is a key field
