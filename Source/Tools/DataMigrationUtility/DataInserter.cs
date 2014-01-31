@@ -508,7 +508,7 @@ namespace DataMigrationUtility
                 }
             }
 
-            string selectString = "SELECT " + fieldCollection.GetList() + " FROM " + fromTable.SQLEscapedName;
+            string selectString = "SELECT " + fieldCollection.GetList(sqlEscapeFunction: m_fromSchema.SQLEscapeName) + " FROM " + fromTable.SQLEscapedName;
             bool skipKeyValuePreservation = false;
 
             // Handle special case of self-referencing table
@@ -526,7 +526,7 @@ namespace DataMigrationUtility
                     {
                         if (string.Compare(sourceTable.Name, foreignKey.ForeignKey.Table.Name, StringComparison.OrdinalIgnoreCase) == 0)
                         {
-                            selectString += (index > 0 ? ", " : "") + foreignKey.ForeignKey.SQLEscapedName;
+                            selectString += (index > 0 ? ", " : "") + m_fromSchema.SQLEscapeName(foreignKey.ForeignKey.Name);
                             index++;
                         }
                     }
@@ -537,7 +537,7 @@ namespace DataMigrationUtility
             {
                 // Order by auto increment field to help preserve the original value while transferring data to destination table
                 if ((object)autoIncField != null)
-                    selectString += " ORDER BY " + autoIncField.SQLEscapedName;
+                    selectString += " ORDER BY " + m_fromSchema.SQLEscapeName(autoIncField.Name);
             }
 
             // Execute source query

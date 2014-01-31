@@ -1442,9 +1442,13 @@ namespace DataMigrationUtility
         /// Get comma separated list of <see cref="Field"/>
         /// </summary>
         /// <param name="returnAutoInc"></param>
+        /// <param name="sqlEscapeFunction"></param>
         /// <returns></returns>
-        public string GetList(bool returnAutoInc = true)
+        public string GetList(bool returnAutoInc = true, Func<string, string> sqlEscapeFunction = null)
         {
+            if ((object)sqlEscapeFunction == null)
+                sqlEscapeFunction = m_parent.Parent.Parent.SQLEscapeName;
+
             StringBuilder fieldList = new StringBuilder();
 
             foreach (Field field in m_fieldList)
@@ -1454,7 +1458,7 @@ namespace DataMigrationUtility
                     if (fieldList.Length > 0)
                         fieldList.Append(", ");
 
-                    fieldList.Append(field.SQLEscapedName);
+                    fieldList.Append(sqlEscapeFunction(field.Name));
                 }
             }
 
