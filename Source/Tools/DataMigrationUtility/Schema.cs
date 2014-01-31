@@ -836,6 +836,9 @@ namespace DataMigrationUtility
                                             case DatabaseType.SQLite:
                                                 encodedValue = "'" + tempDateTimeValue.ToString("yyyy-MM-dd HH:mm:ss") + "'";
                                                 break;
+                                            case DatabaseType.Oracle:
+                                                encodedValue = "to_date('" + tempDateTimeValue.ToString("dd-MMM-yyyy HH:mm:ss") + "', 'DD-MON-YYYY HH24:MI:SS')";
+                                                break;
                                             default:
                                                 encodedValue = "'" + tempDateTimeValue.ToString("dd-MMM-yyyy HH:mm:ss") + "'";
                                                 break;
@@ -963,6 +966,9 @@ namespace DataMigrationUtility
                                 break;
                             case DatabaseType.SQLite:
                                 encodedValue = "'" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                                break;
+                            case DatabaseType.Oracle:
+                                encodedValue = "to_date('" + DateTime.UtcNow.ToString("dd-MMM-yyyy HH:mm:ss") + "', 'DD-MON-YYYY HH24:MI:SS')";
                                 break;
                             default:
                                 encodedValue = "'" + DateTime.UtcNow.ToString("dd-MMM-yyyy HH:mm:ss") + "'";
