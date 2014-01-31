@@ -1371,81 +1371,81 @@ SET NEW.CreatedOn = UTC_TIMESTAMP();
 CREATE TRIGGER AuditLog_InsertDefault BEFORE INSERT ON AuditLog FOR EACH ROW
 SET NEW.UpdatedOn = UTC_TIMESTAMP();	
 
---CREATE FUNCTION StringToGuid(str CHAR(36)) RETURNS BINARY(16)
---RETURN CONCAT(UNHEX(LEFT(str, 8)), UNHEX(MID(str, 10, 4)), UNHEX(MID(str, 15, 4)), UNHEX(MID(str, 20, 4)), UNHEX(RIGHT(str, 12)));
+-- CREATE FUNCTION StringToGuid(str CHAR(36)) RETURNS BINARY(16)
+-- RETURN CONCAT(UNHEX(LEFT(str, 8)), UNHEX(MID(str, 10, 4)), UNHEX(MID(str, 15, 4)), UNHEX(MID(str, 20, 4)), UNHEX(RIGHT(str, 12)));
 
---CREATE FUNCTION GuidToString(guid BINARY(16)) RETURNS CHAR(36) 
---RETURN CONCAT(HEX(LEFT(guid, 4)), '-', HEX(MID(guid, 5, 2)), '-', HEX(MID(guid, 7, 2)), '-', HEX(MID(guid, 9, 2)), '-', HEX(RIGHT(guid, 6)));
+-- CREATE FUNCTION GuidToString(guid BINARY(16)) RETURNS CHAR(36) 
+-- RETURN CONCAT(HEX(LEFT(guid, 4)), '-', HEX(MID(guid, 5, 2)), '-', HEX(MID(guid, 7, 2)), '-', HEX(MID(guid, 9, 2)), '-', HEX(RIGHT(guid, 6)));
 
---CREATE FUNCTION NewGuid() RETURNS BINARY(16) 
---RETURN StringToGuid(UUID());
+-- CREATE FUNCTION NewGuid() RETURNS BINARY(16) 
+-- RETURN StringToGuid(UUID());
 
---DELIMITER $$
---CREATE PROCEDURE GetFormattedMeasurements(measurementSql TEXT, includeAdjustments TINYINT, OUT measurements TEXT)
---BEGIN
---    DECLARE done INT DEFAULT 0;
---    DECLARE measurementID INT;
---    DECLARE archiveSource VARCHAR(50);
---    DECLARE adder FLOAT DEFAULT 0.0;
---    DECLARE multiplier FLOAT DEFAULT 1.1;	
---    DECLARE selectedMeasurements CURSOR FOR SELECT * FROM temp;
---    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+-- DELIMITER $$
+-- CREATE PROCEDURE GetFormattedMeasurements(measurementSql TEXT, includeAdjustments TINYINT, OUT measurements TEXT)
+-- BEGIN
+--     DECLARE done INT DEFAULT 0;
+--     DECLARE measurementID INT;
+--     DECLARE archiveSource VARCHAR(50);
+--     DECLARE adder FLOAT DEFAULT 0.0;
+--     DECLARE multiplier FLOAT DEFAULT 1.1;	
+--     DECLARE selectedMeasurements CURSOR FOR SELECT * FROM temp;
+--     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
---    CREATE TEMPORARY TABLE temp
---    (
---        MeasurementID INT,
---        ArchiveSource VARCHAR(50),
---        Adder FLOAT,
---        Multiplier FLOAT
---    )
---    TABLESPACE MEMORY;
+--     CREATE TEMPORARY TABLE temp
+--     (
+--         MeasurementID INT,
+--         ArchiveSource VARCHAR(50),
+--         Adder FLOAT,
+--         Multiplier FLOAT
+--     )
+--     TABLESPACE MEMORY;
     
---    SET @insertSQL = CONCAT('INSERT INTO temp ', measurementSql);
---    PREPARE stmt FROM @insertSQL;
---    EXECUTE stmt;
---    DEALLOCATE PREPARE stmt;
+--     SET @insertSQL = CONCAT('INSERT INTO temp ', measurementSql);
+--     PREPARE stmt FROM @insertSQL;
+--     EXECUTE stmt;
+--     DEALLOCATE PREPARE stmt;
 
---    OPEN selectedMeasurements;	
---    SET measurements = '';
+--     OPEN selectedMeasurements;	
+--     SET measurements = '';
     
---    -- Step through selected measurements
---    REPEAT
---        -- Get next row from measurements SQL
---        FETCH selectedMeasurements INTO measurementID, archiveSource, adder, multiplier;
+--     --  Step through selected measurements
+--     REPEAT
+--         --  Get next row from measurements SQL
+--         FETCH selectedMeasurements INTO measurementID, archiveSource, adder, multiplier;
 
---        IF NOT done THEN
---            IF LENGTH(measurements) > 0 THEN
---                SET measurements = CONCAT(measurements, ';');
---            END IF;
+--         IF NOT done THEN
+--             IF LENGTH(measurements) > 0 THEN
+--                 SET measurements = CONCAT(measurements, ';');
+--             END IF;
             
---            IF includeAdjustments <> 0 AND (adder <> 0.0 OR multiplier <> 1.0) THEN
---                SET measurements = CONCAT(measurements, archiveSource, ':', measurementID, ',', adder, ',', multiplier);
---            ELSE
---                SET measurements = CONCAT(measurements, archiveSource, ':', measurementID);
---            END IF;
+--             IF includeAdjustments <> 0 AND (adder <> 0.0 OR multiplier <> 1.0) THEN
+--                 SET measurements = CONCAT(measurements, archiveSource, ':', measurementID, ',', adder, ',', multiplier);
+--             ELSE
+--                 SET measurements = CONCAT(measurements, archiveSource, ':', measurementID);
+--             END IF;
 
---        END IF;
---    UNTIL done END REPEAT;
+--         END IF;
+--     UNTIL done END REPEAT;
 
---    CLOSE selectedMeasurements;
---    DROP TABLE temp;
---END$$
---DELIMITER ;
+--     CLOSE selectedMeasurements;
+--     DROP TABLE temp;
+-- END$$
+-- DELIMITER ;
 
---DELIMITER $$
---CREATE FUNCTION FormatMeasurements(measurementSql TEXT, includeAdjustments TINYINT)
---RETURNS TEXT 
---BEGIN
---  DECLARE measurements TEXT; 
+-- DELIMITER $$
+-- CREATE FUNCTION FormatMeasurements(measurementSql TEXT, includeAdjustments TINYINT)
+-- RETURNS TEXT 
+-- BEGIN
+--   DECLARE measurements TEXT; 
 
---    CALL GetFormattedMeasurements(measurementSql, includeAdjustments, measurements);
+--     CALL GetFormattedMeasurements(measurementSql, includeAdjustments, measurements);
 
---    IF LENGTH(measurements) > 0 THEN
---        SET measurements = CONCAT('{', measurements, '}');
---    ELSE
---        SET measurements = NULL;
---    END IF;
+--     IF LENGTH(measurements) > 0 THEN
+--         SET measurements = CONCAT('{', measurements, '}');
+--     ELSE
+--         SET measurements = NULL;
+--     END IF;
         
---    RETURN measurements;
---END$$
---DELIMITER ;
+--     RETURN measurements;
+-- END$$
+-- DELIMITER ;
