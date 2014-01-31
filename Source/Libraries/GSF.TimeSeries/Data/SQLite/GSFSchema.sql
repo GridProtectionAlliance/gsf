@@ -711,7 +711,7 @@ CREATE TABLE MeasurementGroup (
     ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     Name VARCHAR(200) NOT NULL,
     Description TEXT NULL,
-    AccessControlFilter TEXT NULL,
+    FilterExpression TEXT NULL,
     CreatedOn DATETIME NOT NULL DEFAULT '',
     CreatedBy VARCHAR(200) NOT NULL DEFAULT '',
     UpdatedOn DATETIME NOT NULL DEFAULT '',
