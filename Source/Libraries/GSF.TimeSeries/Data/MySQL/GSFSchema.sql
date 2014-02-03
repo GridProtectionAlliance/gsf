@@ -140,7 +140,7 @@ CREATE TABLE Interconnection(
 );
 
 CREATE TABLE Node(
-    ID NCHAR(36) NULL,
+    ID NCHAR(36) NOT NULL DEFAULT '',
     Name VARCHAR(200) NOT NULL,
     CompanyID INT NULL,
     Longitude DECIMAL(9, 6) NULL,
@@ -295,7 +295,7 @@ CREATE TABLE OutputStreamDeviceAnalog(
 
 CREATE TABLE Measurement(
     PointID INT AUTO_INCREMENT NOT NULL,
-    SignalID NCHAR(36) NULL,
+    SignalID NCHAR(36) NOT NULL DEFAULT '',
     HistorianID INT NULL,
     DeviceID INT NULL,
     PointTag VARCHAR(200) NOT NULL,
@@ -581,7 +581,7 @@ CREATE TABLE AccessLog (
 );
 
 CREATE TABLE UserAccount (
-    ID NCHAR(36) NULL,
+    ID NCHAR(36) NOT NULL DEFAULT '',
     Name VARCHAR(200) NOT NULL,
     Password VARCHAR(200) NULL,
     FirstName VARCHAR(200) NULL,
@@ -601,7 +601,7 @@ CREATE TABLE UserAccount (
 );
 
 CREATE TABLE SecurityGroup (
-    ID NCHAR(36) NULL,
+    ID NCHAR(36) NOT NULL DEFAULT '',
     Name VARCHAR(200) NOT NULL,
     Description TEXT NULL,
     CreatedOn DATETIME NULL,
@@ -613,7 +613,7 @@ CREATE TABLE SecurityGroup (
 );
 
 CREATE TABLE ApplicationRole (
-    ID NCHAR(36) NULL,
+    ID NCHAR(36) NOT NULL DEFAULT '',
     Name VARCHAR(200) NOT NULL,
     Description TEXT NULL,
     NodeID NCHAR(36) NOT NULL,
@@ -644,7 +644,7 @@ CREATE TABLE SecurityGroupUserAccount (
 
 CREATE TABLE Subscriber (
     NodeID NCHAR(36) NOT NULL,
-    ID NCHAR(36) NULL,
+    ID NCHAR(36) NOT NULL DEFAULT '',
     Acronym VARCHAR(200) NOT NULL,
     Name VARCHAR(200) NULL,
     SharedSecret VARCHAR(200) NULL,
@@ -1294,13 +1294,13 @@ CREATE TRIGGER AccessLog_InsertDefault BEFORE INSERT ON AccessLog
 FOR EACH ROW SET NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP());
 
 CREATE TRIGGER ApplicationRole_InsertDefault BEFORE INSERT ON ApplicationRole 
-FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
+FOR EACH ROW SET NEW.ID = IF(NEW.ID <> '', NEW.ID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
 
 CREATE TRIGGER SecurityGroup_InsertDefault BEFORE INSERT ON SecurityGroup 
-FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
+FOR EACH ROW SET NEW.ID = IF(NEW.ID <> '', NEW.ID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
 
 CREATE TRIGGER UserAccount_InsertDefault BEFORE INSERT ON UserAccount 
-FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.ChangePasswordOn = COALESCE(NEW.ChangePasswordOn, ADDDATE(UTC_TIMESTAMP(), 90)), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
+FOR EACH ROW SET NEW.ID = IF(NEW.ID <> '', NEW.ID, UUID()), NEW.ChangePasswordOn = COALESCE(NEW.ChangePasswordOn, ADDDATE(UTC_TIMESTAMP(), 90)), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
 
 CREATE TRIGGER CalculatedMeasurement_InsertDefault BEFORE INSERT ON CalculatedMeasurement
 FOR EACH ROW SET NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
@@ -1324,13 +1324,13 @@ CREATE TRIGGER Historian_InsertDefault BEFORE INSERT ON Historian
 FOR EACH ROW SET NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
 
 CREATE TRIGGER Subscriber_InsertDefault BEFORE INSERT ON Subscriber
-FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
+FOR EACH ROW SET NEW.ID = IF(NEW.ID <> '', NEW.ID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
 
 CREATE TRIGGER Measurement_InsertDefault BEFORE INSERT ON Measurement
-FOR EACH ROW SET NEW.SignalID = COALESCE(NEW.SignalID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
+FOR EACH ROW SET NEW.SignalID = IF(NEW.SignalID <> '', NEW.SignalID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
 
 CREATE TRIGGER Node_InsertDefault BEFORE INSERT ON Node
-FOR EACH ROW SET NEW.ID = COALESCE(NEW.ID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
+FOR EACH ROW SET NEW.ID = IF(NEW.ID <> '', NEW.ID, UUID()), NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
 
 CREATE TRIGGER OtherDevice_InsertDefault BEFORE INSERT ON OtherDevice
 FOR EACH ROW SET NEW.CreatedBy = COALESCE(NEW.CreatedBy, USER()), NEW.CreatedOn = COALESCE(NEW.CreatedOn, UTC_TIMESTAMP()), NEW.UpdatedBy = COALESCE(NEW.UpdatedBy, USER()), NEW.UpdatedOn = COALESCE(NEW.UpdatedOn, UTC_TIMESTAMP());
