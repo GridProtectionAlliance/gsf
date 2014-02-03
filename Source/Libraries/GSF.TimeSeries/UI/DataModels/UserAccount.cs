@@ -395,7 +395,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount ORDER BY Name");
 
                 foreach (DataRow row in userAccountTable.Rows)
-                    userAccountList[database.Guid(row, "ID")] = row.Field<string>("Name");
+                    userAccountList[database.Guid(row, "ID")] = UserInfo.SIDToAccountName(row.Field<string>("Name"));
 
                 return userAccountList;
             }
@@ -414,8 +414,12 @@ namespace GSF.TimeSeries.UI.DataModels
         /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, UserAccount userAccount)
         {
+            const string ErrorMessage = "User name already exists.";
+
             bool createdConnection = false;
             string query;
+            string userAccountSID;
+            int existing;
 
             try
             {
@@ -427,19 +431,30 @@ namespace GSF.TimeSeries.UI.DataModels
                     pColumn = "[Password]";
 
                 object changePasswordOn = userAccount.ChangePasswordOn;
+
                 if (userAccount.ChangePasswordOn == DateTime.MinValue)
                     changePasswordOn = (object)DBNull.Value;
                 else if (database.IsJetEngine)
                     changePasswordOn = userAccount.ChangePasswordOn.ToOADate();
 
-                if (userAccount.ID == null || userAccount.ID == Guid.Empty)
+                userAccountSID = UserInfo.AccountNameToSID(userAccount.Name);
+
+                if (!UserInfo.IsUserSID(userAccountSID))
+                    userAccountSID = userAccount.Name;
+
+                if (userAccount.ID == Guid.Empty)
                 {
+                    existing = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM UserAccount WHERE Name = {0}", "name"), DefaultTimeout, userAccountSID));
+
+                    if (existing > 0)
+                        throw new InvalidOperationException(ErrorMessage);
+
                     query = database.ParameterizedQueryString("INSERT INTO UserAccount (Name, " + pColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, " +
                         "LockedOut, UseADAuthentication, ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, " +
                         "{9}, {10}, {11}, {12}, {13})", "name", "password", "firstName", "lastName", "defaultNodeID", "phone", "email", "lockedOut", "useADAuthentication",
                         "changePasswordOn", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, UserInfo.AccountNameToSID(userAccount.Name),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccountSID,
                         userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.CurrentNodeID(),
                         userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                         changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
@@ -448,12 +463,17 @@ namespace GSF.TimeSeries.UI.DataModels
                 }
                 else
                 {
+                    existing = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM UserAccount WHERE Name = {0} AND ID <> {1}", "name", "id"), DefaultTimeout, userAccountSID, userAccount.ID));
+
+                    if (existing > 0)
+                        throw new InvalidOperationException(ErrorMessage);
+
                     query = database.ParameterizedQueryString("UPDATE UserAccount SET Name = {0}, " + pColumn + " = {1}, FirstName = {2}, LastName = {3}, " +
                             "DefaultNodeID = {4}, Phone = {5}, Email = {6}, LockedOut = {7}, UseADAuthentication = {8}, ChangePasswordOn = {9}, UpdatedBy = {10}, " +
                             "UpdatedOn = {11} WHERE ID = {12}", "name", "password", "firstName", "lastName", "defaultNodeID", "phone", "email", "lockedOut",
                             "useADAuthentication", "changePasswordOn", "updatedBy", "updatedOn", "id");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, UserInfo.AccountNameToSID(userAccount.Name),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, userAccountSID,
                             userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
                             userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), database.Bool(userAccount.LockedOut), database.Bool(userAccount.UseADAuthentication),
                             changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));

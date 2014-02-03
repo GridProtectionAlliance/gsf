@@ -135,7 +135,7 @@ namespace GSF.TimeSeries
                     {
                         sid = UserInfo.AccountNameToSID(accountName);
 
-                        if (!ReferenceEquals(accountName, sid))
+                        if (!ReferenceEquals(accountName, sid) && UserInfo.IsUserSID(sid))
                             updateMap.Add(id, sid);
                     }
                 }
@@ -159,7 +159,7 @@ namespace GSF.TimeSeries
                     {
                         sid = UserInfo.AccountNameToSID(accountName);
 
-                        if (!ReferenceEquals(accountName, sid))
+                        if (!ReferenceEquals(accountName, sid) && UserInfo.IsGroupSID(sid))
                             updateMap.Add(id, sid);
                     }
                 }

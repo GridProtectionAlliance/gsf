@@ -2731,6 +2731,52 @@ namespace GSF.Identity
 #endif
         }
 
+        /// <summary>
+        /// Determines whether the given security identifier identifies a user account.
+        /// </summary>
+        /// <param name="sid">The security identifier.</param>
+        /// <returns>True if the security identifier identifies a user account; false otherwise.</returns>
+        public static bool IsUserSID(string sid)
+        {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
+            try
+            {
+                string accountName = SIDToAccountName(sid);
+                DirectoryEntry entry = new DirectoryEntry(string.Format("WinNT://{0}", ValidateGroupName(accountName).Replace('\\', '/')));
+                return entry.SchemaClassName.Equals("User", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (COMException)
+            {
+                return false;
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Determines whether the given security identifier identifies a group.
+        /// </summary>
+        /// <param name="sid">The security identifier.</param>
+        /// <returns>True if the security identifier identifies a group; false otherwise.</returns>
+        public static bool IsGroupSID(string sid)
+        {
+#if MONO
+            throw new NotSupportedException("Not supported under Mono.");
+#else
+            try
+            {
+                string accountName = SIDToAccountName(sid);
+                DirectoryEntry entry = new DirectoryEntry(string.Format("WinNT://{0}", ValidateGroupName(accountName).Replace('\\', '/')));
+                return entry.SchemaClassName.Equals("Group", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (COMException)
+            {
+                return false;
+            }
+#endif
+        }
+
         // DirectoryEntry will only resolve "BUILTIN\" groups with a dot ".\"
         private static string ValidateGroupName(string groupName)
         {

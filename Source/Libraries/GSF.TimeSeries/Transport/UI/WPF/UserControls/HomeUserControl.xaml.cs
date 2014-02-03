@@ -169,27 +169,39 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             Version appVersion = AssemblyInfo.EntryAssembly.Version;
             TextBlockManagerVersion.Text = appVersion.Major + "." + appVersion.Minor + "." + appVersion.Build + ".0";
 
-            using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+            try
             {
-                TextBlockDatabaseType.Text = database.DatabaseType.ToString();
-
-                if (database.DatabaseType == DatabaseType.SQLite || database.DatabaseType == DatabaseType.Access)
+                using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
                 {
+                    TextBlockDatabaseType.Text = database.DatabaseType.ToString();
+
                     try
                     {
-                        // Extract database file name from connection string for file centric databases
-                        TextBlockDatabaseName.Text = FilePath.GetFileName(ConfigurationFile.Current.Settings[CommonFunctions.DefaultSettingsCategory]["ConnectionString"].Value.ParseKeyValuePairs()["Data Source"]);
+                        if (database.IsSqlite || database.IsJetEngine)
+                        {
+                            // Extract database file name from connection string for file centric databases
+                            TextBlockDatabaseName.Text = FilePath.GetFileName(database.Connection.ConnectionString.ParseKeyValuePairs()["Data Source"]);
+                        }
+                        else if (database.IsOracle)
+                        {
+                            // Extract user name from connection string for Oracle databases
+                            TextBlockDatabaseName.Text = database.Connection.ConnectionString.ParseKeyValuePairs()["User Id"];
+                        }
+                        else
+                        {
+                            TextBlockDatabaseName.Text = database.Connection.Database;
+                        }
                     }
                     catch
                     {
-                        // Fall back on database name if file name extraction fails
+                        // Fall back on database name if file anything fails
                         TextBlockDatabaseName.Text = database.Connection.Database;
                     }
                 }
-                else
-                {
-                    TextBlockDatabaseName.Text = database.Connection.Database;
-                }
+            }
+            catch
+            {
+                TextBlockDatabaseName.Text = "Not Avaliable";
             }
 
             try
