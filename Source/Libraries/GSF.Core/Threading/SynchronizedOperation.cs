@@ -113,8 +113,8 @@ namespace GSF.Threading
                 ExecuteAction();
                 Interlocked.Exchange(ref m_operationExecuting, 0);
 
-                if (Interlocked.CompareExchange(ref m_operationPending, 0, 1) == 1)
-                    ThreadPool.QueueUserWorkItem(state => RunOnce());
+                if (Interlocked.CompareExchange(ref m_operationPending, 0, 0) == 1)
+                    TryRunAsync();
             }
         }
 
