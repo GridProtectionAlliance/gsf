@@ -34,6 +34,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using GSF;
@@ -831,16 +832,13 @@ namespace DataMigrationUtility
                                         switch (m_parent.Parent.Parent.Parent.DataSourceType)
                                         {
                                             case DatabaseType.Access:
-                                                encodedValue = "#" + tempDateTimeValue.ToString("MM/dd/yyyy HH:mm:ss") + "#";
-                                                break;
-                                            case DatabaseType.SQLite:
-                                                encodedValue = "'" + tempDateTimeValue.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                                                encodedValue = "#" + tempDateTimeValue.ToString("MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture) + "#";
                                                 break;
                                             case DatabaseType.Oracle:
                                                 encodedValue = "to_date('" + tempDateTimeValue.ToString("dd-MMM-yyyy HH:mm:ss") + "', 'DD-MON-YYYY HH24:MI:SS')";
                                                 break;
                                             default:
-                                                encodedValue = "'" + tempDateTimeValue.ToString("dd-MMM-yyyy HH:mm:ss") + "'";
+                                                encodedValue = "'" + tempDateTimeValue.ToString("yyyy-MM-dd HH:mm:ss") + "'";
                                                 break;
                                         }
                                     }
@@ -962,16 +960,13 @@ namespace DataMigrationUtility
                         switch (m_parent.Parent.Parent.Parent.DataSourceType)
                         {
                             case DatabaseType.Access:
-                                encodedValue = "#" + DateTime.UtcNow.ToString("MM/dd/yyyy HH:mm:ss") + "#";
-                                break;
-                            case DatabaseType.SQLite:
-                                encodedValue = "'" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "'";
+                                encodedValue = "#" + DateTime.UtcNow.ToString("MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture) + "#";
                                 break;
                             case DatabaseType.Oracle:
                                 encodedValue = "to_date('" + DateTime.UtcNow.ToString("dd-MMM-yyyy HH:mm:ss") + "', 'DD-MON-YYYY HH24:MI:SS')";
                                 break;
                             default:
-                                encodedValue = "'" + DateTime.UtcNow.ToString("dd-MMM-yyyy HH:mm:ss") + "'";
+                                encodedValue = "'" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "'";
                                 break;
                         }
                         break;
