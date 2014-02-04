@@ -2837,7 +2837,7 @@ namespace GSF.TimeSeries.Transport
 
                                     // Remove any devices in the database that are associated with the parent device and do not exist in the meta-data
                                     if (uniqueIDs.BinarySearch(uniqueID) < 0)
-                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, uniqueID);
+                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID));
                                 }
                                 UpdateSyncProgress();
                             }
@@ -2967,13 +2967,13 @@ namespace GSF.TimeSeries.Transport
                                     if (signalIDs.BinarySearch(signalID) < 0)
                                     {
                                         // Measurement was not in the meta-data, get the measurement's actual record based ID for its associated device
-                                        object measurementDeviceID = command.ExecuteScalar(queryMeasurementDeviceIDSql, m_metadataSynchronizationTimeout, signalID);
+                                        object measurementDeviceID = command.ExecuteScalar(queryMeasurementDeviceIDSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
 
                                         // If the unknown measurement is directly associated with a device that exists in the meta-data it is assumed that this measurement
                                         // was removed from the publishing system and no longer exists therefore we remove it from the local measurement cache. If the user
                                         // needs custom local measurements associated with a remote device, they should be associated with the parent device only.
                                         if (measurementDeviceID != null && !(measurementDeviceID is DBNull) && deviceIDs.ContainsValue((int)measurementDeviceID))
-                                            command.ExecuteNonQuery(deleteMeasurementSql, m_metadataSynchronizationTimeout, signalID);
+                                            command.ExecuteNonQuery(deleteMeasurementSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
                                     }
                                 }
 

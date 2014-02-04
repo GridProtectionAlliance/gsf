@@ -52,7 +52,7 @@ namespace GSF.Security
         /// </summary>
         /// <param name="identity">An <see cref="SecurityIdentity"/> object.</param>
         /// <exception cref="ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        internal SecurityPrincipal(SecurityIdentity identity)
+        public SecurityPrincipal(SecurityIdentity identity)
         {
             if (identity == null)
                 throw new ArgumentNullException("identity");

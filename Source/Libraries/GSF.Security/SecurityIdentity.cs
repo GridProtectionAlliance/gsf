@@ -49,7 +49,7 @@ namespace GSF.Security
         /// </summary>
         /// <param name="provider">An <see cref="ISecurityProvider"/> of the user.</param>
         /// <exception cref="ArgumentNullException">Value specified for <paramref name="provider"/> is null.</exception>
-        internal SecurityIdentity(ISecurityProvider provider)
+        public SecurityIdentity(ISecurityProvider provider)
         {
             if ((object)provider == null)
                 throw new ArgumentNullException("provider");
