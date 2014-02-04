@@ -759,8 +759,10 @@ AS
 SELECT Historian.NodeID, Runtime.ID, Historian.Acronym AS AdapterName,
  COALESCE(NULLIF(TRIM(Historian.AssemblyName), ''), 'HistorianAdapters.dll') AS AssemblyName, 
  COALESCE(NULLIF(TRIM(Historian.TypeName), ''), CASE WHEN IsLocal = 1 THEN 'HistorianAdapters.LocalOutputAdapter' ELSE 'HistorianAdapters.RemoteOutputAdapter' END) AS TypeName, 
- Historian.ConnectionString || ';' || ('instanceName=' || Historian.Acronym) || ';' || ('sourceids=' || Historian.Acronym) || ';' ||
- ('measurementReportingInterval=' || Historian.MeasurementReportingInterval) AS ConnectionString
+ COALESCE(Historian.ConnectionString || ';', '') ||
+ COALESCE('instanceName=' || Historian.Acronym || ';', '') ||
+ COALESCE('sourceids=' || Historian.Acronym || ';', '') ||
+ COALESCE('measurementReportingInterval=' || Historian.MeasurementReportingInterval, '') AS ConnectionString
 FROM Historian LEFT OUTER JOIN
  Runtime ON Historian.ID = Runtime.SourceID AND Runtime.SourceTable = 'Historian'
 WHERE (Historian.Enabled <> 0)
@@ -769,20 +771,21 @@ ORDER BY Historian.LoadOrder;
 CREATE VIEW RuntimeDevice
 AS
 SELECT Device.NodeID, Runtime.ID, Device.Acronym AS AdapterName, Protocol.AssemblyName, Protocol.TypeName,
- Device.ConnectionString || ';' || ('isConcentrator=' || Device.IsConcentrator) || ';' ||
- ('accessID=' || Device.AccessID) || ';' ||
- CASE WHEN Device.TimeZone IS NULL THEN '' ELSE 'timeZone=' || Device.TimeZone END || ';' ||
- ('timeAdjustmentTicks=' || Device.TimeAdjustmentTicks) || ';' ||
- CASE WHEN Protocol.Acronym IS NULL THEN '' ELSE 'phasorProtocol=' || Protocol.Acronym END || ';' ||
- ('dataLossInterval=' || Device.DataLossInterval) || ';' ||
- ('allowedParsingExceptions=' || Device.AllowedParsingExceptions) || ';' ||
- ('parsingExceptionWindow=' || Device.ParsingExceptionWindow) || ';' ||
- ('delayedConnectionInterval=' || Device.DelayedConnectionInterval) || ';' ||
- ('allowUseOfCachedConfiguration=' || Device.AllowUseOfCachedConfiguration) || ';' ||
- ('autoStartDataParsingSequence=' || Device.AutoStartDataParsingSequence) || ';' ||
- ('skipDisableRealTimeData=' || Device.SkipDisableRealTimeData) || ';' ||
- ('measurementReportingInterval=' || Device.MeasurementReportingInterval) || ';' ||
- ('connectOnDemand=' || Device.ConnectOnDemand) AS ConnectionString
+ COALESCE(Device.ConnectionString || ';', '') ||
+ COALESCE('isConcentrator=' || Device.IsConcentrator || ';', '') ||
+ COALESCE('accessID=' || Device.AccessID || ';', '') ||
+ COALESCE('timeZone=' || Device.TimeZone || ';', '') ||
+ COALESCE('timeAdjustmentTicks=' || Device.TimeAdjustmentTicks || ';', '') ||
+ COALESCE('phasorProtocol=' || Protocol.Acronym || ';', '') ||
+ COALESCE('dataLossInterval=' || Device.DataLossInterval || ';', '') ||
+ COALESCE('allowedParsingExceptions=' || Device.AllowedParsingExceptions || ';', '') ||
+ COALESCE('parsingExceptionWindow=' || Device.ParsingExceptionWindow || ';', '') ||
+ COALESCE('delayedConnectionInterval=' || Device.DelayedConnectionInterval || ';', '') ||
+ COALESCE('allowUseOfCachedConfiguration=' || Device.AllowUseOfCachedConfiguration || ';', '') ||
+ COALESCE('autoStartDataParsingSequence=' || Device.AutoStartDataParsingSequence || ';', '') ||
+ COALESCE('skipDisableRealTimeData=' || Device.SkipDisableRealTimeData || ';', '') ||
+ COALESCE('measurementReportingInterval=' || Device.MeasurementReportingInterval || ';', '') ||
+ COALESCE('connectOnDemand=' || Device.ConnectOnDemand, '') AS ConnectionString
 FROM Device LEFT OUTER JOIN
  Protocol ON Device.ProtocolID = Protocol.ID LEFT OUTER JOIN
  Runtime ON Device.ID = Runtime.SourceID AND Runtime.SourceTable = 'Device'
@@ -831,29 +834,29 @@ AS
 SELECT OutputStream.NodeID, Runtime.ID, OutputStream.Acronym AS AdapterName, 
  'PhasorProtocolAdapters.dll' AS AssemblyName, 
  CASE Type WHEN 1 THEN 'PhasorProtocolAdapters.BpaPdcStream.Concentrator' WHEN 2 THEN 'PhasorProtocolAdapters.Iec61850_90_5.Concentrator' ELSE 'PhasorProtocolAdapters.IeeeC37_118.Concentrator' END AS TypeName,
- OutputStream.ConnectionString || ';' ||
- CASE WHEN OutputStream.DataChannel IS NULL THEN '' ELSE ('dataChannel={' || OutputStream.DataChannel || '}') END || ';' ||
- CASE WHEN OutputStream.CommandChannel IS NULL THEN '' ELSE ('commandChannel={' || OutputStream.CommandChannel || '}') END || ';' ||
- ('idCode=' || OutputStream.IDCode) || ';' ||
- ('autoPublishConfigFrame=' || OutputStream.AutoPublishConfigFrame) || ';' ||
- ('autoStartDataChannel=' || OutputStream.AutoStartDataChannel) || ';' ||
- ('nominalFrequency=' || OutputStream.NominalFrequency) || ';' ||
- ('lagTime=' || OutputStream.LagTime) || ';' ||
- ('leadTime=' || OutputStream.LeadTime) || ';' ||
- ('framesPerSecond=' || OutputStream.FramesPerSecond) || ';' ||
- ('useLocalClockAsRealTime=' || OutputStream.UseLocalClockAsRealTime) || ';' ||
- ('allowSortsByArrival=' || OutputStream.AllowSortsByArrival) || ';' ||
- ('ignoreBadTimestamps=' || OutputStream.IgnoreBadTimeStamps) || ';' ||
- ('timeResolution=' || OutputStream.TimeResolution) || ';' ||
- ('allowPreemptivePublishing=' || OutputStream.AllowPreemptivePublishing) || ';' ||
- ('downsamplingMethod=' || OutputStream.DownsamplingMethod) || ';' ||
- ('dataFormat=' || OutputStream.DataFormat) || ';' ||
- ('coordinateFormat=' || OutputStream.CoordinateFormat) || ';' ||
- ('currentScalingValue=' || OutputStream.CurrentScalingValue) || ';' ||
- ('voltageScalingValue=' || OutputStream.VoltageScalingValue) || ';' ||
- ('analogScalingValue=' || OutputStream.AnalogScalingValue) || ';' ||
- ('performTimestampReasonabilityCheck=' || OutputStream.PerformTimeReasonabilityCheck) || ';' ||
- ('digitalMaskValue=' || OutputStream.DigitalMaskValue) AS ConnectionString
+ COALESCE(OutputStream.ConnectionString || ';', '') ||
+ COALESCE('dataChannel={' || OutputStream.DataChannel || '};', '') ||
+ COALESCE('commandChannel={' || OutputStream.CommandChannel || '};', '') ||
+ COALESCE('idCode=' || OutputStream.IDCode || ';', '') ||
+ COALESCE('autoPublishConfigFrame=' || OutputStream.AutoPublishConfigFrame || ';', '') ||
+ COALESCE('autoStartDataChannel=' || OutputStream.AutoStartDataChannel || ';', '') ||
+ COALESCE('nominalFrequency=' || OutputStream.NominalFrequency || ';', '') ||
+ COALESCE('lagTime=' || OutputStream.LagTime || ';', '') ||
+ COALESCE('leadTime=' || OutputStream.LeadTime || ';', '') ||
+ COALESCE('framesPerSecond=' || OutputStream.FramesPerSecond || ';', '') ||
+ COALESCE('useLocalClockAsRealTime=' || OutputStream.UseLocalClockAsRealTime || ';', '') ||
+ COALESCE('allowSortsByArrival=' || OutputStream.AllowSortsByArrival || ';', '') ||
+ COALESCE('ignoreBadTimestamps=' || OutputStream.IgnoreBadTimeStamps || ';', '') ||
+ COALESCE('timeResolution=' || OutputStream.TimeResolution || ';', '') ||
+ COALESCE('allowPreemptivePublishing=' || OutputStream.AllowPreemptivePublishing || ';', '') ||
+ COALESCE('downsamplingMethod=' || OutputStream.DownsamplingMethod || ';', '') ||
+ COALESCE('dataFormat=' || OutputStream.DataFormat || ';', '') ||
+ COALESCE('coordinateFormat=' || OutputStream.CoordinateFormat || ';', '') ||
+ COALESCE('currentScalingValue=' || OutputStream.CurrentScalingValue || ';', '') ||
+ COALESCE('voltageScalingValue=' || OutputStream.VoltageScalingValue || ';', '') ||
+ COALESCE('analogScalingValue=' || OutputStream.AnalogScalingValue || ';', '') ||
+ COALESCE('performTimestampReasonabilityCheck=' || OutputStream.PerformTimeReasonabilityCheck || ';', '') ||
+ COALESCE('digitalMaskValue=' || OutputStream.DigitalMaskValue, '') AS ConnectionString
 FROM OutputStream LEFT OUTER JOIN
  Runtime ON OutputStream.ID = Runtime.SourceID AND Runtime.SourceTable = 'OutputStream'
 WHERE (OutputStream.Enabled <> 0)
@@ -872,20 +875,20 @@ CREATE VIEW RuntimeCalculatedMeasurement
 AS
 SELECT CalculatedMeasurement.NodeID, Runtime.ID, CalculatedMeasurement.Acronym AS AdapterName, 
  TRIM(CalculatedMeasurement.AssemblyName) AS AssemblyName, TRIM(CalculatedMeasurement.TypeName) AS TypeName,
- CASE WHEN CalculatedMeasurement.ConnectionString IS NULL THEN '' ELSE CalculatedMeasurement.ConnectionString END || ';' ||
- CASE WHEN ConfigSection IS NULL THEN '' ELSE ('configurationSection=' || ConfigSection) END || ';' ||
- ('minimumMeasurementsToUse=' || CalculatedMeasurement.MinimumMeasurementsToUse) || ';' ||
- ('framesPerSecond=' || CalculatedMeasurement.FramesPerSecond) || ';' ||
- ('lagTime=' || CalculatedMeasurement.LagTime) || ';' ||
- ('leadTime=' || CalculatedMeasurement.LeadTime) || ';' ||
- CASE WHEN InputMeasurements IS NULL THEN '' ELSE ('inputMeasurementKeys={' || InputMeasurements || '}') END || ';' ||
- CASE WHEN OutputMeasurements IS NULL THEN '' ELSE ('outputMeasurements={' || OutputMeasurements || '}') END || ';' ||
- ('ignoreBadTimestamps=' || CalculatedMeasurement.IgnoreBadTimeStamps) || ';' ||
- ('timeResolution=' || CalculatedMeasurement.TimeResolution) || ';' ||
- ('allowPreemptivePublishing=' || CalculatedMeasurement.AllowPreemptivePublishing) || ';' ||
- ('performTimestampReasonabilityCheck=' || CalculatedMeasurement.PerformTimeReasonabilityCheck) || ';' ||
- ('downsamplingMethod=' || CalculatedMeasurement.DownsamplingMethod) || ';' ||
- ('useLocalClockAsRealTime=' || CalculatedMeasurement.UseLocalClockAsRealTime) AS ConnectionString
+ COALESCE(CalculatedMeasurement.ConnectionString || ';', '') ||
+ COALESCE('configurationSection=' || ConfigSection || ';', '') ||
+ COALESCE('minimumMeasurementsToUse=' || CalculatedMeasurement.MinimumMeasurementsToUse || ';', '') ||
+ COALESCE('framesPerSecond=' || CalculatedMeasurement.FramesPerSecond || ';', '') ||
+ COALESCE('lagTime=' || CalculatedMeasurement.LagTime || ';', '') ||
+ COALESCE('leadTime=' || CalculatedMeasurement.LeadTime || ';', '') ||
+ COALESCE('inputMeasurementKeys={' || InputMeasurements || '};', '') ||
+ COALESCE('outputMeasurements={' || OutputMeasurements || '};', '') ||
+ COALESCE('ignoreBadTimestamps=' || CalculatedMeasurement.IgnoreBadTimeStamps || ';', '') ||
+ COALESCE('timeResolution=' || CalculatedMeasurement.TimeResolution || ';', '') ||
+ COALESCE('allowPreemptivePublishing=' || CalculatedMeasurement.AllowPreemptivePublishing || ';', '') ||
+ COALESCE('performTimestampReasonabilityCheck=' || CalculatedMeasurement.PerformTimeReasonabilityCheck || ';', '') ||
+ COALESCE('downsamplingMethod=' || CalculatedMeasurement.DownsamplingMethod || ';', '') ||
+ COALESCE('useLocalClockAsRealTime=' || CalculatedMeasurement.UseLocalClockAsRealTime, '') AS ConnectionString
 FROM CalculatedMeasurement LEFT OUTER JOIN
  Runtime ON CalculatedMeasurement.ID = Runtime.SourceID AND Runtime.SourceTable = 'CalculatedMeasurement'
 WHERE (CalculatedMeasurement.Enabled <> 0)
