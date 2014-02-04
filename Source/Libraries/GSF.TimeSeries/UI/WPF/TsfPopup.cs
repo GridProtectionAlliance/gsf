@@ -29,7 +29,9 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 
 namespace GSF.TimeSeries.UI
 {
@@ -49,6 +51,18 @@ namespace GSF.TimeSeries.UI
             public readonly int Top;
             public readonly int Right;
             public readonly int Bottom;
+        }
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="TsfPopup"/> class.
+        /// </summary>
+        public TsfPopup()
+        {
+            PreviewMouseDown += TsfPopup_PreviewMouseDown;
         }
 
         #endregion
@@ -81,7 +95,10 @@ namespace GSF.TimeSeries.UI
 
         private static void OnTopmostChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
-            (obj as TsfPopup).UpdateWindow();
+            TsfPopup tsfPopup = obj as TsfPopup;
+
+            if ((object)tsfPopup != null)
+                tsfPopup.UpdateWindow();
         }
 
         /// <summary>
@@ -95,11 +112,39 @@ namespace GSF.TimeSeries.UI
 
         private void UpdateWindow()
         {
-            IntPtr hwnd = ((HwndSource)PresentationSource.FromVisual(this.Child)).Handle;
+            HwndSource hwndSource;
+            IntPtr hwnd;
             RECT rect;
 
-            if (GetWindowRect(hwnd, out rect))
-                SetWindowPos(hwnd, Topmost ? -1 : -2, rect.Left, rect.Top, (int)this.Width, (int)this.Height, 0);
+            // Get the source of the window handle
+            hwndSource = PresentationSource.FromVisual(Child) as HwndSource;
+
+            if ((object)hwndSource != null)
+            {
+                // Get the window handle
+                hwnd = hwndSource.Handle;
+
+                // Set the position of the window
+                if (GetWindowRect(hwnd, out rect))
+                    SetWindowPos(hwnd, Topmost ? -1 : -2, rect.Left, rect.Top, (int)Width, (int)Height, 0);
+            }
+        }
+
+        private void TsfPopup_PreviewMouseDown(object sender, MouseButtonEventArgs mouseButtonEventArgs)
+        {
+            DependencyObject parent = VisualTreeHelper.GetParent(this);
+            Window window = parent as Window;
+
+            // Find the parent window of this popup
+            while ((object)parent != null && (object)window == null)
+            {
+                parent = VisualTreeHelper.GetParent(parent);
+                window = parent as Window;
+            }
+
+            // Make sure the window is active
+            if ((object)window != null)
+                window.Activate();
         }
 
         #endregion
