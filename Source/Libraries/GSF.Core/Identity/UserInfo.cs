@@ -2738,20 +2738,7 @@ namespace GSF.Identity
         /// <returns>True if the security identifier identifies a user account; false otherwise.</returns>
         public static bool IsUserSID(string sid)
         {
-#if MONO
-            throw new NotSupportedException("Not supported under Mono.");
-#else
-            try
-            {
-                string accountName = SIDToAccountName(sid);
-                DirectoryEntry entry = new DirectoryEntry(string.Format("WinNT://{0}", ValidateGroupName(accountName).Replace('\\', '/')));
-                return entry.SchemaClassName.Equals("User", StringComparison.OrdinalIgnoreCase);
-            }
-            catch (COMException)
-            {
-                return false;
-            }
-#endif
+            return IsSchemaSID(sid, "User");
         }
 
         /// <summary>
@@ -2761,14 +2748,29 @@ namespace GSF.Identity
         /// <returns>True if the security identifier identifies a group; false otherwise.</returns>
         public static bool IsGroupSID(string sid)
         {
+            return IsSchemaSID(sid, "Group");
+        }
+
+        private static bool IsSchemaSID(string sid, string schemaClassName)
+        {
 #if MONO
             throw new NotSupportedException("Not supported under Mono.");
 #else
             try
             {
-                string accountName = SIDToAccountName(sid);
-                DirectoryEntry entry = new DirectoryEntry(string.Format("WinNT://{0}", ValidateGroupName(accountName).Replace('\\', '/')));
-                return entry.SchemaClassName.Equals("Group", StringComparison.OrdinalIgnoreCase);
+                string accountName;
+                DirectoryEntry entry;
+
+                if ((object)sid == null)
+                    throw new ArgumentNullException("sid");
+
+                if (!sid.StartsWith("S-"))
+                    return false;
+
+                accountName = SIDToAccountName(sid);
+                entry = new DirectoryEntry(string.Format("WinNT://{0}", ValidateGroupName(accountName).Replace('\\', '/')));
+
+                return entry.SchemaClassName.Equals(schemaClassName, StringComparison.OrdinalIgnoreCase);
             }
             catch (COMException)
             {

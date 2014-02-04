@@ -439,7 +439,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 userAccountSID = UserInfo.AccountNameToSID(userAccount.Name);
 
-                if (!UserInfo.IsUserSID(userAccountSID))
+                if (!userAccount.UseADAuthentication || !UserInfo.IsUserSID(userAccountSID))
                     userAccountSID = userAccount.Name;
 
                 if (userAccount.ID == Guid.Empty)
