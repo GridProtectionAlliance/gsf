@@ -89,13 +89,17 @@ namespace GSF.Data
         #region [ SQL Encoding String Extension ]
 
         /// <summary>
-        /// Performs SQL encoding on given T-SQL string.
+        /// Performs SQL encoding on given SQL string.
         /// </summary>
         /// <param name="sql">The string on which SQL encoding is to be performed.</param>
+        /// <param name="databaseType">Database type for the SQL encoding.</param>
         /// <returns>The SQL encoded string.</returns>
-        public static string SqlEncode(this string sql)
+        public static string SQLEncode(this string sql, DatabaseType databaseType = DatabaseType.Other)
         {
-            return sql.Replace("\'", "\'\'").Replace("/*", "").Replace("--", "");
+            if (databaseType == DatabaseType.MySQL)
+                return sql.Replace("\\", "\\\\").Replace("\'", "\\\'");
+
+            return sql.Replace("\'", "\'\'"); //.Replace("/*", "").Replace("--", "");
         }
 
         #endregion

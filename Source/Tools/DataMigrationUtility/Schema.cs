@@ -817,7 +817,7 @@ namespace DataMigrationUtility
                                 }
                                 else
                                 {
-                                    encodedValue = "'" + encodedValue.SqlEncode() + "'";
+                                    encodedValue = "'" + encodedValue.SQLEncode(m_parent.Parent.Parent.Parent.DataSourceType) + "'";
                                 }
                                 break;
                             case OleDbType.DBTimeStamp:
