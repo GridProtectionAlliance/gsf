@@ -2972,7 +2972,7 @@ namespace GSF.TimeSeries.Transport
                                         // If the unknown measurement is directly associated with a device that exists in the meta-data it is assumed that this measurement
                                         // was removed from the publishing system and no longer exists therefore we remove it from the local measurement cache. If the user
                                         // needs custom local measurements associated with a remote device, they should be associated with the parent device only.
-                                        if (measurementDeviceID != null && !(measurementDeviceID is DBNull) && deviceIDs.ContainsValue((int)measurementDeviceID))
+                                        if (measurementDeviceID != null && !(measurementDeviceID is DBNull) && deviceIDs.ContainsValue(Convert.ToInt32(measurementDeviceID)))
                                             command.ExecuteNonQuery(deleteMeasurementSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
                                     }
                                 }
