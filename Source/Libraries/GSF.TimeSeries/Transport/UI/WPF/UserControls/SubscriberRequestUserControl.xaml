@@ -172,7 +172,10 @@
                             <TextBlock Width="{StaticResource XXXLargeItemSize}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap">
                                 This button will allow you to import a remote certificate to the trusted certificates directory
                                 on the service so that you will be able to connect to the owner of this certificate.
+                                Note that the certificate will not be imported until your authorization request has been created.
                             </TextBlock>
+                            
+                            <TextBlock HorizontalAlignment="Center" TextAlignment="Center" FontWeight="Bold" Text="{Binding ImportCertificatePath}" />
                             
                             <Button Width="{StaticResource SmallerItemSize}" Height="25" Content="Import CER..."
                                 ToolTip="Imports a certificate into the trusted certificates directory on the server."
