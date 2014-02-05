@@ -54,6 +54,7 @@ using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security;
 using GSF.ServiceProcess;
+using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
 using Microsoft.Win32;
@@ -127,10 +128,9 @@ namespace GSF.TimeSeries
         private Timer m_gcCollectTimer;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
-        private AutoResetEvent m_configurationCacheComplete;
-        private object m_queuedConfigurationCachePending;
+        private SynchronizedOperation m_configurationCacheOperation;
+        private volatile DataSet m_latestConfiguration;
         private object m_systemConfigurationLoadLock;
-        private object m_latestConfiguration;
 
         private ServiceHelper m_serviceHelper;
         private ServerBase m_remotingServer;
@@ -146,22 +146,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public ServiceHostBase()
         {
-            // Generate local certificate for remoting server
-            GenerateLocalCertificate();
-
             InitializeComponent();
-            InitializeServiceHelper();
-
-            // Register service level event handlers
-            m_serviceHelper.ServiceStarting += ServiceStartingHandler;
-            m_serviceHelper.ServiceStarted += ServiceStartedHandler;
-            m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
-
-            if (m_serviceHelper.StatusLog != null)
-                m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
-
-            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
-                m_serviceHelper.ErrorLogger.ErrorLog.LogException += LogExceptionHandler;
+            ServiceName = "IaonHost";
         }
 
         /// <summary>
@@ -346,8 +332,8 @@ namespace GSF.TimeSeries
             exampleSettings.Add("MySQL.DataProviderString", "AssemblyName={MySql.Data, Version=6.3.6.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d}; ConnectionType=MySql.Data.MySqlClient.MySqlConnection; AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter", "Example MySQL database .NET provider string");
             exampleSettings.Add("Oracle.ConnectionString", "Data Source=tnsName; User ID=schemaUserName; Password=schemaPassword", "Example Oracle database connection string");
             exampleSettings.Add("Oracle.DataProviderString", "AssemblyName={Oracle.DataAccess, Version=2.112.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342}; ConnectionType=Oracle.DataAccess.Client.OracleConnection; AdapterType=Oracle.DataAccess.Client.OracleDataAdapter", "Example Oracle database .NET provider string");
-            exampleSettings.Add("SQLite.ConnectionString", "Data Source=databaseName.db; Version=3", "Example SQLite database connection string");
-            exampleSettings.Add("SQLite.DataProviderString", "AssemblyName={System.Data.SQLite, Version=1.0.74.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter", "Example SQLite database .NET provider string");
+            exampleSettings.Add("SQLite.ConnectionString", "Data Source=databaseName.db; Version=3; Foreign Keys=True; FailIfMissing=True", "Example SQLite database connection string");
+            exampleSettings.Add("SQLite.DataProviderString", "AssemblyName={System.Data.SQLite, Version=1.0.79.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139}; ConnectionType=System.Data.SQLite.SQLiteConnection; AdapterType=System.Data.SQLite.SQLiteDataAdapter", "Example SQLite database .NET provider string");
             exampleSettings.Add("OleDB.ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0; Data Source=databaseName.mdb", "Example Microsoft Access (via OleDb) database connection string");
             exampleSettings.Add("OleDB.DataProviderString", "AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089}; ConnectionType=System.Data.OleDb.OleDbConnection; AdapterType=System.Data.OleDb.OleDbDataAdapter", "Example OleDb database .NET provider string");
             exampleSettings.Add("Odbc.ConnectionString", "Driver={SQL Server Native Client 10.0}; Server=serverName; Database=databaseName; Uid=userName; Pwd=password;", "Example ODBC database connection string");
@@ -356,7 +342,7 @@ namespace GSF.TimeSeries
             exampleSettings.Add("XmlFile.ConnectionString", "SystemConfiguration.xml", "Example XML configuration file connection string");
 
             // Retrieve configuration cache directory as defined in the config file
-            cachePath = systemSettings["ConfigurationCachePath"].Value;
+            cachePath = FilePath.GetAbsolutePath(systemSettings["ConfigurationCachePath"].Value);
 
             // Make sure configuration cache directory exists
             try
@@ -380,8 +366,7 @@ namespace GSF.TimeSeries
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
-            m_configurationCacheComplete = new AutoResetEvent(true);
-            m_queuedConfigurationCachePending = new object();
+            m_configurationCacheOperation = new SynchronizedOperation(ExecuteConfigurationCache);
             m_systemConfigurationLoadLock = new object();
 
             // Setup default thread pool size
@@ -611,15 +596,6 @@ namespace GSF.TimeSeries
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
             }
 
-            if ((object)m_configurationCacheComplete != null)
-            {
-                // Release any waiting threads before disposing wait handle
-                m_configurationCacheComplete.Set();
-                m_configurationCacheComplete.Dispose();
-            }
-
-            m_configurationCacheComplete = null;
-
             // Unattach from handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
         }
@@ -651,7 +627,6 @@ namespace GSF.TimeSeries
 
         private void GenerateLocalCertificate()
         {
-            string serviceName = "IaonHost";
             ConfigurationFile configurationFile;
             CategorizedSettingsElementCollection remotingServer;
 
@@ -659,19 +634,20 @@ namespace GSF.TimeSeries
             CertificateGenerator certificateGenerator;
             X509Certificate2 certificate = null;
 
+            if (string.IsNullOrWhiteSpace(ServiceName))
+                throw new InvalidOperationException("EstablishServiceProperties must be overridden and ServiceName must be set");
+
             try
             {
-                serviceName = FilePath.GetFileNameWithoutExtension(AssemblyInfo.EntryAssembly.Location);
-
                 configurationFile = ConfigurationFile.Current;
                 remotingServer = configurationFile.Settings["remotingServer"];
 
-                remotingServer.Add("CertificateFile", string.Format("{0}.cer", serviceName), "Path to the local certificate used by this server for authentication.");
+                remotingServer.Add("CertificateFile", string.Format("{0}.cer", ServiceName), "Path to the local certificate used by this server for authentication.");
                 certificatePath = FilePath.GetAbsolutePath(remotingServer["CertificateFile"].Value);
 
                 certificateGenerator = new CertificateGenerator()
                 {
-                    Issuer = serviceName,
+                    Issuer = ServiceName,
                     CertificatePath = certificatePath
                 };
 
@@ -679,11 +655,11 @@ namespace GSF.TimeSeries
                     certificate = new X509Certificate2(certificatePath);
 
                 if (!Equals(certificate, certificateGenerator.GenerateCertificate()))
-                    EventLog.WriteEntry(serviceName, string.Format("Created self-signed certificate for service: \"{0}\"", certificatePath), EventLogEntryType.Information, 0);
+                    EventLog.WriteEntry(ServiceName, string.Format("Created self-signed certificate for service: \"{0}\"", certificatePath), EventLogEntryType.Information, 0);
             }
             catch (Exception ex)
             {
-                EventLog.WriteEntry(serviceName, string.Format("{0}{3}{1}{3}{2}", ex.Message, ex.GetType().FullName, ex.StackTrace, Environment.NewLine), EventLogEntryType.Error, 0);
+                EventLog.WriteEntry(ServiceName, string.Format("{0}{3}{1}{3}{2}", ex.Message, ex.GetType().FullName, ex.StackTrace, Environment.NewLine), EventLogEntryType.Error, 0);
             }
         }
 
@@ -699,7 +675,7 @@ namespace GSF.TimeSeries
 
             if (remotingServerSettings.Cast<CategorizedSettingsElement>().Any(element => element.Name.Equals("EnabledSslProtocols", StringComparison.OrdinalIgnoreCase) && !element.Value.Equals("None", StringComparison.OrdinalIgnoreCase)))
                 m_remotingServer = InitializeTlsServer();
-                    else
+            else
                 m_remotingServer = InitializeTcpServer();
 
             m_serviceHelper.ErrorLogger.ErrorLog.FileName = "ErrorLog.txt";
@@ -725,9 +701,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.PersistSettings = true;
             m_serviceHelper.RemotingServer = m_remotingServer;
             m_serviceHelper.Initialize();
-
-            ServiceName = "IaonHost";
-                }
+        }
 
         private TcpServer InitializeTcpServer()
         {
@@ -742,10 +716,10 @@ namespace GSF.TimeSeries
             remotingServer.Initialize();
 
             return remotingServer;
-            }
+        }
 
         private TlsServer InitializeTlsServer()
-            {
+        {
             TlsServer remotingServer;
 
             remotingServer = new TlsServer();
@@ -963,7 +937,7 @@ namespace GSF.TimeSeries
                         operationStartTime = DateTime.UtcNow.Ticks;
 
                         // Extract and begin cache of current security context - this does not require an existing security provider
-                        AdoSecurityProvider.PrepareSecurityContext(connection);
+                        AdoSecurityProvider.ExtractSecurityContext(connection);
 
                         operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
@@ -1317,65 +1291,14 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void CacheCurrentConfiguration(DataSet configuration)
         {
-            try
-            {
-                // Queue configuration serialization using latest dataset
-                ThreadPool.QueueUserWorkItem(QueueConfigurationCache, configuration);
-            }
-            catch (Exception ex)
-            {
-                DisplayStatusMessage("Failed to queue configuration caching due to exception: {0}", UpdateType.Alarm, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
-            }
-        }
-
-        // Since configuration serialization may take a while, we queue-up activity for one-at-a-time processing using latest dataset
-        private void QueueConfigurationCache(object state)
-        {
-            // Always attempt cache for most recent configuration
-            Interlocked.Exchange(ref m_latestConfiguration, state);
-
-            // Queue up a configuration cache unless another thread has already requested one
-            if (Monitor.TryEnter(m_queuedConfigurationCachePending, 500))
-            {
-                try
-                {
-                    // Queue new configuration cache after waiting for any prior cache operation to complete
-                    if (m_configurationCacheComplete.WaitOne())
-                    {
-                        object latestConfiguration = null;
-
-                        // Get latest configuration
-                        Interlocked.Exchange(ref latestConfiguration, m_latestConfiguration);
-
-                        try
-                        {
-                            // Queue up task to to execute cache of the latest configuration
-                            ThreadPool.QueueUserWorkItem(ExecuteConfigurationCache, latestConfiguration);
-                        }
-                        catch (Exception ex)
-                        {
-                            DisplayStatusMessage("Failed to queue configuration caching due to exception: {0}", UpdateType.Alarm, ex.Message);
-                            m_serviceHelper.ErrorLogger.Log(ex);
-                        }
-
-                        // Dereference data set configuration if another one hasn't been queued-up in the mean time
-                        Interlocked.CompareExchange(ref m_latestConfiguration, null, latestConfiguration);
-                    }
+            m_latestConfiguration = configuration;
+            m_configurationCacheOperation.RunOnceAsync();
                 }
-                finally
-                {
-                    Monitor.Exit(m_queuedConfigurationCachePending);
-                }
-            }
-        }
 
         // Executes actual serialization of current configuration
-        private void ExecuteConfigurationCache(object state)
+        private void ExecuteConfigurationCache()
         {
-            try
-            {
-                DataSet configuration = state as DataSet;
+            DataSet configuration = m_latestConfiguration;
 
                 if ((object)configuration != null)
                 {
@@ -1425,13 +1348,6 @@ namespace GSF.TimeSeries
                     }
                 }
             }
-            finally
-            {
-                // Release any waiting threads
-                if ((object)m_configurationCacheComplete != null)
-                    m_configurationCacheComplete.Set();
-            }
-        }
 
         private void BackupConfiguration(ConfigurationType configType, string configurationFile)
         {
@@ -1538,6 +1454,20 @@ namespace GSF.TimeSeries
         /// <param name="args">Service startup arguments, if any.</param>
         protected override void OnStart(string[] args)
         {
+            GenerateLocalCertificate();
+            InitializeServiceHelper();
+
+            // Register service level event handlers
+            m_serviceHelper.ServiceStarting += ServiceStartingHandler;
+            m_serviceHelper.ServiceStarted += ServiceStartedHandler;
+            m_serviceHelper.ServiceStopping += ServiceStoppingHandler;
+
+            if (m_serviceHelper.StatusLog != null)
+                m_serviceHelper.StatusLog.LogException += LogExceptionHandler;
+
+            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+                m_serviceHelper.ErrorLogger.ErrorLog.LogException += LogExceptionHandler;
+
             m_serviceHelper.OnStart(args);
         }
 
@@ -1644,13 +1574,13 @@ namespace GSF.TimeSeries
         /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void HealthMonitorProcessHandler(string name, object[] parameters)
         {
-            const string requestCommand = "Health";
-            ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(requestCommand);
+            const string RequestCommand = "Health";
+            ClientRequestHandler requestHandler = m_serviceHelper.FindClientRequestHandler(RequestCommand);
 
             if (requestHandler != null)
             {
                 // We pretend to be a client and send a "Health" command to ourselves...
-                requestHandler.HandlerMethod(ClientHelper.PretendRequest(requestCommand));
+                requestHandler.HandlerMethod(ClientHelper.PretendRequest(RequestCommand));
 
                 // We also export human readable health information to a text file for external display
                 m_healthExporter.ExportData(m_serviceHelper.PerformanceMonitor.Status);

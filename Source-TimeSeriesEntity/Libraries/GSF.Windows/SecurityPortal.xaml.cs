@@ -244,6 +244,9 @@ namespace GSF.Windows
             else if (provider.UserData.IsLockedOut)
                 // Account is locked.
                 DisplayErrorMessage("Account is currently locked.");
+            else if (provider.UserData.Roles.Count == 0)
+                // No roles are assigned
+                DisplayErrorMessage("Account has not been assigned any roles and therefore has no rights. Contact your administrator.");
             else
                 return false;
 

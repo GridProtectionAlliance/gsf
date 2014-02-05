@@ -28,17 +28,23 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO.Ports;
+using System.Linq;
 using System.Net;
+using System.Security.Principal;
 using System.Threading;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Threading;
 using GSF.Communication;
 using GSF.Data;
 using GSF.IO;
 using GSF.Security;
 using GSF.TimeSeries.UI.DataModels;
+using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.UI
 {
@@ -64,6 +70,7 @@ namespace GSF.TimeSeries.UI
         #region [ Static ]
 
         // Static Fields
+        private static SecurityPrincipal s_currentPrincipal;
         private static Guid s_currentNodeID;
         private static string s_serviceConnectionString;
         private static string s_dataPublisherConnectionString;
@@ -73,13 +80,69 @@ namespace GSF.TimeSeries.UI
         private static bool s_retryServiceConnection;
         private static LinkedList<Tuple<string, Type, object[]>> s_pageHistory;
         private static LinkedListNode<Tuple<string, Type, object[]>> s_currentPage;
+        private static Timer s_principalRefreshTimer;
+
+        // Static Constructor
+
+        static CommonFunctions()
+        {
+            s_principalRefreshTimer = new Timer();
+            s_principalRefreshTimer.AutoReset = false;
+            s_principalRefreshTimer.Interval = 1000;
+            s_principalRefreshTimer.Elapsed += PrincipalRefreshTimer_Elapsed;
+            s_principalRefreshTimer.Start();
+        }
+
+        private static void PrincipalRefreshTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        {
+            ISecurityProvider provider;
+
+            if ((object)s_currentPrincipal != null)
+            {
+                // If user is no longer authenticated, provider session may have expired so provider session will
+                // now be reinitialized. This step will "re-validate" user's current state (e.g., locked-out).
+                if (!SecurityProviderCache.TryGetCachedProvider(s_currentPrincipal.Identity.Name, out provider))
+                {
+                    Thread.CurrentPrincipal = s_currentPrincipal;
+                    SecurityProviderCache.ReauthenticateCurrentPrincipal();
+                    CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+
+                    // Rights may have changed -- notify for revalidation of menu commands
+                    Application.Current.Dispatcher.BeginInvoke(new Action(OnCurrentPrincipalRefreshed));
+                }
+            }
+
+            s_principalRefreshTimer.Start();
+        }
 
         // Static Properties
 
         /// <summary>
         /// Defines the current principal for the thread owning the common functions.
         /// </summary>
-        public static SecurityPrincipal CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+        public static SecurityPrincipal CurrentPrincipal
+        {
+            get
+            {
+                if ((object)s_currentPrincipal == null)
+                    s_currentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+
+                return s_currentPrincipal;
+            }
+            set
+            {
+                ISecurityProvider cachedProvider;
+                ISecurityProvider provider;
+
+                if (SecurityProviderCache.TryGetCachedProvider(value.Identity.Name, out cachedProvider))
+                {
+                    provider = SecurityProviderUtility.CreateProvider(value.Identity.Name);
+                    provider.UserData.Clone(cachedProvider.UserData);
+                    provider.Password = cachedProvider.Password;
+                    s_currentPrincipal = new SecurityPrincipal(new SecurityIdentity(provider));
+                }
+            }
+        }
 
         /// <summary>
         /// Defines the current user name as defined in the Thread.CurrentPrincipal.Identity.
@@ -93,7 +156,13 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
-                return ((object)s_currentPage != null) && ((object)s_currentPage.Next != null);
+                SecurityPrincipal currentPrincipal = CurrentPrincipal;
+                ISecurityProvider securityProvider;
+
+                if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
+                    securityProvider = SecurityProviderCache.CurrentProvider;
+
+                return ((object)s_currentPage != null) && ((object)s_currentPage.Next != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any();
             }
         }
 
@@ -104,7 +173,13 @@ namespace GSF.TimeSeries.UI
         {
             get
             {
-                return ((object)s_currentPage != null) && ((object)s_currentPage.Previous != null);
+                SecurityPrincipal currentPrincipal = CurrentPrincipal;
+                ISecurityProvider securityProvider;
+
+                if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
+                    securityProvider = SecurityProviderCache.CurrentProvider;
+
+                return ((object)s_currentPage != null) && ((object)s_currentPage.Previous != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any();
             }
         }
 
@@ -116,6 +191,12 @@ namespace GSF.TimeSeries.UI
         public static event EventHandler ServiceConnectionRefreshed = delegate
         {
         };
+
+        /// <summary>
+        /// Event raised when the <see cref="CurrentPrincipal"/> property changes as
+        /// a result of its security provider expiring from the security provider cache.
+        /// </summary>
+        public static event EventHandler CurrentPrincipalRefreshed;
 
         /// <summary>
         /// Triggered when the flag that indicates whether we can move forward in page history changes.
@@ -152,7 +233,7 @@ namespace GSF.TimeSeries.UI
             {
                 if (!string.IsNullOrEmpty(CurrentUser))
                 {
-                    if (database == null)
+                    if ((object)database == null)
                     {
                         database = new AdoDataConnection(DefaultSettingsCategory);
                         createdConnection = true;
@@ -166,7 +247,7 @@ namespace GSF.TimeSeries.UI
                     switch (connectionType)
                     {
                         case "sqlconnection":
-                            string contextSql = "DECLARE @context VARBINARY(128)\n SELECT @context = CONVERT(VARBINARY(128), CONVERT(VARCHAR(128), @userName))\n SET CONTEXT_INFO @context";
+                            const string contextSql = "DECLARE @context VARBINARY(128)\n SELECT @context = CONVERT(VARBINARY(128), CONVERT(VARCHAR(128), @userName))\n SET CONTEXT_INFO @context";
                             command = database.Connection.CreateCommand();
                             command.CommandText = contextSql;
                             command.AddParameterWithValue("@userName", CurrentUser);
@@ -182,14 +263,12 @@ namespace GSF.TimeSeries.UI
                             command.CommandText = "BEGIN context.set_current_user('" + CurrentUser + "'); END;";
                             command.ExecuteNonQuery();
                             break;
-                        default:
-                            break;
                     }
                 }
             }
             finally
             {
-                if (createdConnection && database != null)
+                if (createdConnection)
                     database.Dispose();
             }
         }
@@ -310,14 +389,14 @@ namespace GSF.TimeSeries.UI
 
                         if (serviceSettings.ContainsKey("datapublisherport"))
                         {
-                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + serviceSettings["datapublisherport"];
+                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":", StringComparison.OrdinalIgnoreCase) + 1) + serviceSettings["datapublisherport"];
 
                             if (!string.IsNullOrEmpty(interfaceValue))
                                 s_dataPublisherConnectionString += ";interface=" + interfaceValue;
                         }
                         else if (settings.ContainsKey("datapublisherport"))
                         {
-                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":") + 1) + settings["datapublisherport"];
+                            s_dataPublisherConnectionString = "server=" + server.Substring(0, server.LastIndexOf(":", StringComparison.OrdinalIgnoreCase) + 1) + settings["datapublisherport"];
 
                             if (!string.IsNullOrEmpty(interfaceValue))
                                 s_dataPublisherConnectionString += ";interface=" + interfaceValue;
@@ -555,7 +634,7 @@ namespace GSF.TimeSeries.UI
                     {
                         s_windowsServiceClient = new WindowsServiceClient(connectionString);
 
-                        if (SecurityProviderCache.TryGetCachedProvider(CurrentUser, out provider))
+                        if (SecurityProviderCache.TryGetCachedProvider(CurrentPrincipal.Identity.Name, out provider))
                         {
                             userData = provider.UserData;
 
@@ -592,6 +671,53 @@ namespace GSF.TimeSeries.UI
         private static void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
             LogException(null, "Remoting Client Connect", e.Argument);
+        }
+
+        /// <summary>
+        /// Displays a status message in the unobtrusive status message popup.
+        /// </summary>
+        /// <param name="message">The message to be displayed.</param>
+        public static void DisplayStatusMessage(string message)
+        {
+            Dispatcher dispatcher = Application.Current.Dispatcher;
+            TextBlock statusTextBlock;
+            Popup statusPopup;
+
+            if (dispatcher.Thread != Thread.CurrentThread)
+            {
+                dispatcher.BeginInvoke(new Action<string>(DisplayStatusMessage), message);
+                return;
+            }
+
+            statusTextBlock = Application.Current.MainWindow.FindName("TextBlockResult") as TextBlock;
+            statusPopup = Application.Current.MainWindow.FindName("PopupStatus") as Popup;
+
+            if ((object)statusTextBlock != null && (object)statusPopup != null)
+            {
+                statusTextBlock.Text = message;
+                statusPopup.IsOpen = true;
+                statusPopup.InvalidateVisual();
+            }
+        }
+
+        /// <summary>
+        /// Hides the unobtrusive status message popup.
+        /// </summary>
+        public static void HideStatusMessage()
+        {
+            Dispatcher dispatcher = Application.Current.Dispatcher;
+            Popup statusPopup;
+
+            if (dispatcher.Thread != Thread.CurrentThread)
+            {
+                dispatcher.BeginInvoke(new Action(HideStatusMessage));
+                return;
+            }
+
+            statusPopup = Application.Current.MainWindow.FindName("PopupStatus") as Popup;
+
+            if ((object)statusPopup != null)
+                statusPopup.IsOpen = false;
         }
 
         /// <summary>
@@ -664,8 +790,8 @@ namespace GSF.TimeSeries.UI
 
                 return "Successfully sent " + command + " command.";
             }
-            else
-                throw new ApplicationException("Application is currently disconnected from service.");
+
+            throw new ApplicationException("Application is currently disconnected from service.");
         }
 
         /// <summary>
@@ -803,7 +929,7 @@ namespace GSF.TimeSeries.UI
                     // If this is not a local address - we will also send event to be logged on the server
                     if (!string.IsNullOrEmpty(remotingAddress) && !Communication.Transport.IsLocalAddress(remotingAddress))
                     {
-                        string message = "";
+                        string message;
                         EventLogEntryType eventType;
                         int eventID;
 
@@ -961,11 +1087,15 @@ namespace GSF.TimeSeries.UI
 
                 // Get the next page and instantiate the user control
                 s_currentPage = s_currentPage.Next;
-                userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
+
+                if ((object)s_currentPage == null)
+                    userControl = null;
+                else
+                    userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
 
                 if ((object)userControl != null)
                 {
-                    // Display the user contro
+                    // Display the user control
                     panel.Children.Clear();
                     panel.Children.Add(userControl);
 
@@ -1016,7 +1146,11 @@ namespace GSF.TimeSeries.UI
 
                 // Get the previous page and instantiate the user control
                 s_currentPage = s_currentPage.Previous;
-                userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
+
+                if ((object)s_currentPage == null)
+                    userControl = null;
+                else
+                    userControl = Activator.CreateInstance(s_currentPage.Value.Item2, s_currentPage.Value.Item3) as UserControl;
 
                 if ((object)userControl != null)
                 {
@@ -1050,6 +1184,15 @@ namespace GSF.TimeSeries.UI
                     }
                 }
             }
+        }
+
+        private static void OnCurrentPrincipalRefreshed()
+        {
+            if ((object)CurrentPrincipalRefreshed != null)
+                CurrentPrincipalRefreshed(null, EventArgs.Empty);
+
+            OnCanGoForwardChanged();
+            OnCanGoBackChanged();
         }
 
         private static void OnCanGoForwardChanged()

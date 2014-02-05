@@ -38,7 +38,6 @@ using System;
 using System.IdentityModel.Policy;
 using System.ServiceModel;
 using GSF.Adapters;
-using GSF.Configuration;
 
 namespace GSF.ServiceModel
 {
@@ -46,7 +45,7 @@ namespace GSF.ServiceModel
     /// Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
     [ServiceContract]
-    public interface ISelfHostingService : IAdapter, ISupportLifecycle, IPersistSettings
+    public interface ISelfHostingService : IAdapter
     {
         #region [ Members ]
 
@@ -72,33 +71,56 @@ namespace GSF.ServiceModel
         /// <summary>
         /// Gets or sets a semicolon delimited list of URIs where the web service can be accessed.
         /// </summary>
-        string Endpoints { get; set; }
+        string Endpoints
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="Type.FullName"/> of the contract interface implemented by the web service.
         /// </summary>
-        string Contract { get; set; }
+        string ContractInterface
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHost"/> will use the current instance of the web service for processing 
         /// requests or base the web service instance creation on <see cref="InstanceContextMode"/> specified in its <see cref="ServiceBehaviorAttribute"/>.
         /// </summary>
-        bool Singleton { get; set; }
+        bool Singleton
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="Type.FullName"/> of <see cref="IAuthorizationPolicy"/> to be used for securing all web service <see cref="Endpoints"/>.
         /// </summary>
-        string SecurityPolicy { get; set; }
-        
+        string SecurityPolicy
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Gets or sets a boolean value that indicates whether web service metadata is to made available at all web service <see cref="Endpoints"/>.
         /// </summary>
-        bool PublishMetadata { get; set; }
+        bool PublishMetadata
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the <see cref="ServiceHost"/> hosting the web service.
         /// </summary>
-        ServiceHost ServiceHost { get; }
+        ServiceHost ServiceHost
+        {
+            get;
+        }
 
         #endregion
     }

@@ -217,12 +217,10 @@ namespace GatewayProtocolAdapters
 
         // Constants
 
-#pragma warning disable 612,618
         /// <summary>
         /// Specifies the default value for the <see cref="RequireAuthentication"/> property.
         /// </summary>
         public const bool DefaultRequireAuthentication = false;
-#pragma warning restore 612,618
 
         /// <summary>
         /// Specifies the default value for the <see cref="SecurityMode"/> property.
@@ -270,11 +268,6 @@ namespace GatewayProtocolAdapters
         public const string DefaultMetadataFilters = null;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="AutoConnect"/> property.
-        /// </summary>
-        public const bool DefaultAutoConnect = false;
-
-        /// <summary>
         /// Specifies the default value for the <see cref="SynchronizeMetadata"/> property.
         /// </summary>
         public const bool DefaultSynchronizeMetadata = false;
@@ -305,7 +298,6 @@ namespace GatewayProtocolAdapters
         private bool m_useTransactionForMetadata;
         private bool m_useMillisecondResolution;
         private string m_metadataFilters;
-        private bool m_autoConnect;
         private bool m_synchronizeMetadata;
         private double m_dataLossInterval;
         private int m_bufferSize;
@@ -327,8 +319,7 @@ namespace GatewayProtocolAdapters
         [EditorBrowsable(EditorBrowsableState.Never),
         ConnectionStringParameter,
         DefaultValue(DefaultRequireAuthentication),
-        Description("Defines the flag that determines if the publisher requires subscribers to authenticate before making data requests."),
-        Obsolete("Replaced by SecurityMode. Security modes that require authentication are Gateway and TLS.")]
+        Description("Defines the flag that determines if the publisher requires subscribers to authenticate before making data requests.")]
         public bool RequireAuthentication
         {
             get
@@ -522,24 +513,6 @@ namespace GatewayProtocolAdapters
             set
             {
                 m_metadataFilters = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets flag that determines if <see cref="DataSubscriber"/> should attempt to auto-connect to <see cref="DataPublisher"/> using defined connection settings.
-        /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(DefaultAutoConnect),
-        Description("Defines the flag that determines if the subscriber should attempt to auto-connect to the publisher using defined connection settings.")]
-        public bool AutoConnect
-        {
-            get
-            {
-                return m_autoConnect;
-            }
-            set
-            {
-                m_autoConnect = value;
             }
         }
 

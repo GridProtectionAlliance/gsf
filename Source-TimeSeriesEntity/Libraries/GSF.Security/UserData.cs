@@ -66,6 +66,15 @@ namespace GSF.Security
             Initialize();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserData"/> class by copying an existing instance.
+        /// </summary>
+        /// <param name="userData">The existing instance of the <see cref="UserData"/> class.</param>
+        public UserData(UserData userData)
+        {
+            Clone(userData);
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -285,6 +294,33 @@ namespace GSF.Security
             IsAuthenticated = false;
             Groups.Clear();
             Roles.Clear();
+        }
+
+        /// <summary>
+        /// Copies a new instance of the <see cref="UserData"/> class by copying an existing instance.
+        /// </summary>
+        /// <param name="userData">The existing instance of the <see cref="UserData"/> class.</param>
+        public void Clone(UserData userData)
+        {
+            LoginID = userData.LoginID;
+            Username = userData.Username;
+            Password = userData.Password;
+            FirstName = userData.FirstName;
+            LastName = userData.LastName;
+            CompanyName = userData.CompanyName;
+            PhoneNumber = userData.PhoneNumber;
+            EmailAddress = userData.EmailAddress;
+            SecurityQuestion = userData.SecurityQuestion;
+            SecurityAnswer = userData.SecurityAnswer;
+            PasswordChangeDateTime = userData.PasswordChangeDateTime;
+            AccountCreatedDateTime = userData.AccountCreatedDateTime;
+            IsDefined = userData.IsDefined;
+            IsExternal = userData.IsExternal;
+            IsDisabled = userData.IsDisabled;
+            IsLockedOut = userData.IsLockedOut;
+            IsAuthenticated = userData.IsAuthenticated;
+            Groups = new List<string>(userData.Groups);
+            Roles = new List<string>(userData.Roles);
         }
 
         #endregion

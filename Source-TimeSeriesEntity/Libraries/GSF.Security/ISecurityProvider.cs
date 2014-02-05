@@ -51,7 +51,7 @@ namespace GSF.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the name of the application being secured as defined in the backend security datastore.
+        /// Gets or sets the name of the application being secured as defined in the backend security data store.
         /// </summary>
         string ApplicationName
         {
@@ -60,7 +60,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets or sets the connection string to be used for connection to the backend security datastore.
+        /// Gets or sets the connection string to be used for connection to the backend security data store.
         /// </summary>
         string ConnectionString
         {
@@ -78,7 +78,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Gets or sets <see cref="SecurePassword"/> as cleartext password.
+        /// Gets or sets <see cref="SecurePassword"/> as clear text password.
         /// </summary>
         string Password
         {
@@ -103,7 +103,7 @@ namespace GSF.Security
         }
 
         /// <summary>
-        /// Geta a boolean value that indicates whether <see cref="UpdateData"/> operation is supported.
+        /// Gets a boolean value that indicates whether <see cref="UpdateData"/> operation is supported.
         /// </summary>
         bool CanUpdateData
         {
@@ -158,26 +158,26 @@ namespace GSF.Security
         bool Authenticate(string password);
 
         /// <summary>
-        /// Refreshes the <see cref="UserData"/> from the backend datastore.
+        /// Refreshes the <see cref="UserData"/> from the backend data store.
         /// </summary>
         /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
         bool RefreshData();
 
         /// <summary>
-        /// Updates the <see cref="UserData"/> in the backend datastore.
+        /// Updates the <see cref="UserData"/> in the backend data store.
         /// </summary>
         /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
         bool UpdateData();
 
         /// <summary>
-        /// Resets user password in the backend datastore.
+        /// Resets user password in the backend data store.
         /// </summary>
         /// <param name="securityAnswer">Answer to the user's security question.</param>
         /// <returns>true if the password is reset, otherwise false.</returns>
         bool ResetPassword(string securityAnswer);
 
         /// <summary>
-        /// Changes user password in the backend datastore.
+        /// Changes user password in the backend data store.
         /// </summary>
         /// <param name="oldPassword">User's current password.</param>
         /// <param name="newPassword">User's new password.</param>

@@ -731,6 +731,8 @@ namespace GSF.TimeSeries.Transport
                     if (packet.Count > 0)
                         ProcessBinaryMeasurements(packet, useCompactMeasurementFormat, usePayloadCompression);
 
+                    IncrementProcessedEntities(signals.Count());
+
                     // Update latency statistics
                     m_parent.UpdateLatencyStatistics(signals.Select(m => (long)(m_lastPublishTime - m.Timestamp)));
 

@@ -76,6 +76,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
 
         private string m_localCertificateFile;
         private string m_localCertificateServerPath;
+        private string m_importCertificatePath;
         private byte[] m_localCertificateData;
         private string m_remoteCertificateFile;
         private byte[] m_remoteCertificateData;
@@ -390,6 +391,22 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 m_localCertificateServerPath = value;
                 OnPropertyChanged("LocalCertificateServerPath");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the certificate to be imported to the service.
+        /// </summary>
+        public string ImportCertificatePath
+        {
+            get
+            {
+                return m_importCertificatePath;
+            }
+            set
+            {
+                m_importCertificatePath = value;
+                OnPropertyChanged("ImportCertificatePath");
             }
         }
 
@@ -821,7 +838,10 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             fileDialog.CheckPathExists = false;
 
             if (fileDialog.ShowDialog() == true && File.Exists(fileDialog.FileName))
-                m_remoteCertificateData = File.ReadAllBytes(fileDialog.FileName);
+            {
+                ImportCertificatePath = fileDialog.FileName;
+                m_remoteCertificateData = File.ReadAllBytes(m_importCertificatePath);
+            }
         }
 
         private void CreateAuthenticationRequest()

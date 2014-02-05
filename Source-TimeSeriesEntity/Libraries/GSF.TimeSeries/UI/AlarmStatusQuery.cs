@@ -27,6 +27,7 @@ using System.Threading;
 using GSF.Communication;
 using GSF.Console;
 using GSF.ServiceProcess;
+using GSF.Threading;
 
 namespace GSF.TimeSeries.UI
 {
@@ -65,9 +66,8 @@ namespace GSF.TimeSeries.UI
         // Fields
         private WindowsServiceClient m_serviceClient;
         private ICollection<Alarm> m_raisedAlarms;
-        private AutoResetEvent m_requestComplete;
+        private SynchronizedOperation m_alarmStateQueryOperation;
         private AutoResetEvent m_responseComplete;
-        private readonly object m_queuedQueryPending;
         private int m_responseTimeout;
         private bool m_connectedToService;
         private bool m_disposed;
@@ -87,9 +87,8 @@ namespace GSF.TimeSeries.UI
             // Determine initial state of connectivity
             UpdateServiceConnectivity();
 
+            m_alarmStateQueryOperation = new SynchronizedOperation(ExecuteAlarmStateQuery);
             m_responseComplete = new AutoResetEvent(false);
-            m_requestComplete = new AutoResetEvent(true);
-            m_queuedQueryPending = new object();
             m_responseTimeout = DefaultResponseTimeout;
         }
 
@@ -158,15 +157,6 @@ namespace GSF.TimeSeries.UI
                         }
 
                         m_responseComplete = null;
-
-                        if ((object)m_requestComplete != null)
-                        {
-                            // Release any waiting threads before disposing wait handle
-                            m_requestComplete.Set();
-                            m_requestComplete.Dispose();
-                        }
-
-                        m_requestComplete = null;
 
                         // Detach from service connected events
                         CommonFunctions.ServiceConnectionRefreshed -= CommonFunctions_ServiceConnectionRefreshed;
@@ -238,31 +228,13 @@ namespace GSF.TimeSeries.UI
         /// </summary>
         public void RequestRaisedAlarmStates()
         {
-            // Create single item operation queue so that multiple requests will be handled one at a time
-            ThreadPool.QueueUserWorkItem(QueueAlarmStateQuery);
-        }
-
-        // Queue one alarm state query at a time
-        private void QueueAlarmStateQuery(object state)
-        {
-            // Queue up a query unless another thread has already requested one
-            if (Monitor.TryEnter(m_queuedQueryPending))
-            {
-                try
-                {
-                    // Queue new query after waiting for any prior query request to complete
-                    if (m_requestComplete.WaitOne())
-                        ThreadPool.QueueUserWorkItem(ExecuteAlarmStateQuery);
-                }
-                finally
-                {
-                    Monitor.Exit(m_queuedQueryPending);
-                }
-            }
+            // Create single item operation queue so that
+            // multiple requests will be handled one at a time
+            m_alarmStateQueryOperation.RunOnceAsync();
         }
 
         // Execute alarm state query
-        private void ExecuteAlarmStateQuery(object state)
+        private void ExecuteAlarmStateQuery()
         {
             // Nothing to do if not connected to service
             if (!m_connectedToService)
@@ -294,11 +266,6 @@ namespace GSF.TimeSeries.UI
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException("Alarm state query error: " + ex.Message, ex));
-            }
-            finally
-            {
-                if ((object)m_requestComplete != null)
-                    m_requestComplete.Set();
             }
         }
 

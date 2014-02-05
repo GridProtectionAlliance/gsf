@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -33,7 +34,9 @@ using GSF;
 using GSF.Communication;
 using GSF.Configuration;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using GSF.TimeSeries.Transport;
+using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute, GSF.TimeSeries.Adapters.NestedConnectionStringParameterAttribute>;
 
 namespace GatewayProtocolAdapters
 {
@@ -53,6 +56,13 @@ namespace GatewayProtocolAdapters
 
         // Fields
         private DataSubscriber m_dataSubscriber;
+        private DataSubscriberSettings m_settingsObject;
+
+        private long m_minimumMeasurementsPerSecond;
+        private long m_maximumMeasurementsPerSecond;
+        private long m_totalMeasurementsPerSecond;
+        private long m_measurementsPerSecondCount;
+
         private bool m_disposed;
 
         #endregion
@@ -76,8 +86,18 @@ namespace GatewayProtocolAdapters
             }
             set
             {
+                ConnectionStringParser parser;
                 base.ConnectionString = value;
-                new ConnectionStringParser<ConnectionStringParameterAttribute, NestedConnectionStringParameterAttribute>().ParseConnectionString(value, SettingsObject);
+                parser = new ConnectionStringParser();
+                parser.ParseConnectionString(value, SettingsObject);
+            }
+        }
+
+        public override object SettingsObject
+        {
+            get
+            {
+                return m_settingsObject;
             }
         }
 
@@ -116,7 +136,7 @@ namespace GatewayProtocolAdapters
                 status.AppendLine();
                 status.AppendFormat("  Pending command requests: {0}", m_requests.Count);
                 status.AppendLine();
-                status.AppendFormat("             Authenticated: {0}", m_authenticated);
+                status.AppendFormat("             Authenticated: {0}", m_dataSubscriber.Authenticated);
                 status.AppendLine();
                 status.AppendFormat("                Subscribed: {0}", m_subscribed);
                 status.AppendLine();
@@ -125,8 +145,8 @@ namespace GatewayProtocolAdapters
                 status.AppendFormat("      Data monitor enabled: {0}", (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled);
                 status.AppendLine();
 
-                if (DataLossInterval > 0.0D)
-                    status.AppendFormat("No data reconnect interval: {0} seconds", DataLossInterval.ToString("0.000"));
+                if (m_settingsObject.DataLossInterval > 0.0D)
+                    status.AppendFormat("No data reconnect interval: {0} seconds", m_settingsObject.DataLossInterval.ToString("0.000"));
                 else
                     status.Append("No data reconnect interval: disabled");
 
@@ -166,17 +186,64 @@ namespace GatewayProtocolAdapters
 
         #region [ Methods ]
 
-        public override string GetShortStatus(int maxLength)
+        public override void Initialize()
         {
-            throw new NotImplementedException();
+            base.Initialize();
+
+            m_dataSubscriber = new DataSubscriber()
+            {
+                SecurityMode = m_settingsObject.SecurityMode,
+                OperationalModes = m_settingsObject.OperationalModes,
+                DataLossInterval = m_settingsObject.DataLossInterval,
+                BufferSize = m_settingsObject.BufferSize
+            };
+
+            if (!Settings.ContainsKey("SecurityMode"))
+                m_dataSubscriber.RequireAuthentication = m_settingsObject.RequireAuthentication;
+
+            if (Settings.ContainsKey("ReceiveInternalMetadata"))
+                m_dataSubscriber.ReceiveInternalMetadata = m_settingsObject.ReceiveInternalMetadata;
+
+            if (Settings.ContainsKey("ReceiveExternalMetadata"))
+                m_dataSubscriber.ReceiveExternalMetadata = m_settingsObject.ReceiveExternalMetadata;
+
+            if (m_settingsObject.SecurityMode == SecurityMode.Gateway)
+            {
+                m_dataSubscriber.SharedSecret = m_settingsObject.GatewaySecuritySettings.SharedSecret;
+                m_dataSubscriber.AuthenticationID = m_settingsObject.GatewaySecuritySettings.AuthenticationID;
+            }
+
+            if (m_settingsObject.SecurityMode == SecurityMode.TLS)
+            {
+                m_dataSubscriber.LocalCertificateFilePath = m_settingsObject.TlsSecuritySettings.LocalCertificate;
+                m_dataSubscriber.RemoteCertificateFilePath = m_settingsObject.TlsSecuritySettings.RemoteCertificate;
+                m_dataSubscriber.ValidPolicyErrors = m_settingsObject.TlsSecuritySettings.ValidPolicyErrors;
+                m_dataSubscriber.ValidChainFlags = m_settingsObject.TlsSecuritySettings.ValidChainFlags;
+                m_dataSubscriber.CheckCertificateRevocation = m_settingsObject.TlsSecuritySettings.CheckCertificateRevocation;
+            }
+
+            m_dataSubscriber.ConnectionEstablished += DataSubscriber_ConnectionEstablished;
+            m_dataSubscriber.ConnectionAuthenticated += DataSubscriber_ConnectionAuthenticated;
+            m_dataSubscriber.MetaDataReceived += DataSubscriber_MetaDataReceived;
+
+            // Register subscriber with the statistics engine
+            StatisticsEngine.Register(this, "Subscriber", "SUB");
+            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
         }
 
         protected override void AttemptConnection()
         {
-            throw new NotImplementedException();
+            if ((object)m_dataSubscriber != null)
+                m_dataSubscriber.Start();
         }
 
         protected override void AttemptDisconnection()
+        {
+            if ((object)m_dataSubscriber != null)
+                m_dataSubscriber.Stop();
+        }
+
+        public override string GetShortStatus(int maxLength)
         {
             throw new NotImplementedException();
         }
@@ -204,6 +271,42 @@ namespace GatewayProtocolAdapters
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
+        }
+
+        private void DataSubscriber_ConnectionEstablished(object sender, EventArgs eventArgs)
+        {
+            string sharedSecret;
+            string authenticationID;
+
+            if (m_settingsObject.SecurityMode != SecurityMode.Gateway)
+            {
+                // Start subscription...
+            }
+            else
+            {
+                sharedSecret = m_settingsObject.GatewaySecuritySettings.SharedSecret;
+                authenticationID = m_settingsObject.GatewaySecuritySettings.AuthenticationID;
+                m_dataSubscriber.Authenticate(sharedSecret, authenticationID);
+            }
+        }
+
+        private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs eventArgs)
+        {
+
+        }
+
+        private void DataSubscriber_MetaDataReceived(object sender, EventArgs<DataSet> eventArgs)
+        {
+
+        }
+
+        // Resets the measurements per second counters after reading the values from the last calculation interval.
+        private void ResetMeasurementsPerSecondCounters()
+        {
+            m_minimumMeasurementsPerSecond = 0L;
+            m_maximumMeasurementsPerSecond = 0L;
+            m_totalMeasurementsPerSecond = 0L;
+            m_measurementsPerSecondCount = 0L;
         }
 
         #endregion

@@ -32,6 +32,7 @@ using GSF.Collections;
 using GSF.Console;
 using GSF.Data;
 using GSF.ServiceProcess;
+using GSF.Threading;
 
 namespace GSF.TimeSeries.UI
 {
@@ -70,9 +71,10 @@ namespace GSF.TimeSeries.UI
         // Fields
         private WindowsServiceClient m_serviceClient;
         private readonly List<Guid> m_authorizedSignalIDs;
-        private AutoResetEvent m_requestComplete;
+        private SynchronizedOperation m_authorizationQueryOperation;
+        private ISet<Guid> m_authorizationQueryIDs;
+        private object m_authorizationQueryLock;
         private AutoResetEvent m_responseComplete;
-        private readonly object m_queuedQueryPending;
         private int m_requests;
         private int m_responses;
         private int m_responseTimeout;
@@ -92,8 +94,9 @@ namespace GSF.TimeSeries.UI
 
             m_authorizedSignalIDs = new List<Guid>();
             m_responseComplete = new AutoResetEvent(false);
-            m_requestComplete = new AutoResetEvent(true);
-            m_queuedQueryPending = new object();
+            m_authorizationQueryOperation = new SynchronizedOperation(ExecuteAuthorizationQuery);
+            m_authorizationQueryIDs = new HashSet<Guid>();
+            m_authorizationQueryLock = new object();
             m_responseTimeout = DefaultResponseTimeout;
         }
 
@@ -162,15 +165,6 @@ namespace GSF.TimeSeries.UI
                         }
 
                         m_responseComplete = null;
-
-                        if ((object)m_requestComplete != null)
-                        {
-                            // Release any waiting threads before disposing wait handle
-                            m_requestComplete.Set();
-                            m_requestComplete.Dispose();
-                        }
-
-                        m_requestComplete = null;
                     }
                 }
                 finally
@@ -186,131 +180,115 @@ namespace GSF.TimeSeries.UI
         /// <param name="sourceMeasurements">Measurement signal IDs to request authorization state for.</param>
         public void RequestAuthorizationStatus(IEnumerable<Guid> sourceMeasurements)
         {
-            if ((object)sourceMeasurements != null && sourceMeasurements.Count() > 0)
+            if ((object)sourceMeasurements != null)
             {
-                // Create single item operation queue so that multiple requests will be handled one at a time
-                ThreadPool.QueueUserWorkItem(QueueAuthorizationQuery, sourceMeasurements.Distinct());
-            }
-        }
+                lock (m_authorizationQueryLock)
+                {
+                    m_authorizationQueryIDs.UnionWith(sourceMeasurements);
 
-        // Queue one authorization query at a time
-        private void QueueAuthorizationQuery(object state)
-        {
-            // Queue up an authorization query unless another thread has already requested one
-            if (Monitor.TryEnter(m_queuedQueryPending))
-            {
-                try
-                {
-                    // Queue new authorization query after waiting for any prior query request to complete
-                    if (m_requestComplete.WaitOne())
-                        ThreadPool.QueueUserWorkItem(ExecuteAuthorizationQuery, state);
-                }
-                finally
-                {
-                    Monitor.Exit(m_queuedQueryPending);
+                    if (m_authorizationQueryIDs.Count > 0)
+                        m_authorizationQueryOperation.RunOnceAsync();
                 }
             }
         }
 
         // Execute authorization query
-        private void ExecuteAuthorizationQuery(object state)
+        private void ExecuteAuthorizationQuery()
         {
             try
             {
-                IEnumerable<Guid> sourceMeasurements = state as IEnumerable<Guid>;
+                List<Guid> sourceMeasurements;
 
-                if ((object)sourceMeasurements != null)
+                lock (m_authorizationQueryLock)
                 {
-                    List<int> deviceIDs = new List<int>();
-                    AdoDataConnection database = null;
+                    sourceMeasurements = m_authorizationQueryIDs.ToList();
+                    m_authorizationQueryIDs.Clear();
+                }
 
-                    // Query associated device ID list for given measurements
-                    try
+                List<int> deviceIDs = new List<int>();
+                AdoDataConnection database = null;
+
+                // Query associated device ID list for given measurements
+                try
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    string guidPrefix = database.DatabaseType == DatabaseType.Access ? "{" : "'";
+                    string guidSuffix = database.DatabaseType == DatabaseType.Access ? "}" : "'";
+                    string query = string.Format("SELECT DISTINCT DeviceID FROM ActiveMeasurement WHERE ProtocolType = 'Measurement' AND SignalID IN ({0})", sourceMeasurements.Select(signalID => guidPrefix + signalID.ToString() + guidSuffix).ToDelimitedString(", "));
+                    DataTable measurementDevices = database.Connection.RetrieveData(database.AdapterType, query);
+
+                    foreach (DataRow row in measurementDevices.Rows)
                     {
-                        database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                        string guidPrefix = database.DatabaseType == DatabaseType.Access ? "{" : "'";
-                        string guidSuffix = database.DatabaseType == DatabaseType.Access ? "}" : "'";
-                        string query = string.Format("SELECT DISTINCT DeviceID FROM ActiveMeasurement WHERE ProtocolType = 'Measurement' AND SignalID IN ({0})", sourceMeasurements.Select(signalID => guidPrefix + signalID.ToString() + guidSuffix).ToDelimitedString(", "));
-                        DataTable measurementDevices = database.Connection.RetrieveData(database.AdapterType, query);
+                        int? deviceID = row.ConvertNullableField<int>("DeviceID");
 
-                        foreach (DataRow row in measurementDevices.Rows)
+                        if (deviceID.HasValue)
                         {
-                            int? deviceID = row.ConvertNullableField<int>("DeviceID");
-
-                            if (deviceID.HasValue)
+                            // Validate that device ID is unique (not trusting all databases will handle DISTINCT properly)
+                            if (deviceIDs.BinarySearch(deviceID.Value) < 0)
                             {
-                                // Validate that device ID is unique (not trusting all databases will handle DISTINCT properly)
-                                if (deviceIDs.BinarySearch(deviceID.Value) < 0)
-                                {
-                                    deviceIDs.Add(deviceID.Value);
-                                    deviceIDs.Sort();
-                                }
+                                deviceIDs.Add(deviceID.Value);
+                                deviceIDs.Sort();
                             }
                         }
                     }
-                    finally
+                }
+                finally
+                {
+                    if ((object)database != null)
+                        database.Dispose();
+                }
+
+                // Clear existing destination signal ID lists
+                lock (m_authorizedSignalIDs)
+                {
+                    m_authorizedSignalIDs.Clear();
+                }
+
+                // Reset request and response counts to zero
+                m_requests = 0;
+                m_responses = 0;
+
+                // Reset state of response complete event (in case a prior event set never completed)
+                if ((object)m_responseComplete != null)
+                    m_responseComplete.Reset();
+
+                // Send service commands to DataSubscribers to determine signal authorizations
+                foreach (int deviceID in deviceIDs)
+                {
+                    // Send command for authorized signals for this device
+                    CommonFunctions.SendCommandToService(string.Format("INVOKE {0} GetAuthorizedSignalIDs", deviceID));
+                    m_requests++;
+                }
+
+                if (m_requests > 0)
+                {
+                    // Wait for command responses allowing processing time for each
+                    if ((object)m_responseComplete != null)
                     {
-                        if ((object)database != null)
-                            database.Dispose();
+                        if (!m_responseComplete.WaitOne(m_requests * m_responseTimeout))
+                            OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for {1} service response{2}.", (m_requests * m_responseTimeout / 1000.0D).ToString("0.00"), m_requests, m_requests == 1 ? "" : "s")));
                     }
 
-                    // Clear existing destination signal ID lists
+                    // Create a sorted list of the source measurements to use as a filter to authorized measurements
+                    List<Guid> sourceFilter = new List<Guid>(sourceMeasurements);
+                    sourceFilter.Sort();
+
+                    Guid[] authorizedSignalIDs = null;
+
+                    // Provide user with a distinct list of query results - if there are any
                     lock (m_authorizedSignalIDs)
                     {
-                        m_authorizedSignalIDs.Clear();
+                        if (m_authorizedSignalIDs.Count > 0)
+                            authorizedSignalIDs = m_authorizedSignalIDs.Distinct().Where(signalID => sourceFilter.BinarySearch(signalID) >= 0).ToArray();
                     }
 
-                    // Reset request and response counts to zero
-                    m_requests = 0;
-                    m_responses = 0;
-
-                    // Reset state of response complete event (in case a prior event set never completed)
-                    if ((object)m_responseComplete != null)
-                        m_responseComplete.Reset();
-
-                    // Send service commands to DataSubscribers to determine signal authorizations
-                    foreach (int deviceID in deviceIDs)
-                    {
-                        // Send command for authorized signals for this device
-                        CommonFunctions.SendCommandToService(string.Format("INVOKE {0} GetAuthorizedSignalIDs", deviceID));
-                        m_requests++;
-                    }
-
-                    if (m_requests > 0)
-                    {
-                        // Wait for command responses allowing processing time for each
-                        if ((object)m_responseComplete != null)
-                        {
-                            if (!m_responseComplete.WaitOne(m_requests * m_responseTimeout))
-                                OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for {1} service response{2}.", (m_requests * m_responseTimeout / 1000.0D).ToString("0.00"), m_requests, m_requests == 1 ? "" : "s")));
-                        }
-
-                        // Create a sorted list of the source measurements to use as a filter to authorized measurements
-                        List<Guid> sourceFilter = new List<Guid>(sourceMeasurements);
-                        sourceFilter.Sort();
-
-                        Guid[] authorizedSignalIDs = null;
-
-                        // Provide user with a distinct list of query results - if there are any
-                        lock (m_authorizedSignalIDs)
-                        {
-                            if (m_authorizedSignalIDs.Count > 0)
-                                authorizedSignalIDs = m_authorizedSignalIDs.Distinct().Where(signalID => sourceFilter.BinarySearch(signalID) >= 0).ToArray();
-                        }
-
-                        if (authorizedSignalIDs != null && authorizedSignalIDs.Length > 0)
-                            OnAuthorizedMeasurements(authorizedSignalIDs);
-                    }
+                    if (authorizedSignalIDs != null && authorizedSignalIDs.Length > 0)
+                        OnAuthorizedMeasurements(authorizedSignalIDs);
                 }
             }
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException("Authorized measurements query error: " + ex.Message, ex));
-            }
-            finally
-            {
-                if ((object)m_requestComplete != null)
-                    m_requestComplete.Set();
             }
         }
 

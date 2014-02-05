@@ -23,6 +23,14 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.ServiceProcess;
+using System.Text;
 using GSF.Communication;
 using GSF.Configuration;
 using GSF.Console;
@@ -32,16 +40,6 @@ using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security;
 using GSF.ServiceProcess;
-using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading;
 
 namespace GSF.TimeSeries
 {
@@ -52,16 +50,13 @@ namespace GSF.TimeSeries
     {
         #region [ Members ]
 
-        // Constants
-        private const int VK_RETURN = 0x0D;
-        private const int WM_KEYDOWN = 0x100;
-
         // Fields
-        private bool m_innerLoopActive;
         private bool m_telnetActive;
+        private volatile bool m_authenticated;
+        private readonly object m_displayLock;
+
         private readonly ConsoleColor m_originalBgColor;
         private readonly ConsoleColor m_originalFgColor;
-        private readonly ManualResetEvent m_authenticationWaitHandle;
 
         private ClientBase m_remotingClient;
         private ClientHelper m_clientHelper;
@@ -83,16 +78,14 @@ namespace GSF.TimeSeries
             // Save the color scheme.
             m_originalBgColor = System.Console.BackgroundColor;
             m_originalFgColor = System.Console.ForegroundColor;
+            m_displayLock = new object();
 
             // Register event handlers.
-            m_clientHelper.AuthenticationFailure += ClientHelper_AuthenticationFailure;
+            m_clientHelper.AuthenticationSuccess += ClientHelper_AuthenticationSuccess;
             m_clientHelper.ReceivedServiceUpdate += ClientHelper_ReceivedServiceUpdate;
             m_clientHelper.ReceivedServiceResponse += ClientHelper_ReceivedServiceResponse;
             m_clientHelper.TelnetSessionEstablished += ClientHelper_TelnetSessionEstablished;
             m_clientHelper.TelnetSessionTerminated += ClientHelper_TelnetSessionTerminated;
-
-            // Authentication wait handle.
-            m_authenticationWaitHandle = new ManualResetEvent(true);
         }
 
         /// <summary>
@@ -149,7 +142,7 @@ namespace GSF.TimeSeries
                 string serviceName = arguments["OrderedArg1"];
 
                 // Attempt to access service controller for the specified Windows service
-                ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, true) == 0);
+                ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, StringComparison.OrdinalIgnoreCase) == 0);
 
                 if (serviceController != null)
                 {
@@ -157,7 +150,7 @@ namespace GSF.TimeSeries
                     {
                         if (serviceController.Status == ServiceControllerStatus.Running)
                         {
-                            System.Console.WriteLine("Attempting to stop the {0} Windows service...", serviceName);
+                            WriteLine("Attempting to stop the {0} Windows service...", serviceName);
 
                             serviceController.Stop();
 
@@ -165,17 +158,17 @@ namespace GSF.TimeSeries
                             serviceController.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20.0D));
 
                             if (serviceController.Status == ServiceControllerStatus.Stopped)
-                                System.Console.WriteLine("Successfully stopped the {0} Windows service.", serviceName);
+                                WriteLine("Successfully stopped the {0} Windows service.", serviceName);
                             else
-                                System.Console.WriteLine("Failed to stop the {0} Windows service after trying for 20 seconds...", serviceName);
+                                WriteLine("Failed to stop the {0} Windows service after trying for 20 seconds...", serviceName);
 
                             // Add an extra line for visual separation of service termination status
-                            System.Console.WriteLine("");
+                            WriteLine("");
                         }
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine("Failed to stop the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                        WriteLine("Failed to stop the {0} Windows service: {1}\r\n", serviceName, ex.Message);
                     }
                 }
 
@@ -187,7 +180,7 @@ namespace GSF.TimeSeries
                     if (instances.Length > 0)
                     {
                         int total = 0;
-                        System.Console.WriteLine("Attempting to stop running instances of the {0}...", serviceName);
+                        WriteLine("Attempting to stop running instances of the {0}...", serviceName);
 
                         // Terminate all instances of service running on the local computer
                         foreach (Process process in instances)
@@ -197,15 +190,15 @@ namespace GSF.TimeSeries
                         }
 
                         if (total > 0)
-                            System.Console.WriteLine("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : "");
+                            WriteLine("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : "");
 
                         // Add an extra line for visual separation of process termination status
-                        System.Console.WriteLine("");
+                        WriteLine("");
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Console.WriteLine("Failed to terminate running instances of the {0}: {1}\r\n", serviceName, ex.Message);
+                    WriteLine("Failed to terminate running instances of the {0}: {1}\r\n", serviceName, ex.Message);
                 }
 
                 // Attempt to restart Windows service...
@@ -221,7 +214,7 @@ namespace GSF.TimeSeries
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine("Failed to restart the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                        WriteLine("Failed to restart the {0} Windows service: {1}\r\n", serviceName, ex.Message);
                     }
                 }
             }
@@ -236,50 +229,102 @@ namespace GSF.TimeSeries
                 }
 
                 // Connect to service and send commands.
-                while (!m_clientHelper.Enabled)
+                while (!string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
                 {
-                    m_authenticationWaitHandle.WaitOne();
-                    m_clientHelper.Connect();
-
-                    while (m_clientHelper.Enabled && string.Compare(userInput, "Exit", true) != 0)
+                    try
                     {
-                        m_innerLoopActive = true;
+                        m_clientHelper.Connect();
 
-                        // Wait for a command from the user. 
-                        userInput = System.Console.ReadLine();
-
-                        // Write a blank line to the console.
-                        System.Console.WriteLine();
-
-                        if (!string.IsNullOrWhiteSpace(userInput))
+                        if (!m_authenticated)
                         {
-                            // The user typed in a command and didn't just hit <ENTER>. 
-                            switch (userInput.ToUpper())
-                            {
-                                case "CLS":
-                                    // User wants to clear the console window. 
-                                    System.Console.Clear();
-                                    break;
-                                case "EXIT":
-                                    // User wants to exit the telnet session with the service. 
-                                    if (m_telnetActive)
-                                    {
-                                        userInput = string.Empty;
-                                        m_clientHelper.SendRequest("Telnet -disconnect");
-                                    }
-                                    break;
-                                default:
-                                    // User wants to send a request to the service. 
-                                    m_clientHelper.SendRequest(userInput);
-                                    if (string.Compare(userInput, "Help", true) == 0)
-                                        DisplayHelp();
+                            string username;
+                            UserInfo userInfo;
+                            StringBuilder passwordBuilder = new StringBuilder();
+                            StringBuilder prompt = new StringBuilder();
+                            ConsoleKeyInfo key;
 
-                                    break;
+                            lock (m_displayLock)
+                            {
+                            prompt.AppendLine();
+                            prompt.AppendLine();
+                            prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
+                            prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
+                            prompt.AppendLine();
+                            Write(prompt.ToString());
+
+                            // Capture the user name.
+                            Write("Enter user name: ");
+
+                            username = System.Console.ReadLine();
+
+                            // Capture the password.
+                            Write("Enter password: ");
+
+                            while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
+                                passwordBuilder.Append(key.KeyChar);
+
+                                WriteLine();
+                            }
+
+                            // Set network credentials used when attempting AD authentication
+                            userInfo = new UserInfo(username);
+                            userInfo.Initialize();
+                            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString()));
+
+                            // Set the user name on the client helper.
+                            m_clientHelper.Username = username;
+                            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
+                        }
+
+                        while (m_authenticated && m_clientHelper.Enabled && !string.Equals(userInput, "Exit", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Wait for a command from the user. 
+                            userInput = System.Console.ReadLine();
+
+                            // Write a blank line to the console.
+                            WriteLine();
+
+                            if (!string.IsNullOrWhiteSpace(userInput))
+                            {
+                                // The user typed in a command and didn't just hit <ENTER>. 
+                                switch (userInput.ToUpper())
+                                {
+                                    case "CLS":
+                                        // User wants to clear the console window. 
+                                        System.Console.Clear();
+                                        break;
+                                    case "EXIT":
+                                        // User wants to exit the telnet session with the service. 
+                                        if (m_telnetActive)
+                                        {
+                                            userInput = string.Empty;
+                                            m_clientHelper.SendRequest("Telnet -disconnect");
+                                        }
+                                        break;
+                                    case "LOGIN":
+                                        m_clientHelper.Username = null;
+                                        m_clientHelper.Password = null;
+                                        m_authenticated = false;
+                                        break;
+                                    default:
+                                        // User wants to send a request to the service. 
+                                        m_clientHelper.SendRequest(userInput);
+                                        if (string.Compare(userInput, "Help", StringComparison.OrdinalIgnoreCase) == 0)
+                                            DisplayHelp();
+
+                                        break;
+                                }
                             }
                         }
-                    }
 
-                    m_innerLoopActive = false;
+                        m_clientHelper.Disconnect();
+                    }
+                    catch (Exception)
+                    {
+                        // Errors during the outer connection loop
+                        // should simply force an attempt to reconnect
+                        m_clientHelper.Disconnect();
+                    }
                 }
             }
         }
@@ -447,69 +492,17 @@ namespace GSF.TimeSeries
             help.AppendLine();
             help.AppendLine();
 
-            System.Console.Write(help.ToString());
+            Write(help.ToString());
         }
 
-        private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e)
+        /// <summary>
+        /// Client helper service update reception handler.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event argument containing update type and associated message data.</param>
+        private void ClientHelper_AuthenticationSuccess(object sender, EventArgs e)
         {
-            // Prompt for credentials.
-            StringBuilder prompt = new StringBuilder();
-
-            UserInfo userInfo;
-            string username;
-            StringBuilder passwordBuilder = new StringBuilder();
-
-            prompt.AppendLine();
-            prompt.AppendLine();
-            prompt.Append("Connection to the service was rejected due to authentication failure. \r\n");
-            prompt.Append("Enter the credentials to be used for authentication with the service.");
-            prompt.AppendLine();
-            prompt.AppendLine();
-            System.Console.Write(prompt.ToString());
-
-            // Tell outer connect loop to wait for authentication.
-            m_authenticationWaitHandle.Reset();
-
-            // If the inner loop is active, post enter to the console
-            // to escape the Console.ReadLine() in the inner loop.
-            if (m_innerLoopActive)
-            {
-                m_remotingClient.Enabled = false;
-#if !MONO
-                IntPtr hWnd = Process.GetCurrentProcess().MainWindowHandle;
-                NativeMethods.PostMessage(hWnd, WM_KEYDOWN, VK_RETURN, 0);
-                Thread.Sleep(500);
-#endif
-            }
-
-            // Capture the user name.
-            System.Console.Write("Enter user name: ");
-            username = System.Console.ReadLine();
-
-            // Capture the password.
-            ConsoleKeyInfo key;
-            System.Console.Write("Enter password: ");
-            while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
-            {
-                passwordBuilder.Append(key.KeyChar);
-            }
-
-            // Set network credentials used when attempting AD authentication
-            userInfo = new UserInfo(username);
-            userInfo.Initialize();
-            SetNetworkCredential(new NetworkCredential(userInfo.LoginID, passwordBuilder.ToString()));
-
-            // Set the user name on the client helper.
-            m_clientHelper.Username = username;
-            m_clientHelper.Password = SecurityProviderUtility.EncryptPassword(passwordBuilder.ToString());
-
-            // Done with the console; signal reconnect.
-            m_authenticationWaitHandle.Set();
-
-            // Re-attempt connection with new credentials.
-            e.Cancel = true;
-            System.Console.WriteLine();
-            System.Console.WriteLine();
+            m_authenticated = true;
         }
 
         /// <summary>
@@ -519,22 +512,25 @@ namespace GSF.TimeSeries
         /// <param name="e">Event argument containing update type and associated message data.</param>
         protected virtual void ClientHelper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
         {
-            // Output status updates from the service to the console window.
-            switch (e.Argument1)
+            lock (m_displayLock)
             {
-                case UpdateType.Alarm:
-                    System.Console.ForegroundColor = ConsoleColor.Red;
-                    break;
-                case UpdateType.Information:
-                    System.Console.ForegroundColor = m_originalFgColor;
-                    break;
-                case UpdateType.Warning:
-                    System.Console.ForegroundColor = ConsoleColor.Yellow;
-                    break;
-            }
+                // Output status updates from the service to the console window.
+                switch (e.Argument1)
+                {
+                    case UpdateType.Alarm:
+                        System.Console.ForegroundColor = ConsoleColor.Red;
+                        break;
+                    case UpdateType.Information:
+                        System.Console.ForegroundColor = m_originalFgColor;
+                        break;
+                    case UpdateType.Warning:
+                        System.Console.ForegroundColor = ConsoleColor.Yellow;
+                        break;
+                }
 
-            System.Console.Write(e.Argument2);
-            System.Console.ForegroundColor = m_originalFgColor;
+                Write(e.Argument2);
+                System.Console.ForegroundColor = m_originalFgColor;
+            }
         }
 
         /// <summary>
@@ -551,23 +547,26 @@ namespace GSF.TimeSeries
             {
                 string message = e.Argument.Message;
 
-                if (responseSuccess)
+                lock (m_displayLock)
                 {
-                    if (string.IsNullOrWhiteSpace(message))
-                        System.Console.Write("{0} command processed successfully.\r\n\r\n", sourceCommand);
+                    if (responseSuccess)
+                    {
+                        if (string.IsNullOrWhiteSpace(message))
+                            Write("{0} command processed successfully.\r\n\r\n", sourceCommand);
+                        else
+                            Write("{0}\r\n\r\n", message);
+                    }
                     else
-                        System.Console.Write("{0}\r\n\r\n", message);
-                }
-                else
-                {
-                    System.Console.ForegroundColor = ConsoleColor.Red;
+                    {
+                        System.Console.ForegroundColor = ConsoleColor.Red;
 
-                    if (string.IsNullOrWhiteSpace(message))
-                        System.Console.Write("{0} failure.\r\n\r\n", sourceCommand);
-                    else
-                        System.Console.Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
+                        if (string.IsNullOrWhiteSpace(message))
+                            Write("{0} failure.\r\n\r\n", sourceCommand);
+                        else
+                            Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
 
-                    System.Console.ForegroundColor = m_originalFgColor;
+                        System.Console.ForegroundColor = m_originalFgColor;
+                    }
                 }
             }
         }
@@ -581,9 +580,13 @@ namespace GSF.TimeSeries
         {
             // Change the console color scheme to indicate active telnet session.
             m_telnetActive = true;
-            System.Console.BackgroundColor = ConsoleColor.Blue;
-            System.Console.ForegroundColor = ConsoleColor.Gray;
-            System.Console.Clear();
+
+            lock (m_displayLock)
+            {
+                System.Console.BackgroundColor = ConsoleColor.Blue;
+                System.Console.ForegroundColor = ConsoleColor.Gray;
+                System.Console.Clear();
+            }
         }
 
         /// <summary>
@@ -595,9 +598,43 @@ namespace GSF.TimeSeries
         {
             // Revert to original color scheme to indicate end of telnet session.
             m_telnetActive = false;
-            System.Console.BackgroundColor = m_originalBgColor;
-            System.Console.ForegroundColor = m_originalFgColor;
-            System.Console.Clear();
+
+            lock (m_displayLock)
+            {
+                System.Console.BackgroundColor = m_originalBgColor;
+                System.Console.ForegroundColor = m_originalFgColor;
+                System.Console.Clear();
+            }
+        }
+
+        private void Write(string format, params object[] args)
+        {
+            lock (m_displayLock)
+            {
+                if (args.Length == 0)
+                    System.Console.Write(format);
+                else
+                    System.Console.Write(format, args);
+            }
+        }
+
+        private void WriteLine()
+        {
+            lock (m_displayLock)
+            {
+                System.Console.WriteLine();
+            }
+        }
+
+        private void WriteLine(string format, params object[] args)
+        {
+            lock (m_displayLock)
+            {
+                if (args.Length == 0)
+                    System.Console.WriteLine(format);
+                else
+                    System.Console.WriteLine(format, args);
+            }
         }
 
         #endregion

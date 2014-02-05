@@ -145,11 +145,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
             {
                 filterText = filterText.ToLower();
                 m_newDevices = new ObservableCollection<Device>(
-                    Device.GetNewDevicesForOutputStream(null, m_outputStreamID).Where(d => d.Acronym.ToLower().Contains(filterText) ||
-                                                                                            d.Name.ToLower().Contains(filterText) ||
-                                                                                            d.CompanyAcronym.ToLower().Contains(filterText) ||
-                                                                                            d.CompanyName.ToLower().Contains(filterText) ||
-                                                                                            d.ParentAcronym.ToLower().Contains(filterText))
+                    Device.GetNewDevicesForOutputStream(null, m_outputStreamID).Where(d => d.Acronym.ToNonNullString().ToLower().Contains(filterText) ||
+                                                                                            d.Name.ToNonNullString().ToLower().Contains(filterText) ||
+                                                                                            d.CompanyAcronym.ToNonNullString().ToLower().Contains(filterText) ||
+                                                                                            d.CompanyName.ToNonNullString().ToLower().Contains(filterText) ||
+                                                                                            d.ParentAcronym.ToNonNullString().ToLower().Contains(filterText))
                     );
             }
 

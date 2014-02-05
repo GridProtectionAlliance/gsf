@@ -26,10 +26,11 @@
 //******************************************************************************************************
 
 using System;
+using System.Linq;
 using System.Reflection;
-using System.Windows.Controls;
 using System.Windows.Input;
 using GSF.IO;
+using GSF.Security;
 
 namespace GSF.TimeSeries.UI.Commands
 {
@@ -52,6 +53,18 @@ namespace GSF.TimeSeries.UI.Commands
         /// Raises when value of <see cref="CanExecute"/> changes.
         /// </summary>
         public event EventHandler CanExecuteChanged;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="MenuCommand"/> class.
+        /// </summary>
+        public MenuCommand()
+        {
+            CommonFunctions.CurrentPrincipalRefreshed += (sender, args) => OnCanExecuteChanged();
+        }
 
         #endregion
 
@@ -131,15 +144,14 @@ namespace GSF.TimeSeries.UI.Commands
         /// <returns><c>true</c> if this <see cref="MenuCommand"/> can be executed; otherwise, <c>false</c>.</returns>
         public bool CanExecute(object parameter)
         {
-            bool canExecute;
-            if (string.IsNullOrEmpty(Roles) || Roles == "*")
-                canExecute = true;
-            else
-                canExecute = CommonFunctions.CurrentPrincipal.IsInRole(Roles);
+            SecurityPrincipal currentPrincipal = CommonFunctions.CurrentPrincipal;
+            ISecurityProvider securityProvider;
 
-            //OnCanExecuteChanged();
+            if (!SecurityProviderCache.TryGetCachedProvider(currentPrincipal.Identity.Name, out securityProvider))
+                securityProvider = SecurityProviderCache.CurrentProvider;
 
-            return canExecute;
+            return ((object)securityProvider != null) && currentPrincipal.Identity.IsAuthenticated && securityProvider.UserData.Roles.Any() &&
+                (string.IsNullOrEmpty(Roles) || Roles == "*" || currentPrincipal.IsInRole(Roles));
         }
 
         /// <summary>

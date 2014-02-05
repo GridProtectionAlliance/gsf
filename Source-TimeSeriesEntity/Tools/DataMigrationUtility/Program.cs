@@ -38,7 +38,7 @@ namespace DataMigrationUtility
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new DataMigrationUtility());
+            Application.Run(new DataMigrationUtilityScreen());
         }
     }
 }

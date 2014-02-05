@@ -1243,7 +1243,7 @@ CREATE TABLE [dbo].[ApplicationRole](
 
 GO
 
-CREATE UNIQUE NONCLUSTERED INDEX [IX_ApplicationRole] ON [dbo].[Device]
+CREATE UNIQUE NONCLUSTERED INDEX [IX_ApplicationRole] ON [dbo].[ApplicationRole]
 (
     [NodeID] ASC,
     [Name] ASC

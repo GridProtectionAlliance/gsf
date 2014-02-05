@@ -38,6 +38,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using GSF.Data;
+using GSF.Identity;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -61,7 +62,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
         #endregion
 
-        #region [properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets the current SecurityGroup ID
@@ -239,17 +240,19 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 foreach (DataRow row in securityGroupTable.Rows)
                 {
+                    Guid id = database.Guid(row, "ID");
+
                     securityGroupList.Add(new SecurityGroup()
                     {
-                        ID = database.Guid(row, "ID"),
-                        Name = row.Field<string>("Name"),
+                        ID = id,
+                        Name = UserInfo.SIDToAccountName(row.Field<string>("Name")),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
                         CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         UpdatedOn = Convert.ToDateTime(row.Field<object>("UpdatedOn")),
                         UpdatedBy = row.Field<string>("UpdatedBy"),
-                        CurrentUsers = GetCurrentUsers(database, Guid.Parse(row.Field<object>("ID").ToString())),
-                        PossibleUsers = GetPossibleUsers(database, Guid.Parse(row.Field<object>("ID").ToString()))
+                        CurrentUsers = GetCurrentUsers(database, id),
+                        PossibleUsers = GetPossibleUsers(database, id)
                     });
                 }
 
@@ -278,10 +281,10 @@ namespace GSF.TimeSeries.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<Guid, string> currentUsers = new Dictionary<Guid, string>();
-                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT * FROM SecurityGroupUserAccountDetail WHERE SecurityGroupID = {0} ORDER BY UserName", "groupID"), groupID);
+                DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT * FROM SecurityGroupUserAccountDetail WHERE SecurityGroupID = {0} ORDER BY UserName", "groupID"), database.Guid(groupID));
 
                 foreach (DataRow row in currentUsersTable.Rows)
-                    currentUsers[database.Guid(row, "UserAccountID")] = row.Field<string>("UserName");
+                    currentUsers[database.Guid(row, "UserAccountID")] = UserInfo.SIDToAccountName(row.Field<string>("UserName"));
 
                 return currentUsers;
             }
@@ -306,10 +309,10 @@ namespace GSF.TimeSeries.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 Dictionary<Guid, string> possibleGroupUsers = new Dictionary<Guid, string>();
                 string query = database.ParameterizedQueryString("SELECT ID, Name FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM SecurityGroupUserAccount WHERE SecurityGroupID = {0}) ORDER BY Name", "groupID");
-                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, groupID);
+                DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(groupID));
 
                 foreach (DataRow row in possibleUsersTable.Rows)
-                    possibleGroupUsers[database.Guid(row, "ID")] = row.Field<string>("Name");
+                    possibleGroupUsers[database.Guid(row, "ID")] = UserInfo.SIDToAccountName(row.Field<string>("Name"));
 
                 return possibleGroupUsers;
             }
@@ -339,11 +342,11 @@ namespace GSF.TimeSeries.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeAdded)
                 {
-                    userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userID"), id).ToNonNullString();
-                    securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), groupID).ToNonNullString();
+                    userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userID"), database.Guid(id)).ToNonNullString();
+                    securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), database.Guid(groupID)).ToNonNullString();
                     query = database.ParameterizedQueryString("INSERT INTO SecurityGroupUserAccount (SecurityGroupID, UserAccountID) VALUES ({0}, {1})", "groupID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(groupID), database.Guid(id));
-                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully added to security group \"{1}\" by user \"{2}\".", userName, securityGroupName, CommonFunctions.CurrentUser), 8);
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully added to security group \"{1}\" by user \"{2}\".", UserInfo.SIDToAccountName(userName), UserInfo.SIDToAccountName(securityGroupName), CommonFunctions.CurrentUser), 8);
                 }
 
                 return "User accounts added to group successfully";
@@ -374,11 +377,11 @@ namespace GSF.TimeSeries.UI.DataModels
                 createdConnection = CreateConnection(ref database);
                 foreach (Guid id in usersToBeDeleted)
                 {
-                    userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userID"), id).ToNonNullString();
-                    securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), groupID).ToNonNullString();
+                    userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userID"), database.Guid(id)).ToNonNullString();
+                    securityGroupName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), database.Guid(groupID)).ToNonNullString();
                     query = database.ParameterizedQueryString("DELETE FROM SecurityGroupUserAccount WHERE SecurityGroupID = {0} AND UserAccountID = {1}", "groupID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(groupID), database.Guid(id));
-                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully removed from security group \"{1}\" by user \"{2}\".", userName, securityGroupName, CommonFunctions.CurrentUser), 9);
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" successfully removed from security group \"{1}\" by user \"{2}\".", UserInfo.SIDToAccountName(userName), UserInfo.SIDToAccountName(securityGroupName), CommonFunctions.CurrentUser), 9);
                 }
 
                 return "User accounts deleted from group successfully";
@@ -412,7 +415,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable securityGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM SecurityGroup ORDER BY Name");
 
                 foreach (DataRow row in securityGroupTable.Rows)
-                    securityGroupList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
+                    securityGroupList[row.ConvertField<int>("ID")] = UserInfo.SIDToAccountName(row.Field<string>("Name"));
 
                 return securityGroupList;
             }
@@ -431,29 +434,47 @@ namespace GSF.TimeSeries.UI.DataModels
         /// <returns>String, for display use, indicating success.</returns>
         public static string Save(AdoDataConnection database, SecurityGroup securityGroup)
         {
+            const string ErrorMessage = "Group name already exists.";
+
             bool createdConnection = false;
             string query;
+            string groupSID;
+            int existing;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
+                groupSID = UserInfo.AccountNameToSID(securityGroup.Name);
+
+                if (!UserInfo.IsGroupSID(groupSID))
+                    groupSID = securityGroup.Name;
 
                 if (securityGroup.ID == Guid.Empty)
                 {
+                    existing = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM SecurityGroup WHERE Name = {0}", "name"), DefaultTimeout, groupSID));
+
+                    if (existing > 0)
+                        throw new InvalidOperationException(ErrorMessage);
+
                     query = database.ParameterizedQueryString("INSERT INTO SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES ({0}, {1}, " +
                         "{2}, {3}, {4}, {5})", "name", "description", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, groupSID, securityGroup.Description.ToNotNull(),
                         CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
 
                     CommonFunctions.LogEvent(string.Format("Security group \"{0}\" created successfully by user \"{1}\".", securityGroup.Name, CommonFunctions.CurrentUser), 6);
                 }
                 else
                 {
+                    existing = Convert.ToInt32(database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM SecurityGroup WHERE Name = {0} AND ID <> {1}", "name", "id"), DefaultTimeout, groupSID, securityGroup.ID));
+
+                    if (existing > 0)
+                        throw new InvalidOperationException(ErrorMessage);
+
                     query = database.ParameterizedQueryString("UPDATE SecurityGroup SET Name = {0}, Description = {1}, UpdatedBy = {2}, UpdatedOn = {3} " +
                         "WHERE ID = {4}", "name", "description", "updatedBy", "updatedOn", "id");
 
-                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, securityGroup.Name, securityGroup.Description.ToNotNull(),
+                    database.Connection.ExecuteNonQuery(query, DefaultTimeout, groupSID, securityGroup.Description.ToNotNull(),
                         CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
 
                     CommonFunctions.LogEvent(string.Format("Information about security group \"{0}\" updated successfully by user \"{1}\".", securityGroup.Name, CommonFunctions.CurrentUser), 7);
@@ -493,7 +514,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM SecurityGroup WHERE ID = {0}", "securityGroupID"), DefaultTimeout, database.Guid(securityGroupID));
 
                 // Write to the event log
-                CommonFunctions.LogEvent(string.Format("Security group \"{0}\" deleted successfully by user \"{1}\".", securityGroupName, CommonFunctions.CurrentUser), 13);
+                CommonFunctions.LogEvent(string.Format("Security group \"{0}\" deleted successfully by user \"{1}\".", UserInfo.SIDToAccountName(securityGroupName), CommonFunctions.CurrentUser), 13);
 
                 return "Security group deleted successfully";
             }

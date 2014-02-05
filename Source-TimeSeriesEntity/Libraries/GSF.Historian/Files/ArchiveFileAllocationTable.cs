@@ -52,6 +52,7 @@ using System.IO;
 using System.Linq;
 using GSF.Interop;
 using GSF.Parsing;
+using GSF.Units;
 
 namespace GSF.Historian.Files
 {
@@ -490,8 +491,8 @@ namespace GSF.Historian.Files
 
                 if (unusedDataBlock != null)
                     return m_dataBlockCount - unusedDataBlock.Index;
-                else
-                    return 0;
+
+                return 0;
             }
         }
 
@@ -550,7 +551,7 @@ namespace GSF.Historian.Files
             buffer.ValidateParameters(startIndex, length);
 
             startIndex += m_variableTableRegion.GenerateBinaryImage(buffer, startIndex);
-            startIndex += m_fixedTableRegion.GenerateBinaryImage(buffer, startIndex);
+            m_fixedTableRegion.GenerateBinaryImage(buffer, startIndex);
 
             return length;
         }
@@ -564,12 +565,17 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Saves the <see cref="ArchiveFileAllocationTable"/> data to the <see cref="ArchiveFile"/>.
         /// </summary>
-        public void Save()
+        /// <param name="forceFlush">Forces an immediate disk flush for save.</param>
+        public void Save(bool forceFlush = false)
         {
             // Leave space for data blocks.
             lock (m_parent.FileData)
             {
+                if (m_parent.FileData.Length == 0)
+                    m_parent.FileData.SetLength((long)(m_parent.FileSize * SI2.Mega));
+
                 m_parent.FileData.Seek(DataLength, SeekOrigin.Begin);
+
                 this.CopyBinaryImageToStream(m_parent.FileData);
 
                 if (!m_parent.CacheWrites)
@@ -601,6 +607,7 @@ namespace GSF.Historian.Files
                 }
                 m_dataBlockCount = m_dataBlockPointers.Count;
             }
+
             Save();
 
             // Initialize newly added data blocks.
@@ -608,7 +615,8 @@ namespace GSF.Historian.Files
 
             for (int i = m_dataBlockCount - dataBlocksToAdd; i < m_dataBlockCount; i++)
             {
-                dataBlock = new ArchiveDataBlock(m_parent, i, -1, true);
+                dataBlock = new ArchiveDataBlock(m_parent, i, -1);
+                dataBlock.Reset();
             }
         }
 
@@ -627,10 +635,10 @@ namespace GSF.Historian.Files
                 pointer = m_dataBlockPointers.FirstOrDefault(dataBlockPointer => dataBlockPointer.HistorianID == historianID);
             }
 
-            if (pointer == null)
+            if ((object)pointer == null)
                 return null;
-            else
-                return pointer.GetDataBlock(preRead);
+
+            return pointer.GetDataBlock(preRead);
         }
 
         /// <summary>
@@ -648,10 +656,10 @@ namespace GSF.Historian.Files
                 pointer = m_dataBlockPointers.LastOrDefault(dataBlockPointer => dataBlockPointer.HistorianID == historianID);
             }
 
-            if (pointer == null)
+            if ((object)pointer == null)
                 return null;
-            else
-                return pointer.GetDataBlock(preRead);
+
+            return pointer.GetDataBlock(preRead);
         }
 
         /// <summary>
@@ -704,6 +712,7 @@ namespace GSF.Historian.Files
                 if (!(startTime == TimeTag.MinValue || endTime == TimeTag.MaxValue))
                 {
                     // There are 2 different search criteria for this:
+
                     // 1) If matching data block pointers have been found, then find data block pointer before the first matching data block pointer.
                     //    or
                     // 2) Find the last data block pointer in the time range of TimeTag.MinValue to m_searchEndTime.
@@ -714,7 +723,8 @@ namespace GSF.Historian.Files
                         searchEndTime = new TimeTag(blockPointers.First().StartTime.Value - 1.0D);
 
                     ArchiveDataBlockPointer borderMatch = m_dataBlockPointers.LastOrDefault(dataBlockPointer => dataBlockPointer.Matches(historianID, TimeTag.MinValue, searchEndTime));
-                    if (borderMatch != null)
+
+                    if ((object)borderMatch != null)
                         blockPointers.Insert(0, borderMatch);
                 }
             }
@@ -728,12 +738,13 @@ namespace GSF.Historian.Files
         /// </summary>
         /// <param name="historianID">Historian identifier for which the <see cref="ArchiveDataBlock"/> is being requested.</param>
         /// <param name="dataTime"><see cref="TimeTag"/> of the <see cref="ArchiveDataPoint"/> to be written to the <see cref="ArchiveDataBlock"/>.</param>
-        /// <param name="blockIndex"><see cref="ArchiveDataBlock.Index"/> of the <see cref="ArchiveDataBlock"/> last used for writting <see cref="ArchiveDataPoint"/>s for the <paramref name="historianID"/>.</param>
+        /// <param name="blockIndex"><see cref="ArchiveDataBlock.Index"/> of the <see cref="ArchiveDataBlock"/> last used for writing <see cref="ArchiveDataPoint"/>s for the <paramref name="historianID"/>.</param>
         /// <returns><see cref="ArchiveDataBlock"/> object if available; otherwise null if all <see cref="ArchiveDataBlock"/>s have been allocated.</returns>
         internal ArchiveDataBlock RequestDataBlock(int historianID, TimeTag dataTime, int blockIndex)
         {
             ArchiveDataBlock dataBlock = null;
             ArchiveDataBlockPointer dataBlockPointer = null;
+
             if (blockIndex >= 0 && blockIndex < m_dataBlockCount)
             {
                 // Valid data block index is specified, so retrieve the corresponding data block.
@@ -743,14 +754,13 @@ namespace GSF.Historian.Files
                 }
 
                 dataBlock = dataBlockPointer.DataBlock;
+
                 if (!dataBlockPointer.IsAllocated && dataBlock.SlotsUsed > 0)
                 {
                     // Clear existing data from the data block since it is unallocated.
                     dataBlock.Reset();
                 }
-                else if (dataBlockPointer.IsAllocated &&
-                         (dataBlockPointer.HistorianID != historianID ||
-                          (dataBlockPointer.HistorianID == historianID && dataBlock.SlotsAvailable == 0)))
+                else if (dataBlockPointer.IsAllocated && (dataBlockPointer.HistorianID != historianID || (dataBlockPointer.HistorianID == historianID && dataBlock.SlotsAvailable == 0)))
                 {
                     // Search for a new data block since the suggested data block cannot be used.
                     blockIndex = -1;
@@ -761,6 +771,7 @@ namespace GSF.Historian.Files
             {
                 // Negative data block index is specified indicating a search must be performed for a data block.
                 dataBlock = FindLastDataBlock(historianID);
+
                 if (dataBlock != null && dataBlock.SlotsAvailable == 0)
                 {
                     // Previously used data block is full.
@@ -771,6 +782,7 @@ namespace GSF.Historian.Files
                 {
                     // Look for the first unallocated data block.
                     dataBlock = FindDataBlock(-1);
+
                     if (dataBlock == null)
                     {
                         // Extend the file for historic writes only.
@@ -784,9 +796,7 @@ namespace GSF.Historian.Files
                     {
                         // Reset the unallocated data block if there is data in it.
                         if (dataBlock.SlotsUsed > 0)
-                        {
                             dataBlock.Reset();
-                        }
                     }
                 }
 

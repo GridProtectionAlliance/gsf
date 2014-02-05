@@ -48,6 +48,7 @@ using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
+using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
 using Random = GSF.Security.Cryptography.Random;
@@ -226,8 +227,6 @@ namespace GSF.TimeSeries.Transport
         private Guid m_nodeID;
         private int m_gatewayProtocolID;
         private readonly List<ServerCommand> m_requests;
-        private AutoResetEvent m_synchronizationComplete;
-        private readonly object m_queuedSynchronizationPending;
         private SecurityMode m_securityMode;
         private bool m_synchronizedSubscription;
         private bool m_useMillisecondResolution;
@@ -245,11 +244,12 @@ namespace GSF.TimeSeries.Transport
         private bool m_autoSynchronizeMetadata;
         private bool m_useTransactionForMetadata;
         private int m_metadataSynchronizationTimeout;
-        private readonly object m_receivedMetadataLock;
-        private DataSet m_receivedMetadata;
+        private SynchronizedOperation m_synchronizeMetadataOperation;
+        private volatile DataSet m_receivedMetadata;
         private DataSet m_synchronizedMetadata;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
+        private int m_bufferSize;
 
         private readonly List<TimeSeriesBuffer> m_bufferBlockCache;
         private uint m_expectedBufferBlockSequenceNumber;
@@ -283,9 +283,7 @@ namespace GSF.TimeSeries.Transport
         public DataSubscriber()
         {
             m_requests = new List<ServerCommand>();
-            m_synchronizationComplete = new AutoResetEvent(true);
-            m_queuedSynchronizationPending = new object();
-            m_receivedMetadataLock = new object();
+            m_synchronizeMetadataOperation = new SynchronizedOperation(SynchronizeMetadata);
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
@@ -971,17 +969,8 @@ namespace GSF.TimeSeries.Transport
                         CommandChannel = null;
                         DataChannel = null;
                         DisposeLocalConcentrator();
-
-                        if ((object)m_synchronizationComplete != null)
-                        {
-                            // Release any waiting threads before disposing wait handle
-                            m_synchronizationComplete.Set();
-                            m_synchronizationComplete.Dispose();
                         }
-
-                        m_synchronizationComplete = null;
                     }
-                }
                 finally
                 {
                     m_disposed = true;          // Prevent duplicate dispose.
@@ -1126,7 +1115,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.SendBufferSize = bufferSize;
 
                 // Assign command channel client reference and attach to needed events
-                this.CommandChannel = commandChannel;
+                CommandChannel = commandChannel;
             }
             else
             {
@@ -1150,7 +1139,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.SendBufferSize = bufferSize;
 
                 // Assign command channel client reference and attach to needed events
-                this.CommandChannel = commandChannel;
+                CommandChannel = commandChannel;
             }
 
             // Get proper connection string - either from specified command channel
@@ -1165,6 +1154,49 @@ namespace GSF.TimeSeries.Transport
             StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
 
             Initialized = true;
+        }
+
+        private void InitializeCommandChannel()
+        {
+            if (m_securityMode != SecurityMode.TLS)
+            {
+                // Create a new TCP client
+                TcpClient commandChannel = new TcpClient();
+
+                // Initialize default settings
+                commandChannel.PayloadAware = true;
+                commandChannel.PersistSettings = false;
+                commandChannel.MaxConnectionAttempts = 1;
+                commandChannel.ReceiveBufferSize = m_bufferSize;
+                commandChannel.SendBufferSize = m_bufferSize;
+
+                // Assign command channel client reference and attach to needed events
+                CommandChannel = commandChannel;
+            }
+            else
+            {
+                // Create a new TLS client and certificate checker
+                TlsClient commandChannel = new TlsClient();
+                SimpleCertificateChecker certificateChecker = new SimpleCertificateChecker();
+
+                // Set up certificate checker
+                certificateChecker.TrustedCertificates.Add(new X509Certificate2(FilePath.GetAbsolutePath(m_remoteCertificate)));
+                certificateChecker.ValidPolicyErrors = m_validPolicyErrors;
+                certificateChecker.ValidChainFlags = m_validChainFlags;
+
+                // Initialize default settings
+                commandChannel.PayloadAware = true;
+                commandChannel.PersistSettings = false;
+                commandChannel.MaxConnectionAttempts = 1;
+                commandChannel.CertificateFile = FilePath.GetAbsolutePath(m_localCertificate);
+                commandChannel.CheckCertificateRevocation = m_checkCertificateRevocation;
+                commandChannel.CertificateChecker = certificateChecker;
+                commandChannel.ReceiveBufferSize = m_bufferSize;
+                commandChannel.SendBufferSize = m_bufferSize;
+
+                // Assign command channel client reference and attach to needed events
+                CommandChannel = commandChannel;
+            }
         }
 
         // Gets the path to the local certificate from the configuration file
@@ -1240,7 +1272,7 @@ namespace GSF.TimeSeries.Transport
                         subscribedMeasurements.Add(signalID);
                     }
 
-                    // Combine subscribed output measurement with any existing output measurement and return unique set
+                        // Combine subscribed output measurement with any existing output measurement and return unique set
                     OutputSignalIDs.UnionWith(subscribedMeasurements);
                 }
                 catch (Exception ex)
@@ -1887,7 +1919,7 @@ namespace GSF.TimeSeries.Transport
                     }
 
                     // Assign data channel client reference and attach to needed events
-                    this.DataChannel = dataChannel;
+                    DataChannel = dataChannel;
 
                     // Setup subscription packet
                     using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
@@ -1999,12 +2031,8 @@ namespace GSF.TimeSeries.Transport
         {
             try
             {
-                lock (m_receivedMetadataLock)
-                {
                     m_receivedMetadata = metadata;
-                }
-
-                ThreadPool.QueueUserWorkItem(QueueMetaDataSynchronization);
+                m_synchronizeMetadataOperation.RunOnceAsync();
             }
             catch (Exception ex)
             {
@@ -2587,7 +2615,7 @@ namespace GSF.TimeSeries.Transport
                 dataChannel = ConnectionString;
 
             if (OutputSignalIDs.Count > 0)
-            {
+                {
 #pragma warning disable 0618
                 // Start unsynchronized subscription
                 UnsynchronizedSubscribe(true, false, OutputSignalIDs.ToDelimitedString(';'), dataChannel);
@@ -2598,56 +2626,21 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        // Queues meta-data synchronization one at a time
-        private void QueueMetaDataSynchronization(object state)
-        {
-            try
-            {
-                // Queue up a synchronization unless another thread has already requested one
-                if (!m_disposed && Monitor.TryEnter(m_queuedSynchronizationPending))
-                {
-                    try
-                    {
-                        // Queue new synchronization after waiting for any prior synchronization to complete
-                        if (m_synchronizationComplete.WaitOne())
-                            ThreadPool.QueueUserWorkItem(SynchronizeMetadata);
-                    }
-                    finally
-                    {
-                        Monitor.Exit(m_queuedSynchronizationPending);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue meta-data synchronization: " + ex.Message, ex));
-            }
-        }
-
-
         /// <summary>
         /// Handles meta-data synchronization to local system.
         /// </summary>
-        /// <param name="state"><see cref="DataSet"/> meta-data collection passed into state parameter.</param>
         /// <remarks>
         /// This function should only be initiated from call to <see cref="SynchronizeMetadata(DataSet)"/> to make
         /// sure only one meta-data synchronization happens at once. Users can override this method to customize
         /// process of meta-data synchronization.
         /// </remarks>
-        protected virtual void SynchronizeMetadata(object state)
+        protected virtual void SynchronizeMetadata()
         {
             // TODO: This function is complex and very closely tied to the current time-series data schema - perhaps it should be moved outside this class and referenced
             // TODO: as a delegate that can be assigned and called to allow other schemas as well. DataPublisher is already very flexible in what data it can deliver.
             try
             {
-                DataSet metadata;
-
-                lock (m_receivedMetadataLock)
-                {
-                    metadata = m_receivedMetadata;
-                    m_receivedMetadata = null;
-                }
+                DataSet metadata = m_receivedMetadata;
 
                 // Only perform database synchronization if meta-data has changed since last update
                 if (!SynchronizedMetadataChanged(metadata))
@@ -2873,7 +2866,7 @@ namespace GSF.TimeSeries.Transport
 
                                     // Remove any devices in the database that are associated with the parent device and do not exist in the meta-data
                                     if (uniqueIDs.BinarySearch(uniqueID) < 0)
-                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, uniqueID);
+                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID));
                                 }
                                 UpdateSyncProgress();
                             }
@@ -3003,13 +2996,13 @@ namespace GSF.TimeSeries.Transport
                                     if (signalIDs.BinarySearch(signalID) < 0)
                                     {
                                         // Measurement was not in the meta-data, get the measurement's actual record based ID for its associated device
-                                        object measurementDeviceID = command.ExecuteScalar(queryMeasurementDeviceIDSql, m_metadataSynchronizationTimeout, signalID);
+                                        object measurementDeviceID = command.ExecuteScalar(queryMeasurementDeviceIDSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
 
                                         // If the unknown measurement is directly associated with a device that exists in the meta-data it is assumed that this measurement
                                         // was removed from the publishing system and no longer exists therefore we remove it from the local measurement cache. If the user
                                         // needs custom local measurements associated with a remote device, they should be associated with the parent device only.
-                                        if (measurementDeviceID != null && !(measurementDeviceID is DBNull) && deviceIDs.ContainsValue((int)measurementDeviceID))
-                                            command.ExecuteNonQuery(deleteMeasurementSql, m_metadataSynchronizationTimeout, signalID);
+                                        if (measurementDeviceID != null && !(measurementDeviceID is DBNull) && deviceIDs.ContainsValue(Convert.ToInt32(measurementDeviceID)))
+                                            command.ExecuteNonQuery(deleteMeasurementSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
                                     }
                                 }
 
@@ -3141,11 +3134,6 @@ namespace GSF.TimeSeries.Transport
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
-            }
-            finally
-            {
-                if ((object)m_synchronizationComplete != null)
-                    m_synchronizationComplete.Set();
             }
         }
 

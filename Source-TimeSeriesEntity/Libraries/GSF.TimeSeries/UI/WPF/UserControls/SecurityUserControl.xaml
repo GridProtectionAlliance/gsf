@@ -55,7 +55,7 @@
             <Style TargetType="TextBlock">
                 <Setter Property="Margin" Value="2" />
                 <Setter Property="TextAlignment" Value="Right" />
-                <Setter Property="HorizontalAlignment" Value="Right" />                                
+                <Setter Property="HorizontalAlignment" Value="Left" />                                
                 <Setter Property="VerticalAlignment" Value="Center" />
             </Style>
             

@@ -35,6 +35,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using GSF.Data;
+using GSF.Identity;
 
 namespace GSF.TimeSeries.UI.DataModels
 {
@@ -328,7 +329,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in currentUsersTable.Rows)
-                    currentUsers[database.Guid(row, "UserAccountID")] = row.Field<string>("UserName");
+                    currentUsers[database.Guid(row, "UserAccountID")] = UserInfo.SIDToAccountName(row.Field<string>("UserName"));
 
                 return currentUsers;
             }
@@ -357,7 +358,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in possibleUsersTable.Rows)
-                    possibleUsers[database.Guid(row, "ID")] = row.Field<string>("Name");
+                    possibleUsers[database.Guid(row, "ID")] = UserInfo.SIDToAccountName(row.Field<string>("Name"));
 
                 return possibleUsers;
             }
@@ -386,7 +387,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable currentGroupsTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in currentGroupsTable.Rows)
-                    currentGroups[database.Guid(row, "SecurityGroupID")] = row.Field<string>("SecurityGroupName");
+                    currentGroups[database.Guid(row, "SecurityGroupID")] = UserInfo.SIDToAccountName(row.Field<string>("SecurityGroupName"));
 
                 return currentGroups;
             }
@@ -415,7 +416,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable possibleGroupsTable = database.Connection.RetrieveData(database.AdapterType, query, database.Guid(roleID));
 
                 foreach (DataRow row in possibleGroupsTable.Rows)
-                    possibleGroups[database.Guid(row, "ID")] = row.Field<string>("Name");
+                    possibleGroups[database.Guid(row, "ID")] = UserInfo.SIDToAccountName(row.Field<string>("Name"));
 
                 return possibleGroups;
             }
@@ -439,13 +440,14 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
+
                 foreach (Guid id in usersToBeAdded)
                 {
                     string userName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM UserAccount WHERE ID = {0}", "userAccountID"), DefaultTimeout, database.Guid(id)).ToNonNullString();
                     string roleName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(roleID)).ToNonNullString();
                     string query = database.ParameterizedQueryString("INSERT INTO ApplicationRoleUserAccount (ApplicationRoleID, UserAccountID) VALUES ({0}, {1})", "roleID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(roleID), database.Guid(id));
-                    CommonFunctions.LogEvent(string.Format("User \"{0}\" added to role \"{1}\" by user \"{2}\".", userName, roleName, CommonFunctions.CurrentUser), 4);
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" added to role \"{1}\" by user \"{2}\".", UserInfo.SIDToAccountName(userName), roleName, CommonFunctions.CurrentUser), 4);
                 }
 
                 return "User accounts added to role successfully";
@@ -476,7 +478,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     string roleName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(roleID)).ToNonNullString();
                     string query = database.ParameterizedQueryString("DELETE FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = {0} AND UserAccountID = {1}", "roleID", "userID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(roleID), database.Guid(id));
-                    CommonFunctions.LogEvent(string.Format("User \"{0}\" removed from role \"{1}\" by user \"{2}\".", userName, roleName, CommonFunctions.CurrentUser), 5);
+                    CommonFunctions.LogEvent(string.Format("User \"{0}\" removed from role \"{1}\" by user \"{2}\".", UserInfo.SIDToAccountName(userName), roleName, CommonFunctions.CurrentUser), 5);
                 }
 
                 return "User accounts deleted from role successfully";
@@ -507,7 +509,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     string roleName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(roleID)).ToNonNullString();
                     string query = database.ParameterizedQueryString("INSERT INTO ApplicationRoleSecurityGroup (ApplicationRoleID, SecurityGroupID) Values ({0}, {1})", "roleID", "groupID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(roleID), database.Guid(id));
-                    CommonFunctions.LogEvent(string.Format("Group \"{0}\" added to role \"{1}\" by user \"{2}\".", groupName, roleName, CommonFunctions.CurrentUser), 10);
+                    CommonFunctions.LogEvent(string.Format("Group \"{0}\" added to role \"{1}\" by user \"{2}\".", UserInfo.SIDToAccountName(groupName), roleName, CommonFunctions.CurrentUser), 10);
                 }
 
                 return "Security groups added to role successfully";
@@ -538,7 +540,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     string roleName = database.Connection.ExecuteScalar(database.ParameterizedQueryString("SELECT Name FROM ApplicationRole WHERE ID = {0}", "applicationRoleID"), DefaultTimeout, database.Guid(roleID)).ToNonNullString();
                     string query = database.ParameterizedQueryString("DELETE FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = {0} AND SecurityGroupID = {1}", "roleID", "groupID");
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, database.Guid(roleID), database.Guid(id));
-                    CommonFunctions.LogEvent(string.Format("Group \"{0}\" removed from role \"{1}\" by user \"{2}\".", groupName, roleName, CommonFunctions.CurrentUser), 11);
+                    CommonFunctions.LogEvent(string.Format("Group \"{0}\" removed from role \"{1}\" by user \"{2}\".", UserInfo.SIDToAccountName(groupName), roleName, CommonFunctions.CurrentUser), 11);
                 }
 
                 return "Security groups deleted from role successfully";

@@ -52,7 +52,7 @@ namespace GSF.Security
         /// </summary>
         /// <param name="identity">An <see cref="SecurityIdentity"/> object.</param>
         /// <exception cref="ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        internal SecurityPrincipal(SecurityIdentity identity)
+        public SecurityPrincipal(SecurityIdentity identity)
         {
             if (identity == null)
                 throw new ArgumentNullException("identity");
@@ -92,17 +92,15 @@ namespace GSF.Security
                 // No need to check user roles.
                 return false;
             }
-            else
-            {
-                // Check if user has any one of the specified roles.
-                foreach (string role in roles.Split(','))
-                {
-                    if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(m_identity.Provider.TranslateRole(role.Trim()), currentRole))) != null)
-                        return true;
-                }
 
-                return false;
+            // Check if user has any one of the specified roles.
+            foreach (string role in roles.Split(','))
+            {
+                if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(m_identity.Provider.TranslateRole(role.Trim()), currentRole))) != null)
+                    return true;
             }
+
+            return false;
         }
 
         #endregion

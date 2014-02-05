@@ -107,28 +107,18 @@
     <Compile Include="ApplicationSettings.cs" />
     <Compile Include="BulkDataOperationBase.cs" />
     <Compile Include="DataInserter.cs" />
-    <Compile Include="DataMigrationUtility.cs">
+    <Compile Include="DataMigrationUtilityScreen.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DataMigrationUtility.Designer.cs">
-      <DependentUpon>DataMigrationUtility.cs</DependentUpon>
+    <Compile Include="DataMigrationUtilityScreen.Designer.cs">
+      <DependentUpon>DataMigrationUtilityScreen.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Schema.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Schema.designer.cs">
-      <DependentUpon>Schema.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SqlGenerator.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SqlGenerator.designer.cs">
-      <DependentUpon>SqlGenerator.cs</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="DataMigrationUtility.resx">
-      <DependentUpon>DataMigrationUtility.cs</DependentUpon>
+    <Compile Include="Schema.cs" />
+    <Compile Include="SqlGenerator.cs" />
+    <EmbeddedResource Include="DataMigrationUtilityScreen.resx">
+      <DependentUpon>DataMigrationUtilityScreen.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -152,12 +142,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <WCFMetadata Include="Service References\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Database.DataInserter.bmp" />
-    <Content Include="Database.Schema.bmp" />
-    <Content Include="Database.SqlGenerator.bmp" />
     <Content Include="DataMigrationUtility.ico" />
   </ItemGroup>
   <ItemGroup>

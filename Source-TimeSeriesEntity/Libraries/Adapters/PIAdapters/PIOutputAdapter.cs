@@ -29,6 +29,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using GSF;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using PISDK;
@@ -53,8 +54,7 @@ namespace PIAdapters
         private Server m_server;                                             // PI server object for archiving data
         private ConcurrentDictionary<Guid, PIPoint> m_tagKeyMap;             // cache the mapping between GSFSchema measurements and PI points
         private int m_processedMeasurements;                                 // track the processed measurements
-        private readonly object m_queuedMetadataRefreshPending;              // sync object to prevent multiple metadata refreshes from occurring concurrently
-        private readonly AutoResetEvent m_metadataRefreshComplete;           // Auto reset event to flag when metadata refresh has completed
+        private SynchronizedOperation m_metadataRefreshOperation;            // Operation that handles metadata refresh
         private bool m_runMetadataSync;                                      // whether or not to automatically create/update PI points on the server
         private string m_piPointSource;                                      // Point source to set on PI points when automatically created by the adapter
         private string m_piPointClass;                                       // Point class to use for new PI points when automatically created by the adapter
@@ -71,8 +71,7 @@ namespace PIAdapters
         public PIOutputAdapter()
         {
             m_connectTimeout = 30000;
-            m_queuedMetadataRefreshPending = new object();
-            m_metadataRefreshComplete = new AutoResetEvent(true);
+            m_metadataRefreshOperation = new SynchronizedOperation(ExecuteMetadataRefresh);
             m_tagKeyMap = new ConcurrentDictionary<Guid, PIPoint>();
             m_processedMeasurements = 0;
             m_runMetadataSync = true;
@@ -256,14 +255,8 @@ namespace PIAdapters
                             m_tagKeyMap.Clear();
                             m_tagKeyMap = null;
                         }
-
-                        if ((object)m_metadataRefreshComplete != null)
-                        {
-                            m_metadataRefreshComplete.Set();
-                            m_metadataRefreshComplete.Dispose();
                         }
                     }
-                }
                 finally
                 {
                     m_disposed = true;          // Prevent duplicate dispose.
@@ -437,33 +430,33 @@ namespace PIAdapters
                 {
                     string tagname = row["PointTag"].ToString();
 
-                    // Use alternate tag if one is defined
+                        // Use alternate tag if one is defined
                     if (!string.IsNullOrWhiteSpace(row["AlternateTag"].ToString()) && string.Compare(row["AlternateTag"].ToString(), "DIGI", true) != 0)
                         tagname = row["AlternateTag"].ToString();
 
-                    PointList points;
+                        PointList points;
 
-                    // Two ways to find points here
-                    // 1. if we are running metadata sync from the adapter, look for the signal ID in the exdesc field
-                    // 2. if the pi points are being manually maintained, look for either the point tag or alternate tag in the actual pi point tag
+                        // Two ways to find points here
+                        // 1. if we are running metadata sync from the adapter, look for the signal ID in the exdesc field
+                        // 2. if the pi points are being manually maintained, look for either the point tag or alternate tag in the actual pi point tag
                     string filter = !m_runMetadataSync ? string.Format("TAG='{0}'", tagname) : string.Format("EXDESC='{0}'", signalID);
 
-                    points = m_server.GetPoints(filter);
+                        points = m_server.GetPoints(filter);
 
-                    if (points == null || points.Count == 0)
-                    {
+                        if (points == null || points.Count == 0)
+                        {
                         OnStatusMessage("No PI points found with {0}. Data will not be archived for signal {1}.", new object[] { filter, signalID });
-                    }
-                    else
-                    {
-                        if (points.Count > 1)
+                        }
+                        else
+                        {
+                            if (points.Count > 1)
                             OnStatusMessage("Multiple PI points were found with tagname matching '{0}' or '{1}' for signal {2}. The first match will be used.", new object[] { row["POINTTAG"], row["ALTERNATETAG"], signalID });
 
                         m_tagKeyMap.AddOrUpdate(signalID, points[1], (k, v) => points[1]); // NOTE - The PointList is NOT 0-based (index 1 is the first item in points)
-                        mapped++;
+                            mapped++;
+                        }
                     }
                 }
-            }
 
             OnStatusMessage("Mapped {0} keys to points successfully.", new object[] { mapped });
         }
@@ -475,42 +468,11 @@ namespace PIAdapters
         public override void RefreshMetadata()
         {
             if (m_runMetadataSync)
-            {
-                ThreadPool.QueueUserWorkItem(QueueMetadataRefresh);
-            }
+                m_metadataRefreshOperation.RunOnceAsync();
         }
 
-        private void QueueMetadataRefresh(object state)
-        {
-            try
-            {
-                // Queue up a metadata refresh unless another thread is already running
-                if (Monitor.TryEnter(m_queuedMetadataRefreshPending))
-                {
-                    try
+        private void ExecuteMetadataRefresh()
                     {
-                        // Queue new metadata refresh after waiting for any prior refresh to complete
-                        if (m_metadataRefreshComplete.WaitOne())
-                            ThreadPool.QueueUserWorkItem(ExecuteMetadataRefresh);
-                    }
-                    finally
-                    {
-                        Monitor.Exit(m_queuedMetadataRefreshPending);
-                    }
-                }
-            }
-            catch (ThreadAbortException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
-            }
-        }
-
-        private void ExecuteMetadataRefresh(object state)
-        {
             OnStatusMessage("Beginning metadata refresh...");
 
             try
@@ -585,10 +547,6 @@ namespace PIAdapters
             catch (Exception ex)
             {
                 OnProcessException(ex);
-            }
-            finally
-            {
-                m_metadataRefreshComplete.Set();
             }
 
             OnStatusMessage("Completed metadata refresh successfully.");

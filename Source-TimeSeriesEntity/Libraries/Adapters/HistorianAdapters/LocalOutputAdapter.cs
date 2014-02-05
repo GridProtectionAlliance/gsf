@@ -27,7 +27,7 @@
 //       Modified RefreshMetadata() to perform synchronous refresh.
 //       Corrected the implementation of Dispose().
 //  09/18/2009 - Pinal C. Patel
-//       Added override to Status property and added event handler to archive rollver notification.
+//       Added override to Status property and added event handler to archive rollover notification.
 //  10/28/2009 - Pinal C. Patel
 //       Modified to allow for multiple instances of the adapter to be loaded and configured with 
 //       different settings by persisting the settings in the config file under unique categories.
@@ -37,7 +37,7 @@
 //       Modified Initialize() to load all available metadata providers.
 //  12/11/2009 - Pinal C. Patel
 //       Fixed the implementation for allowing multiple adapter instances.
-//       Expanded the adapter status to include dynamically loaded plugins.
+//       Expanded the adapter status to include dynamically loaded plug-ins.
 //  04/28/2010 - Pinal C. Patel
 //       Modified ProcessMeasurements() method to not throw an exception if the archive file is not 
 //       open as this will be handled by ArchiveFile.WriteData() method if necessary.
@@ -51,7 +51,7 @@
 //  11/07/2010 - Pinal C. Patel
 //       Modified namespace reservation logic to handle the changed URI format in SelfHostingService.
 //  11/21/2011 - J. Ritchie Carroll
-//       Modified historian optimization procedure to dyanmically add reading adapters.
+//       Modified historian optimization procedure to dynamically add reading adapters.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
 //
@@ -62,12 +62,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Principal;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using GSF;
 using GSF.Configuration;
@@ -77,6 +74,7 @@ using GSF.Historian.Files;
 using GSF.Historian.MetadataProviders;
 using GSF.Historian.Replication;
 using GSF.IO;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -95,12 +93,10 @@ namespace HistorianAdapters
         private DataServices m_dataServices;
         private MetadataProviders m_metadataProviders;
         private ReplicationProviders m_replicationProviders;
-        private readonly object m_queuedMetadataRefreshPending;
-        private AutoResetEvent m_metadataRefreshComplete;
+        private SynchronizedOperation m_metadataRefreshOperation;
         private bool m_autoRefreshMetadata;
         private string m_instanceName;
         private string m_archivePath;
-        private bool m_useNamespaceReservation;
         private long m_archivedMeasurements;
         private volatile int m_adapterLoadedCount;
         private bool m_disposed;
@@ -115,12 +111,11 @@ namespace HistorianAdapters
         public LocalOutputAdapter()
         {
             m_autoRefreshMetadata = true;
-            m_queuedMetadataRefreshPending = new object();
-            m_metadataRefreshComplete = new AutoResetEvent(true);
             m_archive = new ArchiveFile();
             m_archive.MetadataFile = new MetadataFile();
             m_archive.StateFile = new StateFile();
             m_archive.IntercomFile = new IntercomFile();
+            m_metadataRefreshOperation = new SynchronizedOperation(ExecuteMetadataRefresh, OnProcessException);
         }
 
         #endregion
@@ -131,20 +126,85 @@ namespace HistorianAdapters
         /// Gets or sets instance name defined for this <see cref="LocalOutputAdapter"/>.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the instance name for the archive. Leave this value blank to default to the adapter name."),
+        Description("Define the instance name for the archive. Leave this value blank to default to the adapter name (blank is typical setting)."),
         DefaultValue("")]
         public string InstanceName
         {
             get
             {
-                if (string.IsNullOrEmpty(m_instanceName))
-                    return Name.ToLower();
-
                 return m_instanceName;
             }
             set
             {
                 m_instanceName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean indicating whether or not metadata is
+        /// refreshed when the adapter attempts to connect to the archive.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define a boolean indicating whether to refresh metadata from database on connect."),
+        DefaultValue(true)]
+        public bool AutoRefreshMetadata
+        {
+            get
+            {
+                return m_autoRefreshMetadata;
+            }
+            set
+            {
+                m_autoRefreshMetadata = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return base.InputMeasurementKeys;
+            }
+            set
+            {
+                base.InputMeasurementKeys = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override string Dependencies
+        {
+            get
+            {
+                return base.Dependencies;
+            }
+            set
+            {
+                base.Dependencies = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum time the system will wait on inter-adapter
+        /// dependencies before publishing queued measurements to an adapter.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override long DependencyTimeout
+        {
+            get
+            {
+                return base.DependencyTimeout;
+            }
+            set
+            {
+                base.DependencyTimeout = value;
             }
         }
 
@@ -160,25 +220,6 @@ namespace HistorianAdapters
             set
             {
                 m_archivePath = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean indicating whether or not metadata is
-        /// refreshed when the adapter attempts to connect to the archive.
-        /// </summary>
-        [ConnectionStringParameter,
-        Description("Define a boolean indicating whether to refresh metadata on connect."),
-        DefaultValue(true)]
-        public bool AutoRefreshMetadata
-        {
-            get
-            {
-                return m_autoRefreshMetadata;
-            }
-            set
-            {
-                m_autoRefreshMetadata = value;
             }
         }
 
@@ -212,6 +253,7 @@ namespace HistorianAdapters
             get
             {
                 StringBuilder status = new StringBuilder();
+
                 status.Append(base.Status);
                 status.AppendLine();
                 status.Append(m_archive.Status);
@@ -242,91 +284,49 @@ namespace HistorianAdapters
         [AdapterCommand("Refreshes metadata using all available and enabled providers.", "Administrator", "Editor")]
         public override void RefreshMetadata()
         {
-            ThreadPool.QueueUserWorkItem(QueueMetadataRefresh);
+            m_metadataRefreshOperation.RunOnceAsync();
         }
 
-        private void QueueMetadataRefresh(object state)
+        private void ExecuteMetadataRefresh()
         {
+            bool queueEnabled = false;
+
             try
             {
-                // Queue up a metadata refresh unless another thread has already requested one
-                if (Monitor.TryEnter(m_queuedMetadataRefreshPending))
+                base.RefreshMetadata();
+
+                if ((object)m_archive != null && m_archive.IsOpen && (object)m_archive.StateFile != null && m_archive.StateFile.IsOpen && (object)m_archive.MetadataFile != null && m_archive.MetadataFile.IsOpen)
                 {
-                    try
+                    queueEnabled = InternalProcessQueue.Enabled;
+                    InternalProcessQueue.Stop();
+
+                    // Synchronously refresh the meta-base.
+                    lock (m_metadataProviders.Adapters)
                     {
-                        // Queue new metadata refresh after waiting for any prior refresh to complete
-                        if (m_metadataRefreshComplete.WaitOne())
-                            ThreadPool.QueueUserWorkItem(ExecuteMetadataRefresh);
-                    }
-                    finally
-                    {
-                        Monitor.Exit(m_queuedMetadataRefreshPending);
-                    }
-                }
-            }
-            catch (ThreadAbortException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
-            }
-        }
-
-        private void ExecuteMetadataRefresh(object state)
-        {
-            try
-            {
-                bool queueEnabled = false;
-
-                try
-                {
-                    base.RefreshMetadata();
-
-                    if (m_archive != null && m_archive.IsOpen && m_archive.StateFile != null && m_archive.StateFile.IsOpen && m_archive.MetadataFile != null && m_archive.MetadataFile.IsOpen)
-                    {
-                        queueEnabled = InternalProcessQueue.Enabled;
-                        InternalProcessQueue.Stop();
-
-                        // Synchronously refresh the metabase.
-                        lock (m_metadataProviders.Adapters)
+                        foreach (IMetadataProvider provider in m_metadataProviders.Adapters)
                         {
-                            foreach (IMetadataProvider provider in m_metadataProviders.Adapters)
-                            {
-                                if (provider.Enabled)
-                                    provider.Refresh();
-                            }
-                        }
-
-                        // Request a state file synchronization in case file watchers are disabled
-                        m_archive.SynchronizeStateFile();
-
-                        // Wait for the metabase to synchronize, up to five seconds
-                        int waitCounts = 0;
-
-                        while (m_archive.StateFile.RecordsOnDisk != m_archive.MetadataFile.RecordsOnDisk || waitCounts < 50)
-                        {
-                            Thread.Sleep(100);
-                            waitCounts++;
+                            if (provider.Enabled)
+                                provider.Refresh();
                         }
                     }
-                }
-                finally
-                {
-                    m_metadataRefreshComplete.Set();
 
-                    if (queueEnabled)
-                        InternalProcessQueue.Start();
+                    // Request a state file synchronization in case file watchers are disabled
+                    m_archive.SynchronizeStateFile();
+
+                    // Wait for the meta-base to synchronize, up to five seconds
+                    int waitCounts = 0;
+
+                    while (m_archive.StateFile.RecordsOnDisk != m_archive.MetadataFile.RecordsOnDisk && waitCounts < 50)
+                    {
+                        Thread.Sleep(100);
+                        waitCounts++;
+                    }
                 }
             }
-            catch (ThreadAbortException)
+            finally
             {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(ex);
+                if (queueEnabled)
+                    InternalProcessQueue.Start();
             }
         }
 
@@ -338,25 +338,23 @@ namespace HistorianAdapters
         {
             base.Initialize();
 
-            string refreshMetadata;
-            string errorMessage = "{0} is missing from Settings - Example: instanceName=XX;archivePath=c:\\;autoRefreshMetadata=True";
             Dictionary<string, string> settings = Settings;
-            string setting;
+            string refreshMetadata;
 
             // Validate settings.
-            if (!settings.TryGetValue("instancename", out m_instanceName))
-                throw new ArgumentException(string.Format(errorMessage, "instanceName"));
+            if (!settings.TryGetValue("instanceName", out m_instanceName) || string.IsNullOrWhiteSpace(m_instanceName))
+                m_instanceName = Name.ToLower();
 
-            if (!settings.TryGetValue("archivepath", out m_archivePath))
+            if (!settings.TryGetValue("archivePath", out m_archivePath))
                 m_archivePath = FilePath.GetAbsolutePath(FilePath.AddPathSuffix("Archive"));
 
-            if (settings.TryGetValue("refreshmetadata", out refreshMetadata) || settings.TryGetValue("autorefreshmetadata", out refreshMetadata))
+            if (settings.TryGetValue("refreshMetadata", out refreshMetadata) || settings.TryGetValue("autoRefreshMetadata", out refreshMetadata))
                 m_autoRefreshMetadata = refreshMetadata.ParseBoolean();
 
-            if (settings.TryGetValue("useNamespaceReservation", out setting))
-                m_useNamespaceReservation = setting.ParseBoolean();
-            else
-                m_useNamespaceReservation = false;
+            //if (settings.TryGetValue("useNamespaceReservation", out setting))
+            //    m_useNamespaceReservation = setting.ParseBoolean();
+            //else
+            //    m_useNamespaceReservation = false;
 
             // Initialize metadata file.
             m_instanceName = m_instanceName.ToLower();
@@ -386,9 +384,21 @@ namespace HistorianAdapters
             m_archive.CompressData = false;
             m_archive.PersistSettings = true;
             m_archive.SettingsCategory = m_instanceName + m_archive.SettingsCategory;
-            m_archive.RolloverStart += Archive_RolloverStart;
-            m_archive.RolloverComplete += Archive_RolloverComplete;
-            m_archive.RolloverException += Archive_RolloverException;
+
+            m_archive.RolloverStart += m_archive_RolloverStart;
+            m_archive.RolloverComplete += m_archive_RolloverComplete;
+            m_archive.RolloverException += m_archive_RolloverException;
+
+            m_archive.DataReadException += m_archive_DataReadException;
+            m_archive.DataWriteException += m_archive_DataWriteException;
+
+            m_archive.OffloadStart += m_archive_OffloadStart;
+            m_archive.OffloadComplete += m_archive_OffloadComplete;
+            m_archive.OffloadException += m_archive_OffloadException;
+
+            m_archive.FutureDataReceived += m_archive_FutureDataReceived;
+            m_archive.OutOfSequenceDataReceived += m_archive_OutOfSequenceDataReceived;
+
             m_archive.Initialize();
 
             // Provide web service support.
@@ -437,7 +447,7 @@ namespace HistorianAdapters
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        if (m_dataServices != null)
+                        if ((object)m_dataServices != null)
                         {
                             m_dataServices.AdapterCreated -= DataServices_AdapterCreated;
                             m_dataServices.AdapterLoaded -= DataServices_AdapterLoaded;
@@ -446,7 +456,7 @@ namespace HistorianAdapters
                             m_dataServices.Dispose();
                         }
 
-                        if (m_metadataProviders != null)
+                        if ((object)m_metadataProviders != null)
                         {
                             m_metadataProviders.AdapterCreated -= MetadataProviders_AdapterCreated;
                             m_metadataProviders.AdapterLoaded -= MetadataProviders_AdapterLoaded;
@@ -455,7 +465,7 @@ namespace HistorianAdapters
                             m_metadataProviders.Dispose();
                         }
 
-                        if (m_replicationProviders != null)
+                        if ((object)m_replicationProviders != null)
                         {
                             m_replicationProviders.AdapterCreated -= ReplicationProviders_AdapterCreated;
                             m_replicationProviders.AdapterLoaded -= ReplicationProviders_AdapterLoaded;
@@ -464,35 +474,41 @@ namespace HistorianAdapters
                             m_replicationProviders.Dispose();
                         }
 
-                        if (m_archive != null)
+                        if ((object)m_archive != null)
                         {
-                            m_archive.RolloverStart -= Archive_RolloverStart;
-                            m_archive.RolloverComplete -= Archive_RolloverComplete;
-                            m_archive.RolloverException -= Archive_RolloverException;
+                            m_archive.RolloverStart -= m_archive_RolloverStart;
+                            m_archive.RolloverComplete -= m_archive_RolloverComplete;
+                            m_archive.RolloverException -= m_archive_RolloverException;
+
+                            m_archive.DataReadException -= m_archive_DataReadException;
+                            m_archive.DataWriteException -= m_archive_DataWriteException;
+
+                            m_archive.OffloadStart -= m_archive_OffloadStart;
+                            m_archive.OffloadComplete -= m_archive_OffloadComplete;
+                            m_archive.OffloadException -= m_archive_OffloadException;
+
+                            m_archive.FutureDataReceived -= m_archive_FutureDataReceived;
+                            m_archive.OutOfSequenceDataReceived -= m_archive_OutOfSequenceDataReceived;
+
                             m_archive.Dispose();
 
-                            if (m_archive.MetadataFile != null)
+                            if ((object)m_archive.MetadataFile != null)
                             {
                                 m_archive.MetadataFile.Dispose();
                                 m_archive.MetadataFile = null;
                             }
 
-                            if (m_archive.StateFile != null)
+                            if ((object)m_archive.StateFile != null)
                             {
                                 m_archive.StateFile.Dispose();
                                 m_archive.StateFile = null;
                             }
 
-                            if (m_archive.IntercomFile != null)
+                            if ((object)m_archive.IntercomFile != null)
                             {
                                 m_archive.IntercomFile.Dispose();
                                 m_archive.IntercomFile = null;
                             }
-
-                            if (m_metadataRefreshComplete != null)
-                                m_metadataRefreshComplete.Dispose();
-
-                            m_metadataRefreshComplete = null;
                         }
                     }
                 }
@@ -546,7 +562,7 @@ namespace HistorianAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            if (m_archive != null)
+            if ((object)m_archive != null)
             {
                 if (m_archive.IsOpen)
                 {
@@ -554,19 +570,19 @@ namespace HistorianAdapters
                     m_archive.Close();
                 }
 
-                if (m_archive.MetadataFile != null && m_archive.MetadataFile.IsOpen)
+                if ((object)m_archive.MetadataFile != null && m_archive.MetadataFile.IsOpen)
                 {
                     m_archive.MetadataFile.Save();
                     m_archive.MetadataFile.Close();
                 }
 
-                if (m_archive.StateFile != null && m_archive.StateFile.IsOpen)
+                if ((object)m_archive.StateFile != null && m_archive.StateFile.IsOpen)
                 {
                     m_archive.StateFile.Save();
                     m_archive.StateFile.Close();
                 }
 
-                if (m_archive.IntercomFile != null && m_archive.IntercomFile.IsOpen)
+                if ((object)m_archive.IntercomFile != null && m_archive.IntercomFile.IsOpen)
                 {
                     m_archive.IntercomFile.Save();
                     m_archive.IntercomFile.Close();
@@ -588,23 +604,58 @@ namespace HistorianAdapters
             {
                 m_archive.WriteData(new ArchiveDataPoint(measurement));
             }
+
             m_archivedMeasurements += measurements.Length;
         }
 
-        private void Archive_RolloverStart(object sender, EventArgs e)
+        private void m_archive_RolloverStart(object sender, EventArgs e)
         {
             OnStatusMessage("Archive is being rolled over...");
         }
 
-        private void Archive_RolloverComplete(object sender, EventArgs e)
+        private void m_archive_RolloverComplete(object sender, EventArgs e)
         {
             OnStatusMessage("Archive rollover is complete.");
         }
 
-        private void Archive_RolloverException(object sender, EventArgs<Exception> e)
+        private void m_archive_RolloverException(object sender, EventArgs<Exception> e)
         {
-            OnProcessException(e.Argument);
-            OnStatusMessage("Archive rollover failed - {0}", e.Argument.Message);
+            OnProcessException(new InvalidOperationException(string.Format("Archive rollover failed: {0}", e.Argument.Message), e.Argument));
+        }
+
+        private void m_archive_DataReadException(object sender, EventArgs<Exception> e)
+        {
+            OnProcessException(new InvalidOperationException(string.Format("Archive data read exception: {0}", e.Argument.Message), e.Argument));
+        }
+
+        private void m_archive_DataWriteException(object sender, EventArgs<Exception> e)
+        {
+            OnProcessException(new InvalidOperationException(string.Format("Archive write read exception: {0}", e.Argument.Message), e.Argument));
+        }
+
+        private void m_archive_OffloadStart(object sender, EventArgs e)
+        {
+            OnStatusMessage("Archive offload started...");
+        }
+
+        private void m_archive_OffloadComplete(object sender, EventArgs e)
+        {
+            OnStatusMessage("Archive offload complete.");
+        }
+
+        private void m_archive_OffloadException(object sender, EventArgs<Exception> e)
+        {
+            OnProcessException(new InvalidOperationException(string.Format("Archive offload exception: {0}", e.Argument.Message), e.Argument));
+        }
+
+        private void m_archive_FutureDataReceived(object sender, EventArgs<GSF.Historian.IDataPoint> e)
+        {
+            OnStatusMessage("Received data for point {0}:{1} with an unreasonable future timestamp. Data with a timestamp beyond {2:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, e.Argument.HistorianID, m_archive.LeadTimeTolerance);
+        }
+
+        private void m_archive_OutOfSequenceDataReceived(object sender, EventArgs<GSF.Historian.IDataPoint> e)
+        {
+            OnStatusMessage("Received out-of-sequence data for point {0}:{1}. Data not received in order will not be archived, per configuration.", m_instanceName, e.Argument.HistorianID);
         }
 
         private void DataServices_AdapterCreated(object sender, EventArgs<IDataService> e)
@@ -637,8 +688,11 @@ namespace HistorianAdapters
                 // Populate the default configuration for AdoMetadataProvider.
                 AdoMetadataProvider provider = e.Argument as AdoMetadataProvider;
 
-                provider.Enabled = true;
-                provider.SelectString = string.Format("SELECT * FROM HistorianMetadata WHERE PlantCode='{0}'", Name);
+                if ((object)provider != null)
+                {
+                    provider.Enabled = true;
+                    provider.SelectString = string.Format("SELECT * FROM HistorianMetadata WHERE PlantCode='{0}'", Name);
+                }
 
                 // The following connection information is now provided via configuration Eval mappings
                 //    provider.DataProviderString = config.Settings["SystemSettings"]["DataProviderString"].Value;
@@ -770,6 +824,8 @@ namespace HistorianAdapters
         // Static Methods
 
         // Apply historian configuration optimizations at start-up
+        // ReSharper disable once UnusedMember.Local
+        // ReSharper disable once UnusedParameter.Local
         private static void OptimizeLocalHistorianSettings(IDbConnection connection, Type adapterType, string nodeIDQueryString, string arguments, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException)
         {
             // Make sure setting exists to allow user to by-pass local historian optimizations at startup
@@ -821,7 +877,7 @@ namespace HistorianAdapters
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} meta-data file including its path.", acronym));
                         fileName = settings["FileName"].Value;
 
-                        if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, true) == 0)
+                        if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             if (!File.Exists(defaultFileName))
                                 File.Move(fileName, defaultFileName);
@@ -842,7 +898,7 @@ namespace HistorianAdapters
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} state file including its path.", acronym));
                         fileName = settings["FileName"].Value;
 
-                        if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, true) == 0)
+                        if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             if (!File.Exists(defaultFileName))
                                 File.Move(fileName, defaultFileName);
@@ -863,7 +919,7 @@ namespace HistorianAdapters
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} intercom file including its path.", acronym));
                         fileName = settings["FileName"].Value;
 
-                        if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, true) == 0)
+                        if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             if (!File.Exists(defaultFileName))
                                 File.Move(fileName, defaultFileName);
@@ -880,7 +936,7 @@ namespace HistorianAdapters
                         settings.Add("FileName", defaultFileName, string.Format("Name of the {0} working archive file including its path.", acronym));
                         fileName = settings["FileName"].Value;
 
-                        if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, true) == 0)
+                        if (string.Compare(FilePath.GetDirectoryName(fileName), currentPath, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             if (!File.Exists(defaultFileName))
                                 File.Move(fileName, defaultFileName);
@@ -890,7 +946,7 @@ namespace HistorianAdapters
                         // Move any historical files in executable folder to the archive folder...
                         string[] archiveFileNames = FilePath.GetFileList(string.Format("{0}\\{1}_archive*.d", FilePath.GetAbsolutePath(""), acronym));
 
-                        if (archiveFileNames != null && archiveFileNames.Length > 0)
+                        if ((object)archiveFileNames != null && archiveFileNames.Length > 0)
                         {
                             statusMessage("LocalOutputAdapter", new EventArgs<string>("Relocating existing historical data to \"Archive\" folder..."));
 
@@ -911,7 +967,7 @@ namespace HistorianAdapters
                             match = readers.FirstOrDefault(inputRow =>
                             {
                                 if (inputRow["ConnectionString"].ToNonNullString().ParseKeyValuePairs().TryGetValue("instanceName", out instanceName))
-                                    return string.Compare(instanceName, acronym, true) == 0;
+                                    return string.Compare(instanceName, acronym, StringComparison.OrdinalIgnoreCase) == 0;
 
                                 return false;
                             });
@@ -958,34 +1014,34 @@ namespace HistorianAdapters
                 {
                     name = info.Name;
 
-                    if (name.EndsWith("MetadataFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("MetadataFile"))) < 0)
+                    if (name.EndsWith("MetadataFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("MetadataFile", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("StateFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("StateFile"))) < 0)
+                    if (name.EndsWith("StateFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("StateFile", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("IntercomFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("IntercomFile"))) < 0)
+                    if (name.EndsWith("IntercomFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("IntercomFile", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("ArchiveFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("ArchiveFile"))) < 0)
+                    if (name.EndsWith("ArchiveFile") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("ArchiveFile", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("AdoMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("AdoMetadataProvider"))) < 0)
+                    if (name.EndsWith("AdoMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("AdoMetadataProvider", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("OleDbMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("OleDbMetadataProvider"))) < 0)
+                    if (name.EndsWith("OleDbMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("OleDbMetadataProvider", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("RestWebServiceMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("RestWebServiceMetadataProvider"))) < 0)
+                    if (name.EndsWith("RestWebServiceMetadataProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("RestWebServiceMetadataProvider", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("MetadataService") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("MetadataService"))) < 0)
+                    if (name.EndsWith("MetadataService") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("MetadataService", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("TimeSeriesDataService") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("TimeSeriesDataService"))) < 0)
+                    if (name.EndsWith("TimeSeriesDataService") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("TimeSeriesDataService", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
 
-                    if (name.EndsWith("HadoopReplicationProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("HadoopReplicationProvider"))) < 0)
+                    if (name.EndsWith("HadoopReplicationProvider") && validHistorians.BinarySearch(name.Substring(0, name.IndexOf("HadoopReplicationProvider", StringComparison.OrdinalIgnoreCase))) < 0)
                         categoriesToRemove.Add(name);
                 }
 
@@ -1005,103 +1061,103 @@ namespace HistorianAdapters
             }
         }
 
-        /// <summary>
-        /// Creates a parameterized query string for the underlying database type 
-        /// based on the given format string and the parameter names.
-        /// </summary>
-        /// <param name="adapterType">The adapter type used to determine the underlying database type.</param>
-        /// <param name="format">A composite format string.</param>
-        /// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
-        /// <returns>A parameterized query string based on the given format and parameter names.</returns>
-        private static string ParameterizedQueryString(Type adapterType, string format, params string[] parameterNames)
-        {
-            bool oracle = adapterType.Name == "OracleDataAdapter";
-            char paramChar = oracle ? ':' : '@';
-            object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
-            return string.Format(format, parameters);
-        }
+        ///// <summary>
+        ///// Creates a parameterized query string for the underlying database type 
+        ///// based on the given format string and the parameter names.
+        ///// </summary>
+        ///// <param name="adapterType">The adapter type used to determine the underlying database type.</param>
+        ///// <param name="format">A composite format string.</param>
+        ///// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
+        ///// <returns>A parameterized query string based on the given format and parameter names.</returns>
+        //private static string ParameterizedQueryString(Type adapterType, string format, params string[] parameterNames)
+        //{
+        //    bool oracle = adapterType.Name == "OracleDataAdapter";
+        //    char paramChar = oracle ? ':' : '@';
+        //    object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
+        //    return string.Format(format, parameters);
+        //}
 
-        // Create an http namespace reservation
-        private static void AddNamespaceReservation(Uri serviceUri)
-        {
-            OperatingSystem OS = Environment.OSVersion;
-            ProcessStartInfo psi = null;
-            string parameters = null;
+        //// Create an http namespace reservation
+        //private static void AddNamespaceReservation(Uri serviceUri)
+        //{
+        //    OperatingSystem OS = Environment.OSVersion;
+        //    ProcessStartInfo psi = null;
+        //    string parameters = null;
 
-            if (OS.Platform == PlatformID.Win32NT)
-            {
-                if (OS.Version.Major > 5)
-                {
-                    // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
-                    string everyoneUser = new SecurityIdentifier("S-1-1-0").Translate(typeof(NTAccount)).ToString();
-                    parameters = string.Format(@"http add urlacl url={0}://+:{1}{2} user=\{3}", serviceUri.Scheme, serviceUri.Port, serviceUri.AbsolutePath, everyoneUser);
-                    psi = new ProcessStartInfo("netsh", parameters);
-                }
-                else
-                {
-                    // Attempt to use "httpcfg" for older Windows versions...
-                    parameters = string.Format(@"set urlacl /u {0}://*:{1}{2}/ /a D:(A;;GX;;;S-1-1-0)", serviceUri.Scheme, serviceUri.Port, serviceUri.AbsolutePath);
-                    psi = new ProcessStartInfo("httpcfg", parameters);
-                }
-            }
+        //    if (OS.Platform == PlatformID.Win32NT)
+        //    {
+        //        if (OS.Version.Major > 5)
+        //        {
+        //            // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
+        //            string everyoneUser = new SecurityIdentifier("S-1-1-0").Translate(typeof(NTAccount)).ToString();
+        //            parameters = string.Format(@"http add urlacl url={0}://+:{1}{2} user=\{3}", serviceUri.Scheme, serviceUri.Port, serviceUri.AbsolutePath, everyoneUser);
+        //            psi = new ProcessStartInfo("netsh", parameters);
+        //        }
+        //        else
+        //        {
+        //            // Attempt to use "httpcfg" for older Windows versions...
+        //            parameters = string.Format(@"set urlacl /u {0}://*:{1}{2}/ /a D:(A;;GX;;;S-1-1-0)", serviceUri.Scheme, serviceUri.Port, serviceUri.AbsolutePath);
+        //            psi = new ProcessStartInfo("httpcfg", parameters);
+        //        }
+        //    }
 
-            if (psi != null)
-            {
-                psi.Verb = "runas";
-                psi.CreateNoWindow = true;
-                psi.WindowStyle = ProcessWindowStyle.Hidden;
-                psi.UseShellExecute = false;
-                psi.Arguments = parameters;
+        //    if (psi != null)
+        //    {
+        //        psi.Verb = "runas";
+        //        psi.CreateNoWindow = true;
+        //        psi.WindowStyle = ProcessWindowStyle.Hidden;
+        //        psi.UseShellExecute = false;
+        //        psi.Arguments = parameters;
 
-                using (Process shell = new Process())
-                {
-                    shell.StartInfo = psi;
-                    shell.Start();
-                    if (!shell.WaitForExit(5000))
-                        shell.Kill();
-                }
-            }
-        }
+        //        using (Process shell = new Process())
+        //        {
+        //            shell.StartInfo = psi;
+        //            shell.Start();
+        //            if (!shell.WaitForExit(5000))
+        //                shell.Kill();
+        //        }
+        //    }
+        //}
 
-        private static void RemoveNamespaceReservation(Uri serviceUri)
-        {
-            OperatingSystem OS = Environment.OSVersion;
-            ProcessStartInfo psi = null;
-            string parameters = null;
+        //private static void RemoveNamespaceReservation(Uri serviceUri)
+        //{
+        //    OperatingSystem OS = Environment.OSVersion;
+        //    ProcessStartInfo psi = null;
+        //    string parameters = null;
 
-            if (OS.Platform == PlatformID.Win32NT)
-            {
-                if (OS.Version.Major > 5)
-                {
-                    // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
-                    parameters = string.Format(@"http delete urlacl url={0}://+:{1}{2}", serviceUri.Scheme, serviceUri.Port, serviceUri.AbsolutePath);
-                    psi = new ProcessStartInfo("netsh", parameters);
-                }
-                else
-                {
-                    // Attempt to use "httpcfg" for older Windows versions...
-                    parameters = string.Format(@"delete urlacl /u {0}://*:{1}{2}/", serviceUri.Scheme, serviceUri.Port, serviceUri.AbsolutePath);
-                    psi = new ProcessStartInfo("httpcfg", parameters);
-                }
-            }
+        //    if (OS.Platform == PlatformID.Win32NT)
+        //    {
+        //        if (OS.Version.Major > 5)
+        //        {
+        //            // Vista, Windows 2008, Window 7, etc use "netsh" for reservations
+        //            parameters = string.Format(@"http delete urlacl url={0}://+:{1}{2}", serviceUri.Scheme, serviceUri.Port, serviceUri.AbsolutePath);
+        //            psi = new ProcessStartInfo("netsh", parameters);
+        //        }
+        //        else
+        //        {
+        //            // Attempt to use "httpcfg" for older Windows versions...
+        //            parameters = string.Format(@"delete urlacl /u {0}://*:{1}{2}/", serviceUri.Scheme, serviceUri.Port, serviceUri.AbsolutePath);
+        //            psi = new ProcessStartInfo("httpcfg", parameters);
+        //        }
+        //    }
 
-            if (psi != null)
-            {
-                psi.Verb = "runas";
-                psi.CreateNoWindow = true;
-                psi.WindowStyle = ProcessWindowStyle.Hidden;
-                psi.UseShellExecute = false;
-                psi.Arguments = parameters;
+        //    if (psi != null)
+        //    {
+        //        psi.Verb = "runas";
+        //        psi.CreateNoWindow = true;
+        //        psi.WindowStyle = ProcessWindowStyle.Hidden;
+        //        psi.UseShellExecute = false;
+        //        psi.Arguments = parameters;
 
-                using (Process shell = new Process())
-                {
-                    shell.StartInfo = psi;
-                    shell.Start();
-                    if (!shell.WaitForExit(5000))
-                        shell.Kill();
-                }
-            }
-        }
+        //        using (Process shell = new Process())
+        //        {
+        //            shell.StartInfo = psi;
+        //            shell.Start();
+        //            if (!shell.WaitForExit(5000))
+        //                shell.Kill();
+        //        }
+        //    }
+        //}
 
         #endregion
     }

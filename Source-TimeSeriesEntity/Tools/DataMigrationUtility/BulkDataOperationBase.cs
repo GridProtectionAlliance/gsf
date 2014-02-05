@@ -29,198 +29,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using GSF;
 
-namespace Database
+namespace DataMigrationUtility
 {
-    #region [ TableProgressEventHandler ]
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TableProgressEventHandler"/> class.
-    /// </summary>
-    /// <typeparam name="T1"></typeparam>
-    /// <typeparam name="T2"></typeparam>
-    /// <typeparam name="T3"></typeparam>
-    /// <typeparam name="T4"></typeparam>
-    public class TableProgressEventHandler<T1, T2, T3, T4> : EventArgs
-    {
-        #region [ Members ]
-
-        //Variables declaration
-        public string TableName;
-        public bool Executed;
-        public int CurrentTable;
-        public int TotalTables;
-
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public TableProgressEventHandler()
-            : this(default(string), default(bool), default(int), default(int))
-        {
-        }
-
-        /// <summary>
-        /// Constructor with parameters
-        /// </summary>
-        /// <param name="tableName">Table is currently in progress for migration</param>
-        /// <param name="executed">Status of table execution</param>
-        /// <param name="currentTable">Current index of table count</param>
-        /// <param name="totalTables">Total tables need to be processed</param>
-        public TableProgressEventHandler(string tableName, bool executed, int currentTable, int totalTables)
-        {
-            TableName = tableName;
-            Executed = executed;
-            CurrentTable = currentTable;
-            TotalTables = totalTables;
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region  [ RowProgressEventHandler ]
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RowProgressEventHandler"/> class.
-    /// </summary>
-    /// <typeparam name="T1"></typeparam>
-    /// <typeparam name="T2"></typeparam>
-    /// <typeparam name="T3"></typeparam>
-    public class RowProgressEventHandler<T1, T2, T3> : EventArgs
-    {
-        #region [ Members ]
-
-        //Variables Declaration
-        public string TableName;
-        public int CurrentRow;
-        public int TotalRows;
-
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public RowProgressEventHandler()
-            : this(default(string), default(int), default(int))
-        {
-        }
-
-        /// <summary>
-        /// Constructor with parameters
-        /// </summary>
-        /// <param name="tableName">Table name for which rows are in progress</param>
-        /// <param name="currentRow">Current index of row</param>
-        /// <param name="totalRows">Total rows in table</param>
-        public RowProgressEventHandler(string tableName, int currentRow, int totalRows)
-        {
-            TableName = tableName;
-            CurrentRow = currentRow;
-            TotalRows = totalRows;
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region [ OverallProgressEventHandler ]
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="OverallProgressEventHandler"/> class.
-    /// </summary>
-    /// <typeparam name="T1"></typeparam>
-    /// <typeparam name="T2"></typeparam>
-    public class OverallProgressEventHandler<T1, T2> : EventArgs
-    {
-        #region [ Members ]
-
-        //Variables Declaration
-        public int Current;
-        public int Total;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public OverallProgressEventHandler()
-            : this(default(int), default(int))
-        {
-        }
-
-        /// <summary>
-        /// Constructor with parameters
-        /// </summary>
-        /// <param name="current">Currenct Index of overall progress</param>
-        /// <param name="total">Total Table of overall progress</param>
-        public OverallProgressEventHandler(int current, int total)
-        {
-            Current = current;
-            Total = total;
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region [ OverallProgressEventHandler ]
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SqlFailureEventHandler"/> class.
-    /// </summary>
-    /// <typeparam name="T1"></typeparam>
-    /// <typeparam name="T2"></typeparam>
-    public class SqlFailureEventHandler<T1, T2> : EventArgs
-    {
-        #region [ Members ]
-
-        //Variables Declaration
-        public string Sql;
-        public Exception Ex;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public SqlFailureEventHandler()
-            : this(default(string), default(Exception))
-        {
-        }
-
-        /// <summary>
-        /// Constructor with parameters
-        /// </summary>
-        /// <param name="sql">sql statement that executed</param>
-        /// <param name="ex">Exception occured while executing a sql statement</param>
-        public SqlFailureEventHandler(string sql, Exception ex)
-        {
-            Sql = sql;
-            Ex = ex;
-        }
-
-        #endregion
-
-    }
-
-    #endregion
-
-
     #region [ IBulkDataOperation ]
 
     /// <summary>
@@ -231,22 +43,22 @@ namespace Database
         /// <summary>
         /// Get the status information of table progress
         /// </summary>
-        event EventHandler<TableProgressEventHandler<string, bool, int, int>> TableProgress;
+        event EventHandler<EventArgs<string, bool, int, int>> TableProgress;
 
         /// <summary>
         /// Get the information of Row progress of table
         /// </summary>
-        event EventHandler<RowProgressEventHandler<string, int, int>> RowProgress;
+        event EventHandler<EventArgs<string, int, int>> RowProgress;
 
         /// <summary>
         /// Get the information of overall progress of Migration utility
         /// </summary>
-        event EventHandler<OverallProgressEventHandler<int, int>> OverallProgress;
+        event EventHandler<EventArgs<int, int>> OverallProgress;
 
         /// <summary>
-        /// Get the information of exception while processing sql statement
+        /// Get the information of exception while processing SQL statement
         /// </summary>
-        event EventHandler<SqlFailureEventHandler<string, Exception>> SqlFailure;
+        event EventHandler<EventArgs<string, Exception>> SQLFailure;
 
         /// <summary>
         /// Get the work table information
@@ -284,7 +96,7 @@ namespace Database
         }
 
         /// <summary>
-        /// Get or set time out for sql statement
+        /// Get or set time out for SQL statement
         /// </summary>
         int Timeout
         {
@@ -312,43 +124,41 @@ namespace Database
     public abstract class BulkDataOperationBase : IBulkDataOperation, IDisposable
     {
 
-
         #region [ Members ]
 
         // Fields - Variables Declaration
-        protected ISite ComponentSite;
-        protected Schema schFrom;
-        protected Schema schTo;
+        protected Schema m_fromSchema;
+        protected Schema m_toSchema;
 
         /// <summary>
-        /// Implemetor can use this variable to track overall progress 
+        /// Implementer can use this variable to track overall progress 
         /// </summary>
-        protected long intOverallProgress;
+        protected long m_overallProgress;
 
         /// <summary>
         /// This is initialized to the overall total number of records to be processed 
         /// </summary>
-        protected long intOverallTotal;
+        protected long m_overallTotal;
 
         /// <summary>
         /// Defines interval for reporting row progress 
         /// </summary>
-        private int intRowReportInterval;
+        private int m_rowReportInterval;
 
         /// <summary>
-        /// Timeout value for Sql operation 
+        /// Timeout value for SQL operation 
         /// </summary>
-        protected int intTimeout;
+        protected int m_timeout;
 
         /// <summary>
         /// Tables value 
         /// </summary>
-        protected Tables colTables;
+        protected Tables m_tableCollection;
 
         /// <summary>
-        /// Flag to check Referencial Integrity
+        /// Flag to check referential integrity
         /// </summary>
-        protected bool flgUseFromSchemaRI;
+        protected bool m_useFromSchemaRI;
 
         /// <summary>
         /// List of exclude tables
@@ -356,165 +166,152 @@ namespace Database
         private readonly List<string> m_excludedTables = new List<string>();
 
         // Events
-        public event EventHandler<TableProgressEventHandler<string, bool, int, int>> TableProgress;
-        public event EventHandler<RowProgressEventHandler<string, int, int>> RowProgress; //.RowProgress;
-        public event EventHandler<OverallProgressEventHandler<int, int>> OverallProgress;
-        public event EventHandler<SqlFailureEventHandler<string, Exception>> SqlFailure;
-        // Delegates
-        public delegate void TableProgressEventHandler(string TableName, bool Executed, int CurrentTable, int TotalTables);
-        public delegate void RowProgressEventHandler(string TableName, int CurrentRow, int TotalRows);
-        public delegate void OverallProgressEventHandler(int Current, int Total);
-        public delegate void SqlFailureEventHandler(string Sql, Exception ex);
 
+        /// <summary>
+        /// Get the status information of table progress
+        /// </summary>
+        public event EventHandler<EventArgs<string, bool, int, int>> TableProgress;
+
+        /// <summary>
+        /// Get the information of Row progress of table
+        /// </summary>
+        public event EventHandler<EventArgs<string, int, int>> RowProgress;
+
+        /// <summary>
+        /// Get the information of overall progress of Migration utility
+        /// </summary>
+        public event EventHandler<EventArgs<int, int>> OverallProgress;
+
+        /// <summary>
+        /// Get the information of exception while processing SQL statement
+        /// </summary>
+        public event EventHandler<EventArgs<string, Exception>> SQLFailure;
 
         #endregion
-
-
 
         #region [ Constructors ]
 
         /// <summary>
         /// Default Constructor
         /// </summary>
-        public BulkDataOperationBase()
+        protected BulkDataOperationBase()
         {
-            intRowReportInterval = 5;
-            intTimeout = 120;
-            flgUseFromSchemaRI = true;
-
+            m_rowReportInterval = 5;
+            m_timeout = 120;
+            m_useFromSchemaRI = true;
         }
 
         /// <summary>
         /// Constructor with parameters
         /// </summary>
-        /// <param name="FromConnectString">Source database connection string</param>
-        /// <param name="ToConnectString">Destination database connection string</param>
-        public BulkDataOperationBase(string FromConnectString, string ToConnectString)
+        /// <param name="fromConnectString">Source database connection string</param>
+        /// <param name="toConnectString">Destination database connection string</param>
+        protected BulkDataOperationBase(string fromConnectString, string toConnectString)
             : this()
         {
-            schFrom = new Schema(FromConnectString, TableType.Table, false, false);
-            schTo = new Schema(ToConnectString, TableType.Table, false, false);
-
+            m_fromSchema = new Schema(fromConnectString, TableType.Table, false, false);
+            m_toSchema = new Schema(toConnectString, TableType.Table, false, false);
         }
 
         /// <summary>
         /// Constructor with parameters
         /// </summary>
-        /// <param name="FromSchema">Source Schema</param>
-        /// <param name="ToSchema">Destination Schema</param>
-        public BulkDataOperationBase(Schema FromSchema, Schema ToSchema)
+        /// <param name="fromSchema">Source Schema</param>
+        /// <param name="toSchema">Destination Schema</param>
+        protected BulkDataOperationBase(Schema fromSchema, Schema toSchema)
             : this()
         {
-            schFrom = FromSchema;
-            schTo = ToSchema;
-
+            m_fromSchema = fromSchema;
+            m_toSchema = toSchema;
         }
 
         #endregion
 
-        //protected override void Finalize()
-        //{
-        //    Dispose(true);
-
-        //}
-
         #region [ Properties ]
 
         /// <summary>
-        /// Get or Set Source schema
+        /// Get or set Source schema
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Source schema definition.")]
         public virtual Schema FromSchema
         {
             get
             {
-                return schFrom;
+                return m_fromSchema;
             }
             set
             {
-                schFrom = value;
-                if ((ComponentSite != null))
-                    if (ComponentSite.DesignMode)
-                        schFrom.ImmediateClose = false;
+                m_fromSchema = value;
             }
         }
 
         /// <summary>
-        /// Get or Set destination schema
+        /// Get or set destination schema
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Destination schema definition.")]
         public virtual Schema ToSchema
         {
             get
             {
-                return schTo;
+                return m_toSchema;
             }
             set
             {
-                schTo = value;
-                if ((ComponentSite != null))
-                    if (ComponentSite.DesignMode)
-                        schTo.ImmediateClose = false;
+                m_toSchema = value;
             }
         }
 
         /// <summary>
-        /// Get or Set number of rows to process before raising progress events
+        /// Get or set number of rows to process before raising progress events
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Number of rows to process before raising progress events."), DefaultValue(5)]
         public virtual int RowReportInterval
         {
             get
             {
-                return intRowReportInterval;
+                return m_rowReportInterval;
             }
             set
             {
-                intRowReportInterval = value;
+                m_rowReportInterval = value;
             }
         }
 
         /// <summary>
-        /// Get or Set Maximum number of seconds to wait when processing a Sql command before timing out.
+        /// Get or set Maximum number of seconds to wait when processing a SQL command before timing out.
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Maximum number of seconds to wait when processing a Sql command before timing out."), DefaultValue(120)]
         public virtual int Timeout
         {
             get
             {
-                return intTimeout;
+                return m_timeout;
             }
             set
             {
-                intTimeout = value;
+                m_timeout = value;
             }
         }
 
         /// <summary>
-        /// Get or Set - use referential integrity information from source/to destination database during data processing
+        /// Get or set - use referential integrity information from source/to destination database during data processing
         /// </summary>
-        [Browsable(true), Category("Configuration"), Description("Set to True to use referential integrity information from source database during data processing, set to False to use destination database."), DefaultValue(true)]
         public virtual bool UseFromSchemaReferentialIntegrity
         {
             get
             {
-                return flgUseFromSchemaRI;
+                return m_useFromSchemaRI;
             }
             set
             {
-                flgUseFromSchemaRI = value;
+                m_useFromSchemaRI = value;
             }
         }
 
         /// <summary>
         /// These are the tables that were found in both source and dest to be used for data operation...
         /// </summary>
-        [Browsable(false)]
         public virtual Tables WorkTables
         {
             get
             {
-                return colTables;
+                return m_tableCollection;
             }
         }
 
@@ -545,19 +342,22 @@ namespace Database
         }
 
         /// <summary>
-        /// Close source and destinaction schema
+        /// Close source and destination schema
         /// </summary>
         public virtual void Close()
         {
-            if ((schFrom != null))
-                schFrom.Close();
-            if ((schTo != null))
-                schTo.Close();
-            schFrom = null;
-            schTo = null;
-            GC.SuppressFinalize(this);
+            if ((object)m_fromSchema != null)
+                m_fromSchema.Close();
 
+            if ((object)m_toSchema != null)
+                m_toSchema.Close();
+
+            m_fromSchema = null;
+            m_toSchema = null;
+
+            GC.SuppressFinalize(this);
         }
+
         /// <summary>
         /// Dispose
         /// </summary>
@@ -571,39 +371,36 @@ namespace Database
         /// </summary>
         public virtual void Analyze()
         {
-            //Table tbl;// = default(Table);
-            Table tblLookup;// = default(Table);
+            Table lookupTable;
 
-            schFrom.ImmediateClose = false;
-            schFrom.Analyze();
+            m_fromSchema.ImmediateClose = false;
+            m_fromSchema.Analyze();
 
-            schTo.ImmediateClose = false;
-            schTo.Analyze();
+            m_toSchema.ImmediateClose = false;
+            m_toSchema.Analyze();
 
             m_excludedTables.Sort();
 
-            colTables = new Tables(schFrom);
+            m_tableCollection = new Tables(m_fromSchema);
 
             // We preprocess which tables we are going to access for data operation...
-            foreach (Table tbl in schFrom.Tables)
+            foreach (Table table in m_fromSchema.Tables)
             {
                 // Bypass excluded tables
-                if (m_excludedTables.BinarySearch(tbl.MapName) < 0)
+                if (m_excludedTables.BinarySearch(table.MapName) < 0)
                 {
-                    // Lookup table name in destination datasource by map name
-                    tblLookup = schTo.Tables.FindByMapName(tbl.MapName);
+                    // Lookup table name in destination data source by map name
+                    lookupTable = m_toSchema.Tables.FindByMapName(table.MapName);
 
-                    if ((tblLookup != null))
+                    if ((object)lookupTable != null)
                     {
-                        intOverallTotal += tbl.RowCount;
-
                         // If user requested to use referential integrity of destination tables then
                         // we use process priority of those tables instead...
-                        if (!flgUseFromSchemaRI)
-                            tbl.Priority = tblLookup.Priority;
+                        if (!m_useFromSchemaRI)
+                            table.Priority = lookupTable.Priority;
 
-                        tbl.Process = true;
-                        colTables.Add(tbl);
+                        table.Process = true;
+                        m_tableCollection.Add(table);
                     }
                 }
             }
@@ -622,30 +419,22 @@ namespace Database
         /// <param name="Executed">Status of data processing on table</param>
         /// <param name="CurrentTable">current table index in data processing</param>
         /// <param name="TotalTables">total table count in data processing</param>
-        protected virtual void RaiseEvent_TableProgress(string TableName, bool Executed, int CurrentTable, int TotalTables)
+        protected virtual void OnTableProgress(string TableName, bool Executed, int CurrentTable, int TotalTables)
         {
-            if (TableProgress != null)
-            {
-                TableProgress(this, new TableProgressEventHandler<string, bool, int, int>(TableName, Executed, CurrentTable, TotalTables));
-                //TableProgress(this, new TableProgressEventHandler(this,<TableName, Executed, CurrentTable, TotalTables>)); //(eventhandler(new EventArgs{TableName, Executed, CurrentTable, TotalTables});
-            }
-
+            if ((object)TableProgress != null)
+                TableProgress(this, new EventArgs<string, bool, int, int>(TableName, Executed, CurrentTable, TotalTables));
         }
 
         /// <summary>
-        /// Raise an event while chage row in data processing
+        /// Raise an event while change row in data processing
         /// </summary>
         /// <param name="TableName">Table name in data processing</param>
         /// <param name="CurrentRow">current row index in data processing</param>
         /// <param name="TotalRows">total rows needs to be process in data processing</param>
-        protected virtual void RaiseEvent_RowProgress(string TableName, int CurrentRow, int TotalRows)
+        protected virtual void OnRowProgress(string TableName, int CurrentRow, int TotalRows)
         {
-            if (RowProgress != null)
-            {
-                RowProgress(this, new RowProgressEventHandler<string, int, int>(TableName, CurrentRow, TotalRows));
-                //RowProgress(TableName, CurrentRow, TotalRows);
-            }
-
+            if ((object)RowProgress != null)
+                RowProgress(this, new EventArgs<string, int, int>(TableName, CurrentRow, TotalRows));
         }
 
         /// <summary>
@@ -653,32 +442,23 @@ namespace Database
         /// </summary>
         /// <param name="Current">Current index of tables in data processing</param>
         /// <param name="Total">Total table count in data processing</param>
-        protected virtual void RaiseEvent_OverallProgress(int Current, int Total)
+        protected virtual void OnOverallProgress(int Current, int Total)
         {
-            if (OverallProgress != null)
-            {
-                OverallProgress(this, new OverallProgressEventHandler<int, int>(Current, Total));
-                //OverallProgress(Current, Total);
-            }
-
+            if ((object)OverallProgress != null)
+                OverallProgress(this, new EventArgs<int, int>(Current, Total));
         }
 
         /// <summary>
-        /// Raise an event if sql statement fail
+        /// Raise an event if SQL statement fail
         /// </summary>
-        /// <param name="Sql">sql statement information</param>
+        /// <param name="SQL">SQL statement information</param>
         /// <param name="ex">exception information</param>
-        protected virtual void RaiseEvent_SqlFailure(string Sql, Exception ex)
+        protected virtual void OnSQLFailure(string SQL, Exception ex)
         {
-            if (SqlFailure != null)
-            {
-                SqlFailure(this, new SqlFailureEventHandler<string, Exception>(Sql, ex));
-                //SqlFailure(Sql, ex);
-            }
-
+            if ((object)SQLFailure != null)
+                SQLFailure(this, new EventArgs<string, Exception>(SQL, ex));
         }
 
         #endregion
     }
-
 }

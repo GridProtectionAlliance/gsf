@@ -209,7 +209,7 @@ namespace NoInetFixUtil
 
             StatusTextBox.AppendText(string.Format("{0} automatic root certificate list update through Windows Update... ", RootCertificateListCheckBox.Checked ? "Disabling" : "Enabling"));
 
-            using (RegistryKey authRootKey = Registry.LocalMachine.OpenSubKey(@"Software\Policies\Microsoft\SystemCertificates\AuthRoot", true))
+            using (RegistryKey authRootKey = Registry.LocalMachine.CreateSubKey(@"Software\Policies\Microsoft\SystemCertificates\AuthRoot"))
             {
                 if ((object)authRootKey != null)
                 {

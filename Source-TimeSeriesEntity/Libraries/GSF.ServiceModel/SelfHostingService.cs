@@ -210,7 +210,7 @@ namespace GSF.ServiceModel
 
         // Fields
         private string m_endpoints;
-        private string m_contract;
+        private string m_contractInterface;
         private bool m_singleton;
         private string m_securityPolicy;
         private bool m_publishMetadata;
@@ -231,8 +231,9 @@ namespace GSF.ServiceModel
         /// </summary>
         protected SelfHostingService()
         {
-            Type type = this.GetType();
-            m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.ToNonNullString().Split(',')[1].Trim();
+            Type type = GetType();
+            m_endpoints = string.Empty;
+            m_contractInterface = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.ToNonNullString().Split(',')[1].Trim();
             m_allowCrossDomainAccess = false;
             m_allowedDomainList = "*";
             m_serviceEnabled = true;
@@ -257,7 +258,7 @@ namespace GSF.ServiceModel
         {
             get
             {
-                return (m_serviceHost != null && m_serviceHost.State == CommunicationState.Opened);
+                return ((object)m_serviceHost != null && m_serviceHost.State == CommunicationState.Opened);
             }
             set
             {
@@ -300,18 +301,18 @@ namespace GSF.ServiceModel
         /// Gets or sets the <see cref="Type.FullName"/> of the contract interface implemented by the web service.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        public string Contract
+        public string ContractInterface
         {
             get
             {
-                return m_contract;
+                return m_contractInterface;
             }
             set
             {
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException("value");
 
-                m_contract = value;
+                m_contractInterface = value;
             }
         }
 
@@ -397,7 +398,7 @@ namespace GSF.ServiceModel
         /// <summary>
         /// Gets or sets a boolean value that indicates whether Windows Authentication is to be enabled.
         /// </summary>
-        public bool WindowsAuthentication 
+        public bool WindowsAuthentication
         {
             get
             {
@@ -412,7 +413,7 @@ namespace GSF.ServiceModel
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the web service is to be enabled at startup.
         /// </summary>
-        public bool ServiceEnabled 
+        public bool ServiceEnabled
         {
             get
             {
@@ -474,7 +475,7 @@ namespace GSF.ServiceModel
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
 
                 settings["Endpoints", true].Update(m_endpoints);
-                settings["Contract", true].Update(m_contract);
+                settings["Contract", true].Update(m_contractInterface);
                 settings["Singleton", true].Update(m_singleton);
                 settings["SecurityPolicy", true].Update(m_securityPolicy);
                 settings["PublishMetadata", true].Update(m_publishMetadata);
@@ -499,7 +500,7 @@ namespace GSF.ServiceModel
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
 
                 settings.Add("Endpoints", m_endpoints, "Semicolon delimited list of URIs where the web service can be accessed.");
-                settings.Add("Contract", m_contract, "Assembly qualified name of the contract interface implemented by the web service.");
+                settings.Add("Contract", m_contractInterface, "Assembly qualified name of the contract interface implemented by the web service.");
                 settings.Add("Singleton", m_singleton, "True if the web service is singleton; otherwise False.");
                 settings.Add("SecurityPolicy", m_securityPolicy, "Assembly qualified name of the authorization policy to be used for securing the web service.");
                 settings.Add("PublishMetadata", m_publishMetadata, "True if the web service metadata is to be published at all the endpoints; otherwise False.");
@@ -508,7 +509,7 @@ namespace GSF.ServiceModel
                 settings.Add("Enabled", "True", "Determines if web service should be enabled at startup.");
 
                 Endpoints = settings["Endpoints"].ValueAs(m_endpoints);
-                Contract = settings["Contract"].ValueAs(m_contract);
+                ContractInterface = settings["Contract"].ValueAs(m_contractInterface);
                 Singleton = settings["Singleton"].ValueAs(m_singleton);
                 SecurityPolicy = settings["SecurityPolicy"].ValueAs(m_securityPolicy);
                 PublishMetadata = settings["PublishMetadata"].ValueAs(m_publishMetadata);
@@ -529,14 +530,13 @@ namespace GSF.ServiceModel
         {
             int randomPort = Random.Int32Between(1024, 65535);
             IPEndPoint[] tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+
             while (true)
             {
-                if (tcpListeners.FirstOrDefault(ep => ep.Port == randomPort) != null)
-                    // Port in use - pick another one.
-                    randomPort++;
+                if ((object)tcpListeners.FirstOrDefault(ep => ep.Port == randomPort) != null)
+                    randomPort++;       // Port in use - pick another one.
                 else
-                    // Port is not in use - use this.
-                    return randomPort;
+                    return randomPort;  // Port is not in use - use this.
             }
         }
 
@@ -555,6 +555,7 @@ namespace GSF.ServiceModel
             {
                 // Use endpoint host information including port number for service address.
                 Match match = Regex.Match(endpoint, regex, RegexOptions.IgnoreCase);
+
                 if (match.Success && match.Groups["host"].Success)
                     return string.Format("http://{0}", match.Groups["host"]);
             }
@@ -583,7 +584,7 @@ namespace GSF.ServiceModel
                 {
                     ServiceMetadataBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceMetadataBehavior>();
 
-                    if (serviceBehavior == null)
+                    if ((object)serviceBehavior == null)
                     {
                         serviceBehavior = new ServiceMetadataBehavior();
                         m_serviceHost.Description.Behaviors.Add(serviceBehavior);
@@ -597,7 +598,7 @@ namespace GSF.ServiceModel
                 {
                     ServiceAuthorizationBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
 
-                    if (serviceBehavior == null)
+                    if ((object)serviceBehavior == null)
                     {
                         serviceBehavior = new ServiceAuthorizationBehavior();
                         m_serviceHost.Description.Behaviors.Add(serviceBehavior);
@@ -605,7 +606,13 @@ namespace GSF.ServiceModel
 
                     serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
                     List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
-                    policies.Add((IAuthorizationPolicy)Activator.CreateInstance(Type.GetType(m_securityPolicy)));
+
+                    Type securityPolicyType = Type.GetType(m_securityPolicy);
+
+                    if ((object)securityPolicyType == null)
+                        throw new NullReferenceException(string.Format("Failed get security policy type '{0}' for self-hosting service - check config file settings.", m_securityPolicy.ToNonNullNorWhiteSpace("[undefined]")));
+
+                    policies.Add((IAuthorizationPolicy)Activator.CreateInstance(securityPolicyType));
                     serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
                 }
 
@@ -616,7 +623,7 @@ namespace GSF.ServiceModel
                 ServiceEndpoint serviceEndpoint;
                 serviceAddresses = m_endpoints.Split(';');
 
-                // Enable Windows Authentication if authroization policy is configured.
+                // Enable Windows Authentication if authorization policy is configured.
                 if (!string.IsNullOrEmpty(m_securityPolicy))
                     m_windowsAuthentication = true;
 
@@ -624,32 +631,36 @@ namespace GSF.ServiceModel
                 {
                     serviceAddress = serviceAddresses[i].Trim();
                     serviceBinding = Service.CreateServiceBinding(ref serviceAddress, m_windowsAuthentication);
-                    if (serviceBinding != null)
+
+                    if ((object)serviceBinding == null)
+                        continue;
+
+                    Type contractInterfaceType = Type.GetType(m_contractInterface);
+
+                    if ((object)contractInterfaceType == null)
+                        throw new NullReferenceException(string.Format("Failed to get contract interface type '{0}' for self-hosting service - check config file settings.", m_contractInterface.ToNonNullNorWhiteSpace("[undefined]")));
+
+                    serviceEndpoint = m_serviceHost.AddServiceEndpoint(contractInterfaceType, serviceBinding, serviceAddress);
+
+                    if (serviceBinding is WebHttpBinding)
                     {
-                        serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_contract), serviceBinding, serviceAddress);
-
-                        if (serviceBinding is WebHttpBinding)
-                        {
-                            // Special handling for REST endpoint.
-                            WebHttpBehavior restBehavior = new WebHttpBehavior();
-
+                        // Special handling for REST endpoint.
+                        WebHttpBehavior restBehavior = new WebHttpBehavior();
 #if !MONO
-                            if (m_publishMetadata)
-                                restBehavior.HelpEnabled = true;
+                        if (m_publishMetadata)
+                            restBehavior.HelpEnabled = true;
 #endif
-
-                            serviceEndpoint.Behaviors.Add(restBehavior);
-                        }
-                        else if (m_publishMetadata)
-                        {
-                            // Add endpoint for service metadata.
-                            if (serviceAddress.StartsWith("http://"))
-                                m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexHttpBinding(), serviceAddress + "/mex");
-                            else if (serviceAddress.StartsWith("net.tcp://"))
-                                m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexTcpBinding(), serviceAddress + "/mex");
-                            else if (serviceAddress.StartsWith("net.pipe://"))
-                                m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexNamedPipeBinding(), serviceAddress + "/mex");
-                        }
+                        serviceEndpoint.Behaviors.Add(restBehavior);
+                    }
+                    else if (m_publishMetadata)
+                    {
+                        // Add endpoint for service metadata.
+                        if (serviceAddress.StartsWith("http://"))
+                            m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexHttpBinding(), serviceAddress + "/mex");
+                        else if (serviceAddress.StartsWith("net.tcp://"))
+                            m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexTcpBinding(), serviceAddress + "/mex");
+                        else if (serviceAddress.StartsWith("net.pipe://"))
+                            m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexNamedPipeBinding(), serviceAddress + "/mex");
                     }
                 }
 
@@ -763,7 +774,7 @@ namespace GSF.ServiceModel
         /// </summary>
         protected virtual void OnServiceHostCreated()
         {
-            if (ServiceHostCreated != null)
+            if ((object)ServiceHostCreated != null)
                 ServiceHostCreated(this, EventArgs.Empty);
         }
 
@@ -772,7 +783,7 @@ namespace GSF.ServiceModel
         /// </summary>
         protected virtual void OnServiceHostStarted()
         {
-            if (ServiceHostStarted != null)
+            if ((object)ServiceHostStarted != null)
                 ServiceHostStarted(this, EventArgs.Empty);
         }
 
@@ -782,7 +793,7 @@ namespace GSF.ServiceModel
         /// <param name="exception"><see cref="Exception"/> to sent to <see cref="ServiceProcessException"/> event.</param>
         protected virtual void OnServiceProcessException(Exception exception)
         {
-            if (ServiceProcessException != null)
+            if ((object)ServiceProcessException != null)
                 ServiceProcessException(this, new EventArgs<Exception>(exception));
         }
 

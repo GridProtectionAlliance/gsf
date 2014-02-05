@@ -29,6 +29,7 @@ using System.Linq;
 using System.Threading;
 using GSF.Console;
 using GSF.ServiceProcess;
+using GSF.Threading;
 
 namespace GSF.TimeSeries.UI
 {
@@ -67,9 +68,10 @@ namespace GSF.TimeSeries.UI
         // Fields
         private WindowsServiceClient m_serviceClient;
         private readonly List<Tuple<Guid, bool, string>> m_subscriberStatuses;
-        private AutoResetEvent m_requestComplete;
+        private SynchronizedOperation m_statusQueryOperation;
+        private ISet<Guid> m_statusQueryIDs;
+        private object m_statusQueryLock;
         private AutoResetEvent m_responseComplete;
-        private readonly object m_queuedQueryPending;
         private int m_requests;
         private int m_responses;
         private int m_responseTimeout;
@@ -89,8 +91,9 @@ namespace GSF.TimeSeries.UI
 
             m_subscriberStatuses = new List<Tuple<Guid, bool, string>>();
             m_responseComplete = new AutoResetEvent(false);
-            m_requestComplete = new AutoResetEvent(true);
-            m_queuedQueryPending = new object();
+            m_statusQueryOperation = new SynchronizedOperation(ExecuteStatusQuery);
+            m_statusQueryIDs = new HashSet<Guid>();
+            m_statusQueryLock = new object();
             m_responseTimeout = DefaultResponseTimeout;
         }
 
@@ -159,15 +162,6 @@ namespace GSF.TimeSeries.UI
                         }
 
                         m_responseComplete = null;
-
-                        if ((object)m_requestComplete != null)
-                        {
-                            // Release any waiting threads before disposing wait handle
-                            m_requestComplete.Set();
-                            m_requestComplete.Dispose();
-                        }
-
-                        m_requestComplete = null;
                     }
                 }
                 finally
@@ -183,98 +177,82 @@ namespace GSF.TimeSeries.UI
         /// <param name="subscriberIDs">Subscriber IDs to request status for.</param>
         public void RequestSubscriberStatus(IEnumerable<Guid> subscriberIDs)
         {
-            if ((object)subscriberIDs != null && subscriberIDs.Any())
+            if ((object)subscriberIDs != null)
             {
-                // Create single item operation queue so that multiple requests will be handled one at a time
-                ThreadPool.QueueUserWorkItem(QueueStatusQuery, subscriberIDs.Distinct());
-            }
-        }
+                lock (m_statusQueryLock)
+                {
+                    m_statusQueryIDs.UnionWith(subscriberIDs);
 
-        // Queue one authorization query at a time
-        private void QueueStatusQuery(object state)
-        {
-            // Queue up a status query unless another thread has already requested one
-            if (Monitor.TryEnter(m_queuedQueryPending))
-            {
-                try
-                {
-                    // Queue new status query after waiting for any prior query request to complete
-                    if (m_requestComplete.WaitOne())
-                        ThreadPool.QueueUserWorkItem(ExecuteStatusQuery, state);
-                }
-                finally
-                {
-                    Monitor.Exit(m_queuedQueryPending);
+                    if (m_statusQueryIDs.Count > 0)
+                        m_statusQueryOperation.RunOnceAsync();
                 }
             }
         }
 
         // Execute status query
-        private void ExecuteStatusQuery(object state)
+        private void ExecuteStatusQuery()
         {
             try
             {
-                IEnumerable<Guid> subscriberIDs = state as IEnumerable<Guid>;
+                List<Guid> subscriberIDs;
 
-                if ((object)subscriberIDs != null)
+                lock (m_statusQueryLock)
                 {
-                    // Clear existing subscriber statuses
+                    subscriberIDs = m_statusQueryIDs.ToList();
+                    m_statusQueryIDs.Clear();
+                }
+
+                // Clear existing subscriber statuses
+                lock (m_subscriberStatuses)
+                {
+                    m_subscriberStatuses.Clear();
+                }
+
+                // Reset request and response counts to zero
+                m_requests = 0;
+                m_responses = 0;
+
+                // Reset state of response complete event (in case a prior event set never completed)
+                if ((object)m_responseComplete != null)
+                    m_responseComplete.Reset();
+
+                // Send service commands to external data publisher to determine subscriber states
+                foreach (Guid subscriberID in subscriberIDs)
+                {
+                    // Send command for authorized signals for this device
+                    CommonFunctions.SendCommandToService(string.Format("INVOKE EXTERNAL!DATAPUBLISHER GetSubscriberStatus {0}", subscriberID));
+                    m_requests++;
+                }
+
+                if (m_requests > 0)
+                {
+                    // Wait for command responses allowing processing time for each
+                    if ((object)m_responseComplete != null)
+                    {
+                        if (!m_responseComplete.WaitOne(m_requests * m_responseTimeout))
+                            OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for {1} service response{2}.", (m_requests * m_responseTimeout / 1000.0D).ToString("0.00"), m_requests, m_requests == 1 ? "" : "s")));
+                    }
+
+                    // Create a sorted list of the subscriberIDs to use as a filter in case we get old responses from other queries
+                    List<Guid> sourceFilter = new List<Guid>(subscriberIDs);
+                    sourceFilter.Sort();
+
+                    Dictionary<Guid, Tuple<bool, string>> subscriberStatuses = null;
+
+                    // Provide user with a dictionary of query results - if there are any
                     lock (m_subscriberStatuses)
                     {
-                        m_subscriberStatuses.Clear();
+                        if (m_subscriberStatuses.Count > 0)
+                            subscriberStatuses = m_subscriberStatuses.Where(tuple => sourceFilter.BinarySearch(tuple.Item1) >= 0).ToDictionary(key => key.Item1, value => new Tuple<bool, string>(value.Item2, value.Item3));
                     }
 
-                    // Reset request and response counts to zero
-                    m_requests = 0;
-                    m_responses = 0;
-
-                    // Reset state of response complete event (in case a prior event set never completed)
-                    if ((object)m_responseComplete != null)
-                        m_responseComplete.Reset();
-
-                    // Send service commands to external data publisher to determine subscriber states
-                    foreach (Guid subscriberID in subscriberIDs)
-                    {
-                        // Send command for authorized signals for this device
-                        CommonFunctions.SendCommandToService(string.Format("INVOKE EXTERNAL!DATAPUBLISHER GetSubscriberStatus {0}", subscriberID));
-                        m_requests++;
-                    }
-
-                    if (m_requests > 0)
-                    {
-                        // Wait for command responses allowing processing time for each
-                        if ((object)m_responseComplete != null)
-                        {
-                            if (!m_responseComplete.WaitOne(m_requests * m_responseTimeout))
-                                OnProcessException(new TimeoutException(string.Format("Timed-out after {0} seconds waiting for {1} service response{2}.", (m_requests * m_responseTimeout / 1000.0D).ToString("0.00"), m_requests, m_requests == 1 ? "" : "s")));
-                        }
-
-                        // Create a sorted list of the subscriberIDs to use as a filter in case we get old responses from other queries
-                        List<Guid> sourceFilter = new List<Guid>(subscriberIDs);
-                        sourceFilter.Sort();
-
-                        Dictionary<Guid, Tuple<bool, string>> subscriberStatuses = null;
-
-                        // Provide user with a dictionary of query results - if there are any
-                        lock (m_subscriberStatuses)
-                        {
-                            if (m_subscriberStatuses.Count > 0)
-                                subscriberStatuses = m_subscriberStatuses.Where(tuple => sourceFilter.BinarySearch(tuple.Item1) >= 0).ToDictionary(key => key.Item1, value => new Tuple<bool, string>(value.Item2, value.Item3));
-                        }
-
-                        if (subscriberStatuses != null && subscriberStatuses.Count > 0)
-                            OnSubscriberStatuses(subscriberStatuses);
-                    }
+                    if (subscriberStatuses != null && subscriberStatuses.Count > 0)
+                        OnSubscriberStatuses(subscriberStatuses);
                 }
             }
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException("Subscriber status query error: " + ex.Message, ex));
-            }
-            finally
-            {
-                if ((object)m_requestComplete != null)
-                    m_requestComplete.Set();
             }
         }
 

@@ -72,7 +72,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Gets the root type in the inheritace hierarchy from which the specified <paramref name="type"/> inherits.
+        /// Gets the root type in the inheritance hierarchy from which the specified <paramref name="type"/> inherits.
         /// </summary>
         /// <param name="type">The <see cref="Type"/> whose root type is to be found.</param>
         /// <returns>The root type in the inheritance hierarchy from which the specified <paramref name="type"/> inherits.</returns>
@@ -139,7 +139,7 @@ namespace GSF
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
         public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes, bool validateReferences = true)
         {
-            Assembly asm = null;
+            Assembly asm;
             List<Type> types = new List<Type>();
 
             if (string.IsNullOrEmpty(binariesDirectory))
@@ -162,15 +162,15 @@ namespace GSF
             foreach (string bin in FilePath.GetFileList(binariesDirectory))
             {
                 // Only process DLLs and EXEs.
-                if (!(string.Compare(FilePath.GetExtension(bin), ".dll", true) == 0 ||
-                      string.Compare(FilePath.GetExtension(bin), ".exe", true) == 0))
+                if (!(string.Compare(FilePath.GetExtension(bin), ".dll", StringComparison.OrdinalIgnoreCase) == 0 ||
+                      string.Compare(FilePath.GetExtension(bin), ".exe", StringComparison.OrdinalIgnoreCase) == 0))
                 {
                     continue;
                 }
 
                 try
                 {
-                    // Load the assembly in the curent app domain.
+                    // Load the assembly in the current app domain.
                     asm = Assembly.LoadFrom(bin);
 
                     if (!validateReferences || asm.TryLoadAllReferences())

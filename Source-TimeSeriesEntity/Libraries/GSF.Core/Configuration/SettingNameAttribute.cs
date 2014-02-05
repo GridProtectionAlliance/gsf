@@ -52,7 +52,7 @@ namespace GSF.Configuration
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="SettingNameAttribute"/> with the specified <paramref name="name"/> value.
+        /// Creates a new <see cref="SettingNameAttribute"/> with the specified <paramref name="names"/> value.
         /// </summary>
         /// <param name="names">Assigns name(s) used to serialize setting into config file.</param>
         public SettingNameAttribute(params string[] names)

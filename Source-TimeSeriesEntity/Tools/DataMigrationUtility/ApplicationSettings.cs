@@ -29,141 +29,142 @@
 
 using System.ComponentModel;
 using System.Configuration;
-using Database;
 using GSF.Configuration;
+using GSF.Data;
 
-/// <summary>
-/// Represent an Application Settings information
-/// </summary>
-public class ApplicationSettings : CategorizedSettingsBase
+namespace DataMigrationUtility
 {
-    #region [ Members ]
-
-    //Variable Declaration
-    public const string ApplicationSettingsCategory = "Application Settings";
-    private string m_fromConnectionString;
-    private DatabaseType m_fromDataType;
-    private string m_toConnectionString;
-    private DatabaseType m_toDataType;
-    private bool m_preservePrimaryKeyValue;
-    private bool m_useFromConnectionForRI;
-
-    #endregion
-
-    #region [ Constructors ]
-
     /// <summary>
-    /// Initialize a new instance of the <see cref="ApplicationSettings"/> class.
+    /// Represent an Application Settings information
     /// </summary>
-    public ApplicationSettings()
-        : base(ApplicationSettingsCategory)
+    public class ApplicationSettings : CategorizedSettingsBase
     {
-        // Specifiy default category
+        #region [ Members ]
+
+        //Variable Declaration
+        public const string ApplicationSettingsCategory = "Application Settings";
+        private string m_fromConnectionString;
+        private DatabaseType m_fromDataType;
+        private string m_toConnectionString;
+        private DatabaseType m_toDataType;
+        private bool m_preservePrimaryKeyValue;
+        private bool m_useFromConnectionForRI;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initialize a new instance of the <see cref="ApplicationSettings"/> class.
+        /// </summary>
+        public ApplicationSettings()
+            : base(ApplicationSettingsCategory)
+        {
+            // Specify default category
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Get or set from connection string to this Data Migration Utility
+        /// </summary>
+        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(""), Description("Source connection string.")]
+        public string FromConnectionString
+        {
+            get
+            {
+                return m_fromConnectionString;
+            }
+            set
+            {
+                m_fromConnectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Get or set from data Type to this Data Migration Utility
+        /// </summary>
+        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(typeof(DatabaseType), "Other"), Description("Source database type.")]
+        public DatabaseType FromDataType
+        {
+            get
+            {
+                return m_fromDataType;
+            }
+            set
+            {
+                m_fromDataType = value;
+            }
+        }
+
+
+        /// <summary>
+        /// Get or set To connection string to this Data Migration Utility
+        /// </summary>
+        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(""), Description("Destination connection string.")]
+        public string ToConnectionString
+        {
+            get
+            {
+                return m_toConnectionString;
+            }
+            set
+            {
+                m_toConnectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Get or set To Data Type to this Data Migration Utility
+        /// </summary>
+        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(typeof(DatabaseType), "Other"), Description("Destination database type.")]
+        public DatabaseType ToDataType
+        {
+            get
+            {
+                return m_toDataType;
+            }
+            set
+            {
+                m_toDataType = value;
+            }
+        }
+
+        /// <summary>
+        /// Get or set user from connection for RI(referential integrity)
+        /// </summary>
+        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(false), Description("Use source connection string for referential integrity analysis.")]
+        public bool UseFromConnectionForRI
+        {
+            get
+            {
+                return m_useFromConnectionForRI;
+            }
+            set
+            {
+                m_useFromConnectionForRI = value;
+            }
+        }
+
+
+        /// <summary>
+        /// Get or set Preserve Primary Key value flag to Data Migration Utility
+        /// </summary>
+        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(false), Description("Preserve value of Primary Key value.")]
+        public bool PreservePrimaryKeyValue
+        {
+            get
+            {
+                return m_preservePrimaryKeyValue;
+            }
+            set
+            {
+                m_preservePrimaryKeyValue = value;
+            }
+        }
+
+        #endregion
     }
-
-    #endregion
-
-    #region [ Properties ]
-
-    /// <summary>
-    /// Get or Set from connection string to this Data Migration Utility
-    /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(""), Description("Source connection string.")]
-    public string FromConnectionString
-    {
-        get
-        {
-            return m_fromConnectionString;
-        }
-        set
-        {
-            m_fromConnectionString = value;
-        }
-    }
-
-    /// <summary>
-    /// Get or Set from data Type to this Data Migration Utility
-    /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(typeof(DatabaseType), "Unspecified"), Description("Source database type.")]
-    public DatabaseType FromDataType
-    {
-        get
-        {
-            return m_fromDataType;
-        }
-        set
-        {
-            m_fromDataType = value;
-        }
-    }
-
-
-    /// <summary>
-    /// Get or Set To connection string to this Data Migration Utility
-    /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(""), Description("Destination connection string.")]
-    public string ToConnectionString
-    {
-        get
-        {
-            return m_toConnectionString;
-        }
-        set
-        {
-            m_toConnectionString = value;
-        }
-    }
-
-    /// <summary>
-    /// Get or Set To Data Type to this Data Migration Utility
-    /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(typeof(DatabaseType), "Unspecified"), Description("Destination database type.")]
-    public DatabaseType ToDataType
-    {
-        get
-        {
-            return m_toDataType;
-        }
-        set
-        {
-            m_toDataType = value;
-        }
-    }
-
-    /// <summary>
-    /// Get or Set user from connection for RI(referential integrity)
-    /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(false), Description("Use source connection string for referential integrity analysis.")]
-    public bool UseFromConnectionForRI
-    {
-        get
-        {
-            return m_useFromConnectionForRI;
-        }
-        set
-        {
-            m_useFromConnectionForRI = value;
-        }
-    }
-
-
-    /// <summary>
-    /// Get or set Preserve Primary Key value flag to Data Migration Utility
-    /// </summary>
-    [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(false), Description("Preserve value of Primary Key value.")]
-    public bool PreservePrimaryKeyValue
-    {
-        get
-        {
-            return m_preservePrimaryKeyValue;
-        }
-        set
-        {
-            m_preservePrimaryKeyValue = value;
-        }
-    }
-
-    #endregion
-
 }
-
