@@ -151,23 +151,21 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 // We do this for later use in refreshing data.
                 StatisticMeasurements = new Dictionary<Guid, StatisticMeasurement>();
+
                 foreach (StatisticMeasurement statisticMeasurement in statisticMeasurements)
-                {
                     StatisticMeasurements.Add(statisticMeasurement.SignalID, statisticMeasurement);
-                }
 
                 // Create a system statistics list.
                 ObservableCollection<StreamStatistic> systemStatistics = new ObservableCollection<StreamStatistic>();
-                systemStatistics.Add(new StreamStatistic
-                    {
+
+                systemStatistics.Add(new StreamStatistic()
+                {
                     ID = 0,
                     Acronym = "SYSTEM",
                     Name = "System",
                     StatusColor = "Green",
                     Expanded = expanded,
-                    StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>(
-                        statisticMeasurements.Where(sm => sm.SignalReference.Contains("!SYSTEM"))
-                        ),
+                    StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>(statisticMeasurements.Where(sm => sm.SignalReference.Contains("!SYSTEM"))),
                     DeviceStatisticList = new ObservableCollection<PdcDeviceStatistic>()
                 });
 
@@ -178,8 +176,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     foreach (StatisticMeasurement measurement in streamStatistic.StatisticMeasurementList)
                         measurement.DeviceID = streamStatistic.ID;
 
-                    streamStatistic.DeviceStatisticList.Insert(0, new PdcDeviceStatistic
-                        {
+                    streamStatistic.DeviceStatisticList.Insert(0, new PdcDeviceStatistic()
+                    {
                         DeviceID = 0,
                         DeviceAcronym = "Run-time Statistics",
                         DeviceName = "",
@@ -194,53 +192,61 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 // Create an input stream statistics list.
-                ObservableCollection<StreamStatistic> inputStreamStatistics = new ObservableCollection<StreamStatistic>(
-                        from stream in resultSet.Tables["DirectDevices"].AsEnumerable()
-                        select new StreamStatistic
+                ObservableCollection<StreamStatistic> inputStreamStatistics = new ObservableCollection<StreamStatistic>
+                (
+                    from stream in resultSet.Tables["DirectDevices"].AsEnumerable()
+                    select new StreamStatistic
+                    {
+                        ID = Convert.ToInt32(stream.Field<object>("ID")),
+                        Acronym = stream.Field<string>("Acronym"),
+                        Name = stream.Field<string>("Name"),
+                        StatusColor = "Gray",
+                        Expanded = expanded,
+                        StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>
+                        (
+                            (
+                                from statisticMeasurement in statisticMeasurements
+                                where statisticMeasurement.DeviceID == Convert.ToInt32(stream.Field<object>("ID"))
+                                select statisticMeasurement
+                            ).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
+                        ),
+                        DeviceStatisticList = new ObservableCollection<PdcDeviceStatistic>
+                        (
+                            from pdcdevice in resultSet.Tables["PdcDevices"].AsEnumerable()
+                            where Convert.ToInt32(pdcdevice.Field<object>("ParentID")) == Convert.ToInt32(stream.Field<object>("ID"))
+                            select new PdcDeviceStatistic()
                             {
-                            ID = Convert.ToInt32(stream.Field<object>("ID")),
-                            Acronym = stream.Field<string>("Acronym"),
-                            Name = stream.Field<string>("Name"),
-                            StatusColor = "Gray",
-                            Expanded = expanded,
-                            StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>(
-                                (from statisticMeasurement in statisticMeasurements
-                                 where statisticMeasurement.DeviceID == Convert.ToInt32(stream.Field<object>("ID"))
-                                 select statisticMeasurement).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
-                                ),
-                            DeviceStatisticList = new ObservableCollection<PdcDeviceStatistic>(
-                                    from pdcdevice in resultSet.Tables["PdcDevices"].AsEnumerable()
-                                    where Convert.ToInt32(pdcdevice.Field<object>("ParentID")) == Convert.ToInt32(stream.Field<object>("ID"))
-                                    select new PdcDeviceStatistic
-                                        {
-                                        DeviceID = Convert.ToInt32(pdcdevice.Field<object>("ID")),
-                                        ParentID = Convert.ToInt32(pdcdevice.Field<object>("ParentID")),
-                                        DeviceAcronym = pdcdevice.Field<string>("Acronym"),
-                                        DeviceName = pdcdevice.Field<string>("Name"),
-                                        Expanded = expanded,
-                                        StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>(
-                                            (from statisticMeasurement in statisticMeasurements
-                                             where statisticMeasurement.DeviceID == Convert.ToInt32(pdcdevice.Field<object>("ID"))
-                                             select statisticMeasurement).OrderBy(sm => sm.LoadOrder)
-                                            )
-                                    }
+                                DeviceID = Convert.ToInt32(pdcdevice.Field<object>("ID")),
+                                ParentID = Convert.ToInt32(pdcdevice.Field<object>("ParentID")),
+                                DeviceAcronym = pdcdevice.Field<string>("Acronym"),
+                                DeviceName = pdcdevice.Field<string>("Name"),
+                                Expanded = expanded,
+                                StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>
+                                (
+                                    (
+                                        from statisticMeasurement in statisticMeasurements
+                                        where statisticMeasurement.DeviceID == Convert.ToInt32(pdcdevice.Field<object>("ID"))
+                                        select statisticMeasurement
+                                    ).OrderBy(sm => sm.LoadOrder)
                                 )
-                        }
-                    );
+                            }
+                        )
+                    }
+                );
 
                 InputStreamStatistics = new Dictionary<int, StreamStatistic>();
                 DevicesWithStatisticMeasurements = new Dictionary<int, ObservableCollection<StatisticMeasurement>>();
 
                 foreach (StreamStatistic streamStatistic in inputStreamStatistics)
                 {
-                    streamStatistic.DeviceStatisticList.Insert(0, new PdcDeviceStatistic
-                        {
-                            DeviceID = 0,
-                            DeviceAcronym = "Run-time Statistics",
-                            DeviceName = "",
-                            Expanded = expanded,
-                            StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>(streamStatistic.StatisticMeasurementList)
-                        });
+                    streamStatistic.DeviceStatisticList.Insert(0, new PdcDeviceStatistic()
+                    {
+                        DeviceID = 0,
+                        DeviceAcronym = "Run-time Statistics",
+                        DeviceName = "",
+                        Expanded = expanded,
+                        StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>(streamStatistic.StatisticMeasurementList)
+                    });
 
                     // We do this for later use in refreshing data.
                     InputStreamStatistics.Add(streamStatistic.ID, streamStatistic);
@@ -261,25 +267,30 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 // Create an output stream statistics list.
-                ObservableCollection<StreamStatistic> outputStreamStatistics = new ObservableCollection<StreamStatistic>(
-                        from outputStream in resultSet.Tables["OutputStreams"].AsEnumerable()
-                        select new StreamStatistic
-                            {
-                            ID = Convert.ToInt32(outputStream.Field<object>("ID")),
-                            Acronym = outputStream.Field<string>("Acronym"),
-                            Name = outputStream.Field<string>("Name"),
-                            StatusColor = "Gray",
-                            DeviceStatisticList = new ObservableCollection<PdcDeviceStatistic>(),
-                            Expanded = expanded,
-                            StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>(
-                                    (from statisticMeasurement in statisticMeasurements
-                                     where statisticMeasurement.SignalReference.StartsWith(outputStream.Field<string>("Acronym") + "!OS-")
-                                     select statisticMeasurement).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
-                                )
-                        }
-                    );
+                ObservableCollection<StreamStatistic> outputStreamStatistics = new ObservableCollection<StreamStatistic>
+                (
+                    from outputStream in resultSet.Tables["OutputStreams"].AsEnumerable()
+                    select new StreamStatistic()
+                    {
+                        ID = Convert.ToInt32(outputStream.Field<object>("ID")),
+                        Acronym = outputStream.Field<string>("Acronym"),
+                        Name = outputStream.Field<string>("Name"),
+                        StatusColor = "Gray",
+                        DeviceStatisticList = new ObservableCollection<PdcDeviceStatistic>(),
+                        Expanded = expanded,
+                        StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>
+                        (
+                            (
+                                from statisticMeasurement in statisticMeasurements
+                                where statisticMeasurement.SignalReference.StartsWith(outputStream.Field<string>("Acronym") + "!OS-")
+                                select statisticMeasurement
+                            ).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
+                        )
+                    }
+                );
 
                 OutputStreamStatistics = new Dictionary<int, StreamStatistic>();
+
                 foreach (StreamStatistic streamStatistic in outputStreamStatistics)
                 {
                     // We do this to associate statistic measurement to parent output stream easily.
@@ -287,7 +298,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         measurement.DeviceID = streamStatistic.ID;
 
                     streamStatistic.DeviceStatisticList.Insert(0, new PdcDeviceStatistic
-                        {
+                    {
                         DeviceID = 0,
                         DeviceAcronym = "Run-time Statistics",
                         DeviceName = "",
@@ -304,31 +315,35 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Create a data publisher statistics list
                 ObservableCollection<StreamStatistic> dataPublisherStatistics = new ObservableCollection<StreamStatistic>(
                         from publisher in resultSet.Tables["DataPublishers"].AsEnumerable()
-                        select new StreamStatistic
-                            {
+                        select new StreamStatistic()
+                        {
                             ID = Convert.ToInt32(publisher.Field<object>("ID")),
                             Acronym = publisher.Field<string>("AdapterName"),
                             Name = "",
                             StatusColor = "Gray",
                             DeviceStatisticList = new ObservableCollection<PdcDeviceStatistic>(),
                             Expanded = expanded,
-                            StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>(
-                                    (from statisticMeasurement in statisticMeasurements
-                                     where statisticMeasurement.SignalReference.StartsWith(publisher.Field<string>("AdapterName") + "!PUB-")
-                                     select statisticMeasurement).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
-                                )
+                            StatisticMeasurementList = new ObservableCollection<StatisticMeasurement>
+                            (
+                                (
+                                    from statisticMeasurement in statisticMeasurements
+                                    where statisticMeasurement.SignalReference.StartsWith(publisher.Field<string>("AdapterName") + "!PUB-")
+                                    select statisticMeasurement
+                                ).OrderBy(sm => sm.Source).ThenBy(sm => sm.LoadOrder)
+                            )
                         }
                     );
 
                 DataPublisherStatistics = new Dictionary<int, StreamStatistic>();
+
                 foreach (StreamStatistic streamStatistic in dataPublisherStatistics)
                 {
                     // We do this to associate statistic measurement to parent output stream easily.
                     foreach (StatisticMeasurement measurement in streamStatistic.StatisticMeasurementList)
                         measurement.DeviceID = streamStatistic.ID;
 
-                    streamStatistic.DeviceStatisticList.Insert(0, new PdcDeviceStatistic
-                        {
+                    streamStatistic.DeviceStatisticList.Insert(0, new PdcDeviceStatistic()
+                    {
                         DeviceID = 0,
                         DeviceAcronym = "Run-time Statistics",
                         DeviceName = "",
@@ -343,36 +358,33 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 }
 
                 // Merge system, input and output stream statistics to create a realtime statistics list.
-                realTimeStatisticList.Add(new RealTimeStatistic
-                    {
-                        SourceType = "System",
-                        Expanded = false,
-                        StreamStatisticList = systemStatistics
-                    }
-                );
+                realTimeStatisticList.Add(new RealTimeStatistic()
+                {
+                    SourceType = "System",
+                    Expanded = false,
+                    StreamStatisticList = systemStatistics
+                });
 
-                realTimeStatisticList.Add(new RealTimeStatistic
-                    {
-                        SourceType = "Input Streams",
-                        Expanded = false,
-                        StreamStatisticList = inputStreamStatistics
-                    }
-                );
+                realTimeStatisticList.Add(new RealTimeStatistic()
+                {
+                    SourceType = "Input Streams",
+                    Expanded = false,
+                    StreamStatisticList = inputStreamStatistics
+                });
 
-                realTimeStatisticList.Add(new RealTimeStatistic
-                    {
-                        SourceType = "Output Streams",
-                        Expanded = false,
-                        StreamStatisticList = outputStreamStatistics
-                    }
-                );
+                realTimeStatisticList.Add(new RealTimeStatistic()
+                {
+                    SourceType = "Output Streams",
+                    Expanded = false,
+                    StreamStatisticList = outputStreamStatistics
+                });
 
-                realTimeStatisticList.Add(new RealTimeStatistic
-                    {
-                        SourceType = "Data Publisher",
-                        Expanded = false,
-                        StreamStatisticList = dataPublisherStatistics
-                    });
+                realTimeStatisticList.Add(new RealTimeStatistic()
+                {
+                    SourceType = "Data Publisher",
+                    Expanded = false,
+                    StreamStatisticList = dataPublisherStatistics
+                });
 
                 return realTimeStatisticList;
             }
@@ -391,6 +403,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static ObservableCollection<StatisticMeasurement> GetStatisticMeasurements(AdoDataConnection database)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -405,6 +418,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Assign min and max point IDs as we will need them to request data from web service.
                 MinPointID = int.MaxValue;
                 MaxPointID = int.MinValue;
+
                 foreach (DataRow row in statisticMeasurements.Rows)
                 {
                     int pointID = Convert.ToInt32(row.Field<object>("PointID"));
@@ -439,43 +453,43 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 // Takes KeyValuePair and generates StatisticMeasurement record by maping statistic measurements with statistic definitions.
                 Func<KeyValuePair<DataRow, string>, StatisticMeasurement> selectFunction = keyvaluepair =>
+                {
+                    DataRow measurement = keyvaluepair.Key;
+                    string measurementSource = keyvaluepair.Value;
+                    Debug.WriteLine(measurementSource);
+                    string signalReference = measurement.Field<string>("SignalReference");
+                    int measurementIndex = Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST") + 3));
+                    Statistic statisticDefinition = new Statistic();
+
+                    foreach (Statistic statistic in statisticDefinitions)
                     {
-                        DataRow measurement = keyvaluepair.Key;
-                        string measurementSource = keyvaluepair.Value;
-                        Debug.WriteLine(measurementSource);
-                        string signalReference = measurement.Field<string>("SignalReference");
-                        int measurementIndex = Convert.ToInt32(signalReference.Substring(signalReference.LastIndexOf("-ST") + 3));
-                        Statistic statisticDefinition = new Statistic();
-
-                        foreach (Statistic statistic in statisticDefinitions)
+                        if (statistic.Source == measurementSource && statistic.SignalIndex == measurementIndex)
                         {
-                            if (statistic.Source == measurementSource && statistic.SignalIndex == measurementIndex)
-                            {
-                                statisticDefinition = statistic;
-                                break;
-                            }
+                            statisticDefinition = statistic;
+                            break;
                         }
+                    }
 
-                        return new StatisticMeasurement
-                            {
-                            SignalID = database.Guid(measurement, "SignalID"),
-                            ID = measurement.Field<string>("ID"),
-                            DeviceID = Convert.ToInt32(measurement.Field<object>("DeviceID") ?? -1),
-                            PointID = Convert.ToInt32(measurement.Field<object>("PointID")),
-                            PointTag = measurement.Field<string>("PointTag"),
-                            SignalReference = signalReference,
-                            Source = measurementSource,
-                            StatisticName = statisticDefinition.Name,
-                            StatisticDescription = statisticDefinition.Description,
-                            DataType = statisticDefinition.DataType,
-                            DisplayFormat = statisticDefinition.DisplayFormat,
-                            ConnectedState = statisticDefinition.IsConnectedState,
-                            LoadOrder = statisticDefinition.LoadOrder,
-                            TimeTag = "n/a",
-                            Quality = "n/a",
-                            Value = "--"
-                        };
+                    return new StatisticMeasurement()
+                    {
+                        SignalID = database.Guid(measurement, "SignalID"),
+                        ID = measurement.Field<string>("ID"),
+                        DeviceID = Convert.ToInt32(measurement.Field<object>("DeviceID") ?? -1),
+                        PointID = Convert.ToInt32(measurement.Field<object>("PointID")),
+                        PointTag = measurement.Field<string>("PointTag"),
+                        SignalReference = signalReference,
+                        Source = measurementSource,
+                        StatisticName = statisticDefinition.Name,
+                        StatisticDescription = statisticDefinition.Description,
+                        DataType = statisticDefinition.DataType,
+                        DisplayFormat = statisticDefinition.DisplayFormat,
+                        ConnectedState = statisticDefinition.IsConnectedState,
+                        LoadOrder = statisticDefinition.LoadOrder,
+                        TimeTag = "n/a",
+                        Quality = "n/a",
+                        Value = "--"
                     };
+                };
 
                 return new ObservableCollection<StatisticMeasurement>(statisticMeasurements.Rows.Cast<DataRow>().Select(mapFunction).OrderBy(pair => pair.Value).Select(selectFunction).OrderBy(s => s.LoadOrder));
 
