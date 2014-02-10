@@ -42,6 +42,7 @@ using System.Windows.Threading;
 using GSF.Communication;
 using GSF.Data;
 using GSF.IO;
+using GSF.Identity;
 using GSF.Security;
 using GSF.TimeSeries.UI.DataModels;
 using Timer = System.Timers.Timer;
@@ -90,28 +91,6 @@ namespace GSF.TimeSeries.UI
             s_principalRefreshTimer.AutoReset = false;
             s_principalRefreshTimer.Interval = 1000;
             s_principalRefreshTimer.Elapsed += PrincipalRefreshTimer_Elapsed;
-            s_principalRefreshTimer.Start();
-        }
-
-        private static void PrincipalRefreshTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
-        {
-            ISecurityProvider provider;
-
-            if ((object)s_currentPrincipal != null)
-            {
-                // If user is no longer authenticated, provider session may have expired so provider session will
-                // now be reinitialized. This step will "re-validate" user's current state (e.g., locked-out).
-                if (!SecurityProviderCache.TryGetCachedProvider(s_currentPrincipal.Identity.Name, out provider))
-                {
-                    Thread.CurrentPrincipal = s_currentPrincipal;
-                    SecurityProviderCache.ReauthenticateCurrentPrincipal();
-                    CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
-
-                    // Rights may have changed -- notify for revalidation of menu commands
-                    Application.Current.Dispatcher.BeginInvoke(new Action(OnCurrentPrincipalRefreshed));
-                }
-            }
-
             s_principalRefreshTimer.Start();
         }
 
@@ -1184,6 +1163,115 @@ namespace GSF.TimeSeries.UI
                     }
                 }
             }
+        }
+
+        private static void PrincipalRefreshTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        {
+            UserInfo userInfo;
+            ISecurityProvider provider;
+            WindowsImpersonationContext impersonationContext;
+
+            if ((object)s_currentPrincipal != null)
+            {
+                // If user is no longer authenticated, provider session may have expired so provider session will
+                // now be reinitialized. This step will "re-validate" user's current state (e.g., locked-out).
+                if (!SecurityProviderCache.TryGetCachedProvider(s_currentPrincipal.Identity.Name, out provider))
+                {
+                    impersonationContext = null;
+
+                    try
+                    {
+                        // Determine whether we need to try impersonating the user
+                        userInfo = new UserInfo(CurrentUser);
+
+                        // If the application is unable to access the domain, possibly because the local user
+                        // running the application does not have access to domain objects, it's possible that
+                        // the user logging in does have access to the domain. So we attempt to impersonate the
+                        // user logging in to allow authentication to proceed
+                        if (!userInfo.DomainAvailable && TryImpersonate(userInfo.LoginID, GetCurrentUserPassword(), out impersonationContext))
+                        {
+                            try
+                            {
+                                // Working around a known issue - DirectorySearcher will often throw
+                                // an exception the first time it is used after impersonating another
+                                // user so we get that out of the way here
+                                userInfo.Initialize();
+                            }
+                            catch (InitializationException)
+                            {
+                                // Exception is expected so we ignore it
+                            }
+                        }
+
+                        Thread.CurrentPrincipal = s_currentPrincipal;
+                        SecurityProviderCache.ReauthenticateCurrentPrincipal();
+                        CurrentPrincipal = Thread.CurrentPrincipal as SecurityPrincipal;
+                    }
+                    finally
+                    {
+                        if ((object)impersonationContext != null)
+                        {
+                            impersonationContext.Undo();
+                            impersonationContext.Dispose();
+                        }
+                    }
+
+                    // Rights may have changed -- notify for revalidation of menu commands
+                    Application.Current.Dispatcher.BeginInvoke(new Action(OnCurrentPrincipalRefreshed));
+                }
+            }
+
+            s_principalRefreshTimer.Start();
+        }
+
+        private static string GetCurrentUserPassword()
+        {
+            SecurityPrincipal currentPrincipal = s_currentPrincipal;
+            SecurityIdentity identity;
+            ISecurityProvider provider;
+
+            if ((object)currentPrincipal == null)
+                return null;
+
+            identity = currentPrincipal.Identity as SecurityIdentity;
+
+            if ((object)identity == null)
+                return null;
+
+            provider = identity.Provider;
+
+            if ((object)provider == null)
+                return null;
+
+            return provider.Password;
+        }
+
+        private static bool TryImpersonate(string loginID, string password, out WindowsImpersonationContext impersonationContext)
+        {
+            string domain;
+            string username;
+            string[] splitLoginID;
+
+            try
+            {
+                splitLoginID = loginID.Split('\\');
+
+                if (splitLoginID.Length == 2)
+                {
+                    domain = splitLoginID[0];
+                    username = splitLoginID[1];
+                    impersonationContext = UserInfo.ImpersonateUser(domain, username, password);
+
+                    return true;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+            }
+
+            impersonationContext = null;
+
+            return false;
         }
 
         private static void OnCurrentPrincipalRefreshed()
