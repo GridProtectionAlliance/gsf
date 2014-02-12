@@ -109,7 +109,7 @@ namespace GSF
             s_endianOrder = new BigEndianOrder();
         }
 
-        private static readonly BigEndianOrder s_endianOrder;
+        private static BigEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="BigEndianOrder"/> class.
@@ -149,7 +149,7 @@ namespace GSF
             s_endianOrder = new LittleEndianOrder();
         }
 
-        private static readonly LittleEndianOrder s_endianOrder;
+        private static LittleEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="LittleEndianOrder"/> class.
@@ -189,7 +189,7 @@ namespace GSF
             s_endianOrder = new NativeEndianOrder();
         }
 
-        private static readonly NativeEndianOrder s_endianOrder;
+        private static NativeEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="NativeEndianOrder"/> class.
@@ -223,6 +223,7 @@ namespace GSF
 
         // Fields
         private readonly bool m_isNativeEndian;
+        private readonly bool m_isLittleEndian;
         private readonly Endianness m_targetEndianness;
         private readonly CopyBufferFunction m_copyBuffer;
         private readonly CoerceByteOrderFunction m_coerceByteOrder;
@@ -243,6 +244,8 @@ namespace GSF
             // the target nor the OS endian order will change during the lifecycle of this class...
             if (targetEndianness == Endianness.BigEndian)
             {
+                m_isLittleEndian = false;
+
                 if (BitConverter.IsLittleEndian)
                 {
                     // If OS is little endian and we want big endian, we swap the bytes
@@ -260,6 +263,8 @@ namespace GSF
             }
             else
             {
+                m_isLittleEndian = true;
+
                 if (BitConverter.IsLittleEndian)
                 {
                     // If OS is little endian and we want little endian, we just copy the bytes
@@ -405,7 +410,7 @@ namespace GSF
             if (value == null)
                 throw new ArgumentNullException("value");
 
-            if (BitConverter.IsLittleEndian)
+            if (m_isLittleEndian)
                 return (short)((int)value[startIndex] | (int)value[startIndex + 1] << 8);
 
             return (short)((int)value[startIndex] << 8 | (int)value[startIndex + 1]);
@@ -452,7 +457,7 @@ namespace GSF
                 if (m_isNativeEndian)
                     return *(int*)lp;
 
-                if (BitConverter.IsLittleEndian)
+                if (m_isLittleEndian)
                     return (int)lp[0] |
                            (int)lp[1] << 8 |
                            (int)lp[2] << 16 |
@@ -489,7 +494,7 @@ namespace GSF
                 if (m_isNativeEndian)
                     return *(long*)lp;
 
-                if (BitConverter.IsLittleEndian)
+                if (m_isLittleEndian)
                     return (long)lp[0] |
                            (long)lp[1] << 8 |
                            (long)lp[2] << 16 |
@@ -680,7 +685,7 @@ namespace GSF
         {
             byte[] rv = new byte[2];
 
-            if (BitConverter.IsLittleEndian)
+            if (m_isLittleEndian)
             {
                 rv[0] = (byte)value;
                 rv[1] = (byte)(value >> 8);
@@ -713,7 +718,7 @@ namespace GSF
         {
             byte[] rv = new byte[4];
 
-            if (BitConverter.IsLittleEndian)
+            if (m_isLittleEndian)
             {
                 rv[0] = (byte)value;
                 rv[1] = (byte)(value >> 8);
@@ -740,7 +745,7 @@ namespace GSF
         {
             byte[] rv = new byte[8];
 
-            if (BitConverter.IsLittleEndian)
+            if (m_isLittleEndian)
             {
                 rv[0] = (byte)value;
                 rv[1] = (byte)(value >> 8);
@@ -824,7 +829,7 @@ namespace GSF
         [Obsolete("This method may be removed from future builds", false)]
         public byte[] GetBytes(Guid value)
         {
-            // TODO: Fix bug in changing the order of a Guid. Also, MS-GUID format does not match RFC standard - perhaps need a RfcGuid struct.
+            // TODO: Fix bug in changing the order of a Guid. Also, MS-GUID format does not match RFC standard - perhaps need a RfcGuid class.
             return m_coerceByteOrder(value.ToByteArray());
         }
 
@@ -928,7 +933,7 @@ namespace GSF
             if (destinationArray == null)
                 throw new ArgumentNullException("destinationArray");
 
-            if (BitConverter.IsLittleEndian)
+            if (m_isLittleEndian)
             {
                 destinationArray[destinationIndex] = (byte)value;
                 destinationArray[destinationIndex + 1] = (byte)(value >> 8);
@@ -979,7 +984,7 @@ namespace GSF
                 {
                     *(int*)rv = value;
                 }
-                else if (BitConverter.IsLittleEndian)
+                else if (m_isLittleEndian)
                 {
                     rv[0] = (byte)value;
                     rv[1] = (byte)(value >> 8);
@@ -1022,7 +1027,7 @@ namespace GSF
                 {
                     *(long*)rv = value;
                 }
-                else if (BitConverter.IsLittleEndian)
+                else if (m_isLittleEndian)
                 {
                     rv[0] = (byte)value;
                     rv[1] = (byte)(value >> 8);
