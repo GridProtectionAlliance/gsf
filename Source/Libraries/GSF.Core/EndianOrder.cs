@@ -28,6 +28,8 @@
 //       Added a GetBytes<T> overload.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//   2/12/2014 - Steven E. Chisholm
+//       Approximately a 6x improvement by simplifying primitive type access and using unsafe code.
 //
 //******************************************************************************************************
 
@@ -102,6 +104,11 @@ namespace GSF
 
         #region [ Static ]
 
+        static BigEndianOrder()
+        {
+            s_endianOrder = new BigEndianOrder();
+        }
+
         private static BigEndianOrder s_endianOrder;
 
         /// <summary>
@@ -111,9 +118,6 @@ namespace GSF
         {
             get
             {
-                if ((object)s_endianOrder == null)
-                    s_endianOrder = new BigEndianOrder();
-
                 return s_endianOrder;
             }
         }
@@ -140,6 +144,11 @@ namespace GSF
 
         #region [ Static ]
 
+        static LittleEndianOrder()
+        {
+            s_endianOrder = new LittleEndianOrder();
+        }
+
         private static LittleEndianOrder s_endianOrder;
 
         /// <summary>
@@ -149,9 +158,6 @@ namespace GSF
         {
             get
             {
-                if ((object)s_endianOrder == null)
-                    s_endianOrder = new LittleEndianOrder();
-
                 return s_endianOrder;
             }
         }
@@ -178,6 +184,11 @@ namespace GSF
 
         #region [ Static ]
 
+        static NativeEndianOrder()
+        {
+            s_endianOrder = new NativeEndianOrder();
+        }
+
         private static NativeEndianOrder s_endianOrder;
 
         /// <summary>
@@ -187,9 +198,6 @@ namespace GSF
         {
             get
             {
-                if ((object)s_endianOrder == null)
-                    s_endianOrder = new NativeEndianOrder();
-
                 return s_endianOrder;
             }
         }
@@ -214,6 +222,8 @@ namespace GSF
         private delegate byte[] CoerceByteOrderFunction(byte[] buffer);
 
         // Fields
+        private readonly bool m_isNativeEndian;
+        private readonly bool m_isLittleEndian;
         private readonly Endianness m_targetEndianness;
         private readonly CopyBufferFunction m_copyBuffer;
         private readonly CoerceByteOrderFunction m_coerceByteOrder;
@@ -234,32 +244,38 @@ namespace GSF
             // the target nor the OS endian order will change during the lifecycle of this class...
             if (targetEndianness == Endianness.BigEndian)
             {
+                m_isLittleEndian = false;
                 if (BitConverter.IsLittleEndian)
                 {
                     // If OS is little endian and we want big endian, we swap the bytes
                     m_copyBuffer = SwapCopy;
                     m_coerceByteOrder = ReverseBuffer;
+                    m_isNativeEndian = false;
                 }
                 else
                 {
                     // If OS is big endian and we want big endian, we just copy the bytes
                     m_copyBuffer = BlockCopy;
                     m_coerceByteOrder = PassThroughBuffer;
+                    m_isNativeEndian = true;
                 }
             }
             else
             {
+                m_isLittleEndian = true;
                 if (BitConverter.IsLittleEndian)
                 {
                     // If OS is little endian and we want little endian, we just copy the bytes
                     m_copyBuffer = BlockCopy;
                     m_coerceByteOrder = PassThroughBuffer;
+                    m_isNativeEndian = true;
                 }
                 else
                 {
                     // If OS is big endian and we want little endian, we swap the bytes
                     m_copyBuffer = SwapCopy;
                     m_coerceByteOrder = ReverseBuffer;
+                    m_isNativeEndian = false;
                 }
             }
         }
@@ -346,7 +362,9 @@ namespace GSF
         [SuppressMessage("Microsoft.Performance", "CA1822")]
         public bool ToBoolean(byte[] value, int startIndex)
         {
-            return BitConverter.ToBoolean(value, startIndex);
+            if (value == null)
+                throw new ArgumentNullException("value");
+            return value[startIndex] != 0;
         }
 
         /// <summary>
@@ -359,11 +377,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public char ToChar(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[2];
-
-            m_copyBuffer(value, startIndex, buffer, 0, 2);
-
-            return BitConverter.ToChar(buffer, 0);
+            return (char)ToInt16(value, startIndex);
         }
 
         /// <summary>
@@ -374,13 +388,10 @@ namespace GSF
         /// <returns>A double-precision floating point number formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
-        public double ToDouble(byte[] value, int startIndex)
+        public unsafe double ToDouble(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[8];
-
-            m_copyBuffer(value, startIndex, buffer, 0, 8);
-
-            return BitConverter.ToDouble(buffer, 0);
+            long tmp = ToInt64(value, startIndex);
+            return *(double*)&tmp;
         }
 
         /// <summary>
@@ -393,11 +404,18 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public short ToInt16(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[2];
-
-            m_copyBuffer(value, startIndex, buffer, 0, 2);
-
-            return BitConverter.ToInt16(buffer, 0);
+            if (value == null)
+                throw new ArgumentNullException("value");
+            if (m_isLittleEndian)
+            {
+                return (short)((int)value[startIndex]
+                             | (int)value[startIndex + 1] << 8);
+            }
+            else
+            {
+                return (short)((int)value[startIndex] << 8
+                             | (int)value[startIndex + 1]);
+            }
         }
 
         /// <summary>
@@ -425,13 +443,34 @@ namespace GSF
         /// <returns>A 32-bit signed integer formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
-        public int ToInt32(byte[] value, int startIndex)
+        public unsafe int ToInt32(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[4];
+            if (value == null)
+                throw new ArgumentNullException("value");
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("startIndex");
+            if (startIndex > value.Length - sizeof(int))
+                throw new ArgumentOutOfRangeException("startIndex");
 
-            m_copyBuffer(value, startIndex, buffer, 0, 4);
-
-            return BitConverter.ToInt32(buffer, 0);
+            fixed (byte* lp = &value[startIndex])
+            {
+                if (m_isNativeEndian)
+                    return *(int*)lp;
+                if (m_isLittleEndian)
+                {
+                    return (int)lp[0] |
+                           (int)lp[1] << 8 |
+                           (int)lp[2] << 16 |
+                           (int)lp[3] << 24;
+                }
+                else
+                {
+                    return (int)lp[0] << 24 |
+                           (int)lp[1] << 16 |
+                           (int)lp[2] << 8 |
+                           (int)lp[3];
+                }
+            }
         }
 
         /// <summary>
@@ -442,13 +481,42 @@ namespace GSF
         /// <returns>A 64-bit signed integer formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
-        public long ToInt64(byte[] value, int startIndex)
+        public unsafe long ToInt64(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[8];
+            if (value == null)
+                throw new ArgumentNullException("value");
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("startIndex");
+            if (startIndex > value.Length - sizeof(long))
+                throw new ArgumentOutOfRangeException("startIndex");
 
-            m_copyBuffer(value, startIndex, buffer, 0, 8);
-
-            return BitConverter.ToInt64(buffer, 0);
+            fixed (byte* lp = &value[startIndex])
+            {
+                if (m_isNativeEndian)
+                    return *(long*)lp;
+                if (m_isLittleEndian)
+                {
+                    return (long)lp[0] |
+                           (long)lp[1] << 8 |
+                           (long)lp[2] << 16 |
+                           (long)lp[3] << 24 |
+                           (long)lp[4] << 32 |
+                           (long)lp[5] << 40 |
+                           (long)lp[6] << 48 |
+                           (long)lp[7] << 56;
+                }
+                else
+                {
+                    return (long)lp[0] << 56 |
+                           (long)lp[1] << 48 |
+                           (long)lp[2] << 40 |
+                           (long)lp[3] << 32 |
+                           (long)lp[4] << 24 |
+                           (long)lp[5] << 16 |
+                           (long)lp[6] << 8 |
+                           (long)lp[7];
+                }
+            }
         }
 
         /// <summary>
@@ -459,13 +527,10 @@ namespace GSF
         /// <returns>A single-precision floating point number formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
-        public float ToSingle(byte[] value, int startIndex)
+        public unsafe float ToSingle(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[4];
-
-            m_copyBuffer(value, startIndex, buffer, 0, 4);
-
-            return BitConverter.ToSingle(buffer, 0);
+            int tmp = ToInt32(value, startIndex);
+            return *(float*)&tmp;
         }
 
         /// <summary>
@@ -478,11 +543,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public ushort ToUInt16(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[2];
-
-            m_copyBuffer(value, startIndex, buffer, 0, 2);
-
-            return BitConverter.ToUInt16(buffer, 0);
+            return (ushort)ToInt16(value, startIndex);
         }
 
         /// <summary>
@@ -512,11 +573,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public uint ToUInt32(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[4];
-
-            m_copyBuffer(value, startIndex, buffer, 0, 4);
-
-            return BitConverter.ToUInt32(buffer, 0);
+            return (uint)ToInt32(value, startIndex);
         }
 
         /// <summary>
@@ -529,11 +586,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public ulong ToUInt64(byte[] value, int startIndex)
         {
-            byte[] buffer = new byte[8];
-
-            m_copyBuffer(value, startIndex, buffer, 0, 8);
-
-            return BitConverter.ToUInt64(buffer, 0);
+            return (ulong)ToInt64(value, startIndex);
         }
 
         /// <summary>
@@ -546,6 +599,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public Guid ToGuid(byte[] value, int startIndex)
         {
+            //ToDo: Bug Identified. Bytes must never be swapped for Guid since it is serialized platform independent.
             byte[] buffer = new byte[16];
 
             m_copyBuffer(value, startIndex, buffer, 0, 16);
@@ -603,8 +657,13 @@ namespace GSF
         [SuppressMessage("Microsoft.Performance", "CA1822")]
         public byte[] GetBytes(bool value)
         {
-            // No need to reverse buffer for one byte:
-            return BitConverter.GetBytes(value);
+            byte rv;
+            if (value)
+                rv = 1;
+            else
+                rv = 0;
+
+            return new byte[] { rv };
         }
 
         /// <summary>
@@ -614,7 +673,7 @@ namespace GSF
         /// <returns>An array of bytes with length 2.</returns>
         public byte[] GetBytes(char value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            return GetBytes((short)value);
         }
 
         /// <summary>
@@ -622,9 +681,9 @@ namespace GSF
         /// </summary>
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 8.</returns>
-        public byte[] GetBytes(double value)
+        public unsafe byte[] GetBytes(double value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            return GetBytes(*(long*)&value);
         }
 
         /// <summary>
@@ -634,7 +693,18 @@ namespace GSF
         /// <returns>An array of bytes with length 2.</returns>
         public byte[] GetBytes(short value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            byte[] rv = new byte[2];
+            if (m_isLittleEndian)
+            {
+                rv[0] = (byte)value;
+                rv[1] = (byte)(value >> 8);
+            }
+            else
+            {
+                rv[0] = (byte)(value >> 8);
+                rv[1] = (byte)(value);
+            }
+            return rv;
         }
 
         /// <summary>
@@ -654,7 +724,22 @@ namespace GSF
         /// <returns>An array of bytes with length 4.</returns>
         public byte[] GetBytes(int value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            byte[] rv = new byte[4];
+            if (m_isLittleEndian)
+            {
+                rv[0] = (byte)value;
+                rv[1] = (byte)(value >> 8);
+                rv[2] = (byte)(value >> 16);
+                rv[3] = (byte)(value >> 24);
+            }
+            else
+            {
+                rv[0] = (byte)(value >> 24);
+                rv[1] = (byte)(value >> 16);
+                rv[2] = (byte)(value >> 8);
+                rv[3] = (byte)(value);
+            }
+            return rv;
         }
 
         /// <summary>
@@ -662,9 +747,32 @@ namespace GSF
         /// </summary>
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 8.</returns>
-        public byte[] GetBytes(long value)
+        public unsafe byte[] GetBytes(long value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            byte[] rv = new byte[8];
+            if (m_isLittleEndian)
+            {
+                rv[0] = (byte)value;
+                rv[1] = (byte)(value >> 8);
+                rv[2] = (byte)(value >> 16);
+                rv[3] = (byte)(value >> 24);
+                rv[4] = (byte)(value >> 32);
+                rv[5] = (byte)(value >> 40);
+                rv[6] = (byte)(value >> 48);
+                rv[7] = (byte)(value >> 56);
+            }
+            else
+            {
+                rv[0] = (byte)(value >> 56);
+                rv[1] = (byte)(value >> 48);
+                rv[2] = (byte)(value >> 40);
+                rv[3] = (byte)(value >> 32);
+                rv[4] = (byte)(value >> 24);
+                rv[5] = (byte)(value >> 16);
+                rv[6] = (byte)(value >> 8);
+                rv[7] = (byte)(value);
+            }
+            return rv;
         }
 
         /// <summary>
@@ -672,9 +780,9 @@ namespace GSF
         /// </summary>
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 4.</returns>
-        public byte[] GetBytes(float value)
+        public unsafe byte[] GetBytes(float value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            return GetBytes(*(int*)&value);
         }
 
         /// <summary>
@@ -684,7 +792,7 @@ namespace GSF
         /// <returns>An array of bytes with length 2.</returns>
         public byte[] GetBytes(ushort value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            return GetBytes((short)value);
         }
 
         /// <summary>
@@ -704,7 +812,7 @@ namespace GSF
         /// <returns>An array of bytes with length 4.</returns>
         public byte[] GetBytes(uint value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            return GetBytes((int)value);
         }
 
         /// <summary>
@@ -714,7 +822,7 @@ namespace GSF
         /// <returns>An array of bytes with length 8.</returns>
         public byte[] GetBytes(ulong value)
         {
-            return m_coerceByteOrder(BitConverter.GetBytes(value));
+            return GetBytes((long)value);
         }
 
         /// <summary>
@@ -724,6 +832,7 @@ namespace GSF
         /// <returns>An array of bytes with length 16.</returns>
         public byte[] GetBytes(Guid value)
         {
+            //ToDo: Fix bug in changing the order of a Guid.
             return m_coerceByteOrder(value.ToByteArray());
         }
 
@@ -780,7 +889,12 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 1);
+            if (destinationArray == null)
+                throw new ArgumentNullException("destinationArray");
+            if (value)
+                destinationArray[destinationIndex] = 1;
+            else
+                destinationArray[destinationIndex] = 0;
             return 1;
         }
 
@@ -793,8 +907,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(char value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
-            return 2;
+            return CopyBytes((short)value, destinationArray, destinationIndex);
         }
 
         /// <summary>
@@ -804,10 +917,9 @@ namespace GSF
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
-        public int CopyBytes(double value, byte[] destinationArray, int destinationIndex)
+        public unsafe int CopyBytes(double value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
-            return 8;
+            return CopyBytes(*(long*)&value, destinationArray, destinationIndex);
         }
 
         /// <summary>
@@ -819,7 +931,20 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(short value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
+            if (destinationArray == null)
+                throw new ArgumentNullException("destinationArray");
+
+            if (m_isLittleEndian)
+            {
+                destinationArray[destinationIndex] = (byte)value;
+                destinationArray[destinationIndex + 1] = (byte)(value >> 8);
+            }
+            else
+            {
+                destinationArray[destinationIndex] = (byte)(value >> 8);
+                destinationArray[destinationIndex + 1] = (byte)(value);
+            }
+
             return 2;
         }
 
@@ -843,9 +968,37 @@ namespace GSF
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
-        public int CopyBytes(int value, byte[] destinationArray, int destinationIndex)
+        public unsafe int CopyBytes(int value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
+            if (destinationArray == null)
+                throw new ArgumentNullException("destinationArray");
+            if (destinationIndex < 0)
+                throw new ArgumentOutOfRangeException("destinationIndex");
+            if (destinationIndex > destinationArray.Length - sizeof(int))
+                throw new ArgumentOutOfRangeException("destinationIndex");
+
+            fixed (byte* rv = &destinationArray[destinationIndex])
+            {
+                if (m_isNativeEndian)
+                {
+                    *(int*)rv = value;
+                }
+                else if (m_isLittleEndian)
+                {
+                    rv[0] = (byte)value;
+                    rv[1] = (byte)(value >> 8);
+                    rv[2] = (byte)(value >> 16);
+                    rv[3] = (byte)(value >> 24);
+                }
+                else
+                {
+                    rv[0] = (byte)(value >> 24);
+                    rv[1] = (byte)(value >> 16);
+                    rv[2] = (byte)(value >> 8);
+                    rv[3] = (byte)(value);
+                }
+            }
+
             return 4;
         }
 
@@ -856,9 +1009,45 @@ namespace GSF
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
-        public int CopyBytes(long value, byte[] destinationArray, int destinationIndex)
+        public unsafe int CopyBytes(long value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
+            if (destinationArray == null)
+                throw new ArgumentNullException("destinationArray");
+            if (destinationIndex < 0)
+                throw new ArgumentOutOfRangeException("destinationIndex");
+            if (destinationIndex > destinationArray.Length - sizeof(long))
+                throw new ArgumentOutOfRangeException("destinationIndex");
+
+            fixed (byte* rv = &destinationArray[destinationIndex])
+            {
+                if (m_isNativeEndian)
+                {
+                    *(long*)rv = value;
+                }
+                else if (m_isLittleEndian)
+                {
+                    rv[0] = (byte)value;
+                    rv[1] = (byte)(value >> 8);
+                    rv[2] = (byte)(value >> 16);
+                    rv[3] = (byte)(value >> 24);
+                    rv[4] = (byte)(value >> 32);
+                    rv[5] = (byte)(value >> 40);
+                    rv[6] = (byte)(value >> 48);
+                    rv[7] = (byte)(value >> 56);
+                }
+                else
+                {
+                    rv[0] = (byte)(value >> 56);
+                    rv[1] = (byte)(value >> 48);
+                    rv[2] = (byte)(value >> 40);
+                    rv[3] = (byte)(value >> 32);
+                    rv[4] = (byte)(value >> 24);
+                    rv[5] = (byte)(value >> 16);
+                    rv[6] = (byte)(value >> 8);
+                    rv[7] = (byte)(value);
+                }
+            }
+
             return 8;
         }
 
@@ -869,10 +1058,9 @@ namespace GSF
         /// <param name="destinationArray">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
-        public int CopyBytes(float value, byte[] destinationArray, int destinationIndex)
+        public unsafe int CopyBytes(float value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
-            return 4;
+            return CopyBytes(*(int*)&value, destinationArray, destinationIndex);
         }
 
         /// <summary>
@@ -884,8 +1072,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(ushort value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 2);
-            return 2;
+            return CopyBytes((short)value, destinationArray, destinationIndex);
         }
 
         /// <summary>
@@ -910,8 +1097,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(uint value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 4);
-            return 4;
+            return CopyBytes((int)value, destinationArray, destinationIndex);
         }
 
         /// <summary>
@@ -923,8 +1109,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(ulong value, byte[] destinationArray, int destinationIndex)
         {
-            m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
-            return 8;
+            return CopyBytes((long)value, destinationArray, destinationIndex);
         }
 
         /// <summary>
@@ -936,6 +1121,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(Guid value, byte[] destinationArray, int destinationIndex)
         {
+            //ToDo: Fix bug because Guids should not be swapped on an endian conversion.
             m_copyBuffer(value.ToByteArray(), 0, destinationArray, destinationIndex, 16);
             return 16;
         }
