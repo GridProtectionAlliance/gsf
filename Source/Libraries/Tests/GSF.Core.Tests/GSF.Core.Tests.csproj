@@ -142,6 +142,7 @@
     <Compile Include="GSF.Units\VoltageTest.cs" />
     <Compile Include="GSF.Units\VolumeTest.cs" />
     <Compile Include="StringExtensionsTest.cs" />
+    <Compile Include="EndianOrderTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Adapters\CsvAdapters\CsvAdapters.csproj">

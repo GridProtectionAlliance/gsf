@@ -67,6 +67,9 @@
 
 #endregion
 
+// Uncomment only for hard coded testing of BigEndian architecture code
+//#define ForceBigEndianArchitecture
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -109,7 +112,7 @@ namespace GSF
             s_endianOrder = new BigEndianOrder();
         }
 
-        private static BigEndianOrder s_endianOrder;
+        private static readonly BigEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="BigEndianOrder"/> class.
@@ -149,7 +152,7 @@ namespace GSF
             s_endianOrder = new LittleEndianOrder();
         }
 
-        private static LittleEndianOrder s_endianOrder;
+        private static readonly LittleEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="LittleEndianOrder"/> class.
@@ -189,7 +192,7 @@ namespace GSF
             s_endianOrder = new NativeEndianOrder();
         }
 
-        private static NativeEndianOrder s_endianOrder;
+        private static readonly NativeEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="NativeEndianOrder"/> class.
@@ -246,7 +249,11 @@ namespace GSF
             {
                 m_isLittleEndian = false;
 
+#if ForceBigEndianArchitecture
+                if (!BitConverter.IsLittleEndian) // <- Hard coded test for alternate architecture
+#else
                 if (BitConverter.IsLittleEndian)
+#endif
                 {
                     // If OS is little endian and we want big endian, we swap the bytes
                     m_copyBuffer = SwapCopy;
@@ -258,19 +265,31 @@ namespace GSF
                     // If OS is big endian and we want big endian, we just copy the bytes
                     m_copyBuffer = BlockCopy;
                     m_coerceByteOrder = PassThroughBuffer;
+#if ForceBigEndianArchitecture
+                    m_isNativeEndian = false;
+#else
                     m_isNativeEndian = true;
+#endif
                 }
             }
             else
             {
                 m_isLittleEndian = true;
 
+#if ForceBigEndianArchitecture
+                if (!BitConverter.IsLittleEndian) // <- Hard coded test for alternate architecture
+#else
                 if (BitConverter.IsLittleEndian)
+#endif
                 {
                     // If OS is little endian and we want little endian, we just copy the bytes
                     m_copyBuffer = BlockCopy;
                     m_coerceByteOrder = PassThroughBuffer;
+#if ForceBigEndianArchitecture
+                    m_isNativeEndian = false;
+#else
                     m_isNativeEndian = true;
+#endif
                 }
                 else
                 {
