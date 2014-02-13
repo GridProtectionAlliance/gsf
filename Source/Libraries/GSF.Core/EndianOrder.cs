@@ -68,7 +68,7 @@
 #endregion
 
 // Uncomment only for hard coded testing of BigEndian architecture code
-//#define ForceBigEndianArchitecture
+//#define ForceBigEndianTesting
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -225,8 +225,8 @@ namespace GSF
         private delegate byte[] CoerceByteOrderFunction(byte[] buffer);
 
         // Fields
-        private readonly bool m_isNativeEndian;
-        private readonly bool m_isLittleEndian;
+        private readonly bool m_targetIsNativeEndian;
+        private readonly bool m_targetIsLittleEndian;
         private readonly Endianness m_targetEndianness;
         private readonly CopyBufferFunction m_copyBuffer;
         private readonly CoerceByteOrderFunction m_coerceByteOrder;
@@ -247,9 +247,9 @@ namespace GSF
             // the target nor the OS endian order will change during the lifecycle of this class...
             if (targetEndianness == Endianness.BigEndian)
             {
-                m_isLittleEndian = false;
+                m_targetIsLittleEndian = false;
 
-#if ForceBigEndianArchitecture
+#if ForceBigEndianTesting
                 if (!BitConverter.IsLittleEndian) // <- Hard coded test for alternate architecture
 #else
                 if (BitConverter.IsLittleEndian)
@@ -258,25 +258,21 @@ namespace GSF
                     // If OS is little endian and we want big endian, we swap the bytes
                     m_copyBuffer = SwapCopy;
                     m_coerceByteOrder = ReverseBuffer;
-                    m_isNativeEndian = false;
+                    m_targetIsNativeEndian = false;
                 }
                 else
                 {
                     // If OS is big endian and we want big endian, we just copy the bytes
                     m_copyBuffer = BlockCopy;
                     m_coerceByteOrder = PassThroughBuffer;
-#if ForceBigEndianArchitecture
-                    m_isNativeEndian = false;
-#else
-                    m_isNativeEndian = true;
-#endif
+                    m_targetIsNativeEndian = true;
                 }
             }
             else
             {
-                m_isLittleEndian = true;
+                m_targetIsLittleEndian = true;
 
-#if ForceBigEndianArchitecture
+#if ForceBigEndianTesting
                 if (!BitConverter.IsLittleEndian) // <- Hard coded test for alternate architecture
 #else
                 if (BitConverter.IsLittleEndian)
@@ -285,20 +281,21 @@ namespace GSF
                     // If OS is little endian and we want little endian, we just copy the bytes
                     m_copyBuffer = BlockCopy;
                     m_coerceByteOrder = PassThroughBuffer;
-#if ForceBigEndianArchitecture
-                    m_isNativeEndian = false;
-#else
-                    m_isNativeEndian = true;
-#endif
+                    m_targetIsNativeEndian = true;
                 }
                 else
                 {
                     // If OS is big endian and we want little endian, we swap the bytes
                     m_copyBuffer = SwapCopy;
                     m_coerceByteOrder = ReverseBuffer;
-                    m_isNativeEndian = false;
+                    m_targetIsNativeEndian = false;
                 }
             }
+
+#if ForceBigEndianTesting
+            m_targetIsLittleEndian = (targetEndianness == Endianness.BigEndian);
+            m_targetIsNativeEndian = false;
+#endif
         }
 
         #endregion
@@ -429,7 +426,7 @@ namespace GSF
             if (value == null)
                 throw new ArgumentNullException("value");
 
-            if (m_isLittleEndian)
+            if (m_targetIsLittleEndian)
                 return (short)((int)value[startIndex] | (int)value[startIndex + 1] << 8);
 
             return (short)((int)value[startIndex] << 8 | (int)value[startIndex + 1]);
@@ -473,10 +470,10 @@ namespace GSF
 
             fixed (byte* lp = &value[startIndex])
             {
-                if (m_isNativeEndian)
+                if (m_targetIsNativeEndian)
                     return *(int*)lp;
 
-                if (m_isLittleEndian)
+                if (m_targetIsLittleEndian)
                     return (int)lp[0] |
                            (int)lp[1] << 8 |
                            (int)lp[2] << 16 |
@@ -510,10 +507,10 @@ namespace GSF
 
             fixed (byte* lp = &value[startIndex])
             {
-                if (m_isNativeEndian)
+                if (m_targetIsNativeEndian)
                     return *(long*)lp;
 
-                if (m_isLittleEndian)
+                if (m_targetIsLittleEndian)
                     return (long)lp[0] |
                            (long)lp[1] << 8 |
                            (long)lp[2] << 16 |
@@ -704,7 +701,7 @@ namespace GSF
         {
             byte[] rv = new byte[2];
 
-            if (m_isLittleEndian)
+            if (m_targetIsLittleEndian)
             {
                 rv[0] = (byte)value;
                 rv[1] = (byte)(value >> 8);
@@ -737,7 +734,7 @@ namespace GSF
         {
             byte[] rv = new byte[4];
 
-            if (m_isLittleEndian)
+            if (m_targetIsLittleEndian)
             {
                 rv[0] = (byte)value;
                 rv[1] = (byte)(value >> 8);
@@ -764,7 +761,7 @@ namespace GSF
         {
             byte[] rv = new byte[8];
 
-            if (m_isLittleEndian)
+            if (m_targetIsLittleEndian)
             {
                 rv[0] = (byte)value;
                 rv[1] = (byte)(value >> 8);
@@ -952,7 +949,7 @@ namespace GSF
             if (destinationArray == null)
                 throw new ArgumentNullException("destinationArray");
 
-            if (m_isLittleEndian)
+            if (m_targetIsLittleEndian)
             {
                 destinationArray[destinationIndex] = (byte)value;
                 destinationArray[destinationIndex + 1] = (byte)(value >> 8);
@@ -999,11 +996,11 @@ namespace GSF
 
             fixed (byte* rv = &destinationArray[destinationIndex])
             {
-                if (m_isNativeEndian)
+                if (m_targetIsNativeEndian)
                 {
                     *(int*)rv = value;
                 }
-                else if (m_isLittleEndian)
+                else if (m_targetIsLittleEndian)
                 {
                     rv[0] = (byte)value;
                     rv[1] = (byte)(value >> 8);
@@ -1042,11 +1039,11 @@ namespace GSF
 
             fixed (byte* rv = &destinationArray[destinationIndex])
             {
-                if (m_isNativeEndian)
+                if (m_targetIsNativeEndian)
                 {
                     *(long*)rv = value;
                 }
-                else if (m_isLittleEndian)
+                else if (m_targetIsLittleEndian)
                 {
                     rv[0] = (byte)value;
                     rv[1] = (byte)(value >> 8);

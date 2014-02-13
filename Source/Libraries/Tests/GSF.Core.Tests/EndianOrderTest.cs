@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 // Uncomment only for hard coded testing of BigEndian architecture code
-//#define ForceBigEndianArchitecture
+//#define ForceBigEndianTesting
 
 using System;
 using System.Collections.Generic;
@@ -187,7 +187,7 @@ namespace GSF.Core.Tests
                 // the target nor the OS endian order will change during the lifecycle of this class...
                 if (targetEndianness == Endianness.BigEndian)
                 {
-#if ForceBigEndianArchitecture
+#if ForceBigEndianTesting
                     if (!BitConverter.IsLittleEndian) // <- Hard coded test for alternate architecture
 #else
                     if (BitConverter.IsLittleEndian)
@@ -206,7 +206,7 @@ namespace GSF.Core.Tests
                 }
                 else
                 {
-#if ForceBigEndianArchitecture
+#if ForceBigEndianTesting
                     if (!BitConverter.IsLittleEndian) // <- Hard coded test for alternate architecture
 #else
                     if (BitConverter.IsLittleEndian)
@@ -855,10 +855,87 @@ namespace GSF.Core.Tests
             uint[] uintValues = { uint.MinValue, 1U, uint.MaxValue / 2U, uint.MaxValue };
             long[] longValues = { long.MinValue, long.MinValue / 2L, -1L, 0L, 1L, long.MaxValue / 2L, long.MaxValue };
             ulong[] ulongValues = { ulong.MinValue, 1UL, ulong.MaxValue / 2UL, ulong.MaxValue };
-            float[] floatValues = { float.MinValue, float.MinValue / 2.0F, -1.0F, 0.0F, 1.0F, float.MaxValue / 2.0F, float.MaxValue };
-            double[] doubleValues = { double.MinValue, double.MinValue / 2.0D, -1.0D, 0.0D, 1.0D, double.MaxValue / 2.0D, double.MaxValue };
+            float[] floatValues = { float.MinValue, float.MinValue / 2.0F, -1.0F, 0.0F, 1.0F, float.MaxValue / 2.0F, float.MaxValue, float.NaN, float.NegativeInfinity, float.PositiveInfinity };
+            double[] doubleValues = { double.MinValue, double.MinValue / 2.0D, -1.0D, 0.0D, 1.0D, double.MaxValue / 2.0D, double.MaxValue, double.NaN, double.NegativeInfinity, double.PositiveInfinity };
 
-#if !ForceBigEndianArchitecture
+#if ForceBigEndianTesting
+            // Swap all values to big-endian order - note that since endian order tester class is now operating in reverse, we use little-endian for this
+            byte[] valueBytes;
+            IConvertible convertibleValue;
+            EndianOrderTester swapper = LittleEndianOrderTester.Default;
+
+            for (int i = 0; i < boolValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(boolValues[i]);
+                boolValues[i] = swapper.ToBoolean(valueBytes, 0);
+            }
+
+            for (int i = 0; i < charValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(charValues[i]);
+                charValues[i] = swapper.ToChar(valueBytes, 0);
+            }
+
+            for (int i = 0; i < shortValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(shortValues[i]);
+                shortValues[i] = swapper.ToInt16(valueBytes, 0);
+            }
+
+            for (int i = 0; i < ushortValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(ushortValues[i]);
+                ushortValues[i] = swapper.ToUInt16(valueBytes, 0);
+            }
+
+            for (int i = 0; i < int24Values.Length; i++)
+            {
+                valueBytes = Int24.GetBytes(int24Values[i]);
+                int24Values[i] = swapper.ToInt24(valueBytes, 0);
+            }
+
+            for (int i = 0; i < uint24Values.Length; i++)
+            {
+                valueBytes = UInt24.GetBytes(uint24Values[i]);
+                uint24Values[i] = swapper.ToUInt24(valueBytes, 0);
+            }
+
+            for (int i = 0; i < intValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(intValues[i]);
+                intValues[i] = swapper.ToInt32(valueBytes, 0);
+            }
+
+            for (int i = 0; i < uintValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(uintValues[i]);
+                uintValues[i] = swapper.ToUInt32(valueBytes, 0);
+            }
+
+            for (int i = 0; i < longValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(longValues[i]);
+                longValues[i] = swapper.ToInt64(valueBytes, 0);
+            }
+
+            for (int i = 0; i < ulongValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(ulongValues[i]);
+                ulongValues[i] = swapper.ToUInt64(valueBytes, 0);
+            }
+
+            for (int i = 0; i < floatValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(floatValues[i]);
+                floatValues[i] = swapper.ToSingle(valueBytes, 0);
+            }
+
+            for (int i = 0; i < doubleValues.Length; i++)
+            {
+                valueBytes = BitConverter.GetBytes(doubleValues[i]);
+                doubleValues[i] = swapper.ToDouble(valueBytes, 0);
+            }
+#else
             TestValues(boolValues, NativeEndianOrder.Default, NativeEndianOrderTester.Default, sizeof(bool));
             TestValues(charValues, NativeEndianOrder.Default, NativeEndianOrderTester.Default, sizeof(char));
             TestValues(shortValues, NativeEndianOrder.Default, NativeEndianOrderTester.Default, sizeof(short));
@@ -872,7 +949,6 @@ namespace GSF.Core.Tests
             TestValues(floatValues, NativeEndianOrder.Default, NativeEndianOrderTester.Default, sizeof(float));
             TestValues(doubleValues, NativeEndianOrder.Default, NativeEndianOrderTester.Default, sizeof(double));
 #endif
-
             TestValues(boolValues, LittleEndianOrder.Default, LittleEndianOrderTester.Default, sizeof(bool));
             TestValues(charValues, LittleEndianOrder.Default, LittleEndianOrderTester.Default, sizeof(char));
             TestValues(shortValues, LittleEndianOrder.Default, LittleEndianOrderTester.Default, sizeof(short));
@@ -1012,8 +1088,28 @@ namespace GSF.Core.Tests
                         }
                         else
                         {
-                            Assert.IsTrue(convertibleValue.ToSingle(null) == eOrder.ToSingle(copiedBytes, 0));
-                            Assert.IsTrue(eOrder.ToSingle(copiedBytes, 0) == eOrderTester.ToSingle(copiedBytes, 0));
+                            float singleValue = convertibleValue.ToSingle(null);
+
+                            if (float.IsNaN(singleValue))
+                            {
+                                Assert.IsTrue(float.IsNaN(eOrder.ToSingle(copiedBytes, 0)));
+                                Assert.IsTrue(float.IsNaN(eOrderTester.ToSingle(copiedBytes, 0)));
+                            }
+                            else if (float.IsNegativeInfinity(singleValue))
+                            {
+                                Assert.IsTrue(float.IsNegativeInfinity(eOrder.ToSingle(copiedBytes, 0)));
+                                Assert.IsTrue(float.IsNegativeInfinity(eOrderTester.ToSingle(copiedBytes, 0)));
+                            }
+                            else if (float.IsPositiveInfinity(singleValue))
+                            {
+                                Assert.IsTrue(float.IsPositiveInfinity(eOrder.ToSingle(copiedBytes, 0)));
+                                Assert.IsTrue(float.IsPositiveInfinity(eOrderTester.ToSingle(copiedBytes, 0)));
+                            }
+                            else
+                            {
+                                Assert.IsTrue(singleValue == eOrder.ToSingle(copiedBytes, 0));
+                                Assert.IsTrue(eOrder.ToSingle(copiedBytes, 0) == eOrderTester.ToSingle(copiedBytes, 0));
+                            }
                         }
                         break;
                     case 8:
@@ -1029,8 +1125,28 @@ namespace GSF.Core.Tests
                         }
                         else
                         {
-                            Assert.IsTrue(convertibleValue.ToDouble(null) == eOrder.ToDouble(copiedBytes, 0));
-                            Assert.IsTrue(eOrder.ToDouble(copiedBytes, 0) == eOrderTester.ToDouble(copiedBytes, 0));
+                            double doubleValue = convertibleValue.ToDouble(null);
+
+                            if (double.IsNaN(doubleValue))
+                            {
+                                Assert.IsTrue(double.IsNaN(eOrder.ToDouble(copiedBytes, 0)));
+                                Assert.IsTrue(double.IsNaN(eOrderTester.ToDouble(copiedBytes, 0)));
+                            }
+                            else if (double.IsNegativeInfinity(doubleValue))
+                            {
+                                Assert.IsTrue(double.IsNegativeInfinity(eOrder.ToDouble(copiedBytes, 0)));
+                                Assert.IsTrue(double.IsNegativeInfinity(eOrderTester.ToDouble(copiedBytes, 0)));
+                            }
+                            else if (double.IsPositiveInfinity(doubleValue))
+                            {
+                                Assert.IsTrue(double.IsPositiveInfinity(eOrder.ToDouble(copiedBytes, 0)));
+                                Assert.IsTrue(double.IsPositiveInfinity(eOrderTester.ToDouble(copiedBytes, 0)));
+                            }
+                            else
+                            {
+                                Assert.IsTrue(doubleValue == eOrder.ToDouble(copiedBytes, 0));
+                                Assert.IsTrue(eOrder.ToDouble(copiedBytes, 0) == eOrderTester.ToDouble(copiedBytes, 0));
+                            }
                         }
                         break;
                 }
