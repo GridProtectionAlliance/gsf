@@ -79,7 +79,7 @@ namespace GSF.Core.Tests
         //
         #endregion
 
-        private const int TotalTestSampleSize = int.MaxValue / 500;
+        private const int TotalTestSampleSize = 500000; // int.MaxValue / 500;
 
         [TestMethod]
         public void TestCompressionCases()
@@ -165,9 +165,9 @@ namespace GSF.Core.Tests
 
             PatternCompressor compressor = new PatternCompressor
                 {
-                CompressedBuffer = new byte[4 * TotalTestSampleSize],
-                CompressionStrength = compressionStrength
-            };
+                    CompressedBuffer = new byte[4 * TotalTestSampleSize],
+                    CompressionStrength = compressionStrength
+                };
 
             byte[] arrayOfInts;
             int bufferLength;
@@ -220,9 +220,9 @@ namespace GSF.Core.Tests
 
             PatternCompressor compressor = new PatternCompressor
                 {
-                CompressedBuffer = new byte[4 * TotalTestSampleSize],
-                CompressionStrength = 31
-            };
+                    CompressedBuffer = new byte[4 * TotalTestSampleSize],
+                    CompressionStrength = 31
+                };
 
             PatternDecompressor decompressor = new PatternDecompressor();
 
@@ -269,9 +269,9 @@ namespace GSF.Core.Tests
 
             PatternCompressor compressor = new PatternCompressor
                 {
-                CompressedBuffer = new byte[4 * TotalTestSampleSize],
-                CompressionStrength = 31
-            };
+                    CompressedBuffer = new byte[4 * TotalTestSampleSize],
+                    CompressionStrength = 31
+                };
 
             for (int i = 0; i < TotalTestSampleSize; i++)
             {
@@ -345,7 +345,7 @@ namespace GSF.Core.Tests
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
             startTime = DateTime.UtcNow.Ticks;
-            compressedLen = PatternCompressor.CompressBuffer(arrayOfFloats, 0, dataLen, bufferLen, 0);
+            compressedLen = PatternCompressor.CompressBuffer(arrayOfFloats, 0, dataLen, bufferLen, 31);
             stopTime = DateTime.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
@@ -437,7 +437,7 @@ namespace GSF.Core.Tests
             results.AppendFormat("Buffer Pool cached take time: {0}\r\n\r\n", (stopTime - startTime).ToElapsedTimeString(4));
 
             startTime = DateTime.UtcNow.Ticks;
-            compressedLen = PatternCompressor.CompressBuffer(arrayOfInts, 0, dataLen, bufferLen, 0);
+            compressedLen = PatternCompressor.CompressBuffer(arrayOfInts, 0, dataLen, bufferLen, 31);
             stopTime = DateTime.UtcNow.Ticks;
             compressTime = stopTime - startTime;
 
@@ -461,7 +461,7 @@ namespace GSF.Core.Tests
             }
 
             // Publish results to debug window
-            results.AppendFormat("Results of floating point compression algorithm over sequential data:\r\n\r\n");
+            results.AppendFormat("Results of integer compression algorithm over sequential data:\r\n\r\n");
             results.AppendFormat("Total number of samples:  \t{0:#,##0}\r\n", TotalTestSampleSize);
             results.AppendFormat("Total number of bytes:    \t{0:#,##0}\r\n", dataLen);
             results.AppendFormat("Total compression time:   \t{0}\r\n", compressTime.ToElapsedTimeString(4));
@@ -579,7 +579,7 @@ namespace GSF.Core.Tests
                 buffer.Write(BitConverter.GetBytes(value), 0, 4);
             }
 
-            // Add one byte of extra space to accomodate compression algorithm
+            // Add one byte of extra space to accommodate compression algorithm
             buffer.WriteByte(0xFF);
 
             byte[] arrayOfInts = buffer.ToArray();

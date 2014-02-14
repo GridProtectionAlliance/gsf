@@ -398,47 +398,37 @@ namespace GSF
         /// </returns>
         public static int CompareTo(this byte[] source, byte[] other)
         {
+            // If both buffers are assumed equal if both are nothing
             if ((object)source == null && (object)other == null)
-            {
-                // Both buffers are assumed equal if both are nothing.
                 return 0;
-            }
-            else if ((object)source == null)
-            {
-                // Buffer 2 has data, and buffer 1 is nothing. Buffer 2 is assumed larger.
+
+            // If other buffer has data and source buffer is nothing, other buffer is assumed larger
+            if ((object)source == null)
                 return 1;
-            }
-            else if ((object)other == null)
-            {
-                // Buffer 1 has data, and buffer 2 is nothing. Buffer 1 is assumed larger.
+
+            // If source buffer has data and other buffer is nothing, source buffer is assumed larger
+            if ((object)other == null)
                 return -1;
-            }
-            else
+
+            int length1 = source.Length;
+            int length2 = other.Length;
+
+            // If buffer lengths are unequal, buffer with largest number of elements is assumed to be largest
+            if (length1 != length2)
+                return length1.CompareTo(length2);
+
+            int comparision = 0;
+
+            // Compares elements of buffers that are of equal size.
+            for (int x = 0; x < length1; x++)
             {
-                int length1 = source.Length;
-                int length2 = other.Length;
+                comparision = source[x].CompareTo(other[x]);
 
-                if (length1 == length2)
-                {
-                    int comparision = 0;
-
-                    // Compares elements of buffers that are of equal size.
-                    for (int x = 0; x < length1; x++)
-                    {
-                        comparision = source[x].CompareTo(other[x]);
-
-                        if (comparision != 0)
-                            break;
-                    }
-
-                    return comparision;
-                }
-                else
-                {
-                    // Buffer lengths are unequal. Buffer with largest number of elements is assumed to be largest.
-                    return length1.CompareTo(length2);
-                }
+                if (comparision != 0)
+                    break;
             }
+
+            return comparision;
         }
 
         /// <summary>
@@ -481,15 +471,15 @@ namespace GSF
         /// </exception>
         public static int CompareTo(this byte[] source, int sourceOffset, byte[] other, int otherOffset, int count)
         {
-            // Both buffers are assumed equal if both are nothing.
+            // If both buffers are assumed equal if both are nothing
             if ((object)source == null && (object)other == null)
                 return 0;
 
-            // Buffer 2 has data, and buffer 1 is nothing. Buffer 2 is assumed larger.
+            // If other buffer has data and source buffer is nothing, other buffer is assumed larger
             if ((object)source == null)
                 return 1;
 
-            // Buffer 1 has data, and buffer 2 is nothing. Buffer 1 is assumed larger.
+            // If source buffer has data and other buffer is nothing, source buffer is assumed larger
             if ((object)other == null)
                 return -1;
 
