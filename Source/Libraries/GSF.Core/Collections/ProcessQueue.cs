@@ -64,6 +64,8 @@
 //       the List<T> based functionality of original code.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//   2/14/2014 - Steven E. Chisholm
+//       Incorporated Threading.WorkerThread and removed the previous worker polling model.
 //
 //******************************************************************************************************
 
@@ -76,6 +78,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using GSF.Threading;
 using GSF.Units;
 using Timer = System.Timers.Timer;
 
@@ -365,7 +368,7 @@ namespace GSF.Collections
         private ProcessItemFunctionSignature m_processItemFunction;
         private ProcessItemsFunctionSignature m_processItemsFunction;
         private CanProcessItemFunctionSignature m_canProcessItemFunction;
-
+        private WorkerThread m_realTimeProcessThread;
         private IEnumerable<T> m_processQueue;
         private int m_maximumThreads;
         private int m_processTimeout;
@@ -375,7 +378,6 @@ namespace GSF.Collections
         private bool m_requeueOnException;
 
         private volatile bool m_enabled;
-        private int m_processing;
         private int m_threadCount;
         private long m_itemsProcessing;
         private long m_itemsProcessed;
@@ -383,12 +385,6 @@ namespace GSF.Collections
         private long m_stopTime;
         private string m_name;
         private bool m_disposed;
-
-#if ThreadTracking
-        private ManagedThread m_realTimeProcessThread;
-#else
-        private Thread m_realTimeProcessThread;
-#endif
 
         private Timer m_processTimer;
         private readonly object m_processLock;
@@ -725,7 +721,7 @@ namespace GSF.Collections
             get
             {
                 if (m_processingIsRealTime)
-                    return ((object)m_realTimeProcessThread != null);
+                    return m_enabled;
 
                 lock (m_processLock)
                 {
@@ -1045,15 +1041,6 @@ namespace GSF.Collections
             if ((object)queue != null)
             {
                 queue.Enqueue(item);
-
-                if (m_enabled && m_processingIsRealTime && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
-                {
-                    if (!queue.IsEmpty)
-                        ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
-                    else
-                        Interlocked.Exchange(ref m_processing, 0);
-                }
-
                 DataAdded();
             }
             else
@@ -1221,15 +1208,8 @@ namespace GSF.Collections
             if (m_processingIsRealTime)
             {
                 // Start real-time processing thread
-#if ThreadTracking
-                m_realTimeProcessThread = new ManagedThread(RealTimeThreadProc);
-                m_realTimeProcessThread.Name = "GSF.Collections.ProcessQueue.RealTimeThreadProc() [" + Name + "]";
-#else
-                m_realTimeProcessThread = new Thread(RealTimeThreadProc);
-#endif
-
-                m_realTimeProcessThread.IsBackground = true;
-                m_realTimeProcessThread.Start();
+                m_realTimeProcessThread = new WorkerThread();
+                m_realTimeProcessThread.DoWork += RealTimeDataProcessingLoop;
             }
             else
             {
@@ -1257,9 +1237,7 @@ namespace GSF.Collections
 
             if (m_processingIsRealTime)
             {
-                // Remove reference to process thread - it will stop gracefully after it has finished processing
-                // current set of items since enabled is false...
-                m_realTimeProcessThread = null;
+                //Do Nothing
             }
             else
             {
@@ -1448,6 +1426,13 @@ namespace GSF.Collections
                         m_processTimer.Enabled = true;
                 }
             }
+            else
+            {
+                if (m_enabled)
+                {
+                    m_realTimeProcessThread.Signal();
+                }
+            }
         }
 
         /// <summary>
@@ -1606,72 +1591,20 @@ namespace GSF.Collections
             }
         }
 
-        /// <summary>
-        /// Creates a real-time thread for processing items. 
-        /// </summary>
-        private void RealTimeThreadProc()
-        {
-            int processing;
-            int sleepTime = 1;
-            long noWorkSleeps = 0L;
-
-            try
-            {
-                // Creates a real-time processing loop that will start item processing as quickly as possible.
-                while (m_enabled)
-                {
-                    processing = Interlocked.CompareExchange(ref m_processing, 1, 0);
-
-                    // Kick start processing when items exist that are not currently being processed
-                    if (processing == 0 && !IsEmpty)
-                    {
-                        sleepTime = 1;
-                        noWorkSleeps = 0L;
-                        ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
-                    }
-                    else
-                    {
-                        // If the processing flag was set but no items were found in the process queue,
-                        // the asynchronous loop was never spawned so we need to clear the processing flag
-                        if (processing == 0)
-                            Interlocked.Exchange(ref m_processing, 0);
-
-                        // Vary sleep time based on how often kick start is being processed, up to one second for very idle queues
-                        if (noWorkSleeps > 1000L)
-                            sleepTime = 1000;   // It will take well over 1.5 minutes of no work before sleeping for 1 second
-                        else if (noWorkSleeps > 100L)
-                            sleepTime = 100;    // It will take at least one second of no work before sleeping for 100ms
-                        else if (noWorkSleeps > 5L)
-                            sleepTime = 10;     // It will take at least 5ms of no work before sleeping for 10ms
-
-                        noWorkSleeps++;
-
-                        // Wait around for more items to process
-                        Thread.Sleep(sleepTime);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                if (m_enabled)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred in real-time processing loop: {0}", ex.Message), ex));
-                }
-            }
-        }
-
         // Creates a real-time loop for processing data that runs as long as there is data to process
-        private void RealTimeDataProcessingLoop(object state)
+        private void RealTimeDataProcessingLoop(object caller, EventArgs e)
         {
+            if (!m_enabled || IsEmpty)
+                return;
+
             if ((object)m_processItemsFunction == null)
                 ProcessNextItem();
             else
                 ProcessNextItems();
 
             if (m_enabled && !IsEmpty)
-                ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
-            else
-                Interlocked.Exchange(ref m_processing, 0);
+                m_realTimeProcessThread.Signal();
+
         }
 
         /// <summary>
