@@ -311,7 +311,7 @@ namespace GSF.Identity
                 WindowsApi.TOKEN_ELEVATION_TYPE elevationType = WindowsApi.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault;
                 uint dwSize;
 
-                if (!WindowsApi.GetTokenInformation(hToken, WindowsApi.TOKEN_INFORMATION_CLASS.TokenElevationType, ref elevationType, sizeof(WindowsApi.TOKEN_ELEVATION_TYPE), out dwSize))
+                if (!WindowsApi.GetTokenInformation(hToken, WindowsApi.TOKEN_INFORMATION_CLASS.TokenElevationType, ref elevationType, (uint)sizeof(WindowsApi.TOKEN_ELEVATION_TYPE), out dwSize))
                     throw new Win32Exception(WindowsApi.GetLastError());
 
                 return elevationType;
