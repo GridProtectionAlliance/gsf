@@ -103,7 +103,7 @@ namespace GSF.Threading
         public void RunOnceAsync()
         {
             if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
-                ThreadPool.QueueUserWorkItem(state => TryRun());
+                TryRunAsync();
         }
 
         /// <summary>
@@ -113,12 +113,7 @@ namespace GSF.Threading
         public void TryRun()
         {
             if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
-            {
                 ExecuteAction();
-
-                if (Interlocked.Exchange(ref m_state, NotRunning) == Pending)
-                    ThreadPool.QueueUserWorkItem(state => TryRun());
-            }
         }
 
         /// <summary>
@@ -127,8 +122,8 @@ namespace GSF.Threading
         /// </summary>
         public void TryRunAsync()
         {
-            if (Interlocked.CompareExchange(ref m_state, 0, 0) == NotRunning)
-                ThreadPool.QueueUserWorkItem(state => TryRun());
+            if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
+                ThreadPool.QueueUserWorkItem(state => ExecuteAction());
         }
 
         private void ExecuteAction()
@@ -147,6 +142,12 @@ namespace GSF.Threading
                 catch
                 {
                 }
+            }
+
+            if (Interlocked.CompareExchange(ref m_state, NotRunning, Running) == Pending)
+            {
+                Interlocked.Exchange(ref m_state, Running);
+                ThreadPool.QueueUserWorkItem(state => ExecuteAction());
             }
         }
 
