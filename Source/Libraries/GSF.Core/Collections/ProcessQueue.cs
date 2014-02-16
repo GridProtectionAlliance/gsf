@@ -66,6 +66,9 @@
 //       Modified Header.
 //   2/14/2014 - Steven E. Chisholm
 //       Incorporated Threading.WorkerThread and removed the previous worker polling model.
+//   2/16/2014 - Steven E. Chisholm
+//       Replaced the internal ConcurrentQueue<T> with SynchronizedQueue<T> in favor of bulk synchronous
+//       method calls.
 //
 //******************************************************************************************************
 
@@ -145,7 +148,7 @@ namespace GSF.Collections
     #endregion
 
     /// <summary>
-    /// Represents a lock-free thread-safe collection of items, based on <see cref="ConcurrentQueue{T}"/>, that get processed on independent threads with a consumer provided function.
+    /// Represents a lock-free thread-safe collection of items, based on <see cref="SynchronizedQueue{T}"/>, that get processed on independent threads with a consumer provided function.
     /// </summary>
     /// <typeparam name="T">Type of object to process</typeparam>
     /// <remarks>
@@ -404,7 +407,7 @@ namespace GSF.Collections
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-            : this(processItemFunction, null, canProcessItemFunction, new ConcurrentQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            : this(processItemFunction, null, canProcessItemFunction, new SynchronizedQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
         }
 
@@ -419,7 +422,7 @@ namespace GSF.Collections
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-            : this(null, processItemsFunction, canProcessItemFunction, new ConcurrentQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            : this(null, processItemsFunction, canProcessItemFunction, new SynchronizedQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
         }
 
@@ -738,7 +741,7 @@ namespace GSF.Collections
         {
             get
             {
-                ConcurrentQueue<T> queue = InternalQueue;
+                SynchronizedQueue<T> queue = InternalQueue;
 
                 if ((object)queue != null)
                     return queue.IsEmpty;
@@ -972,11 +975,11 @@ namespace GSF.Collections
         }
 
         // Attempts to return process queue enuerable as a concurrent queue
-        private ConcurrentQueue<T> InternalQueue
+        private SynchronizedQueue<T> InternalQueue
         {
             get
             {
-                return m_processQueue as ConcurrentQueue<T>;
+                return m_processQueue as SynchronizedQueue<T>;
             }
         }
 
@@ -1036,7 +1039,7 @@ namespace GSF.Collections
         /// <param name="item">The item to add to the <see cref="ProcessQueue{T}"/>.</param>
         public virtual void Add(T item)
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {
@@ -1055,9 +1058,16 @@ namespace GSF.Collections
         /// <param name="items">The elements to be added to the <see name="ProcessQueue{T}"/>.</param>
         public virtual void AddRange(IEnumerable<T> items)
         {
-            foreach (T item in items)
+            SynchronizedQueue<T> queue = InternalQueue;
+
+            if ((object)queue != null)
             {
-                Add(item);
+                queue.Enqueue(items);
+                DataAdded();
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -1068,7 +1078,7 @@ namespace GSF.Collections
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
         public virtual bool Contains(T item)
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             // Calls to ToArray on concurrent queue avoid cases where collection may be modified during a context switch between GetEnumerator and MoveNext
             if ((object)queue != null)
@@ -1096,7 +1106,7 @@ namespace GSF.Collections
         /// <returns>A new array containing the elements copied from the <see cref="ProcessQueue{T}"/>.</returns>
         public virtual T[] ToArray()
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
                 return queue.ToArray();
@@ -1122,7 +1132,7 @@ namespace GSF.Collections
         /// <returns><c>true</c> if an object was removed and returned successfully; otherwise, <c>false</c>.</returns>
         public virtual bool TryTake(out T item)
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
                 return queue.TryDequeue(out item);
@@ -1137,23 +1147,13 @@ namespace GSF.Collections
         /// <returns><c>true</c> if any objects were removed and returned successfully; otherwise, <c>false</c>.</returns>
         public virtual bool TryTake(out T[] items)
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {
-                T item;
-                List<T> taken = new List<T>();
-
-                while (queue.TryDequeue(out item))
-                {
-                    taken.Add(item);
-                }
-
-                if (taken.Count > 0)
-                {
-                    items = taken.ToArray();
+                items = queue.DequeueAll();
+                if (items.Length > 0)
                     return true;
-                }
 
                 items = null;
                 return false;
@@ -1176,7 +1176,7 @@ namespace GSF.Collections
         /// </summary>
         public virtual void Clear()
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {

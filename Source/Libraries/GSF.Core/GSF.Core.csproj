@@ -176,6 +176,7 @@
     <Compile Include="Collections\ProcessList.cs" />
     <Compile Include="Collections\ProcessQueue.cs" />
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
+    <Compile Include="Collections\SynchronizedQueue.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="ComplexNumber.cs" />
     <Compile Include="CompoundValue.cs" />
