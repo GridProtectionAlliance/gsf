@@ -176,7 +176,6 @@
     <Compile Include="Collections\ProcessList.cs" />
     <Compile Include="Collections\ProcessQueue.cs" />
     <Compile Include="Collections\ProcessQueueStatistics.cs" />
-    <Compile Include="Collections\SynchronizedQueue.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="ComplexNumber.cs" />
     <Compile Include="CompoundValue.cs" />
@@ -337,9 +336,7 @@
     <Compile Include="Threading\ManagedThreads.cs" />
     <Compile Include="Threading\NamespaceDoc.cs" />
     <Compile Include="Threading\ReaderWriterSpinLock.cs" />
-    <Compile Include="Threading\StateMachine.cs" />
     <Compile Include="Threading\SynchronizedOperation.cs" />
-    <Compile Include="Threading\WorkerThread.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="TimeTagBase.cs" />
