@@ -2364,8 +2364,9 @@ namespace GSF.TimeSeries.Transport
                             m_lifetimeMeasurements += measurementCount;
                             UpdateMeasurementsPerSecond(measurementCount);
 
-                            foreach (long latency in measurements.Select(m => timeReceived - m.Timestamp))
+                            for (int x = 0; x < measurements.Count; x++)
                             {
+                                long latency = timeReceived - (long)measurements[x].Timestamp;
                                 if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
                                     m_lifetimeMinimumLatency = latency;
 
