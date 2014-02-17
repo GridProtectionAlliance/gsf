@@ -34,6 +34,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using GSF.Configuration;
+using GSF.Identity;
 using GSF.Security;
 
 namespace GSF.Windows
@@ -135,7 +136,7 @@ namespace GSF.Windows
             ManageScreenVisualization();
 
             // Open this window on top of all other windows
-            this.Topmost = true;
+            Topmost = true;
         }
 
         #endregion
@@ -169,8 +170,8 @@ namespace GSF.Windows
                     ConfigurationFile.Current.Save();
                 }
 
-                if (this.DialogResult == null)
-                    this.DialogResult = value;
+                if (DialogResult == null)
+                    DialogResult = value;
             }
         }
 
@@ -282,6 +283,34 @@ namespace GSF.Windows
             DisplayErrorMessage(null);
         }
 
+        private bool TryImpersonate(string loginID, string password, out WindowsImpersonationContext impersonationContext)
+        {
+            string domain;
+            string username;
+            string[] splitLoginID;
+
+            try
+            {
+                splitLoginID = loginID.Split('\\');
+
+                if (splitLoginID.Length == 2)
+                {
+                    domain = splitLoginID[0];
+                    username = splitLoginID[1];
+                    impersonationContext = UserInfo.ImpersonateUser(domain, username, password);
+
+                    return true;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+            }
+
+            impersonationContext = null;
+
+            return false;
+        }
+
         #region [ Event Handlers ]
 
         /// <summary>
@@ -302,7 +331,7 @@ namespace GSF.Windows
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
-                this.DragMove();
+                DragMove();
         }
 
         /// <summary>
@@ -312,10 +341,36 @@ namespace GSF.Windows
         /// <param name="e">Arguments of this event.</param>
         private void ButtonLogin_Click(object sender, RoutedEventArgs e)
         {
+            UserInfo userInfo;
+            WindowsImpersonationContext impersonationContext = null;
+            ISecurityProvider provider;
+
             try
             {
+                // Determine whether we need to try impersonating the user
+                userInfo = new UserInfo(TextBoxUserName.Text);
+
+                // If the application is unable to access the domain, possibly because the local user
+                // running the application does not have access to domain objects, it's possible that
+                // the user logging in does have access to the domain. So we attempt to impersonate the
+                // user logging in to allow authentication to proceed
+                if (!userInfo.DomainAvailable && TryImpersonate(userInfo.LoginID, TextBoxPassword.Password, out impersonationContext))
+                {
+                    try
+                    {
+                        // Working around a known issue - DirectorySearcher will often throw
+                        // an exception the first time it is used after impersonating another
+                        // user so we get that out of the way here
+                        userInfo.Initialize();
+                    }
+                    catch (InitializationException)
+                    {
+                        // Exception is expected so we ignore it
+                    }
+                }
+
                 // Initialize the security provider
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxUserName.Text);
+                provider = SecurityProviderUtility.CreateProvider(TextBoxUserName.Text);
 
                 // Attempt to authenticate user
                 if (provider.Authenticate(TextBoxPassword.Password))
@@ -356,6 +411,14 @@ namespace GSF.Windows
                     TextBoxUserName.Focus();
                 else
                     TextBoxPassword.Focus();
+            }
+            finally
+            {
+                if ((object)impersonationContext != null)
+                {
+                    impersonationContext.Undo();
+                    impersonationContext.Dispose();
+                }
             }
         }
 
@@ -490,9 +553,9 @@ namespace GSF.Windows
         /// <param name="e">Arguments of this event.</param>
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (LoginSection.Visibility == Visibility.Visible && e.Source == TextBoxUserName)
+            if (LoginSection.Visibility == Visibility.Visible && ReferenceEquals(e.Source, TextBoxUserName))
                 TextBoxChangePasswordUserName.Text = TextBoxUserName.Text;
-            else if (ChangePasswordSection.Visibility == Visibility.Visible && e.Source == TextBoxChangePasswordUserName)
+            else if (ChangePasswordSection.Visibility == Visibility.Visible && ReferenceEquals(e.Source, TextBoxChangePasswordUserName))
                 TextBoxUserName.Text = TextBoxChangePasswordUserName.Text;
 
             ClearErrorMessage();
@@ -515,12 +578,21 @@ namespace GSF.Windows
         /// <param name="e">Arguments of this event.</param>
         private void TextBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (sender != null)
+            if ((object)sender != null)
             {
-                if (sender is TextBox)
-                    ((TextBox)sender).SelectAll();
-                else if (sender is PasswordBox)
-                    ((PasswordBox)sender).SelectAll();
+                TextBox box = sender as TextBox;
+
+                if ((object)box != null)
+                {
+                    box.SelectAll();
+                }
+                else
+                {
+                    PasswordBox passwordBox = sender as PasswordBox;
+
+                    if ((object)passwordBox != null)
+                        passwordBox.SelectAll();
+                }
             }
         }
 

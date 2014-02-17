@@ -33,11 +33,15 @@ namespace GSF.Threading
     {
         #region [ Members ]
 
+        // Constants
+        private const int NotRunning = 0;
+        private const int Running = 1;
+        private const int Pending = 2;
+
         // Fields
         private Action m_action;
         private Action<Exception> m_exceptionAction;
-        private int m_operationExecuting;
-        private int m_operationPending;
+        private int m_state;
 
         #endregion
 
@@ -82,8 +86,8 @@ namespace GSF.Threading
         /// </remarks>
         public void RunOnce()
         {
-            Interlocked.Exchange(ref m_operationPending, 1);
-            TryRun();
+            if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
+                TryRun();
         }
 
         /// <summary>
@@ -98,7 +102,8 @@ namespace GSF.Threading
         /// </remarks>
         public void RunOnceAsync()
         {
-            ThreadPool.QueueUserWorkItem(state => RunOnce());
+            if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
+                TryRunAsync();
         }
 
         /// <summary>
@@ -107,15 +112,8 @@ namespace GSF.Threading
         /// </summary>
         public void TryRun()
         {
-            if (Interlocked.CompareExchange(ref m_operationExecuting, 1, 0) == 0)
-            {
-                Interlocked.Exchange(ref m_operationPending, 0);
+            if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
                 ExecuteAction();
-                Interlocked.Exchange(ref m_operationExecuting, 0);
-
-                if (Interlocked.CompareExchange(ref m_operationPending, 0, 0) == 1)
-                    TryRunAsync();
-            }
         }
 
         /// <summary>
@@ -124,7 +122,8 @@ namespace GSF.Threading
         /// </summary>
         public void TryRunAsync()
         {
-            ThreadPool.QueueUserWorkItem(state => TryRun());
+            if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
+                ThreadPool.QueueUserWorkItem(state => ExecuteAction());
         }
 
         private void ExecuteAction()
@@ -143,6 +142,12 @@ namespace GSF.Threading
                 catch
                 {
                 }
+            }
+
+            if (Interlocked.CompareExchange(ref m_state, NotRunning, Running) == Pending)
+            {
+                Interlocked.Exchange(ref m_state, Running);
+                ThreadPool.QueueUserWorkItem(state => ExecuteAction());
             }
         }
 

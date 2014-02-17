@@ -526,12 +526,15 @@ namespace DataMigrationUtility
                     {
                         if (string.Compare(sourceTable.Name, foreignKey.ForeignKey.Table.Name, StringComparison.OrdinalIgnoreCase) == 0)
                         {
-                            selectString += (index > 0 ? ", " : "") + m_fromSchema.SQLEscapeName(foreignKey.ForeignKey.Name);
+                            if (m_fromSchema.DataSourceType == DatabaseType.Oracle) // Force Oracle to sort NULLs at a higher level
+                                selectString += (index > 0 ? ", " : "") + "COALESCE(" + m_fromSchema.SQLEscapeName(foreignKey.ForeignKey.Name) + ", 0)";
+                            else
+                                selectString += (index > 0 ? ", " : "") + m_fromSchema.SQLEscapeName(foreignKey.ForeignKey.Name);
+
                             index++;
                         }
                     }
                 }
-
             }
             else
             {

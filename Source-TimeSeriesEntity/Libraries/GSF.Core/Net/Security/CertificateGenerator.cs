@@ -237,7 +237,8 @@ namespace GSF.Net.Security
             return hostEntry.AddressList
                 .Select(address => address.ToString())
                 .Concat(hostEntry.Aliases)
-                .Concat(new string[] { hostEntry.HostName }).ToArray();
+                .Concat(new string[] { Environment.MachineName, hostEntry.HostName })
+                .ToArray();
         }
 
         // Gets the default path to which the certificate file will be generated.

@@ -121,7 +121,7 @@ namespace GSF.IO.Compression
             // Create a new compression deflater
             using (BlockAllocatedMemoryStream compressedData = new BlockAllocatedMemoryStream())
             {
-                using (DeflateStream deflater = new DeflateStream(compressedData, CompressionMode.Compress))
+                using (DeflateStream deflater = new DeflateStream(compressedData, CompressionMode.Compress, true))
                 {
                     // Provide data for compression
                     deflater.Write(source, startIndex, length);

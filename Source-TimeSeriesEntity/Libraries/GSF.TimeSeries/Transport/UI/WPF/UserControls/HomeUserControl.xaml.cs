@@ -132,17 +132,17 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
 
         private void HomeUserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            // if (!CommonFunctions.CurrentPrincipal.IsInRole("Administrator"))
-            //ButtonRestart.IsEnabled = false;
+            if (!CommonFunctions.CurrentPrincipal.IsInRole("Administrator"))
+                ButtonRestart.IsEnabled = false;
 
-            // if (!CommonFunctions.CurrentPrincipal.IsInRole("Administrator,Editor"))
-            //ButtonInputWizard.IsEnabled = false;
+            //if (!CommonFunctions.CurrentPrincipal.IsInRole("Administrator,Editor"))
+            //    ButtonInputWizard.IsEnabled = false;
 
             m_windowsServiceClient = CommonFunctions.GetWindowsServiceClient();
 
             if (m_windowsServiceClient == null || m_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
             {
-                //ButtonRestart.IsEnabled = false;
+                ButtonRestart.IsEnabled = false;
             }
             else
             {
@@ -155,8 +155,8 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             }
 
             m_refreshTimer = new DispatcherTimer();
-            m_refreshTimer.Interval = TimeSpan.FromSeconds(10);
-            m_refreshTimer.Tick += m_refreshTimer_Tick;
+            m_refreshTimer.Interval = TimeSpan.FromSeconds(5);
+            m_refreshTimer.Tick += RefreshTimer_Tick;
             m_refreshTimer.Start();
 
             if (IntPtr.Size == 8)
@@ -239,22 +239,25 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 ComboBoxDevice.SelectedIndex = 0;
         }
 
-        void m_refreshTimer_Tick(object sender, EventArgs e)
+        void RefreshTimer_Tick(object sender, EventArgs e)
         {
             if (m_windowsServiceClient != null && m_windowsServiceClient.Helper != null &&
-                   m_windowsServiceClient.Helper.RemotingClient != null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+                m_windowsServiceClient.Helper.RemotingClient != null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
             {
                 try
                 {
+                    ButtonRestart.IsEnabled = CommonFunctions.CurrentPrincipal.IsInRole("Administrator");
 
                     if (!m_eventHandlerRegistered)
                     {
                         m_windowsServiceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
                         CommonFunctions.SendCommandToService("Version -actionable");
+                        m_eventHandlerRegistered = true;
                     }
 
                     CommonFunctions.SendCommandToService("Health -actionable");
                     CommonFunctions.SendCommandToService("Time -actionable");
+
                     if (PopupStatus.IsOpen)
                         CommonFunctions.SendCommandToService("Status -actionable");
                 }
@@ -262,31 +265,13 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                 {
                 }
             }
+            else
+            {
+                ButtonRestart.IsEnabled = false;
+            }
+
             TextBlockLocalTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
         }
-
-        //private void ButtonQuickLink_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MenuDataItem item = new MenuDataItem();
-        //    string stringToMatch = ((Button)sender).Tag.ToString();
-
-        //    if (!string.IsNullOrEmpty(stringToMatch))
-        //    {
-        //        if (stringToMatch == "Restart")
-        //        {
-        //            RestartService();
-        //        }
-        //        else
-        //        {
-        //            GetMenuDataItem(m_menuDataItems, stringToMatch, ref item);
-
-        //            if (item.MenuText != null)
-        //            {
-        //                item.Command.Execute(null);
-        //            }
-        //        }
-        //    }
-        //}
 
         /// <summary>
         /// Recursively finds menu item to navigate to when a button is clicked on the UI.
@@ -303,29 +288,25 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
                     item = items[i];
                     break;
                 }
-                else
-                {
-                    if (items[i].SubMenuItems.Count > 0)
-                    {
-                        GetMenuDataItem(items[i].SubMenuItems, stringToMatch, ref item);
-                    }
-                }
+
+                if (items[i].SubMenuItems.Count > 0)
+                    GetMenuDataItem(items[i].SubMenuItems, stringToMatch, ref item);
             }
         }
 
         private void RestartService()
         {
-            if (MessageBox.Show("Do you want to restart service?", "Restart Service", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            try
             {
-                if (m_windowsServiceClient != null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+                if (MessageBox.Show("Do you want to restart service?", "Restart Service", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
                     CommonFunctions.SendCommandToService("Restart");
                     MessageBox.Show("Successfully sent RESTART command to the service.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
-                else
-                {
-                    MessageBox.Show("Failed sent RESTART command to the service." + Environment.NewLine + "Service is either offline or disconnected.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+            }
+            catch
+            {
+                MessageBox.Show("Failed sent RESTART command to the service." + Environment.NewLine + "Service is either offline or disconnected.", "Restart Service", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -590,11 +571,18 @@ namespace GSF.TimeSeries.Transport.UI.UserControls
             string stringToMatch = ((Button)sender).Tag.ToString();
 
             if (!string.IsNullOrEmpty(stringToMatch))
-                GetMenuDataItem(m_menuDataItems, stringToMatch, ref item);
-
-            if (item.MenuText != null)
             {
-                item.Command.Execute(null);
+                if (stringToMatch == "Restart")
+                {
+                    RestartService();
+                }
+                else
+                {
+                    GetMenuDataItem(m_menuDataItems, stringToMatch, ref item);
+
+                    if ((object)item.MenuText != null)
+                        item.Command.Execute(null);
+                }
             }
         }
 

@@ -177,6 +177,8 @@
     <Compile Include="GSF.Units\TimeTest.cs" />
     <Compile Include="GSF.Units\VoltageTest.cs" />
     <Compile Include="GSF.Units\VolumeTest.cs" />
+    <Compile Include="StringExtensionsTest.cs" />
+    <Compile Include="EndianOrderTest.cs" />
     <Compile Include="SynchronizedClientSubscriptionTest.cs" />
     <Compile Include="TemporalClientSubscriptionProxyTest.cs" />
     <None Include="TemporalMeasurementTest.cs.discontinued" />

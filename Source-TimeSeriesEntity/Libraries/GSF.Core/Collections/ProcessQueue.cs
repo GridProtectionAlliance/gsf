@@ -64,6 +64,11 @@
 //       the List<T> based functionality of original code.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//   2/14/2014 - Steven E. Chisholm
+//       Incorporated Threading.WorkerThread and removed the previous worker polling model.
+//   2/16/2014 - Steven E. Chisholm
+//       Replaced the internal ConcurrentQueue<T> with SynchronizedQueue<T> in favor of bulk synchronous
+//       method calls.
 //
 //******************************************************************************************************
 
@@ -76,6 +81,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using GSF.Threading;
 using GSF.Units;
 using Timer = System.Timers.Timer;
 
@@ -142,7 +148,7 @@ namespace GSF.Collections
     #endregion
 
     /// <summary>
-    /// Represents a lock-free thread-safe collection of items, based on <see cref="ConcurrentQueue{T}"/>, that get processed on independent threads with a consumer provided function.
+    /// Represents a lock-free thread-safe collection of items, based on <see cref="SynchronizedQueue{T}"/>, that get processed on independent threads with a consumer provided function.
     /// </summary>
     /// <typeparam name="T">Type of object to process</typeparam>
     /// <remarks>
@@ -365,7 +371,7 @@ namespace GSF.Collections
         private ProcessItemFunctionSignature m_processItemFunction;
         private ProcessItemsFunctionSignature m_processItemsFunction;
         private CanProcessItemFunctionSignature m_canProcessItemFunction;
-
+        private WorkerThread m_realTimeProcessThread;
         private IEnumerable<T> m_processQueue;
         private int m_maximumThreads;
         private int m_processTimeout;
@@ -375,7 +381,6 @@ namespace GSF.Collections
         private bool m_requeueOnException;
 
         private volatile bool m_enabled;
-        private int m_processing;
         private int m_threadCount;
         private long m_itemsProcessing;
         private long m_itemsProcessed;
@@ -383,12 +388,6 @@ namespace GSF.Collections
         private long m_stopTime;
         private string m_name;
         private bool m_disposed;
-
-#if ThreadTracking
-        private ManagedThread m_realTimeProcessThread;
-#else
-        private Thread m_realTimeProcessThread;
-#endif
 
         private Timer m_processTimer;
         private readonly object m_processLock;
@@ -408,7 +407,7 @@ namespace GSF.Collections
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-            : this(processItemFunction, null, canProcessItemFunction, new ConcurrentQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            : this(processItemFunction, null, canProcessItemFunction, new SynchronizedQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
         }
 
@@ -423,7 +422,7 @@ namespace GSF.Collections
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-            : this(null, processItemsFunction, canProcessItemFunction, new ConcurrentQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+            : this(null, processItemsFunction, canProcessItemFunction, new SynchronizedQueue<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
         }
 
@@ -725,7 +724,7 @@ namespace GSF.Collections
             get
             {
                 if (m_processingIsRealTime)
-                    return ((object)m_realTimeProcessThread != null);
+                    return m_enabled;
 
                 lock (m_processLock)
                 {
@@ -742,7 +741,7 @@ namespace GSF.Collections
         {
             get
             {
-                ConcurrentQueue<T> queue = InternalQueue;
+                SynchronizedQueue<T> queue = InternalQueue;
 
                 if ((object)queue != null)
                     return queue.IsEmpty;
@@ -976,11 +975,11 @@ namespace GSF.Collections
         }
 
         // Attempts to return process queue enuerable as a concurrent queue
-        private ConcurrentQueue<T> InternalQueue
+        private SynchronizedQueue<T> InternalQueue
         {
             get
             {
-                return m_processQueue as ConcurrentQueue<T>;
+                return m_processQueue as SynchronizedQueue<T>;
             }
         }
 
@@ -1040,20 +1039,11 @@ namespace GSF.Collections
         /// <param name="item">The item to add to the <see cref="ProcessQueue{T}"/>.</param>
         public virtual void Add(T item)
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {
                 queue.Enqueue(item);
-
-                if (m_enabled && m_processingIsRealTime && Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
-                {
-                    if (!queue.IsEmpty)
-                        ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
-                    else
-                        Interlocked.Exchange(ref m_processing, 0);
-                }
-
                 DataAdded();
             }
             else
@@ -1068,9 +1058,16 @@ namespace GSF.Collections
         /// <param name="items">The elements to be added to the <see name="ProcessQueue{T}"/>.</param>
         public virtual void AddRange(IEnumerable<T> items)
         {
-            foreach (T item in items)
+            SynchronizedQueue<T> queue = InternalQueue;
+
+            if ((object)queue != null)
             {
-                Add(item);
+                queue.Enqueue(items);
+                DataAdded();
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -1081,7 +1078,7 @@ namespace GSF.Collections
         /// <param name="item">The object to locate in the <see cref="ProcessQueue{T}"/>. The value can be null for reference types.</param>
         public virtual bool Contains(T item)
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             // Calls to ToArray on concurrent queue avoid cases where collection may be modified during a context switch between GetEnumerator and MoveNext
             if ((object)queue != null)
@@ -1109,7 +1106,7 @@ namespace GSF.Collections
         /// <returns>A new array containing the elements copied from the <see cref="ProcessQueue{T}"/>.</returns>
         public virtual T[] ToArray()
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
                 return queue.ToArray();
@@ -1135,7 +1132,7 @@ namespace GSF.Collections
         /// <returns><c>true</c> if an object was removed and returned successfully; otherwise, <c>false</c>.</returns>
         public virtual bool TryTake(out T item)
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
                 return queue.TryDequeue(out item);
@@ -1150,23 +1147,13 @@ namespace GSF.Collections
         /// <returns><c>true</c> if any objects were removed and returned successfully; otherwise, <c>false</c>.</returns>
         public virtual bool TryTake(out T[] items)
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {
-                T item;
-                List<T> taken = new List<T>();
-
-                while (queue.TryDequeue(out item))
-                {
-                    taken.Add(item);
-                }
-
-                if (taken.Count > 0)
-                {
-                    items = taken.ToArray();
+                items = queue.DequeueAll();
+                if (items.Length > 0)
                     return true;
-                }
 
                 items = null;
                 return false;
@@ -1189,7 +1176,7 @@ namespace GSF.Collections
         /// </summary>
         public virtual void Clear()
         {
-            ConcurrentQueue<T> queue = InternalQueue;
+            SynchronizedQueue<T> queue = InternalQueue;
 
             if ((object)queue != null)
             {
@@ -1221,15 +1208,8 @@ namespace GSF.Collections
             if (m_processingIsRealTime)
             {
                 // Start real-time processing thread
-#if ThreadTracking
-                m_realTimeProcessThread = new ManagedThread(RealTimeThreadProc);
-                m_realTimeProcessThread.Name = "GSF.Collections.ProcessQueue.RealTimeThreadProc() [" + Name + "]";
-#else
-                m_realTimeProcessThread = new Thread(RealTimeThreadProc);
-#endif
-
-                m_realTimeProcessThread.IsBackground = true;
-                m_realTimeProcessThread.Start();
+                m_realTimeProcessThread = new WorkerThread();
+                m_realTimeProcessThread.DoWork += RealTimeDataProcessingLoop;
             }
             else
             {
@@ -1257,9 +1237,7 @@ namespace GSF.Collections
 
             if (m_processingIsRealTime)
             {
-                // Remove reference to process thread - it will stop gracefully after it has finished processing
-                // current set of items since enabled is false...
-                m_realTimeProcessThread = null;
+                //Do Nothing
             }
             else
             {
@@ -1448,6 +1426,13 @@ namespace GSF.Collections
                         m_processTimer.Enabled = true;
                 }
             }
+            else
+            {
+                if (m_enabled)
+                {
+                    m_realTimeProcessThread.Signal();
+                }
+            }
         }
 
         /// <summary>
@@ -1606,72 +1591,20 @@ namespace GSF.Collections
             }
         }
 
-        /// <summary>
-        /// Creates a real-time thread for processing items. 
-        /// </summary>
-        private void RealTimeThreadProc()
-        {
-            int processing;
-            int sleepTime = 1;
-            long noWorkSleeps = 0L;
-
-            try
-            {
-                // Creates a real-time processing loop that will start item processing as quickly as possible.
-                while (m_enabled)
-                {
-                    processing = Interlocked.CompareExchange(ref m_processing, 1, 0);
-
-                    // Kick start processing when items exist that are not currently being processed
-                    if (processing == 0 && !IsEmpty)
-                    {
-                        sleepTime = 1;
-                        noWorkSleeps = 0L;
-                        ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
-                    }
-                    else
-                    {
-                        // If the processing flag was set but no items were found in the process queue,
-                        // the asynchronous loop was never spawned so we need to clear the processing flag
-                        if (processing == 0)
-                            Interlocked.Exchange(ref m_processing, 0);
-
-                        // Vary sleep time based on how often kick start is being processed, up to one second for very idle queues
-                        if (noWorkSleeps > 1000L)
-                            sleepTime = 1000;   // It will take well over 1.5 minutes of no work before sleeping for 1 second
-                        else if (noWorkSleeps > 100L)
-                            sleepTime = 100;    // It will take at least one second of no work before sleeping for 100ms
-                        else if (noWorkSleeps > 5L)
-                            sleepTime = 10;     // It will take at least 5ms of no work before sleeping for 10ms
-
-                        noWorkSleeps++;
-
-                        // Wait around for more items to process
-                        Thread.Sleep(sleepTime);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                if (m_enabled)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred in real-time processing loop: {0}", ex.Message), ex));
-                }
-            }
-        }
-
         // Creates a real-time loop for processing data that runs as long as there is data to process
-        private void RealTimeDataProcessingLoop(object state)
+        private void RealTimeDataProcessingLoop(object caller, EventArgs e)
         {
+            if (!m_enabled || IsEmpty)
+                return;
+
             if ((object)m_processItemsFunction == null)
                 ProcessNextItem();
             else
                 ProcessNextItems();
 
             if (m_enabled && !IsEmpty)
-                ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
-            else
-                Interlocked.Exchange(ref m_processing, 0);
+                m_realTimeProcessThread.Signal();
+
         }
 
         /// <summary>

@@ -101,6 +101,10 @@ namespace GSF.Security
         /// <summary>
         /// Gets the user's password.
         /// </summary>
+        /// <remarks>
+        /// This field is only used to store hashed user
+        /// passwords which are stored in the database.
+        /// </remarks>
         [XmlElement, DataMember(Order = 1)]
         public string Password
         {

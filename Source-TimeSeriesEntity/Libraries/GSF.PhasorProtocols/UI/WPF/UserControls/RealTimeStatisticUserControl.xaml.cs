@@ -21,9 +21,12 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.ViewModels;
 using GSF.TimeSeries.UI;
 
@@ -58,6 +61,26 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         #region [ Methods ]
 
+        private RealTimeStatistics CreateDataContext()
+        {
+            RealTimeStatistics dataContext = new RealTimeStatistics(1, m_statisticDataRefreshInterval);
+            List<RealTimeStatistic> realTimeStatistics = dataContext.ItemsSource.ToList();
+            List<StreamStatistic> streamStatistics = realTimeStatistics.SelectMany(stream => stream.StreamStatisticList).ToList();
+            List<PdcDeviceStatistic> deviceStatistics = streamStatistics.SelectMany(device => device.DeviceStatisticList).ToList();
+            List<StatisticMeasurement> statisticMeasurements = deviceStatistics.SelectMany(device => device.StatisticMeasurementList).ToList();
+
+            if (statisticMeasurements.Count < 100)
+                deviceStatistics.ForEach(device => device.Expanded = true);
+
+            if (deviceStatistics.Count < 100)
+                streamStatistics.ForEach(streamStatistic => streamStatistic.Expanded = true);
+
+            if (streamStatistics.Count < 100)
+                realTimeStatistics.ForEach(realTimeStatistic => realTimeStatistic.Expanded = true);
+
+            return dataContext;
+        }
+
         private void RealTimeStatisticUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             m_dataContext.Stop();
@@ -75,12 +98,10 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             TextBlockMeasurementRefreshInterval.Text = m_statisticDataRefreshInterval.ToString() + " sec";
             TextBoxRefreshInterval.Text = m_statisticDataRefreshInterval.ToString();
-            m_dataContext = new RealTimeStatistics(1, m_statisticDataRefreshInterval);
-            this.DataContext = m_dataContext;
-            this.KeyUp += RealTimeStatisticUserControl_KeyUp;
+            m_dataContext = CreateDataContext();
+            DataContext = m_dataContext;
+            KeyUp += RealTimeStatisticUserControl_KeyUp;
         }
-
-        #endregion
 
         private void RealTimeStatisticUserControl_KeyUp(object sender, KeyEventArgs e)
         {
@@ -125,5 +146,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             PopupSettings.IsOpen = false;
         }
+
+        #endregion
     }
 }

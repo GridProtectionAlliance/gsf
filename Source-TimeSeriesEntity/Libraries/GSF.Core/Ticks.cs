@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  Ticks.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -24,6 +24,9 @@
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//   2/16/2014 - Steven E. Chisholm
+//       Inlined a large portion of the smaller methods. Also fixed errors 
+//       in Equals(object) and CompareTo(object)
 //
 //******************************************************************************************************
 
@@ -709,10 +712,18 @@ namespace GSF
             if ((object)value == null)
                 return 1;
 
-            if (!(value is long) && !(value is Ticks) && !(value is DateTime) && !(value is TimeSpan))
+            long num;
+            if (value is long)
+                num = (long)value;
+            else if (value is Ticks)
+                num = ((Ticks)value).m_value;
+            else if (value is DateTime)
+                num = ((DateTime)value).Ticks;
+            else if (value is TimeSpan)
+                num = ((TimeSpan)value).Ticks;
+            else
                 throw new ArgumentException("Argument must be an Int64 or a Ticks");
 
-            long num = (Ticks)value;
             return (m_value < num ? -1 : (m_value > num ? 1 : 0));
         }
 
@@ -728,7 +739,7 @@ namespace GSF
         /// </returns>
         public int CompareTo(Ticks value)
         {
-            return CompareTo((long)value);
+            return CompareTo(value.m_value);
         }
 
         /// <summary>
@@ -743,7 +754,7 @@ namespace GSF
         /// </returns>
         public int CompareTo(DateTime value)
         {
-            return CompareTo((Ticks)value);
+            return CompareTo(value.Ticks);
         }
 
         /// <summary>
@@ -758,7 +769,7 @@ namespace GSF
         /// </returns>
         public int CompareTo(TimeSpan value)
         {
-            return CompareTo((Ticks)value);
+            return CompareTo(value.Ticks);
         }
 
         /// <summary>
@@ -786,8 +797,14 @@ namespace GSF
         /// </returns>
         public override bool Equals(object obj)
         {
-            if (obj is long || obj is Ticks || obj is DateTime || obj is TimeSpan)
-                return Equals((Ticks)obj);
+           if (obj is long)
+                return m_value == (long)obj;
+            if (obj is Ticks)
+                return m_value == ((Ticks)obj).m_value;
+            if (obj is DateTime)
+                return m_value == ((DateTime)obj).Ticks;
+            if (obj is TimeSpan)
+                return m_value == ((TimeSpan)obj).Ticks;
 
             return false;
         }
@@ -801,7 +818,7 @@ namespace GSF
         /// </returns>
         public bool Equals(Ticks obj)
         {
-            return Equals((long)obj);
+            return (m_value == obj.m_value);
         }
 
         /// <summary>
@@ -813,7 +830,7 @@ namespace GSF
         /// </returns>
         public bool Equals(DateTime obj)
         {
-            return Equals((Ticks)obj);
+            return (m_value == obj.Ticks);
         }
 
         /// <summary>
@@ -825,7 +842,7 @@ namespace GSF
         /// </returns>
         public bool Equals(TimeSpan obj)
         {
-            return Equals((Ticks)obj);
+            return (m_value == obj.Ticks);
         }
 
         /// <summary>
@@ -957,7 +974,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator ==(Ticks value1, Ticks value2)
         {
-            return value1.Equals(value2);
+            return value1.m_value == value2.m_value;
         }
 
         /// <summary>
@@ -968,7 +985,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator !=(Ticks value1, Ticks value2)
         {
-            return !value1.Equals(value2);
+            return value1.m_value != value2.m_value;
         }
 
         /// <summary>
@@ -979,7 +996,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator <(Ticks value1, Ticks value2)
         {
-            return (value1.CompareTo(value2) < 0);
+            return value1.m_value < value2.m_value;
         }
 
         /// <summary>
@@ -990,7 +1007,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator <=(Ticks value1, Ticks value2)
         {
-            return (value1.CompareTo(value2) <= 0);
+            return value1.m_value <= value2.m_value;
         }
 
         /// <summary>
@@ -1001,7 +1018,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator >(Ticks value1, Ticks value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return value1.m_value > value2.m_value;
         }
 
         /// <summary>
@@ -1012,7 +1029,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator >=(Ticks value1, Ticks value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return value1.m_value >= value2.m_value;
         }
 
         #endregion
@@ -1140,7 +1157,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator ~(Ticks value)
         {
-            return ~value.m_value;
+            return new Ticks(~value.m_value);
         }
 
         /// <summary>
@@ -1151,7 +1168,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator &(Ticks value1, Ticks value2)
         {
-            return value1.m_value & value2.m_value;
+            return new Ticks(value1.m_value & value2.m_value);
         }
 
         /// <summary>
@@ -1162,7 +1179,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator |(Ticks value1, Ticks value2)
         {
-            return value1.m_value | value2.m_value;
+            return new Ticks(value1.m_value | value2.m_value);
         }
 
         /// <summary>
@@ -1173,7 +1190,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator ^(Ticks value1, Ticks value2)
         {
-            return value1.m_value ^ value2.m_value;
+            return new Ticks(value1.m_value ^ value2.m_value);
         }
 
         /// <summary>
@@ -1184,7 +1201,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator >>(Ticks value, int shifts)
         {
-            return (Ticks)(value.m_value >> shifts);
+            return new Ticks((value.m_value >> shifts));
         }
 
         /// <summary>
@@ -1195,7 +1212,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator <<(Ticks value, int shifts)
         {
-            return (Ticks)(value.m_value << shifts);
+            return new Ticks((value.m_value << shifts));
         }
 
         #endregion
@@ -1210,7 +1227,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator %(Ticks value1, Ticks value2)
         {
-            return value1.m_value % value2.m_value;
+            return new Ticks(value1.m_value % value2.m_value);
         }
 
         /// <summary>
@@ -1221,7 +1238,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator +(Ticks value1, Ticks value2)
         {
-            return value1.m_value + value2.m_value;
+            return new Ticks(value1.m_value + value2.m_value);
         }
 
         /// <summary>
@@ -1232,7 +1249,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator -(Ticks value1, Ticks value2)
         {
-            return value1.m_value - value2.m_value;
+            return new Ticks(value1.m_value - value2.m_value);
         }
 
         /// <summary>
@@ -1243,7 +1260,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator *(Ticks value1, Ticks value2)
         {
-            return value1.m_value * value2.m_value;
+            return new Ticks(value1.m_value * value2.m_value);
         }
 
         // Integer division operators
@@ -1256,7 +1273,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator /(Ticks value1, Ticks value2)
         {
-            return value1.m_value / value2.m_value;
+            return new Ticks(value1.m_value / value2.m_value);
         }
 
         // C# doesn't expose an exponent operator but some other .NET languages do,

@@ -91,7 +91,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
         {
             get
             {
-                return Thread.CurrentPrincipal.IsInRole("Administrator, Editor");
+                return ((object)CommonFunctions.CurrentPrincipal != null && CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"));
             }
         }
 
