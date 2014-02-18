@@ -18,15 +18,17 @@
 //  ----------------------------------------------------------------------------------------------------
 //  11/12/2004 - J. Ritchie Carroll
 //       Initial version of source generated.
-//  08/4/2009 - Josh L. Patterson
+//  08/04/2009 - Josh L. Patterson
 //       Edited Code Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
-//   2/16/2014 - Steven E. Chisholm
-//       Inlined a large portion of the smaller methods. Also fixed errors 
+//  02/16/2014 - Steven E. Chisholm
+//       In-lined a large portion of the smaller methods. Also fixed errors 
 //       in Equals(object) and CompareTo(object)
+//  02/18/2014 - J. Ritchie Carroll
+//       Added sub-second distribution functions for common use.
 //
 //******************************************************************************************************
 
@@ -67,6 +69,7 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using GSF.Units;
@@ -106,18 +109,19 @@ namespace GSF
     /// The difference between <see cref="Ticks"/> and <see cref="DateTime"/> is that <see cref="Ticks"/> is essentially a long
     /// integer (i.e., an <see cref="Int64"/>) which represents the number of ticks that have elapsed since 12:00:00 midnight,
     /// January 1, 0001 with each tick having a resolution of 100-nanoseconds. You would use <see cref="Ticks"/> in places where
-    /// you needed to directly represent time in high-resolution, i.e., time with subsecond accuracy, using an object that will
+    /// you needed to directly represent time in high-resolution, i.e., time with sub-second accuracy, using an object that will
     /// act like a long integer but handle time conversions. <see cref="Ticks"/> can also represent a "time period" (e.g., the
     /// number of ticks elapsed since a process started) and thus can also be used like a <see cref="TimeSpan"/>; when used in
     /// this manner the <see cref="Ticks.ToElapsedTimeString()"/> method can be used to convert the <see cref="Ticks"/> value
     /// into a handy textual representation of elapsed years, days, hours, minutes and seconds.
     /// </para>
     /// <para>
-    /// This class behaves just like an <see cref="Int64"/> representing a time in ticks; it is implictly castable to and from
+    /// This class behaves just like an <see cref="Int64"/> representing a time in ticks; it is implicitly castable to and from
     /// an <see cref="Int64"/> and therefore can be generally used "as" an Int64 directly. It is also implicitly castable to and
     /// from a <see cref="DateTime"/>, a <see cref="TimeSpan"/>, an <see cref="NtpTimeTag"/> and a <see cref="UnixTimeTag"/>.
     /// </para>
     /// </remarks>
+    // ReSharper disable RedundantNameQualifier
     [Serializable]
     public struct Ticks : IComparable, IFormattable, IConvertible, IComparable<Ticks>, IComparable<Int64>, IComparable<DateTime>, IComparable<TimeSpan>, IEquatable<Ticks>, IEquatable<Int64>, IEquatable<DateTime>, IEquatable<TimeSpan>
     {
@@ -145,28 +149,28 @@ namespace GSF
         // Constants
 
         // Standard time names used by ToString method
-        private static readonly string[] s_timeNames = new[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 60 Seconds", "0 Seconds" };
+        private static readonly string[] s_timeNames = { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 60 Seconds", "0 Seconds" };
 
         // Standard time names, without seconds, used by ToString method
-        private static readonly string[] s_timeNamesNoSeconds = new[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 1 Minute", "0 Minutes" };
+        private static readonly string[] s_timeNamesNoSeconds = { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 1 Minute", "0 Minutes" };
 
         /// <summary>Number of 100-nanosecond ticks in one second.</summary>
         public const long PerSecond = 10000000L;
 
         /// <summary>Number of 100-nanosecond ticks in one millisecond.</summary>
-        public const long PerMillisecond = (long)(PerSecond * SI.Milli);
+        public const long PerMillisecond = (long)(Ticks.PerSecond * SI.Milli);
 
         /// <summary>Number of 100-nanosecond ticks in one microsecond.</summary>
-        public const long PerMicrosecond = (long)(PerSecond * SI.Micro);
+        public const long PerMicrosecond = (long)(Ticks.PerSecond * SI.Micro);
 
         /// <summary>Number of 100-nanosecond ticks in one minute.</summary>
-        public const long PerMinute = 60L * PerSecond;
+        public const long PerMinute = 60L * Ticks.PerSecond;
 
         /// <summary>Number of 100-nanosecond ticks in one hour.</summary>
-        public const long PerHour = 60L * PerMinute;
+        public const long PerHour = 60L * Ticks.PerMinute;
 
         /// <summary>Number of 100-nanosecond ticks in one day.</summary>
-        public const long PerDay = 24L * PerHour;
+        public const long PerDay = 24L * Ticks.PerHour;
 
         // Fields
         private readonly long m_value; // Time value stored in ticks
@@ -216,7 +220,7 @@ namespace GSF
         /// </remarks>
         public double ToSeconds()
         {
-            return m_value / (double)PerSecond;
+            return m_value / (double)Ticks.PerSecond;
         }
 
         /// <summary>
@@ -229,7 +233,7 @@ namespace GSF
         /// </remarks>
         public double ToMilliseconds()
         {
-            return m_value / (double)PerMillisecond;
+            return m_value / (double)Ticks.PerMillisecond;
         }
 
         /// <summary>
@@ -242,7 +246,7 @@ namespace GSF
         /// </remarks>
         public double ToMicroseconds()
         {
-            return m_value / (double)PerMicrosecond;
+            return m_value / (double)Ticks.PerMicrosecond;
         }
 
         /// <summary>
@@ -352,7 +356,7 @@ namespace GSF
             if (leadTime <= 0)
                 throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
-            double distance = (currentTime.m_value - m_value) / (double)PerSecond;
+            double distance = (currentTime.m_value - m_value) / (double)Ticks.PerSecond;
 
             return (distance >= -leadTime && distance <= lagTime);
         }
@@ -395,32 +399,32 @@ namespace GSF
         /// </returns>
         public Ticks DistanceBeyondSecond()
         {
-            return m_value - (m_value - m_value % PerSecond);
+            return m_value - (m_value - m_value % Ticks.PerSecond);
         }
 
         /// <summary>
-        /// Creates a new <see cref="Ticks"/> value that represents a baselined timestamp, in 100-nanoseconds
+        /// Creates a new <see cref="Ticks"/> value that represents a base-lined timestamp, in 100-nanoseconds
         /// intervals, that begins at the beginning of the specified time interval.
         /// </summary>
         /// <param name="interval">
-        /// <see cref="BaselineTimeInterval"/> to which <see cref="Ticks"/> timestamp should be baselined.
+        /// <see cref="BaselineTimeInterval"/> to which <see cref="Ticks"/> timestamp should be base-lined.
         /// </param>
         /// <returns>
-        /// A new <see cref="Ticks"/> value that represents a baselined timestamp, in 100-nanoseconds intervals,
+        /// A new <see cref="Ticks"/> value that represents a base-lined timestamp, in 100-nanoseconds intervals,
         /// that begins at the specified <see cref="BaselineTimeInterval"/>.
         /// </returns>
         /// <remarks>
-        /// Baselining to the <see cref="BaselineTimeInterval.Second"/> would return the <see cref="Ticks"/>
+        /// Base-lining to the <see cref="BaselineTimeInterval.Second"/> would return the <see cref="Ticks"/>
         /// value starting at zero milliseconds.<br/>
-        /// Baselining to the <see cref="BaselineTimeInterval.Minute"/> would return the <see cref="Ticks"/>
+        /// Base-lining to the <see cref="BaselineTimeInterval.Minute"/> would return the <see cref="Ticks"/>
         /// value starting at zero seconds and milliseconds.<br/>
-        /// Baselining to the <see cref="BaselineTimeInterval.Hour"/> would return the <see cref="Ticks"/>
+        /// Base-lining to the <see cref="BaselineTimeInterval.Hour"/> would return the <see cref="Ticks"/>
         /// value starting at zero minutes, seconds and milliseconds.<br/>
-        /// Baselining to the <see cref="BaselineTimeInterval.Day"/> would return the <see cref="Ticks"/>
+        /// Base-lining to the <see cref="BaselineTimeInterval.Day"/> would return the <see cref="Ticks"/>
         /// value starting at zero hours, minutes, seconds and milliseconds.<br/>
-        /// Baselining to the <see cref="BaselineTimeInterval.Month"/> would return the <see cref="Ticks"/>
+        /// Base-lining to the <see cref="BaselineTimeInterval.Month"/> would return the <see cref="Ticks"/>
         /// value starting at day one, zero hours, minutes, seconds and milliseconds.<br/>
-        /// Baselining to the <see cref="BaselineTimeInterval.Year"/> would return the <see cref="Ticks"/>
+        /// Base-lining to the <see cref="BaselineTimeInterval.Year"/> would return the <see cref="Ticks"/>
         /// value starting at month one, day one, zero hours, minutes, seconds and milliseconds.
         /// </remarks>
         public Ticks BaselinedTimestamp(BaselineTimeInterval interval)
@@ -428,13 +432,13 @@ namespace GSF
             switch (interval)
             {
                 case BaselineTimeInterval.Second:
-                    return m_value - m_value % PerSecond;
+                    return m_value - m_value % Ticks.PerSecond;
                 case BaselineTimeInterval.Minute:
-                    return m_value - m_value % PerMinute;
+                    return m_value - m_value % Ticks.PerMinute;
                 case BaselineTimeInterval.Hour:
-                    return m_value - m_value % PerHour;
+                    return m_value - m_value % Ticks.PerHour;
                 case BaselineTimeInterval.Day:
-                    return m_value - m_value % PerDay;
+                    return m_value - m_value % Ticks.PerDay;
                 case BaselineTimeInterval.Month:
                     DateTime toMonth = new DateTime(m_value);
                     return new DateTime(toMonth.Year, toMonth.Month, 1, 0, 0, 0, 0).Ticks;
@@ -530,8 +534,8 @@ namespace GSF
         {
             if (secondPrecision < 0)
                 return ToElapsedTimeString(secondPrecision, s_timeNamesNoSeconds);
-            else
-                return ToElapsedTimeString(secondPrecision, s_timeNames);
+
+            return ToElapsedTimeString(secondPrecision, s_timeNames);
         }
 
         /// <summary>
@@ -797,7 +801,7 @@ namespace GSF
         /// </returns>
         public override bool Equals(object obj)
         {
-           if (obj is long)
+            if (obj is long)
                 return m_value == (long)obj;
             if (obj is Ticks)
                 return m_value == ((Ticks)obj).m_value;
@@ -1318,7 +1322,7 @@ namespace GSF
         /// </remarks>
         public static double ToSeconds(Ticks value)
         {
-            return value / (double)PerSecond;
+            return value / (double)Ticks.PerSecond;
         }
 
         /// <summary>
@@ -1332,7 +1336,7 @@ namespace GSF
         /// </remarks>
         public static double ToMilliseconds(Ticks value)
         {
-            return value / (double)PerMillisecond;
+            return value / (double)Ticks.PerMillisecond;
         }
 
         /// <summary>
@@ -1346,7 +1350,7 @@ namespace GSF
         /// </remarks>
         public static double ToMicroseconds(Ticks value)
         {
-            return value / (double)PerMicrosecond;
+            return value / (double)Ticks.PerMicrosecond;
         }
 
         /// <summary>
@@ -1356,7 +1360,7 @@ namespace GSF
         /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in seconds.</returns>
         public static Ticks FromSeconds(double value)
         {
-            return new Ticks((long)(value * PerSecond));
+            return new Ticks((long)(value * Ticks.PerSecond));
         }
 
         /// <summary>
@@ -1366,7 +1370,7 @@ namespace GSF
         /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in milliseconds.</returns>
         public static Ticks FromMilliseconds(double value)
         {
-            return new Ticks((long)(value * PerMillisecond));
+            return new Ticks((long)(value * Ticks.PerMillisecond));
         }
 
         /// <summary>
@@ -1376,7 +1380,7 @@ namespace GSF
         /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in microseconds.</returns>
         public static Ticks FromMicroseconds(double value)
         {
-            return new Ticks((long)(value * PerMicrosecond));
+            return new Ticks((long)(value * Ticks.PerMicrosecond));
         }
 
         /// <summary>
@@ -1521,6 +1525,145 @@ namespace GSF
             result = parseResult;
 
             return parseResponse;
+        }
+
+        /// <summary>
+        /// Gets a sub-second time distribution in <see cref="Ticks"/> for the specified <paramref name="samplesPerSecond"/>.
+        /// </summary>
+        /// <param name="samplesPerSecond">Samples per second.</param>
+        /// <returns>Array of sub-second time distribution in <see cref="Ticks"/>.</returns>
+        public static Ticks[] SubsecondDistribution(int samplesPerSecond)
+        {
+            Ticks[] sampleTimes = new Ticks[samplesPerSecond];
+
+            for (int i = 0; i < samplesPerSecond; i++)
+                sampleTimes[i] = new Ticks((long)(Ticks.PerSecond * (i * (1.0D / samplesPerSecond))));
+
+            return sampleTimes;
+        }
+
+        /// <summary>
+        /// Gets a sub-second time distribution in milliseconds for the specified <paramref name="samplesPerSecond"/>.
+        /// </summary>
+        /// <param name="samplesPerSecond">Samples per second.</param>
+        /// <returns>Array of sub-second time distribution in milliseconds.</returns>
+        public static int[] MillisecondDistribution(int samplesPerSecond)
+        {
+            return SubsecondDistribution(samplesPerSecond).Select(ticks => (int)ticks.ToMilliseconds()).ToArray();
+        }
+
+        /// <summary>
+        /// Gets a sub-second time distribution in microseconds for the specified <paramref name="samplesPerSecond"/>.
+        /// </summary>
+        /// <param name="samplesPerSecond">Samples per second.</param>
+        /// <returns>Array of sub-second time distribution in microseconds.</returns>
+        public static int[] MicrosecondDistribution(int samplesPerSecond)
+        {
+            return SubsecondDistribution(samplesPerSecond).Select(ticks => (int)ticks.ToMicroseconds()).ToArray();
+        }
+
+        /// <summary>
+        /// Returns a floor-aligned sub-second distribution timestamp for given <paramref name="timestamp"/>.
+        /// </summary>
+        /// <param name="timestamp">Timestamp to align.</param>
+        /// <param name="samplesPerSecond">Samples per second to use for distribution.</param>
+        /// <param name="timeResolution">Defines the time resolution to use when aligning <paramref name="timestamp"/> to its proper distribution timestamp.</param>
+        /// <returns>A floor-aligned sub-second distribution timestamp for given <paramref name="timestamp"/>.</returns>
+        /// <remarks>
+        /// Time resolution value is typically a power of 10 based on the number of ticks per the desired resolution. The following table defines
+        /// common resolutions and their respective <paramref name="timeResolution"/> values:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Resolution</term>
+        ///         <description>Time Resolution Value</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Seconds</term>
+        ///         <description><see cref="Ticks.PerSecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Milliseconds</term>
+        ///         <description><see cref="Ticks.PerMillisecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Microseconds</term>
+        ///         <description><see cref="Ticks.PerMicrosecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Ticks</term>
+        ///         <description>0</description>
+        ///     </item>
+        /// </list>
+        /// If source timestamps have variation, i.e., they are not aligned within common distributions, the <paramref name="timeResolution"/>
+        /// can be adjusted to include slack to accommodate the variance. When including slack in the time resolution, the value will depend
+        /// on the <paramref name="samplesPerSecond"/>, for example: you could use 330,000 for 30 samples per second, 160,000 for 60 samples
+        /// per second, and 80,000 for 120 samples per second. Actual slack value may need to be more or less depending on the size of the
+        /// source timestamp variation.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Ticks AlignToSubsecondDistribution(Ticks timestamp, int samplesPerSecond, long timeResolution)
+        {
+            // Calculate destination ticks for this frame
+            long ticks = timestamp.m_value, baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
+
+            // Baseline timestamp to the top of the second
+            baseTicks = ticks - ticks % Ticks.PerSecond;
+
+            // Remove the seconds from ticks
+            ticksBeyondSecond = ticks - baseTicks;
+
+            // Calculate a frame index between 0 and m_framesPerSecond-1, corresponding to ticks
+            // rounded down to the nearest frame
+            frameIndex = (long)(ticksBeyondSecond / (Ticks.PerSecond / (double)samplesPerSecond));
+
+            // Calculate the timestamp of the nearest frame rounded up
+            nextDestinationTicks = (frameIndex + 1) * Ticks.PerSecond / samplesPerSecond;
+
+            // Determine whether the desired frame is the nearest
+            // frame rounded down or the nearest frame rounded up
+            if (timeResolution <= 1)
+            {
+                if (nextDestinationTicks <= ticksBeyondSecond)
+                    destinationTicks = nextDestinationTicks;
+                else
+                    destinationTicks = frameIndex * Ticks.PerSecond / samplesPerSecond;
+            }
+            else
+            {
+                // If, after translating nextDestinationTicks to the time resolution, it is less than
+                // or equal to ticks, nextDestinationTicks corresponds to the desired frame
+                if ((nextDestinationTicks / timeResolution) * timeResolution <= ticksBeyondSecond)
+                    destinationTicks = nextDestinationTicks;
+                else
+                    destinationTicks = frameIndex * Ticks.PerSecond / samplesPerSecond;
+            }
+
+            // Recover the seconds that were removed
+            destinationTicks += baseTicks;
+
+            return new Ticks(destinationTicks);
+        }
+
+        /// <summary>
+        /// Returns a floor-aligned millisecond distribution timestamp for given <paramref name="timestamp"/>.
+        /// </summary>
+        /// <param name="timestamp">Timestamp to align.</param>
+        /// <param name="samplesPerSecond">Samples per second to use for distribution.</param>
+        /// <returns>A floor-aligned millisecond distribution timestamp for given <paramref name="timestamp"/>.</returns>
+        public static Ticks AlignToMillisecondDistribution(Ticks timestamp, int samplesPerSecond)
+        {
+            return AlignToSubsecondDistribution(timestamp, samplesPerSecond, Ticks.PerMillisecond);
+        }
+
+        /// <summary>
+        /// Returns a floor-aligned microsecond distribution timestamp for given <paramref name="timestamp"/>.
+        /// </summary>
+        /// <param name="timestamp">Timestamp to align.</param>
+        /// <param name="samplesPerSecond">Samples per second to use for distribution.</param>
+        /// <returns>A floor-aligned microsecond distribution timestamp for given <paramref name="timestamp"/>.</returns>
+        public static Ticks AlignToMicrosecondDistribution(Ticks timestamp, int samplesPerSecond)
+        {
+            return AlignToSubsecondDistribution(timestamp, samplesPerSecond, Ticks.PerMicrosecond);
         }
 
         #endregion
