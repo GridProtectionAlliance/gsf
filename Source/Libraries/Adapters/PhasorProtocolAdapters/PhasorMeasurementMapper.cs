@@ -43,7 +43,6 @@ using GSF.PhasorProtocols.Anonymous;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
-using GSF.TimeSeries.Transport;
 using GSF.Units;
 
 namespace PhasorProtocolAdapters
@@ -98,7 +97,7 @@ namespace PhasorProtocolAdapters
                     long cutOff;
                     int missingFrameCount;
 
-                    cutOff = GetSortedTimestamp(RealTime - LagTicks);
+                    cutOff = Ticks.AlignToSubsecondDistribution(RealTime - LagTicks, FramesPerSecond, TimeResolution);
                     missingFrameCount = (int)Math.Round((cutOff - m_lastFrameTimestamp) / TicksPerFrame);
                     m_missingData += (missingFrameCount > m_redundantFramesPerPacket) ? (missingFrameCount - m_redundantFramesPerPacket) : 0;
                     m_lastFrameTimestamp = cutOff;
@@ -117,7 +116,7 @@ namespace PhasorProtocolAdapters
             public override void Start()
             {
                 base.Start();
-                m_lastFrameTimestamp = GetSortedTimestamp(RealTime);
+                m_lastFrameTimestamp = Ticks.AlignToSubsecondDistribution(RealTime, FramesPerSecond, TimeResolution);
             }
 
             /// <summary>
@@ -132,49 +131,6 @@ namespace PhasorProtocolAdapters
                 missingFrameCount = (int)Math.Round((frame.Timestamp - m_lastFrameTimestamp) / TicksPerFrame);
                 m_missingData += (missingFrameCount > m_redundantFramesPerPacket) ? (missingFrameCount - m_redundantFramesPerPacket) : 0;
                 m_lastFrameTimestamp = frame.Timestamp;
-            }
-
-            // Calculates what the given time would be if it were aligned properly to a frame timestamp.
-            private long GetSortedTimestamp(long ticks)
-            {
-                long baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
-
-                // Baseline timestamp to the top of the second
-                baseTicks = ticks - ticks % Ticks.PerSecond;
-
-                // Remove the seconds from ticks
-                ticksBeyondSecond = ticks - baseTicks;
-
-                // Calculate a frame index between 0 and m_framesPerSecond-1, corresponding to ticks
-                // rounded down to the nearest frame
-                frameIndex = (long)(ticksBeyondSecond / TicksPerFrame);
-
-                // Calculate the timestamp of the nearest frame rounded up
-                nextDestinationTicks = (frameIndex + 1) * Ticks.PerSecond / FramesPerSecond;
-
-                // Determine whether the desired frame is the nearest
-                // frame rounded down or the nearest frame rounded up
-                if (TimeResolution <= 1)
-                {
-                    if (nextDestinationTicks <= ticksBeyondSecond)
-                        destinationTicks = nextDestinationTicks;
-                    else
-                        destinationTicks = frameIndex * Ticks.PerSecond / FramesPerSecond;
-                }
-                else
-                {
-                    // If, after translating nextDestinationTicks to the time resolution, it is less than
-                    // or equal to ticks, nextDestinationTicks corresponds to the desired frame
-                    if ((nextDestinationTicks / TimeResolution) * TimeResolution <= ticksBeyondSecond)
-                        destinationTicks = nextDestinationTicks;
-                    else
-                        destinationTicks = frameIndex * Ticks.PerSecond / FramesPerSecond;
-                }
-
-                // Recover the seconds that were removed
-                destinationTicks += baseTicks;
-
-                return destinationTicks;
             }
 
             #endregion
@@ -1041,7 +997,7 @@ namespace PhasorProtocolAdapters
             else
                 SharedMapping = null;
 
-            if (settings.TryGetValue("timeZone", out setting) && !string.IsNullOrWhiteSpace(setting) && string.Compare(setting.Trim(), "UTC", true) != 0 && string.Compare(setting.Trim(), "Coordinated Universal Time", true) != 0)
+            if (settings.TryGetValue("timeZone", out setting) && !string.IsNullOrWhiteSpace(setting) && !setting.Trim().Equals("UTC", StringComparison.OrdinalIgnoreCase) && !setting.Trim().Equals("Coordinated Universal Time", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
@@ -1347,7 +1303,7 @@ namespace PhasorProtocolAdapters
 
                         // Create a measurement with a reference associated with this adapter
                         definedMeasurement = new Measurement
-                		{
+                        {
                             ID = signalID,
                             Key = MeasurementKey.Parse(row["ID"].ToString(), signalID),
                             TagName = signalReference,
@@ -1714,7 +1670,7 @@ namespace PhasorProtocolAdapters
             int x, count;
 
             // Adjust time to UTC based on source time zone
-            if (m_timezone != TimeZoneInfo.Utc)
+            if (!m_timezone.Equals(TimeZoneInfo.Utc))
                 frame.Timestamp = TimeZoneInfo.ConvertTimeToUtc(frame.Timestamp, m_timezone);
 
             // We also allow "fine tuning" of time for fickle GPS clocks...

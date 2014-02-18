@@ -56,7 +56,6 @@ namespace GSF.TimeSeries
         private volatile TrackingFrame m_head;                          // Reference to current top of the frame collection
         private volatile TrackingFrame m_last;                          // Reference to last published frame
         private int m_framesPerSecond;                                  // Cached frames per second
-        private double m_ticksPerFrame;                                 // Cached ticks per frame
         private long m_timeResolution;                                  // Cached time resolution (max sorting resolution in ticks)
         private DownsamplingMethod m_downsamplingMethod;                // Cached down-sampling method
         private bool m_disposed;                                        // Object disposed flag
@@ -108,7 +107,6 @@ namespace GSF.TimeSeries
                     throw new ArgumentOutOfRangeException("value", "Frames per second must be greater than 0");
 
                 m_framesPerSecond = value;
-                m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
             }
         }
 
