@@ -170,6 +170,7 @@
     <Compile Include="Collections\AsyncQueue.cs" />
     <Compile Include="Collections\CollectionExtensions.cs" />
     <Compile Include="Collections\DoubleBufferedQueue.cs" />
+    <Compile Include="Collections\DoubleBufferedQueueManager.cs" />
     <Compile Include="Collections\IOrderedDictionary.cs" />
     <Compile Include="Collections\IOrderedSet.cs" />
     <Compile Include="Collections\ObservableSet.cs" />
