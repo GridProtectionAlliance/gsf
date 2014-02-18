@@ -61,6 +61,7 @@ namespace GSF.Collections
         private int m_listIndex;
         private List<T>[] m_lists;
         private SpinLock m_swapLock;
+        private int m_count;
 
         private volatile ProcessItemsFunctionSignature m_processItemsFunction;
         private SpinLock m_autoProcessLock;
@@ -117,6 +118,7 @@ namespace GSF.Collections
             {
                 m_swapLock.Enter(ref lockTaken);
                 m_lists[m_listIndex].AddRange(items);
+                m_count = m_lists[m_listIndex].Count;
             }
             finally
             {
@@ -172,8 +174,48 @@ namespace GSF.Collections
                 listIndex = m_listIndex;
                 m_listIndex = 1 - m_listIndex;
                 m_lists[m_listIndex].Clear();
+                m_count = 0;
 
                 return m_lists[listIndex];
+            }
+            finally
+            {
+                if (lockTaken)
+                    m_swapLock.Exit();
+            }
+        }
+
+        /// <summary>
+        /// Dequeues a collection of items from the queue.
+        /// </summary>
+        /// <returns>
+        /// A collection of items that have previously been enqueued,
+        /// or no items if none have been enqueued since last dequeue.
+        /// </returns>
+        public int TryDequeue(out IList<T> items)
+        {
+            bool lockTaken = false;
+            int listIndex;
+
+            try
+            {
+                m_swapLock.TryEnter(ref lockTaken);
+
+                if (lockTaken)
+                {
+                    listIndex = m_listIndex;
+                    m_listIndex = 1 - m_listIndex;
+                    m_lists[m_listIndex].Clear();
+                    m_count = 0;
+
+                    items = m_lists[listIndex];
+                }
+                else
+                {
+                    items = EmptyList;
+                }
+
+                return m_count;
             }
             finally
             {
@@ -250,6 +292,13 @@ namespace GSF.Collections
             if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly IList<T> EmptyList = new T[0];
 
         #endregion
     }

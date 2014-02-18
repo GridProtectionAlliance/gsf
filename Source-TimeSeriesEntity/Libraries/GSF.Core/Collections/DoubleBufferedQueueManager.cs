@@ -142,7 +142,12 @@ namespace GSF.Collections
 
         // Fields
         private readonly SynchronizedOperation m_itemHandlingOperation;
+        private readonly Action m_itemHandler;
+
         private readonly List<DoubleBufferedQueue<T>> m_queues;
+        private readonly List<T> m_dequeuedItems;
+        private volatile bool m_itemsLeft;
+
         private readonly object m_queuesLock;
 
         #endregion
@@ -155,6 +160,7 @@ namespace GSF.Collections
         public DoubleBufferedQueueManager()
         {
             m_queues = new List<DoubleBufferedQueue<T>>();
+            m_dequeuedItems = new List<T>();
             m_queuesLock = new object();
         }
 
@@ -184,7 +190,8 @@ namespace GSF.Collections
         public DoubleBufferedQueueManager(Action itemHandler, Action<Exception> exceptionHandler)
             : this()
         {
-            m_itemHandlingOperation = new SynchronizedOperation(itemHandler, exceptionHandler);
+            m_itemHandlingOperation = new SynchronizedOperation(CallItemHandler, exceptionHandler);
+            m_itemHandler = itemHandler;
         }
 
         /// <summary>
@@ -195,7 +202,24 @@ namespace GSF.Collections
         public DoubleBufferedQueueManager(Action<IList<T>> itemHandler, Action<Exception> exceptionHandler)
             : this()
         {
-            m_itemHandlingOperation = new SynchronizedOperation(() => itemHandler(Dequeue()), exceptionHandler);
+            m_itemHandlingOperation = new SynchronizedOperation(CallItemHandler, exceptionHandler);
+            m_itemHandler = () => itemHandler(Dequeue());
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets a flag that indicates whether there are any items left to
+        /// be consumed after the last call to <see cref="Dequeue"/>.
+        /// </summary>
+        public bool ItemsLeft
+        {
+            get
+            {
+                return m_itemsLeft;
+            }
         }
 
         #endregion
@@ -224,19 +248,27 @@ namespace GSF.Collections
         /// <returns>A list of items to be consumed.</returns>
         public IList<T> Dequeue()
         {
-            IList<T> items;
+            IList<T> dequeuedItems;
 
             lock (m_queuesLock)
             {
+                m_itemsLeft = false;
+
                 if (m_queues.Count == 0)
                     return EmptyList;
+                
+                m_dequeuedItems.Clear();
 
-                items = m_queues
-                    .SelectMany(queue => queue.Dequeue())
-                    .ToList();
+                foreach (DoubleBufferedQueue<T> queue in m_queues)
+                {
+                    if (queue.TryDequeue(out dequeuedItems) <= 0)
+                        m_dequeuedItems.AddRange(dequeuedItems);
+                    else
+                        m_itemsLeft = true;
+                }
             }
 
-            return items;
+            return m_dequeuedItems;
         }
 
         /// <summary>
@@ -268,6 +300,17 @@ namespace GSF.Collections
                     m_queues[index] = m_queues[last];
                     m_queues.RemoveAt(last);
                 }
+            }
+        }
+
+        private void CallItemHandler()
+        {
+            m_itemHandler();
+
+            lock (m_queuesLock)
+            {
+                if (m_itemsLeft)
+                    m_itemHandlingOperation.RunOnceAsync();
             }
         }
 
