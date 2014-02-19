@@ -186,11 +186,73 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Dequeues a collection of items from the queue.
+        /// Attempts to enqueue a collection of items into the double-buffered queue.
         /// </summary>
+        /// <param name="items">The collection of items to be enqueued.</param>
         /// <returns>
-        /// A collection of items that have previously been enqueued,
-        /// or no items if none have been enqueued since last dequeue.
+        /// True if the items were successfully enqueued; false otherwise.
+        /// </returns>
+        public bool TryEnqueue(IEnumerable<T> items)
+        {
+            bool lockTaken = false;
+
+            try
+            {
+                m_swapLock.TryEnter(ref lockTaken);
+
+                if (lockTaken)
+                {
+                    m_lists[m_listIndex].AddRange(items);
+                    m_count = m_lists[m_listIndex].Count;
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                    m_swapLock.Exit();
+            }
+
+            if (lockTaken && (object)m_processItemsFunction != null)
+            {
+                lockTaken = false;
+
+                try
+                {
+                    // This lock prevents a race condition that could result during a context switch between the interlocked
+                    // operation and the dequeue which could lead to items being left in the queue and not processed. As long
+                    // as items are being enqueued, this lock will never contend with lock in the ProcessItem method.
+                    m_autoProcessLock.Enter(ref lockTaken);
+
+                    if (Interlocked.CompareExchange(ref m_processing, 1, 0) == 0)
+                    {
+                        items = Dequeue();
+
+                        if (items.Any())
+                            ThreadPool.QueueUserWorkItem(ProcessItems, items);
+                        else
+                            Interlocked.Exchange(ref m_processing, 0);
+                    }
+                }
+                finally
+                {
+                    if (lockTaken)
+                        m_autoProcessLock.Exit();
+                }
+
+                return true;
+            }
+
+            return lockTaken;
+        }
+
+        /// <summary>
+        /// Attempts to dequeue a collection of items from the queue and
+        /// returns the number of items left in the queue after dequeuing.
+        /// </summary>
+        /// <param name="items">The items that were dequeued.</param>
+        /// <returns>
+        /// The number of items left in the queue after
+        /// dequeuing as many items as possible.
         /// </returns>
         public int TryDequeue(out IList<T> items)
         {

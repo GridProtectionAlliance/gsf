@@ -86,6 +86,14 @@ namespace GSF.Threading
         /// </remarks>
         public void RunOnce()
         {
+            // lock (m_stateLock)
+            // {
+            //     if (m_state == NotRunning)
+            //         TryRun();
+            //     else if (m_state == Running)
+            //         m_state = Pending;
+            // }
+
             if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
                 TryRun();
         }
@@ -102,6 +110,14 @@ namespace GSF.Threading
         /// </remarks>
         public void RunOnceAsync()
         {
+            // lock (m_stateLock)
+            // {
+            //     if (m_state == NotRunning)
+            //         TryRunAsync();
+            //     else if (m_state == Running)
+            //         m_state = Pending;
+            // }
+
             if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
                 TryRunAsync();
         }
@@ -112,6 +128,15 @@ namespace GSF.Threading
         /// </summary>
         public void TryRun()
         {
+            // lock (m_stateLock)
+            // {
+            //     if (m_state == NotRunning)
+            //     {
+            //         m_state = Running;
+            //         ExecuteAction();
+            //     }
+            // }
+
             if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
                 ExecuteAction();
         }
@@ -122,6 +147,15 @@ namespace GSF.Threading
         /// </summary>
         public void TryRunAsync()
         {
+            // lock (m_stateLock)
+            // {
+            //     if (m_state == NotRunning)
+            //     {
+            //         m_state = Running;
+            //         ThreadPool.QueueUserWorkItem(state => ExecuteAction());
+            //     }
+            // }
+
             if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
                 ThreadPool.QueueUserWorkItem(state => ExecuteAction());
         }
@@ -144,8 +178,23 @@ namespace GSF.Threading
                 }
             }
 
+            // lock (m_stateLock)
+            // {
+            //     if (m_state == Pending)
+            //     {
+            //         m_state = Running;
+            //         ThreadPool.QueueUserWorkItem(state => ExecuteAction());
+            //     }
+            //     else if (m_state == Running)
+            //     {
+            //         m_state = NotRunning;
+            //     }
+            // }
+
             if (Interlocked.CompareExchange(ref m_state, NotRunning, Running) == Pending)
             {
+                // There is no race condition here because if m_state is Pending,
+                // then it cannot be changed by any other line of code except this one
                 Interlocked.Exchange(ref m_state, Running);
                 ThreadPool.QueueUserWorkItem(state => ExecuteAction());
             }
