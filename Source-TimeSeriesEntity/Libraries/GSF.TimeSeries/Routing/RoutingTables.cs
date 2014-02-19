@@ -75,7 +75,7 @@ namespace GSF.TimeSeries.Routing
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
-        
+
         private volatile ISet<Guid> m_inputMeasurementKeysRestriction;
         private SynchronizedOperation m_calculateRoutingTablesOperation;
         private volatile GlobalCache m_globalCache;
@@ -211,7 +211,7 @@ namespace GSF.TimeSeries.Routing
         }
 
         private void CalculateRoutingTables()
-                {
+        {
             long startTime = DateTime.UtcNow.Ticks;
             double elapsedTime;
 
@@ -291,19 +291,19 @@ namespace GSF.TimeSeries.Routing
                 // Calculate possible routes for each action and output adapter
                 foreach (IAdapter adapter in adapterCollection)
                 {
-                        // Make sure adapter is initialized before calculating route
+                    // Make sure adapter is initialized before calculating route
                     if (adapter.Initialized)
-                        {
+                    {
                         signalIDs = adapter.InputSignalIDs;
                         adapterType = adapter.GetType();
 
                         // Add this adapter as a destination to each
                         // signal defined in its input measurement keys
                         foreach (Guid signalID in signalIDs)
-                            {
+                        {
                             destinations = destinationsLookup.GetOrAdd(signalID, guid => new List<IAdapter>());
                             destinations.Add(adapter);
-                                    }
+                        }
 
                         // Determine which methods defined on the adapter type qualify as routes and store those in a lookup table
                         routes = routesLookupTemplates.GetOrAdd(adapterType, templateFactory)
@@ -311,8 +311,8 @@ namespace GSF.TimeSeries.Routing
                             .ToList();
 
                         routesLookup.Add(adapter, routes);
-                        }
                     }
+                }
 
                 // Update global lookup tables for routing
                 m_globalCache = new GlobalCache()
@@ -370,13 +370,13 @@ namespace GSF.TimeSeries.Routing
                 localCache.Initialize(globalCache.CacheVersion);
 
                 foreach (ITimeSeriesEntity timeSeriesEntity in localCache.TimeSeriesEntities)
-                    {
+                {
                     if (!localCache.SignalRoutesLookup.TryGetValue(timeSeriesEntity.ID, out signalRoutes))
-                        {
+                    {
                         // Use the global cache to find the signal
                         // routes, and store them in the local cache
                         signalRoutes = FindAndCacheSignalRoutes(timeSeriesEntity, globalCache, localCache);
-                        }
+                    }
 
                     foreach (SignalRoute signalRoute in signalRoutes)
                     {
@@ -415,13 +415,13 @@ namespace GSF.TimeSeries.Routing
                     catch (Exception ex)
                     {
                         OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception routing data to adapter [{0}]: {1}", activeRoute.Adapter.Name, ex.Message), ex));
+                    }
                 }
             }
-        }
             catch (Exception ex)
-        {
+            {
                 OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception occurred in time-series routing event handler: {0}", ex.Message), ex));
-        }
+            }
         }
 
         private ICollection<SignalRoute> FindAndCacheSignalRoutes(ITimeSeriesEntity timeSeriesEntity, GlobalCache globalCache, RoutingEventArgs localCache)
@@ -473,12 +473,12 @@ namespace GSF.TimeSeries.Routing
                         matchingRoutes = localAdapterRoutes
                             .Where(route => route.SignalType.IsAssignableFrom(timeSeriesEntityType))
                             .ToList();
-                            }
+                    }
 
                     // We should have found at least one route unless there
                     // are no routes defined to handle the signal's type
                     if (matchingRoutes.Count > 0)
-                        {
+                    {
                         // In the case of multiple matches, get routes with
                         // the most defined signal types, where it is not
                         // compatible with any other type in the list
@@ -492,37 +492,37 @@ namespace GSF.TimeSeries.Routing
                         // If we still have multiple matches,
                         // try throwing out the generic routes
                         if (matchingRoutes.Count > 1)
-            {
+                        {
                             matchingRoutes = matchingRoutes
                                 .Where(route => !route.ProcessingMethod.IsGenericMethod)
                                 .ToList();
-            }
+                        }
 
                         // There should only be one route,
                         // except in the case of ambiguous matches
                         if (matchingRoutes.Count == 1)
-            {
+                        {
                             signalRoutes.Add(matchingRoutes[0]);
-                }
+                        }
                         else
-                {
+                        {
                             const string Message = "WARNING: When locating routes for signal [{0}] going to adapter [{1}]," +
                                 " multiple processing methods were found that could handle the signal's type, and the" +
                                 " system was unable to resolve the ambiguity. The signal will not be processed by this" +
                                 " adapter. The adapter will likely need to be fixed to resolve the ambiguity.";
 
                             OnStatusMessage(Message, timeSeriesEntity.ID, destination.Name);
-                }
-                }
+                        }
+                    }
                     else
-        {
+                    {
                         const string Message = "WARNING: When locating routes for signal [{0}] going to adapter [{1}]," +
                             " no processing methods were found that could handle the signal's type. The signal will" +
                             " not be processed by this adapter. This is likely a configuration error.";
 
                         OnStatusMessage(Message, timeSeriesEntity.ID, destination.Name);
-            }
-        }
+                    }
+                }
             }
 
             // Store these routes in the local cache
@@ -601,16 +601,16 @@ namespace GSF.TimeSeries.Routing
             ISet<Guid> requestedOutputSignals;
 
             if ((object)inputSignalsRestriction != null && inputSignalsRestriction.Any())
-                {
+            {
                 // When an input signals restriction has been defined, determine the set of adapters
                 // by walking the dependency chain of the restriction
                 dependencyChain = TraverseDependencyChain(inputSignalsRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-                    }
-                    else
-                    {
+            }
+            else
+            {
                 // Determine the set of adapters in the dependency chain for all adapters in the system
                 dependencyChain = TraverseDependencyChain(inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-                    }
+            }
 
             // Get the full set of requested input and output signals in the entire dependency chain
             inputSignals = new HashSet<Guid>(dependencyChain.SelectMany(adapter => adapter.InputSignalIDs));
@@ -618,9 +618,9 @@ namespace GSF.TimeSeries.Routing
 
             // Turn connect on demand input adapters on or off based on whether they are part of the dependency chain
             if ((object)inputAdapterCollection != null)
-                {
+            {
                 foreach (IInputAdapter inputAdapter in inputAdapterCollection)
-                    {
+                {
                     if (!inputAdapter.AutoStart)
                     {
                         if (dependencyChain.Contains(inputAdapter))
@@ -629,31 +629,31 @@ namespace GSF.TimeSeries.Routing
                             requestedOutputSignals.IntersectWith(inputSignals);
                             inputAdapter.RequestedOutputSignals = requestedOutputSignals;
                             inputAdapter.Enabled = true;
-                    }
-                    else
-                    {
+                        }
+                        else
+                        {
                             inputAdapter.RequestedOutputSignals = null;
                             inputAdapter.Enabled = false;
-            }
                         }
                     }
                 }
+            }
 
             // Turn connect on demand action adapters on or off based on whether they are part of the dependency chain
-                if ((object)actionAdapterCollection != null)
+            if ((object)actionAdapterCollection != null)
+            {
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
-                    {
                     if (!actionAdapter.AutoStart)
-                {
-                        if (dependencyChain.Contains(actionAdapter))
                     {
-                            if (actionAdapter.RespectInputDemands)
+                        if (dependencyChain.Contains(actionAdapter))
                         {
+                            if (actionAdapter.RespectInputDemands)
+                            {
                                 requestedInputSignals = new HashSet<Guid>(actionAdapter.InputSignalIDs);
                                 requestedInputSignals.IntersectWith(outputSignals);
                                 actionAdapter.RequestedInputSignals = requestedInputSignals;
-            }
+                            }
 
                             if (actionAdapter.RespectOutputDemands)
                             {
@@ -662,9 +662,9 @@ namespace GSF.TimeSeries.Routing
                                 actionAdapter.RequestedOutputSignals = requestedOutputSignals;
                             }
 
-                                actionAdapter.Enabled = true;
+                            actionAdapter.Enabled = true;
                         }
-                            else
+                        else
                         {
                             actionAdapter.RequestedInputSignals = null;
                             actionAdapter.RequestedOutputSignals = null;
@@ -676,18 +676,18 @@ namespace GSF.TimeSeries.Routing
 
             // Turn connect on demand output adapters on or off based on whether they are part of the dependency chain
             if ((object)outputAdapterCollection != null)
-                {
+            {
                 foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
-                    {
+                {
                     if (!outputAdapter.AutoStart)
-                        {
+                    {
                         if (dependencyChain.Contains(outputAdapter))
-                            {
+                        {
                             requestedInputSignals = new HashSet<Guid>(outputAdapter.OutputSignalIDs);
                             requestedInputSignals.IntersectWith(inputSignals);
                             outputAdapter.RequestedInputSignals = requestedInputSignals;
                             outputAdapter.Enabled = true;
-                }
+                        }
                         else
                         {
                             outputAdapter.RequestedInputSignals = null;
@@ -712,7 +712,7 @@ namespace GSF.TimeSeries.Routing
             ISet<IAdapter> dependencyChain = new HashSet<IAdapter>();
 
             foreach (IInputAdapter inputAdapter in inputAdapterCollection)
-                {
+            {
                 if (!dependencyChain.Contains(inputAdapter) && inputSignalsRestriction.Overlaps(inputAdapter.OutputSignalIDs))
                     AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
             }
@@ -721,10 +721,10 @@ namespace GSF.TimeSeries.Routing
             {
                 if (!dependencyChain.Contains(actionAdapter) && inputSignalsRestriction.Overlaps(actionAdapter.OutputSignalIDs))
                     AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-                }
+            }
 
             return dependencyChain;
-            }
+        }
 
         /// <summary>
         /// Determines the set of adapters in the dependency chain for all adapters in the system which are either not connect or demand or are demanded.
@@ -733,14 +733,14 @@ namespace GSF.TimeSeries.Routing
         /// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
         /// <param name="outputAdapterCollection">Collection of output adapters at start of routing table calculation.</param>
         protected virtual ISet<IAdapter> TraverseDependencyChain(IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
-                {
+        {
             ISet<IAdapter> dependencyChain = new HashSet<IAdapter>();
 
             foreach (IInputAdapter inputAdapter in inputAdapterCollection)
             {
                 if (inputAdapter.AutoStart && !dependencyChain.Contains(inputAdapter))
                     AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-                }
+            }
 
             foreach (IActionAdapter actionAdapter in actionAdapterCollection)
             {
@@ -766,15 +766,15 @@ namespace GSF.TimeSeries.Routing
             // Checks all action adapters to determine whether they also need to be
             // added to the chain as a result of this adapter being added to the chain
             foreach (IActionAdapter actionAdapter in actionAdapterCollection)
-                {
+            {
                 if (actionAdapter.RespectInputDemands && !dependencyChain.Contains(actionAdapter) && adapter.OutputSignalIDs.Overlaps(actionAdapter.InputSignalIDs))
                     AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-        }
+            }
 
             // Checks all output adapters to determine whether they also need to be
             // added to the chain as a result of this adapter being added to the chain
             foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
-        {
+            {
                 if (!dependencyChain.Contains(outputAdapter) && adapter.OutputSignalIDs.Overlaps(outputAdapter.InputSignalIDs))
                     AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
             }
@@ -792,14 +792,14 @@ namespace GSF.TimeSeries.Routing
             {
                 if (!dependencyChain.Contains(inputAdapter) && adapter.InputSignalIDs.Overlaps(inputAdapter.OutputSignalIDs))
                     AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-        }
+            }
 
             // Checks all action adapters to determine whether they also need to be
             // added to the chain as a result of this adapter being added to the chain
             foreach (IActionAdapter actionAdapter in actionAdapterCollection)
-        {
-                if (!dependencyChain.Contains(actionAdapter))
             {
+                if (!dependencyChain.Contains(actionAdapter))
+                {
                     if (actionAdapter.RespectInputDemands && adapter.OutputSignalIDs.Overlaps(actionAdapter.InputSignalIDs))
                         AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                     else if (actionAdapter.RespectOutputDemands && adapter.InputSignalIDs.Overlaps(actionAdapter.OutputSignalIDs))
@@ -818,22 +818,22 @@ namespace GSF.TimeSeries.Routing
 
         // Adds an output adapter to the dependency chain.
         private void AddOutputAdapter(IOutputAdapter adapter, ISet<IAdapter> dependencyChain, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
-            {
+        {
             // Adds the adapter to the chain
             dependencyChain.Add(adapter);
 
             // Checks all input adapters to determine whether they also need to be
             // added to the chain as a result of this adapter being added to the chain
             foreach (IInputAdapter inputAdapter in inputAdapterCollection)
-                {
+            {
                 if (!dependencyChain.Contains(inputAdapter) && adapter.InputSignalIDs.Overlaps(inputAdapter.OutputSignalIDs))
                     AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-                }
+            }
 
             // Checks all action adapters to determine whether they also need to be
             // added to the chain as a result of this adapter being added to the chain
             foreach (IActionAdapter actionAdapter in actionAdapterCollection)
-                {
+            {
                 if (actionAdapter.RespectOutputDemands && !dependencyChain.Contains(actionAdapter) && adapter.InputSignalIDs.Overlaps(actionAdapter.OutputSignalIDs))
                     AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
             }
