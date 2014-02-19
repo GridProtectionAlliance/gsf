@@ -778,20 +778,26 @@ namespace GSF.TimeSeries.Routing
             // Adds the adapter to the chain
             dependencyChain.Add(adapter);
 
-            // Checks all action adapters to determine whether they also need to be
-            // added to the chain as a result of this adapter being added to the chain
-            foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+            if ((object)actionAdapterCollection != null)
             {
-                if (actionAdapter.RespectInputDemands && !dependencyChain.Contains(actionAdapter) && adapter.OutputSignalIDs.Overlaps(actionAdapter.InputSignalIDs))
-                    AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                // Checks all action adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (actionAdapter.RespectInputDemands && !dependencyChain.Contains(actionAdapter) && adapter.OutputSignalIDs.Overlaps(actionAdapter.InputSignalIDs))
+                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
 
-            // Checks all output adapters to determine whether they also need to be
-            // added to the chain as a result of this adapter being added to the chain
-            foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+            if ((object)outputAdapterCollection != null)
             {
-                if (!dependencyChain.Contains(outputAdapter) && adapter.OutputSignalIDs.Overlaps(outputAdapter.InputSignalIDs))
-                    AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                // Checks all output adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(outputAdapter) && adapter.OutputSignalIDs.Overlaps(outputAdapter.InputSignalIDs))
+                        AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
         }
 
@@ -801,33 +807,42 @@ namespace GSF.TimeSeries.Routing
             // Adds the adapter to the chain
             dependencyChain.Add(adapter);
 
-            // Checks all input adapters to determine whether they also need to be
-            // added to the chain as a result of this adapter being added to the chain
-            foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+            if ((object)inputAdapterCollection != null)
             {
-                if (!dependencyChain.Contains(inputAdapter) && adapter.InputSignalIDs.Overlaps(inputAdapter.OutputSignalIDs))
-                    AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-            }
-
-            // Checks all action adapters to determine whether they also need to be
-            // added to the chain as a result of this adapter being added to the chain
-            foreach (IActionAdapter actionAdapter in actionAdapterCollection)
-            {
-                if (!dependencyChain.Contains(actionAdapter))
+                // Checks all input adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
-                    if (actionAdapter.RespectInputDemands && adapter.OutputSignalIDs.Overlaps(actionAdapter.InputSignalIDs))
-                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-                    else if (actionAdapter.RespectOutputDemands && adapter.InputSignalIDs.Overlaps(actionAdapter.OutputSignalIDs))
-                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                    if (!dependencyChain.Contains(inputAdapter) && adapter.InputSignalIDs.Overlaps(inputAdapter.OutputSignalIDs))
+                        AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
                 }
             }
 
-            // Checks all output adapters to determine whether they also need to be
-            // added to the chain as a result of this adapter being added to the chain
-            foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+            if ((object)actionAdapterCollection != null)
             {
-                if (!dependencyChain.Contains(outputAdapter) && adapter.OutputSignalIDs.Overlaps(outputAdapter.InputSignalIDs))
-                    AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                // Checks all action adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(actionAdapter))
+                    {
+                        if (actionAdapter.RespectInputDemands && adapter.OutputSignalIDs.Overlaps(actionAdapter.InputSignalIDs))
+                            AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                        else if (actionAdapter.RespectOutputDemands && adapter.InputSignalIDs.Overlaps(actionAdapter.OutputSignalIDs))
+                            AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                    }
+                }
+            }
+
+            if ((object)outputAdapterCollection != null)
+            {
+                // Checks all output adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(outputAdapter) && adapter.OutputSignalIDs.Overlaps(outputAdapter.InputSignalIDs))
+                        AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
         }
 
@@ -837,20 +852,26 @@ namespace GSF.TimeSeries.Routing
             // Adds the adapter to the chain
             dependencyChain.Add(adapter);
 
-            // Checks all input adapters to determine whether they also need to be
-            // added to the chain as a result of this adapter being added to the chain
-            foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+            if ((object)inputAdapterCollection != null)
             {
-                if (!dependencyChain.Contains(inputAdapter) && adapter.InputSignalIDs.Overlaps(inputAdapter.OutputSignalIDs))
-                    AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                // Checks all input adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(inputAdapter) && adapter.InputSignalIDs.Overlaps(inputAdapter.OutputSignalIDs))
+                        AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
 
-            // Checks all action adapters to determine whether they also need to be
-            // added to the chain as a result of this adapter being added to the chain
-            foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+            if ((object)actionAdapterCollection != null)
             {
-                if (actionAdapter.RespectOutputDemands && !dependencyChain.Contains(actionAdapter) && adapter.InputSignalIDs.Overlaps(actionAdapter.OutputSignalIDs))
-                    AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                // Checks all action adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (actionAdapter.RespectOutputDemands && !dependencyChain.Contains(actionAdapter) && adapter.InputSignalIDs.Overlaps(actionAdapter.OutputSignalIDs))
+                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
         }
 
