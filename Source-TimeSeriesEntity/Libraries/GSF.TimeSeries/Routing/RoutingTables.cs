@@ -711,16 +711,22 @@ namespace GSF.TimeSeries.Routing
         {
             ISet<IAdapter> dependencyChain = new HashSet<IAdapter>();
 
-            foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+            if ((object)inputAdapterCollection != null)
             {
-                if (!dependencyChain.Contains(inputAdapter) && inputSignalsRestriction.Overlaps(inputAdapter.OutputSignalIDs))
-                    AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(inputAdapter) && inputSignalsRestriction.Overlaps(inputAdapter.OutputSignalIDs))
+                        AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
 
-            foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+            if ((object)actionAdapterCollection != null)
             {
-                if (!dependencyChain.Contains(actionAdapter) && inputSignalsRestriction.Overlaps(actionAdapter.OutputSignalIDs))
-                    AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(actionAdapter) && inputSignalsRestriction.Overlaps(actionAdapter.OutputSignalIDs))
+                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
 
             return dependencyChain;
@@ -736,22 +742,31 @@ namespace GSF.TimeSeries.Routing
         {
             ISet<IAdapter> dependencyChain = new HashSet<IAdapter>();
 
-            foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+            if ((object)inputAdapterCollection != null)
             {
-                if (inputAdapter.AutoStart && !dependencyChain.Contains(inputAdapter))
-                    AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+                {
+                    if (inputAdapter.AutoStart && !dependencyChain.Contains(inputAdapter))
+                        AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
 
-            foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+            if ((object)actionAdapterCollection != null)
             {
-                if (actionAdapter.AutoStart && !dependencyChain.Contains(actionAdapter))
-                    AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (actionAdapter.AutoStart && !dependencyChain.Contains(actionAdapter))
+                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
 
-            foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+            if ((object)outputAdapterCollection != null)
             {
-                if (outputAdapter.AutoStart && !dependencyChain.Contains(outputAdapter))
-                    AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+                {
+                    if (outputAdapter.AutoStart && !dependencyChain.Contains(outputAdapter))
+                        AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
             }
 
             return dependencyChain;
