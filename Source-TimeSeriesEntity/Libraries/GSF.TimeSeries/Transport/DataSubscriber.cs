@@ -28,7 +28,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.IO.Compression;
@@ -40,17 +39,12 @@ using System.Text;
 using System.Threading;
 using System.Timers;
 using System.Xml;
-using GSF.Collections;
 using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
 using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
 using GSF.Security.Cryptography;
-using GSF.Threading;
 using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
@@ -61,9 +55,7 @@ namespace GSF.TimeSeries.Transport
     /// <summary>
     /// Represents a data subscribing client that will connect to a data publisher for a data subscription.
     /// </summary>
-    [Description("DataSubscriber: client that subscribes to a publishing server for a streaming data.")]
-    [EditorBrowsable(EditorBrowsableState.Advanced)] // Normally defined as an input device protocol
-    public class DataSubscriber : InputAdapterBase
+    public class DataSubscriber : IDisposable
     {
         #region [ Members ]
 
@@ -167,9 +159,14 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler<EventArgs<DataSet>> MetaDataReceived;
 
         /// <summary>
-        /// Occurs when first measurement is transmitted by data publication server.
+        /// Occurs when first time-series entity is transmitted by data publication server.
         /// </summary>
         public event EventHandler<EventArgs<Ticks>> DataStartTime;
+
+        /// <summary>
+        /// Occurs when new time-series entities are received from the data publisher.
+        /// </summary>
+        public event EventHandler<EventArgs<ICollection<ITimeSeriesEntity>>> NewEntities; 
 
         /// <summary>
         /// Indicates that processing for an input adapter (via temporal session) has completed.
@@ -178,7 +175,7 @@ namespace GSF.TimeSeries.Transport
         /// This event is expected to only be raised when an input adapter has been designed to process
         /// a finite amount of data, e.g., reading a historical range of data during temporal processing.
         /// </remarks>
-        public new event EventHandler<EventArgs<string>> ProcessingComplete;
+        public event EventHandler<EventArgs<string>> ProcessingComplete;
 
         /// <summary>
         /// Occurs when a notification has been received from the <see cref="DataPublisher"/>.
@@ -192,67 +189,73 @@ namespace GSF.TimeSeries.Transport
         public event EventHandler ServerConfigurationChanged;
 
         /// <summary>
+        /// Occurs when the data subscriber has a message which
+        /// provides information about the status of its operations.
+        /// </summary>
+        public event EventHandler<EventArgs<string>> StatusMessage; 
+
+        /// <summary>
+        /// Occurs when the data subscriber encounters an exception.
+        /// </summary>
+        public event EventHandler<EventArgs<Exception>> ProcessException;
+
+        // Constants
+
+        /// <summary>
         /// Defines default value for <see cref="DataSubscriber.OperationalModes"/>.
         /// </summary>
         public const OperationalModes DefaultOperationalModes = OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData | OperationalModes.ReceiveInternalMetadata | OperationalModes.UseCommonSerializationFormat;
 
-        /// <summary>
-        /// Defines the default value for the <see cref="MetadataSynchronizationTimeout"/> property.
-        /// </summary>
-        public const int DefaultMetadataSynchronizationTimeout = 0;
-
-        /// <summary>
-        /// Defines the default value for the <see cref="UseTransactionForMetadata"/> property.
-        /// </summary>
-        public const bool DefaultUseTransactionForMetadata = true;
-
         // Fields
         private IClient m_commandChannel;
         private UdpClient m_dataChannel;
-        private LocalConcentrator m_localConcentrator;
-        private Timer m_dataStreamMonitor;
+        private string m_connectionString;
+        private volatile bool m_reinitializeCommandChannel;
+
         private long m_commandChannelConnectionAttempts;
         private long m_dataChannelConnectionAttempts;
-        private volatile SignalIndexCache m_remoteSignalIndexCache;
-        private volatile SignalIndexCache m_signalIndexCache;
-        private volatile long[] m_baseTimeOffsets;
-        private volatile int m_timeIndex;
-        private volatile byte[][][] m_keyIVs;
+
+        private volatile bool m_enabled;
+        private volatile bool m_isConnected;
         private volatile bool m_authenticated;
         private volatile bool m_subscribed;
-        private volatile int m_lastBytesReceived;
-        private long m_monitoredBytesReceived;
-        private long m_totalBytesReceived;
-        private long m_lastMissingCacheWarning;
-        private Guid m_nodeID;
-        private int m_gatewayProtocolID;
-        private readonly List<ServerCommand> m_requests;
+
+        private int m_processingInterval;
+
+        private LocalConcentrator m_localConcentrator;
+        private Timer m_dataStreamMonitor;
+
         private SecurityMode m_securityMode;
-        private bool m_synchronizedSubscription;
-        private bool m_useMillisecondResolution;
-        private bool m_autoConnect;
-        private string m_metadataFilters;
         private string m_sharedSecret;
-        private string m_authenticationID;
-        private string m_localCertificate;
-        private string m_remoteCertificate;
+        private string m_localCertificateFilePath;
+        private string m_remoteCertificateFilePath;
         private SslPolicyErrors m_validPolicyErrors;
         private X509ChainStatusFlags m_validChainFlags;
         private bool m_checkCertificateRevocation;
-        private bool m_internal;
-        private bool m_includeTime;
-        private bool m_autoSynchronizeMetadata;
-        private bool m_useTransactionForMetadata;
-        private int m_metadataSynchronizationTimeout;
-        private SynchronizedOperation m_synchronizeMetadataOperation;
-        private volatile DataSet m_receivedMetadata;
-        private DataSet m_synchronizedMetadata;
+
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
         private int m_bufferSize;
 
+        private readonly List<ServerCommand> m_requests;
+        private bool m_synchronizedSubscription;
+
+        private volatile SignalIndexCache m_signalIndexCache;
+        private long m_lastMissingCacheWarning;
+
+        private bool m_useMillisecondResolution;
+        private bool m_includeTime;
+
+        private volatile long[] m_baseTimeOffsets;
+        private volatile int m_timeIndex;
+        private volatile byte[][][] m_keyIVs;
+
         private readonly List<TimeSeriesBuffer> m_bufferBlockCache;
         private uint m_expectedBufferBlockSequenceNumber;
+
+        private volatile int m_lastBytesReceived;
+        private long m_monitoredBytesReceived;
+        private long m_totalBytesReceived;
 
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
@@ -266,11 +269,6 @@ namespace GSF.TimeSeries.Transport
         private long m_lifetimeMaximumLatency;
         private long m_lifetimeLatencyMeasurements;
 
-        private long m_syncProgressTotalActions;
-        private long m_syncProgressActionsCount;
-        private long m_syncProgressUpdateInterval;
-        private long m_syncProgressLastMessage;
-
         private bool m_disposed;
 
         #endregion
@@ -283,11 +281,8 @@ namespace GSF.TimeSeries.Transport
         public DataSubscriber()
         {
             m_requests = new List<ServerCommand>();
-            m_synchronizeMetadataOperation = new SynchronizedOperation(SynchronizeMetadata);
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
-            m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
-            m_useTransactionForMetadata = DefaultUseTransactionForMetadata;
             DataLossInterval = 10.0D;
 
             m_bufferBlockCache = new List<TimeSeriesBuffer>();
@@ -297,15 +292,19 @@ namespace GSF.TimeSeries.Transport
 
         #region [ Properties ]
 
-        public bool Internal
+        /// <summary>
+        /// Gets or sets the connection string which defines connection properties for the data subscriber.
+        /// </summary>
+        public string ConnectionString
         {
             get
             {
-                return m_internal;
+                return m_connectionString;
             }
             set
             {
-                m_internal = value;
+                m_connectionString = value;
+                m_reinitializeCommandChannel = true;
             }
         }
 
@@ -321,6 +320,7 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_securityMode = value;
+                m_reinitializeCommandChannel = true;
             }
         }
 
@@ -340,95 +340,25 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if <see cref="DataSubscriber"/> should attempt to auto-connection to <see cref="DataPublisher"/> using defined connection settings.
-        /// </summary>
-        public bool AutoConnect
-        {
-            get
-            {
-                return m_autoConnect;
-            }
-            set
-            {
-                m_autoConnect = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets flag that determines if <see cref="DataSubscriber"/> should
-        /// automatically request meta-data synchronization and synchronize publisher
-        /// meta-data with its own database configuration.
-        /// </summary>
-        public bool AutoSynchronizeMetadata
-        {
-            get
-            {
-                return m_autoSynchronizeMetadata;
-            }
-            set
-            {
-                m_autoSynchronizeMetadata = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets requested meta-data filter expressions to be applied by <see cref="DataPublisher"/> before meta-data is sent.
+        /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
         /// </summary>
         /// <remarks>
-        /// Multiple meta-data filters, such filters for different data tables, should be separated by a semicolon. Specifying fields in the filter
-        /// expression that do not exist in the data publisher's current meta-data set could cause filter expressions to not be applied and possibly
-        /// result in no meta-data being received for the specified data table.
+        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
+        /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
-        /// <example>
-        /// FILTER MeasurementDetail WHERE SignalType &lt;&gt; 'STAT'; FILTER PhasorDetail WHERE Phase = '+'
-        /// </example>
-        public string MetadataFilters
+        public int ProcessingInterval
         {
             get
             {
-                return m_metadataFilters;
+                return m_processingInterval;
             }
             set
             {
-                m_metadataFilters = value;
-            }
-        }
+                m_processingInterval = value;
 
-        /// <summary>
-        /// Gets or sets flag that informs publisher if base time-offsets can use millisecond resolution to conserve bandwidth.
-        /// </summary>
-        [Obsolete("SubscriptionInfo object defines this parameter.", false)]
-        public bool UseMillisecondResolution
-        {
-            get
-            {
-                return m_useMillisecondResolution;
-            }
-            set
-            {
-                m_useMillisecondResolution = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets flag that determines if this <see cref="DataSubscriber"/> has successfully authenticated with the <see cref="DataPublisher"/>.
-        /// </summary>
-        public bool Authenticated
-        {
-            get
-            {
-                return m_authenticated;
-            }
-        }
-
-        /// <summary>
-        /// Gets total data packet bytes received during this session.
-        /// </summary>
-        public long TotalBytesReceived
-        {
-            get
-            {
-                return m_totalBytesReceived;
+                // Request server update the processing interval
+                SendServerCommand(ServerCommand.UpdateProcessingInterval, EndianOrder.BigEndian.GetBytes(value));
             }
         }
 
@@ -469,6 +399,104 @@ namespace GSF.TimeSeries.Transport
                     }
                     m_dataStreamMonitor = null;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the size of the buffers used to send and receive data in the transport layer.
+        /// </summary>
+        public int BufferSize
+        {
+            get
+            {
+                return m_bufferSize;
+            }
+            set
+            {
+                m_bufferSize = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the file path to the local certificate used
+        /// to authenticate the data subscriber with the data publisher.
+        /// </summary>
+        public string LocalCertificateFilePath
+        {
+            get
+            {
+                return m_localCertificateFilePath;
+            }
+            set
+            {
+                m_localCertificateFilePath = value;
+                m_reinitializeCommandChannel = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the file path to the remote
+        /// certificate used to identify the data publisher.
+        /// </summary>
+        public string RemoteCertificateFilePath
+        {
+            get
+            {
+                return m_remoteCertificateFilePath;
+            }
+            set
+            {
+                m_remoteCertificateFilePath = value;
+                m_reinitializeCommandChannel = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the set of policy errors we expect to
+        /// encounter when validating the data publisher's identity.
+        /// </summary>
+        public SslPolicyErrors ValidPolicyErrors
+        {
+            get
+            {
+                return m_validPolicyErrors;
+            }
+            set
+            {
+                m_validPolicyErrors = value;
+                m_reinitializeCommandChannel = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the set of chain flags we expect to
+        /// encounter when validating the data publisher's identity.
+        /// </summary>
+        public X509ChainStatusFlags ValidChainFlags
+        {
+            get
+            {
+                return m_validChainFlags;
+            }
+            set
+            {
+                m_validChainFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether we should check that the
+        /// data publisher's certificate was revoked by the certificate authority.
+        /// </summary>
+        public bool CheckCertificateRevocation
+        {
+            get
+            {
+                return m_checkCertificateRevocation;
+            }
+            set
+            {
+                m_checkCertificateRevocation = value;
             }
         }
 
@@ -645,71 +673,105 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets the flag indicating if this adapter supports temporal processing.
+        /// Gets flag that indicates whether this data subscriber
+        /// has successfully connected to the data publisher.
         /// </summary>
-        /// <remarks>
-        /// Although the data subscriber provisions support for temporal processing by receiving historical data from a remote source,
-        /// the adapter opens sockets and does not need to be engaged within an actual temporal <see cref="IaonSession"/>, therefore
-        /// this method returns <c>false</c> to make sure the adapter doesn't get instantiated within a temporal session.
-        /// </remarks>
-        public override bool SupportsTemporalProcessing
+        public bool IsConnected
         {
             get
             {
-                return false;
+                return m_isConnected;
             }
         }
 
         /// <summary>
-        /// Gets or sets the desired processing interval, in milliseconds, for the adapter.
+        /// Gets flag that determines if this <see cref="DataSubscriber"/> has successfully authenticated with the <see cref="DataPublisher"/>.
         /// </summary>
-        /// <remarks>
-        /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
-        /// interval while a value of 0 means to process data as fast as possible.
-        /// </remarks>
-        public override int ProcessingInterval
+        public bool Authenticated
         {
             get
             {
-                return base.ProcessingInterval;
-            }
-            set
-            {
-                base.ProcessingInterval = value;
-
-                // Request server update the processing interval
-                SendServerCommand(ServerCommand.UpdateProcessingInterval, EndianOrder.BigEndian.GetBytes(value));
+                return m_authenticated;
             }
         }
 
         /// <summary>
-        /// Gets or sets the timeout used when executing database queries during meta-data synchronization.
+        /// Gets or sets reference to <see cref="Communication.TcpClient"/> command channel, attaching and/or detaching to events as needed.
         /// </summary>
-        public int MetadataSynchronizationTimeout
+        private IClient CommandChannel
         {
             get
             {
-                return m_metadataSynchronizationTimeout;
+                return m_commandChannel;
             }
             set
             {
-                m_metadataSynchronizationTimeout = value;
+                if ((object)m_commandChannel != null)
+                {
+                    // Detach from events on existing command channel reference
+                    m_commandChannel.ConnectionAttempt -= m_commandChannel_ConnectionAttempt;
+                    m_commandChannel.ConnectionEstablished -= m_commandChannel_ConnectionEstablished;
+                    m_commandChannel.ConnectionException -= m_commandChannel_ConnectionException;
+                    m_commandChannel.ConnectionTerminated -= m_commandChannel_ConnectionTerminated;
+                    m_commandChannel.ReceiveData -= m_commandChannel_ReceiveData;
+                    m_commandChannel.ReceiveDataException -= m_commandChannel_ReceiveDataException;
+                    m_commandChannel.SendDataException -= m_commandChannel_SendDataException;
+
+                    if (m_commandChannel != value)
+                        m_commandChannel.Dispose();
+                }
+
+                // Assign new command channel reference
+                m_commandChannel = value;
+
+                if ((object)m_commandChannel != null)
+                {
+                    // Attach to desired events on new command channel reference
+                    m_commandChannel.ConnectionAttempt += m_commandChannel_ConnectionAttempt;
+                    m_commandChannel.ConnectionEstablished += m_commandChannel_ConnectionEstablished;
+                    m_commandChannel.ConnectionException += m_commandChannel_ConnectionException;
+                    m_commandChannel.ConnectionTerminated += m_commandChannel_ConnectionTerminated;
+                    m_commandChannel.ReceiveData += m_commandChannel_ReceiveData;
+                    m_commandChannel.ReceiveDataException += m_commandChannel_ReceiveDataException;
+                    m_commandChannel.SendDataException += m_commandChannel_SendDataException;
+                }
             }
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if meta-data synchronization should be performed within a transaction.
+        /// Gets or sets reference to <see cref="UdpClient"/> data channel, attaching and/or detaching to events as needed.
         /// </summary>
-        public bool UseTransactionForMetadata
+        private UdpClient DataChannel
         {
             get
             {
-                return m_useTransactionForMetadata;
+                return m_dataChannel;
             }
             set
             {
-                m_useTransactionForMetadata = value;
+                if ((object)m_dataChannel != null)
+                {
+                    // Detach from events on existing data channel reference
+                    m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
+                    m_dataChannel.ConnectionAttempt -= m_dataChannel_ConnectionAttempt;
+                    m_dataChannel.ReceiveData -= m_dataChannel_ReceiveData;
+                    m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
+
+                    if ((object)m_dataChannel != value)
+                        m_dataChannel.Dispose();
+                }
+
+                // Assign new data channel reference
+                m_dataChannel = value;
+
+                if ((object)m_dataChannel != null)
+                {
+                    // Attach to desired events on new data channel reference
+                    m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
+                    m_dataChannel.ConnectionAttempt += m_dataChannel_ConnectionAttempt;
+                    m_dataChannel.ReceiveData += m_dataChannel_ReceiveData;
+                    m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
+                }
             }
         }
 
@@ -719,7 +781,7 @@ namespace GSF.TimeSeries.Transport
         /// <remarks>
         /// Derived classes should provide current status information about the adapter for display purposes.
         /// </remarks>
-        public override string Status
+        public string Status
         {
             get
             {
@@ -769,100 +831,18 @@ namespace GSF.TimeSeries.Transport
                     status.Append(m_localConcentrator.Status);
                 }
 
-                status.Append(base.Status);
-
                 return status.ToString();
             }
         }
 
         /// <summary>
-        /// Gets a flag that determines if this <see cref="DataSubscriber"/> uses an asynchronous connection.
+        /// Gets total data packet bytes received during this session.
         /// </summary>
-        protected override bool UseAsyncConnect
+        public long TotalBytesReceived
         {
             get
             {
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets reference to <see cref="UdpClient"/> data channel, attaching and/or detaching to events as needed.
-        /// </summary>
-        protected UdpClient DataChannel
-        {
-            get
-            {
-                return m_dataChannel;
-            }
-            set
-            {
-                if ((object)m_dataChannel != null)
-                {
-                    // Detach from events on existing data channel reference
-                    m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
-                    m_dataChannel.ConnectionAttempt -= m_dataChannel_ConnectionAttempt;
-                    m_dataChannel.ReceiveData -= m_dataChannel_ReceiveData;
-                    m_dataChannel.ReceiveDataException -= m_dataChannel_ReceiveDataException;
-
-                    if ((object)m_dataChannel != value)
-                        m_dataChannel.Dispose();
-                }
-
-                // Assign new data channel reference
-                m_dataChannel = value;
-
-                if ((object)m_dataChannel != null)
-                {
-                    // Attach to desired events on new data channel reference
-                    m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
-                    m_dataChannel.ConnectionAttempt += m_dataChannel_ConnectionAttempt;
-                    m_dataChannel.ReceiveData += m_dataChannel_ReceiveData;
-                    m_dataChannel.ReceiveDataException += m_dataChannel_ReceiveDataException;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets reference to <see cref="Communication.TcpClient"/> command channel, attaching and/or detaching to events as needed.
-        /// </summary>
-        protected IClient CommandChannel
-        {
-            get
-            {
-                return m_commandChannel;
-            }
-            set
-            {
-                if ((object)m_commandChannel != null)
-                {
-                    // Detach from events on existing command channel reference
-                    m_commandChannel.ConnectionAttempt -= m_commandChannel_ConnectionAttempt;
-                    m_commandChannel.ConnectionEstablished -= m_commandChannel_ConnectionEstablished;
-                    m_commandChannel.ConnectionException -= m_commandChannel_ConnectionException;
-                    m_commandChannel.ConnectionTerminated -= m_commandChannel_ConnectionTerminated;
-                    m_commandChannel.ReceiveData -= m_commandChannel_ReceiveData;
-                    m_commandChannel.ReceiveDataException -= m_commandChannel_ReceiveDataException;
-                    m_commandChannel.SendDataException -= m_commandChannel_SendDataException;
-
-                    if (m_commandChannel != value)
-                        m_commandChannel.Dispose();
-                }
-
-                // Assign new command channel reference
-                m_commandChannel = value;
-
-                if ((object)m_commandChannel != null)
-                {
-                    // Attach to desired events on new command channel reference
-                    m_commandChannel.ConnectionAttempt += m_commandChannel_ConnectionAttempt;
-                    m_commandChannel.ConnectionEstablished += m_commandChannel_ConnectionEstablished;
-                    m_commandChannel.ConnectionException += m_commandChannel_ConnectionException;
-                    m_commandChannel.ConnectionTerminated += m_commandChannel_ConnectionTerminated;
-                    m_commandChannel.ReceiveData += m_commandChannel_ReceiveData;
-                    m_commandChannel.ReceiveDataException += m_commandChannel_ReceiveDataException;
-                    m_commandChannel.SendDataException += m_commandChannel_SendDataException;
-                }
+                return m_totalBytesReceived;
             }
         }
 
@@ -954,366 +934,34 @@ namespace GSF.TimeSeries.Transport
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="DataSubscriber"/> object and optionally releases the managed resources.
+        /// Attempts to connect to this <see cref="DataSubscriber"/>.
         /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        public void Start()
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        DataLossInterval = 0.0D;
-                        CommandChannel = null;
-                        DataChannel = null;
-                        DisposeLocalConcentrator();
-                        }
-                    }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
+            if (m_enabled)
+                throw new InvalidOperationException("Unable to start data subscriber because it is already running.");
 
-        /// <summary>
-        /// Initializes <see cref="DataSubscriber"/>.
-        /// </summary>
-        public override void Initialize()
-        {
-            base.Initialize();
+            if (string.IsNullOrEmpty(m_connectionString))
+                throw new InvalidOperationException("Unable to start data subscriber because the connection string is missing.");
 
-            Dictionary<string, string> settings = Settings;
-            string setting;
+            m_expectedBufferBlockSequenceNumber = 0u;
+            m_commandChannelConnectionAttempts = 0;
+            m_dataChannelConnectionAttempts = 0;
 
-            OperationalModes operationalModes;
-            int metadataSynchronizationTimeout;
-            double interval;
-            int bufferSize;
+            if (m_reinitializeCommandChannel)
+                InitializeCommandChannel();
 
-            // Setup connection to data publishing server with or without authentication required
-            if (settings.TryGetValue("requireAuthentication", out setting))
-                RequireAuthentication = setting.ParseBoolean();
+            m_commandChannel.ConnectAsync();
 
-            // Set the security mode if explicitly defined
-            if (settings.TryGetValue("securityMode", out setting))
-                m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
+            m_authenticated = (m_securityMode == SecurityMode.TLS);
+            m_subscribed = false;
+            m_keyIVs = null;
 
-            // Settings specific to Gateway security
-            if (m_securityMode == SecurityMode.Gateway)
-            {
-                if (!settings.TryGetValue("sharedSecret", out m_sharedSecret) || string.IsNullOrWhiteSpace(m_sharedSecret))
-                    throw new ArgumentException("The \"sharedSecret\" setting must be defined when using Gateway security mode.");
+            m_totalBytesReceived = 0L;
+            m_monitoredBytesReceived = 0L;
+            m_lastBytesReceived = 0;
 
-                if (!settings.TryGetValue("authenticationID", out m_authenticationID) || string.IsNullOrWhiteSpace(m_authenticationID))
-                    throw new ArgumentException("The \"authenticationID\" setting must be defined when using Gateway security mode.");
-            }
-
-            // Settings specific to Transport Layer Security
-            if (m_securityMode == SecurityMode.TLS)
-            {
-                if (!settings.TryGetValue("localCertificate", out m_localCertificate) || !File.Exists(m_localCertificate))
-                    m_localCertificate = GetLocalCertificate();
-
-                if (!settings.TryGetValue("remoteCertificate", out m_remoteCertificate) || !RemoteCertificateExists())
-                    throw new ArgumentException("The \"remoteCertificate\" setting must be defined and certificate file must exist when using TLS security mode.");
-
-                if (!settings.TryGetValue("validPolicyErrors", out setting) || !Enum.TryParse(setting, out m_validPolicyErrors))
-                    m_validPolicyErrors = SslPolicyErrors.None;
-
-                if (!settings.TryGetValue("validChainFlags", out setting) || !Enum.TryParse(setting, out m_validChainFlags))
-                    m_validChainFlags = X509ChainStatusFlags.NoError;
-
-                if (settings.TryGetValue("checkCertificateRevocation", out setting) && !string.IsNullOrWhiteSpace(setting))
-                    m_checkCertificateRevocation = setting.ParseBoolean();
-                else
-                    m_checkCertificateRevocation = true;
-            }
-
-            // Check if measurements for this connection should be marked as "internal" - i.e., owned and allowed for proxy
-            if (settings.TryGetValue("internal", out setting))
-                m_internal = setting.ParseBoolean();
-
-            // See if user has opted for different operational modes
-            if (settings.TryGetValue("operationalModes", out setting) && Enum.TryParse(setting, true, out operationalModes))
-                m_operationalModes = operationalModes;
-
-            // Check if user has explicitly defined the ReceiveInternalMetadata flag
-            if (settings.TryGetValue("receiveInternalMetadata", out setting))
-                ReceiveInternalMetadata = setting.ParseBoolean();
-
-            // Check if user has explicitly defined the ReceiveExternalMetadata flag
-            if (settings.TryGetValue("receiveExternalMetadata", out setting))
-                ReceiveExternalMetadata = setting.ParseBoolean();
-
-            // Check if user has defined a meta-data synchronization timeout
-            if (settings.TryGetValue("metadataSynchronizationTimeout", out setting) && int.TryParse(setting, out metadataSynchronizationTimeout))
-                m_metadataSynchronizationTimeout = metadataSynchronizationTimeout;
-
-            // Check if user has defined a flag for using a transaction during meta-data synchronization
-            if (settings.TryGetValue("useTransactionForMetadata", out setting))
-                m_useTransactionForMetadata = setting.ParseBoolean();
-
-            // Check if user wants to request that publisher use millisecond resolution to conserve bandwidth
-            if (settings.TryGetValue("useMillisecondResolution", out setting))
-                m_useMillisecondResolution = setting.ParseBoolean();
-
-            // Check if user has defined any meta-data filter expressions
-            if (settings.TryGetValue("metadataFilters", out setting))
-                m_metadataFilters = setting;
-
-            // Define auto connect setting
-            if (settings.TryGetValue("autoConnect", out setting))
-            {
-                m_autoConnect = setting.ParseBoolean();
-
-                if (m_autoConnect)
-                    m_autoSynchronizeMetadata = true;
-            }
-
-            // Check if synchronize meta-data is explicitly enabled or disabled
-            if (settings.TryGetValue("synchronizeMetadata", out setting))
-                m_autoSynchronizeMetadata = setting.ParseBoolean();
-
-            // Define data loss interval
-            if (settings.TryGetValue("dataLossInterval", out setting) && double.TryParse(setting, out interval))
-                DataLossInterval = interval;
-
-            // Define buffer size
-            if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out bufferSize))
-                bufferSize = ClientBase.DefaultReceiveBufferSize;
-
-            if (m_autoConnect)
-            {
-                // Connect to local events when automatically engaging connection cycle
-                ConnectionAuthenticated += DataSubscriber_ConnectionAuthenticated;
-                MetaDataReceived += DataSubscriber_MetaDataReceived;
-
-                // Update output measurements to include "subscribed" points
-                UpdateOutputMeasurements(true);
-            }
-            else if (m_autoSynchronizeMetadata)
-            {
-                // Output measurements do not include "subscribed" points,
-                // but should still be filtered if applicable
-                TryFilterOutputMeasurements();
-            }
-
-            if (m_securityMode != SecurityMode.TLS)
-            {
-                // Create a new TCP client
-                TcpClient commandChannel = new TcpClient();
-
-                // Initialize default settings
-                commandChannel.PayloadAware = true;
-                commandChannel.PersistSettings = false;
-                commandChannel.MaxConnectionAttempts = 1;
-                commandChannel.ReceiveBufferSize = bufferSize;
-                commandChannel.SendBufferSize = bufferSize;
-
-                // Assign command channel client reference and attach to needed events
-                CommandChannel = commandChannel;
-            }
-            else
-            {
-                // Create a new TLS client and certificate checker
-                TlsClient commandChannel = new TlsClient();
-                SimpleCertificateChecker certificateChecker = new SimpleCertificateChecker();
-
-                // Set up certificate checker
-                certificateChecker.TrustedCertificates.Add(new X509Certificate2(FilePath.GetAbsolutePath(m_remoteCertificate)));
-                certificateChecker.ValidPolicyErrors = m_validPolicyErrors;
-                certificateChecker.ValidChainFlags = m_validChainFlags;
-
-                // Initialize default settings
-                commandChannel.PayloadAware = true;
-                commandChannel.PersistSettings = false;
-                commandChannel.MaxConnectionAttempts = 1;
-                commandChannel.CertificateFile = FilePath.GetAbsolutePath(m_localCertificate);
-                commandChannel.CheckCertificateRevocation = m_checkCertificateRevocation;
-                commandChannel.CertificateChecker = certificateChecker;
-                commandChannel.ReceiveBufferSize = bufferSize;
-                commandChannel.SendBufferSize = bufferSize;
-
-                // Assign command channel client reference and attach to needed events
-                CommandChannel = commandChannel;
-            }
-
-            // Get proper connection string - either from specified command channel
-            // or from base connection string
-            if (settings.TryGetValue("commandChannel", out setting))
-                m_commandChannel.ConnectionString = setting;
-            else
-                m_commandChannel.ConnectionString = ConnectionString;
-
-            // Register subscriber with the statistics engine
-            StatisticsEngine.Register(this, "Subscriber", "SUB");
-            StatisticsEngine.Calculated += (sender, args) => ResetMeasurementsPerSecondCounters();
-
-            Initialized = true;
-        }
-
-        private void InitializeCommandChannel()
-        {
-            if (m_securityMode != SecurityMode.TLS)
-            {
-                // Create a new TCP client
-                TcpClient commandChannel = new TcpClient();
-
-                // Initialize default settings
-                commandChannel.PayloadAware = true;
-                commandChannel.PersistSettings = false;
-                commandChannel.MaxConnectionAttempts = 1;
-                commandChannel.ReceiveBufferSize = m_bufferSize;
-                commandChannel.SendBufferSize = m_bufferSize;
-
-                // Assign command channel client reference and attach to needed events
-                CommandChannel = commandChannel;
-            }
-            else
-            {
-                // Create a new TLS client and certificate checker
-                TlsClient commandChannel = new TlsClient();
-                SimpleCertificateChecker certificateChecker = new SimpleCertificateChecker();
-
-                // Set up certificate checker
-                certificateChecker.TrustedCertificates.Add(new X509Certificate2(FilePath.GetAbsolutePath(m_remoteCertificate)));
-                certificateChecker.ValidPolicyErrors = m_validPolicyErrors;
-                certificateChecker.ValidChainFlags = m_validChainFlags;
-
-                // Initialize default settings
-                commandChannel.PayloadAware = true;
-                commandChannel.PersistSettings = false;
-                commandChannel.MaxConnectionAttempts = 1;
-                commandChannel.CertificateFile = FilePath.GetAbsolutePath(m_localCertificate);
-                commandChannel.CheckCertificateRevocation = m_checkCertificateRevocation;
-                commandChannel.CertificateChecker = certificateChecker;
-                commandChannel.ReceiveBufferSize = m_bufferSize;
-                commandChannel.SendBufferSize = m_bufferSize;
-
-                // Assign command channel client reference and attach to needed events
-                CommandChannel = commandChannel;
-            }
-        }
-
-        // Gets the path to the local certificate from the configuration file
-        private string GetLocalCertificate()
-        {
-            CategorizedSettingsElement localCertificateElement = ConfigurationFile.Current.Settings["systemSettings"]["LocalCertificate"];
-            string localCertificate = null;
-
-            if ((object)localCertificateElement != null)
-                localCertificate = localCertificateElement.Value;
-
-            if ((object)localCertificate == null || !File.Exists(FilePath.GetAbsolutePath(localCertificate)))
-                throw new InvalidOperationException("Unable to find local certificate. Local certificate file must exist when using TLS security mode.");
-
-            return localCertificate;
-        }
-
-        // Checks if the specified certificate exists
-        private bool RemoteCertificateExists()
-        {
-            string fullPath = FilePath.GetAbsolutePath(m_remoteCertificate);
-            CategorizedSettingsElement remoteCertificateElement;
-
-            if (!File.Exists(fullPath))
-            {
-                remoteCertificateElement = ConfigurationFile.Current.Settings["systemSettings"]["RemoteCertificatesPath"];
-
-                if ((object)remoteCertificateElement != null)
-                {
-                    m_remoteCertificate = Path.Combine(remoteCertificateElement.Value, m_remoteCertificate);
-                    fullPath = FilePath.GetAbsolutePath(m_remoteCertificate);
-                }
-            }
-
-            return File.Exists(fullPath);
-        }
-
-        // Initialize (or reinitialize) the output measurements associated with the data subscriber.
-        // Returns true if output measurements were updated, otherwise false if they remain the same.
-        private bool UpdateOutputMeasurements(bool initialCall = false)
-        {
-            ISet<Guid> originalOutputMeasurements = OutputSignalIDs;
-
-            // Reapply output measurements if reinitializing - this way filter expressions and/or sourceIDs
-            // will be reapplied. This can be important after a meta-data refresh which may have added new
-            // measurements that could now be applicable as desired output measurements.
-            if (!initialCall)
-            {
-                string setting;
-
-                OutputSignalIDs.Clear();
-
-                if (Settings.TryGetValue("outputMeasurements", out setting))
-                    OutputSignalIDs.UnionWith(ParseFilterExpression(DataSource, true, setting));
-
-                OutputSourceIDs = OutputSourceIDs;
-            }
-
-            // If active measurements are defined, attempt to defined desired subscription points from there
-            if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
-            {
-                try
-                {
-                    // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
-                    DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0");
-                    HashSet<Guid> subscribedMeasurements = new HashSet<Guid>();
-                    Guid signalID;
-
-                    foreach (DataRow row in filteredRows)
-                    {
-                        // Parse primary measurement identifier
-                        signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                        subscribedMeasurements.Add(signalID);
-                    }
-
-                        // Combine subscribed output measurement with any existing output measurement and return unique set
-                    OutputSignalIDs.UnionWith(subscribedMeasurements);
-                }
-                catch (Exception ex)
-                {
-                    // Errors here may not be catastrophic, this simply limits the auto-assignment of input measurement keys desired for subscription
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to apply subscribed measurements to subscription filter: {0}", ex.Message), ex));
-                }
-            }
-
-            // Ensure that we are not attempting to subscribe to
-            // measurements that we know cannot be published
-            TryFilterOutputMeasurements();
-
-            // Determine if output measurements have changed
-            return originalOutputMeasurements.SetEquals(OutputSignalIDs);
-        }
-
-        // When synchronizing meta-data, the publisher sends meta-data for all possible signals we can subscribe to.
-        // Here we check each signal defined in OutputMeasurements to determine whether that signal was defined in
-        // the published meta-data rather than blindly attempting to subscribe to all signals.
-        private void TryFilterOutputMeasurements()
-        {
-            IEnumerable<Guid> signals;
-            Guid signalID = Guid.Empty;
-
-            try
-            {
-                if ((object)DataSource != null && DataSource.Tables.Contains("ActiveMeasurements"))
-                {
-                    signals = DataSource.Tables["ActiveMeasurements"]
-                        .Select(string.Format("DeviceID = {0}", ID))
-                        .Where(row => Guid.TryParse(row["SignalID"].ToNonNullString(), out signalID))
-                        .Select(row => signalID);
-
-                    OutputSignalIDs.IntersectWith(signals);
-                }
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format("Error when filtering output measurements by device ID: {0}", ex.Message), ex));
-            }
+            m_enabled = true;
         }
 
         /// <summary>
@@ -1328,6 +976,8 @@ namespace GSF.TimeSeries.Transport
             {
                 try
                 {
+                    m_sharedSecret = sharedSecret;
+
                     using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
                     {
                         byte[] salt = new byte[DataPublisher.CipherSaltLength];
@@ -1358,7 +1008,87 @@ namespace GSF.TimeSeries.Transport
                 }
             }
             else
+            {
                 OnProcessException(new InvalidOperationException("Cannot authenticate subscription without a connection string."));
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Sends a server command to the publisher connection with associated <paramref name="message"/> data.
+        /// </summary>
+        /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
+        /// <param name="message">String based command data to send to server.</param>
+        /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
+        public virtual bool SendServerCommand(ServerCommand commandCode, string message)
+        {
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
+                {
+                    byte[] bytes = m_encoding.GetBytes(message);
+
+                    buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
+                    buffer.Write(bytes, 0, bytes.Length);
+
+                    return SendServerCommand(commandCode, buffer.ToArray());
+                }
+            }
+
+            return SendServerCommand(commandCode);
+        }
+
+        /// <summary>
+        /// Sends a server command to the publisher connection.
+        /// </summary>
+        /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
+        /// <param name="data">Optional command data to send.</param>
+        /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
+        public virtual bool SendServerCommand(ServerCommand commandCode, byte[] data = null)
+        {
+            if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
+            {
+                try
+                {
+                    using (BlockAllocatedMemoryStream commandPacket = new BlockAllocatedMemoryStream())
+                    {
+                        // Write command code into command packet
+                        commandPacket.WriteByte((byte)commandCode);
+
+                        // Write command buffer into command packet
+                        if ((object)data != null && data.Length > 0)
+                            commandPacket.Write(data, 0, data.Length);
+
+                        // Send command packet to publisher
+                        m_commandChannel.SendAsync(commandPacket.ToArray(), 0, (int)commandPacket.Length);
+                    }
+
+                    // Track server command in pending request queue
+                    lock (m_requests)
+                    {
+                        // Make sure a pending request does not already exist
+                        int index = m_requests.BinarySearch(commandCode);
+
+                        if (index < 0)
+                        {
+                            // Add the new server command to the request list
+                            m_requests.Add(commandCode);
+
+                            // Make sure requests are sorted to allow for binary searching
+                            m_requests.Sort();
+                        }
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred while trying to send server command \"{0}\" to publisher: {1}", commandCode, ex.Message), ex));
+                }
+            }
+            else
+                OnProcessException(new InvalidOperationException(string.Format("Subscriber is currently unconnected. Cannot send server command \"{0}\" to publisher.", commandCode)));
 
             return false;
         }
@@ -1454,8 +1184,8 @@ namespace GSF.TimeSeries.Transport
                 localConcentrator.UsePrecisionTimer = false;
 
                 // Parse time constraints, if defined
-                DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? ParseTimeTag(info.StartTime) : DateTime.MinValue;
-                DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? ParseTimeTag(info.StopTime) : DateTime.MaxValue;
+                DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(info.StartTime) ? AdapterBase.ParseTimeTag(info.StartTime) : DateTime.MinValue;
+                DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(info.StopTime) ? AdapterBase.ParseTimeTag(info.StopTime) : DateTime.MaxValue;
 
                 // When processing historical data, timestamps should not be evaluated for reasonability
                 if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
@@ -1530,355 +1260,6 @@ namespace GSF.TimeSeries.Transport
             m_useMillisecondResolution = info.UseMillisecondResolution;
 
             return Subscribe(false, info.UseCompactMeasurementFormat, connectionString.ToString());
-        }
-
-        /// <summary>
-        /// Subscribes (or re-subscribes) to a data publisher for a remotely synchronized set of data points.
-        /// </summary>
-        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
-        /// <param name="framesPerSecond">The desired number of data frames per second.</param>
-        /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be sub-second).</param>
-        /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be sub-second).</param>
-        /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
-        /// <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
-        /// <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
-        /// <param name="ignoreBadTimestamps">Boolean value that determines if bad timestamps (as determined by measurement's timestamp quality) should be ignored when sorting measurements.</param>
-        /// <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
-        /// <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
-        /// <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
-        /// <param name="downsamplingMethod">Gets the total number of down-sampled measurements processed by the concentrator.</param>
-        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
-        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
-        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
-        /// <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
-        /// <param name="waitHandleNames">Comma separated list of wait handle names used to establish external event wait handles needed for inter-adapter synchronization.</param>
-        /// <param name="waitHandleTimeout">Maximum wait time for external events, in milliseconds, before proceeding.</param>
-        /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
-        /// <remarks>
-        /// <para>
-        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
-        /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
-        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
-        /// </para>
-        /// <para>
-        /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-        /// processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
-        /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
-        /// </para>
-        /// <para>
-        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
-        /// following formats:
-        /// <list type="table">
-        ///     <listheader>
-        ///         <term>Time Format</term>
-        ///         <description>Format Description</description>
-        ///     </listheader>
-        ///     <item>
-        ///         <term>12-30-2000 23:59:59.033</term>
-        ///         <description>Absolute date and time.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*</term>
-        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-20s</term>
-        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-10m</term>
-        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-1h</term>
-        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-1d</term>
-        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        /// </list>
-        /// </para>
-        /// </remarks>
-        [Obsolete("Preferred method uses SubscriptionInfo object to subscribe.", false)]
-        public virtual bool RemotelySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, string downsamplingMethod = "LastReceived", string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
-        {
-            // Dispose of any previously established local concentrator
-            DisposeLocalConcentrator();
-
-            StringBuilder connectionString = new StringBuilder();
-            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
-
-            connectionString.AppendFormat("framesPerSecond={0}; ", framesPerSecond);
-            connectionString.AppendFormat("lagTime={0}; ", lagTime);
-            connectionString.AppendFormat("leadTime={0}; ", leadTime);
-            connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
-            connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
-            connectionString.AppendFormat("includeTime=false; ");
-            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
-            connectionString.AppendFormat("ignoreBadTimestamps={0}; ", ignoreBadTimestamps);
-            connectionString.AppendFormat("allowSortsByArrival={0}; ", allowSortsByArrival);
-            connectionString.AppendFormat("timeResolution={0}; ", (long)timeResolution);
-            connectionString.AppendFormat("allowPreemptivePublishing={0}; ", allowPreemptivePublishing);
-            connectionString.AppendFormat("downsamplingMethod={0}; ", downsamplingMethod);
-            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
-            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
-            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
-
-            if (!string.IsNullOrWhiteSpace(waitHandleNames))
-            {
-                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
-                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
-            }
-
-            return Subscribe(true, compactFormat, connectionString.ToString());
-        }
-
-        /// <summary>
-        /// Subscribes (or re-subscribes) to a data publisher for a locally synchronized set of data points.
-        /// </summary>
-        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
-        /// <param name="framesPerSecond">The desired number of data frames per second.</param>
-        /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be sub-second).</param>
-        /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be sub-second).</param>
-        /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
-        /// <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
-        /// <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
-        /// <param name="ignoreBadTimestamps">Boolean value that determines if bad timestamps (as determined by measurement's timestamp quality) should be ignored when sorting measurements.</param>
-        /// <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
-        /// <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
-        /// <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
-        /// <param name="downsamplingMethod">Gets the total number of down-sampled measurements processed by the concentrator.</param>
-        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
-        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
-        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
-        /// <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
-        /// <param name="waitHandleNames">Comma separated list of wait handle names used to establish external event wait handles needed for inter-adapter synchronization.</param>
-        /// <param name="waitHandleTimeout">Maximum wait time for external events, in milliseconds, before proceeding.</param>
-        /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
-        /// <remarks>
-        /// <para>
-        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
-        /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
-        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
-        /// </para>
-        /// <para>
-        /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-        /// processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
-        /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
-        /// </para>
-        /// <para>
-        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
-        /// following formats:
-        /// <list type="table">
-        ///     <listheader>
-        ///         <term>Time Format</term>
-        ///         <description>Format Description</description>
-        ///     </listheader>
-        ///     <item>
-        ///         <term>12-30-2000 23:59:59.033</term>
-        ///         <description>Absolute date and time.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*</term>
-        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-20s</term>
-        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-10m</term>
-        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-1h</term>
-        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-1d</term>
-        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        /// </list>
-        /// </para>
-        /// </remarks>
-        [Obsolete("Preferred method uses SubscriptionInfo object to subscribe.", false)]
-        public virtual bool LocallySynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, string dataChannel = null, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, string downsamplingMethod = "LastReceived", string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
-        {
-            // Dispose of any previously established local concentrator
-            DisposeLocalConcentrator();
-
-            // Establish a local concentrator to synchronize received measurements
-            m_localConcentrator = new LocalConcentrator(this);
-            m_localConcentrator.ProcessException += m_localConcentrator_ProcessException;
-            m_localConcentrator.FramesPerSecond = framesPerSecond;
-            m_localConcentrator.LagTime = lagTime;
-            m_localConcentrator.LeadTime = leadTime;
-            m_localConcentrator.UseLocalClockAsRealTime = useLocalClockAsRealTime;
-            m_localConcentrator.IgnoreBadTimestamps = ignoreBadTimestamps;
-            m_localConcentrator.AllowSortsByArrival = allowSortsByArrival;
-            m_localConcentrator.TimeResolution = timeResolution;
-            m_localConcentrator.AllowPreemptivePublishing = allowPreemptivePublishing;
-
-            // TODO: Determine how to specify and lookup desired down-sampling method from a subscription perspective
-            if (string.IsNullOrEmpty(downsamplingMethod) || string.Compare(downsamplingMethod, "LastReceived", true) == 0)
-                m_localConcentrator.FilterFunction = null;
-            else
-                throw new InvalidOperationException("Cannot use specified down-sampling method: " + downsamplingMethod);
-
-            m_localConcentrator.UsePrecisionTimer = false;
-
-            // Parse time constraints, if defined
-            DateTime startTimeConstraint = !string.IsNullOrWhiteSpace(startTime) ? ParseTimeTag(startTime) : DateTime.MinValue;
-            DateTime stopTimeConstraint = !string.IsNullOrWhiteSpace(stopTime) ? ParseTimeTag(stopTime) : DateTime.MaxValue;
-
-            // When processing historical data, timestamps should not be evaluated for reasonability
-            if (startTimeConstraint != DateTime.MinValue || stopTimeConstraint != DateTime.MaxValue)
-            {
-                m_localConcentrator.PerformTimestampReasonabilityCheck = false;
-                m_localConcentrator.LeadTime = double.MaxValue;
-            }
-
-            // Assign alternate processing interval, if defined
-            if (processingInterval != -1)
-                m_localConcentrator.ProcessingInterval = processingInterval;
-
-            // Initiate unsynchronized subscribe
-            StringBuilder connectionString = new StringBuilder();
-            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
-
-            connectionString.AppendFormat("trackLatestMeasurements={0}; ", false);
-            connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
-            connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
-            connectionString.AppendFormat("includeTime={0}; ", true);
-            connectionString.AppendFormat("lagTime={0}; ", 10.0D);
-            connectionString.AppendFormat("leadTime={0}; ", 5.0D);
-            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", false);
-            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
-            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
-            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
-
-            if (!string.IsNullOrWhiteSpace(waitHandleNames))
-            {
-                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
-                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
-            }
-
-            // Start subscription process
-            if (Subscribe(false, compactFormat, connectionString.ToString()))
-            {
-                // If subscription succeeds, start local concentrator
-                m_localConcentrator.Start();
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
-        /// </summary>
-        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
-        /// <param name="throttled">Boolean value that determines if data should be throttled at a set transmission interval or sent on change.</param>
-        /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
-        /// <param name="dataChannel">Desired UDP return data channel connection string to use for data packet transmission. Set to <c>null</c> to use TCP channel for data transmission.</param>
-        /// <param name="includeTime">Boolean value that determines if time is a necessary component in streaming data.</param>
-        /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be sub-second).</param>
-        /// <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be sub-second).</param>
-        /// <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
-        /// <param name="startTime">Defines a relative or exact start time for the temporal constraint to use for historical playback.</param>
-        /// <param name="stopTime">Defines a relative or exact stop time for the temporal constraint to use for historical playback.</param>
-        /// <param name="constraintParameters">Defines any temporal parameters related to the constraint to use for historical playback.</param>
-        /// <param name="processingInterval">Defines the desired processing interval milliseconds, i.e., historical play back speed, to use when temporal constraints are defined.</param>
-        /// <param name="waitHandleNames">Comma separated list of wait handle names used to establish external event wait handles needed for inter-adapter synchronization.</param>
-        /// <param name="waitHandleTimeout">Maximum wait time for external events, in milliseconds, before proceeding.</param>
-        /// <returns><c>true</c> if subscribe transmission was successful; otherwise <c>false</c>.</returns>
-        /// <remarks>
-        /// <para>
-        /// When the <paramref name="startTime"/> or <paramref name="stopTime"/> temporal processing constraints are defined (i.e., not <c>null</c>), this
-        /// specifies the start and stop time over which the subscriber session will process data. Passing in <c>null</c> for the <paramref name="startTime"/>
-        /// and <paramref name="stopTime"/> specifies the the subscriber session will process data in standard, i.e., real-time, operation.
-        /// </para>
-        /// <para>
-        /// With the exception of the values of -1 and 0, the <paramref name="processingInterval"/> value specifies the desired historical playback data
-        /// processing interval in milliseconds. This is basically a delay, or timer interval, over which to process data. Setting this value to -1 means
-        /// to use the default processing interval while setting the value to 0 means to process data as fast as possible.
-        /// </para>
-        /// <para>
-        /// The <paramref name="startTime"/> and <paramref name="stopTime"/> parameters can be specified in one of the
-        /// following formats:
-        /// <list type="table">
-        ///     <listheader>
-        ///         <term>Time Format</term>
-        ///         <description>Format Description</description>
-        ///     </listheader>
-        ///     <item>
-        ///         <term>12-30-2000 23:59:59.033</term>
-        ///         <description>Absolute date and time.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*</term>
-        ///         <description>Evaluates to <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-20s</term>
-        ///         <description>Evaluates to 20 seconds before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-10m</term>
-        ///         <description>Evaluates to 10 minutes before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-1h</term>
-        ///         <description>Evaluates to 1 hour before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>*-1d</term>
-        ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
-        ///     </item>
-        /// </list>
-        /// </para>
-        /// </remarks>
-        [Obsolete("Preferred method uses SubscriptionInfo object to subscribe.", false)]
-        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, string dataChannel = null, bool includeTime = true, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false, string startTime = null, string stopTime = null, string constraintParameters = null, int processingInterval = -1, string waitHandleNames = null, int waitHandleTimeout = 0)
-        {
-            // Dispose of any previously established local concentrator
-            DisposeLocalConcentrator();
-
-            StringBuilder connectionString = new StringBuilder();
-            AssemblyInfo assemblyInfo = AssemblyInfo.ExecutingAssembly;
-
-            connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
-            connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression.ToNonNullString());
-            connectionString.AppendFormat("dataChannel={{{0}}}; ", dataChannel.ToNonNullString());
-            connectionString.AppendFormat("includeTime={0}; ", includeTime);
-            connectionString.AppendFormat("lagTime={0}; ", lagTime);
-            connectionString.AppendFormat("leadTime={0}; ", leadTime);
-            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
-            connectionString.AppendFormat("startTimeConstraint={0}; ", startTime.ToNonNullString());
-            connectionString.AppendFormat("stopTimeConstraint={0}; ", stopTime.ToNonNullString());
-            connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
-            connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
-            connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
-            connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
-
-            if (!string.IsNullOrWhiteSpace(waitHandleNames))
-            {
-                connectionString.AppendFormat("; waitHandleNames={0}", waitHandleNames);
-                connectionString.AppendFormat("; waitHandleTimeout={0}", waitHandleTimeout);
-            }
-
-            // Make sure not to monitor for data loss any faster than down-sample time on throttled connections - additionally
-            // you will want to make sure data stream monitor is twice lag-time to allow time for initial points to arrive.
-            if (throttled && (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Interval / 1000.0D < lagTime)
-                m_dataStreamMonitor.Interval = 2.0D * lagTime * 1000.0D;
-
-            return Subscribe(false, compactFormat, connectionString.ToString());
         }
 
         /// <summary>
@@ -1964,19 +1345,8 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Unsubscribes from a data publisher.
-        /// </summary>
-        /// <returns><c>true</c> if unsubscribe transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool Unsubscribe()
-        {
-            // Send unsubscribe server command
-            return SendServerCommand(ServerCommand.Unsubscribe);
-        }
-
-        /// <summary>
         /// Returns the measurements signal IDs that were authorized after the last successful subscription request.
         /// </summary>
-        [AdapterCommand("Gets authorized signal IDs from last subscription request.", "Administrator", "Editor", "Viewer")]
         public virtual Guid[] GetAuthorizedSignalIDs()
         {
             if ((object)m_signalIndexCache != null)
@@ -1988,7 +1358,6 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Returns the measurements signal IDs that were unauthorized after the last successful subscription request.
         /// </summary>
-        [AdapterCommand("Gets unauthorized signal IDs from last subscription request.", "Administrator", "Editor", "Viewer")]
         public virtual Guid[] GetUnauthorizedSignalIDs()
         {
             if ((object)m_signalIndexCache != null)
@@ -2000,7 +1369,6 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Resets the counters for the lifetime statistics without interrupting the adapter's operations.
         /// </summary>
-        [AdapterCommand("Resets the counters for the lifetime statistics without interrupting the adapter's operations.", "Administrator", "Editor")]
         public virtual void ResetLifetimeCounters()
         {
             m_lifetimeMeasurements = 0L;
@@ -2012,135 +1380,35 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Initiate a meta-data refresh.
+        /// Unsubscribes from a data publisher.
         /// </summary>
-        [AdapterCommand("Initiates a meta-data refresh.", "Administrator", "Editor")]
-        public virtual void RefreshMetadata()
+        /// <returns><c>true</c> if unsubscribe transmission was successful; otherwise <c>false</c>.</returns>
+        public virtual bool Unsubscribe()
         {
-            SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
+            // Send unsubscribe server command
+            return SendServerCommand(ServerCommand.Unsubscribe);
         }
 
         /// <summary>
-        /// Spawn meta-data synchronization.
+        /// Gets a short one-line status of this <see cref="DataSubscriber"/>.
         /// </summary>
-        /// <param name="metadata"><see cref="DataSet"/> to use for synchronization.</param>
-        /// <remarks>
-        /// This method makes sure only one meta-data synchronization happens at a time.
-        /// </remarks>
-        public void SynchronizeMetadata(DataSet metadata)
-        {
-            try
-            {
-                    m_receivedMetadata = metadata;
-                m_synchronizeMetadataOperation.RunOnceAsync();
-            }
-            catch (Exception ex)
-            {
-                // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue meta-data synchronization: " + ex.Message, ex));
-            }
-        }
-
-        /// <summary>
-        /// Sends a server command to the publisher connection with associated <paramref name="message"/> data.
-        /// </summary>
-        /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
-        /// <param name="message">String based command data to send to server.</param>
-        /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool SendServerCommand(ServerCommand commandCode, string message)
-        {
-            if (!string.IsNullOrWhiteSpace(message))
-            {
-                using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
-                {
-                    byte[] bytes = m_encoding.GetBytes(message);
-
-                    buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
-                    buffer.Write(bytes, 0, bytes.Length);
-
-                    return SendServerCommand(commandCode, buffer.ToArray());
-                }
-            }
-
-            return SendServerCommand(commandCode);
-        }
-
-        /// <summary>
-        /// Sends a server command to the publisher connection.
-        /// </summary>
-        /// <param name="commandCode"><see cref="ServerCommand"/> to send.</param>
-        /// <param name="data">Optional command data to send.</param>
-        /// <returns><c>true</c> if <paramref name="commandCode"/> transmission was successful; otherwise <c>false</c>.</returns>
-        public virtual bool SendServerCommand(ServerCommand commandCode, byte[] data = null)
+        /// <param name="maxLength">Maximum length of the status message.</param>
+        /// <returns>Text of the status message.</returns>
+        public string GetShortStatus(int maxLength)
         {
             if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
-            {
-                try
-                {
-                    using (BlockAllocatedMemoryStream commandPacket = new BlockAllocatedMemoryStream())
-                    {
-                        // Write command code into command packet
-                        commandPacket.WriteByte((byte)commandCode);
+                return string.Format("Subscriber is connected and receiving {0} data points", m_synchronizedSubscription ? "synchronized" : "unsynchronized").CenterText(maxLength);
 
-                        // Write command buffer into command packet
-                        if ((object)data != null && data.Length > 0)
-                            commandPacket.Write(data, 0, data.Length);
-
-                        // Send command packet to publisher
-                        m_commandChannel.SendAsync(commandPacket.ToArray(), 0, (int)commandPacket.Length);
-                    }
-
-                    // Track server command in pending request queue
-                    lock (m_requests)
-                    {
-                        // Make sure a pending request does not already exist
-                        int index = m_requests.BinarySearch(commandCode);
-
-                        if (index < 0)
-                        {
-                            // Add the new server command to the request list
-                            m_requests.Add(commandCode);
-
-                            // Make sure requests are sorted to allow for binary searching
-                            m_requests.Sort();
-                        }
-                    }
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred while trying to send server command \"{0}\" to publisher: {1}", commandCode, ex.Message), ex));
-                }
-            }
-            else
-                OnProcessException(new InvalidOperationException(string.Format("Subscriber is currently unconnected. Cannot send server command \"{0}\" to publisher.", commandCode)));
-
-            return false;
-        }
-
-        /// <summary>
-        /// Attempts to connect to this <see cref="DataSubscriber"/>.
-        /// </summary>
-        protected override void AttemptConnection()
-        {
-            m_expectedBufferBlockSequenceNumber = 0u;
-            m_commandChannelConnectionAttempts = 0;
-            m_dataChannelConnectionAttempts = 0;
-            m_commandChannel.ConnectAsync();
-            m_authenticated = (m_securityMode == SecurityMode.TLS);
-            m_subscribed = false;
-            m_keyIVs = null;
-            m_totalBytesReceived = 0L;
-            m_monitoredBytesReceived = 0L;
-            m_lastBytesReceived = 0;
+            return "Subscriber is not connected.".CenterText(maxLength);
         }
 
         /// <summary>
         /// Attempts to disconnect from this <see cref="DataSubscriber"/>.
         /// </summary>
-        protected override void AttemptDisconnection()
+        public void Stop()
         {
+            m_enabled = false;
+
             // Stop data stream monitor
             if ((object)m_dataStreamMonitor != null)
                 m_dataStreamMonitor.Enabled = false;
@@ -2151,41 +1419,108 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="DataSubscriber"/>.
+        /// Releases all the resources used by the <see cref="DataSubscriber"/> object.
         /// </summary>
-        /// <param name="maxLength">Maximum length of the status message.</param>
-        /// <returns>Text of the status message.</returns>
-        public override string GetShortStatus(int maxLength)
+        public void Dispose()
         {
-            if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
-                return string.Format("Subscriber is connected and receiving {0} data points", m_synchronizedSubscription ? "synchronized" : "unsynchronized").CenterText(maxLength);
-
-            return "Subscriber is not connected.".CenterText(maxLength);
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// Get message from string based response.
+        /// Releases the unmanaged resources used by the <see cref="DataSubscriber"/> object and optionally releases the managed resources.
         /// </summary>
-        /// <param name="buffer">Response buffer.</param>
-        /// <param name="startIndex">Start index of response message.</param>
-        /// <param name="length">Length of response message.</param>
-        /// <returns>Decoded response string.</returns>
-        protected string InterpretResponseMessage(byte[] buffer, int startIndex, int length)
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
         {
-            return m_encoding.GetString(buffer, startIndex, length);
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        DataLossInterval = 0.0D;
+                        CommandChannel = null;
+                        DataChannel = null;
+                        DisposeLocalConcentrator();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
-        // Restarts the subscriber.
-        private void Restart()
+        /// <summary>
+        /// Disposes of any previously defined local concentrator.
+        /// </summary>
+        internal void DisposeLocalConcentrator()
         {
-            try
+            if ((object)m_localConcentrator != null)
             {
-                base.Start();
+                m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
+                m_localConcentrator.Dispose();
             }
-            catch (Exception ex)
+
+            m_localConcentrator = null;
+        }
+
+        private void InitializeCommandChannel()
+        {
+            Dictionary<string, string> settings;
+            string setting;
+
+            if (m_securityMode != SecurityMode.TLS)
             {
-                OnProcessException(ex);
+                // Create a new TCP client
+                TcpClient commandChannel = new TcpClient();
+
+                // Initialize default settings
+                commandChannel.PayloadAware = true;
+                commandChannel.PersistSettings = false;
+                commandChannel.MaxConnectionAttempts = 1;
+                commandChannel.ReceiveBufferSize = m_bufferSize;
+                commandChannel.SendBufferSize = m_bufferSize;
+
+                // Assign command channel client reference and attach to needed events
+                CommandChannel = commandChannel;
             }
+            else
+            {
+                // Create a new TLS client and certificate checker
+                TlsClient commandChannel = new TlsClient();
+                SimpleCertificateChecker certificateChecker = new SimpleCertificateChecker();
+
+                // Set up certificate checker
+                certificateChecker.TrustedCertificates.Add(new X509Certificate2(FilePath.GetAbsolutePath(m_remoteCertificateFilePath)));
+                certificateChecker.ValidPolicyErrors = m_validPolicyErrors;
+                certificateChecker.ValidChainFlags = m_validChainFlags;
+
+                // Initialize default settings
+                commandChannel.PayloadAware = true;
+                commandChannel.PersistSettings = false;
+                commandChannel.MaxConnectionAttempts = 1;
+                commandChannel.CertificateFile = FilePath.GetAbsolutePath(m_localCertificateFilePath);
+                commandChannel.CheckCertificateRevocation = m_checkCertificateRevocation;
+                commandChannel.CertificateChecker = certificateChecker;
+                commandChannel.ReceiveBufferSize = m_bufferSize;
+                commandChannel.SendBufferSize = m_bufferSize;
+
+                // Assign command channel client reference and attach to needed events
+                CommandChannel = commandChannel;
+            }
+
+            // Get proper connection string - either from specified command channel
+            // or from base connection string
+            settings = m_connectionString.ParseKeyValuePairs();
+
+            if (settings.TryGetValue("commandChannel", out setting))
+                m_commandChannel.ConnectionString = setting;
+            else
+                m_commandChannel.ConnectionString = ConnectionString;
+
+            m_reinitializeCommandChannel = false;
         }
 
         private void ProcessServerResponse(byte[] buffer, int length)
@@ -2495,8 +1830,7 @@ namespace GSF.TimeSeries.Transport
                             break;
                         case ServerResponse.UpdateSignalIndexCache:
                             // Deserialize new signal index cache
-                            m_remoteSignalIndexCache = DeserializeSignalIndexCache(buffer.BlockCopy(responseIndex, responseLength));
-                            m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
+                            m_signalIndexCache = DeserializeSignalIndexCache(buffer.BlockCopy(responseIndex, responseLength));
                             break;
                         case ServerResponse.UpdateBaseTimes:
                             // Get active time index
@@ -2580,13 +1914,6 @@ namespace GSF.TimeSeries.Transport
                         case ServerResponse.ConfigurationChanged:
                             OnStatusMessage("Received notification from publisher that configuration has changed.");
                             OnServerConfigurationChanged();
-
-                            // Initiate meta-data refresh when publisher configuration has changed - we only do this
-                            // for automatic connections since API style connections have to manually initiate a
-                            // meta-data refresh. API style connection should attach to server configuration changed
-                            // event and request meta-data refresh to complete automated cycle.
-                            if (m_autoConnect && m_autoSynchronizeMetadata)
-                                SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
                             break;
                     }
                 }
@@ -2597,566 +1924,16 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        // Handles auto-connection subscription initialization
-        private void StartSubscription()
-        {
-            SubscribeToOutputMeasurements(!m_autoSynchronizeMetadata);
-
-            // Initiate meta-data refresh
-            if (m_autoSynchronizeMetadata)
-                SendServerCommand(ServerCommand.MetaDataRefresh, m_metadataFilters);
-        }
-
-        private void SubscribeToOutputMeasurements(bool metaDataRefreshCompleted)
-        {
-            string dataChannel = null;
-
-            // If TCP command channel is defined separately, then base connection string defines data channel
-            if (Settings.ContainsKey("commandChannel"))
-                dataChannel = ConnectionString;
-
-            if (OutputSignalIDs.Count > 0)
-                {
-#pragma warning disable 0618
-                // Start unsynchronized subscription
-                UnsynchronizedSubscribe(true, false, OutputSignalIDs.ToDelimitedString(';'), dataChannel);
-            }
-            else if (metaDataRefreshCompleted)
-            {
-                OnStatusMessage("WARNING: No measurements are currently defined for subscription.");
-            }
-        }
-
         /// <summary>
-        /// Handles meta-data synchronization to local system.
+        /// Get message from string based response.
         /// </summary>
-        /// <remarks>
-        /// This function should only be initiated from call to <see cref="SynchronizeMetadata(DataSet)"/> to make
-        /// sure only one meta-data synchronization happens at once. Users can override this method to customize
-        /// process of meta-data synchronization.
-        /// </remarks>
-        protected virtual void SynchronizeMetadata()
+        /// <param name="buffer">Response buffer.</param>
+        /// <param name="startIndex">Start index of response message.</param>
+        /// <param name="length">Length of response message.</param>
+        /// <returns>Decoded response string.</returns>
+        private string InterpretResponseMessage(byte[] buffer, int startIndex, int length)
         {
-            // TODO: This function is complex and very closely tied to the current time-series data schema - perhaps it should be moved outside this class and referenced
-            // TODO: as a delegate that can be assigned and called to allow other schemas as well. DataPublisher is already very flexible in what data it can deliver.
-            try
-            {
-                DataSet metadata = m_receivedMetadata;
-
-                // Only perform database synchronization if meta-data has changed since last update
-                if (!SynchronizedMetadataChanged(metadata))
-                    return;
-
-                if ((object)metadata == null)
-                {
-                    OnStatusMessage("WARNING: Meta-data synchronization was not performed, deserialized dataset was empty.");
-                    return;
-                }
-
-                bool dataMonitoringEnabled = false;
-
-                // Reset data stream monitor while meta-data synchronization is in progress
-                if ((object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled)
-                {
-                    m_dataStreamMonitor.Enabled = false;
-                    dataMonitoringEnabled = true;
-                }
-
-                // Track total meta-data synchronization process time
-                Ticks startTime = DateTime.UtcNow.Ticks;
-
-                // Open the configuration database using settings found in the config file
-                using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
-                using (IDbCommand command = database.Connection.CreateCommand())
-                {
-                    IDbTransaction transaction = null;
-
-                    if (m_useTransactionForMetadata)
-                        transaction = database.Connection.BeginTransaction(database.DefaultIsloationLevel());
-
-                    try
-                    {
-                        if ((object)transaction != null)
-                            command.Transaction = transaction;
-
-                        // Query the actual record ID based on the known run-time ID for this subscriber device
-                        int parentID = Convert.ToInt32(command.ExecuteScalar(string.Format("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device'", ID), m_metadataSynchronizationTimeout));
-
-                        // Validate that the subscriber device is marked as a concentrator (we are about to associate children devices with it)
-                        if (!command.ExecuteScalar(string.Format("SELECT IsConcentrator FROM Device WHERE ID = {0}", parentID), m_metadataSynchronizationTimeout).ToString().ParseBoolean())
-                            command.ExecuteNonQuery(string.Format("UPDATE Device SET IsConcentrator = 1 WHERE ID = {0}", parentID), m_metadataSynchronizationTimeout);
-
-                        // Get any historian associated with the subscriber device
-                        object historianID = command.ExecuteScalar(string.Format("SELECT HistorianID FROM Device WHERE ID = {0}", parentID), m_metadataSynchronizationTimeout);
-
-                        // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
-                        if (m_nodeID == Guid.Empty)
-                            m_nodeID = Guid.Parse(command.ExecuteScalar(string.Format("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0}", (int)ID), m_metadataSynchronizationTimeout).ToString());
-
-                        // Determine the protocol record auto-inc ID value for the gateway transport protocol (GEP) - this value is also cached since it shouldn't change for the lifetime of this class
-                        if (m_gatewayProtocolID == 0)
-                            m_gatewayProtocolID = int.Parse(command.ExecuteScalar("SELECT ID FROM Protocol WHERE Acronym='GatewayTransport'", m_metadataSynchronizationTimeout).ToString());
-
-                        // Ascertain total number of actions required for all meta-data synchronization so some level feed back can be provided on progress
-                        InitSyncProgress(metadata.Tables.Cast<DataTable>().Select(dataTable => (long)dataTable.Rows.Count).Sum() + 3);
-
-                        // Prefix all children devices with the name of the parent since the same device names could appear in different connections (helps keep device names unique)
-                        string sourcePrefix = Name + "!";
-                        Dictionary<string, int> deviceIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
-                        string deviceAcronym, signalTypeAcronym;
-                        decimal longitude, latitude;
-                        decimal? location;
-                        object originalSource;
-                        int deviceID;
-
-                        // Check to see if data for the "DeviceDetail" table was included in the meta-data
-                        if (metadata.Tables.Contains("DeviceDetail"))
-                        {
-                            DataTable deviceDetail = metadata.Tables["DeviceDetail"];
-                            List<Guid> uniqueIDs = new List<Guid>();
-                            DataRow[] deviceRows;
-
-                            // Define SQL statement to query if this device is already defined (this should always be based on the unique guid-based device ID)
-                            string deviceExistsSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0}", "uniqueID");
-
-                            // Define SQL statement to insert new device record
-                            string insertDeviceSql = database.ParameterizedQueryString("INSERT INTO Device(NodeID, ParentID, HistorianID, Acronym, Name, ProtocolID, FramesPerSecond, OriginalSource, AccessID, Longitude, Latitude, ContactList, IsConcentrator, Enabled) " +
-                                                                                       "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, 0, 1)", "nodeID", "parentID", "historianID", "acronym", "name", "protocolID", "framesPerSecond", "originalSource", "accessID", "longitude", "latitude", "contactList");
-
-                            // Define SQL statement to update device's guid-based unique ID after insert
-                            string updateDeviceUniqueIDSql = database.ParameterizedQueryString("UPDATE Device SET UniqueID = {0} WHERE Acronym = {1}", "uniqueID", "acronym");
-
-                            // Define SQL statement to query if a device can be safely updated
-                            string deviceIsUpdatableSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE UniqueID = {0} AND (ParentID <> {1} OR ParentID IS NULL)", "uniqueID", "parentID");
-
-                            // Define SQL statement to update existing device record
-                            string updateDeviceSql = database.ParameterizedQueryString("UPDATE Device SET Acronym = {0}, Name = {1}, OriginalSource = {2}, ProtocolID = {3}, FramesPerSecond = {4}, HistorianID = {5}, AccessID = {6}, Longitude = {7}, Latitude = {8}, ContactList = {9} WHERE UniqueID = {10}",
-                                                                                       "acronym", "name", "originalSource", "protocolID", "framesPerSecond", "historianID", "accessID", "longitude", "latitude", "contactList", "uniqueID");
-
-                            // Define SQL statement to retrieve device's auto-inc ID based on its unique guid-based ID
-                            string queryDeviceIDSql = database.ParameterizedQueryString("SELECT ID FROM Device WHERE UniqueID = {0}", "uniqueID");
-
-                            // Define SQL statement to retrieve all unique device ID's for the current parent to check for mismatches
-                            string queryUniqueDeviceIDsSql = database.ParameterizedQueryString("SELECT UniqueID FROM Device WHERE ParentID = {0}", "parentID");
-
-                            // Define SQL statement to remove device records that no longer exist in the meta-data
-                            string deleteDeviceSql = database.ParameterizedQueryString("DELETE FROM Device WHERE UniqueID = {0}", "uniqueID");
-
-                            // Determine which device rows should be synchronized based on operational mode flags
-                            if (ReceiveInternalMetadata && ReceiveExternalMetadata)
-                                deviceRows = deviceDetail.Select();
-                            else if (ReceiveInternalMetadata)
-                                deviceRows = deviceDetail.Select("OriginalSource IS NULL");
-                            else if (ReceiveExternalMetadata)
-                                deviceRows = deviceDetail.Select("OriginalSource IS NOT NULL");
-                            else
-                                deviceRows = new DataRow[0];
-
-                            // Check existence of optional meta-data fields
-                            DataColumnCollection deviceDetailColumns = deviceDetail.Columns;
-                            bool accessIDFieldExists = deviceDetailColumns.Contains("AccessID");
-                            bool longitudeFieldExists = deviceDetailColumns.Contains("Longitude");
-                            bool latitudeFieldExists = deviceDetailColumns.Contains("Latitude");
-                            bool companyAcronymFieldExists = deviceDetailColumns.Contains("CompanyAcronym");
-                            bool protocolNameFieldExists = deviceDetailColumns.Contains("ProtocolName");
-                            bool vendorAcronymFieldExists = deviceDetailColumns.Contains("VendorAcronym");
-                            bool vendorDeviceNameFieldExists = deviceDetailColumns.Contains("VendorDeviceName");
-                            bool interconnectionNameFieldExists = deviceDetailColumns.Contains("InterconnectionName");
-
-                            // Older versions of GEP did not include the AccessID field, so this is treated as optional
-                            int accessID = 0;
-
-                            foreach (DataRow row in deviceRows)
-                            {
-                                Guid uniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString());
-
-                                // Track unique device Guids in this meta-data session, we'll need to remove any old associated devices that no longer exist
-                                uniqueIDs.Add(uniqueID);
-
-                                // We will synchronize meta-data only if the source owns this device and it's not defined as a concentrator (these should normally be filtered by publisher - but we check just in case).
-                                if (!row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
-                                {
-                                    if (accessIDFieldExists)
-                                        accessID = (int)row.Field<long>("AccessID");
-
-                                    // Get longitude and latitude values if they are defined
-                                    longitude = 0M;
-                                    latitude = 0M;
-
-                                    if (longitudeFieldExists)
-                                    {
-                                        location = row.ConvertNullableField<decimal>("Longitude");
-
-                                        if (location.HasValue)
-                                            longitude = location.Value;
-                                    }
-
-                                    if (latitudeFieldExists)
-                                    {
-                                        location = row.ConvertNullableField<decimal>("Latitude");
-
-                                        if (location.HasValue)
-                                            latitude = location.Value;
-                                    }
-
-                                    // Save any reported extraneous values from device meta-data in connection string formatted contact list - all fields are considered optional
-                                    Dictionary<string, string> contactList = new Dictionary<string, string>();
-
-                                    if (companyAcronymFieldExists)
-                                        contactList["companyAcronym"] = row.Field<string>("CompanyAcronym") ?? string.Empty;
-
-                                    if (protocolNameFieldExists)
-                                        contactList["protocolName"] = row.Field<string>("ProtocolName") ?? string.Empty;
-
-                                    if (vendorAcronymFieldExists)
-                                        contactList["vendorAcronym"] = row.Field<string>("VendorAcronym") ?? string.Empty;
-
-                                    if (vendorDeviceNameFieldExists)
-                                        contactList["vendorDeviceName"] = row.Field<string>("VendorDeviceName") ?? string.Empty;
-
-                                    if (interconnectionNameFieldExists)
-                                        contactList["interconnectionName"] = row.Field<string>("InterconnectionName") ?? string.Empty;
-
-                                    // Determine if device record already exists
-                                    if (Convert.ToInt32(command.ExecuteScalar(deviceExistsSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID))) == 0)
-                                    {
-                                        // Insert new device record
-                                        command.ExecuteNonQuery(insertDeviceSql, m_metadataSynchronizationTimeout, database.Guid(m_nodeID), parentID, historianID, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"),
-                                                                m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym"), accessID, longitude, latitude, contactList.JoinKeyValuePairs());
-
-                                        // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
-                                        // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
-                                        command.ExecuteNonQuery(updateDeviceUniqueIDSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), sourcePrefix + row.Field<string>("Acronym"));
-                                    }
-                                    else
-                                    {
-                                        // Perform safety check to preserve device records which are not safe to overwrite
-                                        if (Convert.ToInt32(command.ExecuteScalar(deviceIsUpdatableSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
-                                            continue;
-
-                                        // Gateway is assuming ownership of the device records when the "internal" flag is true - this means the device's measurements can be forwarded to another party. From a device record perspective,
-                                        // ownership is inferred by setting 'OriginalSource' to null. When gateway doesn't own device records (i.e., the "internal" flag is false), this means the device's measurements can only be consumed
-                                        // locally - from a device record perspective this means the 'OriginalSource' field is set to the acronym of the PDC or PMU that generated the source measurements. This field allows a mirrored source
-                                        // restriction to be implemented later to ensure all devices in an output protocol came from the same original source connection, if desired.
-                                        originalSource = m_internal ? (object)DBNull.Value : string.IsNullOrEmpty(row.Field<string>("ParentAcronym")) ? sourcePrefix + row.Field<string>("Acronym") : sourcePrefix + row.Field<string>("ParentAcronym");
-
-                                        // Update existing device record
-                                        command.ExecuteNonQuery(updateDeviceSql, m_metadataSynchronizationTimeout, sourcePrefix + row.Field<string>("Acronym"), row.Field<string>("Name"), originalSource, m_gatewayProtocolID, row.ConvertField<int>("FramesPerSecond"), historianID, accessID, longitude, latitude, contactList.JoinKeyValuePairs(), database.Guid(uniqueID));
-                                    }
-                                }
-
-                                // Capture local device ID auto-inc value for measurement association
-                                deviceIDs[row.Field<string>("Acronym")] = Convert.ToInt32(command.ExecuteScalar(queryDeviceIDSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID)));
-
-                                // Periodically notify user about synchronization progress
-                                UpdateSyncProgress();
-                            }
-
-                            // Remove any device records associated with this subscriber that no longer exist in the meta-data
-                            if (uniqueIDs.Count > 0)
-                            {
-                                // Sort unique ID list so that binary search can be used for quick lookups
-                                uniqueIDs.Sort();
-
-                                DataTable deviceUniqueIDs = command.RetrieveData(database.AdapterType, queryUniqueDeviceIDsSql, m_metadataSynchronizationTimeout, parentID);
-                                Guid uniqueID;
-
-                                foreach (DataRow deviceRow in deviceUniqueIDs.Rows)
-                                {
-                                    uniqueID = database.Guid(deviceRow, "UniqueID");
-
-                                    // Remove any devices in the database that are associated with the parent device and do not exist in the meta-data
-                                    if (uniqueIDs.BinarySearch(uniqueID) < 0)
-                                        command.ExecuteNonQuery(deleteDeviceSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID));
-                                }
-                                UpdateSyncProgress();
-                            }
-                        }
-
-                        // Check to see if data for the "MeasurementDetail" table was included in the meta-data
-                        if (metadata.Tables.Contains("MeasurementDetail"))
-                        {
-                            DataTable measurementDetail = metadata.Tables["MeasurementDetail"];
-                            List<Guid> signalIDs = new List<Guid>();
-                            DataRow[] measurementRows;
-
-                            // Define SQL statement to query if this measurement is already defined (this should always be based on the unique signal ID Guid)
-                            string measurementExistsSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Measurement WHERE SignalID = {0}", "signalID");
-
-                            // Define SQL statement to insert new measurement record
-                            string insertMeasurementSql = database.ParameterizedQueryString("INSERT INTO Measurement(DeviceID, HistorianID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Description, Internal, Subscribed, Enabled) " +
-                                                                                            "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, 0, 1)", "deviceID", "historianID", "pointTag", "alternateTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal");
-
-                            // Define SQL statement to update measurement's signal ID after insert
-                            string updateMeasurementSignalIDSql = database.ParameterizedQueryString("UPDATE Measurement SET SignalID = {0}, AlternateTag = NULL WHERE AlternateTag = {1}", "signalID", "alternateTag");
-
-                            // Define SQL statement to update existing measurement record
-                            string updateMeasurementSql = database.ParameterizedQueryString("UPDATE Measurement SET HistorianID = {0}, PointTag = {1}, SignalTypeID = {2}, PhasorSourceIndex = {3}, SignalReference = {4}, Description = {5}, Internal = {6} WHERE SignalID = {7}",
-                                                                                            "historianID", "pointTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "internal", "signalID");
-
-                            // Define SQL statement to retrieve all measurement signal ID's for the current parent to check for mismatches - note that we use the ActiveMeasurements view
-                            // since it associates measurements with their top-most parent runtime device ID, this allows us to easily query all measurements for the parent device
-                            string queryMeasurementSignalIDsSql = database.ParameterizedQueryString("SELECT SignalID FROM ActiveMeasurement WHERE DeviceID = {0}", "deviceID");
-
-                            // Define SQL statement to retrieve measurement's associated device ID, i.e., actual record ID, based on measurement's signal ID
-                            string queryMeasurementDeviceIDSql = database.ParameterizedQueryString("SELECT DeviceID FROM Measurement WHERE SignalID = {0}", "signalID");
-
-                            // Define SQL statement to remove device records that no longer exist in the meta-data
-                            string deleteMeasurementSql = database.ParameterizedQueryString("DELETE FROM Measurement WHERE SignalID = {0}", "signalID");
-
-                            // Load signal type ID's from local database associated with their acronym for proper signal type translation
-                            Dictionary<string, int> signalTypeIDs = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
-
-                            foreach (DataRow row in command.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM SignalType").Rows)
-                            {
-                                signalTypeAcronym = row.Field<string>("Acronym");
-
-                                if (!string.IsNullOrWhiteSpace(signalTypeAcronym))
-                                    signalTypeIDs[signalTypeAcronym] = row.ConvertField<int>("ID");
-                            }
-
-                            // Determine which measurement rows should be synchronized based on operational mode flags
-                            if (ReceiveInternalMetadata && ReceiveExternalMetadata)
-                                measurementRows = measurementDetail.Select();
-                            else if (ReceiveInternalMetadata)
-                                measurementRows = measurementDetail.Select("Internal <> 0");
-                            else if (ReceiveExternalMetadata)
-                                measurementRows = measurementDetail.Select("Internal = 0");
-                            else
-                                measurementRows = new DataRow[0];
-
-                            // Older versions of GEP did not include the PhasorSourceIndex field, so this is treated as optional
-                            bool phasorSourceIndexFieldExists = measurementDetail.Columns.Contains("PhasorSourceIndex");
-                            object phasorSourceIndex = DBNull.Value;
-
-                            foreach (DataRow row in measurementRows)
-                            {
-                                // Get device and signal type acronyms
-                                deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
-                                signalTypeAcronym = row.Field<string>("SignalAcronym") ?? string.Empty;
-
-                                // Get phasor source index if field is defined
-                                if (phasorSourceIndexFieldExists)
-                                {
-                                    // Using ConvertNullableField extension since publisher could use SQLite database in which case
-                                    // all integers would arrive in data set as longs and need to be converted back to integers
-                                    int? index = row.ConvertNullableField<int>("PhasorSourceIndex");
-                                    phasorSourceIndex = index.HasValue ? (object)index.Value : (object)DBNull.Value;
-                                }
-
-                                // Make sure we have an associated device and signal type already defined for the measurement
-                                if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym) && !string.IsNullOrWhiteSpace(signalTypeAcronym) && signalTypeIDs.ContainsKey(signalTypeAcronym))
-                                {
-                                    // Prefix the tag name with the "updated" device name
-                                    deviceID = deviceIDs[deviceAcronym];
-                                    string pointTag = sourcePrefix + row.Field<string>("PointTag");
-                                    Guid signalID = Guid.Parse(row.Field<object>("SignalID").ToString());
-
-                                    // Track unique measurement signal Guids in this meta-data session, we'll need to remove any old associated measurements that no longer exist
-                                    signalIDs.Add(signalID);
-
-                                    // Determine if measurement record already exists
-                                    if (Convert.ToInt32(command.ExecuteScalar(measurementExistsSql, m_metadataSynchronizationTimeout, database.Guid(signalID))) == 0)
-                                    {
-                                        string alternateTag = Guid.NewGuid().ToString();
-
-                                        // Insert new measurement record
-                                        command.ExecuteNonQuery(insertMeasurementSql, m_metadataSynchronizationTimeout, deviceID, historianID, pointTag, alternateTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal));
-
-                                        // Guids are normally auto-generated during insert - after insertion update the Guid so that it matches the source data. Most of the database
-                                        // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
-                                        command.ExecuteNonQuery(updateMeasurementSignalIDSql, m_metadataSynchronizationTimeout, database.Guid(signalID), alternateTag);
-                                    }
-                                    else
-                                    {
-                                        // Update existing measurement record. Note that this update assumes that measurements will remain associated with a static source device.
-                                        command.ExecuteNonQuery(updateMeasurementSql, m_metadataSynchronizationTimeout, historianID, pointTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
-                                    }
-                                }
-
-                                // Periodically notify user about synchronization progress
-                                UpdateSyncProgress();
-                            }
-
-                            // Remove any measurement records associated with existing devices in this session but no longer exist in the meta-data
-                            if (signalIDs.Count > 0)
-                            {
-                                // Sort signal ID list so that binary search can be used for quick lookups
-                                signalIDs.Sort();
-
-                                // Query all the guid-based signal ID's for all measurement records associated with the parent device using run-time ID
-                                DataTable measurementSignalIDs = command.RetrieveData(database.AdapterType, queryMeasurementSignalIDsSql, m_metadataSynchronizationTimeout, (int)ID);
-                                Guid signalID;
-
-                                // Walk through each database record and see if the measurement exists in the provided meta-data
-                                foreach (DataRow measurementRow in measurementSignalIDs.Rows)
-                                {
-                                    signalID = database.Guid(measurementRow, "SignalID");
-
-                                    // Remove any measurements in the database that are associated with received devices and do not exist in the meta-data
-                                    if (signalIDs.BinarySearch(signalID) < 0)
-                                    {
-                                        // Measurement was not in the meta-data, get the measurement's actual record based ID for its associated device
-                                        object measurementDeviceID = command.ExecuteScalar(queryMeasurementDeviceIDSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
-
-                                        // If the unknown measurement is directly associated with a device that exists in the meta-data it is assumed that this measurement
-                                        // was removed from the publishing system and no longer exists therefore we remove it from the local measurement cache. If the user
-                                        // needs custom local measurements associated with a remote device, they should be associated with the parent device only.
-                                        if (measurementDeviceID != null && !(measurementDeviceID is DBNull) && deviceIDs.ContainsValue(Convert.ToInt32(measurementDeviceID)))
-                                            command.ExecuteNonQuery(deleteMeasurementSql, m_metadataSynchronizationTimeout, database.Guid(signalID));
-                                    }
-                                }
-
-                                UpdateSyncProgress();
-                            }
-                        }
-
-                        // Check to see if data for the "PhasorDetail" table was included in the meta-data
-                        if (metadata.Tables.Contains("PhasorDetail"))
-                        {
-                            Dictionary<int, int> maxSourceIndicies = new Dictionary<int, int>();
-                            int sourceIndex;
-
-                            // Phasor data is normally only needed so that the user can properly generate a mirrored IEEE C37.118 output stream from the source data.
-                            // This is necessary since, in this protocol, the phasors are described (i.e., labeled) as a unit (i.e., as a complex number) instead of
-                            // as two distinct angle and magnitude measurements.
-
-                            // Define SQL statement to query if phasor record is already defined (no Guid is defined for these simple label records)
-                            string phasorExistsSql = database.ParameterizedQueryString("SELECT COUNT(*) FROM Phasor WHERE DeviceID = {0} AND SourceIndex = {1}", "deviceID", "sourceIndex");
-
-                            // Define SQL statement to insert new phasor record
-                            string insertPhasorSql = database.ParameterizedQueryString("INSERT INTO Phasor(DeviceID, Label, Type, Phase, SourceIndex) VALUES ({0}, {1}, {2}, {3}, {4})", "deviceID", "label", "type", "phase", "sourceIndex");
-
-                            // Define SQL statement to update existing phasor record
-                            string updatePhasorSql = database.ParameterizedQueryString("UPDATE Phasor SET Label = {0}, Type = {1}, Phase = {2} WHERE DeviceID = {3} AND SourceIndex = {4}", "label", "type", "phase", "deviceID", "sourceIndex");
-
-                            // Define SQL statement to delete a phasor record
-                            string deletePhasorSql = database.ParameterizedQueryString("DELETE FROM Phasor WHERE DeviceID = {0} AND SourceIndex > {1}", "deviceID", "sourceIndex");
-
-                            foreach (DataRow row in metadata.Tables["PhasorDetail"].Rows)
-                            {
-                                // Get device acronym
-                                deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
-
-                                // Make sure we have an associated device already defined for the phasor record
-                                if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym))
-                                {
-                                    deviceID = deviceIDs[deviceAcronym];
-
-                                    // Determine if phasor record already exists
-                                    if (Convert.ToInt32(command.ExecuteScalar(phasorExistsSql, m_metadataSynchronizationTimeout, deviceID, row.ConvertField<int>("SourceIndex"))) == 0)
-                                    {
-                                        // Insert new phasor record
-                                        command.ExecuteNonQuery(insertPhasorSql, m_metadataSynchronizationTimeout, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), row.ConvertField<int>("SourceIndex"));
-                                    }
-                                    else
-                                    {
-                                        // Update existing phasor record
-                                        command.ExecuteNonQuery(updatePhasorSql, m_metadataSynchronizationTimeout, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, row.ConvertField<int>("SourceIndex"));
-                                    }
-
-                                    // Track largest source index for each device
-                                    maxSourceIndicies.TryGetValue(deviceID, out sourceIndex);
-
-                                    if (row.ConvertField<int>("SourceIndex") > sourceIndex)
-                                        maxSourceIndicies[deviceID] = row.ConvertField<int>("SourceIndex");
-                                }
-
-                                // Periodically notify user about synchronization progress
-                                UpdateSyncProgress();
-                            }
-
-                            // Remove any phasor records associated with existing devices in this session but no longer exist in the meta-data
-                            if (maxSourceIndicies.Count > 0)
-                            {
-                                foreach (KeyValuePair<int, int> deviceIndexPair in maxSourceIndicies)
-                                {
-                                    command.ExecuteNonQuery(deletePhasorSql, m_metadataSynchronizationTimeout, deviceIndexPair.Key, deviceIndexPair.Value);
-                                }
-                            }
-                        }
-
-                        if ((object)transaction != null)
-                            transaction.Commit();
-
-                        // Update local in-memory synchronized meta-data cache
-                        m_synchronizedMetadata = metadata;
-                    }
-                    catch (Exception ex)
-                    {
-                        OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
-
-                        if ((object)transaction != null)
-                        {
-                            try
-                            {
-                                transaction.Rollback();
-                            }
-                            catch (Exception rollbackException)
-                            {
-                                OnProcessException(new InvalidOperationException("Failed to roll back database transaction due to exception: " + rollbackException.Message, rollbackException));
-                            }
-                        }
-
-                        return;
-                    }
-                    finally
-                    {
-                        if ((object)transaction != null)
-                            transaction.Dispose();
-                    }
-                }
-
-                // New signals may have been defined, take original remote signal index cache and apply changes
-                if (m_remoteSignalIndexCache != null)
-                    m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
-
-                OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3));
-
-                // Send notification that system configuration has changed
-                OnConfigurationChanged();
-
-                // For automatic connections, when meta-data refresh is complete, update output measurements to see if any
-                // points for subscription have changed after re-application of filter expressions and if so, resubscribe
-                if (m_autoConnect && UpdateOutputMeasurements())
-                {
-                    OnStatusMessage("Meta-data received from publisher modified measurement availability, adjusting active subscription...");
-
-                    // Updating subscription will restart data stream monitor upon successful resubscribe
-                    SubscribeToOutputMeasurements(true);
-                }
-                else
-                {
-                    // Restart data stream monitor after meta-data synchronization if it was originally enabled
-                    if (dataMonitoringEnabled && (object)m_dataStreamMonitor != null)
-                        m_dataStreamMonitor.Enabled = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException("Failed to synchronize meta-data to local cache: " + ex.Message, ex));
-            }
-        }
-
-        private void InitSyncProgress(long totalActions)
-        {
-            m_syncProgressTotalActions = totalActions;
-            m_syncProgressActionsCount = 0;
-
-            // We update user on progress with 5 messages or every 15 seconds
-            m_syncProgressUpdateInterval = (long)(totalActions * 0.2D);
-            m_syncProgressLastMessage = DateTime.UtcNow.Ticks;
-        }
-
-        private void UpdateSyncProgress()
-        {
-            m_syncProgressActionsCount++;
-
-            if (m_syncProgressActionsCount % m_syncProgressUpdateInterval == 0 || DateTime.UtcNow.Ticks - m_syncProgressLastMessage > 150000000)
-            {
-                OnStatusMessage("Meta-data synchronization is {0:0.0%} complete...", m_syncProgressActionsCount / (double)m_syncProgressTotalActions);
-                m_syncProgressLastMessage = DateTime.UtcNow.Ticks;
-            }
+            return m_encoding.GetString(buffer, startIndex, length);
         }
 
         private SignalIndexCache DeserializeSignalIndexCache(byte[] buffer)
@@ -3275,6 +2052,22 @@ namespace GSF.TimeSeries.Transport
             };
         }
 
+        // Restarts the subscriber.
+        private void Restart()
+        {
+            try
+            {
+                if (m_enabled)
+                    Stop();
+
+                Start();
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(ex);
+            }
+        }
+
         private Encoding GetCharacterEncoding(OperationalEncoding operationalEncoding)
         {
             Encoding encoding;
@@ -3300,6 +2093,39 @@ namespace GSF.TimeSeries.Transport
             return encoding;
         }
 
+        // Updates the measurements per second counters after receiving another set of measurements.
+        private void UpdateMeasurementsPerSecond(int measurementCount)
+        {
+            long secondsSinceEpoch = DateTime.UtcNow.Ticks / Ticks.PerSecond;
+
+            if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
+            {
+                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
+                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
+
+                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
+                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
+
+                m_totalMeasurementsPerSecond += m_measurementsInSecond;
+                m_measurementsPerSecondCount++;
+                m_measurementsInSecond = 0L;
+
+                m_lastSecondsSinceEpoch = secondsSinceEpoch;
+            }
+
+            m_measurementsInSecond += measurementCount;
+        }
+
+        // Disconnect client, restarting if disconnect was not intentional
+        private void DisconnectClient()
+        {
+            DataChannel = null;
+
+            // If user didn't initiate disconnect, restart the connection
+            if (m_enabled)
+                Restart();
+        }
+
         // Socket exception handler
         private bool HandleSocketException(Exception ex)
         {
@@ -3320,39 +2146,6 @@ namespace GSF.TimeSeries.Transport
                 HandleSocketException(ex.InnerException);
 
             return false;
-        }
-
-        // Disconnect client, restarting if disconnect was not intentional
-        private void DisconnectClient()
-        {
-            DataChannel = null;
-
-            // If user didn't initiate disconnect, restart the connection
-            if (Enabled)
-                Start();
-        }
-
-        // This method is called when connection has been authenticated
-        private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs e)
-        {
-            if (m_autoConnect)
-                StartSubscription();
-        }
-
-        // This method is called then new meta-data has been received
-        private void DataSubscriber_MetaDataReceived(object sender, EventArgs<DataSet> e)
-        {
-            try
-            {
-                // We handle synchronization on a separate thread since this process may be lengthy
-                if (m_autoSynchronizeMetadata)
-                    SynchronizeMetadata(e.Argument);
-            }
-            catch (Exception ex)
-            {
-                // Process exception for logging
-                OnProcessException(new InvalidOperationException("Failed to queue meta-data synchronization due to exception: " + ex.Message, ex));
-            }
         }
 
         /// <summary>
@@ -3464,6 +2257,16 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Raises the <see cref="NewEntities"/> event.
+        /// </summary>
+        /// <param name="entities">Collection of entities received from the data publisher.</param>
+        private void OnNewEntities(ICollection<ITimeSeriesEntity> entities)
+        {
+            if ((object)NewEntities != null)
+                NewEntities(this, new EventArgs<ICollection<ITimeSeriesEntity>>(entities));
+        }
+
+        /// <summary>
         /// Raises the <see cref="ProcessingComplete"/> event.
         /// </summary>
         /// <param name="source">Type name of adapter that sent the processing completed notification.</param>
@@ -3473,9 +2276,6 @@ namespace GSF.TimeSeries.Transport
             {
                 if ((object)ProcessingComplete != null)
                     ProcessingComplete(this, new EventArgs<string>(source));
-
-                // Also raise base class event in case this event has been subscribed
-                OnProcessingComplete();
             }
             catch (Exception ex)
             {
@@ -3520,17 +2320,30 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
-        /// Disposes of any previously defined local concentrator.
+        /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
-        protected internal void DisposeLocalConcentrator()
+        private void OnStatusMessage(string message)
         {
-            if ((object)m_localConcentrator != null)
-            {
-                m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
-                m_localConcentrator.Dispose();
-            }
+            if ((object)StatusMessage != null)
+                StatusMessage(this, new EventArgs<string>(message));
+        }
 
-            m_localConcentrator = null;
+        /// <summary>
+        /// Raises the <see cref="StatusMessage"/> event.
+        /// </summary>
+        private void OnStatusMessage(string format, params object[] formatArgs)
+        {
+            if ((object)StatusMessage != null)
+                StatusMessage(this, new EventArgs<string>(string.Format(format, formatArgs)));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ProcessException"/> event.
+        /// </summary>
+        private void OnProcessException(Exception ex)
+        {
+            if ((object)ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e)
@@ -3553,54 +2366,12 @@ namespace GSF.TimeSeries.Transport
             m_monitoredBytesReceived = 0L;
         }
 
-        // Updates the measurements per second counters after receiving another set of measurements.
-        private void UpdateMeasurementsPerSecond(int measurementCount)
-        {
-            long secondsSinceEpoch = DateTime.UtcNow.Ticks / Ticks.PerSecond;
-
-            if (secondsSinceEpoch > m_lastSecondsSinceEpoch)
-            {
-                if (m_measurementsInSecond < m_minimumMeasurementsPerSecond || m_minimumMeasurementsPerSecond == 0L)
-                    m_minimumMeasurementsPerSecond = m_measurementsInSecond;
-
-                if (m_measurementsInSecond > m_maximumMeasurementsPerSecond || m_maximumMeasurementsPerSecond == 0L)
-                    m_maximumMeasurementsPerSecond = m_measurementsInSecond;
-
-                m_totalMeasurementsPerSecond += m_measurementsInSecond;
-                m_measurementsPerSecondCount++;
-                m_measurementsInSecond = 0L;
-
-                m_lastSecondsSinceEpoch = secondsSinceEpoch;
-            }
-
-            m_measurementsInSecond += measurementCount;
-        }
-
-        // Resets the measurements per second counters after reading the values from the last calculation interval.
-        private void ResetMeasurementsPerSecondCounters()
-        {
-            m_minimumMeasurementsPerSecond = 0L;
-            m_maximumMeasurementsPerSecond = 0L;
-            m_totalMeasurementsPerSecond = 0L;
-            m_measurementsPerSecondCount = 0L;
-        }
-
-        private bool SynchronizedMetadataChanged(DataSet newSynchronizedMetadata)
-        {
-            try
-            {
-                return !DataSetEqualityComparer.Default.Equals(m_synchronizedMetadata, newSynchronizedMetadata);
-            }
-            catch
-            {
-                return true;
-            }
-        }
-
         #region [ Command Channel Event Handlers ]
 
         private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)
         {
+            m_isConnected = true;
+
             // Make sure no existing requests are queued for a new publisher connection
             lock (m_requests)
             {
@@ -3610,26 +2381,15 @@ namespace GSF.TimeSeries.Transport
             // Define operational modes as soon as possible
             SendServerCommand(ServerCommand.DefineOperationalModes, EndianOrder.BigEndian.GetBytes((uint)m_operationalModes));
 
-            // Notify input adapter base that asynchronous connection succeeded
-            OnConnected();
-
             // Notify consumer that connection was successfully established
             OnConnectionEstablished();
 
             OnStatusMessage("Data subscriber command channel connection to publisher was established.");
-
-            if (m_autoConnect)
-            {
-                // Attempt authentication if required, remaining steps will happen on successful authentication
-                if (m_securityMode == SecurityMode.Gateway)
-                    Authenticate(m_sharedSecret, m_authenticationID);
-                else
-                    StartSubscription();
-            }
         }
 
         private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)
         {
+            m_isConnected = false;
             OnConnectionTerminated();
             OnStatusMessage("Data subscriber command channel connection to publisher was terminated.");
             DisconnectClient();

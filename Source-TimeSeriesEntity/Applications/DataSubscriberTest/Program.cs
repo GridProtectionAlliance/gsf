@@ -83,7 +83,6 @@ namespace DataSubscriberTest
             // Initialize subscriber
             subscriber.ConnectionString = "server=localhost:6177";
             subscriber.OperationalModes |= OperationalModes.UseCommonSerializationFormat | OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData;
-            subscriber.Initialize();
 
             // Start subscriber connection cycle
             subscriber.Start();
@@ -150,7 +149,7 @@ namespace DataSubscriberTest
             }
         }
 
-        static void SubscriberNewEntities(object sender, EventArgs<ICollection<IMeasurement>> e)
+        static void SubscriberNewEntities(object sender, EventArgs<ICollection<ITimeSeriesEntity>> e)
         {
             // Check to see if total number of added points will exceed process interval used to show periodic
             // messages of how many points have been archived so far...

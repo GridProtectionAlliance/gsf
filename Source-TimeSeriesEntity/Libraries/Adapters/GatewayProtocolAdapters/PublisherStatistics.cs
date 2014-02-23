@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  GatewayStatistics.cs - Gbtc
+//  PublisherStatistics.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,184 +16,18 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/09/2012 - Stephen C. Wills
+//  02/22/2014 - Stephen C. Wills
 //       Generated original version of source code.
-//  12/20/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
 
-using System.Linq;
+using GSF.TimeSeries.Statistics;
 using GSF.TimeSeries.Transport;
 
-namespace GSF.TimeSeries.Statistics
+namespace GatewayProtocolAdapters
 {
-    internal static class GatewayStatistics
+    public static class PublisherStatistics
     {
-        #region [ Subscriber Statistics ]
-
-        private static double GetSubscriberStatistic_Connected(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.IsConnected ? 1.0D : 0.0D;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_Authenticated(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.Authenticated ? 1.0D : 0.0D;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_ProcessedMeasurements(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = s_statisticValueCache.GetDifference(subscriber, subscriber.ProcessedEntities, "ProcessedMeasurements");
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_TotalBytesReceived(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-            {
-                statistic = s_statisticValueCache.GetDifference(subscriber, subscriber.TotalBytesReceived, "TotalBytesReceived");
-
-                if (statistic < 0.0D)
-                    statistic = subscriber.TotalBytesReceived;
-            }
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_AuthorizedCount(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.GetAuthorizedSignalIDs().Count();
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_UnauthorizedCount(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.GetUnauthorizedSignalIDs().Count();
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_LifetimeMeasurements(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.LifetimeMeasurements;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_MinimumMeasurementsPerSecond(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.MinimumMeasurementsPerSecond;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_MaximumMeasurementsPerSecond(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.MaximumMeasurementsPerSecond;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_AverageMeasurementsPerSecond(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.AverageMeasurementsPerSecond;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_LifetimeBytesReceived(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.TotalBytesReceived;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_LifetimeMinimumLatency(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.LifetimeMinimumLatency;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_LifetimeMaximumLatency(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.LifetimeMaximumLatency;
-
-            return statistic;
-        }
-
-        private static double GetSubscriberStatistic_LifetimeAverageLatency(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            DataSubscriber subscriber = source as DataSubscriber;
-
-            if ((object)subscriber != null)
-                statistic = subscriber.LifetimeAverageLatency;
-
-            return statistic;
-        }
-
-        #endregion
-
-        #region [ Publisher Statistics ]
 
         private static double GetPublisherStatistic_Connected(object source, string arguments)
         {
@@ -211,8 +45,8 @@ namespace GSF.TimeSeries.Statistics
             double statistic = 0.0D;
             DataPublisher publisher = source as DataPublisher;
 
-            if ((object)publisher != null)
-                statistic = publisher.ClientConnections.Count;
+            //if ((object)publisher != null)
+            //    statistic = publisher.ClientConnections.Count;
 
             return statistic;
         }
@@ -342,8 +176,6 @@ namespace GSF.TimeSeries.Statistics
 
             return statistic;
         }
-
-        #endregion
 
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
     }

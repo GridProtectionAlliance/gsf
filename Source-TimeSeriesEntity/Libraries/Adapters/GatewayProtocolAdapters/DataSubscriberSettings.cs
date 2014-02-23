@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.ComponentModel;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -283,9 +282,9 @@ namespace GatewayProtocolAdapters
         public const int DefaultBufferSize = ClientBase.DefaultReceiveBufferSize;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="CommandChannel"/> property.
+        /// Specifies the default value for the <see cref="DataChannelPort"/> property.
         /// </summary>
-        public const string DefaultCommandChannel = null;
+        public const int DefaultDataChannelPort = -1;
 
         // Fields
         private bool m_requireAuthentication;
@@ -302,6 +301,7 @@ namespace GatewayProtocolAdapters
         private double m_dataLossInterval;
         private int m_bufferSize;
         private string m_commandChannel;
+        private int m_dataChannelPort;
         private GatewaySecurity m_gatewaySecuritySettings;
         private TlsSecurity m_tlsSecuritySettings;
 
@@ -576,8 +576,25 @@ namespace GatewayProtocolAdapters
         /// Gets or sets the connection string which defines connection parameters to connect to the publisher's command channel.
         /// </summary>
         [ConnectionStringParameter,
-        DefaultValue(DefaultCommandChannel),
-        Description("Defines the connection parameters to connect to the publisher's command channel. Use this only when also defining a separate data channel.")]
+        DefaultValue(DefaultDataChannelPort),
+        Description("Defines the local UDP port used by the subscriber when establishing the data channel. Set to -1 to disable the data channel.")]
+        public int DataChannelPort
+        {
+            get
+            {
+                return m_dataChannelPort;
+            }
+            set
+            {
+                m_dataChannelPort = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the connection string which defines connection parameters to connect to the publisher's command channel.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Defines the connection parameters to connect to the publisher's command channel.")]
         public string CommandChannel
         {
             get
