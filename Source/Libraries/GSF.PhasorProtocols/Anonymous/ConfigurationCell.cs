@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.Serialization;
+using GSF.TimeSeries;
 
 namespace GSF.PhasorProtocols.Anonymous
 {
@@ -35,7 +36,7 @@ namespace GSF.PhasorProtocols.Anonymous
     /// Represents a protocol independent implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
     [Serializable]
-    public class ConfigurationCell : ConfigurationCellBase, IDisposable
+    public class ConfigurationCell : ConfigurationCellBase, IDevice, IDisposable
     {
         #region [ Members ]
 
@@ -59,6 +60,8 @@ namespace GSF.PhasorProtocols.Anonymous
         private long m_dataQualityErrors;
         private long m_timeQualityErrors;
         private long m_deviceErrors;
+        private long m_measurementsReceived;
+        private long m_measurementsExpected;
         private object m_source;
         private bool m_disposed;
 
@@ -251,6 +254,36 @@ namespace GSF.PhasorProtocols.Anonymous
             set
             {
                 m_deviceErrors = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets total measurements received for this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        public long MeasurementsReceived
+        {
+            get
+            {
+                return m_measurementsReceived;
+            }
+            set
+            {
+                m_measurementsReceived = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets total measurements expected to have been received for this <see cref="ConfigurationCell"/>.
+        /// </summary>
+        public long MeasurementsExpected
+        {
+            get
+            {
+                return m_measurementsExpected;
+            }
+            set
+            {
+                m_measurementsExpected = value;
             }
         }
 

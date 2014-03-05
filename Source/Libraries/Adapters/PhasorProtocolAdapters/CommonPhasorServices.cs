@@ -884,9 +884,6 @@ namespace PhasorProtocolAdapters
             if (Convert.ToInt32(connection.ExecuteScalar("SELECT COUNT(*) FROM Statistic")) == 0)
             {
                 statusMessage("CommonPhasorServices", new EventArgs<string>("Loading default records for Statistic..."));
-                LoadStatistic(connection, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Device', 1, 'Data Quality Errors', 'Number of data quaility errors reported by device during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetDeviceStatistic_DataQualityErrors', '', 1, 'System.Int32', @displayFormat, 0, 1)", "{0:N0}");
-                LoadStatistic(connection, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Device', 2, 'Time Quality Errors', 'Number of time quality errors reported by device during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetDeviceStatistic_TimeQualityErrors', '', 1, 'System.Int32', @displayFormat, 0, 2)", "{0:N0}");
-                LoadStatistic(connection, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Device', 3, 'Device Errors', 'Number of device errors reported by device during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetDeviceStatistic_DeviceErrors', '', 1, 'System.Int32', @displayFormat, 0, 3)", "{0:N0}");
                 LoadStatistic(connection, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('InputStream', 1, 'Total Frames', 'Total number of frames received from input stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetInputStreamStatistic_TotalFrames', '', 1, 'System.Int32', @displayFormat, 0, 2)", "{0:N0}");
                 LoadStatistic(connection, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('InputStream', 2, 'Last Report Time', 'Timestamp of last received data frame from input stream.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetInputStreamStatistic_LastReportTime', '', 1, 'System.DateTime', @displayFormat, 0, 1)", "{0:mm':'ss'.'fff}");
                 LoadStatistic(connection, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('InputStream', 3, 'Missing Frames', 'Number of frames that were not received from input stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetInputStreamStatistic_MissingFrames', '', 1, 'System.Int32', @displayFormat, 0, 3)", "{0:N0}");
@@ -995,61 +992,6 @@ namespace PhasorProtocolAdapters
 
             return device.IDLabel;
         }
-
-        #region [ Device Statistic Calculators ]
-
-        /// <summary>
-        /// Calculates number of data quaility errors reported by device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Data Quality Errors Statistic.</returns>
-        private static double GetDeviceStatistic_DataQualityErrors(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            ConfigurationCell device = source as ConfigurationCell;
-
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.DataQualityErrors, "DataQualityErrors");
-
-            return statistic;
-        }
-
-        /// <summary>
-        /// Calculates number of time quality errors reported by device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Time Quality Errors Statistic.</returns>
-        private static double GetDeviceStatistic_TimeQualityErrors(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            ConfigurationCell device = source as ConfigurationCell;
-
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.TimeQualityErrors, "TimeQualityErrors");
-
-            return statistic;
-        }
-
-        /// <summary>
-        /// Calculates number of device errors reported by device during last reporting interval.
-        /// </summary>
-        /// <param name="source">Source Device.</param>
-        /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Device Errros Statistic.</returns>
-        private static double GetDeviceStatistic_DeviceErrors(object source, string arguments)
-        {
-            double statistic = 0.0D;
-            ConfigurationCell device = source as ConfigurationCell;
-
-            if ((object)device != null)
-                statistic = s_statisticValueCache.GetDifference(device, device.DeviceErrors, "DeviceErrors");
-
-            return statistic;
-        }
-
-        #endregion
 
         #region [ InputStream Statistic Calculators ]
 

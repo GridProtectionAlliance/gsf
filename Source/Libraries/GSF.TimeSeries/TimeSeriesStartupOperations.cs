@@ -206,9 +206,10 @@ namespace GSF.TimeSeries
 
             const string StatHistorianCountFormat = "SELECT COUNT(*) FROM Historian WHERE Acronym = 'STAT' AND NodeID = {0}";
             const string StatEngineCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName = 'STATISTIC!SERVICES' AND NodeID = {0}";
-            const string SystemStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'System'";
-            const string SubscriberStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Subscriber'";
-            const string PublisherStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Publisher'";
+            const string SystemStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'System' AND AssemblyName = 'GSF.TimeSeries.dll'";
+            const string DeviceStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Device' AND AssemblyName = 'GSF.TimeSeries.dll'";
+            const string SubscriberStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Subscriber' AND AssemblyName = 'GSF.TimeSeries.dll'";
+            const string PublisherStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'Publisher' AND AssemblyName = 'GSF.TimeSeries.dll'";
             const string RuntimeDeviceCountFormat = "SELECT COUNT(*) FROM Runtime WHERE ID = {0} AND SourceTable = 'Device'";
 
             const string StatHistorianIDFormat = "SELECT ID FROM Historian WHERE Acronym = 'STAT' AND NodeID = {0}";
@@ -216,6 +217,7 @@ namespace GSF.TimeSeries
             const string StatMeasurementCountFormat = "SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND HistorianID = {1}";
 
             const string SubscriberRowsFormat = "SELECT * FROM IaonInputAdapter WHERE TypeName = 'GSF.TimeSeries.Transport.DataSubscriber' AND NodeID = {0}";
+            const string DeviceRowsFormat = "SELECT * FROM Device WHERE ParentID = {0}";
             const string PublisherRowsFormat = "SELECT * FROM IaonActionadapter WHERE TypeName = 'GSF.TimeSeries.Transport.DataPublisher' AND NodeID = {0}";
             const string RuntimeSourceIDFormat = "SELECT SourceID FROM Runtime WHERE ID = {0}";
 
@@ -226,11 +228,18 @@ namespace GSF.TimeSeries
             const string StatHistorianInsertFormat = "INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'TestingAdapters.dll', 'TestingAdapters.VirtualOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)";
             const string StatEngineInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, LoadOrder, Enabled) VALUES({0}, 'STATISTIC!SERVICES', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.StatisticsEngine', 0, 1)";
             const string SystemStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('System', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.PerformanceStatistics', 'GetSystemStatistic_{3}', '', 1, 'System.Double', '{{0:N3}}', 0, {0})";
+            const string DeviceStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Device', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.DeviceStatistics', 'GetDeviceStatistic_{3}', '', 1, 'System.Int32', '{{0:N0}}', 0, {0})";
             const string SubscriberStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Subscriber', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetSubscriberStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
             const string PublisherStatInsertFormat = "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('Publisher', {0}, '{1}', '{2}', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Statistics.GatewayStatistics', 'GetPublisherStatistic_{3}', '', 1, '{4}', '{5}', 0, {0})";
 
             const string StatMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, 1)";
-            const string SubscriberDeviceStatMeausrementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
+            const string DeviceStatMeausrementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
+
+            // DELETE queries
+            const string SystemStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'System' AND SignalIndex <= {0}";
+            const string DeviceStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Device' AND SignalIndex <= {0}";
+            const string SubscriberStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Subscriber' AND SignalIndex <= {0}";
+            const string PublisherStatisticDeleteFormat = "DELETE FROM Statistic WHERE Source = 'Publisher' AND SignalIndex <= {0}";
 
             // Names and descriptions for each of the statistics
             string[] SystemStatNames = { "CPU Usage", "Average CPU Usage", "Memory Usage", "Average Memory Usage", "Thread Count", "Average Thread Count", "Threading Contention Rate", "Average Threading Contention Rate", "IO Usage", "Average IO Usage", "Datagram Send Rate", "Average Datagram Send Rate", "Datagram Receive Rate", "Average Datagram Receive Rate" };
@@ -249,6 +258,15 @@ namespace GSF.TimeSeries
                                                 "Average number of IPv4 datagrams sent by this process per second.",
                                                 "Number of IPv4 datagrams currently received by this process per second.",
                                                 "Average number of IPv4 datagrams received by this process per second."
+                                              };
+
+            string[] DeviceStatNames = { "Data Quality Errors", "Time Quality Errors", "Device Errors", "Measurements Received", "Measurements Expected" };
+
+            string[] DeviceStatDescriptions = { "Number of data quaility errors reported by device during last reporting interval.",
+                                                "Number of time quality errors reported by device during last reporting interval.",
+                                                "Number of device errors reported by device during last reporting interval.",
+                                                "Number of measurements received from device during last reporting interval.",
+                                                "Expected number of measurements received from device during last reporting interval."
                                               };
 
             string[] SubscriberStatNames = { "Subscriber Connected", "Subscriber Authenticated", "Processed Measurements", "Total Bytes Received", "Authorized Signal Count", "Unauthorized Signal Count", "Lifetime Measurements", "Lifetime Bytes Received", "Minimum Measurements Per Second", "Maximum Measurements Per Second", "Average Measurements Per Second", "Lifetime Minimum Latency", "Lifetime Maximum Latency", "Lifetime Average Latency" };
@@ -295,7 +313,7 @@ namespace GSF.TimeSeries
 
             // Parameterized query string for inserting statistic measurements
             string statMeasurementInsertQuery = ParameterizedQueryString(connection.GetType(), StatMeasurementInsertFormat, "historianID", "pointTag", "signalTypeID", "signalReference", "description");
-            string subscriberDeviceStatInsertQuery = ParameterizedQueryString(connection.GetType(), SubscriberDeviceStatMeausrementInsertFormat, "historianID", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
+            string deviceStatMeasurementInsertQuery = ParameterizedQueryString(connection.GetType(), DeviceStatMeausrementInsertFormat, "historianID", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
 
             // Query for count values to ensure existence of these records
             int statConfigEntityCount = Convert.ToInt32(connection.ExecuteScalar(StatConfigEntityCountFormat));
@@ -304,6 +322,7 @@ namespace GSF.TimeSeries
             int statHistorianCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatHistorianCountFormat, nodeIDQueryString)));
             int statEngineCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatEngineCountFormat, nodeIDQueryString)));
             int systemStatCount = Convert.ToInt32(connection.ExecuteScalar(SystemStatCountFormat));
+            int deviceStatCount = Convert.ToInt32(connection.ExecuteScalar(DeviceStatCountFormat));
             int subscriberStatCount = Convert.ToInt32(connection.ExecuteScalar(SubscriberStatCountFormat));
             int publisherStatCount = Convert.ToInt32(connection.ExecuteScalar(PublisherStatCountFormat));
 
@@ -350,8 +369,10 @@ namespace GSF.TimeSeries
                 connection.ExecuteNonQuery(string.Format(StatEngineInsertFormat, nodeIDQueryString));
 
             // Ensure that system statistics exist
-            if (systemStatCount == 0)
+            if (systemStatCount != SystemStatNames.Length)
             {
+                connection.ExecuteNonQuery(string.Format(SystemStatisticDeleteFormat, SystemStatNames.Length));
+
                 for (int i = 0; i < SystemStatNames.Length; i++)
                 {
                     signalIndex = i + 1;
@@ -362,9 +383,26 @@ namespace GSF.TimeSeries
                 }
             }
 
-            // Ensure that subscriber statistics exist
-            if (subscriberStatCount == 0)
+            // Ensure that system statistics exist
+            if (deviceStatCount != DeviceStatNames.Length)
             {
+                connection.ExecuteNonQuery(string.Format(DeviceStatisticDeleteFormat, DeviceStatNames.Length));
+
+                for (int i = 0; i < DeviceStatNames.Length; i++)
+                {
+                    signalIndex = i + 1;
+                    statName = DeviceStatNames[i];
+                    statDescription = DeviceStatDescriptions[i];
+                    statMethodSuffix = statName.Replace(" ", "");
+                    connection.ExecuteNonQuery(string.Format(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
+                }
+            }
+
+            // Ensure that subscriber statistics exist
+            if (subscriberStatCount == SubscriberStatNames.Length)
+            {
+                connection.ExecuteNonQuery(string.Format(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length));
+
                 for (int i = 0; i < SubscriberStatNames.Length; i++)
                 {
                     signalIndex = i + 1;
@@ -378,8 +416,10 @@ namespace GSF.TimeSeries
             }
 
             // Ensure that subscriber statistics exist
-            if (publisherStatCount == 0)
+            if (publisherStatCount == PublisherStatNames.Length)
             {
+                connection.ExecuteNonQuery(string.Format(PublisherStatisticDeleteFormat, PublisherStatNames.Length));
+
                 for (int i = 0; i < PublisherStatNames.Length; i++)
                 {
                     signalIndex = i + 1;
@@ -440,12 +480,36 @@ namespace GSF.TimeSeries
                         if (runtimeDeviceCount > 0)
                         {
                             // Subscriber is defined in the Device table; include the device ID in the insert query
-                            connection.ExecuteNonQuery(subscriberDeviceStatInsertQuery, (object)statHistorianID, adapterSourceID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                            connection.ExecuteNonQuery(deviceStatMeasurementInsertQuery, (object)statHistorianID, adapterSourceID, pointTag, statSignalTypeID, signalReference, measurementDescription);
                         }
                         else
                         {
                             // Subscriber is not defined in the Device table; do not include a device ID
                             connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                        }
+                    }
+                }
+
+                if (runtimeDeviceCount > 0)
+                {
+                    // Ensure that device statistic measurements exist
+                    foreach (DataRow device in connection.RetrieveData(s_adapterType, string.Format(DeviceRowsFormat, adapterSourceID)).Rows)
+                    {
+                        adapterID = device.ConvertField<int>("ID");
+                        adapterName = "LOCAL$" + device.Field<string>("Acronym");
+
+                        for (int i = 0; i < DeviceStatNames.Length; i++)
+                        {
+                            signalIndex = i + 1;
+                            signalReference = string.Format("{0}!PMU-ST{1}", adapterName, signalIndex);
+                            statMeasurementCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
+
+                            if (statMeasurementCount == 0)
+                            {
+                                pointTag = string.Format("{0}_{1}!PMU:ST{2}", companyAcronym, adapterName, signalIndex);
+                                measurementDescription = string.Format("Device Statistic local to node '{0}' for {1}", nodeName, DeviceStatDescriptions[i]);
+                                connection.ExecuteNonQuery(deviceStatMeasurementInsertQuery, (object)statHistorianID, adapterID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                            }
                         }
                     }
                 }

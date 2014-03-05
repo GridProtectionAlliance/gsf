@@ -105,6 +105,7 @@
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
+    <Compile Include="IDevice.cs" />
     <Compile Include="IFrame.cs" />
     <Compile Include="IMeasurement.cs" />
     <Compile Include="ImmediateMeasurements.cs" />
@@ -135,6 +136,8 @@
     <Compile Include="NativeMethods.cs" />
     <Compile Include="PrecisionInputTimer.cs" />
     <Compile Include="ServiceClientBase.cs" />
+    <Compile Include="Statistics\DeviceStatistics.cs" />
+    <Compile Include="Statistics\DeviceStatisticsHelper.cs" />
     <Compile Include="Statistics\GatewayStatistics.cs" />
     <Compile Include="Statistics\PerformanceStatistics.cs" />
     <Compile Include="Statistics\Statistic.cs" />
@@ -167,6 +170,7 @@
     <Compile Include="Transport\CompactMeasurement.cs" />
     <Compile Include="Transport\IClientSubscription.cs" />
     <Compile Include="Transport\SignalIndexCache.cs" />
+    <Compile Include="Transport\SourceDevice.cs" />
     <Compile Include="Transport\SubscriptionInfo.cs" />
     <Compile Include="Transport\SynchronizedClientSubscription.cs" />
     <Compile Include="Transport\TemporalClientSubscriptionProxy.cs" />

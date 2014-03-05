@@ -26,6 +26,7 @@
 //
 //******************************************************************************************************
 
+using System.Text.RegularExpressions;
 using GSF.Collections;
 using GSF.Communication;
 using GSF.Configuration;
@@ -131,7 +132,213 @@ namespace GSF.TimeSeries.Transport
             #endregion
         }
 
+        private class SubscribedDevice : IDevice, IDisposable
+        {
+            #region [ Members ]
+
+            // Fields
+            private readonly string m_name;
+
+            private Guid m_statusFlagsID;
+            private Guid m_frequencyID;
+            private Guid m_deltaFrequencyID;
+
+            private long m_dataQualityErrors;
+            private long m_timeQualityErrors;
+            private long m_deviceErrors;
+            private long m_measurementsReceived;
+            private double m_measurementsExpected;
+
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            public SubscribedDevice(string name)
+            {
+                if ((object)name == null)
+                    throw new ArgumentNullException("name");
+
+                m_name = name;
+                StatisticsEngine.Register(this, name, "Device", "PMU");
+            }
+
+            /// <summary>
+            /// Releases the unmanaged resources before the <see cref="SubscribedDevice"/> object is reclaimed by <see cref="GC"/>.
+            /// </summary>
+            ~SubscribedDevice()
+            {
+                Unregister();
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            public string Name
+            {
+                get
+                {
+                    return m_name;
+                }
+            }
+
+            public Guid StatusFlagsID
+            {
+                get
+                {
+                    return m_statusFlagsID;
+                }
+                set
+                {
+                    m_statusFlagsID = value;
+                }
+            }
+
+            public Guid FrequencyID
+            {
+                get
+                {
+                    return m_frequencyID;
+                }
+                set
+                {
+                    m_frequencyID = value;
+                }
+            }
+
+            public Guid DeltaFrequencyID
+            {
+                get
+                {
+                    return m_deltaFrequencyID;
+                }
+                set
+                {
+                    m_deltaFrequencyID = value;
+                }
+            }
+
+            public long DataQualityErrors
+            {
+                get
+                {
+                    return Interlocked.Read(ref m_dataQualityErrors);
+                }
+                set
+                {
+                    Interlocked.Exchange(ref m_dataQualityErrors, value);
+                }
+            }
+
+            public long TimeQualityErrors
+            {
+                get
+                {
+                    return Interlocked.Read(ref m_timeQualityErrors);
+                }
+                set
+                {
+                    Interlocked.Exchange(ref m_timeQualityErrors, value);
+                }
+            }
+
+            public long DeviceErrors
+            {
+                get
+                {
+                    return Interlocked.Read(ref m_deviceErrors);
+                }
+                set
+                {
+                    Interlocked.Exchange(ref m_deviceErrors, value);
+                }
+            }
+
+            public long MeasurementsReceived
+            {
+                get
+                {
+                    return Interlocked.Read(ref m_measurementsReceived);
+                }
+                set
+                {
+                    Interlocked.Exchange(ref m_measurementsReceived, value);
+                }
+            }
+
+            public long MeasurementsExpected
+            {
+                get
+                {
+                    return (long)Interlocked.CompareExchange(ref m_measurementsExpected, 0.0D, 0.0D);
+                }
+                set
+                {
+                    Interlocked.Exchange(ref m_measurementsExpected, value);
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            public override bool Equals(object obj)
+            {
+                SubscribedDevice subscribedDevice = obj as SubscribedDevice;
+                return (object)subscribedDevice != null && m_name.Equals(subscribedDevice.m_name);
+            }
+
+            public override int GetHashCode()
+            {
+                return m_name.GetHashCode();
+            }
+
+            /// <summary>
+            /// Releases all the resources used by the <see cref="SubscribedDevice"/> object.
+            /// </summary>
+            public void Dispose()
+            {
+                Unregister();
+                GC.SuppressFinalize(this);
+            }
+
+            private void Unregister()
+            {
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        StatisticsEngine.Unregister(this);
+                    }
+                    finally
+                    {
+                        m_disposed = true;  // Prevent duplicate dispose.
+                    }
+                }
+            }
+
+            #endregion
+        }
+
         // Constants
+
+        /// <summary>
+        /// Defines default value for <see cref="DataSubscriber.OperationalModes"/>.
+        /// </summary>
+        public const OperationalModes DefaultOperationalModes = OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData | OperationalModes.ReceiveInternalMetadata | OperationalModes.UseCommonSerializationFormat;
+
+        /// <summary>
+        /// Defines the default value for the <see cref="MetadataSynchronizationTimeout"/> property.
+        /// </summary>
+        public const int DefaultMetadataSynchronizationTimeout = 0;
+
+        /// <summary>
+        /// Defines the default value for the <see cref="UseTransactionForMetadata"/> property.
+        /// </summary>
+        public const bool DefaultUseTransactionForMetadata = true;
+
         private const int EvenKey = 0;      // Even key/IV index
         private const int OddKey = 1;       // Odd key/IV index
         private const int KeyIndex = 0;     // Index of cipher key component in keyIV array
@@ -191,22 +398,10 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public event EventHandler ServerConfigurationChanged;
 
-        /// <summary>
-        /// Defines default value for <see cref="DataSubscriber.OperationalModes"/>.
-        /// </summary>
-        public const OperationalModes DefaultOperationalModes = OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData | OperationalModes.ReceiveInternalMetadata | OperationalModes.UseCommonSerializationFormat;
-
-        /// <summary>
-        /// Defines the default value for the <see cref="MetadataSynchronizationTimeout"/> property.
-        /// </summary>
-        public const int DefaultMetadataSynchronizationTimeout = 0;
-
-        /// <summary>
-        /// Defines the default value for the <see cref="UseTransactionForMetadata"/> property.
-        /// </summary>
-        public const bool DefaultUseTransactionForMetadata = true;
-
         // Fields
+        private volatile Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> m_subscribedDevicesLookup;
+        private volatile List<DeviceStatisticsHelper<SubscribedDevice>> m_statisticsHelpers;
+        private SynchronizedOperation m_registerStatisticsOperation;
         private IClient m_commandChannel;
         private UdpClient m_dataChannel;
         private LocalConcentrator m_localConcentrator;
@@ -253,6 +448,8 @@ namespace GSF.TimeSeries.Transport
         private readonly List<BufferBlockMeasurement> m_bufferBlockCache;
         private uint m_expectedBufferBlockSequenceNumber;
 
+        private Timer m_subscribedDevicesTimer;
+
         private long m_lifetimeMeasurements;
         private long m_minimumMeasurementsPerSecond;
         private long m_maximumMeasurementsPerSecond;
@@ -281,6 +478,7 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public DataSubscriber()
         {
+            m_registerStatisticsOperation = new SynchronizedOperation(HandleDeviceStatisticsRegistration);
             m_requests = new List<ServerCommand>();
             m_synchronizeMetadataOperation = new SynchronizedOperation(SynchronizeMetadata);
             m_encoding = Encoding.Unicode;
@@ -700,6 +898,19 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        public override DataSet DataSource
+        {
+            get
+            {
+                return base.DataSource;
+            }
+            set
+            {
+                base.DataSource = value;
+                m_registerStatisticsOperation.RunOnce();
+            }
+        }
+
         /// <summary>
         /// Gets the status of this <see cref="DataSubscriber"/>.
         /// </summary>
@@ -956,6 +1167,13 @@ namespace GSF.TimeSeries.Transport
                         CommandChannel = null;
                         DataChannel = null;
                         DisposeLocalConcentrator();
+
+                        if ((object)m_subscribedDevicesTimer != null)
+                        {
+                            m_subscribedDevicesTimer.Elapsed -= SubscribedDevicesTimer_Elapsed;
+                            m_subscribedDevicesTimer.Dispose();
+                            m_subscribedDevicesTimer = null;
+                        }
                     }
                 }
                 finally
@@ -2081,6 +2299,10 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         protected override void AttemptConnection()
         {
+            long now = DateTime.UtcNow.Ticks;
+            List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
+
+            m_registerStatisticsOperation.RunOnceAsync();
             m_expectedBufferBlockSequenceNumber = 0u;
             m_commandChannelConnectionAttempts = 0;
             m_dataChannelConnectionAttempts = 0;
@@ -2091,6 +2313,20 @@ namespace GSF.TimeSeries.Transport
             m_totalBytesReceived = 0L;
             m_monitoredBytesReceived = 0L;
             m_lastBytesReceived = 0;
+
+            if ((object)m_subscribedDevicesTimer == null)
+            {
+                m_subscribedDevicesTimer = new Timer(1000.0D);
+                m_subscribedDevicesTimer.Elapsed += SubscribedDevicesTimer_Elapsed;
+            }
+
+            if ((object)statisticsHelpers != null)
+            {
+                foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in statisticsHelpers)
+                    statisticsHelper.Reset(now);
+            }
+
+            m_subscribedDevicesTimer.Start();
         }
 
         /// <summary>
@@ -2098,6 +2334,9 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         protected override void AttemptDisconnection()
         {
+            // Unregister device statistics
+            m_registerStatisticsOperation.RunOnceAsync();
+
             // Stop data stream monitor
             if ((object)m_dataStreamMonitor != null)
                 m_dataStreamMonitor.Enabled = false;
@@ -2105,6 +2344,9 @@ namespace GSF.TimeSeries.Transport
             // Disconnect command channel
             if ((object)m_commandChannel != null)
                 m_commandChannel.Disconnect();
+
+            if ((object)m_subscribedDevicesTimer != null)
+                m_subscribedDevicesTimer.Stop();
         }
 
         /// <summary>
@@ -2153,6 +2395,9 @@ namespace GSF.TimeSeries.Transport
             {
                 try
                 {
+                    Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup;
+                    DeviceStatisticsHelper<SubscribedDevice> statisticsHelper;
+
                     ServerResponse responseCode = (ServerResponse)buffer[0];
                     ServerCommand commandCode = (ServerCommand)buffer[1];
                     int responseLength = EndianOrder.BigEndian.ToInt32(buffer, 2);
@@ -2351,6 +2596,76 @@ namespace GSF.TimeSeries.Transport
                                 }
                             }
 
+                            // Calculate statistics
+                            subscribedDevicesLookup = m_subscribedDevicesLookup;
+                            statisticsHelper = null;
+
+                            if ((object)subscribedDevicesLookup != null)
+                            {
+                                IEnumerable<IGrouping<DeviceStatisticsHelper<SubscribedDevice>, IMeasurement>> deviceGroups = measurements
+                                    .Where(measurement => subscribedDevicesLookup.TryGetValue(measurement.ID, out statisticsHelper))
+                                    .Select(measurement => Tuple.Create(statisticsHelper, measurement))
+                                    .ToList()
+                                    .GroupBy(tuple => tuple.Item1, tuple => tuple.Item2);
+
+                                foreach (IGrouping<DeviceStatisticsHelper<SubscribedDevice>, IMeasurement> deviceGroup in deviceGroups)
+                                {
+                                    statisticsHelper = deviceGroup.Key;
+
+                                    foreach (IGrouping<Ticks, IMeasurement> frame in deviceGroup.GroupBy(measurement => measurement.Timestamp))
+                                    {
+                                        // Determine the number of measurements received with valid values
+                                        int measurementsReceived = frame.Count(measurement => !double.IsNaN(measurement.Value));
+
+                                        IMeasurement statusFlags = null;
+                                        IMeasurement frequency = null;
+                                        IMeasurement deltaFrequency = null;
+
+                                        // Search the frame for status flags, frequency, and delta frequency
+                                        foreach (IMeasurement measurement in frame)
+                                        {
+                                            if (measurement.ID == statisticsHelper.Device.StatusFlagsID)
+                                                statusFlags = measurement;
+                                            else if (measurement.ID == statisticsHelper.Device.FrequencyID)
+                                                frequency = measurement;
+                                            else if (measurement.ID == statisticsHelper.Device.DeltaFrequencyID)
+                                                deltaFrequency = measurement;
+                                        }
+
+                                        // If we are receiving status flags for this device,
+                                        // count the data quality, time quality, and device errors
+                                        if ((object)statusFlags != null)
+                                        {
+                                            uint commonStatusFlags = (uint)statusFlags.Value;
+
+                                            if ((commonStatusFlags & (uint)Bits.Bit19) > 0)
+                                                statisticsHelper.Device.DataQualityErrors++;
+
+                                            if ((commonStatusFlags & (uint)Bits.Bit18) > 0)
+                                                statisticsHelper.Device.TimeQualityErrors++;
+
+                                            if ((commonStatusFlags & (uint)Bits.Bit16) > 0)
+                                                statisticsHelper.Device.DeviceErrors++;
+
+                                            measurementsReceived--;
+                                        }
+
+                                        // Zero is not a valid value for frequency.
+                                        // If frequency is zero, invalidate both frequency and delta frequency
+                                        if ((object)frequency != null && frequency.Value == 0.0D)
+                                        {
+                                            if ((object)deltaFrequency != null)
+                                                measurementsReceived -= 2;
+                                            else
+                                                measurementsReceived--;
+                                        }
+
+                                        // Track the number of measurements received
+                                        statisticsHelper.AddToMeasurementsReceived(measurementsReceived);
+                                    }
+                                }
+                            }
+
                             // Provide new measurements to local concentrator, if defined, otherwise directly expose them to the consumer
                             if ((object)m_localConcentrator != null)
                                 m_localConcentrator.SortMeasurements(measurements);
@@ -2367,6 +2682,7 @@ namespace GSF.TimeSeries.Transport
                             for (int x = 0; x < measurements.Count; x++)
                             {
                                 long latency = timeReceived - (long)measurements[x].Timestamp;
+
                                 if (m_lifetimeMinimumLatency > latency || m_lifetimeMinimumLatency == 0)
                                     m_lifetimeMinimumLatency = latency;
 
@@ -2458,6 +2774,7 @@ namespace GSF.TimeSeries.Transport
                             // Deserialize new signal index cache
                             m_remoteSignalIndexCache = DeserializeSignalIndexCache(buffer.BlockCopy(responseIndex, responseLength));
                             m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
+                            FixExpectedMeasurementCounts();
                             break;
                         case ServerResponse.UpdateBaseTimes:
                             // Get active time index
@@ -3303,6 +3620,202 @@ namespace GSF.TimeSeries.Transport
                 Start();
         }
 
+        private void HandleDeviceStatisticsRegistration()
+        {
+            if (Enabled)
+                RegisterDeviceStatistics();
+            else
+                UnregisterDeviceStatistics();
+        }
+
+        private void RegisterDeviceStatistics()
+        {
+            long now = DateTime.UtcNow.Ticks;
+
+            Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup;
+            List<DeviceStatisticsHelper<SubscribedDevice>> subscribedDevices;
+            ISet<string> subscribedDeviceNames;
+            ISet<string> definedDeviceNames;
+
+            DataSet dataSource;
+            DataRow[] measurementRows;
+            Guid signalID;
+
+            try
+            {
+                dataSource = DataSource;
+
+                if (!dataSource.Tables.Contains("InputStreamDevices"))
+                {
+                    foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in m_statisticsHelpers)
+                        statisticsHelper.Device.Dispose();
+
+                    m_statisticsHelpers = new List<DeviceStatisticsHelper<SubscribedDevice>>();
+                }
+                else
+                {
+                    subscribedDevicesLookup = new Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>>();
+                    subscribedDevices = new List<DeviceStatisticsHelper<SubscribedDevice>>();
+                    subscribedDeviceNames = new HashSet<string>();
+                    definedDeviceNames = new HashSet<string>();
+
+                    foreach (DataRow deviceRow in dataSource.Tables["InputStreamDevices"].Select(string.Format("ParentID = {0}", ID)))
+                        definedDeviceNames.Add(string.Format("LOCAL${0}", deviceRow["Acronym"].ToNonNullString()));
+
+                    if ((object)m_statisticsHelpers != null)
+                    {
+                        foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in m_statisticsHelpers)
+                        {
+                            if (definedDeviceNames.Contains(statisticsHelper.Device.Name))
+                            {
+                                subscribedDevices.Add(statisticsHelper);
+                                subscribedDeviceNames.Add(statisticsHelper.Device.Name);
+                            }
+                            else
+                            {
+                                statisticsHelper.Device.Dispose();
+                            }
+                        }
+                    }
+
+                    foreach (string definedDeviceName in definedDeviceNames)
+                    {
+                        if (!subscribedDeviceNames.Contains(definedDeviceName))
+                        {
+                            DeviceStatisticsHelper<SubscribedDevice> statisticsHelper = new DeviceStatisticsHelper<SubscribedDevice>(new SubscribedDevice(definedDeviceName));
+                            subscribedDevices.Add(statisticsHelper);
+                            statisticsHelper.Reset(now);
+                        }
+                    }
+
+                    if (dataSource.Tables.Contains("ActiveMeasurements"))
+                    {
+                        foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in subscribedDevices)
+                        {
+                            measurementRows = dataSource.Tables["ActiveMeasurements"]
+                                .Select(string.Format("SignalReference LIKE '{0}-%' AND SignalType <> 'STAT'", Regex.Replace(statisticsHelper.Device.Name, @"^LOCAL\$", "")));
+
+                            foreach (DataRow measurementRow in measurementRows)
+                            {
+                                if (Guid.TryParse(measurementRow["SignalID"].ToNonNullString(), out signalID))
+                                {
+                                    subscribedDevicesLookup.Add(signalID, statisticsHelper);
+
+                                    switch (measurementRow["SignalType"].ToNonNullString())
+                                    {
+                                        case "FLAG":
+                                            statisticsHelper.Device.StatusFlagsID = signalID;
+                                            break;
+
+                                        case "FREQ":
+                                            statisticsHelper.Device.FrequencyID = signalID;
+                                            break;
+
+                                        case "DFDT":
+                                            statisticsHelper.Device.DeltaFrequencyID = signalID;
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    m_subscribedDevicesLookup = subscribedDevicesLookup;
+                    m_statisticsHelpers = subscribedDevices;
+                }
+
+                FixExpectedMeasurementCounts();
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Unable to register device statistics due to exception: {0}", ex.Message), ex));
+            }
+        }
+
+        private void UnregisterDeviceStatistics()
+        {
+            try
+            {
+                if ((object)m_statisticsHelpers != null)
+                {
+                    foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in m_statisticsHelpers)
+                        statisticsHelper.Device.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Unable to unregister device statistics due to exception: {0}", ex.Message), ex));
+            }
+        }
+
+        private void FixExpectedMeasurementCounts()
+        {
+            Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> subscribedDevicesLookup = m_subscribedDevicesLookup;
+            List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
+            DeviceStatisticsHelper<SubscribedDevice> statisticsHelper;
+
+            SignalIndexCache signalIndexCache = m_signalIndexCache;
+            DataSet dataSource = DataSource;
+
+            DataTable measurementTable;
+            IEnumerable<IGrouping<DeviceStatisticsHelper<SubscribedDevice>, Guid>> groups;
+
+            try
+            {
+                if ((object)statisticsHelpers == null || (object)subscribedDevicesLookup == null)
+                    return;
+
+                if ((object)signalIndexCache == null)
+                    return;
+
+                if ((object)dataSource == null || !dataSource.Tables.Contains("ActiveMeasurements"))
+                    return;
+
+                measurementTable = dataSource.Tables["ActiveMeasurements"];
+
+                if (!measurementTable.Columns.Contains("FramesPerSecond"))
+                    return;
+
+                // Get expected measurement counts
+                groups = signalIndexCache.AuthorizedSignalIDs
+                    .Where(signalID => subscribedDevicesLookup.TryGetValue(signalID, out statisticsHelper))
+                    .Select(signalID => Tuple.Create(subscribedDevicesLookup[signalID], signalID))
+                    .ToList()
+                    .GroupBy(tuple => tuple.Item1, tuple => tuple.Item2);
+
+                foreach (IGrouping<DeviceStatisticsHelper<SubscribedDevice>, Guid> group in groups)
+                {
+                    group.Key.ExpectedMeasurementsPerSecond = group
+                        .Select(signalID => GetFramesPerSecond(measurementTable, signalID))
+                        .Sum();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Unable to set expected measurement counts for gathering statistics due to exception: {0}", ex.Message), ex));
+            }
+        }
+
+        private int GetFramesPerSecond(DataTable measurementTable, Guid signalID)
+        {
+            DataRow row = measurementTable.Select(string.Format("SignalID = '{0}'", signalID)).FirstOrDefault();
+
+            if ((object)row != null)
+            {
+                switch (row.Field<string>("SignalType").ToUpperInvariant())
+                {
+                    case "FLAG":
+                    case "STAT":
+                        return 0;
+
+                    default:
+                        return row.ConvertField<int>("FramesPerSecond");
+                }
+            }
+
+            return 0;
+        }
+
         // This method is called when connection has been authenticated
         private void DataSubscriber_ConnectionAuthenticated(object sender, EventArgs e)
         {
@@ -3554,6 +4067,15 @@ namespace GSF.TimeSeries.Transport
             m_maximumMeasurementsPerSecond = 0L;
             m_totalMeasurementsPerSecond = 0L;
             m_measurementsPerSecondCount = 0L;
+        }
+
+        private void SubscribedDevicesTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        {
+            long now = DateTime.UtcNow.Ticks;
+            List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
+
+            foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in statisticsHelpers)
+                statisticsHelper.Update(now);
         }
 
         private bool SynchronizedMetadataChanged(DataSet newSynchronizedMetadata)
