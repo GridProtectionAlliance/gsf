@@ -1,0 +1,129 @@
+﻿<UserControl x:Class="GSF.TimeSeries.UI.UserControls.DataQualityReportUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignHeight="650" d:DesignWidth="850"
+             xmlns:vm="clr-namespace:GSF.TimeSeries.UI.ViewModels"
+             Background="Transparent" Loaded="DataQualityReportUserControl_Loaded" Unloaded="DataQualityReportUserControl_Unloaded">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/GSF.TimeSeries.UI.WPF;Component/Resources/CommonResource.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <vm:DataQualityReportViewModel x:Key="ViewModel" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Center" DataContext="{StaticResource ViewModel}">
+        <StackPanel.Resources>
+            <Style TargetType="Button">
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="Width" Value="{StaticResource XSmallItemSize}" />
+                <Setter Property="Height" Value="27"/>
+                <Setter Property="Margin" Value="2"/>
+            </Style>
+        </StackPanel.Resources>
+        
+        <Border Width="{StaticResource XXXLargeItemSize}" CornerRadius="5" BorderThickness="2" Background="White" BorderBrush="Red" Visibility="{Binding ConnectivityMessageVisibility}">
+            <TextBlock HorizontalAlignment="Center">Unable to contact the service. Reporting services cannot be configured.</TextBlock>
+        </Border>
+
+        <GroupBox Padding="10" Margin="0,20,0,0" Header="Retrieve Reports" IsEnabled="{Binding ServiceConnected}">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Report Date" />
+                    <DatePicker Width="{StaticResource SmallItemSize}" Height="25" SelectedDate="{Binding Path=ReportDate, Mode=TwoWay}" SelectedDateFormat="Short">
+                        <DatePicker.Resources>
+                            <Style TargetType="Button" />
+                        </DatePicker.Resources>
+                    </DatePicker>
+                    <Button Width="{StaticResource SmallItemSize}" Margin="10,0" Content="Generate Report..." Command="{Binding GenerateReportCommand}" />
+                </StackPanel>
+
+                <TextBlock Margin="0,20,0,0" Width="450" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap">
+                        Report location should be a path on the server, relative to the service installation path or a fully qualified
+                        absolute path, where the service will be able to save the reports. Service user will need rights to this folder.
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="ReportLocation" />
+                    <TextBox Text="{Binding Path=ReportLocation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="{StaticResource XXLargeItemSize}" />
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox Padding="10" Margin="0,20,0,0" Header="Automatic Report Generation" IsEnabled="{Binding ServiceConnected}">
+            <StackPanel Orientation="Vertical">
+
+                <StackPanel Orientation="Horizontal" IsEnabled="{Binding ServiceConnected}">
+                    <Label>
+                        <Label.Style>
+                            <Style TargetType="{x:Type Label}">
+                                <Setter Property="Content" Value="Reporting is disabled."/>
+                                
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ReportingEnabled}" Value="True">
+                                        <Setter Property="Label.Content" Value="Reporting is enabled." />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Label.Style>
+                    </Label>
+
+                    <Button Width="{StaticResource XSmallItemSize}" Margin="10,0" Command="{Binding ChangeReportingEnabledCommand}">
+                        <Button.Style>
+                            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Content" Value="Enable"/>
+                                
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ReportingEnabled}" Value="True">
+                                        <Setter Property="Label.Content" Value="Disable" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" IsEnabled="{Binding ReportingEnabled}">
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Report Generation Time" VerticalContentAlignment="Center" />
+                        <TextBox Text="{Binding Path=ReportGenerationTimeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="{StaticResource XSmallItemSize}" />
+                        <Label Content="(HH:mm)" VerticalContentAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <StackPanel Margin="20,0" Orientation="Vertical">
+            <Label Margin="0,20,0,0" Padding="2" Content="Click update to apply the following changes." />
+
+            <StackPanel Orientation="Horizontal">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ReportingEnabled}" Value="True">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                
+                <Label Padding="2" Content="Report Generation Time = " />
+                <Label Padding="2" Content="{Binding ActualReportGenerationTimeText}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <Label Padding="2" Content="Report Location = " />
+                <Label Padding="2" Content="{Binding ReportLocation}" />
+            </StackPanel>
+
+            <Button Width="{StaticResource XSmallItemSize}" Content="Update" HorizontalAlignment="Left" Command="{Binding UpdateReportingConfigCommand}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

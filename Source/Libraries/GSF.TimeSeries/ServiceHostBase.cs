@@ -128,6 +128,7 @@ namespace GSF.TimeSeries
         private Timer m_gcCollectTimer;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
+        private DataQualityReportingProcess m_dataQualityReportingProcess;
         private SynchronizedOperation m_configurationCacheOperation;
         private volatile DataSet m_latestConfiguration;
         private object m_systemConfigurationLoadLock;
@@ -500,9 +501,17 @@ namespace GSF.TimeSeries
             m_statusExporter.ProcessException += m_iaonSession.ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
 
+            // Create reporting process
+            m_dataQualityReportingProcess = new DataQualityReportingProcess();
+            m_dataQualityReportingProcess.SettingsCategory = "DataQualityReporting";
+            m_dataQualityReportingProcess.PersistSettings = true;
+            m_dataQualityReportingProcess.LoadSettings();
+            m_serviceHelper.ServiceComponents.Add(m_dataQualityReportingProcess);
+
             // Define scheduled service processes
             m_serviceHelper.AddScheduledProcess(HealthMonitorProcessHandler, "HealthMonitor", "* * * * *");    // Every minute
             m_serviceHelper.AddScheduledProcess(StatusExportProcessHandler, "StatusExport", "*/30 * * * *");   // Every 30 minutes
+            m_serviceHelper.AddProcess(ReportingProcessHandler, "Reporting");                                  // Unscheduled
 
             // Add key Iaon collections as service components
             m_serviceHelper.ServiceComponents.Add(m_iaonSession.InputAdapters);
@@ -522,6 +531,8 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Restart", "Attempts to restart the host service", RestartServiceHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RefreshRoutes", "Spawns request to recalculate routing tables", RefreshRoutesRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TemporalSupport", "Determines if any adapters support temporal processing", TemporalSupportRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GenerateReport", "Generates a report for the specified date", GenerateReportRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReportingConfig", "Displays or modifies the configuration of the reporting process", ReportingConfigRequestHandler, false));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("LogEvent", "Logs remote event log entries.", LogEventRequestHandler, false));
 
             try
@@ -577,6 +588,12 @@ namespace GSF.TimeSeries
                 m_statusExporter.ProcessException -= m_iaonSession.ProcessExceptionHandler;
             }
             m_statusExporter = null;
+
+            // Dispose reporting process
+            if (m_dataQualityReportingProcess != null)
+                m_serviceHelper.ServiceComponents.Remove(m_dataQualityReportingProcess);
+
+            m_dataQualityReportingProcess = null;
 
             // Dispose Iaon session
             if (m_iaonSession != null)
@@ -1608,6 +1625,30 @@ namespace GSF.TimeSeries
             m_statusExporter.ExportData(m_serviceHelper.Status);
         }
 
+        /// <summary>
+        /// Event handler for scheduled reporting services.
+        /// </summary>
+        /// <param name="name">Scheduled event name.</param>
+        /// <param name="parameters">Scheduled event parameters.</param>
+        protected virtual void ReportingProcessHandler(string name, object[] parameters)
+        {
+            try
+            {
+                DataQualityReportingProcess dataQualityReportingProcess = m_dataQualityReportingProcess;
+
+                lock (dataQualityReportingProcess)
+                {
+                    dataQualityReportingProcess.ReportDate = DateTime.Now - TimeSpan.FromDays(1);
+                    dataQualityReportingProcess.Execute();
+                }
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to generate report for {0:yyyy-MM-dd} due to exception: {1}", UpdateType.Alarm, m_dataQualityReportingProcess.ReportDate, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+            }
+        }
+
         #endregion
 
         #region [ Remote Client Request Handlers ]
@@ -2266,6 +2307,174 @@ namespace GSF.TimeSeries
                     else
                     {
                         SendResponse(requestInfo, false, "Failed to load system configuration.");
+                    }
+                }
+            }
+        }
+
+        private void GenerateReportRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Generates a report for the specified date.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       GenerateReport [ReportDate] [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   ReportDate:".PadRight(20));
+                helpMessage.Append("Date of the report to be generated (yyyy-MM-dd), or yesterday if not specified");
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                DataQualityReportingProcess dataQualityReportingProcess;
+                DateTime reportDate;
+                string reportPath;
+
+                try
+                {
+                    dataQualityReportingProcess = m_dataQualityReportingProcess;
+
+                    if ((object)dataQualityReportingProcess != null)
+                    {
+                        if (!requestInfo.Request.Arguments.Exists("OrderedArg1") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg1"], out reportDate))
+                            reportDate = DateTime.Now - TimeSpan.FromDays(1);
+
+                        lock (dataQualityReportingProcess)
+                        {
+                            dataQualityReportingProcess.ReportDate = reportDate;
+                            reportPath = Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, dataQualityReportingProcess.ReportDate));
+
+                            if (!File.Exists(reportPath))
+                                dataQualityReportingProcess.Execute();
+
+                            if (File.Exists(reportPath))
+                                SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), "Report was successfully generated.");
+                            else
+                                SendResponse(requestInfo, false, "Reporting process failed silently.");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SendResponse(requestInfo, false, "Unable to generate report due to exception: {0}", ex.Message);
+                }
+            }
+        }
+
+        private void ReportingConfigRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Displays or modifies the configuration of the reporting process.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ReportingConfig [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -get".PadRight(20));
+                helpMessage.Append("Gets the configuration of the reporting process as command-line arguments");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -set Args".PadRight(20));
+                helpMessage.Append("Sets the configuration of the reporting process using the given command-line arguments");
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                DataQualityReportingProcess dataQualityReportingProcess = m_dataQualityReportingProcess;
+
+                string arg;
+                double threshold;
+
+                if ((object)dataQualityReportingProcess == null)
+                    return;
+
+                if (requestInfo.Request.Arguments.Exists("get") || !requestInfo.Request.Arguments.Exists("set"))
+                {
+
+                    try
+                    {
+                        lock (dataQualityReportingProcess)
+                        {
+                            SendResponse(requestInfo, true, dataQualityReportingProcess.GetArguments());
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        SendResponse(requestInfo, false, "Unable to send reporting configuration due to exception: {0}", ex.Message);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        lock (dataQualityReportingProcess)
+                        {
+                            arg = requestInfo.Request.Arguments["reportLocation"];
+
+                            if ((object)arg != null)
+                                dataQualityReportingProcess.ReportLocation = arg.Trim();
+
+                            arg = requestInfo.Request.Arguments["titleText"];
+
+                            if ((object)arg != null)
+                                dataQualityReportingProcess.Title = arg.Trim();
+
+                            arg = requestInfo.Request.Arguments["companyText"];
+
+                            if ((object)arg != null)
+                                dataQualityReportingProcess.Company = arg.Trim();
+
+                            arg = requestInfo.Request.Arguments["level4Threshold"];
+
+                            if ((object)arg != null && double.TryParse(arg.Trim(), out threshold))
+                                dataQualityReportingProcess.Level4Threshold = threshold;
+
+                            arg = requestInfo.Request.Arguments["level3Threshold"];
+
+                            if ((object)arg != null && double.TryParse(arg.Trim(), out threshold))
+                                dataQualityReportingProcess.Level3Threshold = threshold;
+
+                            arg = requestInfo.Request.Arguments["level4Alias"];
+
+                            if ((object)arg != null)
+                                dataQualityReportingProcess.Level4Alias = arg.Trim();
+
+                            arg = requestInfo.Request.Arguments["level3Alias"];
+
+                            if ((object)arg != null)
+                                dataQualityReportingProcess.Level3Alias = arg.Trim();
+
+                            dataQualityReportingProcess.SaveSettings();
+                            SendResponse(requestInfo, true, "Reporting configuration saved successfully.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        SendResponse(requestInfo, false, "Unable to save settings reporting configuration due to exception: {0}", ex.Message);
                     }
                 }
             }

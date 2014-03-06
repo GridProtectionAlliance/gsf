@@ -135,6 +135,7 @@
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="PrecisionInputTimer.cs" />
+    <Compile Include="DataQualityReportingProcess.cs" />
     <Compile Include="ServiceClientBase.cs" />
     <Compile Include="Statistics\DeviceStatistics.cs" />
     <Compile Include="Statistics\DeviceStatisticsHelper.cs" />

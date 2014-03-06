@@ -506,7 +506,7 @@ namespace StatHistorianReportGenerator
 
             // Get the text for the labels in the first column of the table
             labelText = new string[] { "" }
-                .Concat(Enumerable.Range(0, 5).Select(level => string.Format("{0} (L{1})", levelAliases[level], level)).Reverse())
+                .Concat(Enumerable.Range(0, 5).Select(level => string.Format("L{0}: {1}", level, levelAliases[level])).Reverse())
                 .Concat(new string[] { "Total" })
                 .ToArray();
 
@@ -689,9 +689,9 @@ namespace StatHistorianReportGenerator
             string definitionsText = string.Format("Level 4: {0} - Devices which are reporting as expected, with an availability of at least {1:0.##}% on the report date.", m_level4Alias, m_level4Threshold) + Environment.NewLine +
                 string.Format("Level 3: {0} - Devices with an availability of at least {1:0.##}% on the report date.", m_level3Alias, m_level3Threshold) + Environment.NewLine +
                 string.Format("Level 2: Poor - Devices which reported on the report date, but had an availability below {0:0.##}%.", m_level3Threshold) + Environment.NewLine +
-                "Level 1: Offline - Devices which did not report on the report date, but have reported some time during the 30 days prior to the report date." + Environment.NewLine +
+                "Level 1: Offline - Devices which did not report on the report date, but have reported at some time during the 30 days prior to the report date." + Environment.NewLine +
                 "Level 0: Failed - Devices which have not reported during the 30 days prior to the report date." + Environment.NewLine +
-                "Availability: Percentage of the number of measurements received from a device over the total number of measurements that were expected to be received from the device." + Environment.NewLine +
+                "Availability: Percentage of measurements received over total measurements expected, per device." + Environment.NewLine +
                 "Acceptable Quality: Devices which are in Level 4 or Level 3.";
 
             // Break the definitions text into lines
@@ -726,7 +726,8 @@ namespace StatHistorianReportGenerator
                     if (font.rGetTextWidthMM(builder.ToString()) > FooterWidthMillimeters)
                     {
                         page.AddMM(PageMarginMillimeters, verticalMillimeters + font.rSizeMM, new RepString(font, builder.ToString(0, lengthWithoutWord)));
-                        builder.Remove(0, lengthWithoutWord + 1);
+                        builder.Remove(0, lengthWithoutWord);
+                        builder.Insert(0, "             ");
                         verticalMillimeters += lineHeightMillimeters;
                     }
                 }

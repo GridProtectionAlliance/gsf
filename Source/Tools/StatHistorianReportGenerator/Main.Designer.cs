@@ -28,8 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.ReportTimeLabel = new System.Windows.Forms.Label();
-            this.ReportTimeDateTimePicker = new System.Windows.Forms.DateTimePicker();
+            this.ReportDateLabel = new System.Windows.Forms.Label();
+            this.ReportDateDateTimePicker = new System.Windows.Forms.DateTimePicker();
             this.GenerateReportButton = new System.Windows.Forms.Button();
             this.TitleTextLabel = new System.Windows.Forms.Label();
             this.TitleTextTextBox = new System.Windows.Forms.TextBox();
@@ -47,23 +47,23 @@
             this.Level3AliasLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // ReportTimeLabel
+            // ReportDateLabel
             // 
-            this.ReportTimeLabel.AutoSize = true;
-            this.ReportTimeLabel.Location = new System.Drawing.Point(23, 94);
-            this.ReportTimeLabel.Name = "ReportTimeLabel";
-            this.ReportTimeLabel.Size = new System.Drawing.Size(65, 13);
-            this.ReportTimeLabel.TabIndex = 0;
-            this.ReportTimeLabel.Text = "Report Time";
+            this.ReportDateLabel.AutoSize = true;
+            this.ReportDateLabel.Location = new System.Drawing.Point(23, 94);
+            this.ReportDateLabel.Name = "ReportDateLabel";
+            this.ReportDateLabel.Size = new System.Drawing.Size(65, 13);
+            this.ReportDateLabel.TabIndex = 0;
+            this.ReportDateLabel.Text = "Report Date";
             // 
-            // ReportTimeDateTimePicker
+            // ReportDateDateTimePicker
             // 
-            this.ReportTimeDateTimePicker.CustomFormat = "dd/MM/yyyy";
-            this.ReportTimeDateTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.ReportTimeDateTimePicker.Location = new System.Drawing.Point(96, 92);
-            this.ReportTimeDateTimePicker.Name = "ReportTimeDateTimePicker";
-            this.ReportTimeDateTimePicker.Size = new System.Drawing.Size(142, 20);
-            this.ReportTimeDateTimePicker.TabIndex = 2;
+            this.ReportDateDateTimePicker.CustomFormat = "dd/MM/yyyy";
+            this.ReportDateDateTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.ReportDateDateTimePicker.Location = new System.Drawing.Point(96, 92);
+            this.ReportDateDateTimePicker.Name = "ReportDateDateTimePicker";
+            this.ReportDateDateTimePicker.Size = new System.Drawing.Size(142, 20);
+            this.ReportDateDateTimePicker.TabIndex = 2;
             // 
             // GenerateReportButton
             // 
@@ -217,8 +217,8 @@
             this.Controls.Add(this.TitleTextTextBox);
             this.Controls.Add(this.TitleTextLabel);
             this.Controls.Add(this.GenerateReportButton);
-            this.Controls.Add(this.ReportTimeDateTimePicker);
-            this.Controls.Add(this.ReportTimeLabel);
+            this.Controls.Add(this.ReportDateDateTimePicker);
+            this.Controls.Add(this.ReportDateLabel);
             this.Name = "Main";
             this.Text = "STAT Historian Report Generator";
             this.Load += new System.EventHandler(this.Main_Load);
@@ -229,8 +229,8 @@
 
         #endregion
 
-        private System.Windows.Forms.Label ReportTimeLabel;
-        private System.Windows.Forms.DateTimePicker ReportTimeDateTimePicker;
+        private System.Windows.Forms.Label ReportDateLabel;
+        private System.Windows.Forms.DateTimePicker ReportDateDateTimePicker;
         private System.Windows.Forms.Button GenerateReportButton;
         private System.Windows.Forms.Label TitleTextLabel;
         private System.Windows.Forms.TextBox TitleTextTextBox;

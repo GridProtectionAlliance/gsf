@@ -59,7 +59,7 @@ namespace StatHistorianReportGenerator
 
         private void Main_Load(object sender, EventArgs e)
         {
-            ReportTimeDateTimePicker.Value = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd"));
+            ReportDateDateTimePicker.Value = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd"));
         }
 
         private void GenerateReportButton_Click(object sender, EventArgs e)
@@ -79,7 +79,7 @@ namespace StatHistorianReportGenerator
                     {
                         TitleText = TitleTextTextBox.Text,
                         CompanyText = CompanyTextTextBox.Text,
-                        ReportDate = ReportTimeDateTimePicker.Value,
+                        ReportDate = ReportDateDateTimePicker.Value,
                         Level4Alias = Level4AliasTextBox.Text,
                         Level3Alias = Level3AliasTextBox.Text
                     };

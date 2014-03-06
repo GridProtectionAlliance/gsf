@@ -23,7 +23,7 @@ namespace StatHistorianReportGenerator
 
             string reportLocation = "";
             string reportFileName = "";
-            DateTime reportTime;
+            DateTime reportDate;
             double threshold;
 
             if (Environment.GetCommandLineArgs().Length > 1)
@@ -35,7 +35,7 @@ namespace StatHistorianReportGenerator
                     reportGenerator.ArchiveLocation = arg;
 
                 if (TryGetValue(args, "reportLocation", out arg))
-                    reportLocation = FilePath.GetAbsolutePath(arg);
+                    reportLocation = arg;
 
                 if (TryGetValue(args, "reportFileName", out arg))
                     reportFileName = arg;
@@ -46,8 +46,8 @@ namespace StatHistorianReportGenerator
                 if (TryGetValue(args, "company", out arg))
                     reportGenerator.CompanyText = arg;
 
-                if (TryGetValue(args, "reportTime", out arg) && DateTime.TryParse(arg, out reportTime))
-                    reportGenerator.ReportDate = reportTime;
+                if (TryGetValue(args, "reportDate", out arg) && DateTime.TryParse(arg, out reportDate))
+                    reportGenerator.ReportDate = reportDate;
 
                 if (TryGetValue(args, "level4Threshold", out arg) && double.TryParse(arg, out threshold))
                     reportGenerator.Level4Threshold = threshold;
@@ -64,6 +64,11 @@ namespace StatHistorianReportGenerator
                 if (string.IsNullOrEmpty(reportFileName))
                     reportFileName = string.Format("{0} {1:yyyy-MM-dd}.pdf", reportGenerator.TitleText, reportGenerator.ReportDate);
 
+                reportLocation = FilePath.GetAbsolutePath(reportLocation);
+
+                if (!Directory.Exists(reportLocation))
+                    Directory.CreateDirectory(reportLocation);
+
                 reportGenerator.GenerateReport().Save(Path.Combine(reportLocation, reportFileName));
             }
             else
@@ -77,7 +82,14 @@ namespace StatHistorianReportGenerator
         private static bool TryGetValue(Arguments args, string arg, out string value)
         {
             value = args[arg];
-            return (object)value != null;
+
+            if ((object)value != null)
+            {
+                value = value.Trim();
+                return true;
+            }
+
+            return false;
         }
     }
 }
