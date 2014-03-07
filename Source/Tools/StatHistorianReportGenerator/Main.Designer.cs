@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.ReportDateLabel = new System.Windows.Forms.Label();
             this.ReportDateDateTimePicker = new System.Windows.Forms.DateTimePicker();
             this.GenerateReportButton = new System.Windows.Forms.Button();
@@ -219,6 +220,7 @@
             this.Controls.Add(this.GenerateReportButton);
             this.Controls.Add(this.ReportDateDateTimePicker);
             this.Controls.Add(this.ReportDateLabel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Main";
             this.Text = "STAT Historian Report Generator";
             this.Load += new System.EventHandler(this.Main_Load);
