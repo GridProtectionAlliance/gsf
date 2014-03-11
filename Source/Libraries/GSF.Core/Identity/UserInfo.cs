@@ -855,12 +855,12 @@ namespace GSF.Identity
                 if (string.Compare(Thread.CurrentPrincipal.Identity.Name, LoginID, StringComparison.OrdinalIgnoreCase) == 0)
                     userIsAuthenticated = Thread.CurrentPrincipal.Identity.IsAuthenticated;
 
+                // Only enumerate groups
+                root.Children.SchemaFilter.Add("Group");
+
                 // Have to scan each local group for the AD user...
                 foreach (DirectoryEntry groupEntry in root.Children)
                 {
-                    if (groupEntry.SchemaClassName != "Group")
-                        continue;
-
                     if ((bool)groupEntry.Invoke("IsMember", new object[] { userPath }) ||
                         (userIsAuthenticated && (bool)groupEntry.Invoke("IsMember", new object[] { authenticatedUsersGroupPath })))
                     {
