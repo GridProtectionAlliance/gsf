@@ -2355,7 +2355,7 @@ namespace GSF.TimeSeries
                         lock (dataQualityReportingProcess)
                         {
                             dataQualityReportingProcess.ReportDate = reportDate;
-                            reportPath = Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, dataQualityReportingProcess.ReportDate));
+                            reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, dataQualityReportingProcess.ReportDate)));
 
                             if (!File.Exists(reportPath))
                                 dataQualityReportingProcess.Execute();
