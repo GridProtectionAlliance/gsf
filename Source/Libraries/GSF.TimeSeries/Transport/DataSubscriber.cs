@@ -3645,10 +3645,13 @@ namespace GSF.TimeSeries.Transport
             {
                 dataSource = DataSource;
 
-                if (!dataSource.Tables.Contains("InputStreamDevices"))
+                if ((object)dataSource == null || !dataSource.Tables.Contains("InputStreamDevices"))
                 {
-                    foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in m_statisticsHelpers)
-                        statisticsHelper.Device.Dispose();
+                    if ((object)m_statisticsHelpers != null)
+                    {
+                        foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in m_statisticsHelpers)
+                            statisticsHelper.Device.Dispose();
+                    }
 
                     m_statisticsHelpers = new List<DeviceStatisticsHelper<SubscribedDevice>>();
                 }
