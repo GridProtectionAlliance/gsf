@@ -323,8 +323,8 @@ namespace StatHistorianReportGenerator
                 };
 
                 // Set up and open the statistics reader
-                statisticsReader.StartTime = startTime;
-                statisticsReader.EndTime = endTime;
+                statisticsReader.StartTime = startTime.ToUniversalTime();
+                statisticsReader.EndTime = endTime.ToUniversalTime();
                 statisticsReader.ArchiveFilePath = locator.ArchiveFilePath;
                 statisticsReader.MetadataFilePath = locator.MetadataFilePath;
                 statisticsReader.StateFilePath = locator.StateFilePath;

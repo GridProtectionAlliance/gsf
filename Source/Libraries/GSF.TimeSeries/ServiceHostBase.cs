@@ -2339,6 +2339,9 @@ namespace GSF.TimeSeries
             }
             else
             {
+                DateTime now = DateTime.Now;
+                DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
+
                 DataQualityReportingProcess dataQualityReportingProcess;
                 DateTime reportDate;
                 string reportPath;
@@ -2350,20 +2353,27 @@ namespace GSF.TimeSeries
                     if ((object)dataQualityReportingProcess != null)
                     {
                         if (!requestInfo.Request.Arguments.Exists("OrderedArg1") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg1"], out reportDate))
-                            reportDate = DateTime.Now - TimeSpan.FromDays(1);
+                            reportDate = today - TimeSpan.FromDays(1);
 
-                        lock (dataQualityReportingProcess)
+                        if (reportDate < today)
                         {
-                            dataQualityReportingProcess.ReportDate = reportDate;
-                            reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, dataQualityReportingProcess.ReportDate)));
+                            lock (dataQualityReportingProcess)
+                            {
+                                dataQualityReportingProcess.ReportDate = reportDate;
+                                reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, dataQualityReportingProcess.ReportDate)));
 
-                            if (!File.Exists(reportPath))
-                                dataQualityReportingProcess.Execute();
+                                if (!File.Exists(reportPath))
+                                    dataQualityReportingProcess.Execute();
 
-                            if (File.Exists(reportPath))
-                                SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), "Report was successfully generated.");
-                            else
-                                SendResponse(requestInfo, false, "Reporting process failed silently.");
+                                if (File.Exists(reportPath))
+                                    SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), "Report was successfully generated.");
+                                else
+                                    SendResponse(requestInfo, false, "Reporting process failed silently.");
+                            }
+                        }
+                        else
+                        {
+                            SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", now, reportDate, reportDate + TimeSpan.FromDays(1)));
                         }
                     }
                 }
