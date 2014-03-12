@@ -77,6 +77,7 @@ namespace GSF.TimeSeries.Transport
         private double m_publishInterval;
         private bool m_includeTime;
         private bool m_useMillisecondResolution;
+        private bool m_isNaNFiltered;
         private volatile long[] m_baseTimeOffsets;
         private volatile int m_timeIndex;
         private Timer m_baseTimeRotationTimer;
@@ -425,6 +426,11 @@ namespace GSF.TimeSeries.Transport
             else
                 m_useMillisecondResolution = false;
 
+            if (Settings.TryGetValue("requestNaNValueFilter", out setting))
+                m_isNaNFiltered = m_parent.AllowNaNValueFilter && setting.ParseBoolean();
+            else
+                m_isNaNFiltered = false;
+
             if (Settings.TryGetValue("bufferBlockRetransmissionTimeout", out setting))
                 m_bufferBlockRetransmissionTimeout = double.Parse(setting);
             else
@@ -538,6 +544,9 @@ namespace GSF.TimeSeries.Transport
 
                 m_parent.SendDataStartTime(m_clientID, timestamp);
             }
+
+            if (m_isNaNFiltered)
+                measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
 
             if (ProcessMeasurementFilter)
             {

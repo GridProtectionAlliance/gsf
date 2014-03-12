@@ -70,6 +70,7 @@ namespace GSF.TimeSeries.Transport
         private volatile bool m_usePayloadCompression;
         private volatile bool m_useCompactMeasurementFormat;
         private volatile bool m_startTimeSent;
+        private volatile bool m_isNaNFiltered;
         private IaonSession m_iaonSession;
 
         private readonly BlockAllocatedMemoryStream m_workingBuffer;
@@ -376,6 +377,11 @@ namespace GSF.TimeSeries.Transport
             else
                 m_bufferBlockRetransmissionTimeout = 5.0D;
 
+            if (Settings.TryGetValue("requestNaNValueFiltering", out setting))
+                m_isNaNFiltered = m_parent.AllowNaNValueFilter && setting.ParseBoolean();
+            else
+                m_isNaNFiltered = false;
+
             m_bufferBlockRetransmissionTimer = new Timer();
             m_bufferBlockRetransmissionTimer.AutoReset = false;
             m_bufferBlockRetransmissionTimer.Interval = m_bufferBlockRetransmissionTimeout * 1000.0D;
@@ -422,6 +428,9 @@ namespace GSF.TimeSeries.Transport
 
                 m_parent.SendDataStartTime(m_clientID, timestamp);
             }
+
+            if (m_isNaNFiltered)
+                measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
 
             if (ProcessMeasurementFilter)
             {

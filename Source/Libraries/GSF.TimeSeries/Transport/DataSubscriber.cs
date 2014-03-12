@@ -425,6 +425,7 @@ namespace GSF.TimeSeries.Transport
         private SecurityMode m_securityMode;
         private bool m_synchronizedSubscription;
         private bool m_useMillisecondResolution;
+        private bool m_requestNaNValueFilter;
         private bool m_autoConnect;
         private string m_metadataFilters;
         private string m_sharedSecret;
@@ -1266,6 +1267,10 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("useMillisecondResolution", out setting))
                 m_useMillisecondResolution = setting.ParseBoolean();
 
+            // Check if user wants to request that publisher remove NaN from the data stream to conserve bandwidth
+            if (settings.TryGetValue("requestNaNValueFilter", out setting))
+                m_requestNaNValueFilter = setting.ParseBoolean();
+
             // Check if user has defined any meta-data filter expressions
             if (settings.TryGetValue("metadataFilters", out setting))
                 m_metadataFilters = setting;
@@ -1591,6 +1596,7 @@ namespace GSF.TimeSeries.Transport
                 connectionString.AppendFormat("allowSortsByArrival={0};", info.AllowSortsByArrival);
                 connectionString.AppendFormat("timeResolution={0};", info.TimeResolution);
                 connectionString.AppendFormat("allowPreemptivePublishing={0};", info.AllowPreemptivePublishing);
+                connectionString.AppendFormat("requestNaNValueFilter={0};", info.RequestNaNValueFilter);
                 connectionString.AppendFormat("downsamplingMethod={0};", info.DownsamplingMethod.ToString());
                 connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
                 connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -1682,6 +1688,7 @@ namespace GSF.TimeSeries.Transport
             connectionString.AppendFormat("useLocalClockAsRealTime={0};", info.UseLocalClockAsRealTime);
             connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
             connectionString.AppendFormat("useMillisecondResolution={0};", info.UseMillisecondResolution);
+            connectionString.AppendFormat("requestNaNValueFilter={0};", info.RequestNaNValueFilter);
             connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(info.FilterExpression))
@@ -2040,6 +2047,7 @@ namespace GSF.TimeSeries.Transport
             connectionString.AppendFormat("timeConstraintParameters={0}; ", constraintParameters.ToNonNullString());
             connectionString.AppendFormat("processingInterval={0}; ", processingInterval);
             connectionString.AppendFormat("useMillisecondResolution={0}; ", m_useMillisecondResolution);
+            connectionString.AppendFormat("requestNaNValueFilter={0}; ", m_requestNaNValueFilter);
             connectionString.AppendFormat("assemblyInfo={{source={0}; version={1}.{2}.{3}; buildDate={4}}}", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (!string.IsNullOrWhiteSpace(waitHandleNames))

@@ -592,6 +592,16 @@ namespace GSF.TimeSeries.Transport
         public const bool DefaultAllowMetadataRefresh = true;
 
         /// <summary>
+        /// Default value for <see cref="AllowNaNValueFilter"/>.
+        /// </summary>
+        public const bool DefaultAllowNaNValueFilter = true;
+
+        /// <summary>
+        /// Default value for <see cref="ForceNaNValueFilter"/>.
+        /// </summary>
+        public const bool DefaultForceNaNValueFilter = false;
+
+        /// <summary>
         /// Default value for <see cref="UseBaseTimeOffsets"/>.
         /// </summary>
         public const bool DefaultUseBaseTimeOffsets = false;
@@ -647,6 +657,8 @@ namespace GSF.TimeSeries.Transport
         private bool m_allowPayloadCompression;
         private bool m_allowSynchronizedSubscription;
         private bool m_allowMetadataRefresh;
+        private bool m_allowNaNValueFilter;
+        private bool m_forceNaNValueFilter;
         private bool m_useBaseTimeOffsets;
 
         private long m_totalBytesSent;
@@ -696,6 +708,8 @@ namespace GSF.TimeSeries.Transport
             m_allowPayloadCompression = DefaultAllowPayloadCompression;
             m_allowSynchronizedSubscription = DefaultAllowSynchronizedSubscription;
             m_allowMetadataRefresh = DefaultAllowMetadataRefresh;
+            m_allowNaNValueFilter = DefaultAllowNaNValueFilter;
+            m_forceNaNValueFilter = DefaultForceNaNValueFilter;
             m_useBaseTimeOffsets = DefaultUseBaseTimeOffsets;
             m_metadataTables = DefaultMetadataTables;
             m_forceReceiveMetadataFlags = OperationalModes.ReceiveInternalMetadata;
@@ -885,6 +899,42 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_allowMetadataRefresh = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that indicates if this publisher will allow filtering of data which is not a number.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that indicates if this publisher will allow filtering of data which is not a number."),
+        DefaultValue(DefaultAllowNaNValueFilter)]
+        public bool AllowNaNValueFilter
+        {
+            get
+            {
+                return m_allowNaNValueFilter;
+            }
+            set
+            {
+                m_allowNaNValueFilter = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that indicates if this publisher will force filtering of data which is not a number.
+        /// </summary>
+        [ConnectionStringParameter,
+        Description("Define the flag that indicates if this publisher will force filtering of data which is not a number."),
+        DefaultValue(DefaultForceNaNValueFilter)]
+        public bool ForceNaNValueFilter
+        {
+            get
+            {
+                return m_forceNaNValueFilter;
+            }
+            set
+            {
+                m_forceNaNValueFilter = value;
             }
         }
 
@@ -1372,6 +1422,14 @@ namespace GSF.TimeSeries.Transport
             // Check flag to see if metadata refresh commands are allowed
             if (settings.TryGetValue("allowMetadataRefresh", out setting))
                 m_allowMetadataRefresh = setting.ParseBoolean();
+
+            // Check flag to see if NaN value filtering is allowed
+            if (settings.TryGetValue("allowNaNValueFilter", out setting))
+                m_allowNaNValueFilter = setting.ParseBoolean();
+
+            // Check flag to see if NaN value filtering is forced
+            if (settings.TryGetValue("forceNaNValueFilter", out setting))
+                m_forceNaNValueFilter = setting.ParseBoolean();
 
             if (settings.TryGetValue("useBaseTimeOffsets", out setting))
                 m_useBaseTimeOffsets = setting.ParseBoolean();

@@ -40,6 +40,7 @@ namespace GSF.TimeSeries.Transport
 
         private bool m_useCompactMeasurementFormat;
         private bool m_useMillisecondResolution;
+        private bool m_requestNaNValueFilter;
 
         private bool m_udpDataChannel;
         private int m_dataChannelLocalPort;
@@ -207,6 +208,22 @@ namespace GSF.TimeSeries.Transport
             set
             {
                 m_useMillisecondResolution = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the flag that determines whether to request that measurements
+        /// sent to the subscriber should be filtered by the publisher prior to sending them.
+        /// </summary>
+        public virtual bool RequestNaNValueFilter
+        {
+            get
+            {
+                return m_requestNaNValueFilter;
+            }
+            set
+            {
+                m_requestNaNValueFilter = value;
             }
         }
 
