@@ -97,7 +97,7 @@ namespace PhasorProtocolAdapters
                     long cutOff;
                     int missingFrameCount;
 
-                    cutOff = GetSortedTimestamp(RealTime - LagTicks);
+                    cutOff = Ticks.AlignToSubsecondDistribution(RealTime - LagTicks, FramesPerSecond, TimeResolution);
                     missingFrameCount = (int)Math.Round((cutOff - m_lastFrameTimestamp) / TicksPerFrame);
                     m_missingData += (missingFrameCount > m_redundantFramesPerPacket) ? (missingFrameCount - m_redundantFramesPerPacket) : 0;
                     m_lastFrameTimestamp = cutOff;
@@ -116,7 +116,7 @@ namespace PhasorProtocolAdapters
             public override void Start()
             {
                 base.Start();
-                m_lastFrameTimestamp = GetSortedTimestamp(RealTime);
+                m_lastFrameTimestamp = Ticks.AlignToSubsecondDistribution(RealTime, FramesPerSecond, TimeResolution);
             }
 
             /// <summary>
@@ -133,61 +133,19 @@ namespace PhasorProtocolAdapters
                 m_lastFrameTimestamp = frame.Timestamp;
             }
 
-            // Calculates what the given time would be if it were aligned properly to a frame timestamp.
-            private long GetSortedTimestamp(long ticks)
-            {
-                long baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
-
-                // Baseline timestamp to the top of the second
-                baseTicks = ticks - ticks % Ticks.PerSecond;
-
-                // Remove the seconds from ticks
-                ticksBeyondSecond = ticks - baseTicks;
-
-                // Calculate a frame index between 0 and m_framesPerSecond-1, corresponding to ticks
-                // rounded down to the nearest frame
-                frameIndex = (long)(ticksBeyondSecond / TicksPerFrame);
-
-                // Calculate the timestamp of the nearest frame rounded up
-                nextDestinationTicks = (frameIndex + 1) * Ticks.PerSecond / FramesPerSecond;
-
-                // Determine whether the desired frame is the nearest
-                // frame rounded down or the nearest frame rounded up
-                if (TimeResolution <= 1)
-                {
-                    if (nextDestinationTicks <= ticksBeyondSecond)
-                        destinationTicks = nextDestinationTicks;
-                    else
-                        destinationTicks = frameIndex * Ticks.PerSecond / FramesPerSecond;
-                }
-                else
-                {
-                    // If, after translating nextDestinationTicks to the time resolution, it is less than
-                    // or equal to ticks, nextDestinationTicks corresponds to the desired frame
-                    if ((nextDestinationTicks / TimeResolution) * TimeResolution <= ticksBeyondSecond)
-                        destinationTicks = nextDestinationTicks;
-                    else
-                        destinationTicks = frameIndex * Ticks.PerSecond / FramesPerSecond;
-                }
-
-                // Recover the seconds that were removed
-                destinationTicks += baseTicks;
-
-                return destinationTicks;
-            }
-
             #endregion
         }
 
         // Fields
         private MultiProtocolFrameParser m_frameParser;
         private ConcurrentDictionary<string, Guid> m_definedMeasurements;
-        private ConcurrentDictionary<ushort, ConfigurationCell> m_definedDevices;
-        private ConcurrentDictionary<string, ConfigurationCell> m_labelDefinedDevices;
+        private ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>> m_definedDevices;
+        private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
         private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
         private MissingDataMonitor m_missingDataMonitor;
         private Timer m_dataStreamMonitor;
+        private Timer m_measurementCounter;
         private bool m_allowUseOfCachedConfiguration;
         private bool m_cachedConfigLoadAttempted;
         private TimeZoneInfo m_timezone;
@@ -210,7 +168,6 @@ namespace PhasorProtocolAdapters
         private bool m_isConcentrator;
         private bool m_receivedConfigFrame;
         private long m_bytesReceived;
-        private int m_hashCode;
         private double m_lagTime;
         private double m_leadTime;
         private long m_timeResolution;
@@ -281,10 +238,7 @@ namespace PhasorProtocolAdapters
             }
         }
 
-        /// <summary>
-        /// Gets an enumeration of all defined system devices (regardless of ID or label based definition)
-        /// </summary>
-        public IEnumerable<ConfigurationCell> DefinedDevices
+        private IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> StatisticsHelpers
         {
             get
             {
@@ -292,6 +246,17 @@ namespace PhasorProtocolAdapters
                     return m_definedDevices.Values.Concat(m_labelDefinedDevices.Values);
 
                 return m_definedDevices.Values;
+            }
+        }
+
+        /// <summary>
+        /// Gets an enumeration of all defined system devices (regardless of ID or label based definition)
+        /// </summary>
+        public IEnumerable<ConfigurationCell> DefinedDevices
+        {
+            get
+            {
+                return StatisticsHelpers.Select(statisticsHelper => statisticsHelper.Device);
             }
         }
 
@@ -939,19 +904,26 @@ namespace PhasorProtocolAdapters
                     if (disposing)
                     {
                         // Detach from frame parser events and set reference to null
-                        this.FrameParser = null;
+                        FrameParser = null;
 
                         if ((object)m_dataStreamMonitor != null)
                         {
                             m_dataStreamMonitor.Elapsed -= m_dataStreamMonitor_Elapsed;
                             m_dataStreamMonitor.Dispose();
-                        }
                         m_dataStreamMonitor = null;
+                        }
+
+                        if ((object)m_measurementCounter != null)
+                        {
+                            m_measurementCounter.Elapsed -= MeasurementCounter_Elapsed;
+                            m_measurementCounter.Dispose();
+                            m_measurementCounter = null;
+                        }
 
                         if ((object)m_definedDevices != null)
                         {
                             // Unregister each existing device from the statistics engine
-                            foreach (ConfigurationCell device in m_definedDevices.Values)
+                            foreach (ConfigurationCell device in DefinedDevices)
                             {
                                 StatisticsEngine.Unregister(device);
                             }
@@ -1041,7 +1013,7 @@ namespace PhasorProtocolAdapters
             else
                 SharedMapping = null;
 
-            if (settings.TryGetValue("timeZone", out setting) && !string.IsNullOrWhiteSpace(setting) && string.Compare(setting.Trim(), "UTC", true) != 0 && string.Compare(setting.Trim(), "Coordinated Universal Time", true) != 0)
+            if (settings.TryGetValue("timeZone", out setting) && !string.IsNullOrWhiteSpace(setting) && !setting.Trim().Equals("UTC", StringComparison.OrdinalIgnoreCase) && !setting.Trim().Equals("Coordinated Universal Time", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
@@ -1146,7 +1118,7 @@ namespace PhasorProtocolAdapters
             frameParser.SourceName = Name;
 
             // Assign reference to frame parser for this connection and attach to needed events
-            this.FrameParser = frameParser;
+            FrameParser = frameParser;
 
             // Load specific configuration file if one was specified
             if (settings.TryGetValue("configurationFile", out setting))
@@ -1173,13 +1145,13 @@ namespace PhasorProtocolAdapters
             if ((object)m_definedDevices != null)
             {
                 // Unregister each existing device from the statistics engine
-                foreach (ConfigurationCell device in m_definedDevices.Values)
+                foreach (ConfigurationCell device in DefinedDevices)
                 {
                     StatisticsEngine.Unregister(device);
                 }
             }
 
-            m_definedDevices = new ConcurrentDictionary<ushort, ConfigurationCell>();
+            m_definedDevices = new ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>>();
 
             if (m_isConcentrator)
             {
@@ -1211,7 +1183,7 @@ namespace PhasorProtocolAdapters
                     {
                         // When forcing label mapping we always try to use label for unique lookup
                         if ((object)m_labelDefinedDevices == null)
-                            m_labelDefinedDevices = new ConcurrentDictionary<string, ConfigurationCell>(StringComparer.OrdinalIgnoreCase);
+                            m_labelDefinedDevices = new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
 
                         // See if label already exists in this collection
                         if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
@@ -1224,14 +1196,14 @@ namespace PhasorProtocolAdapters
                             }
                             else
                             {
-                                m_definedDevices.TryAdd(definedDevice.IDCode, definedDevice);
+                                m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
                                 StatisticsEngine.Register(definedDevice, definedDevice.IDLabel, "Device", "PMU");
                                 devicedAdded = true;
                             }
                         }
                         else
                         {
-                            m_labelDefinedDevices.TryAdd(definedDevice.StationName, definedDevice);
+                            m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
                             StatisticsEngine.Register(definedDevice, definedDevice.IDLabel, "Device", "PMU");
                             devicedAdded = true;
                         }
@@ -1243,7 +1215,7 @@ namespace PhasorProtocolAdapters
                         {
                             // For devices that do not have unique ID codes, we fall back on its label for unique lookup
                             if ((object)m_labelDefinedDevices == null)
-                                m_labelDefinedDevices = new ConcurrentDictionary<string, ConfigurationCell>(StringComparer.OrdinalIgnoreCase);
+                                m_labelDefinedDevices = new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
 
                             if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
                             {
@@ -1252,14 +1224,14 @@ namespace PhasorProtocolAdapters
                             }
                             else
                             {
-                                m_labelDefinedDevices.TryAdd(definedDevice.StationName, definedDevice);
+                                m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
                                 StatisticsEngine.Register(definedDevice, definedDevice.IDLabel, "Device", "PMU");
                                 devicedAdded = true;
                             }
                         }
                         else
                         {
-                            m_definedDevices.TryAdd(definedDevice.IDCode, definedDevice);
+                            m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
                             StatisticsEngine.Register(definedDevice, definedDevice.IDLabel, "Device", "PMU");
                             devicedAdded = true;
                         }
@@ -1310,16 +1282,16 @@ namespace PhasorProtocolAdapters
                 if (m_forceLabelMapping)
                 {
                     if ((object)m_labelDefinedDevices == null)
-                        m_labelDefinedDevices = new ConcurrentDictionary<string, ConfigurationCell>(StringComparer.OrdinalIgnoreCase);
+                        m_labelDefinedDevices = new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
 
-                    m_labelDefinedDevices.TryAdd(definedDevice.StationName, definedDevice);
+                    m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
                     StatisticsEngine.Register(definedDevice, definedDevice.IDLabel, "Device", "PMU");
 
                     OnStatusMessage("Input device is using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.");
                 }
                 else
                 {
-                    m_definedDevices.TryAdd(definedDevice.IDCode, definedDevice);
+                    m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
                     StatisticsEngine.Register(definedDevice, definedDevice.IDLabel, "Device", "PMU");
                 }
             }
@@ -1410,10 +1382,12 @@ namespace PhasorProtocolAdapters
         {
             if ((object)m_definedDevices != null)
             {
+                DeviceStatisticsHelper<ConfigurationCell> statisticsHelper;
                 ConfigurationCell definedDevice;
 
-                if (m_definedDevices.TryGetValue(idCode, out definedDevice))
+                if (m_definedDevices.TryGetValue(idCode, out statisticsHelper))
                 {
+                    definedDevice = statisticsHelper.Device;
                     definedDevice.DataQualityErrors = 0;
                     definedDevice.DeviceErrors = 0;
                     definedDevice.TotalFrames = 0;
@@ -1500,6 +1474,7 @@ namespace PhasorProtocolAdapters
                 if ((object)configFrame != null)
                 {
                     m_frameParser.ConfigurationFrame = configFrame;
+                    StartMeasurementCounter();
                     m_receivedConfigFrame = true;
                     m_configurationChanges++;
                 }
@@ -1539,6 +1514,8 @@ namespace PhasorProtocolAdapters
                         // Process exception for logging
                         OnProcessException(new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
                     }
+
+                    StartMeasurementCounter();
 
                     m_receivedConfigFrame = true;
                     m_configurationChanges++;
@@ -1624,6 +1601,8 @@ namespace PhasorProtocolAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
+            long now = DateTime.UtcNow.Ticks;
+
             m_lastReportTime = 0;
             m_bytesReceived = 0;
             m_outOfOrderFrames = 0;
@@ -1646,6 +1625,9 @@ namespace PhasorProtocolAdapters
             // Stop frame parser
             if ((object)m_frameParser != null)
                 m_frameParser.Stop();
+
+            if ((object)m_measurementCounter != null)
+                m_measurementCounter.Stop();
         }
 
         /// <summary>
@@ -1688,7 +1670,9 @@ namespace PhasorProtocolAdapters
             const int FrequencyIndex = (int)CompositeFrequencyValue.Frequency;
             const int DfDtIndex = (int)CompositeFrequencyValue.DfDt;
 
-            List<ITimeSeriesEntity> mappedMeasurements = new List<ITimeSeriesEntity>();
+            ICollection<ITimeSeriesEntity> mappedMeasurements = new List<ITimeSeriesEntity>();
+            IEnumerable<IMeasurement<double>> parsedMeasurements;
+            DeviceStatisticsHelper<ConfigurationCell> statisticsHelper;
             ConfigurationCell definedDevice;
             PhasorValueCollection phasors;
             AnalogValueCollection analogs;
@@ -1698,7 +1682,7 @@ namespace PhasorProtocolAdapters
             int x, count;
 
             // Adjust time to UTC based on source time zone
-            if (!Equals(m_timezone, TimeZoneInfo.Utc))
+            if (!m_timezone.Equals(TimeZoneInfo.Utc))
                 frame.Timestamp = TimeZoneInfo.ConvertTimeToUtc(frame.Timestamp, m_timezone);
 
             // We also allow "fine tuning" of time for fickle GPS clocks...
@@ -1743,9 +1727,11 @@ namespace PhasorProtocolAdapters
                 {
                     // Lookup device by its label (if needed), then by its ID code
                     if (((object)m_labelDefinedDevices != null &&
-                        m_labelDefinedDevices.TryGetValue(parsedDevice.StationName.ToNonNullString(), out definedDevice)) ||
-                        m_definedDevices.TryGetValue(parsedDevice.IDCode, out definedDevice))
+                        m_labelDefinedDevices.TryGetValue(parsedDevice.StationName.ToNonNullString(), out statisticsHelper)) ||
+                        m_definedDevices.TryGetValue(parsedDevice.IDCode, out statisticsHelper))
                     {
+                        definedDevice = statisticsHelper.Device;
+
                         // Track latest reporting time for this device
                         if (timestamp > definedDevice.LastReportTime)
                             definedDevice.LastReportTime = timestamp;
@@ -1810,6 +1796,16 @@ namespace PhasorProtocolAdapters
                             // Map digital value
                             MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Digital, x, count), digitals[x].Measurements[0]);
                         }
+
+                        // Track measurement count statistics for this device
+                        parsedMeasurements = parsedDevice.PhasorValues.SelectMany(phasor => phasor.Measurements)
+                            .Concat(parsedDevice.DigitalValues.SelectMany(digital => digital.Measurements))
+                            .Concat(parsedDevice.AnalogValues.SelectMany(analog => analog.Measurements));
+
+                        if (parsedDevice.FrequencyValue.Frequency != 0.0D)
+                            parsedMeasurements = parsedMeasurements.Concat(parsedDevice.FrequencyValue.Measurements);
+
+                        statisticsHelper.AddToMeasurementsReceived(parsedMeasurements.Count(measurement => !double.IsNaN(measurement.Value)));
                     }
                     else
                     {
@@ -1908,16 +1904,45 @@ namespace PhasorProtocolAdapters
             return references[index];
         }
 
-        /// <summary>
-        /// Returns the hash code for this instance.
-        /// </summary>
-        /// <returns>A 32-bit signed integer hash code.</returns>
-        public override int GetHashCode()
+        private void StartMeasurementCounter()
         {
-            if (m_hashCode == 0)
-                m_hashCode = Guid.NewGuid().GetHashCode();
+            long now = DateTime.UtcNow.Ticks;
 
-            return m_hashCode;
+            DataSet dataSource;
+            DataTable measurementTable;
+            IConfigurationFrame configurationFrame;
+            int measurementsPerFrame;
+
+            if (!m_receivedConfigFrame)
+            {
+                // If this is the first time we've received the configuration frame,
+                // we'll use it to calculate expected measurements per second for each device
+                dataSource = DataSource;
+
+                if ((object)dataSource != null && dataSource.Tables.Contains("ActiveMeasurements"))
+                {
+                    measurementTable = dataSource.Tables["ActiveMeasurements"];
+                    configurationFrame = m_frameParser.ConfigurationFrame;
+
+                    foreach (DeviceStatisticsHelper<ConfigurationCell> statisticsHelper in StatisticsHelpers)
+                    {
+                        measurementsPerFrame = measurementTable.Select(string.Format("SignalReference LIKE '{0}-%' AND SignalType <> 'FLAG' AND SignalType <> 'STAT'", statisticsHelper.Device.IDLabel)).Length;
+                        statisticsHelper.ExpectedMeasurementsPerSecond = configurationFrame.FrameRate * measurementsPerFrame;
+                        statisticsHelper.Reset(now);
+                    }
+                }
+            }
+
+            if ((object)m_measurementCounter == null)
+        {
+                // Create the timer if it doesn't already exist
+                m_measurementCounter = new Timer(1000.0D);
+                m_measurementCounter.Elapsed += MeasurementCounter_Elapsed;
+            }
+
+            // Start the measurement counter timer
+            // to start gathering statistics
+            m_measurementCounter.Start();
         }
 
         // Updates the measurements per second counters after receiving another set of measurements.
@@ -2010,6 +2035,8 @@ namespace PhasorProtocolAdapters
                     // Process exception for logging
                     OnProcessException(new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
                 }
+
+                StartMeasurementCounter();
 
                 m_receivedConfigFrame = true;
             }
@@ -2122,6 +2149,15 @@ namespace PhasorProtocolAdapters
             }
 
             m_bytesReceived = 0;
+        }
+
+        private void MeasurementCounter_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        {
+            long now = DateTime.UtcNow.Ticks;
+            IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> statisticsHelpers = StatisticsHelpers;
+
+            foreach (DeviceStatisticsHelper<ConfigurationCell> statisticsHelper in statisticsHelpers)
+                statisticsHelper.Update(now);
         }
 
         #endregion

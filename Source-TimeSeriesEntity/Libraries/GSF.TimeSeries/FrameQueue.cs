@@ -54,7 +54,6 @@ namespace GSF.TimeSeries
         private volatile TrackingFrame m_head;                          // Reference to current top of the frame collection
         private volatile TrackingFrame m_last;                          // Reference to last published frame
         private int m_framesPerSecond;                                  // Cached frames per second
-        private double m_ticksPerFrame;                                 // Cached ticks per frame
         private long m_timeResolution;                                  // Cached time resolution (max sorting resolution in ticks)
         private bool m_disposed;                                        // Object disposed flag
 
@@ -104,7 +103,6 @@ namespace GSF.TimeSeries
                     throw new ArgumentOutOfRangeException("value", "Frames per second must be greater than 0");
 
                 m_framesPerSecond = value;
-                m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
             }
         }
 
@@ -351,45 +349,12 @@ namespace GSF.TimeSeries
         /// <returns>An existing or new <see cref="TrackingFrame"/> from the queue for the specified timestamp.</returns>
         public TrackingFrame GetFrame(long ticks)
         {
-            // Calculate destination ticks for this frame
             TrackingFrame frame = null;
             bool locked = false, nodeAdded = false;
-            long baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
+            long destinationTicks;
 
-            // Baseline timestamp to the top of the second
-            baseTicks = ticks - ticks % Ticks.PerSecond;
-
-            // Remove the seconds from ticks
-            ticksBeyondSecond = ticks - baseTicks;
-
-            // Calculate a frame index between 0 and m_framesPerSecond-1, corresponding to ticks
-            // rounded down to the nearest frame
-            frameIndex = (long)(ticksBeyondSecond / m_ticksPerFrame);
-
-            // Calculate the timestamp of the nearest frame rounded up
-            nextDestinationTicks = (frameIndex + 1) * Ticks.PerSecond / m_framesPerSecond;
-
-            // Determine whether the desired frame is the nearest
-            // frame rounded down or the nearest frame rounded up
-            if (m_timeResolution <= 1)
-            {
-                if (nextDestinationTicks <= ticksBeyondSecond)
-                    destinationTicks = nextDestinationTicks;
-                else
-                    destinationTicks = frameIndex * Ticks.PerSecond / m_framesPerSecond;
-            }
-            else
-            {
-                // If, after translating nextDestinationTicks to the time resolution, it is less than
-                // or equal to ticks, nextDestinationTicks corresponds to the desired frame
-                if ((nextDestinationTicks / m_timeResolution) * m_timeResolution <= ticksBeyondSecond)
-                    destinationTicks = nextDestinationTicks;
-                else
-                    destinationTicks = frameIndex * Ticks.PerSecond / m_framesPerSecond;
-            }
-
-            // Recover the seconds that were removed
-            destinationTicks += baseTicks;
+            // Calculate destination ticks for this frame
+            destinationTicks = Ticks.AlignToSubsecondDistribution(ticks, m_framesPerSecond, m_timeResolution);
 
             // Make sure ticks are newer than latest published ticks...
             if (destinationTicks > Thread.VolatileRead(ref m_publishedTicks))

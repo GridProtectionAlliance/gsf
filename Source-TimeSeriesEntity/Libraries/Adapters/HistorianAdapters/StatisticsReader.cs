@@ -39,7 +39,7 @@ namespace HistorianAdapters
     /// connectivity, average latency, the actual data rate, data quality errors, and
     /// time quality errors.
     /// </summary>
-    public class StatisticsReader
+    public class StatisticsReader : IDisposable
     {
         #region [ Members ]
 
@@ -269,13 +269,8 @@ namespace HistorianAdapters
         public void Open()
         {
             IEnumerable<MetadataRecord> records;
-            IEnumerable<MetadataRecord> totalFrameRecords;
-            IEnumerable<MetadataRecord> missingFrameRecords;
-            IEnumerable<MetadataRecord> connectedStatRecords;
-            IEnumerable<MetadataRecord> averageLatencyRecords;
-            IEnumerable<MetadataRecord> actualDataRateRecords;
-            IEnumerable<MetadataRecord> dataQualityErrorRecords;
-            IEnumerable<MetadataRecord> timeQualityErrorRecords;
+            string signalReference;
+            int index;
 
             if (m_archive != null)
                 throw new InvalidOperationException("The StatisticsReader must be closed before reopening.");
@@ -283,47 +278,44 @@ namespace HistorianAdapters
             m_archive = OpenArchiveFile();
             records = m_archive.MetadataFile.Read();
 
-            totalFrameRecords = records.Where(record => record.Name.EndsWith("!IS:ST1"));
-            missingFrameRecords = records.Where(record => record.Name.EndsWith("!IS:ST3"));
-            connectedStatRecords = records.Where(record => record.Name.EndsWith("!IS:ST8"));
-            averageLatencyRecords = records.Where(record => record.Name.EndsWith("!IS:ST14"));
-            actualDataRateRecords = records.Where(record => record.Name.EndsWith("!IS:ST17"));
-            dataQualityErrorRecords = records.Where(IsDataQualityError);
-            timeQualityErrorRecords = records.Where(IsTimeQualityError);
-
-            foreach (MetadataRecord totalFrameRecord in totalFrameRecords)
+            foreach (MetadataRecord record in records)
             {
-                m_totalFrames.Add(totalFrameRecord, m_archive.ReadData(totalFrameRecord.HistorianID, StartTime, EndTime));
-            }
+                signalReference = record.Synonym1;
+                index = signalReference.LastIndexOf('!');
 
-            foreach (MetadataRecord missingFrameRecord in missingFrameRecords)
-            {
-                m_missingFrames.Add(missingFrameRecord, m_archive.ReadData(missingFrameRecord.HistorianID, StartTime, EndTime));
-            }
+                if (index >= 0)
+                {
+                    switch (signalReference.Substring(index))
+                    {
+                        case "!IS-ST1":
+                            m_totalFrames.Add(record, m_archive.ReadData(record.HistorianID, StartTime, EndTime));
+                            break;
 
-            foreach (MetadataRecord connectedStatRecord in connectedStatRecords)
-            {
-                m_connectedStats.Add(connectedStatRecord, m_archive.ReadData(connectedStatRecord.HistorianID, StartTime, EndTime));
-            }
+                        case "!IS-ST3":
+                            m_missingFrames.Add(record, m_archive.ReadData(record.HistorianID, StartTime, EndTime));
+                            break;
 
-            foreach (MetadataRecord averageLatencyRecord in averageLatencyRecords)
-            {
-                m_averageLatency.Add(averageLatencyRecord, m_archive.ReadData(averageLatencyRecord.HistorianID, StartTime, EndTime));
-            }
+                        case "!IS-ST8":
+                            m_connectedStats.Add(record, m_archive.ReadData(record.HistorianID, StartTime, EndTime));
+                            break;
 
-            foreach (MetadataRecord actualDataRateRecord in actualDataRateRecords)
-            {
-                m_actualDataRate.Add(actualDataRateRecord, m_archive.ReadData(actualDataRateRecord.HistorianID, StartTime, EndTime));
-            }
+                        case "!IS-ST14":
+                            m_averageLatency.Add(record, m_archive.ReadData(record.HistorianID, StartTime, EndTime));
+                            break;
 
-            foreach (MetadataRecord dataQualityErrorRecord in dataQualityErrorRecords)
-            {
-                m_dataQualityErrors.Add(dataQualityErrorRecord, m_archive.ReadData(dataQualityErrorRecord.HistorianID, StartTime, EndTime));
-            }
+                        case "!IS-ST17":
+                            m_actualDataRate.Add(record, m_archive.ReadData(record.HistorianID, StartTime, EndTime));
+                            break;
 
-            foreach (MetadataRecord timeQualityErrorRecord in timeQualityErrorRecords)
-            {
-                m_timeQualityErrors.Add(timeQualityErrorRecord, m_archive.ReadData(timeQualityErrorRecord.HistorianID, StartTime, EndTime));
+                        case "!PMU-ST1":
+                            m_dataQualityErrors.Add(record, m_archive.ReadData(record.HistorianID, StartTime, EndTime));
+                            break;
+
+                        case "!PMU-ST2":
+                            m_timeQualityErrors.Add(record, m_archive.ReadData(record.HistorianID, StartTime, EndTime));
+                            break;
+                    }
+                }
             }
         }
 
@@ -335,8 +327,25 @@ namespace HistorianAdapters
             if ((object)m_archive == null)
                 return;
 
+            m_totalFrames.Clear();
+            m_missingFrames.Clear();
+            m_connectedStats.Clear();
+            m_averageLatency.Clear();
+            m_actualDataRate.Clear();
+            m_dataQualityErrors.Clear();
+            m_timeQualityErrors.Clear();
+
             m_archive.Close();
             m_archive = null;
+        }
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="StatisticsReader"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Close();
+            GC.SuppressFinalize(this);
         }
 
         // Opens the archive file in order to retrieve the statistics.
@@ -370,18 +379,6 @@ namespace HistorianAdapters
             file.Open();
 
             return file;
-        }
-
-        // Determines whether the given MetadataRecord describes the data quality error statistic.
-        private static bool IsDataQualityError(MetadataRecord record)
-        {
-            return record.Name.EndsWith(":ST1") && !record.Name.EndsWith("!IS:ST1") && !record.Name.EndsWith("!OS:ST1");
-        }
-
-        // Determines whether the given MetadataRecord describes the time quality error statistic.
-        private static bool IsTimeQualityError(MetadataRecord record)
-        {
-            return record.Name.EndsWith(":ST2") && !record.Name.EndsWith("!IS:ST2") && !record.Name.EndsWith("!OS:ST2");
         }
 
         #endregion

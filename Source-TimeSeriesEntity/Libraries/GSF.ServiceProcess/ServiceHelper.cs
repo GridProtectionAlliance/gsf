@@ -2695,6 +2695,9 @@ namespace GSF.ServiceProcess
                 {
                     foreach (ClientRequestHandler handler in m_clientRequestHandlers)
                     {
+                        if (SecurityProviderUtility.IsResourceSecurable(handler.Command) && !SecurityProviderUtility.IsResourceAccessible(handler.Command))
+                            continue;
+
                         if (!handler.IsAdvertised && !showAdvancedHelp)
                             continue;
 

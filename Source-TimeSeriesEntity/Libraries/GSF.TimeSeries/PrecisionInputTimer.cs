@@ -85,12 +85,7 @@ namespace GSF.TimeSeries
             m_timer.Tick += m_timer_Tick;
 
             m_frameWindowSize = (int)Math.Round(1000.0D / framesPerSecond) * 2;
-            m_frameMilliseconds = new int[framesPerSecond];
-
-            for (int frameIndex = 0; frameIndex < framesPerSecond; frameIndex++)
-            {
-                m_frameMilliseconds[frameIndex] = (int)(1.0D / framesPerSecond * (frameIndex * 1000.0D));
-            }
+            m_frameMilliseconds = Ticks.MillisecondDistribution(framesPerSecond);
 
             // Start high resolution timer on a separate thread so the start
             // time can synchronized to the top of the millisecond

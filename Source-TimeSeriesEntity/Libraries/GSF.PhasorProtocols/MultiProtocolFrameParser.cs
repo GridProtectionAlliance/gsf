@@ -1758,7 +1758,6 @@ namespace GSF.PhasorProtocols
         private int m_configuredFrameRate;
         private string m_sourceName;
         private int m_definedFrameRate;
-        private double m_ticksPerFrame;
         private bool m_autoStartDataParsingSequence;
         private bool m_skipDisableRealTimeData;
         private bool m_initiatingDataStream;
@@ -2154,7 +2153,6 @@ namespace GSF.PhasorProtocols
                         UseHighResolutionInputTimer = false;
 
                     m_definedFrameRate = value;
-                    m_ticksPerFrame = Ticks.PerSecond / (double)m_definedFrameRate;
 
                     // Reactivate timer if it was active
                     if (timerActive)
@@ -3724,35 +3722,7 @@ namespace GSF.PhasorProtocols
                 m_lastFrameReceivedTime = DateTime.UtcNow.Ticks;
 
                 if (m_injectSimulatedTimestamp)
-                {
-                    long baseTicks, ticksBeyondSecond, frameIndex, nextFrameTicks;
-
-                    simulatedTimestamp = m_lastFrameReceivedTime;
-
-                    // Baseline timestamp to the top of the second
-                    baseTicks = simulatedTimestamp - simulatedTimestamp % Ticks.PerSecond;
-
-                    // Remove the seconds from ticks
-                    ticksBeyondSecond = simulatedTimestamp - baseTicks;
-
-                    // Calculate a frame index between 0 and m_framesPerSecond-1, corresponding to ticks
-                    // rounded down to the nearest frame
-                    frameIndex = (long)(ticksBeyondSecond / m_ticksPerFrame);
-
-                    // Calculate the timestamp of the nearest frame rounded up
-                    nextFrameTicks = (frameIndex + 1) * Ticks.PerSecond / m_definedFrameRate;
-
-                    // Determine whether the desired frame is the nearest frame rounded down or the nearest frame rounded up
-                    // After translating nextDestinationTicks to millisecond resolution, if next ticks are less than or equal
-                    // to ticks, nextDestinationTicks corresponds to the desired frame
-                    if ((nextFrameTicks / Ticks.PerMillisecond) * Ticks.PerMillisecond <= ticksBeyondSecond)
-                        simulatedTimestamp = nextFrameTicks;
-                    else
-                        simulatedTimestamp = frameIndex * Ticks.PerSecond / m_definedFrameRate;
-
-                    // Recover the seconds that were removed
-                    simulatedTimestamp += baseTicks;
-                }
+                    simulatedTimestamp = Ticks.AlignToMillisecondDistribution(m_lastFrameReceivedTime, m_definedFrameRate);
             }
             else
             {

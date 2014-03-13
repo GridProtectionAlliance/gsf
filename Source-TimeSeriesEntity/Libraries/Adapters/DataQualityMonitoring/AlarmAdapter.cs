@@ -352,18 +352,25 @@ namespace DataQualityMonitoring
                         processedMeasurements++;
                     }
 
-                    // Send new alarm events into the system,
-                    // then reset the collection for the next
-                    // group of measurements
-                    OnNewEntities(alarmEvents);
+                    if (alarmEvents.Count > 0)
+                    {
+                        // Send new alarm events into the system,
+                        // then reset the collection for the next
+                        // group of measurements
+                        OnNewEntities(alarmEvents);
+                    }
 
-                    // Increment total count of processed measurements
-                    IncrementProcessedEntities(processedMeasurements);
+                    if (processedMeasurements > 0)
+                    {
+                        // Increment total count of processed measurements
+                        IncrementProcessedEntities(processedMeasurements);
 
-                    if (measurements.Any())
                         spinner.Reset();
+                    }
                     else
+                    {
                         spinner.SpinOnce();
+                    }
                 }
                 catch (Exception ex)
                 {

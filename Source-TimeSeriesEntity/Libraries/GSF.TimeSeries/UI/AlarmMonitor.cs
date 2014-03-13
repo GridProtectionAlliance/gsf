@@ -248,7 +248,8 @@ namespace GSF.TimeSeries.UI
             // Initialize lookup table for defined alarms by associated measurement ID
             m_definedAlarmsByMeasurement = definedAlarms
                 .Where(alarm => alarm.AssociatedMeasurementID.HasValue)
-                .ToDictionary(alarm => alarm.AssociatedMeasurementID.Value);
+                .GroupBy(alarm => alarm.AssociatedMeasurementID.GetValueOrDefault())
+                .ToDictionary(group => group.Key, group => group.First());
 
             lock (m_currentAlarmsLock)
             {

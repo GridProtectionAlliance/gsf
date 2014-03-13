@@ -109,6 +109,9 @@
   <ItemGroup>
     <Compile Include="Commands\MenuCommand.cs" />
     <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="UserControls\DataQualityReportUserControl.xaml.cs">
+      <DependentUpon>DataQualityReportUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Editors\FileDialogEditor.xaml.cs">
       <DependentUpon>FileDialogEditor.xaml</DependentUpon>
     </Compile>
@@ -215,6 +218,7 @@
     <Compile Include="ViewModels\ApplicationRoles.cs" />
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
+    <Compile Include="ViewModels\DataQualityReportViewModel.cs" />
     <Compile Include="ViewModels\ErrorLogViewModel.cs" />
     <Compile Include="ViewModels\Historians.cs" />
     <Compile Include="ViewModels\IaonTrees.cs" />
@@ -270,6 +274,10 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="UserControls\DataQualityReportUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Editors\FileDialogEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
