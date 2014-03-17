@@ -1064,7 +1064,7 @@ namespace HistorianView
                             bool isBinary = m_exportFileType == FileType.ComtradeBinary;
 
                             configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
-                            Schema schema = WriteComtradeConfigFile(configFileWriter, metadata, data.Count, isBinary);
+                            Schema schema = WriteComtradeConfigFile(configFileWriter, metadata, data.Count, data.Keys.Min().ToDateTime().Ticks, isBinary);
 
                             dataFileWriter = new StreamWriter(new FileStream(dataFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
                             WriteComtradeDataFile(dataFileWriter, schema, data, isBinary);
@@ -1110,7 +1110,7 @@ namespace HistorianView
             }
         }
 
-        private Schema WriteComtradeConfigFile(StreamWriter configFileWriter, Dictionary<MetadataWrapper, ArchiveReader> metadata, int sampleCount, bool isBinary)
+        private Schema WriteComtradeConfigFile(StreamWriter configFileWriter, Dictionary<MetadataWrapper, ArchiveReader> metadata, int sampleCount, Ticks startTime, bool isBinary)
         {
             // Convert openHistorian metadata to COMTRADE channel metadata
             IEnumerable<ChannelMetadata> channelMetadata = metadata.Keys
@@ -1122,7 +1122,7 @@ namespace HistorianView
                 channelMetadata,
                 "openHistorian Export",
                 "Source=" + m_archiveReaders.First().FileName.Replace(',', '_'),
-                m_startTime.Ticks,
+                startTime,
                 sampleCount,
                 isBinary,
                 1.0D,
@@ -1150,7 +1150,7 @@ namespace HistorianView
                     // exported - the end user will need to cipher out which rows come first based on the data.
                     foreach (string[] row in pair.Value)
                     {
-                        Writer.WriteNextRecordBinary(dataFileStream, schema, pair.Key.ToDateTime(), row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
+                        Writer.WriteNextRecordBinary(dataFileStream, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
                     }
                 }
             }
@@ -1164,7 +1164,7 @@ namespace HistorianView
                     // exported - the end user will need to cipher out which rows come first based on the data.
                     foreach (string[] row in pair.Value)
                     {
-                        Writer.WriteNextRecordAscii(dataFileWriter, schema, pair.Key.ToDateTime(), row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
+                        Writer.WriteNextRecordAscii(dataFileWriter, schema, pair.Key.ToDateTime().Ticks, row.Select(value => double.Parse(value ?? double.NaN.ToString())).ToArray(), sample++);
                     }
                 }
 

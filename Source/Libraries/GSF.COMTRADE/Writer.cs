@@ -26,7 +26,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using GSF;
 using GSF.PhasorProtocols;
 
 namespace GSF.COMTRADE
@@ -325,7 +324,9 @@ namespace GSF.COMTRADE
         /// </remarks>
         public static void WriteNextRecordAscii(StreamWriter output, Schema schema, Ticks timestamp, double[] values, uint sample, bool injectFracSecValue = true, ushort fracSecValue = 0x0000)
         {
+            // Make timestamp relative to beginning of file
             timestamp -= schema.StartTime.Value;
+
             uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
             double value;
             StringBuilder line = new StringBuilder();
@@ -371,6 +372,16 @@ namespace GSF.COMTRADE
                         line.Append(',');
                         line.Append(digitalWord.CheckBits(BitExtensions.BitVal(j)) ? 1 : 0);
                     }
+                }
+            }
+
+            // Make sure FRACSEC values are injected
+            if (isFirstDigital && injectFracSecValue)
+            {
+                for (int j = 0; j < 16; j++)
+                {
+                    line.Append(',');
+                    line.Append(fracSecValue.CheckBits(BitExtensions.BitVal(j)) ? 1 : 0);
                 }
             }
 
@@ -422,6 +433,10 @@ namespace GSF.COMTRADE
 
                 output.Write(EndianOrder.LittleEndian.GetBytes((ushort)value), 0, 2);
             }
+
+            // Make sure FRACSEC values are injected
+            if (isFirstDigital && injectFracSecValue)
+                output.Write(EndianOrder.LittleEndian.GetBytes(fracSecValue), 0, 2);
         }
     }
 }
