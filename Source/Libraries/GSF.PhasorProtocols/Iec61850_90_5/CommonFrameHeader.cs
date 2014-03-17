@@ -181,12 +181,17 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                 uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 6);
                 uint fractionOfSecond = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 10);
+                long ticksBeyondSecond;
 
                 // Without timebase, the best timestamp you can get is down to the whole second
                 m_timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
 
-                decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)m_timebase;
-                m_timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);
+                // "Actual fractional seconds" are obtained by taking fractionOfSecond and dividing by timebase.
+                // Since we are converting to ticks, we need to multiply by Ticks.PerSecond.
+                // We do the multiplication first so that the whole operation can be done using integer arithmetic.
+                // m_timebase / 2L is added before dividing by timebase in order to round the result.
+                ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
+                m_timestamp += (ticksBeyondSecond + m_timebase / 2L) / m_timebase;
 
                 m_timeQualityFlags = fractionOfSecond & Common.TimeQualityFlagsMask;
             }
@@ -678,7 +683,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             get
             {
-                return (UInt24)((decimal)m_timestamp.DistanceBeyondSecond() / (decimal)Ticks.PerSecond * (decimal)m_timebase);
+                // Fraction of second is determined by taking the "actual fractional second" of the timestamp and multiplying by timebase.
+                // Multiplication is done here before division so that the whole operation can be done using integer arithmetic.
+                // Ticks.PerSecond / 2L is added before dividing in order to round the result.
+                return (UInt24)(uint)((m_timestamp.DistanceBeyondSecond() * m_timebase + Ticks.PerSecond / 2L) / Ticks.PerSecond);
             }
         }
 

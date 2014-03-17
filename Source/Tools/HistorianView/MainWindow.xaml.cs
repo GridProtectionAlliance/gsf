@@ -36,13 +36,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Xml;
-using GSF.Collections;
+using System.Xml.Linq;
+using GSF;
 using GSF.COMTRADE;
-using GSF.Configuration;
 using GSF.Historian;
 using GSF.Historian.Files;
 using GSF.IO;
@@ -105,6 +105,7 @@ namespace HistorianView
             public event PropertyChangedEventHandler PropertyChanged;
 
             // Fields
+            private readonly ArchiveReader m_archiveReader;
             private readonly MetadataRecord m_metadata;
             private bool m_export;
 
@@ -115,14 +116,16 @@ namespace HistorianView
             /// <summary>
             /// Creates a new instance of the <see cref="MetadataWrapper"/> class.
             /// </summary>
+            /// <param name="archiveReader">The <see cref="ArchiveReader"/> that the metadata record came from.</param>
             /// <param name="metadata">The <see cref="MetadataRecord"/> to be wrapped.</param>
-            public MetadataWrapper(MetadataRecord metadata)
+            public MetadataWrapper(ArchiveReader archiveReader, MetadataRecord metadata)
             {
                 metadata.Synonym2 = ValidateSynonym2(metadata.Synonym2);
 
                 // This formats name in accordance with COMTRADE standard Annex H (may need to make this optional)
                 metadata.Name = FormatName(metadata.Name, metadata.Synonym1, metadata.Synonym2);
 
+                m_archiveReader = archiveReader;
                 m_metadata = metadata;
             }
 
@@ -268,6 +271,19 @@ namespace HistorianView
                 }
             }
 
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Returns the <see cref="ArchiveReader"/> that the metadata record came from.
+            /// </summary>
+            /// <returns>The archive reader.</returns>
+            public ArchiveReader GetArchiveReader()
+            {
+                return m_archiveReader;
+            }
+
             /// <summary>
             /// Returns the wrapped <see cref="MetadataRecord"/>.
             /// </summary>
@@ -276,10 +292,6 @@ namespace HistorianView
             {
                 return m_metadata;
             }
-
-            #endregion
-
-            #region [ Methods ]
 
             // Triggers the PropertyChanged event.
             private void OnPropertyChanged(string propertyName)
@@ -336,13 +348,21 @@ namespace HistorianView
         }
 
         // Fields
-        private string m_currentSessionPath;
         private ICollection<ArchiveReader> m_archiveReaders;
         private readonly List<MetadataWrapper> m_metadata;
+        private string[] m_tokens;
+
+        private string m_currentSessionPath;
+
         private DateTime m_startTime;
         private DateTime m_endTime;
-        private string[] m_tokens;
         private bool m_showDisabledPoints;
+
+        private FileType m_exportFileType;
+        private int m_exportFrameRate;
+        private double m_exportNominalFrequency;
+        private long m_exportTimeResolution;
+        private bool m_alignTimestampsInExport;
 
         private readonly ICollection<MenuItem> m_contextMenuItems;
         private readonly ICollection<string> m_visibleColumns;
@@ -357,6 +377,8 @@ namespace HistorianView
         /// </summary>
         public MainWindow()
         {
+            string[] defaultArchivePaths = new string[0];
+
             m_archiveReaders = new List<ArchiveReader>();
             m_metadata = new List<MetadataWrapper>();
             m_contextMenuItems = new List<MenuItem>();
@@ -365,32 +387,35 @@ namespace HistorianView
             InitializeComponent();
             InitializeChartWindow();
 
-            StartTime = TimeTag.Parse("*-5M").ToDateTime();
-            EndTime = TimeTag.Parse("*").ToDateTime();
+            m_exportFrameRate = 30;
+            m_exportNominalFrequency = 60.0D;
+            m_exportTimeResolution = 330000L;
+            m_alignTimestampsInExport = true;
+
             m_currentTimeCheckBox.IsChecked = true;
 
-            string[] lastArchiveLocations = ConfigurationFile.Current.Settings.General["ArchiveLocations", true].ValueAs("").Split('|').Where(archiveLocation => !string.IsNullOrWhiteSpace(archiveLocation) && File.Exists(archiveLocation)).ToArray();
+            OpenSessionFile(Path.Combine(FilePath.GetApplicationDataFolder(), "LastSession.hdv"), false);
 
-            if (lastArchiveLocations.Length == 0)
+            if (m_archiveReaders.Count == 0)
             {
                 // See if a local archive folder exists with a valid archive
                 string defaultArchiveLocation = FilePath.GetAbsolutePath("Archive");
 
                 if (Directory.Exists(defaultArchiveLocation))
-                    lastArchiveLocations = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
+                    defaultArchivePaths = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
 
-                if (lastArchiveLocations.Length == 0)
+                if (defaultArchivePaths.Length == 0)
                 {
                     // See if a local statistics folder exists with a valid archive
                     defaultArchiveLocation = FilePath.GetAbsolutePath("Statistics");
 
                     if (Directory.Exists(defaultArchiveLocation))
-                        lastArchiveLocations = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
+                        defaultArchivePaths = Directory.GetFiles(defaultArchiveLocation, "*_archive.d");
                 }
-            }
 
-            if (lastArchiveLocations.Length > 0)
-                OpenArchives(lastArchiveLocations);
+                if (defaultArchivePaths.Length > 0)
+                    OpenArchives(defaultArchivePaths);
+            }
         }
 
         #endregion
@@ -499,27 +524,32 @@ namespace HistorianView
             return m_endTime.ToString("MM/dd/yyyy HH:mm:ss.fff");
         }
 
-        private void OpenArchives(IEnumerable<string> fileNames)
+        private void OpenArchives(IEnumerable<string> archiveLocations)
         {
+            ArchiveReader archiveReader;
+
             ClearArchives();
 
-            foreach (string fileName in fileNames)
+            foreach (string archivelocation in archiveLocations)
             {
-                if (File.Exists(fileName))
-                    m_archiveReaders.Add(OpenArchiveReader(fileName));
+                archiveReader = OpenArchiveReader(archivelocation);
+
+                if ((object)archiveReader != null)
+                    m_archiveReaders.Add(archiveReader);
             }
 
             foreach (ArchiveReader reader in m_archiveReaders)
             {
                 foreach (MetadataRecord record in reader.MetadataFile.Read())
                 {
-                    m_metadata.Add(new MetadataWrapper(record));
+                    m_metadata.Add(new MetadataWrapper(reader, record));
                 }
             }
 
-            ArchiveIsOpen = true;
+            ArchiveIsOpen = m_archiveReaders.Any();
             FilterBySearchResults();
-            m_chartWindow.ArchiveReaders = m_archiveReaders;
+
+            m_chartWindow.VisiblePoints.Clear();
             TrySetChartInterval(null);
             m_chartWindow.UpdateChart();
         }
@@ -527,14 +557,15 @@ namespace HistorianView
         // Prompts the user to open one or more archive files.
         private void ShowOpenArchiveFileDialog()
         {
-            OpenFileDialog archiveDialog = new OpenFileDialog();
+            OpenArchivesDialog dialog = new OpenArchivesDialog();
 
-            archiveDialog.Filter = "Archive files|*_archive.d";
-            archiveDialog.CheckFileExists = true;
-            archiveDialog.Multiselect = true;
+            dialog.ArchiveLocations = m_archiveReaders
+                .Select(reader => string.Format("{0}|{1}", reader.FileName, reader.ArchiveOffloadLocation))
+                .ToList();
 
-            if (archiveDialog.ShowDialog() == true)
-                OpenArchives(archiveDialog.FileNames);
+            dialog.Owner = this;
+            dialog.ShowDialog();
+            OpenArchives(dialog.ArchiveLocations);
         }
 
         // Prompts the user to open a previously saved session file.
@@ -546,15 +577,15 @@ namespace HistorianView
             openSessionDialog.CheckFileExists = true;
 
             if (openSessionDialog.ShowDialog() == true)
-                OpenSessionFile(openSessionDialog.FileName);
+                OpenSessionFile(openSessionDialog.FileName, true);
         }
 
         // Prompts the user for the location to save the current session.
         private void ShowSaveSessionDialog()
         {
-            const string errorMessage = "Unable to save current time interval. Please enter a start time that is less than or equal to the end time.";
+            const string ErrorMessage = "Unable to save current time interval. Please enter a start time that is less than or equal to the end time.";
 
-            if (TrySetChartInterval(errorMessage))
+            if (TrySetChartInterval(ErrorMessage))
             {
                 SaveFileDialog saveSessionDialog = new SaveFileDialog();
 
@@ -564,62 +595,173 @@ namespace HistorianView
                 saveSessionDialog.CheckPathExists = true;
 
                 if (saveSessionDialog.ShowDialog() == true)
-                    SaveCurrentSession(saveSessionDialog.FileName);
+                    SaveSession(saveSessionDialog.FileName, true);
 
                 Focus();
             }
         }
 
         // Opens an archive reader and returns the ArchiveReader object.
-        private ArchiveReader OpenArchiveReader(string fileName)
+        private ArchiveReader OpenArchiveReader(string archiveLocation)
         {
-            ArchiveReader file = new ArchiveReader();
+            string[] paths = archiveLocation.Split('|');
+            string archiveFilePath = paths[0];
+            ArchiveReader file;
 
-            file.Open(fileName);
+            if (!File.Exists(paths[0]))
+                return null;
+
+            if (archiveFilePath.EndsWith("_dbase.dat", StringComparison.OrdinalIgnoreCase))
+                archiveFilePath = FilePath.GetFileList(Path.Combine(FilePath.GetDirectoryName(archiveFilePath), "*.d")).FirstOrDefault();
+
+            if (archiveFilePath == null)
+                return null;
+
+            file = new ArchiveReader();
+
+            if (paths.Length > 1)
+                file.Open(paths[0], paths[1]);
+            else
+                file.Open(paths[0]);
 
             return file;
         }
 
         // Opens a previously saved session file.
-        private void OpenSessionFile(string filePath)
+        private void OpenSessionFile(string filePath, bool setAsCurrentSession)
         {
-            XmlDocument doc = new XmlDocument();
-            XmlNode root;
-            IEnumerable<XmlElement> metadataElements;
+            IEnumerable<MetadataWrapper> wrappers;
+            IEnumerable<string> archiveLocations;
 
-            ClearArchives();
+            XDocument document;
+            XElement root;
 
-            doc.Load(filePath);
-            root = doc.SelectSingleNode("historianDataViewer");
+            string value;
+            FileType fileTypeValue;
+            DateTime dateTimeValue;
+            int intValue;
+            double doubleValue;
+            long longValue;
 
-            if ((object)root == null || (object)root.Attributes == null)
+            // If the hdv file doesn't exist, there's nothing to do
+            if (!File.Exists(filePath))
                 return;
 
-            StartTime = DateTime.Parse(root.Attributes["startTime"].Value);
-            EndTime = DateTime.Parse(root.Attributes["endTime"].Value);
-            metadataElements = root.ChildNodes.Cast<XmlElement>();
-            m_archiveReaders = metadataElements.Select(element => element.Attributes["archivePath"].Value).Distinct().Select(OpenArchiveReader).ToList();
+            // Load the hdv file as an XML document
+            document = XDocument.Load(filePath);
+            root = document.Root;
 
-            foreach (ArchiveReader reader in m_archiveReaders)
+            if (root == null)
+                return;
+
+            // Determine the values of start time, end time, chart resolution, and show disabled points
+            value = (string)root.Attribute("startTime");
+
+            if (DateTime.TryParse(value, out dateTimeValue))
             {
-                IEnumerable<MetadataWrapper> records = reader.MetadataFile.Read().Select(record => new MetadataWrapper(record));
+                m_currentTimeCheckBox.IsChecked = false;
 
-                foreach (MetadataWrapper record in records)
+                StartTime = dateTimeValue;
+
+                if (DateTime.TryParse((string)root.Attribute("endTime"), out dateTimeValue))
+                    EndTime = dateTimeValue;
+                else
+                    EndTime = StartTime + TimeSpan.FromMinutes(5.0D);
+            }
+            else if (Regex.IsMatch(value, @"\*-\d+[smhd]"))
+            {
+                m_currentTimeCheckBox.IsChecked = true;
+                m_currentTimeTextBox.Text = value.Substring(2, value.Length - 3);
+
+                m_currentTimeComboBox.SelectedItem = m_currentTimeComboBox.Items
+                    .Cast<ComboBoxItem>()
+                    .Where(item => item.Content.ToString().StartsWith(value[value.Length - 1].ToString()))
+                    .DefaultIfEmpty(m_currentTimeComboBox.Items[1])
+                    .First();
+            }
+
+            m_chartResolutionTextBox.Text = (string)root.Attribute("chartResolution") ?? m_chartResolutionTextBox.Text;
+            m_showDisabledPoints = ((string)root.Attribute("showDisabledPoints") ?? string.Empty).ParseBoolean();
+
+            // Get the export settings for the session
+            foreach (XAttribute exportAttribute in root.Elements("export").Attributes())
+            {
+                switch (exportAttribute.Name.LocalName)
                 {
-                    XmlElement metadataElement = metadataElements.SingleOrDefault(element => element.Attributes["historianId"].Value == record.GetMetadata().HistorianID.ToString() && element.Attributes["archivePath"].Value == reader.FileName);
+                    case "fileType":
+                        if (Enum.TryParse((string)exportAttribute, out fileTypeValue))
+                            m_exportFileType = fileTypeValue;
 
-                    if (metadataElement != null)
-                        record.Export = bool.Parse(metadataElement.Attributes["export"].Value);
+                        break;
 
-                    m_metadata.Add(record);
+                    case "frameRate":
+                        if (int.TryParse((string)exportAttribute, out intValue))
+                            m_exportFrameRate = intValue;
+
+                        break;
+
+                    case "nominalFrequency":
+                        if (double.TryParse((string)exportAttribute, out doubleValue))
+                            m_exportNominalFrequency = doubleValue;
+
+                        break;
+
+                    case "timeResolution":
+                        if (long.TryParse((string)exportAttribute, out longValue))
+                            m_exportTimeResolution = longValue;
+
+                        break;
+
+                    case "alignTimestamps":
+                        m_alignTimestampsInExport = ((string)exportAttribute).ToNonNullString().ParseBoolean();
+                        break;
                 }
             }
 
-            m_currentSessionPath = filePath;
-            Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
-            ArchiveIsOpen = true;
+            // Determine which archives to open based on the archive tags in the hdv file
+            archiveLocations = root.Elements("archive")
+                .Select(element => string.Format("{0}|{1}", (string)element.Attribute("path"), ((string)element.Attribute("offloadLocation")).ToNonNullString()))
+                .Where(location => (object)location != null)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (!archiveLocations.Any())
+            {
+                // Fall back on the archivePath attribute of the metadata tags if no valid archive tags are specified
+                archiveLocations = root.Elements("metadata").Attributes("archivePath")
+                    .Select(attribute => (string)attribute)
+                    .Where(location => (object)location != null)
+                    .Distinct(StringComparer.OrdinalIgnoreCase);
+            }
+
+            // Open the archives found in the hdv file
+            OpenArchives(archiveLocations);
+
+            // Determine which points to select using the metadata tags in the hdv file
+            wrappers = root
+                .Elements("metadata")
+                .Select(element => m_metadata.FirstOrDefault(wrapper => (string)element.Attribute("archivePath") == wrapper.GetArchiveReader().FileName && (string)element.Attribute("historianId") == wrapper.GetMetadata().HistorianID.ToString()))
+                .Where(wrapper => (object)wrapper != null);
+
+            foreach (MetadataWrapper wrapper in wrappers)
+                wrapper.Export = true;
+
             FilterBySearchResults();
-            m_chartWindow.ArchiveReaders = m_archiveReaders;
+
+            if (setAsCurrentSession)
+            {
+                // Set the current session path and the title
+                // of the window to reflect the current session
+                m_currentSessionPath = filePath;
+                Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
+            }
+
+            // Update chart based on the selected points in the newly opened session
+            m_chartWindow.VisiblePoints = m_metadata
+                .Where(wrapper => wrapper.Export)
+                .Select(wrapper => Tuple.Create(wrapper.GetArchiveReader(), wrapper.GetMetadata()))
+                .ToList();
+
             TrySetChartInterval(null);
             m_chartWindow.UpdateChart();
         }
@@ -628,63 +770,65 @@ namespace HistorianView
         // or prompts the user if the current file path has not been set.
         private void SaveCurrentSession()
         {
-            const string errorMessage = "Unable to save current time interval. Please enter a start time that is less than or equal to the end time.";
+            const string ErrorMessage = "Unable to save current time interval. Please enter a start time that is less than or equal to the end time.";
 
             if (m_currentSessionPath == null)
             {
                 ShowSaveSessionDialog();
             }
-            else if (TrySetChartInterval(errorMessage))
+            else if (TrySetChartInterval(ErrorMessage))
             {
-                SaveCurrentSession(m_currentSessionPath);
+                SaveSession(m_currentSessionPath, true);
             }
         }
 
         // Saves the current session to a session file.
-        private void SaveCurrentSession(string filePath)
+        private void SaveSession(string filePath, bool setAsCurrentSession)
         {
-            string[] attributeNames = { "archivePath", "historianId", "export" };
-            XmlDocument doc = new XmlDocument();
-            XmlElement root = doc.CreateElement("historianDataViewer");
-            XmlAttribute startTime = doc.CreateAttribute("startTime");
-            XmlAttribute endTime = doc.CreateAttribute("endTime");
+            XDocument document;
+            XElement root;
 
-            doc.AppendChild(doc.CreateXmlDeclaration("1.0", "UTF-8", string.Empty));
-            doc.AppendChild(root);
+            // Save general settings and export settings
+            root = new XElement("historianDataViewer",
+                new XAttribute("startTime", GetStartTime()),
+                new XAttribute("endTime", GetEndTime()),
+                new XAttribute("chartResolution", m_chartResolutionTextBox.Text),
+                new XAttribute("showDisabledPoints", m_showDisabledPoints),
 
-            startTime.Value = StartTime.ToString("MM/dd/yyyy HH:mm:ss.fff");
-            endTime.Value = EndTime.ToString("MM/dd/yyyy HH:mm:ss.fff");
-            root.Attributes.Append(startTime);
-            root.Attributes.Append(endTime);
+                new XElement("export",
+                    new XAttribute("fileType", m_exportFileType),
+                    new XAttribute("frameRate", m_exportFrameRate),
+                    new XAttribute("nominalFrequency", m_exportNominalFrequency),
+                    new XAttribute("timeResolution", m_exportTimeResolution),
+                    new XAttribute("alignTimestamps", m_alignTimestampsInExport)));
 
-            foreach (ArchiveReader reader in m_archiveReaders)
+            // Save information about the currently open archives
+            foreach (ArchiveReader archiveReader in m_archiveReaders)
             {
-                foreach (MetadataRecord record in reader.MetadataFile.Read())
-                {
-                    // The earlier version used m_metadata.Single which would throw an exception(when GetMetadata returns a null) causing the application to crash
-                    // When m_metadata.SingleOrDefault is used it returns a null(default) value when the comparison is false
-                    MetadataWrapper wrapper = m_metadata.SingleOrDefault(wrap => wrap.GetMetadata().CompareTo(record) == 0);
-
-                    if ((object)wrapper != null && wrapper.Export)
-                    {
-                        string[] attributeValues = { reader.FileName, record.HistorianID.ToString(), wrapper.Export.ToString() };
-                        XmlElement metadataElement = doc.CreateElement("metadata");
-
-                        for (int i = 0; i < attributeNames.Length; i++)
-                        {
-                            XmlAttribute attribute = doc.CreateAttribute(attributeNames[i]);
-                            attribute.Value = attributeValues[i];
-                            metadataElement.Attributes.Append(attribute);
-                        }
-
-                        root.AppendChild(metadataElement);
-                    }
-                }
+                root.Add(new XElement("archive",
+                    new XAttribute("path", archiveReader.FileName),
+                    new XAttribute("offloadLocation", archiveReader.ArchiveOffloadLocation)));
             }
 
-            doc.Save(filePath);
-            m_currentSessionPath = filePath;
-            Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
+            // Save information about the currently selected points
+            foreach (MetadataWrapper wrapper in m_metadata.Where(m => m.Export))
+            {
+                root.Add(new XElement("metadata",
+                    new XAttribute("archivePath", wrapper.GetArchiveReader().FileName),
+                    new XAttribute("historianId", wrapper.GetMetadata().HistorianID)));
+            }
+
+            // Save the document to the disk
+            document = new XDocument(root);
+            document.Save(filePath);
+
+            if (setAsCurrentSession)
+            {
+                // Set the current session path and the title
+                // of the window to reflect the current session
+                m_currentSessionPath = filePath;
+                Title = Path.GetFileName(filePath) + " - Historian Data Viewer";
+            }
         }
 
         // Creates an item for the data grid header area's context menu.
@@ -764,13 +908,18 @@ namespace HistorianView
         // Displays the chart window.
         private void TrendRequested()
         {
-            const string chartIntervalErrorMessage = "Unable to set x-axis boundaries for the chart. Please enter a start time that is less than or equal to the end time.";
+            const string ChartIntervalErrorMessage = "Unable to set x-axis boundaries for the chart. Please enter a start time that is less than or equal to the end time.";
 
-            if (!TrySetChartInterval(chartIntervalErrorMessage))
+            if (!TrySetChartInterval(ChartIntervalErrorMessage))
                 return;
 
             SetChartResolution();
-            m_chartWindow.VisiblePoints = m_metadata.Where(wrapper => wrapper.Export).Select(wrapper => wrapper.GetMetadata()).ToList();
+
+            m_chartWindow.VisiblePoints = m_metadata
+                .Where(wrapper => wrapper.Export)
+                .Select(wrapper => Tuple.Create(wrapper.GetArchiveReader(), wrapper.GetMetadata()))
+                .ToList();
+
             m_chartWindow.UpdateChart();
             m_chartWindow.Show();
             m_chartWindow.Focus();
@@ -779,137 +928,178 @@ namespace HistorianView
         // Exports measurements to a CSV or COMTRADE file.
         private void ExportRequested()
         {
-            string exportFileName = GetExportFilePath();
+            ExportDialog dialog = new ExportDialog();
+            string exportFileName;
 
-            if ((object)exportFileName != null)
+            dialog.Owner = this;
+            dialog.FileType = m_exportFileType;
+            dialog.FrameRate = m_exportFrameRate;
+            dialog.NominalFrequency = m_exportNominalFrequency;
+            dialog.TimeResolution = m_exportTimeResolution;
+            dialog.AlignTimestamps = m_alignTimestampsInExport;
+
+            if (dialog.ShowDialog() == true)
             {
-                string fileType = Path.GetExtension(exportFileName) ?? "";
-                fileType = fileType.ToLowerInvariant().Trim();
+                exportFileName = GetExportFilePath(dialog.FileType);
 
-                // Note - all COMTRADE data files end in .DAT, just using .BIN as a marker for binary export
-                bool isComtrade = string.Compare(fileType, ".bin", StringComparison.InvariantCultureIgnoreCase) == 0 || string.Compare(fileType, ".dat", StringComparison.InvariantCultureIgnoreCase) == 0;
-
-                StreamWriter dataFileWriter = null;
-                StreamWriter configFileWriter = null;
-
-                try
+                if ((object)exportFileName != null)
                 {
-                    int index = 0;
+                    StreamWriter dataFileWriter = null;
+                    StreamWriter configFileWriter = null;
 
-                    Dictionary<MetadataWrapper, ArchiveReader> metadata = m_metadata
-                        .Where(wrapper => wrapper.Export)
-                        .OrderBy(wrapper => wrapper.GetMetadata(), MetadataSorter.Default)
-                        .ToDictionary(
-                            wrapper => wrapper,
-                            wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata().CompareTo(record) == 0))
-                        );
+                    m_exportFileType = dialog.FileType;
+                    m_exportFrameRate = dialog.FrameRate;
+                    m_exportNominalFrequency = dialog.NominalFrequency;
+                    m_exportTimeResolution = dialog.TimeResolution;
+                    m_alignTimestampsInExport = dialog.AlignTimestamps;
 
-                    Dictionary<TimeTag, List<string[]>> data = new Dictionary<TimeTag, List<string[]>>();
-                    List<double> averages = new List<double>();
-                    List<double> maximums = new List<double>();
-                    List<double> minimums = new List<double>();
-
-                    foreach (MetadataWrapper wrapper in metadata.Keys)
+                    try
                     {
-                        double min = double.NaN;
-                        double max = double.NaN;
-                        double total = 0.0;
-                        int count = 0;
+                        int index = 0;
 
-                        foreach (IDataPoint point in metadata[wrapper].ReadData(wrapper.GetMetadata().HistorianID, GetStartTime(), GetEndTime()))
+                        Dictionary<MetadataWrapper, ArchiveReader> metadata = m_metadata
+                            .Where(wrapper => wrapper.Export)
+                            .OrderBy(wrapper => wrapper.GetMetadata(), MetadataSorter.Default)
+                            .ToDictionary(
+                                wrapper => wrapper,
+                                wrapper => m_archiveReaders.Single(archive => archive.MetadataFile.Read().Any(record => wrapper.GetMetadata().CompareTo(record) == 0))
+                            );
+
+                        Dictionary<TimeTag, List<string[]>> data = new Dictionary<TimeTag, List<string[]>>();
+                        TimeTag startTime = TimeTag.Parse(GetStartTime());
+                        TimeTag endTime = TimeTag.Parse(GetEndTime());
+
+                        List<double> averages = new List<double>();
+                        List<double> maximums = new List<double>();
+                        List<double> minimums = new List<double>();
+
+                        if (m_alignTimestampsInExport)
+                            PopulateWithAlignedTimestamps(data, startTime, endTime, m_exportFrameRate);
+
+                        foreach (MetadataWrapper wrapper in metadata.Keys)
                         {
-                            TimeTag time = point.Time;
-                            List<string[]> rowList;
-                            string[] row;
-                            int rowIndex;
+                            double min = double.NaN;
+                            double max = double.NaN;
+                            double total = 0.0;
+                            int count = 0;
 
-                            // Get or create the list of rows for the timetag of the current point.
-                            if (!data.TryGetValue(time, out rowList))
+                            foreach (IDataPoint point in metadata[wrapper].ReadData(wrapper.GetMetadata().HistorianID, startTime, endTime))
                             {
-                                rowList = new List<string[]>();
-                                data.Add(time, rowList);
-                            }
+                                TimeTag time = point.Time;
+                                List<string[]> rowList;
+                                string[] row;
+                                int rowIndex;
 
-                            // Attempt to add the value of the current point to an existing list.
-                            for (rowIndex = 0; rowIndex < rowList.Count; rowIndex++)
-                            {
-                                row = rowList[rowIndex];
+                                if (m_alignTimestampsInExport)
+                                    time = new TimeTag(new DateTime(Ticks.AlignToSubsecondDistribution(point.Time.ToDateTime().Ticks, m_exportFrameRate, m_exportTimeResolution)));
 
-                                if (row[index] == null)
+                                // Get or create the list of rows for the timetag of the current point.
+                                if (!data.TryGetValue(time, out rowList))
                                 {
-                                    row[index] = point.Value.ToString();
-                                    break;
+                                    rowList = new List<string[]>();
+                                    data.Add(time, rowList);
                                 }
+
+                                // Attempt to add the value of the current point to an existing list.
+                                for (rowIndex = 0; rowIndex < rowList.Count; rowIndex++)
+                                {
+                                    row = rowList[rowIndex];
+
+                                    // When aligning timestamps, ensure that multiple
+                                    // rows are not added for duplicate timestamps
+                                    if (m_alignTimestampsInExport || row[index] == null)
+                                    {
+                                        row[index] = point.Value.ToString();
+                                        break;
+                                    }
+                                }
+
+                                // If all rows were already occupied with
+                                // a value for this point, add a new row.
+                                if (rowIndex >= rowList.Count)
+                                {
+                                    row = new string[metadata.Count];
+                                    row[index] = point.Value.ToString();
+                                    rowList.Add(row);
+                                }
+
+                                // Determine if this is the new minimum value.
+                                if (!(point.Value >= min))
+                                    min = point.Value;
+
+                                // Determine if this is the new maximum value.
+                                if (!(point.Value <= max))
+                                    max = point.Value;
+
+                                // Increase total and count for average calculation.
+                                total += point.Value;
+                                count++;
                             }
 
-                            // If all rows were already occupied with
-                            // a value for this point, add a new row.
-                            if (rowIndex >= rowList.Count)
-                            {
-                                row = new string[metadata.Count];
-                                row[index] = point.Value.ToString();
-                                rowList.Add(row);
-                            }
+                            averages.Add(total / count);
+                            maximums.Add(max);
+                            minimums.Add(min);
 
-                            // Determine if this is the new minimum value.
-                            if (!(point.Value >= min))
-                                min = point.Value;
-
-                            // Determine if this is the new maximum value.
-                            if (!(point.Value <= max))
-                                max = point.Value;
-
-                            // Increase total and count for average calculation.
-                            total += point.Value;
-                            count++;
+                            index++;
                         }
 
-                        averages.Add(total / count);
-                        maximums.Add(max);
-                        minimums.Add(min);
+                        if (m_exportFileType == FileType.ComtradeAscii || m_exportFileType == FileType.ComtradeBinary)
+                        {
+                            // COMTRADE Export
+                            string rootFileName = FilePath.GetDirectoryName(exportFileName) + FilePath.GetFileNameWithoutExtension(exportFileName);
+                            string configFileName = rootFileName + ".cfg";
+                            string dataFileName = rootFileName + ".dat";
+                            bool isBinary = m_exportFileType == FileType.ComtradeBinary;
 
-                        index++;
+                            configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
+                            Schema schema = WriteComtradeConfigFile(configFileWriter, metadata, data.Count, isBinary);
+
+                            dataFileWriter = new StreamWriter(new FileStream(dataFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
+                            WriteComtradeDataFile(dataFileWriter, schema, data, isBinary);
+                        }
+                        else
+                        {
+                            // CSV Export
+                            dataFileWriter = new StreamWriter(new FileStream(exportFileName, FileMode.Create, FileAccess.Write));
+                            WriteCsvDataFile(dataFileWriter, metadata, data, averages, maximums, minimums);
+                        }
                     }
-
-                    if (isComtrade)
+                    finally
                     {
-                        // COMTRADE Export
-                        string rootFileName = FilePath.GetDirectoryName(exportFileName) + FilePath.GetFileNameWithoutExtension(exportFileName);
-                        string configFileName = rootFileName + ".cfg";
-                        string dataFileName = rootFileName + ".dat";
-                        bool isBinary = string.Compare(fileType, ".bin", StringComparison.InvariantCultureIgnoreCase) == 0;
+                        if ((object)dataFileWriter != null)
+                            dataFileWriter.Close();
 
-                        configFileWriter = new StreamWriter(new FileStream(configFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
-                        Schema schema = WriteComtradeConfigFile(configFileWriter, metadata, data.Count, isBinary);
-
-                        dataFileWriter = new StreamWriter(new FileStream(dataFileName, FileMode.Create, FileAccess.Write), Encoding.ASCII);
-                        WriteComtradeDataFile(dataFileWriter, schema, data, isBinary);
-                    }
-                    else
-                    {
-                        // CSV Export
-                        dataFileWriter = new StreamWriter(new FileStream(exportFileName, FileMode.Create, FileAccess.Write));
-                        WriteCsvDataFile(dataFileWriter, metadata, data, averages, maximums, minimums);
+                        if ((object)configFileWriter != null)
+                            configFileWriter.Close();
                     }
                 }
-                finally
+            }
+        }
+
+        private void PopulateWithAlignedTimestamps(Dictionary<TimeTag, List<string[]>> data, TimeTag startTime, TimeTag endTime, int framesPerSecond)
+        {
+            Ticks[] subsecondDistribution = Ticks.SubsecondDistribution(framesPerSecond);
+            Ticks startTimeTicks = startTime.ToDateTime().Ticks;
+            Ticks endTimeTicks = endTime.ToDateTime().Ticks;
+
+            Ticks currentSecond = startTimeTicks.BaselinedTimestamp(BaselineTimeInterval.Second);
+            Ticks[] currentSecondDistribution = subsecondDistribution.Select(time => currentSecond + time).ToArray();
+
+            while (currentSecond <= endTimeTicks)
+            {
+                foreach (Ticks timestamp in currentSecondDistribution)
                 {
-                    if ((object)dataFileWriter != null)
-                        dataFileWriter.Close();
-
-                    if ((object)configFileWriter != null)
-                        configFileWriter.Close();
+                    if (timestamp >= startTimeTicks)
+                        data.Add(new TimeTag(new DateTime(timestamp)), new List<string[]>());
                 }
+
+                currentSecond += Ticks.PerSecond;
+                currentSecondDistribution = subsecondDistribution.Select(time => currentSecond + time).ToArray();
             }
         }
 
         private Schema WriteComtradeConfigFile(StreamWriter configFileWriter, Dictionary<MetadataWrapper, ArchiveReader> metadata, int sampleCount, bool isBinary)
         {
-            // TODO: Define these parameters in an options dialog - perhaps "Binary/ASCII" should be an option there as well so there's only one COMTRADE file export option (i.e., no virtual ".bin" file)
-            //const double timeFactor = 1000.0D;
-            //const double samplingRate = 1000.0D / 30.0D;
-            //const LineFrequency nominalFrequency = LineFrequency.Hz60;
-
             // Convert openHistorian metadata to COMTRADE channel metadata
             IEnumerable<ChannelMetadata> channelMetadata = metadata.Keys
                 .Select(wrapper => wrapper.GetMetadata())
@@ -922,10 +1112,10 @@ namespace HistorianView
                 "Source=" + m_archiveReaders.First().FileName.Replace(',', '_'),
                 m_startTime.Ticks,
                 sampleCount,
-                isBinary);
-            //timeFactor,
-            //samplingRate,
-            //nominalFrequency);
+                isBinary,
+                1.0D,
+                m_exportFrameRate,
+                m_exportNominalFrequency);
 
             // Write new schema file
             configFileWriter.Write(schema.FileImage);
@@ -1099,12 +1289,24 @@ namespace HistorianView
         }
 
         // Gets the file path of the CSV file in which to export measurements.
-        private string GetExportFilePath()
+        private string GetExportFilePath(FileType fileType)
         {
             SaveFileDialog csvDialog = new SaveFileDialog();
 
-            csvDialog.Filter = "CSV Files|*.csv|COMTRADE Files (ASCII)|*.dat|COMTRADE Files (Binary)|*.bin|All Files|*.*";
-            csvDialog.DefaultExt = "csv";
+            switch (fileType)
+            {
+                case FileType.CSV:
+                    csvDialog.Filter = "CSV Files|*.csv|All Files|*.*";
+                    csvDialog.DefaultExt = "csv";
+                    break;
+
+                case FileType.ComtradeAscii:
+                case FileType.ComtradeBinary:
+                    csvDialog.Filter = "COMTRADE Files|*.dat|All Files|*.*";
+                    csvDialog.DefaultExt = "dat";
+                    break;
+            }
+
             csvDialog.AddExtension = true;
             csvDialog.CheckPathExists = true;
 
@@ -1136,15 +1338,6 @@ namespace HistorianView
             m_metadata.Clear();
         }
 
-        // Occurs when the DatePickers are initialized.
-        private void DatePicker_Loaded(object sender, RoutedEventArgs e)
-        {
-            DatePicker picker = sender as DatePicker;
-
-            if (picker != null)
-                picker.SelectedDate = DateTime.Today;
-        }
-
         // Occurs when the starting date is changed.
         private void StartTimeDatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -1155,8 +1348,8 @@ namespace HistorianView
             dateString.Append(m_startTime.ToString("HH:mm:ss.fff"));
 
             // Converts any date format style to US format and clubs both in dateString. 
-            const string format = "MM/dd/yyyy HH:mm:ss.fff";
-            m_startTime = DateTime.ParseExact(dateString.ToString(), format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
+            const string Format = "MM/dd/yyyy HH:mm:ss.fff";
+            m_startTime = DateTime.ParseExact(dateString.ToString(), Format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
         }
 
         // Occurs when the ending date is changed.
@@ -1169,8 +1362,8 @@ namespace HistorianView
             dateString.Append(m_endTime.ToString("HH:mm:ss.fff"));
 
             // Converts any date format style to US format and clubs both in dateString.
-            const string format = "MM/dd/yyyy HH:mm:ss.fff";
-            m_endTime = DateTime.ParseExact(dateString.ToString(), format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
+            const string Format = "MM/dd/yyyy HH:mm:ss.fff";
+            m_endTime = DateTime.ParseExact(dateString.ToString(), Format, CultureInfo.CreateSpecificCulture("en-US"), DateTimeStyles.None);
         }
 
         // Occurs when the user changes the starting time.
@@ -1235,7 +1428,7 @@ namespace HistorianView
         }
 
         // Occurs when the user selects a control that indicates they are ready to select archive files.
-        private void OpenArchiveControl_Click(object sender, RoutedEventArgs e)
+        private void OpenArchivesControl_Click(object sender, RoutedEventArgs e)
         {
             ShowOpenArchiveFileDialog();
         }
@@ -1459,14 +1652,7 @@ namespace HistorianView
         // Clears the archives and closes child windows.
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            string lastArchiveLocations = "";
-
-            if (m_archiveReaders != null && m_archiveReaders.Count > 0)
-                lastArchiveLocations = m_archiveReaders.Select(file => file.FileName).ToDelimitedString();
-
-            ConfigurationFile.Current.Settings.General["ArchiveLocations", true].Value = lastArchiveLocations;
-            ConfigurationFile.Current.Save();
-
+            SaveSession(Path.Combine(FilePath.GetApplicationDataFolder(), "LastSession.hdv"), false);
             ClearArchives();
             m_chartWindow.Closing -= ChildWindow_Closing;
             m_chartWindow.Close();

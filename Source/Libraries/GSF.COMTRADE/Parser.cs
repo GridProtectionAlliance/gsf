@@ -305,7 +305,7 @@ namespace GSF.COMTRADE
                 SampleRate sampleRate = m_schema.SampleRates.LastOrDefault(sr => sample <= sr.EndSample);
 
                 if (sampleRate.Rate > 0.0D)
-                    m_timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample * m_schema.TimeFactor) + m_schema.StartTime.Value);
+                    m_timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample) + m_schema.StartTime.Value);
             }
 
             // Fall back on specified microsecond time
@@ -368,7 +368,7 @@ namespace GSF.COMTRADE
                         SampleRate sampleRate = m_schema.SampleRates.LastOrDefault(sr => sample <= sr.EndSample);
 
                         if (sampleRate.Rate > 0.0D)
-                            m_timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample * m_schema.TimeFactor) + m_schema.StartTime.Value);
+                            m_timestamp = new DateTime(Ticks.FromSeconds(1.0D / sampleRate.Rate * sample) + m_schema.StartTime.Value);
                     }
 
                     // Read microsecond timestamp

@@ -104,12 +104,17 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
             if ((object)configurationFrame != null)
             {
+                long ticksBeyondSecond;
+
                 // If config frame is available, frames have enough information for sub-second time resolution
                 m_timebase = configurationFrame.Timebase;
-                decimal fractionalSeconds = (fractionOfSecond & ~Common.TimeQualityFlagsMask) / (decimal)m_timebase;
-                m_timestamp += (long)(fractionalSeconds * (decimal)Ticks.PerSecond);
-                m_frameRate = (decimal)configurationFrame.FrameRate;
-                m_ticksPerFrame = configurationFrame.TicksPerFrame;
+
+                // "Actual fractional seconds" are obtained by taking fractionOfSecond and dividing by timebase.
+                // Since we are converting to ticks, we need to multiply by Ticks.PerSecond.
+                // We do the multiplication first so that the whole operation can be done using integer arithmetic.
+                // m_timebase / 2L is added before dividing by timebase in order to round the result.
+                ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
+                m_timestamp += (ticksBeyondSecond + m_timebase / 2L) / m_timebase;
             }
 
             m_timeQualityFlags = fractionOfSecond & Common.TimeQualityFlagsMask;
@@ -269,22 +274,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             get
             {
-                // Fall back on original calculation method if ticks-per-frame or frame rate are not defined (e.g., generating FRACSEC for config frame)
-                if (m_ticksPerFrame == 0 || m_frameRate == 0)
-                    return (UInt24)((decimal)m_timestamp.DistanceBeyondSecond() / (decimal)Ticks.PerSecond * (decimal)m_timebase);
-
-                // Maximum fractional second resolution for Ticks is 10,000,000 but for a 24-bit integer maximum resolution is 16,777,215
-                // so we use a higher resolution division operation using a decimal to calculate fractional seconds more accurately
-                decimal ticksBeyondSecond, frameIndex;
-
-                // Remove the seconds from ticks
-                ticksBeyondSecond = (decimal)m_timestamp.DistanceBeyondSecond();
-
-                // Calculate a frame index between 0 and m_framesPerSecond - 1, corresponding to ticks rounded down to the nearest frame
-                frameIndex = ticksBeyondSecond / m_ticksPerFrame;
-
-                // Calculate a very high-resolution fractional second for frame at this index
-                return (UInt24)(frameIndex * (decimal)m_timebase / m_frameRate);
+                // Fraction of second is determined by taking the "actual fractional second" of the timestamp and multiplying by timebase.
+                // Multiplication is done here before division so that the whole operation can be done using integer arithmetic.
+                // Ticks.PerSecond / 2L is added before dividing in order to round the result.
+                return (UInt24)(uint)((m_timestamp.DistanceBeyondSecond() * m_timebase + Ticks.PerSecond / 2L) / Ticks.PerSecond);
             }
         }
 

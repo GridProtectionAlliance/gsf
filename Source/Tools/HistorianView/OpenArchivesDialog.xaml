@@ -1,0 +1,60 @@
+﻿<Window x:Class="HistorianView.OpenArchivesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:hv="clr-namespace:HistorianView"
+        Title="Manage Open Archive Files" Width="640" SizeToContent="Height" WindowStartupLocation="CenterOwner" Icon="jar_view.ico">
+    <StackPanel>
+        <TextBlock Margin="10" TextAlignment="Center" TextWrapping="Wrap" FontSize="16" FontWeight="Bold">
+            Manage archives opened by the Historian Trending Tool.
+        </TextBlock>
+        
+        <TextBlock Margin="10,5" TextAlignment="Center" TextWrapping="Wrap">
+            Each row represents an open archive.<LineBreak />
+            Click the "Open..." button to open another archive.<LineBreak />
+            The button to the left of an archive will close the archive.
+        </TextBlock>
+        
+        <TextBlock Margin="10,5" TextAlignment="Center" TextWrapping="Wrap">
+            Double-click an offload location to edit it.<LineBreak />
+            Click the browse button to search the file system for an offload location.<LineBreak />
+            If you do not know what the offload location is, leave it blank.
+        </TextBlock>
+
+        <TextBlock Margin="10,5" TextAlignment="Center" TextWrapping="Wrap">
+            Click the "Finish" button when finished.
+        </TextBlock>
+
+        <DataGrid Name="ArchiveDataGrid" Margin="10" AutoGenerateColumns="False" CanUserAddRows="False">
+            <DataGrid.ItemsSource>
+                <hv:ArchiveCollection x:Name="Archives" />
+            </DataGrid.ItemsSource>
+
+            <DataGrid.Columns>
+                <DataGridTemplateColumn CanUserSort="False" CanUserResize="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button DataContext="{Binding ID}" ToolTip="Close Archive" Click="CloseArchiveButton_Click">
+                                <Image Width="18" Height="18" Source="/HistorianView;component/Icons/jar_delete.png" />
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Archive" IsReadOnly="True" Binding="{Binding Name}" />
+                <DataGridTextColumn Header="Location" Width="*" IsReadOnly="True" Binding="{Binding Location}" />
+                <DataGridTextColumn Header="Offload Location" Width="*" Binding="{Binding Path=OffloadLocation, Mode=TwoWay}" />
+                <DataGridTemplateColumn Width="80" CanUserSort="False" CanUserResize="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button DataContext="{Binding ID}" Width="75" Height="25" Content="Browse..." Click="BrowseButton_Click" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Margin="10" Orientation="Horizontal">
+            <Button Width="80" Height="25" HorizontalAlignment="Left" Content="Open..." Click="OpenArchiveButton_Click" />
+            <Button Margin="10,0" Width="80" Height="25" HorizontalAlignment="Left" Content="Finish" IsCancel="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

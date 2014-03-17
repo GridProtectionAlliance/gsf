@@ -126,12 +126,6 @@ namespace PhasorProtocolAdapters.Iec61850_90_5
             string setting;
 
             // Load optional parameters
-            if (settings.TryGetValue("timebase", out setting))
-                m_timeBase = uint.Parse(setting);
-            else
-                m_timeBase = GSF.PhasorProtocols.IEC61850_90_5.Common.Timebase;
-
-            // Load optional parameters
             if (settings.TryGetValue("validateIDCode", out setting))
                 m_validateIDCode = setting.ParseBoolean();
             else

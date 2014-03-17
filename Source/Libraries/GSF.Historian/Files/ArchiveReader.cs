@@ -144,6 +144,20 @@ namespace GSF.Historian.Files
         }
 
         /// <summary>
+        /// Gets the path to the offload location used by the <see cref="ArchiveFile"/>.
+        /// </summary>
+        public string ArchiveOffloadLocation
+        {
+            get
+            {
+                if ((object)m_archiveFile == null)
+                    return null;
+
+                return m_archiveFile.ArchiveOffloadLocation;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="StateFile"/> used by the <see cref="ArchiveFile"/>.
         /// </summary>
         public StateFile StateFile
@@ -231,10 +245,11 @@ namespace GSF.Historian.Files
         /// Opens the <see cref="ArchiveFile"/> for use.
         /// </summary>
         /// <param name="fileName">Archive .D archive file name.</param>
-        public void Open(string fileName)
+        /// <param name="offloadLocation">Path to archive offload location.</param>
+        public void Open(string fileName, string offloadLocation = "")
         {
             CloseArchiveFile();
-            m_archiveFile = OpenArchiveFile(fileName);
+            m_archiveFile = OpenArchiveFile(fileName, offloadLocation.ToNonNullString());
         }
 
         /// <summary>
@@ -399,7 +414,7 @@ namespace GSF.Historian.Files
         }
 
         // Opens an archive file as read-only and returns the ArchiveFile object.
-        private ArchiveFile OpenArchiveFile(string fileName)
+        private ArchiveFile OpenArchiveFile(string fileName, string offloadLocation)
         {
             const string metadataFileName = "{0}{1}_dbase.dat";
             const string stateFileName = "{0}{1}_startup.dat";
@@ -415,6 +430,7 @@ namespace GSF.Historian.Files
                 FileAccessMode = FileAccess.Read,
                 MonitorNewArchiveFiles = true,
                 PersistSettings = false,
+                ArchiveOffloadLocation = offloadLocation,
                 StateFile = new StateFile
                 {
                     FileAccessMode = FileAccess.Read,

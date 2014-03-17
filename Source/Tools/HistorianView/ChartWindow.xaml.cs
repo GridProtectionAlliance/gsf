@@ -107,8 +107,7 @@ namespace HistorianView
         public event EventHandler ChartUpdated;
 
         // Fields
-        private ICollection<ArchiveReader> m_archiveReaders;
-        private ICollection<MetadataRecord> m_visiblePoints;
+        private ICollection<Tuple<ArchiveReader, MetadataRecord>> m_visiblePoints;
         private int m_chartResolution;
         private readonly LinkedList<ChartBoundary> m_backwardHistory;
         private readonly LinkedList<ChartBoundary> m_forwardHistory;
@@ -126,8 +125,7 @@ namespace HistorianView
 
         public ChartWindow()
         {
-            m_archiveReaders = new List<ArchiveReader>();
-            m_visiblePoints = new List<MetadataRecord>();
+            m_visiblePoints = new List<Tuple<ArchiveReader, MetadataRecord>>();
             m_chartResolution = 100;
 
             m_backwardHistory = new LinkedList<ChartBoundary>();
@@ -142,20 +140,7 @@ namespace HistorianView
 
         #region [ Properties ]
 
-        public ICollection<ArchiveReader> ArchiveReaders
-        {
-            get
-            {
-                return m_archiveReaders;
-            }
-            set
-            {
-                m_archiveReaders = value;
-                m_visiblePoints.Clear();
-            }
-        }
-
-        public ICollection<MetadataRecord> VisiblePoints
+        public ICollection<Tuple<ArchiveReader, MetadataRecord>> VisiblePoints
         {
             get
             {
@@ -183,7 +168,7 @@ namespace HistorianView
         {
             get
             {
-                return m_xAxis.ActualMinimum.Value;
+                return m_xAxis.ActualMinimum.GetValueOrDefault();
             }
         }
 
@@ -191,7 +176,7 @@ namespace HistorianView
         {
             get
             {
-                return m_xAxis.ActualMaximum.Value;
+                return m_xAxis.ActualMaximum.GetValueOrDefault();
             }
         }
 
@@ -245,34 +230,34 @@ namespace HistorianView
 
             m_chart.Series.Clear();
 
-            foreach (ArchiveReader reader in m_archiveReaders)
+            foreach (Tuple<ArchiveReader, MetadataRecord> visiblePoint in m_visiblePoints)
             {
-                foreach (MetadataRecord record in reader.MetadataFile.Read())
+                if (m_chartResolution > 0 && colorIndex < m_lineColors.Count)
                 {
-                    if (m_chartResolution > 0 && colorIndex < m_lineColors.Count && m_visiblePoints.Any(point => record == point))
-                    {
-                        LineSeries series = new LineSeries();
-                        IEnumerable<IDataPoint> data = reader.ReadData(record.HistorianID, startTime, endTime);
-                        int interval = (data.Count() / m_chartResolution) + 1;
-                        int pointCount = 0;
+                    ArchiveReader reader = visiblePoint.Item1;
+                    MetadataRecord record = visiblePoint.Item2;
+                    IEnumerable<IDataPoint> data = reader.ReadData(record.HistorianID, startTime, endTime);
 
-                        // Change how data points are displayed.
-                        series.DataPointStyle = new Style(typeof(LineDataPoint));
-                        series.DataPointStyle.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(m_lineColors[colorIndex])));
-                        series.DataPointStyle.Setters.Add(new Setter(TemplateProperty, new ControlTemplate()));
-                        colorIndex++;
+                    LineSeries series = new LineSeries();
+                    int interval = (data.Count() / m_chartResolution) + 1;
+                    int pointCount = 0;
 
-                        // Set the title of the series as it will appear in the legend.
-                        series.Title = record.Name;
+                    // Change how data points are displayed.
+                    series.DataPointStyle = new Style(typeof(LineDataPoint));
+                    series.DataPointStyle.Setters.Add(new Setter(BackgroundProperty, new SolidColorBrush(m_lineColors[colorIndex])));
+                    series.DataPointStyle.Setters.Add(new Setter(TemplateProperty, new ControlTemplate()));
+                    colorIndex++;
 
-                        // Filter the data to 100 data points.
-                        series.ItemsSource = data.Where(point => (pointCount++ % interval) == 0).Select(point => new DataPointWrapper(point));
-                        series.IndependentValuePath = "Time";
-                        series.DependentValuePath = "Value";
+                    // Set the title of the series as it will appear in the legend.
+                    series.Title = record.Name;
 
-                        // Add the series to the chart.
-                        m_chart.Series.Add(series);
-                    }
+                    // Filter the data to 100 data points.
+                    series.ItemsSource = data.Where(point => (pointCount++ % interval) == 0).Select(point => new DataPointWrapper(point));
+                    series.IndependentValuePath = "Time";
+                    series.DependentValuePath = "Value";
+
+                    // Add the series to the chart.
+                    m_chart.Series.Add(series);
                 }
             }
 
@@ -395,10 +380,10 @@ namespace HistorianView
         // Changes the chart boundaries based on the given percentages.
         private void Zoom(double leftPercent, double topPercent, double rightPercent, double bottomPercent)
         {
-            DateTime xAxisMinimum = m_xAxis.ActualMinimum.Value;
-            DateTime xAxisMaximum = m_xAxis.ActualMaximum.Value;
-            double yAxisMinimum = m_yAxis.Minimum ?? m_yAxis.ActualMinimum.Value;
-            double yAxisMaximum = m_yAxis.Maximum ?? m_yAxis.ActualMaximum.Value;
+            DateTime xAxisMinimum = m_xAxis.ActualMinimum.GetValueOrDefault();
+            DateTime xAxisMaximum = m_xAxis.ActualMaximum.GetValueOrDefault();
+            double yAxisMinimum = m_yAxis.Minimum ?? m_yAxis.ActualMinimum.GetValueOrDefault();
+            double yAxisMaximum = m_yAxis.Maximum ?? m_yAxis.ActualMaximum.GetValueOrDefault();
 
             // Save current boundary to backward chart history and clear out forward history.
             AddCurrentToBackwardHistory();
