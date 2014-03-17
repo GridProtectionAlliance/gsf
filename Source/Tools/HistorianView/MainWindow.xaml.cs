@@ -554,6 +554,14 @@ namespace HistorianView
             m_chartWindow.UpdateChart();
         }
 
+        private void ReopenArchives()
+        {
+            foreach (ArchiveReader reader in m_archiveReaders)
+            {
+                reader.Open(reader.FileName, reader.ArchiveOffloadLocation);
+            }
+        }
+
         // Prompts the user to open one or more archive files.
         private void ShowOpenArchiveFileDialog()
         {
@@ -915,6 +923,8 @@ namespace HistorianView
 
             SetChartResolution();
 
+            ReopenArchives();
+
             m_chartWindow.VisiblePoints = m_metadata
                 .Where(wrapper => wrapper.Export)
                 .Select(wrapper => Tuple.Create(wrapper.GetArchiveReader(), wrapper.GetMetadata()))
@@ -956,6 +966,8 @@ namespace HistorianView
                     try
                     {
                         int index = 0;
+
+                        ReopenArchives();
 
                         Dictionary<MetadataWrapper, ArchiveReader> metadata = m_metadata
                             .Where(wrapper => wrapper.Export)
