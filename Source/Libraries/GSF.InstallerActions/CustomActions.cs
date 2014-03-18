@@ -52,6 +52,7 @@ namespace GSF.InstallerActions
         [CustomAction]
         public static ActionResult AuthenticateServiceAccountAction(Session session)
         {
+            UserInfo serviceAccountInfo;
             IPrincipal servicePrincipal;
             string serviceAccount;
             string servicePassword;
@@ -59,7 +60,10 @@ namespace GSF.InstallerActions
             string[] splitServiceAccount;
             string serviceDomain = string.Empty;
             string serviceUser = string.Empty;
+
             bool isSystemAccount;
+            bool isManagedServiceAccount;
+            bool isManagedServiceAccountValid;
 
             session.Log("Begin AuthenticateServiceAccountAction");
 
@@ -86,10 +90,31 @@ namespace GSF.InstallerActions
                 serviceAccount.StartsWith(@"NT AUTHORITY\", StringComparison.InvariantCultureIgnoreCase) ||
                 serviceAccount.StartsWith(@"NT SERVICE\", StringComparison.InvariantCultureIgnoreCase);
 
+            isManagedServiceAccount = serviceAccount.EndsWith("$", StringComparison.InvariantCulture);
+
             if (isSystemAccount)
             {
                 session["SERVICEPASSWORD"] = string.Empty;
                 session["SERVICEAUTHENTICATED"] = "yes";
+            }
+            else if (isManagedServiceAccount)
+            {
+                serviceAccountInfo = new UserInfo(serviceAccount);
+
+                isManagedServiceAccountValid = serviceAccountInfo.Exists &&
+                    !serviceAccountInfo.AccountIsDisabled &&
+                    !serviceAccountInfo.AccountIsLockedOut &&
+                    serviceAccountInfo.GetUserPropertyValueAsString("msDS-HostServiceAccountBL").Split(',')[0].Equals("CN=" + Environment.MachineName, StringComparison.CurrentCultureIgnoreCase);
+
+                if (isManagedServiceAccountValid)
+                {
+                    session["SERVICEPASSWORD"] = string.Empty;
+                    session["SERVICEAUTHENTICATED"] = "yes";
+                }
+                else
+                {
+                    session["SERVICEAUTHENTICATED"] = null;
+                }
             }
             else
             {

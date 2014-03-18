@@ -245,23 +245,40 @@ namespace GSF.TimeSeries
 
                             lock (m_displayLock)
                             {
-                            prompt.AppendLine();
-                            prompt.AppendLine();
-                            prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
-                            prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
-                            prompt.AppendLine();
-                            Write(prompt.ToString());
+                                prompt.AppendLine();
+                                prompt.AppendLine();
+                                prompt.AppendLine("Connection to the service was rejected due to authentication failure.");
+                                prompt.AppendLine("Enter the credentials to be used for authentication with the service.");
+                                prompt.AppendLine();
+                                Write(prompt.ToString());
 
-                            // Capture the user name.
-                            Write("Enter user name: ");
+                                // Capture the user name.
+                                Write("Enter user name: ");
 
-                            username = System.Console.ReadLine();
+                                username = System.Console.ReadLine();
 
-                            // Capture the password.
-                            Write("Enter password: ");
+                                // Capture the password.
+                                Write("Enter password: ");
 
-                            while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
-                                passwordBuilder.Append(key.KeyChar);
+                                while ((key = System.Console.ReadKey(true)).KeyChar != '\r')
+                                {
+                                    switch (key.Key)
+                                    {
+                                        case ConsoleKey.Backspace:
+                                            if (passwordBuilder.Length > 0)
+                                                passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
+
+                                            break;
+
+                                        case ConsoleKey.Escape:
+                                            passwordBuilder.Clear();
+                                            break;
+
+                                        default:
+                                            passwordBuilder.Append(key.KeyChar);
+                                            break;
+                                    }
+                                }
 
                                 WriteLine();
                             }
