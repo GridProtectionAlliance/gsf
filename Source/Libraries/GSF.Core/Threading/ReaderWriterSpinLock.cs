@@ -24,11 +24,13 @@
 //              http://www.bluebytesoftware.com/blog/2009/02/21/AMoreScalableReaderwriterLockAndABitLessHarshConsiderationOfTheIdea.aspx
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  03/21/2014 - Steven E. Chisholm
+//       The overhead associated with the reduced contention actually slows down the class. Plus, each instance of this class consumes
+//       A substatial amount of memory. Therefore, I removed the processor fanning that occurs in the readers.
 //
 //******************************************************************************************************
 
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 // We use plenty of interlocked operations on volatile fields below.  Safe.
@@ -55,28 +57,13 @@ namespace GSF.Threading
     {
         #region [ Members ]
 
-        // Nested Types
-        [StructLayout(LayoutKind.Sequential, Size = 128)]
-        struct ReadEntry
-        {
-            internal volatile int m_taken;
-        }
-
         // Fields
         private volatile int m_writer;
-        private volatile ReadEntry[] m_readers = new ReadEntry[Environment.ProcessorCount * 16];
+        private volatile int m_readers;
 
         #endregion
 
         #region [ Properties ]
-
-        private int ReadLockIndex
-        {
-            get
-            {
-                return Thread.CurrentThread.ManagedThreadId % m_readers.Length;
-            }
-        }
 
         #endregion
 
@@ -99,12 +86,9 @@ namespace GSF.Threading
                 {
                     // We now hold the write lock, and prevent new readers -
                     // but we must ensure no readers exist before proceeding.
-                    for (int i = 0; i < m_readers.Length; i++)
-                    {
-                        while (m_readers[i].m_taken != 0)
-                            sw.SpinOnce();
-                    }
-
+                    while (m_readers != 0)
+                        sw.SpinOnce();
+                    
                     break;
                 }
 
@@ -132,7 +116,6 @@ namespace GSF.Threading
         public void EnterReadLock()
         {
             SpinWait sw = new SpinWait();
-            int tid = ReadLockIndex;
 
             // Wait until there are no writers.
             while (true)
@@ -141,7 +124,7 @@ namespace GSF.Threading
                     sw.SpinOnce();
 
                 // Try to take the read lock.
-                Interlocked.Increment(ref m_readers[tid].m_taken);
+                Interlocked.Increment(ref m_readers);
 
                 if (m_writer == 0)
                 {
@@ -150,7 +133,7 @@ namespace GSF.Threading
                 }
 
                 // Back off, to let the writer go through.
-                Interlocked.Decrement(ref m_readers[tid].m_taken);
+                Interlocked.Decrement(ref m_readers);
             }
         }
 
@@ -161,7 +144,7 @@ namespace GSF.Threading
         public void ExitReadLock()
         {
             // Just note that the current reader has left the lock.
-            Interlocked.Decrement(ref m_readers[ReadLockIndex].m_taken);
+            Interlocked.Decrement(ref m_readers);
         }
 
         #endregion
