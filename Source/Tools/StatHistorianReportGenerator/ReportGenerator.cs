@@ -1149,7 +1149,7 @@ namespace StatHistorianReportGenerator
 
         private DateTime ToDate(DateTime dateTime)
         {
-            return DateTime.Parse(dateTime.ToString("yyyy-MM-dd"));
+            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day);
         }
 
         #endregion
