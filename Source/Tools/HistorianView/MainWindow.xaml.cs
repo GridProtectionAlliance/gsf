@@ -988,7 +988,7 @@ namespace HistorianView
                         List<double> minimums = new List<double>();
 
                         if (m_alignTimestampsInExport)
-                            PopulateWithAlignedTimestamps(data, startTime, endTime, m_exportFrameRate);
+                            PopulateWithAlignedTimestamps(data, startTime, endTime, m_exportFrameRate, metadata.Count);
 
                         foreach (MetadataWrapper wrapper in metadata.Keys)
                         {
@@ -1090,7 +1090,7 @@ namespace HistorianView
             }
         }
 
-        private void PopulateWithAlignedTimestamps(Dictionary<TimeTag, List<string[]>> data, TimeTag startTime, TimeTag endTime, int framesPerSecond)
+        private void PopulateWithAlignedTimestamps(Dictionary<TimeTag, List<string[]>> data, TimeTag startTime, TimeTag endTime, int framesPerSecond, int dataColumns)
         {
             Ticks[] subsecondDistribution = Ticks.SubsecondDistribution(framesPerSecond);
             Ticks startTimeTicks = startTime.ToDateTime().Ticks;
@@ -1104,7 +1104,7 @@ namespace HistorianView
                 foreach (Ticks timestamp in currentSecondDistribution)
                 {
                     if (timestamp >= startTimeTicks)
-                        data.Add(new TimeTag(new DateTime(timestamp)), new List<string[]>());
+                        data.Add(new TimeTag(new DateTime(timestamp)), new List<string[]>() { new string[dataColumns] });
                 }
 
                 currentSecond += Ticks.PerSecond;
