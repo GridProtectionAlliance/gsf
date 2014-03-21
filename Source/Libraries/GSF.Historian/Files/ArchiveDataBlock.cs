@@ -104,7 +104,7 @@ namespace GSF.Historian.Files
             m_historianID = historianID;
             m_readBuffer = new byte[ArchiveDataPoint.FixedLength];
             m_writeCursor = Location;
-            m_lastActivityTime = DateTime.Now;
+            m_lastActivityTime = DateTime.UtcNow;
 
             // Scan through existing data to locate write cursor
             if (preRead)
@@ -182,12 +182,12 @@ namespace GSF.Historian.Files
         {
             get
             {
-                double inactivity = DateTime.Now.Subtract(m_lastActivityTime).TotalSeconds;
+                double inactivity = DateTime.UtcNow.Subtract(m_lastActivityTime).TotalSeconds;
 
                 if (inactivity <= InactivityPeriod)
                     return true;
 
-                Trace.WriteLine(string.Format("Inactive for {0} seconds (Last activity = {1}; Time now = {2})", inactivity, m_lastActivityTime, DateTime.Now));
+                Trace.WriteLine(string.Format("Inactive for {0} seconds (Last activity = {1}; Time now = {2})", inactivity, m_lastActivityTime, DateTime.UtcNow));
                 return false;
             }
         }
@@ -212,7 +212,7 @@ namespace GSF.Historian.Files
                 for (int i = 0; i < Capacity; i++)
                 {
                     // Read the data in the block.
-                    m_lastActivityTime = DateTime.Now;
+                    m_lastActivityTime = DateTime.UtcNow;
                     m_parent.FileData.Read(m_readBuffer, 0, m_readBuffer.Length);
 
                     // Attempt to parse archive data point
@@ -250,7 +250,7 @@ namespace GSF.Historian.Files
             if (SlotsAvailable > 0)
             {
                 // We have enough space to write the provided point data to the data block.
-                m_lastActivityTime = DateTime.Now;
+                m_lastActivityTime = DateTime.UtcNow;
 
                 lock (m_parent.FileData)
                 {
