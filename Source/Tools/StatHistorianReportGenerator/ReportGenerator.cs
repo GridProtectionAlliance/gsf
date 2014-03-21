@@ -298,10 +298,15 @@ namespace StatHistorianReportGenerator
         private void ReadStatistics()
         {
             Dictionary<string, DeviceStats> deviceStatsLookup = new Dictionary<string, DeviceStats>();
-            DateTime startTime = m_reportDate - TimeSpan.FromDays(ReportDays);
-            DateTime endTime = m_reportDate + TimeSpan.FromDays(1);
+            DateTime startTime;
+            DateTime endTime;
 
             ArchiveLocator locator;
+            Dictionary<MetadataRecord, IEnumerable<IDataPoint>> measurementsReceived;
+            Dictionary<MetadataRecord, IEnumerable<IDataPoint>> measurementsExpected;
+            Dictionary<MetadataRecord, IEnumerable<IDataPoint>> dataQualityErrors;
+            Dictionary<MetadataRecord, IEnumerable<IDataPoint>> timeQualityErrors;
+
             MetadataRecord dataQualityRecord;
             MetadataRecord timeQualityRecord;
 
@@ -322,23 +327,25 @@ namespace StatHistorianReportGenerator
                     ArchiveName = "STAT"
                 };
 
+                endTime = m_reportDate + TimeSpan.FromDays(1);
+                startTime = endTime - TimeSpan.FromDays(ReportDays);
+
                 // Set up and open the statistics reader
                 statisticsReader.StartTime = startTime.ToUniversalTime();
                 statisticsReader.EndTime = endTime.ToUniversalTime();
                 statisticsReader.ArchiveFilePath = locator.ArchiveFilePath;
-                statisticsReader.MetadataFilePath = locator.MetadataFilePath;
-                statisticsReader.StateFilePath = locator.StateFilePath;
-                statisticsReader.IntercomFilePath = locator.IntercomFilePath;
                 statisticsReader.Open();
 
+                measurementsReceived = statisticsReader.Read("PMU", 4);
+                measurementsExpected = statisticsReader.Read("PMU", 5);
+                dataQualityErrors = statisticsReader.Read("PMU", 2);
+                timeQualityErrors = statisticsReader.Read("PMU", 3);
+
                 // Determine which devices in the archive have stats for both measurements received and measurements expected
-                foreach (Tuple<MetadataRecord, MetadataRecord> tuple in statisticsReader.MeasurementsReceived.Keys.Join(statisticsReader.MeasurementsExpected.Keys, GetDeviceName, GetDeviceName, Tuple.Create))
+                foreach (Tuple<MetadataRecord, MetadataRecord> tuple in measurementsReceived.Keys.Join(measurementsExpected.Keys, GetDeviceName, GetDeviceName, Tuple.Create))
                 {
                     signalReference = tuple.Item1.Synonym1;
                     deviceName = GetDeviceName(tuple.Item1);
-
-                    dataQualityRecord = statisticsReader.DataQualityErrors.Keys.FirstOrDefault(record => GetDeviceName(record) == deviceName);
-                    timeQualityRecord = statisticsReader.TimeQualityErrors.Keys.FirstOrDefault(record => GetDeviceName(record) == deviceName);
 
                     // Ignore statistics that were calculated by an intermediate gateway
                     if (!signalReference.StartsWith("LOCAL$") && signalReference.Contains("LOCAL$"))
@@ -347,6 +354,9 @@ namespace StatHistorianReportGenerator
                     // Make sure LOCAL$ statistics take precedence over other statistics calculated for the same device
                     if (deviceStatsLookup.ContainsKey(deviceName) && !signalReference.StartsWith("LOCAL$"))
                         continue;
+
+                    dataQualityRecord = dataQualityErrors.Keys.FirstOrDefault(record => GetDeviceName(record) == deviceName);
+                    timeQualityRecord = timeQualityErrors.Keys.FirstOrDefault(record => GetDeviceName(record) == deviceName);
 
                     // Create arrays to hold the total sum of the stats for each day being reported
                     deviceStats = new DeviceStats()
@@ -361,7 +371,7 @@ namespace StatHistorianReportGenerator
                     if ((object)dataQualityRecord != null)
                     {
                         // Calculate the total data quality errors for each day being reported
-                        foreach (IDataPoint dataPoint in statisticsReader.DataQualityErrors[dataQualityRecord])
+                        foreach (IDataPoint dataPoint in dataQualityErrors[dataQualityRecord])
                         {
                             index = (int)((ToDate(dataPoint.Time.ToDateTime()) - startTime).Days);
 
@@ -373,7 +383,7 @@ namespace StatHistorianReportGenerator
                     if ((object)timeQualityRecord != null)
                     {
                         // Calculate the total time quality errors for each day being reported
-                        foreach (IDataPoint dataPoint in statisticsReader.TimeQualityErrors[timeQualityRecord])
+                        foreach (IDataPoint dataPoint in timeQualityErrors[timeQualityRecord])
                         {
                             index = (int)((ToDate(dataPoint.Time.ToDateTime()) - startTime).Days);
 
@@ -383,7 +393,7 @@ namespace StatHistorianReportGenerator
                     }
 
                     // Calculate the total measurements received for each day being reported
-                    foreach (IDataPoint dataPoint in statisticsReader.MeasurementsReceived[tuple.Item1])
+                    foreach (IDataPoint dataPoint in measurementsReceived[tuple.Item1])
                     {
                         index = (int)((ToDate(dataPoint.Time.ToDateTime()) - startTime).Days);
 
@@ -392,7 +402,7 @@ namespace StatHistorianReportGenerator
                     }
 
                     // Calculate the total measurements expected for each day being reported
-                    foreach (IDataPoint dataPoint in statisticsReader.MeasurementsExpected[tuple.Item2])
+                    foreach (IDataPoint dataPoint in measurementsExpected[tuple.Item2])
                     {
                         index = (int)((ToDate(dataPoint.Time.ToDateTime()) - startTime).Days);
 
@@ -874,8 +884,8 @@ namespace StatHistorianReportGenerator
                     {
                         levels[level][device].Name,
                         (levels[level][device].MeasurementsReceived[ReportDays - 1] / levels[level][device].MeasurementsExpected[ReportDays - 1]).ToString("0.##%"),
-                        levels[level][device].DataQualityErrors[ReportDays - 1].ToString("0"),
-                        levels[level][device].TimeQualityErrors[ReportDays - 1].ToString("0")
+                        levels[level][device].DataQualityErrors[ReportDays - 1].ToString("#,##0"),
+                        levels[level][device].TimeQualityErrors[ReportDays - 1].ToString("#,##0")
                     };
 
                     // Update the column widths if they need to be widened to accomodate the data

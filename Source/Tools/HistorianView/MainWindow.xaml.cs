@@ -300,19 +300,20 @@ namespace HistorianView
                     PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
 
-            private string ValidateSynonym2(string synonnym2)
+            private string ValidateSynonym2(string synonym2)
             {
-                synonnym2 = synonnym2 ?? "ALOG";
-                return synonnym2.Trim();
+                return !string.IsNullOrEmpty(synonym2) ? synonym2.Trim() : "ALOG";
             }
 
             private string FormatName(string name, string synonym1, string synonym2)
             {
-                if (string.IsNullOrEmpty(name))
-                    return "[UNDEFINED]:" + synonym2;
-
-                string[] parts = name.Split(':');
+                string[] parts;
                 int lastIndexOf;
+
+                if (string.IsNullOrEmpty(name))
+                    return name;
+
+                parts = name.Split(':');
 
                 if (parts.Length > 1)
                 {
@@ -690,6 +691,7 @@ namespace HistorianView
 
             m_chartResolutionTextBox.Text = (string)root.Attribute("chartResolution") ?? m_chartResolutionTextBox.Text;
             m_showDisabledPoints = ((string)root.Attribute("showDisabledPoints") ?? string.Empty).ParseBoolean();
+            ShowDisabledCheckMark.Visibility = m_showDisabledPoints ? Visibility.Visible : Visibility.Collapsed;
 
             // Get the export settings for the session
             foreach (XAttribute exportAttribute in root.Elements("export").Attributes())
