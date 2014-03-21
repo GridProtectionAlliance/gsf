@@ -16,17 +16,12 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/21/2011 - Ritchie
-//       Generated original version of source code based on Joe Duffy's Weblog articles:
-//           "A single-word reader/writer spin lock", January 29, 2009
-//              http://www.bluebytesoftware.com/blog/2009/01/30/ASinglewordReaderwriterSpinLock.aspx
-//           "A more scalable reader/writer lock, and a bit less harsh consideration of the idea", February 20, 2009
-//              http://www.bluebytesoftware.com/blog/2009/02/21/AMoreScalableReaderwriterLockAndABitLessHarshConsiderationOfTheIdea.aspx
-//  12/14/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
+//  03/21/2011 - J. Ritchie Carroll
+//       Generated original version of source code based on Joe Duffy's Weblog articles.
 //  03/21/2014 - Steven E. Chisholm
-//       The overhead associated with the reduced contention actually slows down the class. Plus, each instance of this class consumes
-//       A substatial amount of memory. Therefore, I removed the processor fanning that occurs in the readers.
+//       Removed the processor fanning that occurred in the readers since the overhead associated
+//       with the reduced contention slowed down the class and each instance of this class consumed
+//       a substantial amount of memory.
 //
 //******************************************************************************************************
 
@@ -39,19 +34,14 @@ using System.Threading;
 namespace GSF.Threading
 {
     /// <summary>
-    /// Represents a fast, lightweight reader/writer lock that uses spinning to perform locking with no thread affinity. No recursive
-    /// acquires or upgradable locks are allowed (i.e., all entered locks must be exited before entering another lock).
+    /// Represents a fast, lightweight reader/writer lock that uses spinning to perform locking. No recursive acquires or
+    /// upgradable locks are allowed (i.e., all entered locks must be exited before entering another lock).
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// <see cref="ReaderWriterSpinLock"/> uses a single word of memory and only spins when contention arises so no events are necessary.
-    /// </para>
-    /// <para>
     /// This reader/writer lock uses <see cref="SpinWait"/> to spin the CPU instead of engaging event based locking. As a result it
     /// should only be used in cases where lock times are expected to be very small, reads are very frequent and writes are rare.
     /// If hold times for write locks can be lengthy, it will be better to use <see cref="ReaderWriterLockSlim"/> instead to avoid
     /// unnecessary CPU utilization due to spinning incurred by waiting reads.
-    /// </para>
     /// </remarks>
     public class ReaderWriterSpinLock
     {
@@ -73,7 +63,7 @@ namespace GSF.Threading
         /// Enters the lock in write mode.
         /// </summary>
         /// <remarks>
-        /// Upon successful aquistion of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
+        /// Upon successful acquisition of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitWriteLock"/>.
         /// One <see cref="ExitWriteLock"/> should be called for each <see cref="EnterWriteLock"/>.
         /// </remarks>
         public void EnterWriteLock()
@@ -88,7 +78,7 @@ namespace GSF.Threading
                     // but we must ensure no readers exist before proceeding.
                     while (m_readers != 0)
                         sw.SpinOnce();
-                    
+
                     break;
                 }
 
@@ -110,7 +100,7 @@ namespace GSF.Threading
         /// Enters the lock in read mode.
         /// </summary>
         /// <remarks>
-        /// Upon successful aquistion of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
+        /// Upon successful acquisition of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="ExitReadLock"/>.
         /// One <see cref="ExitReadLock"/> should be called for each <see cref="EnterReadLock"/>.
         /// </remarks>
         public void EnterReadLock()
@@ -126,13 +116,11 @@ namespace GSF.Threading
                 // Try to take the read lock.
                 Interlocked.Increment(ref m_readers);
 
+                // If writer, success - proceed.
                 if (m_writer == 0)
-                {
-                    // Success, no writer, proceed.
                     break;
-                }
 
-                // Back off, to let the writer go through.
+                // Back off to let the writer go through.
                 Interlocked.Decrement(ref m_readers);
             }
         }

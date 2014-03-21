@@ -405,7 +405,9 @@ namespace GSF.COMTRADE
         /// </remarks>
         public static void WriteNextRecordBinary(Stream output, Schema schema, Ticks timestamp, double[] values, uint sample, bool injectFracSecValue = true, ushort fracSecValue = 0x0000)
         {
+            // Make timestamp relative to beginning of file
             timestamp -= schema.StartTime.Value;
+
             uint microseconds = (uint)(timestamp.ToMicroseconds() / schema.TimeFactor);
             double value;
             bool isFirstDigital = true;
