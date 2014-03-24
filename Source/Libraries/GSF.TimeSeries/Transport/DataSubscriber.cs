@@ -401,7 +401,7 @@ namespace GSF.TimeSeries.Transport
         // Fields
         private volatile Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> m_subscribedDevicesLookup;
         private volatile List<DeviceStatisticsHelper<SubscribedDevice>> m_statisticsHelpers;
-        private SynchronizedOperation m_registerStatisticsOperation;
+        private LongSynchronizedOperation m_registerStatisticsOperation;
         private IClient m_commandChannel;
         private UdpClient m_dataChannel;
         private LocalConcentrator m_localConcentrator;
@@ -440,7 +440,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_autoSynchronizeMetadata;
         private bool m_useTransactionForMetadata;
         private int m_metadataSynchronizationTimeout;
-        private SynchronizedOperation m_synchronizeMetadataOperation;
+        private LongSynchronizedOperation m_synchronizeMetadataOperation;
         private volatile DataSet m_receivedMetadata;
         private DataSet m_synchronizedMetadata;
         private OperationalModes m_operationalModes;
@@ -479,9 +479,9 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public DataSubscriber()
         {
-            m_registerStatisticsOperation = new SynchronizedOperation(HandleDeviceStatisticsRegistration);
+            m_registerStatisticsOperation = new LongSynchronizedOperation(HandleDeviceStatisticsRegistration) { IsBackground = true };
             m_requests = new List<ServerCommand>();
-            m_synchronizeMetadataOperation = new SynchronizedOperation(SynchronizeMetadata);
+            m_synchronizeMetadataOperation = new LongSynchronizedOperation(SynchronizeMetadata) { IsBackground = true };
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
@@ -899,6 +899,9 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="DataSubscriber"/>.
+        /// </summary>
         public override DataSet DataSource
         {
             get

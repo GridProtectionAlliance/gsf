@@ -93,7 +93,7 @@ namespace HistorianAdapters
         private DataServices m_dataServices;
         private MetadataProviders m_metadataProviders;
         private ReplicationProviders m_replicationProviders;
-        private SynchronizedOperation m_metadataRefreshOperation;
+        private LongSynchronizedOperation m_metadataRefreshOperation;
         private bool m_autoRefreshMetadata;
         private string m_instanceName;
         private string m_archivePath;
@@ -115,7 +115,7 @@ namespace HistorianAdapters
             m_archive.MetadataFile = new MetadataFile();
             m_archive.StateFile = new StateFile();
             m_archive.IntercomFile = new IntercomFile();
-            m_metadataRefreshOperation = new SynchronizedOperation(ExecuteMetadataRefresh, OnProcessException);
+            m_metadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh, OnProcessException);
         }
 
         #endregion

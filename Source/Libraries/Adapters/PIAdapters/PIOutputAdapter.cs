@@ -48,20 +48,20 @@ namespace PIAdapters
         #region [ Members ]
 
         // Fields
-        private string m_servername;                                         // Server for PI connection
-        private string m_userName;                                           // Username for PI connection
-        private string m_password;                                           // Password for PI connection
-        private int m_connectTimeout;                                        // PI connection timeout
-        private PISDK.PISDK m_pi;                                            // PI SDK object
-        private Server m_server;                                             // PI server object for archiving data
-        private ConcurrentDictionary<MeasurementKey, PIPoint> m_tagMap;      // Cache the mapping between GSFSchema measurements and PI points
-        private int m_processedMeasurements;                                 // Track the processed measurements
-        private readonly SynchronizedOperation m_metadataRefreshOperation;   // Operation that handles metadata refresh
-        private bool m_runMetadataSync;                                      // Whether or not to automatically create/update PI points on the server
-        private string m_piPointSource;                                      // Point source to set on PI points when automatically created by the adapter
-        private string m_piPointClass;                                       // Point class to use for new PI points when automatically created by the adapter
-        private bool m_bulkUpdate;                                           // Flags whether the adapter will update each point in bulk or one update at a time
-        private string m_tagMapCacheFileName;                                // Tag map cache file name
+        private string m_servername;                                            // Server for PI connection
+        private string m_userName;                                              // Username for PI connection
+        private string m_password;                                              // Password for PI connection
+        private int m_connectTimeout;                                           // PI connection timeout
+        private PISDK.PISDK m_pi;                                               // PI SDK object
+        private Server m_server;                                                // PI server object for archiving data
+        private ConcurrentDictionary<MeasurementKey, PIPoint> m_tagMap;         // Cache the mapping between GSFSchema measurements and PI points
+        private int m_processedMeasurements;                                    // Track the processed measurements
+        private readonly LongSynchronizedOperation m_metadataRefreshOperation;  // Operation that handles metadata refresh
+        private bool m_runMetadataSync;                                         // Whether or not to automatically create/update PI points on the server
+        private string m_piPointSource;                                         // Point source to set on PI points when automatically created by the adapter
+        private string m_piPointClass;                                          // Point class to use for new PI points when automatically created by the adapter
+        private bool m_bulkUpdate;                                              // Flags whether the adapter will update each point in bulk or one update at a time
+        private string m_tagMapCacheFileName;                                   // Tag map cache file name
         private bool m_disposed;
 
         #endregion
@@ -74,7 +74,7 @@ namespace PIAdapters
         public PIOutputAdapter()
         {
             m_connectTimeout = 30000;
-            m_metadataRefreshOperation = new SynchronizedOperation(ExecuteMetadataRefresh);
+            m_metadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh) { IsBackground = true };
             m_tagMap = new ConcurrentDictionary<MeasurementKey, PIPoint>();
             m_processedMeasurements = 0;
             m_runMetadataSync = true;

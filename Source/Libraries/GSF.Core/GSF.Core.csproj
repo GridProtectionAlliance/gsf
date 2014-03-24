@@ -331,12 +331,15 @@
     <Compile Include="StringExtensions.cs" />
     <Compile Include="Threading\InterprocessLock.cs" />
     <Compile Include="Threading\InterprocessReaderWriterLock.cs" />
+    <Compile Include="Threading\ISynchronizedOperation.cs" />
+    <Compile Include="Threading\LongSynchronizedOperation.cs" />
     <Compile Include="Threading\ManagedThread.cs" />
     <Compile Include="Threading\ManagedThreadPool.cs" />
     <Compile Include="Threading\ManagedThreads.cs" />
     <Compile Include="Threading\NamespaceDoc.cs" />
     <Compile Include="Threading\ReaderWriterSpinLock.cs" />
-    <Compile Include="Threading\SynchronizedOperation.cs" />
+    <Compile Include="Threading\ShortSynchronizedOperation.cs" />
+    <Compile Include="Threading\SynchronizedOperationBase.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="TimeTagBase.cs" />

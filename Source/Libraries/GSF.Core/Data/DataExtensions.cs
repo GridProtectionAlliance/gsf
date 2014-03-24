@@ -2407,7 +2407,12 @@ namespace GSF.Data
             else
             {
                 // Pick up all parameters that start with @ or : but skip key words such as @@IDENTITY
-                string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith(":") || token.StartsWith("@") && !token.StartsWith("@@")).Distinct().ToArray();
+                string[] tokens = sql.Split(' ', '(', ')', ',', '=')
+                    .Where(token => token.StartsWith(":") || token.StartsWith("@") && !token.StartsWith("@@"))
+                    .Distinct()
+                    .Where(IsValidToken)
+                    .ToArray();
+                
                 int i = 0;
 
                 if (tokens.Length != values.Length)
@@ -2421,6 +2426,12 @@ namespace GSF.Data
 
                 command.CommandText = sql;
             }
+        }
+
+        private static bool IsValidToken(string token)
+        {
+            const string Pattern = @"^[:@][a-zA-Z]\w*$";
+            return Regex.IsMatch(token, Pattern);
         }
 
         /// <summary>

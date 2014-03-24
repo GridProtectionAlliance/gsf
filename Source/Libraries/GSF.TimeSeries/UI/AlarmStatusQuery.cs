@@ -66,7 +66,7 @@ namespace GSF.TimeSeries.UI
         // Fields
         private WindowsServiceClient m_serviceClient;
         private ICollection<Alarm> m_raisedAlarms;
-        private SynchronizedOperation m_alarmStateQueryOperation;
+        private LongSynchronizedOperation m_alarmStateQueryOperation;
         private AutoResetEvent m_responseComplete;
         private int m_responseTimeout;
         private bool m_connectedToService;
@@ -87,7 +87,7 @@ namespace GSF.TimeSeries.UI
             // Determine initial state of connectivity
             UpdateServiceConnectivity();
 
-            m_alarmStateQueryOperation = new SynchronizedOperation(ExecuteAlarmStateQuery);
+            m_alarmStateQueryOperation = new LongSynchronizedOperation(ExecuteAlarmStateQuery) { IsBackground = true };
             m_responseComplete = new AutoResetEvent(false);
             m_responseTimeout = DefaultResponseTimeout;
         }

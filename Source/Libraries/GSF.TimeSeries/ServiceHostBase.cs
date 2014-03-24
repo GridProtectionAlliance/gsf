@@ -129,7 +129,7 @@ namespace GSF.TimeSeries
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
         private DataQualityReportingProcess m_dataQualityReportingProcess;
-        private SynchronizedOperation m_configurationCacheOperation;
+        private LongSynchronizedOperation m_configurationCacheOperation;
         private volatile DataSet m_latestConfiguration;
         private object m_systemConfigurationLoadLock;
 
@@ -378,7 +378,7 @@ namespace GSF.TimeSeries
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
-            m_configurationCacheOperation = new SynchronizedOperation(ExecuteConfigurationCache);
+            m_configurationCacheOperation = new LongSynchronizedOperation(ExecuteConfigurationCache) { IsBackground = true };
             m_systemConfigurationLoadLock = new object();
 
             // Setup default thread pool size
@@ -2314,7 +2314,7 @@ namespace GSF.TimeSeries
 
         private void GenerateReportRequestHandler(ClientRequestInfo requestInfo)
         {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount == 0)
             {
                 StringBuilder helpMessage = new StringBuilder();
 

@@ -77,7 +77,7 @@ namespace GSF.TimeSeries.Adapters
         private Dictionary<Guid, ISet<IAdapter>> m_measurementRoutes;
         private List<IAdapter> m_broadcastRoutes;
         private ReaderWriterLockSlim m_adapterRoutesCacheLock;
-        private SynchronizedOperation m_calculateRoutingTablesOperation;
+        private LongSynchronizedOperation m_calculateRoutingTablesOperation;
         private volatile MeasurementKey[] m_inputMeasurementKeysRestriction;
 
         private readonly AsyncQueue<Tuple<IAdapter, object>> m_dependencyOperationQueue;
@@ -99,7 +99,7 @@ namespace GSF.TimeSeries.Adapters
         public RoutingTables()
         {
             m_adapterRoutesCacheLock = new ReaderWriterLockSlim();
-            m_calculateRoutingTablesOperation = new SynchronizedOperation(CalculateRoutingTables);
+            m_calculateRoutingTablesOperation = new LongSynchronizedOperation(CalculateRoutingTables) { IsBackground = true };
 
             m_dependencyOperationQueue = new AsyncQueue<Tuple<IAdapter, object>>();
             m_dependencies = new Dictionary<IAdapter, ISet<IAdapter>>();

@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  SynchronizedOperation.cs - Gbtc
+//  SynchronizedOperationBase.cs - Gbtc
 //
 //  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  01/29/2014 - Stephen C. Wills
+//  03/21/2014 - Stephen C. Wills
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -27,37 +27,47 @@ using System.Threading;
 namespace GSF.Threading
 {
     /// <summary>
-    /// Represents an operation that cannot run while it is already in progress.
+    /// Base class for operations that cannot run while they is already in progress.
     /// </summary>
-    public class SynchronizedOperation
+    /// <remarks>
+    /// This class handles the synchronization between the methods defined in the
+    /// <see cref="ISynchronizedOperation"/> interface. Implementors should only need
+    /// to implement the <see cref="ExecuteActionAsync"/> method to provide a mechanism
+    /// for executing the action on a separate thread.
+    /// </remarks>
+    public abstract class SynchronizedOperationBase : ISynchronizedOperation
     {
         #region [ Members ]
+
+        // Constants
+        private const int NotRunning = 0;
+        private const int Running = 1;
+        private const int Pending = 2;
 
         // Fields
         private Action m_action;
         private Action<Exception> m_exceptionAction;
-        private int m_operationExecuting;
-        private int m_operationPending;
+        private int m_state;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="SynchronizedOperation"/> class.
+        /// Creates a new instance of the <see cref="SynchronizedOperationBase"/> class.
         /// </summary>
         /// <param name="action">The action to be performed during this operation.</param>
-        public SynchronizedOperation(Action action)
+        protected SynchronizedOperationBase(Action action)
             : this(action, null)
         {
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="SynchronizedOperation"/> class.
+        /// Creates a new instance of the <see cref="SynchronizedOperationBase"/> class.
         /// </summary>
         /// <param name="action">The action to be performed during this operation.</param>
         /// <param name="exceptionAction">The action to be performed if an exception is thrown from the action.</param>
-        public SynchronizedOperation(Action action, Action<Exception> exceptionAction)
+        protected SynchronizedOperationBase(Action action, Action<Exception> exceptionAction)
         {
             if ((object)action == null)
                 throw new ArgumentNullException("action");
@@ -82,8 +92,13 @@ namespace GSF.Threading
         /// </remarks>
         public void RunOnce()
         {
-            Interlocked.Exchange(ref m_operationPending, 1);
-            TryRun();
+            // if (m_state == NotRunning)
+            //     TryRun();
+            // else if (m_state == Running)
+            //     m_state = Pending;
+
+            if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
+                TryRun();
         }
 
         /// <summary>
@@ -98,7 +113,13 @@ namespace GSF.Threading
         /// </remarks>
         public void RunOnceAsync()
         {
-            ThreadPool.QueueUserWorkItem(state => RunOnce());
+            // if (m_state == NotRunning)
+            //     TryRunAsync();
+            // else if (m_state == Running)
+            //     m_state = Pending;
+
+            if (Interlocked.CompareExchange(ref m_state, Pending, Running) == NotRunning)
+                TryRunAsync();
         }
 
         /// <summary>
@@ -107,14 +128,18 @@ namespace GSF.Threading
         /// </summary>
         public void TryRun()
         {
-            if (Interlocked.CompareExchange(ref m_operationExecuting, 1, 0) == 0)
-            {
-                Interlocked.Exchange(ref m_operationPending, 0);
-                ExecuteAction();
-                Interlocked.Exchange(ref m_operationExecuting, 0);
+            // if (m_state == NotRunning)
+            // {
+            //     m_state = Running;
+            //
+            //     if (ExecuteAction())
+            //         ExecuteActionAsync();
+            // }
 
-                if (Interlocked.CompareExchange(ref m_operationPending, 0, 0) == 1)
-                    TryRunAsync();
+            if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
+            {
+                if (ExecuteAction())
+                    ExecuteActionAsync();
             }
         }
 
@@ -124,10 +149,21 @@ namespace GSF.Threading
         /// </summary>
         public void TryRunAsync()
         {
-            ThreadPool.QueueUserWorkItem(state => TryRun());
+            // if (m_state == NotRunning)
+            // {
+            //     m_state = Running;
+            //     ExecuteActionAsync();
+            // }
+
+            if (Interlocked.CompareExchange(ref m_state, Running, NotRunning) == NotRunning)
+                ExecuteActionAsync();
         }
 
-        private void ExecuteAction()
+        /// <summary>
+        /// Executes the action once on the current thread.
+        /// </summary>
+        /// <returns>True if the action was pending and needs to run again; false otherwise.</returns>
+        protected bool ExecuteAction()
         {
             try
             {
@@ -144,7 +180,52 @@ namespace GSF.Threading
                 {
                 }
             }
+
+            // if (m_state == Pending)
+            // {
+            //     m_state = Running;
+            //     return true;
+            // }
+            // else if (m_state == Running)
+            // {
+            //     m_state = NotRunning;
+            // }
+
+            if (Interlocked.CompareExchange(ref m_state, NotRunning, Running) == Pending)
+            {
+                // There is no race condition here because if m_state is Pending,
+                // then it cannot be changed by any other line of code except this one
+                Interlocked.Exchange(ref m_state, Running);
+                return true;
+            }
+
+            return false;
         }
+
+        /// <summary>
+        /// Executes the action on a separate thread.
+        /// </summary>
+        /// <remarks>
+        /// Implementors should call <see cref="ExecuteAction"/> on a separate thread
+        /// and check the return value. If it returns true, that means it needs to run
+        /// again. The following is a sample implementation using a regular dedicated
+        /// thread.
+        /// 
+        /// <code>
+        /// protected override void ExecuteActionAsync()
+        /// {
+        ///     Thread actionThread = new Thread(() =>
+        ///     {
+        ///         while (ExecuteAction())
+        ///         {
+        ///         }
+        ///     });
+        ///
+        ///     actionThread.Start();
+        /// }
+        /// </code>
+        /// </remarks>
+        protected abstract void ExecuteActionAsync();
 
         #endregion
     }

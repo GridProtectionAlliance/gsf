@@ -272,7 +272,7 @@ namespace GSF.Configuration
         private System.Configuration.Configuration m_configuration;
         private UserConfigurationFile m_userConfiguration;
         private volatile ConfigurationSaveMode m_saveMode;
-        private SynchronizedOperation m_saveOperation;
+        private LongSynchronizedOperation m_saveOperation;
 
         #endregion
 
@@ -284,7 +284,7 @@ namespace GSF.Configuration
         internal ConfigurationFile(string configFilePath)
         {
             m_culture = CultureInfo.InvariantCulture;
-            m_saveOperation = new SynchronizedOperation(ExecuteConfigurationSave);
+            m_saveOperation = new LongSynchronizedOperation(ExecuteConfigurationSave);
 
             m_configuration = GetConfiguration(configFilePath);
 

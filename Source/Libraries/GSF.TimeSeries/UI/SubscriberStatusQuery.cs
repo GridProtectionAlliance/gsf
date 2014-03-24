@@ -68,7 +68,7 @@ namespace GSF.TimeSeries.UI
         // Fields
         private WindowsServiceClient m_serviceClient;
         private readonly List<Tuple<Guid, bool, string>> m_subscriberStatuses;
-        private SynchronizedOperation m_statusQueryOperation;
+        private LongSynchronizedOperation m_statusQueryOperation;
         private ISet<Guid> m_statusQueryIDs;
         private object m_statusQueryLock;
         private AutoResetEvent m_responseComplete;
@@ -91,10 +91,12 @@ namespace GSF.TimeSeries.UI
 
             m_subscriberStatuses = new List<Tuple<Guid, bool, string>>();
             m_responseComplete = new AutoResetEvent(false);
-            m_statusQueryOperation = new SynchronizedOperation(ExecuteStatusQuery);
+            m_statusQueryOperation = new LongSynchronizedOperation(ExecuteStatusQuery) { IsBackground = true };
             m_statusQueryIDs = new HashSet<Guid>();
             m_statusQueryLock = new object();
             m_responseTimeout = DefaultResponseTimeout;
+
+            m_statusQueryOperation.IsBackground = true;
         }
 
         /// <summary>

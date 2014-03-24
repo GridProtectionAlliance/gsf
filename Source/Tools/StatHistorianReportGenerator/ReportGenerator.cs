@@ -327,12 +327,12 @@ namespace StatHistorianReportGenerator
                     ArchiveName = "STAT"
                 };
 
-                endTime = m_reportDate + TimeSpan.FromDays(1);
+                endTime = m_reportDate.ToUniversalTime() + TimeSpan.FromDays(1);
                 startTime = endTime - TimeSpan.FromDays(ReportDays);
 
                 // Set up and open the statistics reader
-                statisticsReader.StartTime = startTime.ToUniversalTime();
-                statisticsReader.EndTime = endTime.ToUniversalTime();
+                statisticsReader.StartTime = startTime;
+                statisticsReader.EndTime = endTime;
                 statisticsReader.ArchiveFilePath = locator.ArchiveFilePath;
                 statisticsReader.Open();
 
@@ -373,7 +373,7 @@ namespace StatHistorianReportGenerator
                         // Calculate the total data quality errors for each day being reported
                         foreach (IDataPoint dataPoint in dataQualityErrors[dataQualityRecord])
                         {
-                            index = (int)((ToDate(dataPoint.Time.ToDateTime()) - startTime).Days);
+                            index = (dataPoint.Time.ToDateTime() - startTime).Days;
 
                             if (index >= 0 && index < ReportDays)
                                 deviceStats.DataQualityErrors[index] += dataPoint.Value;
@@ -385,7 +385,7 @@ namespace StatHistorianReportGenerator
                         // Calculate the total time quality errors for each day being reported
                         foreach (IDataPoint dataPoint in timeQualityErrors[timeQualityRecord])
                         {
-                            index = (int)((ToDate(dataPoint.Time.ToDateTime()) - startTime).Days);
+                            index = (dataPoint.Time.ToDateTime() - startTime).Days;
 
                             if (index >= 0 && index < ReportDays)
                                 deviceStats.TimeQualityErrors[index] += dataPoint.Value;
@@ -395,7 +395,7 @@ namespace StatHistorianReportGenerator
                     // Calculate the total measurements received for each day being reported
                     foreach (IDataPoint dataPoint in measurementsReceived[tuple.Item1])
                     {
-                        index = (int)((ToDate(dataPoint.Time.ToDateTime()) - startTime).Days);
+                        index = (dataPoint.Time.ToDateTime() - startTime).Days;
 
                         if (index >= 0 && index < ReportDays)
                             deviceStats.MeasurementsReceived[index] += dataPoint.Value;
@@ -404,7 +404,7 @@ namespace StatHistorianReportGenerator
                     // Calculate the total measurements expected for each day being reported
                     foreach (IDataPoint dataPoint in measurementsExpected[tuple.Item2])
                     {
-                        index = (int)((ToDate(dataPoint.Time.ToDateTime()) - startTime).Days);
+                        index = (dataPoint.Time.ToDateTime() - startTime).Days;
 
                         if (index >= 0 && index < ReportDays)
                             deviceStats.MeasurementsExpected[index] += dataPoint.Value;

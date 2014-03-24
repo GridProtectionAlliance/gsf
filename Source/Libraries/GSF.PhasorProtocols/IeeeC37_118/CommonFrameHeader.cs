@@ -56,8 +56,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         private uint m_timebase;
         private uint m_timeQualityFlags;
         private IChannelParsingState m_state;
-        private readonly decimal m_frameRate;
-        private readonly decimal m_ticksPerFrame;
 
         #endregion
 

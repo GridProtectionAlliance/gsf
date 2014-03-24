@@ -71,7 +71,7 @@ namespace GSF.TimeSeries.UI
         // Fields
         private WindowsServiceClient m_serviceClient;
         private readonly List<Guid> m_authorizedSignalIDs;
-        private SynchronizedOperation m_authorizationQueryOperation;
+        private LongSynchronizedOperation m_authorizationQueryOperation;
         private ISet<Guid> m_authorizationQueryIDs;
         private object m_authorizationQueryLock;
         private AutoResetEvent m_responseComplete;
@@ -94,7 +94,7 @@ namespace GSF.TimeSeries.UI
 
             m_authorizedSignalIDs = new List<Guid>();
             m_responseComplete = new AutoResetEvent(false);
-            m_authorizationQueryOperation = new SynchronizedOperation(ExecuteAuthorizationQuery);
+            m_authorizationQueryOperation = new LongSynchronizedOperation(ExecuteAuthorizationQuery) { IsBackground = true };
             m_authorizationQueryIDs = new HashSet<Guid>();
             m_authorizationQueryLock = new object();
             m_responseTimeout = DefaultResponseTimeout;
