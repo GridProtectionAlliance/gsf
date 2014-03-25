@@ -22,10 +22,18 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Management;
+using System.Security.Principal;
+using System.Text.RegularExpressions;
 using GSF.Configuration;
 using GSF.IO;
+using GSF.Threading;
 
 namespace GSF.TimeSeries
 {
@@ -37,6 +45,9 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
+        private readonly ConcurrentQueue<DateTime> m_reportGenerationQueue;
+        private readonly LongSynchronizedOperation m_executeOperation;
+
         private bool m_persistSettings;
         private string m_settingsCategory;
 
@@ -44,11 +55,11 @@ namespace GSF.TimeSeries
         private string m_reportLocation;
         private string m_title;
         private string m_company;
-        private DateTime m_reportDate;
         private double m_level4Threshold;
         private double m_level3Threshold;
         private string m_level4Alias;
         private string m_level3Alias;
+        private double m_idleReportLifetime;
 
         #endregion
 
@@ -59,6 +70,9 @@ namespace GSF.TimeSeries
         /// </summary>
         public DataQualityReportingProcess()
         {
+            m_reportGenerationQueue = new ConcurrentQueue<DateTime>();
+            m_executeOperation = new LongSynchronizedOperation(Execute) { IsBackground = true };
+
             m_archiveFilePath = "Eval(statArchiveFile.FileName)";
             m_reportLocation = "Reports";
             m_title = "Eval(securityProvider.ApplicationName) Data Quality Report";
@@ -67,26 +81,12 @@ namespace GSF.TimeSeries
             m_level3Threshold = 90.0D;
             m_level4Alias = "Good";
             m_level3Alias = "Fair";
+            m_idleReportLifetime = 14.0D;
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the date of the report to be generated.
-        /// </summary>
-        public DateTime ReportDate
-        {
-            get
-            {
-                return m_reportDate;
-            }
-            set
-            {
-                m_reportDate = value;
-            }
-        }
 
         /// <summary>
         /// Determines whether the object settings are to be persisted to the config file.
@@ -239,36 +239,91 @@ namespace GSF.TimeSeries
             }
         }
 
+        /// <summary>
+        /// Gets or sets the minimum lifetime of a report
+        /// since the last time it was accessed, in days.
+        /// </summary>
+        public double IdleReportLifetime
+        {
+            get
+            {
+                return m_idleReportLifetime;
+            }
+            set
+            {
+                m_idleReportLifetime = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Executes the reporting process to generate the report.
+        /// Returns the list of reports that are available from the report location.
         /// </summary>
-        public void Execute()
+        /// <returns>The list of generated reports.</returns>
+        public List<string> GetReportsList()
         {
-            using (Process process = new Process())
+            string reportLocation = FilePath.GetAbsolutePath(m_reportLocation)
+                .EnsureEnd(Path.DirectorySeparatorChar);
+
+            if (Directory.Exists(reportLocation))
             {
-                process.StartInfo.FileName = FilePath.GetAbsolutePath("StatHistorianReportGenerator.exe");
-                process.StartInfo.Arguments = GetArguments();
-                process.Start();
-                process.WaitForExit();
-                process.Close();
+                return FilePath.GetFileList(reportLocation)
+                    .Select(FilePath.GetFileName)
+                    .Where(IsReportFileName)
+                    .ToList();
+            }
+
+            return new List<string>();
+        }
+
+        /// <summary>
+        /// Returns the list of reports which are in the queue but are yet to be generated.
+        /// </summary>
+        /// <returns>The list of pending reports.</returns>
+        public List<string> GetPendingReportsList()
+        {
+            return m_reportGenerationQueue.ToArray()
+                .Select(reportDate => string.Format("{0} {1:yyyy-MM-dd}.pdf", m_title, reportDate))
+                .ToList();
+        }
+
+        /// <summary>
+        /// Queues up a report to be generated on a separate thread.
+        /// </summary>
+        /// <param name="reportDate">The date of the report to be generated.</param>
+        public void GenerateReport(DateTime reportDate)
+        {
+            // ToArray is a thread-safe operation on ConcurrentQueue
+            // whereas using an enumerator directly on a ConcurrentQueue
+            // can cause collection modified errors while iterating
+            if (!m_reportGenerationQueue.ToArray().Contains(reportDate))
+            {
+                m_reportGenerationQueue.Enqueue(reportDate);
+                m_executeOperation.RunOnceAsync();
             }
         }
 
         /// <summary>
-        /// Gets the command line arguments for the reporting process.
+        /// Deletes reports from the <see cref="ReportLocation"/> that have
+        /// been idle for the length of the <see cref="IdleReportLifetime"/>.
         /// </summary>
-        /// <returns>The command line arguments for the reporting process.</returns>
-        public string GetArguments()
+        public void CleanReportLocation()
         {
-            return string.Format("--archiveLocation=\" {0} \" --reportLocation=\" {1} \" --title=\" {2} \" --company=\" {3} \" " +
-                "--reportDate=\" {4:yyyy-MM-dd} \" --level4threshold=\" {5} \" --level3threshold=\" {6} \" --level4alias=\" {7} \" " +
-                "--level3alias=\" {8} \"", FilePath.GetDirectoryName(m_archiveFilePath).Replace("\"", "\\\""),
-                m_reportLocation.Replace("\"", "\\\""), m_title.Replace("\"", "\\\""), m_company.Replace("\"", "\\\""), m_reportDate,
-                m_level4Threshold, m_level3Threshold, m_level4Alias.Replace("\"", "\\\""), m_level3Alias.Replace("\"", "\\\""));
+            FileInfo info;
+
+            foreach (string report in GetReportsList())
+            {
+                if (IsReportFileName(report))
+                {
+                    info = new FileInfo(FilePath.GetAbsolutePath(Path.Combine(m_reportLocation, report)));
+
+                    if ((DateTime.UtcNow - info.LastAccessTimeUtc).TotalDays > m_idleReportLifetime)
+                        File.Delete(info.FullName);
+                }
+            }
         }
 
         /// <summary>
@@ -295,6 +350,7 @@ namespace GSF.TimeSeries
             settings.Add("Level3Threshold", m_level3Threshold, "Minimum percentage of measurements received from devices in level 3.");
             settings.Add("Level4Alias", m_level4Alias, "Alias for the level 4 category.");
             settings.Add("Level3Alias", m_level3Alias, "Alias for the level 3 category.");
+            settings.Add("IdleReportLifetime", m_idleReportLifetime, "The minimum lifetime of a report since the last time it was accessed, in days.");
 
             ArchiveFilePath = settings["ArchiveFilePath"].ValueAs(m_archiveFilePath);
             ReportLocation = settings["ReportLocation"].ValueAs(m_reportLocation);
@@ -304,6 +360,7 @@ namespace GSF.TimeSeries
             Level3Threshold = settings["Level3Threshold"].ValueAs(m_level3Threshold);
             Level4Alias = settings["Level4Alias"].ValueAs(m_level4Alias);
             Level3Alias = settings["Level3Alias"].ValueAs(m_level3Alias);
+            IdleReportLifetime = settings["IdleReportLifetime"].ValueAs(m_idleReportLifetime);
         }
 
         /// <summary>
@@ -329,7 +386,93 @@ namespace GSF.TimeSeries
             settings["Level3Threshold", true].Update(m_level3Threshold);
             settings["Level4Alias", true].Update(m_level4Alias);
             settings["Level3Alias", true].Update(m_level3Alias);
+            settings["IdleReportLifetime", true].Update(m_idleReportLifetime);
             config.Save();
+        }
+
+        /// <summary>
+        /// Executes the reporting process to generate the report.
+        /// </summary>
+        private void Execute()
+        {
+            WindowsIdentity currentOwner = WindowsIdentity.GetCurrent();
+            DateTime reportDate;
+
+            if ((object)currentOwner != null)
+            {
+                // Wait for existing processes to exit, for instance if the
+                // service was restarted while a report was being generated
+                foreach (Process process in Process.GetProcessesByName("StatHistorianReportGenerator.exe"))
+                {
+                    if (currentOwner.Name == GetProcessOwner(process.Id))
+                        process.WaitForExit();
+                }
+            }
+
+            while (m_reportGenerationQueue.TryPeek(out reportDate))
+            {
+                // Execute the reporting process
+                using (Process process = new Process())
+                {
+                    process.StartInfo.FileName = FilePath.GetAbsolutePath("StatHistorianReportGenerator.exe");
+                    process.StartInfo.Arguments = GetArguments(reportDate);
+                    process.Start();
+                    process.WaitForExit();
+                    process.Close();
+                }
+
+                // Dequeue only after the report is generated so that it
+                // remains in the list of pending reports during generation
+                m_reportGenerationQueue.TryDequeue(out reportDate);
+            }
+        }
+
+        /// <summary>
+        /// Gets the command line arguments for the reporting process.
+        /// </summary>
+        private string GetArguments(DateTime reportDate)
+        {
+            return string.Format("--archiveLocation=\" {0} \" --reportLocation=\" {1} \" --title=\" {2} \" --company=\" {3} \" " +
+                "--reportDate=\" {4:yyyy-MM-dd} \" --level4threshold=\" {5} \" --level3threshold=\" {6} \" --level4alias=\" {7} \" " +
+                "--level3alias=\" {8} \"", FilePath.GetDirectoryName(m_archiveFilePath).Replace("\"", "\\\""),
+                m_reportLocation.Replace("\"", "\\\""), m_title.Replace("\"", "\\\""), m_company.Replace("\"", "\\\""), reportDate,
+                m_level4Threshold, m_level3Threshold, m_level4Alias.Replace("\"", "\\\""), m_level3Alias.Replace("\"", "\\\""));
+        }
+
+        /// <summary>
+        /// Determines whether the given path is a path to a report, based on the file name.
+        /// </summary>
+        private bool IsReportFileName(string fileName)
+        {
+            string regex = string.Format(@"{0} (?<Date>[^.]+)\.pdf", m_title);
+            Match match = Regex.Match(fileName, regex);
+            DateTime reportDate;
+
+            return match.Success && DateTime.TryParse(match.Groups["Date"].Value, out reportDate);
+        }
+
+        /// <summary>
+        /// Determines who is the owner of the given process.
+        /// </summary>
+        private string GetProcessOwner(int processId)
+        {
+            string query = "Select * From Win32_Process Where ProcessID = " + processId;
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+            ManagementObjectCollection processList = searcher.Get();
+
+            object[] argList;
+            int returnVal;
+
+            foreach (ManagementObject obj in processList)
+            {
+                argList = new object[] { string.Empty, string.Empty };
+                returnVal = Convert.ToInt32(obj.InvokeMethod("GetOwner", argList));
+
+                if (returnVal == 0)
+                    return argList[1] + "\\" + argList[0];
+            }
+
+            return "NO OWNER";
         }
 
         #endregion

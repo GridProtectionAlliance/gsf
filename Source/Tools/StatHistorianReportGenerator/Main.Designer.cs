@@ -59,7 +59,7 @@
             // 
             // ReportDateDateTimePicker
             // 
-            this.ReportDateDateTimePicker.CustomFormat = "dd/MM/yyyy";
+            this.ReportDateDateTimePicker.CustomFormat = "MM/dd/yyyy";
             this.ReportDateDateTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.ReportDateDateTimePicker.Location = new System.Drawing.Point(96, 92);
             this.ReportDateDateTimePicker.Name = "ReportDateDateTimePicker";

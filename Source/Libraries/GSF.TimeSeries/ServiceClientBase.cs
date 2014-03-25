@@ -25,6 +25,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
@@ -559,6 +560,7 @@ namespace GSF.TimeSeries
         {
             string sourceCommand;
             bool responseSuccess;
+            byte[] reportData;
 
             if (ClientHelper.TryParseActionableResponse(e.Argument, out sourceCommand, out responseSuccess))
             {
@@ -582,6 +584,31 @@ namespace GSF.TimeSeries
                         else
                             Write("{0} failure: {1}\r\n\r\n", sourceCommand, message);
 
+                        System.Console.ForegroundColor = m_originalFgColor;
+                    }
+                }
+
+                try
+                {
+                    // Handle reports coming from service
+                    if (responseSuccess && sourceCommand.Equals("GetReport", StringComparison.OrdinalIgnoreCase))
+                    {
+                        reportData = e.Argument.Attachments[0] as byte[];
+
+                        if ((object)reportData != null)
+                        {
+                            string tempPath = Path.Combine(Path.GetTempPath(), string.Format("{0}.pdf", Process.GetCurrentProcess().Id));
+                            File.WriteAllBytes(tempPath, reportData);
+                            using (Process.Start(tempPath)) { }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lock (m_displayLock)
+                    {
+                        System.Console.ForegroundColor = ConsoleColor.Red;
+                        WriteLine("Unable to display report due to exception: {0}", ex.Message);
                         System.Console.ForegroundColor = m_originalFgColor;
                     }
                 }

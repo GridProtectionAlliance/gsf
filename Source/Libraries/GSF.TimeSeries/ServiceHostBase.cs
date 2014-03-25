@@ -531,6 +531,8 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Restart", "Attempts to restart the host service", RestartServiceHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("RefreshRoutes", "Spawns request to recalculate routing tables", RefreshRoutesRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("TemporalSupport", "Determines if any adapters support temporal processing", TemporalSupportRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ListReports", "Lists the available reports that have been generated", ListReportsRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GetReport", "Gets a previously generated report for the specified date", GetReportRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GenerateReport", "Generates a report for the specified date", GenerateReportRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReportingConfig", "Displays or modifies the configuration of the reporting process", ReportingConfigRequestHandler, false));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("LogEvent", "Logs remote event log entries.", LogEventRequestHandler, false));
@@ -1632,20 +1634,12 @@ namespace GSF.TimeSeries
         /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void ReportingProcessHandler(string name, object[] parameters)
         {
-            try
-            {
                 DataQualityReportingProcess dataQualityReportingProcess = m_dataQualityReportingProcess;
 
-                lock (dataQualityReportingProcess)
+            if ((object)dataQualityReportingProcess != null)
                 {
-                    dataQualityReportingProcess.ReportDate = DateTime.Now - TimeSpan.FromDays(1);
-                    dataQualityReportingProcess.Execute();
-                }
-            }
-            catch (Exception ex)
-            {
-                DisplayStatusMessage("Failed to generate report for {0:yyyy-MM-dd} due to exception: {1}", UpdateType.Alarm, m_dataQualityReportingProcess.ReportDate, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
+                dataQualityReportingProcess.CleanReportLocation();
+                dataQualityReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
             }
         }
 
@@ -2311,19 +2305,107 @@ namespace GSF.TimeSeries
                 }
             }
         }
+        
+        private void ListReportsRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
 
-        private void GenerateReportRequestHandler(ClientRequestInfo requestInfo)
+                helpMessage.Append("Returns a list of reports that are available from the report location.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       ListReports [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                DataQualityReportingProcess dataQualityReportingProcess;
+
+                StringBuilder listBuilder;
+                List<string> reportsList;
+                List<string> pendingReportsList;
+
+                int fileColumnWidth;
+                string reportPath;
+                FileInfo info;
+                TimeSpan expiration;
+
+                dataQualityReportingProcess = m_dataQualityReportingProcess;
+
+                if ((object)dataQualityReportingProcess != null)
+                {
+                    dataQualityReportingProcess.CleanReportLocation();
+
+                    reportsList = dataQualityReportingProcess.GetReportsList();
+                    pendingReportsList = dataQualityReportingProcess.GetPendingReportsList();
+                    fileColumnWidth = Math.Max(6, reportsList.Concat(pendingReportsList).Select(report => report.Length).DefaultIfEmpty(0).Max()) / 4 * 4 + 4;
+
+                    listBuilder = new StringBuilder();
+                    listBuilder.Append("Report".PadRight(fileColumnWidth));
+                    listBuilder.AppendLine("Status");
+                    listBuilder.Append("------".PadRight(fileColumnWidth));
+                    listBuilder.AppendLine("------");
+
+                    foreach (string report in reportsList)
+                    {
+                        reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, report));
+                        listBuilder.Append(report.PadRight(fileColumnWidth));
+
+                        info = new FileInfo(reportPath);
+                        expiration = TimeSpan.FromDays(dataQualityReportingProcess.IdleReportLifetime) - (DateTime.UtcNow - info.LastAccessTimeUtc);
+
+                        if (expiration.TotalSeconds <= 0.0D)
+                            listBuilder.Append("Expired");
+                        if (expiration.TotalSeconds < 60.0D)
+                            listBuilder.AppendFormat("Expires in {0:0} seconds", expiration.TotalSeconds);
+                        else if (expiration.TotalMinutes < 60.0D)
+                            listBuilder.AppendFormat("Expires in {0:0} minutes", expiration.TotalMinutes);
+                        else if (expiration.TotalHours < 24.0D)
+                            listBuilder.AppendFormat("Expires in {0:0} hours", expiration.TotalHours);
+                        else
+                            listBuilder.AppendFormat("Expires in {0:0} days", expiration.TotalDays);
+
+                        listBuilder.AppendLine();
+        }
+
+                    foreach (string report in pendingReportsList)
+                    {
+                        listBuilder.Append(report.PadRight(fileColumnWidth));
+                        listBuilder.AppendLine("Pending");
+                    }
+
+                    SendResponse(requestInfo, true, listBuilder.ToString());
+                }
+                else
+                {
+                    SendResponse(requestInfo, false, "Unable to list reports while the system is shutting down.");
+                }
+            }
+        }
+
+        private void GetReportRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount == 0)
             {
                 StringBuilder helpMessage = new StringBuilder();
 
-                helpMessage.Append("Generates a report for the specified date.");
+                helpMessage.Append("Gets a report for the specified date.");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
                 helpMessage.AppendLine();
-                helpMessage.Append("       GenerateReport [ReportDate] [Options]");
+                helpMessage.Append("       GetReport [ReportDate] [Options]");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   ReportDate:".PadRight(20));
@@ -2357,19 +2439,72 @@ namespace GSF.TimeSeries
 
                         if (reportDate < today)
                         {
-                            lock (dataQualityReportingProcess)
-                            {
-                                dataQualityReportingProcess.ReportDate = reportDate;
-                                reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, dataQualityReportingProcess.ReportDate)));
+                            reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, reportDate)));
 
-                                if (!File.Exists(reportPath))
-                                    dataQualityReportingProcess.Execute();
+                            if (File.Exists(reportPath))
+                                SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), string.Format("Found and returned report for {0:yyyy-MM-dd}.", reportDate));
+                            else
+                                SendResponse(requestInfo, false, string.Format("Unable to find report for {0:yyyy-MM-dd}.", reportDate));
+                        }
+                        else
+                        {
+                            SendResponse(requestInfo, false, string.Format("[{0:yyyy-MM-dd HH:mm:ss}] Unable to generate report for {1:yyyy-MM-dd} until {2:yyyy-MM-dd}. The statistics archive is not fully populated for that date.", now, reportDate, reportDate + TimeSpan.FromDays(1)));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SendResponse(requestInfo, false, "Unable to generate report due to exception: {0}", ex.Message);
+                }
+            }
+        }
 
-                                if (File.Exists(reportPath))
-                                    SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), "Report was successfully generated.");
-                                else
-                                    SendResponse(requestInfo, false, "Reporting process failed silently.");
-                            }
+        private void GenerateReportRequestHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount == 0)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Generates a report for the specified date.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       GenerateReport [ReportDate] [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   ReportDate:".PadRight(20));
+                helpMessage.Append("Date of the report to be generated (yyyy-MM-dd), or yesterday if not specified");
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                DateTime now = DateTime.Now;
+                DateTime today = DateTime.Parse(now.ToString("yyyy-MM-dd"));
+
+                DataQualityReportingProcess dataQualityReportingProcess;
+                DateTime reportDate;
+
+                try
+                {
+                    dataQualityReportingProcess = m_dataQualityReportingProcess;
+
+                    if ((object)dataQualityReportingProcess != null)
+                    {
+                        if (!requestInfo.Request.Arguments.Exists("OrderedArg1") || !DateTime.TryParse(requestInfo.Request.Arguments["OrderedArg1"], out reportDate))
+                            reportDate = today - TimeSpan.FromDays(1);
+
+                        if (reportDate < today)
+                        {
+                            dataQualityReportingProcess.GenerateReport(reportDate);
+                            SendResponse(requestInfo, true, "Report was successfully queued for generation.");
                         }
                         else
                         {
@@ -2417,20 +2552,24 @@ namespace GSF.TimeSeries
                 DataQualityReportingProcess dataQualityReportingProcess = m_dataQualityReportingProcess;
 
                 string arg;
-                double threshold;
+                double argValue;
 
                 if ((object)dataQualityReportingProcess == null)
                     return;
 
                 if (requestInfo.Request.Arguments.Exists("get") || !requestInfo.Request.Arguments.Exists("set"))
                 {
-
                     try
                     {
-                        lock (dataQualityReportingProcess)
-                        {
-                            SendResponse(requestInfo, true, dataQualityReportingProcess.GetArguments());
-                        }
+                        string configuration = string.Format("--archiveLocation=\" {0} \" --reportLocation=\" {1} \" --title=\" {2} \" --company=\" {3} \" " +
+                            "--level4threshold=\" {4} \" --level3threshold=\" {5} \" --level4alias=\" {6} \" --level3alias=\" {7} \" --idleReportLifetime=\" {8} \"",
+                            FilePath.GetDirectoryName(dataQualityReportingProcess.ArchiveFilePath).Replace("\"", "\\\""),
+                            dataQualityReportingProcess.ReportLocation.Replace("\"", "\\\""), dataQualityReportingProcess.Title.Replace("\"", "\\\""),
+                            dataQualityReportingProcess.Company.Replace("\"", "\\\""), dataQualityReportingProcess.Level4Threshold,
+                            dataQualityReportingProcess.Level3Threshold, dataQualityReportingProcess.Level4Alias.Replace("\"", "\\\""),
+                            dataQualityReportingProcess.Level3Alias.Replace("\"", "\\\""), dataQualityReportingProcess.IdleReportLifetime);
+
+                        SendResponse(requestInfo, true, configuration);
                     }
                     catch (Exception ex)
                     {
@@ -2460,13 +2599,13 @@ namespace GSF.TimeSeries
 
                             arg = requestInfo.Request.Arguments["level4Threshold"];
 
-                            if ((object)arg != null && double.TryParse(arg.Trim(), out threshold))
-                                dataQualityReportingProcess.Level4Threshold = threshold;
+                            if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
+                                dataQualityReportingProcess.Level4Threshold = argValue;
 
                             arg = requestInfo.Request.Arguments["level3Threshold"];
 
-                            if ((object)arg != null && double.TryParse(arg.Trim(), out threshold))
-                                dataQualityReportingProcess.Level3Threshold = threshold;
+                            if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
+                                dataQualityReportingProcess.Level3Threshold = argValue;
 
                             arg = requestInfo.Request.Arguments["level4Alias"];
 
@@ -2477,6 +2616,11 @@ namespace GSF.TimeSeries
 
                             if ((object)arg != null)
                                 dataQualityReportingProcess.Level3Alias = arg.Trim();
+
+                            arg = requestInfo.Request.Arguments["idleReportLifetime"];
+
+                            if ((object)arg != null && double.TryParse(arg.Trim(), out argValue))
+                                dataQualityReportingProcess.IdleReportLifetime = argValue;
 
                             dataQualityReportingProcess.SaveSettings();
                             SendResponse(requestInfo, true, "Reporting configuration saved successfully.");
