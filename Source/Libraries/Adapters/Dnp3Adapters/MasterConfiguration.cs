@@ -26,7 +26,7 @@
 using System;
 using DNP3.Interface;
 
-namespace Dnp3Adapters
+namespace DNP3Adapters
 {
     /// <summary>
     /// Master Configuration
@@ -57,16 +57,21 @@ namespace Dnp3Adapters
         /// <summary>
         /// TCP port for connection
         /// </summary>
-        public UInt16 port;
+        public UInt16 port = 20000;
 
         /// <summary>
-        /// Connection retry interval in milliseconds
+        /// Minimum connection retry interval in milliseconds
         /// </summary>
-        public UInt64 retryMs;
+        public UInt64 minRetryMs = 5000;
+
+        /// <summary>
+        /// Maximum connection retry interval in milliseconds
+        /// </summary>
+        public UInt64 maxRetryMs = 60000;
 
         /// <summary>
         /// DNP3 filter level for port messages
         /// </summary>
-        public FilterLevel level;
+        public System.UInt32 level = DNP3.Interface.LogLevels.NORMAL;
     }
 }

@@ -28,7 +28,7 @@ using System.Collections.Generic;
 using DNP3.Interface;
 using GSF.TimeSeries;
 
-namespace Dnp3Adapters
+namespace DNP3Adapters
 {
     /// <summary>
     /// Helper class that converts measurements and provides a lookup capbility
@@ -44,36 +44,36 @@ namespace Dnp3Adapters
             map.setpointStatusMap.ForEach(m => setpointStatusMap.Add(m.dnpIndex, m));
         }
 
-        public IMeasurement LookupMaybeNull(Binary meas, UInt32 index)
+        public void Lookup(Binary meas, UInt16 index, Action<IMeasurement> action)
         {
-            return LookupMaybeNull(meas, index, binaryMap, ConvertBinary);
+            GenericLookup(meas, index, binaryMap, ConvertBinary, action);
         }
 
-        public IMeasurement LookupMaybeNull(Analog meas, UInt32 index)
+        public void Lookup(Analog meas, UInt16 index, Action<IMeasurement> action)
         {
-            return LookupMaybeNull(meas, index, analogMap, ConvertAnalog);
+            GenericLookup(meas, index, analogMap, ConvertAnalog, action);
         }
 
-        public IMeasurement LookupMaybeNull(Counter meas, UInt32 index)
+        public void Lookup(Counter meas, UInt16 index, Action<IMeasurement> action)
         {
-            return LookupMaybeNull(meas, index, counterMap, ConvertCounter);
+            GenericLookup(meas, index, counterMap, ConvertCounter, action);
         }
 
-        public IMeasurement LookupMaybeNull(ControlStatus meas, UInt32 index)
+        public void Lookup(BinaryOutputStatus meas, UInt16 index, Action<IMeasurement> action)
         {
-            return LookupMaybeNull(meas, index, controlStatusMap, ConvertControlStatus);
+            GenericLookup(meas, index, controlStatusMap, ConvertBinaryOutputStatus, action);
         }
 
-        public IMeasurement LookupMaybeNull(SetpointStatus meas, UInt32 index)
+        public void Lookup(AnalogOutputStatus meas, UInt16 index, Action<IMeasurement> action)
         {
-            return LookupMaybeNull(meas, index, setpointStatusMap, ConvertSetpointStatus);
+            GenericLookup(meas, index, setpointStatusMap, ConvertAnalogOutputStatus, action);
         }
 
         private Measurement ConvertBinary(Binary meas, uint id, String source)
         {
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
-            m.Value = meas.value ? 1.0 : 0.0;
+            m.Value = meas.Value ? 1.0 : 0.0;
             m.Timestamp = DateTime.UtcNow;
             return m;
         }
@@ -82,7 +82,7 @@ namespace Dnp3Adapters
         {
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
-            m.Value = meas.value;
+            m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
         }
@@ -91,34 +91,36 @@ namespace Dnp3Adapters
         {
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
-            m.Value = meas.value; //auto cast to double
+            m.Value = meas.Value; //auto cast to double
             m.Timestamp = DateTime.UtcNow;
             return m;
         }
 
-        private Measurement ConvertControlStatus(ControlStatus meas, uint id, String source)
+        private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus meas, uint id, String source)
         {
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
-            m.Value = meas.value ? 1.0 : 0.0;
+            m.Value = meas.Value ? 1.0 : 0.0;
             m.Timestamp = DateTime.UtcNow;
             return m;
         }
 
-        private Measurement ConvertSetpointStatus(SetpointStatus meas, uint id, String source)
+        private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus meas, uint id, String source)
         {
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
-            m.Value = meas.value;
+            m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
         }
 
-        private static IMeasurement LookupMaybeNull<T>(T meas, UInt32 index, Dictionary<UInt32, Mapping> map, Func<T, uint, String, Measurement> converter)
+        private static void GenericLookup<T>(T meas, UInt32 index, Dictionary<UInt32, Mapping> map, Func<T, uint, String, Measurement> converter, Action<IMeasurement> action)
         {
             Mapping id;
-            if (map.TryGetValue(index, out id)) return converter(meas, id.tsfId, id.tsfSource);
-            else return null;
+            if (map.TryGetValue(index, out id))
+            {
+                action(converter(meas, id.tsfId, id.tsfSource));
+            }           
         }
 
         private readonly Dictionary<UInt32, Mapping> binaryMap = new Dictionary<uint, Mapping>();

@@ -26,7 +26,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Dnp3Adapters
+namespace DNP3Adapters
 {
     /// <summary>
     /// Mapping

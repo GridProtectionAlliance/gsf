@@ -33,28 +33,29 @@ using DNP3.Interface;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
-namespace Dnp3Adapters
+namespace DNP3Adapters
 {
     /// <summary>
     /// DNP3 Adapter
     /// </summary>
     [Description("DNP3: Reads measurements from a remote dnp3 endpoint")]
-    public class Dnp3InputAdapter : InputAdapterBase
+    public class DNP3InputAdapter : InputAdapterBase
     {
         /// <summary>
         /// DNP3 manager shared across all of the DNP3 input adapters
+        /// Concurrency level defaults to number of processors
         /// </summary>
-        private static readonly StackManager m_Manager = new StackManager();
+        private static readonly IDNP3Manager m_Manager = DNP3.Adapter.DNP3ManagerFactory.CreateManager(Environment.ProcessorCount);
 
         /// <summary>
         /// The filename for the communication configuration file
         /// </summary>
-        private String m_commsFileName;
+        private String m_commsFilePath;
 
         /// <summary>
         /// The filename for the measurement mapping configuration file
         /// </summary>
-        private String m_mappingFileName;
+        private String m_mappingFilePath;
 
         /// <summary>
         /// Configuration for the master. Set during the Initialize call.
@@ -69,7 +70,7 @@ namespace Dnp3Adapters
         /// <summary>
         /// Gets set during the AttemptConnection() call and using during AttemptDisconnect()
         /// </summary>
-        private String m_portName;
+        private IChannel m_Channel = null;
 
         /// <summary>
         /// A counter of the number of measurements received
@@ -88,15 +89,15 @@ namespace Dnp3Adapters
         [ConnectionStringParameter,
         Description("Define the name of the XML file from which the communication configuration will be read"),
         DefaultValue("comms1.xml")]
-        public string CommsFileName
+        public string CommsFilePath
         {
             get
             {
-                return m_commsFileName;
+                return m_commsFilePath;
             }
             set
             {
-                m_commsFileName = value;
+                m_commsFilePath = value;
             }
         }
 
@@ -106,52 +107,64 @@ namespace Dnp3Adapters
         [ConnectionStringParameter,
         Description("Define the name of the XML file from which the communication configuration will be read"),
         DefaultValue("device1.xml")]
-        public string MappingFileName
+        public string MappingFilePath
         {
             get
             {
-                return m_mappingFileName;
+                return m_mappingFilePath;
             }
             set
             {
-                m_mappingFileName = value;
+                m_mappingFilePath = value;
             }
         }
 
        /// <summary>
-       /// Initializes <see cref="Dnp3InputAdapter"/>
+       /// Initializes <see cref="DNP3InputAdapter"/>
        /// </summary>
         public override void Initialize()
         {
             base.Initialize();
-                        
-            Settings.TryGetValue("commsFile", out m_commsFileName);
-            Settings.TryGetValue("mappingFile", out m_mappingFileName);                                  
+
+            Settings.TryGetValue("CommsFilePath", out m_commsFilePath);
+            Settings.TryGetValue("MappingFilePath", out m_mappingFilePath);                                  
 
             try
             {
-                if (m_commsFileName == null) throw new ArgumentException("The required commsFile parameter was not specified");
-                if (m_mappingFileName == null) throw new ArgumentException("The required mappingFile parameter was not specified");
+                if (m_commsFilePath == null)
+                {
+                    throw new ArgumentException("The required commsFile parameter was not specified");
+                }
 
-                m_MasterConfig = ReadConfig<MasterConfiguration>(CommsFileName);
-                m_MeasMap = ReadConfig<MeasurementMap>(MappingFileName);                
+                if (m_mappingFilePath == null)
+                {
+                    throw new ArgumentException("The required mappingFile parameter was not specified");
+                }
+
+                m_MasterConfig = ReadConfig<MasterConfiguration>(m_commsFilePath);
+                m_MeasMap = ReadConfig<MeasurementMap>(m_mappingFilePath);                
             }
             catch (Exception ex)
-            {                
+            {
+                string message = ex.Message;
                 OnProcessException(ex);                
             }            
         }
 
         /// <summary>
-        /// Disposes the <see cref="Dnp3InputAdapter"/>
+        /// Disposes the <see cref="DNP3InputAdapter"/>
         /// </summary>
         /// <param name="disposing"><c>true</c> if disposing</param>
         protected override void Dispose(bool disposing)
         {
             if (m_active)
-            {
-                m_Manager.RemovePort(m_portName);
+            {                
                 m_active = false;
+                if (m_Channel != null)
+                {
+                    m_Channel.Shutdown();
+                    m_Channel = null;
+                }
             }
             base.Dispose(disposing);
         }
@@ -168,7 +181,7 @@ namespace Dnp3Adapters
             {
                 stream.Close();
             }
-        }
+        }       
         
         /// <summary>
         /// Async connection flag
@@ -183,14 +196,16 @@ namespace Dnp3Adapters
         /// </summary>
         protected override void AttemptConnection()
         {            
-            var tcp = m_MasterConfig.client;
-            var master = m_MasterConfig.master;
-            m_portName = tcp.address + ":" + tcp.port;
-            m_Manager.AddTCPClient(m_portName, tcp.level, tcp.retryMs, tcp.address, tcp.port);            
-            var adapter = new TimeSeriesDataObserver(new MeasurementLookup(m_MeasMap));
-            adapter.NewMeasurements += adapter_NewMeasurements;
-            adapter.NewMeasurements += OnNewMeasurements;           
-            var acceptor = m_Manager.AddMaster(m_portName, Name, FilterLevel.LEV_WARNING, adapter, m_MasterConfig.master);
+            var tcp = m_MasterConfig.client;            
+            var portName = tcp.address + ":" + tcp.port;
+            var minRetry = TimeSpan.FromMilliseconds(tcp.minRetryMs);
+            var maxRetry = TimeSpan.FromMilliseconds(tcp.maxRetryMs);
+            var channel = m_Manager.AddTCPClient(portName, tcp.level, minRetry, maxRetry, tcp.address, tcp.port);
+            m_Channel = channel;
+            var soeHandler = new TimeSeriesSOEHandler(new MeasurementLookup(m_MeasMap));
+            soeHandler.NewMeasurements += adapter_NewMeasurements;
+            soeHandler.NewMeasurements += OnNewMeasurements;           
+            var master = channel.AddMaster(portName, soeHandler, m_MasterConfig.master);
             m_active = true;
         }
 
@@ -205,8 +220,12 @@ namespace Dnp3Adapters
         protected override void AttemptDisconnection()
         {
             if (m_active)
-            {                
-                m_Manager.RemovePort(m_portName);
+            {
+                if (m_Channel != null)
+                {
+                    m_Channel.Shutdown();
+                    m_Channel = null;
+                }
                 m_active = false;
             }
         }
