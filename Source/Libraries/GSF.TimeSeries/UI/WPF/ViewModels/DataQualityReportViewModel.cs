@@ -32,6 +32,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using GSF.Console;
 using GSF.ServiceProcess;
 using GSF.TimeSeries.UI.Commands;
@@ -156,6 +157,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         private ObservableCollection<string> m_pendingReports;
         private byte[] m_reportData;
 
+        private DispatcherTimer m_listReportsTimer;
         private string m_responseMessage;
         private ManualResetEventSlim m_responseComplete;
         private ICommand m_changeReportingEnabledCommand;
@@ -187,6 +189,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             m_availableReports = new ObservableCollection<AvailableReport>();
             m_pendingReports = new ObservableCollection<string>();
             m_responseComplete = new ManualResetEventSlim(false);
+            m_listReportsTimer = new DispatcherTimer(TimeSpan.FromSeconds(5), DispatcherPriority.ApplicationIdle, (sender, args) => ListReports(), Dispatcher.CurrentDispatcher);
         }
 
         #endregion
@@ -205,6 +208,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             set
             {
                 m_serviceConnected = value;
+                m_listReportsTimer.IsEnabled = value;
                 m_connectivityMessageVisibility = value ? Visibility.Collapsed : Visibility.Visible;
                 OnPropertyChanged("ServiceConnected");
                 OnPropertyChanged("ConnectivityMessageVisibility");
@@ -658,6 +662,8 @@ namespace GSF.TimeSeries.UI.ViewModels
                             string message = string.Format("Report saved, but unable to open: {0}", ex.Message);
                             Popup(message, "GetReport", MessageBoxImage.Error);
                         }
+
+                        ListReports();
                     }
                 }
             }

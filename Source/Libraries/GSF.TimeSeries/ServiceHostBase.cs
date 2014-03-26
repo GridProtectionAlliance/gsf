@@ -2442,9 +2442,14 @@ namespace GSF.TimeSeries
                             reportPath = FilePath.GetAbsolutePath(Path.Combine(dataQualityReportingProcess.ReportLocation, string.Format("{0} {1:yyyy-MM-dd}.pdf", dataQualityReportingProcess.Title, reportDate)));
 
                             if (File.Exists(reportPath))
+                            {
+                                File.SetLastAccessTimeUtc(reportPath, DateTime.UtcNow);
                                 SendResponseWithAttachment(requestInfo, true, File.ReadAllBytes(reportPath), string.Format("Found and returned report for {0:yyyy-MM-dd}.", reportDate));
+                            }
                             else
+                            {
                                 SendResponse(requestInfo, false, string.Format("Unable to find report for {0:yyyy-MM-dd}.", reportDate));
+                            }
                         }
                         else
                         {
