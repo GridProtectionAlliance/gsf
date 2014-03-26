@@ -105,13 +105,11 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DotNetAdapter, Version=1.0.4553.26492, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Dependencies\OpenDNP3\DotNetAdapter.dll</HintPath>
+    <Reference Include="DNP3CLRAdapter">
+      <HintPath>..\..\..\Dependencies\OpenDNP3\DNP3CLRAdapter.dll</HintPath>
     </Reference>
-    <Reference Include="DotNetInterface, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Dependencies\OpenDNP3\DotNetInterface.dll</HintPath>
+    <Reference Include="DNP3CLRInterface">
+      <HintPath>..\..\..\Dependencies\OpenDNP3\DNP3CLRInterface.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -127,7 +125,7 @@
     <Compile Include="MeasurementLookup.cs" />
     <Compile Include="MeasurementMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TimeSeriesDataObserver.cs" />
+    <Compile Include="TimeSeriesSOEHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">

@@ -87,20 +87,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NAudio", "NAudio", "{1F039E
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenDNP3", "OpenDNP3", "{00B924AB-0DC8-4826-8A63-3263E39C2EBF}"
 	ProjectSection(SolutionItems) = preProject
-		Dependencies\OpenDNP3\boost_date_time-vc100-mt-1_47.dll = Dependencies\OpenDNP3\boost_date_time-vc100-mt-1_47.dll
-		Dependencies\OpenDNP3\boost_system-vc100-mt-1_47.dll = Dependencies\OpenDNP3\boost_system-vc100-mt-1_47.dll
-		Dependencies\OpenDNP3\boost_thread-vc100-mt-1_47.dll = Dependencies\OpenDNP3\boost_thread-vc100-mt-1_47.dll
-		Dependencies\OpenDNP3\DotNetAdapter.dll = Dependencies\OpenDNP3\DotNetAdapter.dll
-		Dependencies\OpenDNP3\DotNetInterface.dll = Dependencies\OpenDNP3\DotNetInterface.dll
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x86", "x86", "{62B8EC34-3208-4A64-9292-DB32C0A2F02A}"
-	ProjectSection(SolutionItems) = preProject
-		Dependencies\OpenDNP3\x86\boost_date_time-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_date_time-vc100-mt-1_47.dll
-		Dependencies\OpenDNP3\x86\boost_system-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_system-vc100-mt-1_47.dll
-		Dependencies\OpenDNP3\x86\boost_thread-vc100-mt-1_47.dll = Dependencies\OpenDNP3\x86\boost_thread-vc100-mt-1_47.dll
-		Dependencies\OpenDNP3\x86\DotNetAdapter.dll = Dependencies\OpenDNP3\x86\DotNetAdapter.dll
-		Dependencies\OpenDNP3\x86\DotNetInterface.dll = Dependencies\OpenDNP3\x86\DotNetInterface.dll
+		Dependencies\OpenDNP3\DNP3CLRAdapter.dll = Dependencies\OpenDNP3\DNP3CLRAdapter.dll
+		Dependencies\OpenDNP3\DNP3CLRInterface.dll = Dependencies\OpenDNP3\DNP3CLRInterface.dll
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{0C19430B-01AC-4184-ACDA-6DE690649CD8}"
@@ -1501,12 +1489,14 @@ Global
 		{43A322EE-37D2-4B13-BA16-023E88772F8D} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{7B0EEB2B-6F25-4D59-A15D-F39EA9DC94D3} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
 		{26F261F8-8660-46D3-8090-BCDA9EFF5427} = {2E8D7CE0-8816-4893-848B-05E2A38FE898}
-		{62B8EC34-3208-4A64-9292-DB32C0A2F02A} = {00B924AB-0DC8-4826-8A63-3263E39C2EBF}
 		{7C825A52-3ADB-40BD-8D49-1519A4D534A1} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}
 		{4508009C-7011-4981-B35F-594F42CC0D1F} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}
 		{DEAE7327-1628-4D6D-B682-257335B86B22} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}
 		{FC5B2769-89FD-420B-9722-D6E0B029ABDD} = {0C19430B-01AC-4184-ACDA-6DE690649CD8}
 		{5E75D20E-228E-4ACC-B73D-E9471D9E0852} = {7C825A52-3ADB-40BD-8D49-1519A4D534A1}
 		{D78C3B1B-F673-45EB-86CB-93DCB4572905} = {7C825A52-3ADB-40BD-8D49-1519A4D534A1}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
