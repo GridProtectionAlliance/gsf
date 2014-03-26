@@ -161,7 +161,6 @@ namespace GSF.TimeSeries.UI.ViewModels
         private string m_responseMessage;
         private ManualResetEventSlim m_responseComplete;
         private ICommand m_changeReportingEnabledCommand;
-        private ICommand m_listReportsCommand;
         private ICommand m_generateReportCommand;
         private ICommand m_applyReportingConfigCommand;
 
@@ -207,11 +206,18 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
             set
             {
+                WindowsServiceClient serviceClient;
+
                 m_serviceConnected = value;
                 m_listReportsTimer.IsEnabled = value;
                 m_connectivityMessageVisibility = value ? Visibility.Collapsed : Visibility.Visible;
                 OnPropertyChanged("ServiceConnected");
                 OnPropertyChanged("ConnectivityMessageVisibility");
+
+                serviceClient = CommonFunctions.GetWindowsServiceClient();
+
+                if ((object)serviceClient != null && (object)serviceClient.Helper != null)
+                    serviceClient.Helper.ReceivedServiceResponse += ListReportsHandler;
 
                 if (m_serviceConnected)
                 {
@@ -422,17 +428,6 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// <summary>
         /// Gets the command to generate a new report manually.
         /// </summary>
-        public ICommand ListReportsCommand
-        {
-            get
-            {
-                return m_listReportsCommand ?? (m_listReportsCommand = new RelayCommand(ListReports, () => true));
-            }
-        }
-
-        /// <summary>
-        /// Gets the command to generate a new report manually.
-        /// </summary>
         public ICommand GenerateReportCommand
         {
             get
@@ -461,10 +456,17 @@ namespace GSF.TimeSeries.UI.ViewModels
         /// </summary>
         public void Dispose()
         {
+            WindowsServiceClient serviceClient;
+
             if (!m_disposed)
             {
                 try
                 {
+                    serviceClient = CommonFunctions.GetWindowsServiceClient();
+
+                    if ((object)serviceClient != null && (object)serviceClient.Helper != null)
+                        serviceClient.Helper.ReceivedServiceResponse -= ListReportsHandler;
+
                     if ((object)m_responseComplete != null)
                     {
                         // Release any waiting threads before disposing wait handle
@@ -567,44 +569,12 @@ namespace GSF.TimeSeries.UI.ViewModels
         {
             WindowsServiceClient serviceClient = null;
 
-            AvailableReport report;
-            int statusIndex;
-
             try
             {
-                m_responseComplete.Reset();
-                serviceClient = CommonFunctions.GetWindowsServiceClient();
-                serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
-                serviceClient.Helper.SendRequest("ListReports");
-
-                // Wait for command response allowing for processing time
-                if ((object)m_responseComplete != null)
+                if (m_serviceConnected)
                 {
-                    if (!m_responseComplete.Wait(5000))
-                        throw new TimeoutException("Timed-out after 5 seconds waiting for service response.");
-                }
-
-                if (!string.IsNullOrEmpty(m_reportsList))
-                {
-                    statusIndex = m_reportsList.IndexOf("Status");
-                    m_availableReports.Clear();
-                    m_pendingReports.Clear();
-
-                    foreach (string line in m_reportsList.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Skip(2))
-                    {
-                        report = new AvailableReport(this)
-                        {
-                            Date = GetReportDate(line.Remove(statusIndex).Trim()),
-                            Status = line.Substring(statusIndex).Trim()
-                        };
-
-                        if (report.Status != "Pending")
-                            m_availableReports.Add(report);
-                        else
-                            m_pendingReports.Add(report.Date);
-                    }
-
-                    m_reportsList = null;
+                    serviceClient = CommonFunctions.GetWindowsServiceClient();
+                    serviceClient.Helper.SendRequest("ListReports");
                 }
             }
             catch (Exception ex)
@@ -853,6 +823,33 @@ namespace GSF.TimeSeries.UI.ViewModels
             return reportDate.ToString("MM/dd/yyyy");
         }
 
+        private void UpdateReportsLists(string reportsList)
+        {
+            int statusIndex;
+            AvailableReport report;
+
+            if (!string.IsNullOrEmpty(reportsList))
+            {
+                statusIndex = reportsList.IndexOf("Status");
+                m_availableReports.Clear();
+                m_pendingReports.Clear();
+
+                foreach (string line in reportsList.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Skip(2))
+                {
+                    report = new AvailableReport(this)
+                    {
+                        Date = GetReportDate(line.Remove(statusIndex).Trim()),
+                        Status = line.Substring(statusIndex).Trim()
+                    };
+
+                    if (report.Status != "Pending")
+                        m_availableReports.Add(report);
+                    else
+                        m_pendingReports.Add(report.Date);
+                }
+            }
+        }
+
         private void Helper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
         {
             if (Regex.IsMatch(e.Argument2, "^Process schedules"))
@@ -885,14 +882,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                     {
                         switch (sourceCommand.Trim().ToUpper())
                         {
-                            case "LISTREPORTS":
-                                if (responseSuccess)
-                                    m_reportsList = response.Message;
-                                else
-                                    Application.Current.Dispatcher.BeginInvoke(new Action(() => Popup(response.Message, "ListReports", MessageBoxImage.Error)));
-
-                                break;
-
                             case "GETREPORT":
                                 if (responseSuccess)
                                 {
@@ -923,10 +912,42 @@ namespace GSF.TimeSeries.UI.ViewModels
                                     Application.Current.Dispatcher.BeginInvoke(new Action(() => Popup(response.Message, "ReportingConfig", MessageBoxImage.Error)));
 
                                 break;
+
+                            case "LISTREPORTS":
+                                return;
                         }
 
                         if ((object)m_responseComplete != null)
                             m_responseComplete.Set();
+                    }
+                }
+            }
+        }
+
+        private void ListReportsHandler(object sender, EventArgs<ServiceResponse> e)
+        {
+            ServiceResponse response;
+            string sourceCommand;
+            bool responseSuccess;
+
+            if ((object)e != null)
+            {
+                response = e.Argument;
+
+                if ((object)response != null)
+                {
+                    if (ClientHelper.TryParseActionableResponse(response, out sourceCommand, out responseSuccess))
+                    {
+                        switch (sourceCommand.Trim().ToUpper())
+                        {
+                            case "LISTREPORTS":
+                                if (responseSuccess)
+                                    Application.Current.Dispatcher.BeginInvoke(new Action<string>(UpdateReportsLists), response.Message);
+                                else
+                                    Application.Current.Dispatcher.BeginInvoke(Popup, response.Message, "ListReports", MessageBoxImage.Error);
+
+                                break;
+                        }
                     }
                 }
             }

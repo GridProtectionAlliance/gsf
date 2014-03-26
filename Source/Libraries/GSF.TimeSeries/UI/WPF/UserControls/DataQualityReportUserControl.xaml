@@ -168,11 +168,6 @@
             </DataGrid>
 
             <TextBlock Grid.Row="0" Grid.Column="1" Margin="10,0,0,0" HorizontalAlignment="Left" Text="Pending Reports" />
-            <Button Grid.Row="0" Grid.Column="1" Width="Auto" Padding="0" HorizontalAlignment="Right" ToolTip="Refresh" Command="{Binding ListReportsCommand}">
-                <Button.Content>
-                    <Image Source="/GSF.TimeSeries.UI;component/images/Refresh.png" />
-                </Button.Content>
-            </Button>
 
             <DataGrid Grid.Row="1" Grid.Column="1" Margin="10,0,0,0" Height="{StaticResource LargeItemSize}" ItemsSource="{Binding PendingReports}">
                 <DataGrid.Columns>
