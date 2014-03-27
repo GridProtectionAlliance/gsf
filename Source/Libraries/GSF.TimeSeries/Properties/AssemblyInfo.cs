@@ -62,6 +62,6 @@ using System.Runtime.CompilerServices;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("2.0.166.0")]
-[assembly: AssemblyVersion("2.0.166.0")]
+// [assembly: AssemblyVersion("2.0.167.0")]
+[assembly: AssemblyVersion("2.0.167.0")]
 
