@@ -124,7 +124,7 @@ namespace DNP3Adapters
        /// </summary>
         public override void Initialize()
         {
-            base.Initialize();
+            base.Initialize();         
 
             Settings.TryGetValue("CommsFilePath", out m_commsFilePath);
             Settings.TryGetValue("MappingFilePath", out m_mappingFilePath);                                  
@@ -142,7 +142,7 @@ namespace DNP3Adapters
                 }
 
                 m_MasterConfig = ReadConfig<MasterConfiguration>(m_commsFilePath);
-                m_MeasMap = ReadConfig<MeasurementMap>(m_mappingFilePath);                
+                m_MeasMap = ReadConfig<MeasurementMap>(m_mappingFilePath); 
             }
             catch (Exception ex)
             {
@@ -196,16 +196,18 @@ namespace DNP3Adapters
         /// </summary>
         protected override void AttemptConnection()
         {            
-            var tcp = m_MasterConfig.client;            
-            var portName = tcp.address + ":" + tcp.port;
-            var minRetry = TimeSpan.FromMilliseconds(tcp.minRetryMs);
-            var maxRetry = TimeSpan.FromMilliseconds(tcp.maxRetryMs);
-            var channel = m_Manager.AddTCPClient(portName, tcp.level, minRetry, maxRetry, tcp.address, tcp.port);
+            var tcpConfig = m_MasterConfig.client;
+            var portName = tcpConfig.address + ":" + tcpConfig.port;
+            var minRetry = TimeSpan.FromMilliseconds(tcpConfig.minRetryMs);
+            var maxRetry = TimeSpan.FromMilliseconds(tcpConfig.maxRetryMs);
+            var channel = m_Manager.AddTCPClient(portName, tcpConfig.level, minRetry, maxRetry, tcpConfig.address, tcpConfig.port);     
+            channel.AddStateListener(state => this.OnStatusMessage(portName + " - Channel state change: " + state));            
             m_Channel = channel;
             var soeHandler = new TimeSeriesSOEHandler(new MeasurementLookup(m_MeasMap));
             soeHandler.NewMeasurements += adapter_NewMeasurements;
             soeHandler.NewMeasurements += OnNewMeasurements;           
             var master = channel.AddMaster(portName, soeHandler, m_MasterConfig.master);
+            master.Enable();
             m_active = true;
         }
 
