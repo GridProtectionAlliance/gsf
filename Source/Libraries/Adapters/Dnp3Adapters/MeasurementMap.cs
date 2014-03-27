@@ -90,6 +90,16 @@ namespace DNP3Adapters
         /// Counter Map
         /// </summary>
         public List<Mapping> counterMap = new List<Mapping>();
+
+        /// <summary>
+        /// Fozen Counter Map
+        /// </summary>
+        public List<Mapping> frozenCounterMap = new List<Mapping>();
+
+        /// <summary>
+        /// double bit binary map
+        /// </summary>
+        public List<Mapping> doubleBitBinaryMap = new List<Mapping>();
         
         /// <summary>
         /// Control Status Map

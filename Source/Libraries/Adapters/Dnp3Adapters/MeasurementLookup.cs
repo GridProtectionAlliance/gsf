@@ -40,13 +40,20 @@ namespace DNP3Adapters
             map.binaryMap.ForEach(m => binaryMap.Add(m.dnpIndex, m));
             map.analogMap.ForEach(m => analogMap.Add(m.dnpIndex, m));
             map.counterMap.ForEach(m => counterMap.Add(m.dnpIndex, m));
+            map.frozenCounterMap.ForEach(m => frozenCounterMap.Add(m.dnpIndex, m));
             map.controlStatusMap.ForEach(m => controlStatusMap.Add(m.dnpIndex, m));
             map.setpointStatusMap.ForEach(m => setpointStatusMap.Add(m.dnpIndex, m));
+            map.doubleBitBinaryMap.ForEach(m => doubleBitBinaryMap.Add(m.dnpIndex, m));
         }
 
         public void Lookup(Binary meas, UInt16 index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, binaryMap, ConvertBinary, action);
+        }
+
+        public void Lookup(DoubleBitBinary meas, UInt16 index, Action<IMeasurement> action)
+        {
+            GenericLookup(meas, index, binaryMap, ConvertDoubleBinary, action);
         }
 
         public void Lookup(Analog meas, UInt16 index, Action<IMeasurement> action)
@@ -57,6 +64,11 @@ namespace DNP3Adapters
         public void Lookup(Counter meas, UInt16 index, Action<IMeasurement> action)
         {
             GenericLookup(meas, index, counterMap, ConvertCounter, action);
+        }
+
+        public void Lookup(FrozenCounter meas, UInt16 index, Action<IMeasurement> action)
+        {
+            GenericLookup(meas, index, frozenCounterMap, ConvertFrozenCounter, action);
         }
 
         public void Lookup(BinaryOutputStatus meas, UInt16 index, Action<IMeasurement> action)
@@ -78,6 +90,29 @@ namespace DNP3Adapters
             return m;
         }
 
+        private Measurement ConvertDoubleBinary(DoubleBitBinary meas, uint id, String source)
+        {
+            var m = new Measurement();
+            m.Key = new MeasurementKey(Guid.Empty, id, source);
+            switch (meas.Value)
+            {
+                case (DoubleBit.INDETERMINATE):
+                    m.Value = 0.0;
+                    break;
+                case(DoubleBit.DETERMINED_OFF):
+                    m.Value = 1.0;
+                    break;
+                case (DoubleBit.DETERMINED_ON):
+                    m.Value = 2.0;
+                    break;
+                default:
+                    m.Value = 3.0;
+                    break;
+            }
+            m.Timestamp = DateTime.UtcNow;
+            return m;
+        }
+
         private Measurement ConvertAnalog(Analog meas, uint id, String source)
         {
             var m = new Measurement();
@@ -91,7 +126,16 @@ namespace DNP3Adapters
         {
             var m = new Measurement();
             m.Key = new MeasurementKey(Guid.Empty, id, source);
-            m.Value = meas.Value; //auto cast to double
+            m.Value = meas.Value;
+            m.Timestamp = DateTime.UtcNow;
+            return m;
+        }
+
+        private Measurement ConvertFrozenCounter(FrozenCounter meas, uint id, String source)
+        {
+            var m = new Measurement();
+            m.Key = new MeasurementKey(Guid.Empty, id, source);
+            m.Value = meas.Value;
             m.Timestamp = DateTime.UtcNow;
             return m;
         }
@@ -126,7 +170,9 @@ namespace DNP3Adapters
         private readonly Dictionary<UInt32, Mapping> binaryMap = new Dictionary<uint, Mapping>();
         private readonly Dictionary<UInt32, Mapping> analogMap = new Dictionary<uint, Mapping>();
         private readonly Dictionary<UInt32, Mapping> counterMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<UInt32, Mapping> frozenCounterMap = new Dictionary<uint, Mapping>();
         private readonly Dictionary<UInt32, Mapping> controlStatusMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<UInt32, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();
+        private readonly Dictionary<UInt32, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();                
+        private readonly Dictionary<UInt32, Mapping> doubleBitBinaryMap = new Dictionary<uint, Mapping>();
     }
 }

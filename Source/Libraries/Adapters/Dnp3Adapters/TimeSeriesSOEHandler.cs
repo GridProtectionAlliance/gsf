@@ -77,7 +77,7 @@ namespace DNP3Adapters
 
         void ISOEHandler.LoadEvent(FrozenCounter meas, ushort index)
         {
-            
+            m_lookup.Lookup(meas, index, m_Measurements.Add);
         }
 
         void ISOEHandler.LoadEvent(Counter meas, ushort index)
@@ -92,7 +92,7 @@ namespace DNP3Adapters
 
         void ISOEHandler.LoadEvent(DoubleBitBinary meas, ushort index)
         {
-           
+            m_lookup.Lookup(meas, index, m_Measurements.Add);
         }
 
         void ISOEHandler.LoadEvent(Binary meas, ushort index)
@@ -117,7 +117,7 @@ namespace DNP3Adapters
 
         void ISOEHandler.LoadStatic(FrozenCounter meas, ushort index)
         {
-            
+            m_lookup.Lookup(meas, index, m_Measurements.Add);
         }
 
         void ISOEHandler.LoadStatic(Counter meas, ushort index)
@@ -132,7 +132,7 @@ namespace DNP3Adapters
 
         void ISOEHandler.LoadStatic(DoubleBitBinary meas, ushort index)
         {
-            
+            m_lookup.Lookup(meas, index, m_Measurements.Add);
         }
 
         void ISOEHandler.LoadStatic(Binary meas, ushort index)

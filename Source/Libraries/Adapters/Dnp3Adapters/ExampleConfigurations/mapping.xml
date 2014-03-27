@@ -16,11 +16,25 @@
 
   </binaryMap>
 
-  <analogMap>
+  <doubleBitBinaryMap>
 
     <Mapping>
 
       <tsfId>1</tsfId>
+
+      <tsfSource>PPA</tsfSource>
+
+      <dnpIndex>0</dnpIndex>
+
+    </Mapping>
+
+  </doubleBitBinaryMap>
+
+  <analogMap>
+
+    <Mapping>
+
+      <tsfId>2</tsfId>
 
       <tsfSource>PPA</tsfSource>
 
@@ -34,7 +48,7 @@
 
     <Mapping>
 
-      <tsfId>2</tsfId>
+      <tsfId>3</tsfId>
 
       <tsfSource>PPA</tsfSource>
 
@@ -44,11 +58,25 @@
 
   </counterMap>
 
+  <frozenCounterMap>
+
+    <Mapping>
+
+      <tsfId>4</tsfId>
+
+      <tsfSource>PPA</tsfSource>
+
+      <dnpIndex>0</dnpIndex>
+
+    </Mapping>
+
+  </frozenCounterMap>
+
   <controlStatusMap>
 
     <Mapping>
 
-      <tsfId>3</tsfId>
+      <tsfId>5</tsfId>
 
       <tsfSource>PPA</tsfSource>
 
@@ -62,7 +90,7 @@
 
     <Mapping>
 
-      <tsfId>4</tsfId>
+      <tsfId>6</tsfId>
 
       <tsfSource>PPA</tsfSource>
 
