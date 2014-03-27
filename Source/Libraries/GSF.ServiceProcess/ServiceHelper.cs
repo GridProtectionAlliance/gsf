@@ -2101,13 +2101,15 @@ namespace GSF.ServiceProcess
             {
                 // All subsequent messages from a remote client would be requests.
                 ClientRequest request;
+                ClientRequestInfo requestInfo = null;
+
                 Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out request);
 
                 if ((object)request != null)
                 {
                     try
                     {
-                        ClientRequestInfo requestInfo = new ClientRequestInfo(client, request);
+                        requestInfo = new ClientRequestInfo(client, request);
                         string resource = requestInfo.Request.Command;
 
                         if (m_remoteCommandClientID == Guid.Empty)
@@ -2173,7 +2175,11 @@ namespace GSF.ServiceProcess
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
-                        UpdateStatus(client.ClientID, UpdateType.Alarm, "Failed to process request \"{0}\" - {1}\r\n\r\n", request.Command, ex.Message);
+
+                        if ((object)requestInfo != null)
+                            SendActionableResponse(requestInfo, false, null, "Failed to process request \"{0}\" - {1}\r\n\r\n", request.Command, ex.Message);
+                        else
+                            UpdateStatus(client.ClientID, UpdateType.Alarm, "Failed to process request \"{0}\" - {1}\r\n\r\n", request.Command, ex.Message);
                     }
                 }
                 else

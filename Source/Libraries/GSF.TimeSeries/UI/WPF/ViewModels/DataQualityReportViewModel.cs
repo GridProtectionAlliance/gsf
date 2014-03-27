@@ -142,7 +142,6 @@ namespace GSF.TimeSeries.UI.ViewModels
         private bool m_reportingEnabled;
 
         private string m_reportTitle;
-        private string m_reportsList;
         private string m_reportingConfiguration;
         private string m_originalReportLocation;
         private string m_reportLocation;
@@ -165,6 +164,7 @@ namespace GSF.TimeSeries.UI.ViewModels
         private ICommand m_applyReportingConfigCommand;
 
         private bool m_disposed;
+        private string m_listReportsErrorMessage;
 
         #endregion
 
@@ -217,7 +217,10 @@ namespace GSF.TimeSeries.UI.ViewModels
                 serviceClient = CommonFunctions.GetWindowsServiceClient();
 
                 if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                    serviceClient.Helper.ReceivedServiceResponse += ListReportsHandler;
+                {
+                    serviceClient.Helper.ReceivedServiceUpdate += Helper_ReceivedServiceUpdate;
+                    serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
+                }
 
                 if (m_serviceConnected)
                 {
@@ -393,6 +396,22 @@ namespace GSF.TimeSeries.UI.ViewModels
         }
 
         /// <summary>
+        /// Gets or sets the error message that displays when report listing fails.
+        /// </summary>
+        public string ListReportsErrorMessage
+        {
+            get
+            {
+                return m_listReportsErrorMessage;
+            }
+            set
+            {
+                m_listReportsErrorMessage = value.Trim();
+                OnPropertyChanged("ListReportsErrorMessage");
+            }
+        }
+
+        /// <summary>
         /// Gets the list of available reports.
         /// </summary>
         public ObservableCollection<AvailableReport> AvailableReports
@@ -465,16 +484,20 @@ namespace GSF.TimeSeries.UI.ViewModels
                     serviceClient = CommonFunctions.GetWindowsServiceClient();
 
                     if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                        serviceClient.Helper.ReceivedServiceResponse -= ListReportsHandler;
+                    {
+                        serviceClient.Helper.ReceivedServiceUpdate -= Helper_ReceivedServiceUpdate;
+                        serviceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
+                    }
 
                     if ((object)m_responseComplete != null)
                     {
                         // Release any waiting threads before disposing wait handle
                         m_responseComplete.Set();
                         m_responseComplete.Dispose();
+                        m_responseComplete = null;
                     }
 
-                    m_responseComplete = null;
+                    m_listReportsTimer.Stop();
                 }
                 finally
                 {
@@ -500,11 +523,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                 string message = string.Format("Unable to determine whether reporting services are enabled: {0}", ex.Message);
                 Popup(message, "GetSchedules Error", MessageBoxImage.Error);
             }
-            finally
-            {
-                if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                    serviceClient.Helper.ReceivedServiceUpdate -= Helper_ReceivedServiceUpdate;
-            }
         }
 
         private void GetReportingConfiguration()
@@ -520,7 +538,6 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 m_responseComplete.Reset();
                 serviceClient = CommonFunctions.GetWindowsServiceClient();
-                serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
                 serviceClient.Helper.SendRequest("ReportingConfig");
 
                 // Wait for command response allowing for processing time
@@ -558,11 +575,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                 string message = string.Format("Unable to retrieve reporting services configuration: {0}", ex.Message);
                 Popup(message, "GetReportingConfiguration Error", MessageBoxImage.Error);
             }
-            finally
-            {
-                if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                    serviceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
-            }
         }
 
         private void ListReports()
@@ -579,13 +591,7 @@ namespace GSF.TimeSeries.UI.ViewModels
             }
             catch (Exception ex)
             {
-                string message = string.Format("Unable to retrieve list of available reports: {0}", ex.Message);
-                Popup(message, "ListReports Error", MessageBoxImage.Error);
-            }
-            finally
-            {
-                if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                    serviceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
+                SetListReportsErrorMessage(ex.Message);
             }
         }
 
@@ -606,7 +612,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                 {
                     m_responseComplete.Reset();
                     serviceClient = CommonFunctions.GetWindowsServiceClient();
-                    serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
                     serviceClient.Helper.SendRequest(string.Format("GetReport {0:yyyy-MM-dd}", reportDate));
 
                     // Wait for command response allowing for processing time
@@ -642,11 +647,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                 string message = string.Format("Unable to download report: {0}", ex.Message);
                 Popup(message, "GetReport", MessageBoxImage.Error);
             }
-            finally
-            {
-                if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                    serviceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
-            }
         }
 
         private void GenerateReport()
@@ -657,7 +657,6 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 m_responseComplete.Reset();
                 serviceClient = CommonFunctions.GetWindowsServiceClient();
-                serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
                 serviceClient.Helper.SendRequest(string.Format("GenerateReport {0:yyyy-MM-dd}", m_reportDate));
 
                 // Wait for command response allowing for processing time
@@ -673,11 +672,6 @@ namespace GSF.TimeSeries.UI.ViewModels
             {
                 string message = string.Format("Unable to generate report: {0}", ex.Message);
                 Popup(message, "GenerateReport", MessageBoxImage.Error);
-            }
-            finally
-            {
-                if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                    serviceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
             }
         }
 
@@ -702,11 +696,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                 string message = string.Format("Unable to {0} reporting services: {1}", m_reportingEnabled ? "disable" : "enable", ex.Message);
                 Popup(message, "ChangeReportingEnabled Error", MessageBoxImage.Error);
             }
-            finally
-            {
-                if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                    serviceClient.Helper.ReceivedServiceUpdate -= Helper_ReceivedServiceUpdate;
-            }
         }
 
         private void ApplyReportingConfig()
@@ -721,7 +710,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                 if (m_reportingEnabled && DateTime.TryParseExact(m_reportGenerationTimeText, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out reportGenerationTime) && reportGenerationTime != m_originalReportGenerationTime)
                 {
                     m_responseComplete.Reset();
-                    serviceClient.Helper.ReceivedServiceUpdate += Helper_ReceivedServiceUpdate;
                     serviceClient.Helper.SendRequest(string.Format("Reschedule Reporting \"{0} {1} * * *\" -save", reportGenerationTime.Minute, reportGenerationTime.Hour));
                     CheckSchedules(serviceClient);
                 }
@@ -729,7 +717,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                 if (m_idleReportLifetime != m_originalIdleReportLifetime || !string.Equals(m_reportLocation, m_originalReportLocation, StringComparison.OrdinalIgnoreCase))
                 {
                     m_responseComplete.Reset();
-                    serviceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
 
                     serviceClient.Helper.SendRequest(string.Format("ReportingConfig -set --reportLocation=\" {0} \" --idleReportLifetime=\" {1} \"",
                         m_reportLocation.Replace("\"", "\\\""), m_idleReportLifetime));
@@ -755,14 +742,6 @@ namespace GSF.TimeSeries.UI.ViewModels
                 string message = string.Format("Unable to modify reporting services configuration: {0}", ex.Message);
                 Popup(message, "UpdateReportingConfig Error", MessageBoxImage.Error);
             }
-            finally
-            {
-                if ((object)serviceClient != null && (object)serviceClient.Helper != null)
-                {
-                    serviceClient.Helper.ReceivedServiceUpdate -= Helper_ReceivedServiceUpdate;
-                    serviceClient.Helper.ReceivedServiceResponse -= Helper_ReceivedServiceResponse;
-                }
-            }
         }
 
         private void CheckSchedules(WindowsServiceClient serviceClient = null)
@@ -774,7 +753,6 @@ namespace GSF.TimeSeries.UI.ViewModels
             if ((object)serviceClient == null)
                 serviceClient = CommonFunctions.GetWindowsServiceClient();
 
-            serviceClient.Helper.ReceivedServiceUpdate += Helper_ReceivedServiceUpdate;
             serviceClient.Helper.SendRequest("Schedules");
 
             // Wait for command response allowing for processing time
@@ -885,72 +863,57 @@ namespace GSF.TimeSeries.UI.ViewModels
                             case "GETREPORT":
                                 if (responseSuccess)
                                 {
+                                    // Get the attached report as a byte array
                                     List<object> attachments = response.Attachments;
 
                                     if ((object)attachments != null && attachments.Count > 1)
                                         m_reportData = attachments[0] as byte[];
                                 }
-                                else
-                                {
-                                    Application.Current.Dispatcher.BeginInvoke(new Action(() => Popup(response.Message, "GetReport", MessageBoxImage.Error)));
-                                }
 
                                 break;
 
                             case "GENERATEREPORT":
+                                // Display success message to the user
                                 if (responseSuccess)
                                     Application.Current.Dispatcher.BeginInvoke(new Action(() => Popup(response.Message, "GenerateReport", MessageBoxImage.Information)));
-                                else
-                                    Application.Current.Dispatcher.BeginInvoke(new Action(() => Popup(response.Message, "GenerateReport", MessageBoxImage.Error)));
 
                                 break;
 
                             case "REPORTINGCONFIG":
+                                // Get the reporting configuration
                                 if (responseSuccess)
                                     m_reportingConfiguration = response.Message;
-                                else
-                                    Application.Current.Dispatcher.BeginInvoke(new Action(() => Popup(response.Message, "ReportingConfig", MessageBoxImage.Error)));
 
                                 break;
 
                             case "LISTREPORTS":
+                                if (responseSuccess)
+                                    Application.Current.Dispatcher.BeginInvoke(new Action<string>(UpdateReportsLists), response.Message);
+                                else
+                                    Application.Current.Dispatcher.BeginInvoke(new Action<string>(SetListReportsErrorMessage), response.Message);
+
+                                // Return instead of break since ListReports occurs
+                                // on a timer and does not block the UI thread
                                 return;
                         }
 
+                        // Notify the UI thread to wake up
                         if ((object)m_responseComplete != null)
                             m_responseComplete.Set();
+
+                        // If the response was not successful, display an error message
+                        if (!responseSuccess)
+                            Application.Current.Dispatcher.BeginInvoke(Popup, response.Message.Trim(), sourceCommand, MessageBoxImage.Error);
                     }
                 }
             }
         }
 
-        private void ListReportsHandler(object sender, EventArgs<ServiceResponse> e)
+        private void SetListReportsErrorMessage(string message)
         {
-            ServiceResponse response;
-            string sourceCommand;
-            bool responseSuccess;
-
-            if ((object)e != null)
-            {
-                response = e.Argument;
-
-                if ((object)response != null)
-                {
-                    if (ClientHelper.TryParseActionableResponse(response, out sourceCommand, out responseSuccess))
-                    {
-                        switch (sourceCommand.Trim().ToUpper())
-                        {
-                            case "LISTREPORTS":
-                                if (responseSuccess)
-                                    Application.Current.Dispatcher.BeginInvoke(new Action<string>(UpdateReportsLists), response.Message);
-                                else
-                                    Application.Current.Dispatcher.BeginInvoke(Popup, response.Message, "ListReports", MessageBoxImage.Error);
-
-                                break;
-                        }
-                    }
-                }
-            }
+            m_availableReports.Clear();
+            m_pendingReports.Clear();
+            ListReportsErrorMessage = message;
         }
 
         #endregion
