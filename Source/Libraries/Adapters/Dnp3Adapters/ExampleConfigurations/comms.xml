@@ -1,65 +1,35 @@
-<?xml version="1.0" encoding="Windows-1252"?>
-
-<MasterConfiguration xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
+<?xml version="1.0" encoding="utf-8"?>
+<MasterConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <client>
-
     <address>127.0.0.1</address>
-
-    <port>0</port>
-
-    <retryMs>0</retryMs>
-
-    <level>LEV_EVENT</level>
-
+    <port>20000</port>
+    <minRetryMs>5000</minRetryMs>
+    <maxRetryMs>60000</maxRetryMs>
+    <level>15</level>
   </client>
-
   <master>
-
     <master>
-
       <fragSize>2048</fragSize>
-
       <allowTimeSync>true</allowTimeSync>
-
       <doUnsolOnStartup>false</doUnsolOnStartup>
-
       <enableUnsol>true</enableUnsol>
-
       <unsolClassMask>14</unsolClassMask>
-
-      <integrityRate>5000</integrityRate>
-
-      <taskRetryRate>5000</taskRetryRate>      
-
+      <integrityPeriodMs>5000</integrityPeriodMs>
+      <taskRetryPeriodMs>5000</taskRetryPeriodMs>
     </master>
-
     <app>
-
-      <rspTimeout>5000</rspTimeout>
-
-      <numRetry>0</numRetry>
-
-      <fragSize>2048</fragSize>
-
-    </app>
-
-    <link>
-
       <isMaster>true</isMaster>
-
-      <useConfirms>false</useConfirms>
-
+      <rspTimeoutMs>5000</rspTimeoutMs>
       <numRetry>0</numRetry>
-
+      <fragSize>2048</fragSize>
+    </app>
+    <link>
+      <isMaster>true</isMaster>
+      <useConfirms>false</useConfirms>
+      <numRetry>0</numRetry>
       <localAddr>1</localAddr>
-
       <remoteAddr>1024</remoteAddr>
-
-      <timeout>1000</timeout>
-
+      <timeoutMs>1000</timeoutMs>
     </link>
-
   </master>
-
 </MasterConfiguration>
