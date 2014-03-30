@@ -424,6 +424,7 @@ namespace GSF.Parsing
                     }
                     finally
                     {
+                        outputArgs.Argument = default(TOutputType);
                         ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(outputArgs);
                     }
                 }
@@ -443,6 +444,7 @@ namespace GSF.Parsing
             }
             finally
             {
+                outputArgs.Argument = default(TOutputType);
                 ReusableObjectPool<EventArgs<TOutputType>>.Default.ReturnObject(outputArgs);
             }
         }

@@ -166,6 +166,7 @@
     <Compile Include="BufferExtensions.cs" />
     <Compile Include="ByteEncoding.cs" />
     <Compile Include="CharExtensions.cs" />
+    <Compile Include="Collections\PriorityQueue.cs" />
     <Compile Include="Collections\AsyncDoubleBufferedQueue.cs" />
     <Compile Include="Collections\AsyncQueue.cs" />
     <Compile Include="Collections\CollectionExtensions.cs" />
