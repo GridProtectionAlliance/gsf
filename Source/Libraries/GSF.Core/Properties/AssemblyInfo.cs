@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.0.167.0")]
+[assembly: AssemblyVersion("2.0.168.0")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
