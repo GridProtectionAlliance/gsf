@@ -29,6 +29,15 @@ namespace GSF.Threading
     public interface ISynchronizedOperation
     {
         /// <summary>
+        /// Gets a value to indicate whether the synchronized
+        /// operation is currently executing its action.
+        /// </summary>
+        bool IsRunning
+        {
+            get;
+        }
+
+        /// <summary>
         /// Executes the action on this thread or marks the
         /// operation as pending if the operation is already running.
         /// </summary>

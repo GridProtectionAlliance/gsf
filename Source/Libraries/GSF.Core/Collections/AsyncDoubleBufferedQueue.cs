@@ -72,7 +72,7 @@ namespace GSF.Collections
         /// <summary>
         /// Gets or sets item processing function.
         /// </summary>
-        public virtual DoubleBufferedQueue<T>.ProcessItemsFunctionSignature ProcessItemsFunction
+        public Action<IList<T>> ProcessItemsFunction
         {
             get
             {
@@ -95,15 +95,6 @@ namespace GSF.Collections
         public void Enqueue(IEnumerable<T> items)
         {
             m_asyncQueue.Enqueue(items);
-        }
-
-        /// <summary>
-        /// Dequeues a collection of items from the async double-buffered queue.
-        /// </summary>
-        /// <returns></returns>
-        public IList<T> Dequeue()
-        {
-            return m_doubleBufferedQueue.Dequeue();
         }
 
         // Notifies the consumer of exceptions that occur while processing items in the AsyncQueue.

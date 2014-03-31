@@ -29,7 +29,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using DataQualityMonitoring.Services;
 using GSF;
 using GSF.Collections;
@@ -53,8 +52,8 @@ namespace DataQualityMonitoring
         private AlarmService m_alarmService;
 
         private readonly AsyncDoubleBufferedQueue<IMeasurement> m_measurementQueue;
+        private List<IMeasurement> m_alarmEvents;
         private long m_eventCount;
-        private int m_processThreadState;
 
         private bool m_supportsTemporalProcessing;
         private bool m_disposed;
@@ -69,7 +68,17 @@ namespace DataQualityMonitoring
         public AlarmAdapter()
         {
             m_measurementQueue = new AsyncDoubleBufferedQueue<IMeasurement>();
-            m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
+            m_measurementQueue.ProcessItemsFunction = ProcessMeasurements;
+
+            m_measurementQueue.ProcessException += (sender, e) =>
+            {
+                if (Enabled)
+                {
+                    Exception ex = e.Argument;
+                    string message = string.Format("Exception occurred while processing alarm measurements: {0}", ex.Message);
+                    OnProcessException(new InvalidOperationException(message, ex));
+                }
+            };
         }
 
         #endregion
@@ -174,33 +183,8 @@ namespace DataQualityMonitoring
         /// </summary>
         public override void Start()
         {
-            Thread processThread;
-
             base.Start();
             m_eventCount = 0L;
-
-            // If state is stopping (1), set it to running (2)
-            if (Interlocked.CompareExchange(ref m_processThreadState, 2, 1) == 0)
-            {
-                // If state is stopped (0), set it to running (2) and run the new thread
-                if (Interlocked.CompareExchange(ref m_processThreadState, 2, 0) == 0)
-                {
-                    processThread = new Thread(ProcessMeasurements);
-                    processThread.IsBackground = true;
-                    processThread.Start();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Stops the <see cref="AlarmAdapter"/>.
-        /// </summary>		
-        public override void Stop()
-        {
-            base.Stop();
-
-            // If state is running (2), set it to stopping (1)
-            Interlocked.CompareExchange(ref m_processThreadState, 1, 2);
         }
 
         /// <summary>
@@ -299,97 +283,59 @@ namespace DataQualityMonitoring
         }
 
         // Processes measurements in the queue.
-        private void ProcessMeasurements()
+        private void ProcessMeasurements(IList<IMeasurement> measurements)
         {
-            IEnumerable<IMeasurement> measurements;
-            SpinWait spinner;
-            int threadID;
-
             List<Alarm> alarms;
             List<Alarm> raisedAlarms;
 
-            List<IMeasurement> alarmEvents;
             IMeasurement alarmEvent;
-            long processedMeasurements;
 
-            threadID = Thread.CurrentThread.ManagedThreadId;
-            spinner = new SpinWait();
-            alarmEvents = new List<IMeasurement>();
+            if ((object)m_alarmEvents == null)
+                m_alarmEvents = new List<IMeasurement>();
 
-            // If state is stopping (1), set it to stopped (0)
-            // If state is running (2), continue looping
-            while (Interlocked.CompareExchange(ref m_processThreadState, 0, 1) == 2)
+            foreach (IMeasurement measurement in measurements)
             {
-                try
+                lock (m_alarms)
                 {
-                    // Empty the collection that will store
-                    // alarm events to be sent into the system
-                    alarmEvents.Clear();
-                    processedMeasurements = 0L;
+                    // Get alarms that apply to the measurement being processed
+                    if (!m_alarmLookup.TryGetValue(measurement.ID, out alarms))
+                        alarms = new List<Alarm>();
 
-                    measurements = m_measurementQueue.Dequeue();
-
-                    foreach (IMeasurement measurement in measurements)
-                    {
-                        lock (m_alarms)
-                        {
-                            // Get alarms that apply to the measurement being processed
-                            if (!m_alarmLookup.TryGetValue(measurement.ID, out alarms))
-                                alarms = new List<Alarm>();
-
-                            // Get alarms that triggered events
-                            raisedAlarms = alarms.Where(a => a.Test(measurement)).ToList();
-                        }
-
-                        // Create event measurements to be sent into the system
-                        foreach (Alarm alarm in raisedAlarms)
-                        {
-                            alarmEvent = new Measurement
-                            {
-                                Timestamp = measurement.Timestamp,
-                                Value = (int)alarm.State
-                            };
-
-                            if ((object)alarm.AssociatedMeasurementID != null)
-                            {
-                                alarmEvent.ID = alarm.AssociatedMeasurementID.GetValueOrDefault();
-                                alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
-                            }
-
-                            alarmEvents.Add(alarmEvent);
-                            m_eventCount++;
-                        }
-
-                        // Increment processed measurement count
-                        processedMeasurements++;
-                    }
-                    if (alarmEvents.Count > 0)
-                    {
-                        // Send new alarm events into the system,
-                        // then reset the collection for the next
-                        // group of measurements
-                        OnNewMeasurements(alarmEvents);
-                    }
-                    if (processedMeasurements > 0)
-                    {
-                        // Increment total count of processed measurements
-                        IncrementProcessedMeasurements(processedMeasurements);
-
-                        spinner.Reset();
-                    }
-                    else
-                    {
-                        spinner.SpinOnce();
-                    }
+                    // Get alarms that triggered events
+                    raisedAlarms = alarms.Where(a => a.Test(measurement)).ToList();
                 }
-                catch (Exception ex)
+
+                // Create event measurements to be sent into the system
+                foreach (Alarm alarm in raisedAlarms)
                 {
-                    // Log error and continue processing alarm events
-                    string message = string.Format("Exception occurred while processing alarm measurements: {0}", ex.Message);
-                    OnProcessException(new InvalidOperationException(message, ex));
-                    spinner.SpinOnce();
+                    alarmEvent = new Measurement
+                    {
+                        Timestamp = measurement.Timestamp,
+                        Value = (int)alarm.State
+                    };
+
+                    if ((object)alarm.AssociatedMeasurementID != null)
+                    {
+                        alarmEvent.ID = alarm.AssociatedMeasurementID.GetValueOrDefault();
+                        alarmEvent.Key = MeasurementKey.LookupBySignalID(alarmEvent.ID);
+                    }
+
+                    m_alarmEvents.Add(alarmEvent);
+                    m_eventCount++;
                 }
             }
+
+            if (m_alarmEvents.Count > 0)
+            {
+                // Send new alarm events into the system,
+                // then reset the collection for the next
+                // group of measurements
+                OnNewMeasurements(m_alarmEvents);
+                m_alarmEvents.Clear();
+            }
+
+            // Increment total count of processed measurements
+            IncrementProcessedMeasurements(measurements.Count);
         }
 
         // Get all the highest severity alarms in a list of alarms

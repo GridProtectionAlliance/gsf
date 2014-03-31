@@ -78,6 +78,22 @@ namespace GSF.Threading
 
         #endregion
 
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets a value to indicate whether the synchronized
+        /// operation is currently executing its action.
+        /// </summary>
+        public bool IsRunning
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref m_state, NotRunning, NotRunning) != NotRunning;
+            }
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
