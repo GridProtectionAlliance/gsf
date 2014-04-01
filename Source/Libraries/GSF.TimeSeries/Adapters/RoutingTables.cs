@@ -45,11 +45,140 @@ namespace GSF.TimeSeries.Adapters
 
         // Nested Types
 
-        private class DependencyMeasurement
+        private class GlobalCache
         {
-            public ISet<IAdapter> Dependencies = new HashSet<IAdapter>();
-            public readonly ISet<IAdapter> Notifications = new HashSet<IAdapter>();
-            public IMeasurement Measurement;
+            public HashSet<IAdapter> ProducerAdapters; 
+            public Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
+            public Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
+            public List<Consumer> BroadcastConsumers;
+            public int Version;
+        }
+
+        private class LocalCache
+        {
+            private Dictionary<Guid, List<Producer>> m_localSignalLookup;
+            private Dictionary<Consumer, Producer> m_localDestinationLookup;
+            private RoutingTables m_routingTables;
+            private object m_localCacheLock;
+            private int m_version;
+
+            public LocalCache(RoutingTables routingTables)
+            {
+                m_localCacheLock = new object();
+                m_localSignalLookup = new Dictionary<Guid, List<Producer>>();
+                m_localDestinationLookup = new Dictionary<Consumer, Producer>();
+                m_routingTables = routingTables;
+            }
+
+            public void Route(IEnumerable<IMeasurement> measurements)
+            {
+                GlobalCache globalCache;
+                List<Producer> producers;
+                List<Consumer> consumers;
+
+                // Get the global cache from the routing tables
+                globalCache = Interlocked.CompareExchange(ref m_routingTables.m_globalCache, null, null);
+
+                // Return if routes are still being calculated
+                if ((object)globalCache == null)
+                    return;
+
+                lock (m_localCacheLock)
+                {
+                    // Check the version of the local cache against that of the global cache.
+                    // We need to clear the local cache if the versions don't match because
+                    // that means routes have changed
+                    if (m_version != globalCache.Version)
+                    {
+                        // Dump the signal lookup
+                        m_localSignalLookup.Clear();
+
+                        // Best if we hang onto producers for adapters that still have routes
+                        foreach (Consumer consumer in m_localDestinationLookup.Keys.Where(consumer => !globalCache.GlobalDestinationLookup.ContainsKey(consumer.Adapter)).ToList())
+                        {
+                            m_localDestinationLookup[consumer].QueueProducer.Dispose();
+                            m_localDestinationLookup.Remove(consumer);
+                        }
+
+                        // Update the local cache version
+                        m_version = globalCache.Version;
+                    }
+
+                    foreach (IMeasurement measurement in measurements)
+                    {
+                        // Attempt to look up the signal in the local cache
+                        if (!m_localSignalLookup.TryGetValue(measurement.ID, out producers))
+                        {
+                            // Not in the local cache - check the global cache and fall back on broadcast consumers
+                            if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out consumers))
+                                consumers = globalCache.BroadcastConsumers;
+
+                            // Get a producer for each of the consumers
+                            producers = consumers
+                                .Select(consumer => m_localDestinationLookup.GetOrAdd(consumer, c => new Producer(c.Manager)))
+                                .ToList();
+
+                            // Add this signal to the local cache
+                            m_localSignalLookup.Add(measurement.ID, producers);
+                        }
+
+                        // Add this measurement to the producers' list
+                        foreach (Producer producer in producers)
+                            producer.Measurements.Add(measurement);
+                    }
+
+                    // Produce measurements to consumers in the local destination
+                    // cache which have measurements to be received
+                    foreach (Producer producer in m_localDestinationLookup.Values)
+                    {
+                        if (producer.Measurements.Count > 0)
+                        {
+                            producer.QueueProducer.Produce(producer.Measurements);
+                            producer.Measurements.Clear();
+                        }
+                    }
+                }
+            }
+        }
+
+        private class Producer
+        {
+            public readonly List<IMeasurement> Measurements;
+            public readonly DoubleBufferedQueueProducer<IMeasurement> QueueProducer;
+
+            public Producer(DoubleBufferedQueueManager<IMeasurement> manager)
+            {
+                Measurements = new List<IMeasurement>();
+                QueueProducer = manager.GetProducer();
+            }
+        }
+
+        private class Consumer
+        {
+            public readonly IAdapter Adapter;
+            public readonly DoubleBufferedQueueManager<IMeasurement> Manager;
+
+            public Consumer(IAdapter adapter, Action<Exception> exceptionAction)
+            {
+                IActionAdapter actionAdapter = adapter as IActionAdapter;
+                IOutputAdapter outputAdapter;
+
+                Adapter = adapter;
+
+                if ((object)actionAdapter != null)
+                {
+                    Manager = new DoubleBufferedQueueManager<IMeasurement>(measurements => actionAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction);
+                }
+                else
+                {
+                    outputAdapter = adapter as IOutputAdapter;
+
+                    if ((object)outputAdapter != null)
+                        Manager = new DoubleBufferedQueueManager<IMeasurement>(measurements => outputAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction);
+                    else
+                        Manager = new DoubleBufferedQueueManager<IMeasurement>(() => { });
+                }
+            }
         }
 
         // Events
@@ -74,18 +203,10 @@ namespace GSF.TimeSeries.Adapters
         private InputAdapterCollection m_inputAdapters;
         private ActionAdapterCollection m_actionAdapters;
         private OutputAdapterCollection m_outputAdapters;
-        private Dictionary<Guid, ISet<IAdapter>> m_measurementRoutes;
-        private List<IAdapter> m_broadcastRoutes;
-        private ReaderWriterLockSlim m_adapterRoutesCacheLock;
+
+        private GlobalCache m_globalCache;
         private LongSynchronizedOperation m_calculateRoutingTablesOperation;
         private volatile MeasurementKey[] m_inputMeasurementKeysRestriction;
-
-        private readonly AsyncQueue<Tuple<IAdapter, object>> m_dependencyOperationQueue;
-        private volatile Dictionary<IAdapter, ISet<IAdapter>> m_dependencies;
-        private volatile Dictionary<IAdapter, ISet<IAdapter>> m_backwardDependencies;
-        private readonly Dictionary<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>> m_dependencyMeasurementsLookup;
-        private readonly Dictionary<IAdapter, IList<IMeasurement>> m_notifiedMeasurementLookup;
-        private volatile int m_operationsUntilNextPublish;
 
         private bool m_disposed;
 
@@ -98,16 +219,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public RoutingTables()
         {
-            m_adapterRoutesCacheLock = new ReaderWriterLockSlim();
             m_calculateRoutingTablesOperation = new LongSynchronizedOperation(CalculateRoutingTables) { IsBackground = true };
-
-            m_dependencyOperationQueue = new AsyncQueue<Tuple<IAdapter, object>>();
-            m_dependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
-            m_backwardDependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
-            m_dependencyMeasurementsLookup = new Dictionary<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>>();
-            m_notifiedMeasurementLookup = new Dictionary<IAdapter, IList<IMeasurement>>();
-
-            m_dependencyOperationQueue.ProcessItemFunction = ProcessDependencyOperation;
         }
 
         /// <summary>
@@ -192,16 +304,9 @@ namespace GSF.TimeSeries.Adapters
                 {
                     if (disposing)
                     {
-                        m_measurementRoutes = null;
-                        m_broadcastRoutes = null;
                         m_inputAdapters = null;
                         m_actionAdapters = null;
                         m_outputAdapters = null;
-
-                        if ((object)m_adapterRoutesCacheLock != null)
-                            m_adapterRoutesCacheLock.Dispose();
-
-                        m_adapterRoutesCacheLock = null;
                     }
                 }
                 finally
@@ -283,111 +388,91 @@ namespace GSF.TimeSeries.Adapters
 
             try
             {
-                // Pre-calculate internal routes to improve performance
-                Dictionary<Guid, ISet<IAdapter>> measurementRoutes = new Dictionary<Guid, ISet<IAdapter>>();
-                List<IAdapter> broadcastRoutes = new List<IAdapter>();
-                ISet<IAdapter> adapters;
+                GlobalCache globalCache;
 
-                MeasurementKey[] measurementKeys;
+                Dictionary<Guid, List<Consumer>> globalSignalLookup;
+                Dictionary<IAdapter, Consumer> globalDestinationLookup;
+                List<Consumer> broadcastConsumers;
 
-                Dictionary<IAdapter, ISet<IAdapter>> dependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
-                Dictionary<IAdapter, ISet<IAdapter>> backwardDependencies = new Dictionary<IAdapter, ISet<IAdapter>>();
+                HashSet<IAdapter> producerAdapters;
+                IInputAdapter inputAdapter;
 
-                if ((object)actionAdapterCollection != null)
+                IEnumerable<IAdapter> consumerAdapters;
+                Consumer consumer;
+
+                // Get the global cache from the last routing tables calculation
+                globalCache = Interlocked.CompareExchange(ref m_globalCache, null, null);
+
+                // Create collections to be entered into the new global cache
+                globalSignalLookup = new Dictionary<Guid, List<Consumer>>();
+                globalDestinationLookup = new Dictionary<IAdapter, Consumer>();
+                broadcastConsumers = new List<Consumer>();
+
+                // Get a full list of all producer (input/action) adapters
+                producerAdapters = new HashSet<IAdapter>((inputAdapterCollection ?? Enumerable.Empty<IAdapter>())
+                    .Concat(actionAdapterCollection ?? Enumerable.Empty<IAdapter>()));
+
+                // Attach to NewMeasurements event of all producer adapters
+                foreach (IAdapter producerAdapter in producerAdapters)
                 {
-                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                    if ((object)globalCache == null || !globalCache.ProducerAdapters.Contains(producerAdapter))
                     {
-                        // Make sure adapter is initialized before calculating route
-                        if (actionAdapter.Initialized)
-                        {
-                            measurementKeys = actionAdapter.InputMeasurementKeys;
+                        inputAdapter = producerAdapter as IInputAdapter;
 
-                            if ((object)measurementKeys != null)
-                            {
-                                foreach (MeasurementKey key in measurementKeys)
-                                {
-                                    if (!measurementRoutes.TryGetValue(key.SignalID, out adapters))
-                                    {
-                                        adapters = new HashSet<IAdapter>();
-                                        measurementRoutes.Add(key.SignalID, adapters);
-                                    }
-
-                                    adapters.Add(actionAdapter);
-                                }
-                            }
-                            else
-                            {
-                                broadcastRoutes.Add(actionAdapter);
-                            }
-
-                            AddDependencies(actionAdapter, dependencies, backwardDependencies);
-                        }
+                        if ((object)inputAdapter != null)
+                            inputAdapter.NewMeasurements += GetRoutedMeasurementsHandler();
+                        else
+                            ((IActionAdapter)producerAdapter).NewMeasurements += GetRoutedMeasurementsHandler();
                     }
                 }
 
-                if ((object)outputAdapterCollection != null)
+                // Get a full list of all consumer (action/output) adapters
+                consumerAdapters = (actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
+                    .Concat(outputAdapterCollection ?? Enumerable.Empty<IAdapter>());
+
+                // Generate routes for all signals received by each consumer adapter
+                foreach (IAdapter consumerAdapter in consumerAdapters)
                 {
-                    foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+                    // Search the old global cache for an existing consumer for this adapter
+                    if ((object)globalCache == null || !globalCache.GlobalDestinationLookup.TryGetValue(consumerAdapter, out consumer))
+                        consumer = new Consumer(consumerAdapter, OnProcessException);
+
+                    if ((object)consumerAdapter.InputMeasurementKeys != null)
                     {
-                        // Make sure adapter is initialized before calculating route
-                        if (outputAdapter.Initialized)
-                        {
-                            measurementKeys = outputAdapter.InputMeasurementKeys;
-
-                            if ((object)measurementKeys != null)
-                            {
-                                foreach (MeasurementKey key in measurementKeys)
-                                {
-                                    if (!measurementRoutes.TryGetValue(key.SignalID, out adapters))
-                                    {
-                                        adapters = new HashSet<IAdapter>();
-                                        measurementRoutes.Add(key.SignalID, adapters);
-                                    }
-
-                                    adapters.Add(outputAdapter);
-                                }
-                            }
-                            else
-                            {
-                                broadcastRoutes.Add(outputAdapter);
-                            }
-
-                            AddDependencies(outputAdapter, dependencies, backwardDependencies);
-                        }
+                        // Create routes for each of the consumer's input signals
+                        foreach (Guid signalID in consumerAdapter.InputMeasurementKeys.Select(key => key.SignalID))
+                            globalSignalLookup.GetOrAdd(signalID, id => new List<Consumer>()).Add(consumer);
                     }
+                    else
+                    {
+                        // Add this consumer to the broadcast routes to begin receiving all measurements
+                        broadcastConsumers.Add(consumer);
+                    }
+
+                    // Add this adapter to the global destinations lookup
+                    globalDestinationLookup.Add(consumerAdapter, consumer);
+                    destinationCount++;
                 }
 
-                foreach (HashSet<IAdapter> route in measurementRoutes.Values)
-                    broadcastRoutes.ForEach(adapter => route.Add(adapter));
+                // Broadcast consumers receive all measurements, so add them to every signal route
+                foreach (List<Consumer> consumerList in globalSignalLookup.Values)
+                    consumerList.AddRange(broadcastConsumers);
 
-                m_dependencies = dependencies;
-                m_backwardDependencies = backwardDependencies;
-
-                // Synchronously update adapter routing cache
-                m_adapterRoutesCacheLock.EnterWriteLock();
-
-                try
+                // Swap the new global cache with the old one and increment the version number
+                Interlocked.Exchange(ref m_globalCache, new GlobalCache()
                 {
-                    m_measurementRoutes = measurementRoutes;
-                    m_broadcastRoutes = broadcastRoutes;
-                }
-                finally
-                {
-                    m_adapterRoutesCacheLock.ExitWriteLock();
-                }
+                    ProducerAdapters = producerAdapters,
+                    GlobalSignalLookup = globalSignalLookup,
+                    GlobalDestinationLookup = globalDestinationLookup,
+                    BroadcastConsumers = broadcastConsumers,
+                    Version = (object)globalCache != null ? globalCache.Version + 1 : 0
+                });
 
                 // Start or stop any connect on demand adapters
-                HandleConnectOnDemandAdapters(m_inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-
+                HandleConnectOnDemandAdapters(new HashSet<MeasurementKey>(m_inputMeasurementKeysRestriction ?? Enumerable.Empty<MeasurementKey>()), inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                
                 elapsedTime = Ticks.ToSeconds(DateTime.UtcNow.Ticks - startTime);
-
-                if ((object)actionAdapterCollection != null)
-                    destinationCount += actionAdapterCollection.Length;
-
-                if ((object)outputAdapterCollection != null)
-                    destinationCount += outputAdapterCollection.Length;
-
-                routeCount = measurementRoutes.Count;
+                routeCount = globalSignalLookup.Count;
 
                 OnStatusMessage("Calculated {0} route{1} for {2} destination{3} in {4}.", routeCount, (routeCount == 1) ? "" : "s", destinationCount, (destinationCount == 1) ? "" : "s", elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
             }
@@ -402,190 +487,14 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        private void AddDependencies(IAdapter adapter, Dictionary<IAdapter, ISet<IAdapter>> dependencies, Dictionary<IAdapter, ISet<IAdapter>> backwardDependencies)
-        {
-            IAdapter dependency = null;
-            IActionAdapter actionAdapter;
-            IOutputAdapter outputAdapter;
-            string dependenciesSetting;
-
-            ISet<IAdapter> adapterSet;
-
-            if (adapter.Settings.TryGetValue("dependencies", out dependenciesSetting))
-            {
-                foreach (string adapterName in dependenciesSetting.Split(','))
-                {
-                    if (m_actionAdapters.TryGetAdapterByName(adapterName, out actionAdapter))
-                        dependency = actionAdapter;
-                    else if (m_outputAdapters.TryGetAdapterByName(adapterName, out outputAdapter))
-                        dependency = outputAdapter;
-
-                    if ((object)dependency != null)
-                    {
-                        // Add dependency adapter to collection of dependencies for adapter
-                        if (!dependencies.TryGetValue(adapter, out adapterSet))
-                        {
-                            adapterSet = new HashSet<IAdapter>();
-                            dependencies.Add(adapter, adapterSet);
-                        }
-
-                        adapterSet.Add(actionAdapter);
-
-                        // Add adapter to collection of backward dependencies for dependency adapter
-                        if (!backwardDependencies.TryGetValue(actionAdapter, out adapterSet))
-                        {
-                            adapterSet = new HashSet<IAdapter>();
-                            backwardDependencies.Add(actionAdapter, adapterSet);
-                        }
-
-                        adapterSet.Add(adapter);
-                    }
-                }
-            }
-        }
-
         /// <summary>
-        /// Event handler for distributing new measurements in a routed fashion.
+        /// Gets a handler for measurements that routes measurements to the appropriate consumers.
         /// </summary>
-        /// <param name="sender">Event source reference to adapter that generated new measurements.</param>
-        /// <param name="e">Event arguments containing a collection of new measurements.</param>
-        /// <remarks>
-        /// Time-series framework uses this handler to directly route new measurements to the action and output adapters.
-        /// </remarks>
-        public virtual void RoutedMeasurementsHandler(object sender, EventArgs<ICollection<IMeasurement>> e)
+        /// <returns>The measurement handler used for routing.</returns>
+        public virtual EventHandler<EventArgs<ICollection<IMeasurement>>> GetRoutedMeasurementsHandler()
         {
-            RoutedMeasurementsHandler(e.Argument);
-        }
-
-        /// <summary>
-        /// Method for distributing new measurements in a routed fashion.
-        /// </summary>
-        /// <param name="newMeasurements">Collection of new measurements.</param>
-        /// <remarks>
-        /// Time-series framework uses this handler to directly route new measurements to the action and output adapters.
-        /// </remarks>
-        public virtual void RoutedMeasurementsHandler(IEnumerable<IMeasurement> newMeasurements)
-        {
-            if ((object)m_measurementRoutes == null)
-                return;
-
-            Dictionary<IAdapter, List<IMeasurement>> adapterMeasurementsLookup = new Dictionary<IAdapter, List<IMeasurement>>();
-            List<Guid> broadcastIDs = null;
-
-            List<IMeasurement> measurements;
-            ISet<IAdapter> adapters;
-            ISet<IAdapter> dependencies;
-            DependencyMeasurement dependencyMeasurement;
-            Guid signalID;
-
-            m_adapterRoutesCacheLock.EnterReadLock();
-
-            try
-            {
-                // Loop through each new measurement and look for destination routes
-                foreach (IMeasurement measurement in newMeasurements)
-                {
-                    signalID = measurement.ID;
-
-                    // Get the set of adapters to which this measurement is routed
-                    if (!m_measurementRoutes.TryGetValue(signalID, out adapters))
-                    {
-                        if ((object)broadcastIDs == null)
-                            broadcastIDs = new List<Guid>();
-
-                        broadcastIDs.Add(signalID);
-                        continue;
-                    }
-
-                    // Search for dependencies in each adapter receiving this measurement
-                    foreach (IAdapter adapter in adapters)
-                    {
-                        // Get dependencies for the adapter
-                        if (m_dependencies.TryGetValue(adapter, out dependencies))
-                        {
-                            // Intersect with the set of adapters to see if this measurement
-                            // is also routed to the adapters it is dependent upon
-                            dependencies = new HashSet<IAdapter>(dependencies);
-                            dependencies.IntersectWith(adapters);
-
-                            if (dependencies.Count > 0)
-                            {
-                                // Add a queuing operation to the dependency operation queue
-                                dependencyMeasurement = new DependencyMeasurement
-                                {
-                                    Dependencies = dependencies,
-                                    Measurement = measurement
-                                };
-
-                                m_dependencyOperationQueue.Enqueue(Tuple.Create(adapter, (object)dependencyMeasurement));
-
-                                continue;
-                            }
-                        }
-
-                        // Dependencies are not receiving this measurement, so add this measurement to the list
-                        if (!adapterMeasurementsLookup.TryGetValue(adapter, out measurements))
-                        {
-                            measurements = new List<IMeasurement>();
-                            adapterMeasurementsLookup.Add(adapter, measurements);
-                        }
-
-                        measurements.Add(measurement);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format("Error occurred in routed measurements handler: {0}", ex.Message), ex));
-            }
-            finally
-            {
-                m_adapterRoutesCacheLock.ExitReadLock();
-            }
-
-            // Add broadcast routes for measurements which did not previously have routes
-            if ((object)broadcastIDs != null)
-            {
-                m_adapterRoutesCacheLock.EnterWriteLock();
-
-                try
-                {
-                    foreach (Guid broadcastID in broadcastIDs)
-                        m_measurementRoutes[broadcastID] = new HashSet<IAdapter>(m_broadcastRoutes);
-                }
-                finally
-                {
-                    m_adapterRoutesCacheLock.ExitWriteLock();
-                }
-            }
-
-            // Send independent measurements
-            foreach (KeyValuePair<IAdapter, List<IMeasurement>> pair in adapterMeasurementsLookup)
-            {
-                try
-                {
-                    QueueMeasurementsForProcessing(pair.Key, pair.Value);
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("ERROR: Exception queuing data to adapter [{0}]: {1}", pair.Key.Name, ex.Message), ex));
-                }
-            }
-        }
-
-        private void QueueMeasurementsForProcessing(IAdapter adapter, IEnumerable<IMeasurement> measurements)
-        {
-            IActionAdapter actionAdapter;
-
-            if (adapter.Enabled)
-            {
-                actionAdapter = adapter as IActionAdapter;
-
-                if ((object)actionAdapter != null)
-                    actionAdapter.QueueMeasurementsForProcessing(measurements);
-                else
-                    ((IOutputAdapter)adapter).QueueMeasurementsForProcessing(measurements);
-            }
+            LocalCache localCache = new LocalCache(this);
+            return (sender, args) => localCache.Route(args.Argument);
         }
 
         /// <summary>
@@ -655,503 +564,304 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Starts or stops connect on demand adapters based on current state of demanded input or output measurements.
+        /// Starts or stops connect on demand adapters based on current state of demanded input or output signals.
         /// </summary>
-        /// <param name="inputMeasurementKeysRestriction">Input measurement keys restriction.</param>
+        /// <param name="inputMeasurementKeysRestriction">The set of signals to be produced by the chain of adapters to be handled.</param>
         /// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
         /// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
         /// <param name="outputAdapterCollection">Collection of output adapters at start of routing table calculation.</param>
         /// <remarks>
         /// Set the <paramref name="inputMeasurementKeysRestriction"/> to null to use full adapter routing demands.
         /// </remarks>
-        protected virtual void HandleConnectOnDemandAdapters(MeasurementKey[] inputMeasurementKeysRestriction, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
+        protected virtual void HandleConnectOnDemandAdapters(ISet<MeasurementKey> inputMeasurementKeysRestriction, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
         {
-            IEnumerable<MeasurementKey> outputMeasurementKeys = null;
-            IEnumerable<MeasurementKey> inputMeasurementKeys = null;
-            MeasurementKey[] requestedOutputMeasurementKeys, requestedInputMeasurementKeys, emptyKeys = new MeasurementKey[0];
+            ISet<IAdapter> dependencyChain;
 
-            if ((object)inputMeasurementKeysRestriction != null && inputMeasurementKeysRestriction.Any())
+            ISet<MeasurementKey> inputSignals;
+            ISet<MeasurementKey> outputSignals;
+            ISet<MeasurementKey> requestedInputSignals;
+            ISet<MeasurementKey> requestedOutputSignals;
+
+            if (inputMeasurementKeysRestriction.Any())
             {
-                // When an input measurement keys restriction has been defined, extract the needed input and output measurement keys by
-                // walking the dependency chain of the restriction
-                TraverseMeasurementKeyDependencyChain(inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, out outputMeasurementKeys, out inputMeasurementKeys);
+                // When an input signals restriction has been defined, determine the set of adapters
+                // by walking the dependency chain of the restriction
+                dependencyChain = TraverseDependencyChain(inputMeasurementKeysRestriction, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
             }
             else
             {
-                // Get the full list of output measurements keys that can be provided in this Iaon session
-                if ((object)inputAdapterCollection != null)
-                    outputMeasurementKeys = inputAdapterCollection.OutputMeasurementKeys();
-
-                if ((object)actionAdapterCollection != null)
-                {
-                    if ((object)outputMeasurementKeys == null || !outputMeasurementKeys.Any())
-                    {
-                        outputMeasurementKeys = actionAdapterCollection.OutputMeasurementKeys();
-                    }
-                    else
-                    {
-                        IEnumerable<MeasurementKey> actionAdapterOutputMeasurementKeys = actionAdapterCollection.OutputMeasurementKeys();
-
-                        if ((object)actionAdapterOutputMeasurementKeys != null && actionAdapterOutputMeasurementKeys.Any())
-                            outputMeasurementKeys = outputMeasurementKeys.Concat(actionAdapterOutputMeasurementKeys).Distinct();
-                    }
-                }
-
-                // Get the full list of input measurements that can be demanded in this Iaon session
-                if ((object)outputAdapterCollection != null)
-                    inputMeasurementKeys = outputAdapterCollection.InputMeasurementKeys();
-
-                if ((object)actionAdapterCollection != null)
-                {
-                    if (inputMeasurementKeys == null || !inputMeasurementKeys.Any())
-                    {
-                        inputMeasurementKeys = actionAdapterCollection.InputMeasurementKeys();
-                    }
-                    else
-                    {
-                        MeasurementKey[] actionAdapterInputMeasurementKeys = actionAdapterCollection.InputMeasurementKeys();
-
-                        if ((object)actionAdapterInputMeasurementKeys != null && actionAdapterInputMeasurementKeys.Length > 0)
-                            inputMeasurementKeys = inputMeasurementKeys.Concat(actionAdapterInputMeasurementKeys).Distinct();
-                    }
-                }
+                // Determine the set of adapters in the dependency chain for all adapters in the system
+                dependencyChain = TraverseDependencyChain(inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
             }
 
-            // Handle connect on demand action adapters and output adapters based on currently provisioned output measurements
-            if ((object)outputMeasurementKeys != null && outputMeasurementKeys.Any())
+            // Get the full set of requested input and output signals in the entire dependency chain
+            inputSignals = new HashSet<MeasurementKey>(dependencyChain.SelectMany(adapter => adapter.InputMeasurementKeys()));
+            outputSignals = new HashSet<MeasurementKey>(dependencyChain.SelectMany(adapter => adapter.OutputMeasurementKeys()));
+
+            // Turn connect on demand input adapters on or off based on whether they are part of the dependency chain
+            if ((object)inputAdapterCollection != null)
             {
-                if ((object)actionAdapterCollection != null)
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
                 {
-                    // Start or stop connect on demand action adapters based on need, i.e., they handle any of the currently created output measurements
-                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                    if (!inputAdapter.AutoStart)
                     {
-                        if (!actionAdapter.AutoStart && actionAdapter.RespectInputDemands)
+                        if (dependencyChain.Contains(inputAdapter))
                         {
-                            // Create an intersection between the measurements the adapter can handle and those that are demanded throughout this Iaon session
-                            if ((object)actionAdapter.InputMeasurementKeys != null && actionAdapter.InputMeasurementKeys.Length > 0)
-                                requestedInputMeasurementKeys = actionAdapter.InputMeasurementKeys.Intersect(outputMeasurementKeys).ToArray();
-                            else
-                                requestedInputMeasurementKeys = emptyKeys;
-
-                            // Only update requested input keys if they have changed since adapters may use this as a notification to resubscribe to needed data
-                            if (actionAdapter.RequestedInputMeasurementKeys.CompareTo(requestedInputMeasurementKeys) != 0)
-                                actionAdapter.RequestedInputMeasurementKeys = requestedInputMeasurementKeys;
-
-                            // Do not start or stop adapter
-                            // Adapter will be stopped or started later
-                            // after calculating requested output measurements
+                            requestedOutputSignals = new HashSet<MeasurementKey>(inputAdapter.OutputMeasurementKeys());
+                            requestedOutputSignals.IntersectWith(inputSignals);
+                            inputAdapter.RequestedOutputMeasurementKeys = requestedOutputSignals.ToArray();
+                            inputAdapter.Enabled = true;
                         }
-                    }
-                }
-
-                if ((object)outputAdapterCollection != null)
-                {
-                    // Start or stop connect on demand output adapters based on need, i.e., they handle any of the currently created output measurements
-                    foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
-                    {
-                        if (!outputAdapter.AutoStart)
+                        else
                         {
-                            // Create an intersection between the measurements the adapter can handle and those that are demanded throughout this Iaon session
-                            if ((object)outputAdapter.InputMeasurementKeys != null && outputAdapter.InputMeasurementKeys.Length > 0)
-                                requestedInputMeasurementKeys = outputAdapter.InputMeasurementKeys.Intersect(outputMeasurementKeys).ToArray();
-                            else
-                                requestedInputMeasurementKeys = emptyKeys;
-
-                            // Only update requested input keys if they have changed since adapters may use this as a notification to resubscribe to needed data
-                            if (outputAdapter.RequestedInputMeasurementKeys.CompareTo(requestedInputMeasurementKeys) != 0)
-                                outputAdapter.RequestedInputMeasurementKeys = requestedInputMeasurementKeys;
-
-                            // Start or stop adapter
-                            outputAdapter.Enabled = ((object)outputAdapter.RequestedInputMeasurementKeys != null && outputAdapter.RequestedInputMeasurementKeys.Length > 0);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Handle special case of clearing requested input keys for connect on demand action adapters when no output measurement keys are defined
-                if ((object)actionAdapterCollection != null)
-                {
-                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
-                    {
-                        if (!actionAdapter.AutoStart && (object)actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RespectInputDemands)
-                            actionAdapter.RequestedInputMeasurementKeys = null;
-
-                        // Do not start or stop adapter
-                        // Adapter will be stopped or started later
-                        // after calculating requested output measurements
-                    }
-                }
-
-                // Handle special case of clearing requested input keys and stopping connect on demand output adapters when no output measurement keys are defined
-                if ((object)outputAdapterCollection != null)
-                {
-                    foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
-                    {
-                        if (!outputAdapter.AutoStart)
-                        {
-                            if ((object)outputAdapter.RequestedInputMeasurementKeys != null)
-                                outputAdapter.RequestedInputMeasurementKeys = null;
-
-                            outputAdapter.Enabled = false;
-                        }
-                    }
-                }
-            }
-
-            // Handle connect on demand action adapters and input adapters based on currently demanded input measurements
-            if ((object)inputMeasurementKeys != null && inputMeasurementKeys.Any())
-            {
-                if ((object)actionAdapterCollection != null)
-                {
-                    // Start or stop connect on demand action adapters based on need, i.e., they provide any of the currently demanded input measurements
-                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
-                    {
-                        if (!actionAdapter.AutoStart)
-                        {
-                            if (actionAdapter.RespectOutputDemands)
-                            {
-                                // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
-                                if ((object)actionAdapter.OutputMeasurements != null && actionAdapter.OutputMeasurements.Length > 0)
-                                    requestedOutputMeasurementKeys = actionAdapter.OutputMeasurementKeys().Intersect(inputMeasurementKeys).ToArray();
-                                else
-                                    requestedOutputMeasurementKeys = emptyKeys;
-
-                                // Only update requested output keys if they have changed since adapters may use this as a notification to resubscribe to needed data
-                                if (actionAdapter.RequestedOutputMeasurementKeys.CompareTo(requestedOutputMeasurementKeys) != 0)
-                                    actionAdapter.RequestedOutputMeasurementKeys = requestedOutputMeasurementKeys;
-                            }
-
-                            // Start or stop adapter, action adapter should only be stopped if it also has no requested input measurements keys, as determined prior
-                            if (actionAdapter.RespectOutputDemands && (object)actionAdapter.RequestedOutputMeasurementKeys != null && actionAdapter.RequestedOutputMeasurementKeys.Length > 0)
-                                actionAdapter.Enabled = true;
-                            else
-                                actionAdapter.Enabled = (actionAdapter.RespectInputDemands && (object)actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0);
-                        }
-                    }
-                }
-
-                if ((object)inputAdapterCollection != null)
-                {
-                    // Start or stop connect on demand input adapters based on need, i.e., they provide any of the currently demanded input measurements
-                    foreach (IInputAdapter inputAdapter in inputAdapterCollection)
-                    {
-                        if (!inputAdapter.AutoStart)
-                        {
-                            // Create an intersection between the measurements the adapter can provide and those that are demanded throughout this Iaon session
-                            if ((object)inputAdapter.OutputMeasurements != null && inputAdapter.OutputMeasurements.Length > 0)
-                                requestedOutputMeasurementKeys = inputAdapter.OutputMeasurementKeys().Intersect(inputMeasurementKeys).ToArray();
-                            else
-                                requestedOutputMeasurementKeys = emptyKeys;
-
-                            // Only update requested output keys if they have changed since adapters may use this as a notification to resubscribe to needed data
-                            if (inputAdapter.RequestedOutputMeasurementKeys.CompareTo(requestedOutputMeasurementKeys) != 0)
-                                inputAdapter.RequestedOutputMeasurementKeys = requestedOutputMeasurementKeys;
-
-                            // Start or stop adapter
-                            inputAdapter.Enabled = ((object)inputAdapter.RequestedOutputMeasurementKeys != null && inputAdapter.RequestedOutputMeasurementKeys.Length > 0);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Handle special case of clearing requested output keys and stopping connect on demand action adapters when no input measurement keys are defined
-                if ((object)actionAdapterCollection != null)
-                {
-                    foreach (IActionAdapter actionAdapter in actionAdapterCollection)
-                    {
-                        if (!actionAdapter.AutoStart)
-                        {
-                            if (actionAdapter.RespectOutputDemands)
-                            {
-                                if ((object)actionAdapter.RequestedOutputMeasurementKeys != null)
-                                    actionAdapter.RequestedOutputMeasurementKeys = null;
-                            }
-
-                            // Action adapter should be stopped if it has no requested input measurements keys, as determined prior
-                            if (!(actionAdapter.RespectInputDemands && (object)actionAdapter.RequestedInputMeasurementKeys != null && actionAdapter.RequestedInputMeasurementKeys.Length > 0))
-                                actionAdapter.Enabled = false;
-                        }
-                    }
-                }
-
-                // Handle special case of clearing requested output keys and stopping connect on demand input adapters when no input measurement keys are defined
-                if ((object)inputAdapterCollection != null)
-                {
-                    foreach (IInputAdapter inputAdapter in inputAdapterCollection)
-                    {
-                        if (!inputAdapter.AutoStart)
-                        {
-                            if ((object)inputAdapter.RequestedOutputMeasurementKeys != null)
-                                inputAdapter.RequestedOutputMeasurementKeys = null;
-
+                            inputAdapter.RequestedOutputMeasurementKeys = null;
                             inputAdapter.Enabled = false;
                         }
                     }
                 }
             }
-        }
 
-        /// <summary>
-        /// Calculates the input and output measurement key dependency chain based on a set of input measurement keys restriction.
-        /// </summary>
-        /// <param name="inputMeasurementKeysRestriction">Input measurement keys restriction.</param>
-        /// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
-        /// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
-        /// <param name="outputMeasurementKeys">Dependent output measurement keys to return.</param>
-        /// <param name="inputMeasurementKeys">Dependent input measurement keys to return.</param>
-        protected virtual void TraverseMeasurementKeyDependencyChain(MeasurementKey[] inputMeasurementKeysRestriction, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, out IEnumerable<MeasurementKey> outputMeasurementKeys, out IEnumerable<MeasurementKey> inputMeasurementKeys)
-        {
-            List<MeasurementKey> inputMeasurementKeyList = new List<MeasurementKey>(inputMeasurementKeysRestriction);
-            outputMeasurementKeys = null;
-
-            List<IActionAdapter> actionAdapterList = new List<IActionAdapter>();
-            IEnumerable<IActionAdapter> actionAdapters = null;
-
-            // Keep walking dependency chain until all subordinate action adapters have been found
-            do
+            // Turn connect on demand action adapters on or off based on whether they are part of the dependency chain
+            if ((object)actionAdapterCollection != null)
             {
-                if ((object)actionAdapters != null)
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
                 {
-                    actionAdapterList.AddRange(actionAdapters);
-
-                    IEnumerable<MeasurementKey> newInputKeys = actionAdapterList.InputMeasurementKeys();
-
-                    if ((object)newInputKeys != null && newInputKeys.Any())
-                        inputMeasurementKeyList = inputMeasurementKeyList.Concat(newInputKeys).Distinct().ToList();
-                }
-
-                actionAdapters = FindDistinctAdapters(actionAdapterCollection, inputMeasurementKeyList, actionAdapterList);
-            }
-            while ((object)actionAdapters != null);
-
-            if (actionAdapterList.Count > 0)
-                outputMeasurementKeys = actionAdapterList.OutputMeasurementKeys();
-
-            List<IInputAdapter> inputAdapterList = new List<IInputAdapter>();
-            IEnumerable<IInputAdapter> inputAdapters = null;
-
-            // Keep walking dependency chain until all subordinate input adapters have been found
-            do
-            {
-                if ((object)inputAdapters != null)
-                {
-                    inputAdapterList.AddRange(inputAdapters);
-
-                    IEnumerable<MeasurementKey> newInputKeys = inputAdapterList.InputMeasurementKeys();
-
-                    if ((object)newInputKeys != null && newInputKeys.Any())
-                        inputMeasurementKeyList = inputMeasurementKeyList.Concat(newInputKeys).Distinct().ToList();
-                }
-
-                inputAdapters = FindDistinctAdapters(inputAdapterCollection, inputMeasurementKeyList, inputAdapterList);
-            }
-            while ((object)inputAdapters != null);
-
-            if (inputAdapterList.Count > 0)
-            {
-                if ((object)outputMeasurementKeys == null)
-                    outputMeasurementKeys = inputAdapterList.OutputMeasurementKeys();
-                else
-                    outputMeasurementKeys = outputMeasurementKeys.Concat(inputAdapterList.OutputMeasurementKeys()).Distinct();
-            }
-
-            inputMeasurementKeys = inputMeasurementKeyList;
-        }
-
-        // Find all the distinct adapters (i.e., that haven't been found already) in the source list for the given input measurement keys list
-        private IEnumerable<T> FindDistinctAdapters<T>(IEnumerable<T> sourceCollection, IEnumerable<MeasurementKey> inputMeasurementKeysList, IEnumerable<T> existingList) where T : IAdapter
-        {
-            IEnumerable<T> adapters = null;
-
-            if ((object)sourceCollection != null)
-            {
-                lock (sourceCollection)
-                {
-                    adapters = sourceCollection.Where(adapter => !existingList.Contains(adapter) && adapter.OutputMeasurementKeys().Any(inputMeasurementKeysList.Contains));
-                }
-
-                if (!adapters.Any())
-                    adapters = null;
-            }
-
-            return adapters;
-        }
-
-        /// <summary>
-        /// Event handler for notifying dependent adapters of updates to measurements.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="args">The measurement that was updated.</param>
-        public void NotifyHandler(object sender, EventArgs<IMeasurement> args)
-        {
-            IAdapter adapter = sender as IAdapter;
-
-            if ((object)adapter != null)
-                m_dependencyOperationQueue.Enqueue(Tuple.Create(adapter, (object)args.Argument));
-        }
-
-        private void ProcessDependencyOperation(Tuple<IAdapter, object> operationParameters)
-        {
-            DependencyMeasurement dependencyMeasurement = operationParameters.Item2 as DependencyMeasurement;
-
-            // Determine the type of operation based on the type of the parameters
-            if ((object)dependencyMeasurement != null)
-                ProcessQueue(operationParameters.Item1, dependencyMeasurement);
-            else
-                ProcessNotify(operationParameters.Item1, (IMeasurement)operationParameters.Item2);
-
-            // Determine if we need to run publish and timeout operations.
-            // To improve performance, we do not publish measurements every
-            // time a notification is received. Instead, the number of operations
-            // between each publication is determined by the number of operations
-            // in the async queue after each publication. This allows the system
-            // to perform more publications when the system is keeping up and
-            // perform fewer when the system is falling behind while still
-            // guaranteeing that all notified measurements get published.
-            if (m_operationsUntilNextPublish == 0)
-                m_operationsUntilNextPublish = m_dependencyOperationQueue.Count;
-            else
-                m_operationsUntilNextPublish--;
-
-            if (m_operationsUntilNextPublish == 0)
-            {
-                ProcessTimeouts();
-                PublishNotifiedMeasurements();
-            }
-        }
-
-        private void ProcessQueue(IAdapter adapter, DependencyMeasurement dependencyMeasurement)
-        {
-            Dictionary<Guid, Queue<DependencyMeasurement>> queueLookup;
-            Queue<DependencyMeasurement> dependencyMeasurements;
-            Guid signalID = dependencyMeasurement.Measurement.ID;
-
-            // Get the lookup table for the adapter's dependency measurements
-            if (!m_dependencyMeasurementsLookup.TryGetValue(adapter, out queueLookup))
-            {
-                queueLookup = new Dictionary<Guid, Queue<DependencyMeasurement>>();
-                m_dependencyMeasurementsLookup.Add(adapter, queueLookup);
-            }
-
-            // Get the queue of dependency measurements for this signal
-            if (!queueLookup.TryGetValue(signalID, out dependencyMeasurements))
-            {
-                dependencyMeasurements = new Queue<DependencyMeasurement>();
-                queueLookup.Add(signalID, dependencyMeasurements);
-            }
-
-            // Add the dependency measurement to the queue
-            dependencyMeasurements.Enqueue(dependencyMeasurement);
-        }
-
-        private void ProcessNotify(IAdapter notifier, IMeasurement processedMeasurement)
-        {
-            ISet<IAdapter> dependentAdapters;
-            Dictionary<Guid, Queue<DependencyMeasurement>> queueLookup;
-            Queue<DependencyMeasurement> dependencyMeasurements;
-            IList<IMeasurement> notifiedMeasurements;
-            DependencyMeasurement dependencyMeasurement;
-            DependencyMeasurement dequeuedMeasurement;
-
-            // Look up dependent adapters using reverse lookup table
-            if (!m_backwardDependencies.TryGetValue(notifier, out dependentAdapters))
-                return;
-
-            // Determine if notification means that all dependencies have been met for any dependent adapter
-            foreach (IAdapter dependentAdapter in dependentAdapters)
-            {
-                dequeuedMeasurement = null;
-
-                // Look up collection of queues for the dependent adapter
-                if (!m_dependencyMeasurementsLookup.TryGetValue(dependentAdapter, out queueLookup))
-                    continue;
-
-                // Look up the specific queue for this signal
-                if (!queueLookup.TryGetValue(processedMeasurement.ID, out dependencyMeasurements))
-                    continue;
-
-                // Attempt to find the notified measurement in the queue
-                dependencyMeasurement = dependencyMeasurements.FirstOrDefault(depMeasurement => (object)depMeasurement.Measurement == (object)processedMeasurement);
-
-                if ((object)dependencyMeasurement == null)
-                    continue;
-
-                // Add the notification to the set of notifications for that measurement
-                dependencyMeasurement.Notifications.Add(notifier);
-
-                // Check to see if all dependencies have been met
-                if (dependencyMeasurement.Dependencies.Count != dependencyMeasurement.Notifications.Count)
-                    continue;
-
-                // Get the collection of measurements that have been notified since the last adapter queueing operation
-                if (!m_notifiedMeasurementLookup.TryGetValue(dependentAdapter, out notifiedMeasurements))
-                {
-                    notifiedMeasurements = new List<IMeasurement>();
-                    m_notifiedMeasurementLookup.Add(dependentAdapter, notifiedMeasurements);
-                }
-
-                // If the measurement that was notified is not the first measurement in the queue,
-                // assume that all the ones that came before it have timed out
-                while (dequeuedMeasurement != dependencyMeasurement)
-                {
-                    dequeuedMeasurement = dependencyMeasurements.Dequeue();
-                    notifiedMeasurements.Add(dequeuedMeasurement.Measurement);
-                }
-            }
-        }
-
-        private void ProcessTimeouts()
-        {
-            long now = DateTime.UtcNow.Ticks;
-
-            IAdapter adapter;
-            DependencyMeasurement dequeuedMeasurement;
-            IList<IMeasurement> notifiedMeasurements = null;
-            int timedOutMeasurements;
-
-            // Search through all the queues to find all the measurements which have timed out
-            foreach (KeyValuePair<IAdapter, Dictionary<Guid, Queue<DependencyMeasurement>>> pair in m_dependencyMeasurementsLookup)
-            {
-                adapter = pair.Key;
-
-                foreach (Queue<DependencyMeasurement> measurementQueue in pair.Value.Values)
-                {
-                    // Determine the number of measurements in this queue which have timed out
-                    timedOutMeasurements = measurementQueue.TakeWhile(depMeasurement => (now - depMeasurement.Measurement.ReceivedTimestamp) > adapter.DependencyTimeout).Count();
-
-                    // If there are any measurements that have timed out, get the collection
-                    // of notified measurements for that adapter so we can put them in it
-                    if (timedOutMeasurements > 0)
+                    if (!actionAdapter.AutoStart)
                     {
-                        if (!m_notifiedMeasurementLookup.TryGetValue(adapter, out notifiedMeasurements))
+                        if (dependencyChain.Contains(actionAdapter))
                         {
-                            notifiedMeasurements = new List<IMeasurement>();
-                            m_notifiedMeasurementLookup.Add(adapter, notifiedMeasurements);
+                            if (actionAdapter.RespectInputDemands)
+                            {
+                                requestedInputSignals = new HashSet<MeasurementKey>(actionAdapter.InputMeasurementKeys());
+                                requestedInputSignals.IntersectWith(outputSignals);
+                                actionAdapter.RequestedInputMeasurementKeys = requestedInputSignals.ToArray();
+                            }
+
+                            if (actionAdapter.RespectOutputDemands)
+                            {
+                                requestedOutputSignals = new HashSet<MeasurementKey>(actionAdapter.OutputMeasurementKeys());
+                                requestedOutputSignals.IntersectWith(inputSignals);
+                                actionAdapter.RequestedOutputMeasurementKeys = requestedOutputSignals.ToArray();
+                            }
+
+                            actionAdapter.Enabled = true;
+                        }
+                        else
+                        {
+                            actionAdapter.RequestedInputMeasurementKeys = null;
+                            actionAdapter.RequestedOutputMeasurementKeys = null;
+                            actionAdapter.Enabled = false;
                         }
                     }
+                }
+            }
 
-                    // Place the measurements in the queue.
-                    // NOTE: If we are able to enter the loop, then notifiedMeasurements cannot be
-                    //       null because the for-loop condition is the same as the if statement above.
-                    for (int i = 0; i < timedOutMeasurements; i++)
+            // Turn connect on demand output adapters on or off based on whether they are part of the dependency chain
+            if ((object)outputAdapterCollection != null)
+            {
+                foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+                {
+                    if (!outputAdapter.AutoStart)
                     {
-                        dequeuedMeasurement = measurementQueue.Dequeue();
-                        notifiedMeasurements.Add(dequeuedMeasurement.Measurement);
+                        if (dependencyChain.Contains(outputAdapter))
+                        {
+                            requestedInputSignals = new HashSet<MeasurementKey>(outputAdapter.OutputMeasurementKeys());
+                            requestedInputSignals.IntersectWith(inputSignals);
+                            outputAdapter.RequestedInputMeasurementKeys = requestedInputSignals.ToArray();
+                            outputAdapter.Enabled = true;
+                        }
+                        else
+                        {
+                            outputAdapter.RequestedInputMeasurementKeys = null;
+                            outputAdapter.Enabled = false;
+                        }
                     }
                 }
             }
         }
 
-        private void PublishNotifiedMeasurements()
+        /// <summary>
+        /// Determines the set of adapters in the dependency chain that produces the set of signals in the
+        /// <paramref name="inputMeasurementKeysRestriction"/> and returns the set of input signals required by the
+        /// adapters in the chain and the set of output signals produced by the adapters in the chain.
+        /// </summary>
+        /// <param name="inputMeasurementKeysRestriction">The set of signals that must be produced by the dependency chain.</param>
+        /// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
+        /// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
+        /// <param name="outputAdapterCollection">Collection of output adapters at start of routing table calculation.</param>
+        protected virtual ISet<IAdapter> TraverseDependencyChain(ISet<MeasurementKey> inputMeasurementKeysRestriction, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
         {
-            // Go through each key-value pair and queue the measurements for the adapter
-            foreach (KeyValuePair<IAdapter, IList<IMeasurement>> pair in m_notifiedMeasurementLookup)
-                QueueMeasurementsForProcessing(pair.Key, pair.Value);
+            ISet<IAdapter> dependencyChain = new HashSet<IAdapter>();
 
-            // Clear out the collections of notified measurements and start over
-            m_notifiedMeasurementLookup.Clear();
+            if ((object)inputAdapterCollection != null)
+            {
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(inputAdapter) && inputMeasurementKeysRestriction.Overlaps(inputAdapter.OutputMeasurementKeys()))
+                        AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+
+            if ((object)actionAdapterCollection != null)
+            {
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(actionAdapter) && inputMeasurementKeysRestriction.Overlaps(actionAdapter.OutputMeasurementKeys()))
+                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+
+            return dependencyChain;
+        }
+
+        /// <summary>
+        /// Determines the set of adapters in the dependency chain for all adapters in the system which are either not connect or demand or are demanded.
+        /// </summary>
+        /// <param name="inputAdapterCollection">Collection of input adapters at start of routing table calculation.</param>
+        /// <param name="actionAdapterCollection">Collection of action adapters at start of routing table calculation.</param>
+        /// <param name="outputAdapterCollection">Collection of output adapters at start of routing table calculation.</param>
+        protected virtual ISet<IAdapter> TraverseDependencyChain(IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
+        {
+            ISet<IAdapter> dependencyChain = new HashSet<IAdapter>();
+
+            if ((object)inputAdapterCollection != null)
+            {
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+                {
+                    if (inputAdapter.AutoStart && !dependencyChain.Contains(inputAdapter))
+                        AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+
+            if ((object)actionAdapterCollection != null)
+            {
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (actionAdapter.AutoStart && !dependencyChain.Contains(actionAdapter))
+                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+
+            if ((object)outputAdapterCollection != null)
+            {
+                foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+                {
+                    if (outputAdapter.AutoStart && !dependencyChain.Contains(outputAdapter))
+                        AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+
+            return dependencyChain;
+        }
+
+        // Adds an input adapter to the dependency chain.
+        private void AddInputAdapter(IInputAdapter adapter, ISet<IAdapter> dependencyChain, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
+        {
+            HashSet<MeasurementKey> outputMeasurementKeys = new HashSet<MeasurementKey>(adapter.OutputMeasurementKeys());
+
+            // Adds the adapter to the chain
+            dependencyChain.Add(adapter);
+
+            if ((object)actionAdapterCollection != null)
+            {
+                // Checks all action adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (actionAdapter.RespectInputDemands && !dependencyChain.Contains(actionAdapter) && outputMeasurementKeys.Overlaps(actionAdapter.InputMeasurementKeys()))
+                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+
+            if ((object)outputAdapterCollection != null)
+            {
+                // Checks all output adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(outputAdapter) && outputMeasurementKeys.Overlaps(outputAdapter.InputMeasurementKeys()))
+                        AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+        }
+
+        // Adds an action adapter to the dependency chain.
+        private void AddActionAdapter(IActionAdapter adapter, ISet<IAdapter> dependencyChain, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
+        {
+            HashSet<MeasurementKey> inputMeasurementKeys = new HashSet<MeasurementKey>(adapter.InputMeasurementKeys());
+            HashSet<MeasurementKey> outputMeasurementKeys = new HashSet<MeasurementKey>(adapter.OutputMeasurementKeys());
+
+            // Adds the adapter to the chain
+            dependencyChain.Add(adapter);
+
+            if ((object)inputAdapterCollection != null)
+            {
+                // Checks all input adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(inputAdapter) && inputMeasurementKeys.Overlaps(inputAdapter.OutputMeasurementKeys()))
+                        AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+
+            if ((object)actionAdapterCollection != null)
+            {
+                // Checks all action adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(actionAdapter))
+                    {
+                        if (actionAdapter.RespectInputDemands && outputMeasurementKeys.Overlaps(actionAdapter.InputMeasurementKeys()))
+                            AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                        else if (actionAdapter.RespectOutputDemands && inputMeasurementKeys.Overlaps(actionAdapter.OutputMeasurementKeys()))
+                            AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                    }
+                }
+            }
+
+            if ((object)outputAdapterCollection != null)
+            {
+                // Checks all output adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IOutputAdapter outputAdapter in outputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(outputAdapter) && outputMeasurementKeys.Overlaps(outputAdapter.InputMeasurementKeys()))
+                        AddOutputAdapter(outputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+        }
+
+        // Adds an output adapter to the dependency chain.
+        private void AddOutputAdapter(IOutputAdapter adapter, ISet<IAdapter> dependencyChain, IInputAdapter[] inputAdapterCollection, IActionAdapter[] actionAdapterCollection, IOutputAdapter[] outputAdapterCollection)
+        {
+            HashSet<MeasurementKey> inputMeasurementKeys = new HashSet<MeasurementKey>(adapter.InputMeasurementKeys());
+
+            // Adds the adapter to the chain
+            dependencyChain.Add(adapter);
+
+            if ((object)inputAdapterCollection != null)
+            {
+                // Checks all input adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IInputAdapter inputAdapter in inputAdapterCollection)
+                {
+                    if (!dependencyChain.Contains(inputAdapter) && inputMeasurementKeys.Overlaps(inputAdapter.OutputMeasurementKeys()))
+                        AddInputAdapter(inputAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
+
+            if ((object)actionAdapterCollection != null)
+            {
+                // Checks all action adapters to determine whether they also need to be
+                // added to the chain as a result of this adapter being added to the chain
+                foreach (IActionAdapter actionAdapter in actionAdapterCollection)
+                {
+                    if (actionAdapter.RespectOutputDemands && !dependencyChain.Contains(actionAdapter) && inputMeasurementKeys.Overlaps(actionAdapter.OutputMeasurementKeys()))
+                        AddActionAdapter(actionAdapter, dependencyChain, inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
+                }
+            }
         }
 
         #endregion

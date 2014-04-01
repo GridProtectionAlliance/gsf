@@ -51,6 +51,7 @@ namespace GSF.Collections
         private int m_listIndex;
         private List<T>[] m_lists;
         private SpinLock m_swapLock;
+        private int m_count;
 
         private Action<IList<T>> m_processItemsFunction;
         private ISynchronizedOperation m_processItemsOperation;
@@ -87,6 +88,17 @@ namespace GSF.Collections
             set
             {
                 Interlocked.Exchange(ref m_processItemsFunction, value);
+            }
+        }
+
+        /// <summary>
+        /// Gets the current number of items in the queue.
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                return Interlocked.CompareExchange(ref m_count, 0, 0);
             }
         }
 
@@ -146,6 +158,80 @@ namespace GSF.Collections
             }
         }
 
+        /// <summary>
+        /// Attempts to enqueue a collection of items into the double-buffered queue.
+        /// </summary>
+        /// <param name="items">The collection of items to be enqueued.</param>
+        /// <returns>
+        /// True if the items were successfully enqueued; false otherwise.
+        /// </returns>
+        public bool TryEnqueue(IEnumerable<T> items)
+        {
+            bool lockTaken = false;
+
+            try
+            {
+                m_swapLock.TryEnter(ref lockTaken);
+
+                if (lockTaken)
+                {
+                    m_lists[m_listIndex].AddRange(items);
+                    m_count = m_lists[m_listIndex].Count;
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                    m_swapLock.Exit();
+            }
+
+            if (lockTaken && (object)ProcessItemsFunction != null)
+                m_processItemsOperation.RunOnceAsync();
+
+            return lockTaken;
+        }
+
+        /// <summary>
+        /// Attempts to dequeue a collection of items from the queue and
+        /// returns the number of items left in the queue after dequeuing.
+        /// </summary>
+        /// <param name="items">The items that were dequeued.</param>
+        /// <returns>
+        /// The number of items left in the queue after
+        /// dequeuing as many items as possible.
+        /// </returns>
+        public int TryDequeue(out IList<T> items)
+        {
+            bool lockTaken = false;
+            int listIndex;
+
+            try
+            {
+                m_swapLock.TryEnter(ref lockTaken);
+
+                if (lockTaken)
+                {
+                    listIndex = m_listIndex;
+                    m_listIndex = 1 - m_listIndex;
+                    m_lists[m_listIndex].Clear();
+                    m_count = 0;
+
+                    items = m_lists[listIndex];
+                }
+                else
+                {
+                    items = EmptyList;
+                }
+
+                return m_count;
+            }
+            finally
+            {
+                if (lockTaken)
+                    m_swapLock.Exit();
+            }
+        }
+
         // Attempts to dequeue and process items from the queue.
         private void TryProcessItems()
         {
@@ -168,6 +254,13 @@ namespace GSF.Collections
             if ((object)ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly IList<T> EmptyList = new T[0];
 
         #endregion
     }

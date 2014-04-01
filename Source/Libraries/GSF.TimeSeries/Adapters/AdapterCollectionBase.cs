@@ -104,7 +104,6 @@ namespace GSF.TimeSeries.Adapters
         private DataSet m_dataSource;
         private string m_dataMember;
         private int m_initializationTimeout;
-        private long m_dependencyTimeout;
         private bool m_autoStart;
         private bool m_processMeasurementFilter;
         private IMeasurement[] m_outputMeasurements;
@@ -295,22 +294,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_initializationTimeout = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        public virtual long DependencyTimeout
-        {
-            get
-            {
-                return m_dependencyTimeout;
-            }
-            set
-            {
-                m_dependencyTimeout = value;
             }
         }
 
@@ -896,11 +879,6 @@ namespace GSF.TimeSeries.Adapters
             // Load the default initialization parameter for adapters in this collection
             if (settings.TryGetValue("initializationTimeout", out setting))
                 InitializationTimeout = int.Parse(setting);
-
-            if (settings.TryGetValue("dependencyTimeout", out setting))
-                m_dependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
-            else
-                m_dependencyTimeout = Ticks.PerSecond / 30L;
 
             lock (this)
             {

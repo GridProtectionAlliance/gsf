@@ -107,8 +107,6 @@ namespace GSF.TimeSeries.Adapters
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private int m_initializationTimeout;
-        private string m_dependencies;
-        private long m_dependencyTimeout;
         private bool m_autoStart;
         private bool m_processMeasurementFilter;
         private MeasurementKey[] m_inputMeasurementKeys;
@@ -293,43 +291,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_initializationTimeout = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
-        /// </summary>
-        /// <remarks>
-        /// Adapters can specify a list of adapters that it depends on. The measurement routing
-        /// system will hold on to measurements that need to be passed through an adapter's
-        /// dependencies. Those measurements will be routed to the dependent adapter when all of
-        /// its dependencies have finished processing them.
-        /// </remarks>
-        public virtual string Dependencies
-        {
-            get
-            {
-                return m_dependencies;
-            }
-            set
-            {
-                m_dependencies = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        public virtual long DependencyTimeout
-        {
-            get
-            {
-                return m_dependencyTimeout;
-            }
-            set
-            {
-                m_dependencyTimeout = value;
             }
         }
 
@@ -791,11 +752,6 @@ namespace GSF.TimeSeries.Adapters
 
             if (settings.TryGetValue("processingInterval", out setting) && !string.IsNullOrWhiteSpace(setting) && int.TryParse(setting, out processingInterval))
                 ProcessingInterval = processingInterval;
-
-            if (settings.TryGetValue("dependencyTimeout", out setting))
-                m_dependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
-            else
-                m_dependencyTimeout = Ticks.PerSecond / 30L;
         }
 
         /// <summary>

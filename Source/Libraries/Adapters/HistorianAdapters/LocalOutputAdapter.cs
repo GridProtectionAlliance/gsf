@@ -176,39 +176,6 @@ namespace HistorianAdapters
         }
 
         /// <summary>
-        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override string Dependencies
-        {
-            get
-            {
-                return base.Dependencies;
-            }
-            set
-            {
-                base.Dependencies = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override long DependencyTimeout
-        {
-            get
-            {
-                return base.DependencyTimeout;
-            }
-            set
-            {
-                base.DependencyTimeout = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the path to the archive.
         /// </summary>
         public string ArchivePath

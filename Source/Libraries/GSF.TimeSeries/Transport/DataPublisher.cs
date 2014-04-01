@@ -647,8 +647,8 @@ namespace GSF.TimeSeries.Transport
         private Timer m_commandChannelRestartTimer;
         private Timer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
+        private EventHandler<EventArgs<ICollection<IMeasurement>>> m_routedMeasurementsHandler;
         private string m_metadataTables;
-        private string m_dependencies;
         private string m_cacheMeasurementKeys;
         private SecurityMode m_securityMode;
         private bool m_encryptPayload;
@@ -718,6 +718,7 @@ namespace GSF.TimeSeries.Transport
             m_routingTables.ActionAdapters = this;
             m_routingTables.StatusMessage += m_routingTables_StatusMessage;
             m_routingTables.ProcessException += m_routingTables_ProcessException;
+            m_routedMeasurementsHandler = m_routingTables.GetRoutedMeasurementsHandler();
 
             // Setup a timer for restarting the command channel if it fails
             m_commandChannelRestartTimer = new Timer(2000.0D);
@@ -980,49 +981,6 @@ namespace GSF.TimeSeries.Transport
                     m_cipherKeyRotationTimer.Interval = value;
 
                 throw new ArgumentException("Cannot assign new cipher rotation period, timer is not defined.");
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the comma-separated list of adapter names that this adapter depends on.
-        /// </summary>
-        /// <remarks>
-        /// Adapters can specify a list of adapters that it depends on. The measurement routing
-        /// system will hold on to measurements that need to be passed through an adapter's
-        /// dependencies. Those measurements will be routed to the dependent adapter when all of
-        /// its dependencies have finished processing them.
-        /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(""),
-        Description("Defines a comma-separated list of adapter names which represent this adapter's dependencies.")]
-        public string Dependencies
-        {
-            get
-            {
-                return m_dependencies;
-            }
-            set
-            {
-                m_dependencies = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(0.0333333D),
-        Description("Defines the amount of time, in seconds, that measurements should be held for the adapter while waiting for its dependencies to finish processing.")]
-        public override long DependencyTimeout
-        {
-            get
-            {
-                return base.DependencyTimeout;
-            }
-            set
-            {
-                base.DependencyTimeout = value;
             }
         }
 
@@ -1442,11 +1400,6 @@ namespace GSF.TimeSeries.Transport
             if (settings.TryGetValue("securityMode", out setting))
                 m_securityMode = (SecurityMode)Enum.Parse(typeof(SecurityMode), setting);
 
-            if (settings.TryGetValue("dependencyTimeout", out setting))
-                DependencyTimeout = Ticks.FromSeconds(double.Parse(setting));
-            else
-                DependencyTimeout = Ticks.PerSecond / 30L;
-
             // Determine the type of metadata to force upon clients who do not specify
             if (settings.TryGetValue("forceReceiveMetadataFlags", out setting) && Enum.TryParse(setting, true, out m_forceReceiveMetadataFlags))
                 m_forceReceiveMetadataFlags &= (OperationalModes.ReceiveInternalMetadata | OperationalModes.ReceiveExternalMetadata);
@@ -1486,7 +1439,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.PersistSettings = true;
 
                 // Assign command channel client reference and attach to needed events
-                this.CommandChannel = commandChannel;
+                CommandChannel = commandChannel;
             }
             else
             {
@@ -1507,7 +1460,7 @@ namespace GSF.TimeSeries.Transport
                 commandChannel.CertificateChecker = m_certificateChecker;
 
                 // Assign command channel client reference and attach to needed events
-                this.CommandChannel = commandChannel;
+                CommandChannel = commandChannel;
             }
 
             // Initialize TCP server (loads config file settings)
@@ -1532,10 +1485,10 @@ namespace GSF.TimeSeries.Transport
         {
             int measurementCount;
 
-            if (this.ProcessMeasurementFilter)
+            if (ProcessMeasurementFilter)
                 base.QueueMeasurementsForProcessing(measurements);
             else
-                m_routingTables.RoutedMeasurementsHandler(measurements);
+                m_routedMeasurementsHandler(this, new EventArgs<ICollection<IMeasurement>>(measurements.ToList()));
 
             measurementCount = measurements.Count();
             m_lifetimeMeasurements += measurementCount;
@@ -2463,7 +2416,7 @@ namespace GSF.TimeSeries.Transport
                     if ((object)data == null || data.Length == 0)
                     {
                         // Add zero sized data buffer to response packet
-                        workingBuffer.Write(s_zeroLengthBytes, 0, 4);
+                        workingBuffer.Write(ZeroLengthBytes, 0, 4);
                     }
                     else
                     {
@@ -2475,7 +2428,7 @@ namespace GSF.TimeSeries.Transport
                             int cipherIndex = connection.CipherIndex;
 
                             // Reserve space for size of data buffer to go into response packet
-                            workingBuffer.Write(s_zeroLengthBytes, 0, 4);
+                            workingBuffer.Write(ZeroLengthBytes, 0, 4);
 
                             // Get data packet flags
                             DataPacketFlags flags = (DataPacketFlags)data[0];
@@ -3785,11 +3738,11 @@ namespace GSF.TimeSeries.Transport
             }
             else if (m_securityMode == SecurityMode.TLS)
             {
-                const string errorFormat = "Unable to authenticate client. Client connected using" +
+                const string ErrorFormat = "Unable to authenticate client. Client connected using" +
                     " certificate of subscriber \"{0}\", however the IP address used ({1}) was" +
                     " not found among the list of valid IP addresses.";
 
-                string errorMessage = string.Format(errorFormat, connection.SubscriberName, connection.IPAddress);
+                string errorMessage = string.Format(ErrorFormat, connection.SubscriberName, connection.IPAddress);
 
                 OnProcessException(new InvalidOperationException(errorMessage));
             }
@@ -3860,7 +3813,7 @@ namespace GSF.TimeSeries.Transport
         // Static Fields
 
         // Constant zero length integer byte array
-        private readonly static byte[] s_zeroLengthBytes = new byte[] { 0, 0, 0, 0 };
+        private readonly static byte[] ZeroLengthBytes = { 0, 0, 0, 0 };
 
         #endregion
     }

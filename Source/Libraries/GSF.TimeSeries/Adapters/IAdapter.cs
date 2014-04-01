@@ -152,16 +152,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the maximum time the system will wait on inter-adapter
-        /// dependencies before publishing queued measurements to an adapter.
-        /// </summary>
-        long DependencyTimeout
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets flag indicating if adapter should automatically start or connect on demand.
         /// </summary>
         bool AutoStart
@@ -335,6 +325,16 @@ namespace GSF.TimeSeries.Adapters
         public static bool TemporalConstraintIsDefined(this IAdapter adapter)
         {
             return (adapter.StartTimeConstraint != DateTime.MinValue || adapter.StopTimeConstraint != DateTime.MaxValue);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> input measurements.
+        /// </summary>
+        /// <param name="adapter"><see cref="IAdapter"/> instance input measurements to convert.</param>
+        /// <returns><see cref="MeasurementKey"/> values of the <see cref="IAdapter"/> input measurements.</returns>
+        public static MeasurementKey[] InputMeasurementKeys(this IAdapter adapter)
+        {
+            return adapter.InputMeasurementKeys ?? new MeasurementKey[0];
         }
 
         /// <summary>
