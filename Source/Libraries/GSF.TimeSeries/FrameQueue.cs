@@ -390,6 +390,12 @@ namespace GSF.TimeSeries
                     if (m_frameHash.TryGetValue(destinationTicks, out frame))
                         return frame;
 
+                    // TODO: Add a flag to add frames to publish even if no data arrives for them as an alternate mode
+                    // TODO: of operation. In this mode pre-populate frame queue with at least one second of data from
+                    // TODO: given start time (was thinking up next even second). This mode is useful for generically
+                    // TODO: using concentrator to create a set of frame data from a data set with possible missing
+                    // TODO: data (e.g., a historian) to create an evenly timestamped export
+
                     // Create a new frame for this timestamp
                     frame = new TrackingFrame(m_createNewFrame(destinationTicks), m_downsamplingMethod);
 

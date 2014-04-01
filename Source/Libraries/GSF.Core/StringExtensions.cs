@@ -265,7 +265,7 @@ namespace GSF
         /// when either the <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are detected in the
         /// value of the key/value pair.
         /// </remarks>
-        public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter = ';', char keyValueDelimeter = '=', char startValueDelimeter = '{', char endValueDelimeter = '}')
+        public static string JoinKeyValuePairs(this IDictionary<string, string> pairs, char parameterDelimeter = ';', char keyValueDelimeter = '=', char startValueDelimeter = '{', char endValueDelimeter = '}')
         {
             if ((object)pairs == null)
                 throw new ArgumentNullException("pairs");
