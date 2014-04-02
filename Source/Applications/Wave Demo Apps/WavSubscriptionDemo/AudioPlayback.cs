@@ -308,6 +308,7 @@ namespace NAudioWpfDemo
                 m_statTimer = CreateStatTimer();
                 m_waveProvider = new BufferedWaveProvider(new WaveFormat(m_sampleRate < MINIMUM_SAMPLE_RATE ? MINIMUM_SAMPLE_RATE : m_sampleRate, m_numChannels));
                 m_wavePlayer = CreateWavePlayer(m_waveProvider);
+                m_waveProvider.DiscardOnBufferOverflow = true;
 
                 info = new UnsynchronizedSubscriptionInfo(false)
                 {
