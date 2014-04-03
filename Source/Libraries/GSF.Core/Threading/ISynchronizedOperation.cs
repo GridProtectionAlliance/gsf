@@ -24,6 +24,27 @@
 namespace GSF.Threading
 {
     /// <summary>
+    /// Represents the available types of synchronized operations.
+    /// </summary>
+    public enum SynchronizedOperationType
+    {
+        /// <summary>
+        /// <see cref="ShortSynchronizedOperation"/>
+        /// </summary>
+        Short,
+
+        /// <summary>
+        /// <see cref="LongSynchronizedOperation"/>
+        /// </summary>
+        Long,
+
+        /// <summary>
+        /// <see cref="LongSynchronizedOperation"/> with IsBackground set to <c>true</c>
+        /// </summary>
+        LongBackground
+    }
+
+    /// <summary>
     /// Represents an operation that cannot run while it is already in progress.
     /// </summary>
     public interface ISynchronizedOperation

@@ -219,7 +219,7 @@ namespace GSF.Parsing
         public event EventHandler<EventArgs<TSourceIdentifier, IList<TOutputType>>> SourceDataParsed;
 
         // Fields
-        private AsyncDoubleBufferedQueue<SourceIdentifiableBuffer> m_bufferQueue;
+        private readonly AsyncDoubleBufferedQueue<SourceIdentifiableBuffer> m_bufferQueue;
         private readonly ConcurrentDictionary<TSourceIdentifier, bool> m_sourceInitialized;
         private readonly ConcurrentDictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
         private readonly ConcurrentDictionary<TSourceIdentifier, List<TOutputType>> m_parsedSourceData;
@@ -234,7 +234,8 @@ namespace GSF.Parsing
         /// </summary>
         protected MultiSourceFrameImageParserBase()
         {
-            m_bufferQueue = CreateBufferQueue();
+            m_bufferQueue = new AsyncDoubleBufferedQueue<SourceIdentifiableBuffer>();
+            m_bufferQueue.ProcessItemsFunction = ParseQueuedBuffers;
             m_bufferQueue.ProcessException += ProcessExceptionHandler;
 
             if (ProtocolUsesSyncBytes)
@@ -255,10 +256,7 @@ namespace GSF.Parsing
         {
             get
             {
-                if ((object)m_bufferQueue != null)
-                    return m_bufferQueue.Count;
-
-                return 0;
+                return m_bufferQueue.Count;
             }
         }
 
@@ -400,75 +398,48 @@ namespace GSF.Parsing
             throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead.");
         }
 
-        /// <summary>
-        /// Creates the internal buffer queue.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This method is virtual to allow derived classes to customize the style of processing queue used when consumers
-        /// choose to implement an internal buffer queue.  Default type is a real-time queue with the default settings.
-        /// When overriding, use the <see cref="ParseQueuedBuffers"/> method for the <see cref="ProcessQueue{T}"/>) item
-        /// processing delegate.
-        /// </para>
-        /// <para>
-        /// Note that current design only supports serial processing - consumer overriding this method to return an asynchronous
-        /// process queue to process multiple items at once on separate threads will need to redesign the processing delegate.
-        /// </para>
-        /// </remarks>
-        /// <returns>New internal buffer processing queue (i.e., a new <see cref="ProcessQueue{T}"/>).</returns>
-        protected virtual AsyncDoubleBufferedQueue<SourceIdentifiableBuffer> CreateBufferQueue()
+        // This method is used by the internal <see cref="ProcessQueue{T}"/> to process all queued data buffers.
+        private void ParseQueuedBuffers(IList<SourceIdentifiableBuffer> buffers)
         {
-            AsyncDoubleBufferedQueue<SourceIdentifiableBuffer> queue = new AsyncDoubleBufferedQueue<SourceIdentifiableBuffer>();
-            queue.ProcessItemsFunction = ParseQueuedBuffers;
-            queue.ProcessException += ProcessExceptionHandler;
-            return queue;
-        }
-
-        /// <summary>
-        /// This method is used by the internal <see cref="ProcessQueue{T}"/> to process all queued data buffers.
-        /// </summary>
-        /// <param name="buffers">Identifiable buffers to process.</param>
-        /// <remarks>
-        /// This is the <see cref="SourceIdentifiableBuffer"/> processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
-        /// </remarks>
-        protected virtual void ParseQueuedBuffers(IList<SourceIdentifiableBuffer> buffers)
-        {
-            try
+            if (Enabled)
             {
-                // Process all queued data buffers...
-                foreach (SourceIdentifiableBuffer buffer in buffers)
+                try
                 {
-                    // Track current buffer source
-                    m_source = buffer.Source;
-
-                    // Check to see if this data source has been initialized
-                    if ((object)m_sourceInitialized != null)
-                        StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, true);
-
-                    // Restore any unparsed buffers for this data source, if any
-                    UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_source, (byte[])null);
-
-                    // Start parsing sequence for this buffer - this will begin publication of new parsed outputs
-                    base.Write(buffer.Buffer, 0, buffer.Count);
-
-                    // Track last unparsed buffer for this data source
-                    m_unparsedBuffers[m_source] = UnparsedBuffer;
-                }
-            }
-            finally
-            {
-                // If user has attached to SourceDataParsed event, expose list of parsed data per source
-                if ((object)SourceDataParsed != null)
-                {
-                    foreach (KeyValuePair<TSourceIdentifier, List<TOutputType>> parsedData in m_parsedSourceData)
+                    // Process all queued data buffers...
+                    foreach (SourceIdentifiableBuffer buffer in buffers)
                     {
-                        OnSourceDataParsed(parsedData.Key, parsedData.Value);
+                        // Track current buffer source
+                        m_source = buffer.Source;
+
+                        // Check to see if this data source has been initialized
+                        if ((object)m_sourceInitialized != null)
+                            StreamInitialized = m_sourceInitialized.GetOrAdd(m_source, true);
+
+                        // Restore any unparsed buffers for this data source, if any
+                        UnparsedBuffer = m_unparsedBuffers.GetOrAdd(m_source, (byte[])null);
+
+                        // Start parsing sequence for this buffer - this will begin publication of new parsed outputs
+                        base.Write(buffer.Buffer, 0, buffer.Count);
+
+                        // Track last unparsed buffer for this data source
+                        m_unparsedBuffers[m_source] = UnparsedBuffer;
+                    }
+                }
+                finally
+                {
+                    // If user has attached to SourceDataParsed event, expose list of parsed data per source
+                    if ((object)SourceDataParsed != null)
+                    {
+                        foreach (KeyValuePair<TSourceIdentifier, List<TOutputType>> parsedData in m_parsedSourceData)
+                        {
+                            OnSourceDataParsed(parsedData.Key, parsedData.Value);
+                        }
+
+                        // Clear parsed data dictionary for next pass
+                        m_parsedSourceData.Clear();
                     }
 
-                    // Clear parsed data dictionary for next pass
-                    m_parsedSourceData.Clear();
                 }
-
             }
 
             // Dispose of source buffers - no rush

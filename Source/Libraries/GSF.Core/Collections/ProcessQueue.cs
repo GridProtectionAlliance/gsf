@@ -78,6 +78,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using GSF.Threading;
 using GSF.Units;
 using Timer = System.Timers.Timer;
 
@@ -405,6 +406,9 @@ namespace GSF.Collections
         private ProcessItemsFunctionSignature m_processItemsFunction;
         private CanProcessItemFunctionSignature m_canProcessItemFunction;
 
+        private ISynchronizedOperation m_synchronizedOperation;
+        private SynchronizedOperationType m_synchronizedOperationType;
+
         private IList<T> m_processList;
         private int m_maximumThreads;
         private int m_processTimeout;
@@ -416,7 +420,6 @@ namespace GSF.Collections
         private RequeueMode m_requeueModeOnException;
 
         private volatile bool m_enabled;
-        private int m_processing;
         private int m_threadCount;
         private long m_itemsProcessing;
         private long m_itemsProcessed;
@@ -424,12 +427,6 @@ namespace GSF.Collections
         private long m_stopTime;
         private string m_name;
         private bool m_disposed;
-
-#if ThreadTracking
-        private ManagedThread m_realTimeProcessThread;
-#else
-        private Thread m_realTimeProcessThread;
-#endif
 
         private Timer m_processTimer;
         private readonly object m_processLock;
@@ -791,6 +788,21 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Gets or sets the type of synchronized operation used to process items in a real-time <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        public virtual SynchronizedOperationType SynchronizedOperationType
+        {
+            get
+            {
+                return m_synchronizedOperationType;
+            }
+            set
+            {
+                m_synchronizedOperationType = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets whether or not to automatically place an item back into the <see cref="ProcessQueue{T}"/> if the processing times out.
         /// </summary>
         /// <remarks>Ignored if the ProcessTimeout is set to Timeout.Infinite (i.e., -1).</remarks>
@@ -882,7 +894,7 @@ namespace GSF.Collections
             get
             {
                 if (m_processingIsRealTime)
-                    return ((object)m_realTimeProcessThread != null);
+                    return ((object)m_synchronizedOperation != null);
 
                 lock (m_processLock)
                 {
@@ -1241,15 +1253,20 @@ namespace GSF.Collections
             if (m_processingIsRealTime)
             {
                 // Start real-time processing thread
-#if ThreadTracking
-                m_realTimeProcessThread = new ManagedThread(RealTimeThreadProc);
-                m_realTimeProcessThread.Name = "GSF.Collections.ProcessQueue.RealTimeThreadProc() [" + Name + "]";
-#else
-                m_realTimeProcessThread = new Thread(RealTimeThreadProc);
-#endif
+                switch (SynchronizedOperationType)
+                {
+                    case SynchronizedOperationType.Short:
+                        m_synchronizedOperation = new ShortSynchronizedOperation(RealTimeThreadProc, OnProcessException);
+                        break;
 
-                m_realTimeProcessThread.IsBackground = true;
-                m_realTimeProcessThread.Start();
+                    case SynchronizedOperationType.Long:
+                        m_synchronizedOperation = new LongSynchronizedOperation(RealTimeThreadProc, OnProcessException);
+                        break;
+
+                    case SynchronizedOperationType.LongBackground:
+                        m_synchronizedOperation = new LongSynchronizedOperation(RealTimeThreadProc, OnProcessException) { IsBackground = true };
+                        break;
+                }
             }
             else
             {
@@ -1277,9 +1294,9 @@ namespace GSF.Collections
 
             if (m_processingIsRealTime)
             {
-                // Remove reference to process thread - it will stop gracefully after it has finished processing
+                // Remove reference to synchronized operation - it will stop gracefully after it has finished processing
                 // current set of items since enabled is false...
-                m_realTimeProcessThread = null;
+                m_synchronizedOperation = null;
             }
             else
             {
@@ -1447,9 +1464,12 @@ namespace GSF.Collections
         /// </remarks>
         protected virtual void DataAdded()
         {
-            // For queues that are not processing in real-time, we start the intervaled process timer
-            // when data is added, if it's not running already
-            if (!m_processingIsRealTime)
+            if (m_processingIsRealTime)
+            {
+                if ((object)m_synchronizedOperation != null)
+                    m_synchronizedOperation.RunOnceAsync();
+            }
+            else
             {
                 lock (m_processLock)
                 {
@@ -1517,18 +1537,7 @@ namespace GSF.Collections
                 return true;
 
             // Otherwise we call user function for each item to determine if all items are ready for processing.
-            bool allItemsCanBeProcessed = true;
-
-            foreach (T item in items)
-            {
-                if (!CanProcessItem(item))
-                {
-                    allItemsCanBeProcessed = false;
-                    break;
-                }
-            }
-
-            return allItemsCanBeProcessed;
+            return items.All(CanProcessItem);
         }
 
         /// <summary>
@@ -1807,14 +1816,7 @@ namespace GSF.Collections
                     if ((object)converter == null)
                         throw new ArgumentNullException("converter", "converter is null");
 
-                    List<TOutput> result = new List<TOutput>();
-
-                    foreach (T item in InternalList)
-                    {
-                        result.Add(converter(item));
-                    }
-
-                    return result;
+                    return InternalList.Select(item => converter(item)).ToList();
                 }
                 
                 // Otherwise, we will call native implementation
@@ -1840,18 +1842,7 @@ namespace GSF.Collections
                     if ((object)match == null)
                         throw new ArgumentNullException("match", "match is null");
 
-                    bool found = false;
-
-                    for (int x = 0; x < InternalList.Count; x++)
-                    {
-                        if (match(InternalList[x]))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    return found;
+                    return InternalList.Any(t => match(t));
                 }
                 
                 // Otherwise, we will call native implementation.
@@ -1908,15 +1899,7 @@ namespace GSF.Collections
                     if ((object)match == null)
                         throw new ArgumentNullException("match", "match is null");
 
-                    List<T> foundItems = new List<T>();
-
-                    foreach (T item in InternalList)
-                    {
-                        if (match(item))
-                            foundItems.Add(item);
-                    }
-
-                    return foundItems;
+                    return InternalList.Where(item => match(item)).ToList();
                 }
                 
                 // Otherwise, we will call native implementation.
@@ -2542,18 +2525,7 @@ namespace GSF.Collections
                     if ((object)match == null)
                         throw (new ArgumentNullException("match", "match is null"));
 
-                    bool allTrue = true;
-
-                    foreach (T item in InternalList)
-                    {
-                        if (!match(item))
-                        {
-                            allTrue = false;
-                            break;
-                        }
-                    }
-
-                    return allTrue;
+                    return InternalList.All(item => match(item));
                 }
                 
                 // Otherwise, we will call native implementation.
@@ -2725,72 +2697,16 @@ namespace GSF.Collections
             }
         }
 
-        /// <summary>
-        /// Creates a real-time thread for processing items. 
-        /// </summary>
+        // Processes items
         private void RealTimeThreadProc()
-        {
-            int processing;
-            int sleepTime = 1;
-            long noWorkSleeps = 0L;
-
-            try
-            {
-                // Creates a real-time processing loop that will start item processing as quickly as possible.
-                while (m_enabled)
-                {
-                    processing = Interlocked.CompareExchange(ref m_processing, 1, 0);
-
-                    // Kick start processing when items exist that are not currently being processed
-                    if (processing == 0 && !IsEmpty)
-                    {
-                        sleepTime = 1;
-                        noWorkSleeps = 0L;
-                        ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
-                    }
-                    else
-                    {
-                        // If the processing flag was set but no items were found in the process queue,
-                        // the asynchronous loop was never spawned so we need to clear the processing flag
-                        if (processing == 0)
-                            Interlocked.Exchange(ref m_processing, 0);
-
-                        // Vary sleep time based on how often kick start is being processed, up to one second for very idle queues
-                        if (noWorkSleeps > 1000L)
-                            sleepTime = 1000;   // It will take well over 1.5 minutes of no work before sleeping for 1 second
-                        else if (noWorkSleeps > 100L)
-                            sleepTime = 100;    // It will take at least one second of no work before sleeping for 100ms
-                        else if (noWorkSleeps > 5L)
-                            sleepTime = 10;     // It will take at least 5ms of no work before sleeping for 10ms
-
-                        noWorkSleeps++;
-
-                        // Wait around for more items to process
-                        Thread.Sleep(sleepTime);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                if (m_enabled)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("Exception occurred in real-time processing loop: {0}", ex.Message), ex));
-                }
-            }
-        }
-
-        // Creates a real-time loop for processing data that runs as long as there is data to process
-        private void RealTimeDataProcessingLoop(object state)
         {
             if ((object)m_processItemsFunction == null)
                 ProcessNextItem();
             else
                 ProcessNextItems();
 
-            if (m_enabled && !IsEmpty)
-                ThreadPool.QueueUserWorkItem(RealTimeDataProcessingLoop);
-            else
-                Interlocked.Exchange(ref m_processing, 0);
+            if (Count > 0 && (object)m_synchronizedOperation != null)
+                m_synchronizedOperation.RunOnceAsync();
         }
 
         /// <summary>
