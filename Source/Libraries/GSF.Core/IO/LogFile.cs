@@ -175,7 +175,7 @@ namespace GSF.IO
         private string m_settingsCategory;
         private FileStream m_fileStream;
         private ManualResetEvent m_operationWaitHandle;
-        private ProcessList<string> m_logEntryQueue;
+        private ProcessQueue<string> m_logEntryQueue;
         private Timer m_flushTimer;
         private Encoding m_textEncoding;
         private bool m_disposed;
@@ -202,7 +202,7 @@ namespace GSF.IO
             m_textEncoding = Encoding.Default;
             m_operationWaitHandle = new ManualResetEvent(true);
             m_savedFilesWithTime = new Dictionary<DateTime, string>();
-            m_logEntryQueue = ProcessList<string>.CreateRealTimeQueue(WriteLogEntries);
+            m_logEntryQueue = ProcessQueue<string>.CreateRealTimeQueue(WriteLogEntries);
             m_flushTimer = new Timer();
             m_flushTimerInterval = 10.0D;
 

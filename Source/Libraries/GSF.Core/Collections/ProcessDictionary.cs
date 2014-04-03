@@ -58,7 +58,7 @@ namespace GSF.Collections
     /// have the same parameters (see the <see cref="DictionaryList{TKey,TValue}"/> class for more details.).
     /// </para>
     /// </remarks>
-    public class ProcessDictionary<TKey, TValue> : ProcessList<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
+    public class ProcessDictionary<TKey, TValue> : ProcessQueue<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
     {
         #region [ Members ]
 

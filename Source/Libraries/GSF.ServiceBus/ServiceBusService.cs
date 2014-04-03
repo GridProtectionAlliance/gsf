@@ -473,7 +473,7 @@ namespace GSF.ServiceBus
         private readonly ReaderWriterLockSlim m_clientsLock;
         private readonly ReaderWriterLockSlim m_queuesLock;
         private readonly ReaderWriterLockSlim m_topicsLock;
-        private ProcessList<PublishContext> m_publishQueue;
+        private ProcessQueue<PublishContext> m_publishQueue;
         private long m_discardedMessages;
         private bool m_disposed;
 
@@ -706,9 +706,9 @@ namespace GSF.ServiceBus
             {
                 // Instantiate the process queue.
                 if (m_processingMode == MessageProcessingMode.Parallel)
-                    m_publishQueue = ProcessList<PublishContext>.CreateAsynchronousQueue(PublishMessages);
+                    m_publishQueue = ProcessQueue<PublishContext>.CreateAsynchronousQueue(PublishMessages);
                 else if (m_processingMode == MessageProcessingMode.Sequential)
-                    m_publishQueue = ProcessList<PublishContext>.CreateRealTimeQueue(PublishMessages);
+                    m_publishQueue = ProcessQueue<PublishContext>.CreateRealTimeQueue(PublishMessages);
                 else
                     throw new NotSupportedException(string.Format("Processing mode '{0}' is not supported", m_processingMode));
 
