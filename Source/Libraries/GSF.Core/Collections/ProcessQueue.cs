@@ -1151,16 +1151,15 @@ namespace GSF.Collections
         public virtual bool TryTake(out T[] items)
         {
             ConcurrentQueue<T> queue = InternalQueue;
+            List<T> taken;
+            T item;
 
             if ((object)queue != null)
             {
-                T item;
-                List<T> taken = new List<T>();
+                taken = new List<T>(queue.Count);
 
                 while (queue.TryDequeue(out item))
-                {
                     taken.Add(item);
-                }
 
                 if (taken.Count > 0)
                 {

@@ -446,7 +446,7 @@ namespace GSF.TimeSeries.Adapters
             if (Settings.TryGetValue("inputMeasurementKeys", out setting))
                 InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, true, setting);
             else
-                InputMeasurementKeys = null;
+                InputMeasurementKeys = new MeasurementKey[0];
 
             InputSourceIDs = InputSourceIDs;
         }
