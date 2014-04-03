@@ -44,20 +44,11 @@ namespace GSF.Historian.MetadataProviders
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes the <see cref="MetadataProviders"/>.
-        /// </summary>
-        public override void Initialize()
-        {
-            base.Initialize();
-            OperationQueue.Start();
-        }
-
-        /// <summary>
         /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> using all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
         /// </summary>
         public void RefreshAll()
         {
-            OperationQueue.Add(null);
+            OperationQueue.Enqueue(null);
         }
 
         /// <summary>
@@ -66,7 +57,7 @@ namespace GSF.Historian.MetadataProviders
         /// <param name="provider">Name of the <see cref="IMetadataProvider"/> to use for the <see cref="IMetadataProvider.Refresh()"/>.</param>
         public void RefreshOne(string provider)
         {
-            OperationQueue.Add(provider);
+            OperationQueue.Enqueue(provider);
         }
 
         /// <summary>

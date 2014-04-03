@@ -342,6 +342,15 @@ namespace GSF.TimeSeries.Adapters
             }
             set
             {
+                if (m_inputMeasurementKeys == value)
+                    return;
+
+                if ((object)m_inputMeasurementKeys != null && (object)value != null)
+                {
+                    if (new HashSet<MeasurementKey>(m_inputMeasurementKeys).SetEquals(value))
+                        return;
+                }
+
                 m_inputMeasurementKeys = value;
 
                 // Update input key lookup hash table

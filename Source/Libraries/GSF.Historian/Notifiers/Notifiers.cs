@@ -81,7 +81,7 @@ namespace GSF.Historian.Notifiers
         /// <param name="notificationType">One of the <see cref="NotificationTypes"/> values.</param>
         public void SendNotification(string subject, string message, string details, NotificationTypes notificationType)
         {
-            OperationQueue.Add(new Notification(subject, message, details, notificationType));
+            OperationQueue.Enqueue(new Notification(subject, message, details, notificationType));
         }
 
         /// <summary>

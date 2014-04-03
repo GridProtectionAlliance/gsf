@@ -61,8 +61,10 @@ namespace GSF.Collections
         {
             m_asyncQueue = new AsyncQueue<IEnumerable<T>>();
             m_doubleBufferedQueue = new DoubleBufferedQueue<T>();
+
             m_asyncQueue.ProcessItemFunction = item => m_doubleBufferedQueue.Enqueue(item);
             m_asyncQueue.ProcessException += (sender, args) => OnProcessException(args.Argument);
+            m_doubleBufferedQueue.ProcessException += (sender, args) => OnProcessException(args.Argument);
         }
 
         #endregion
@@ -81,6 +83,17 @@ namespace GSF.Collections
             set
             {
                 m_doubleBufferedQueue.ProcessItemsFunction = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the number of items in the queue.
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                return m_asyncQueue.Count + m_doubleBufferedQueue.Count;
             }
         }
 

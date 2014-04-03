@@ -393,7 +393,7 @@ namespace GSF.Adapters
         private string m_settingsCategory;
         private readonly ObservableCollection<T> m_adapters;
         private FileSystemWatcher m_adapterWatcher;
-        private readonly ProcessQueue<object> m_operationQueue;
+        private readonly AsyncQueue<object> m_operationQueue;
         private readonly Dictionary<Type, bool> m_enabledStates;
         private bool m_enabled;
         private bool m_disposed;
@@ -424,8 +424,10 @@ namespace GSF.Adapters
             m_settingsCategory = this.GetType().Name;
             m_adapters = new ObservableCollection<T>();
             m_adapters.CollectionChanged += Adapters_CollectionChanged;
-            m_operationQueue = ProcessQueue<object>.CreateRealTimeQueue(ExecuteOperation);
+            m_operationQueue = new AsyncQueue<object>();
             m_enabledStates = new Dictionary<Type, bool>();
+
+            m_operationQueue.ProcessItemFunction = ExecuteOperation;
         }
 
         /// <summary>
@@ -803,7 +805,7 @@ namespace GSF.Adapters
         /// <summary>
         /// Gets the <see cref="ProcessQueue{T}"/> object to be used for queuing operations to be executed on <see cref="Adapters"/>.
         /// </summary>
-        protected ProcessQueue<object> OperationQueue
+        protected AsyncQueue<object> OperationQueue
         {
             get
             {
@@ -1153,9 +1155,6 @@ namespace GSF.Adapters
                         if ((object)m_enabledStates != null)
                             m_enabledStates.Clear();
 
-                        if ((object)m_operationQueue != null)
-                            m_operationQueue.Dispose();
-
                         if ((object)m_adapterWatcher != null)
                         {
                             m_adapterWatcher.EnableRaisingEvents = false;
@@ -1330,22 +1329,19 @@ namespace GSF.Adapters
             }
         }
 
-        private void ExecuteOperation(object[] data)
+        private void ExecuteOperation(object data)
         {
-            foreach (object operationData in data)
+            lock (m_adapters)
             {
-                lock (m_adapters)
+                foreach (T adapter in m_adapters)
                 {
-                    foreach (T adapter in m_adapters)
+                    try
                     {
-                        try
-                        {
-                            ExecuteAdapterOperation(adapter, operationData);
-                        }
-                        catch (Exception ex)
-                        {
-                            OnOperationExecutionException(adapter, ex);
-                        }
+                        ExecuteAdapterOperation(adapter, data);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnOperationExecutionException(adapter, ex);
                     }
                 }
             }

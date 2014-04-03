@@ -37,7 +37,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 using System.Threading;
 using GSF.Collections;
 
@@ -220,12 +219,11 @@ namespace GSF.Parsing
         public event EventHandler<EventArgs<TSourceIdentifier, IList<TOutputType>>> SourceDataParsed;
 
         // Fields
-        private ProcessQueue<SourceIdentifiableBuffer> m_bufferQueue;
+        private AsyncDoubleBufferedQueue<SourceIdentifiableBuffer> m_bufferQueue;
         private readonly ConcurrentDictionary<TSourceIdentifier, bool> m_sourceInitialized;
         private readonly ConcurrentDictionary<TSourceIdentifier, byte[]> m_unparsedBuffers;
         private readonly ConcurrentDictionary<TSourceIdentifier, List<TOutputType>> m_parsedSourceData;
         private TSourceIdentifier m_source;
-        private bool m_disposed;
 
         #endregion
 
@@ -264,64 +262,9 @@ namespace GSF.Parsing
             }
         }
 
-        /// <summary>
-        /// Gets the current run-time statistics of the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>.
-        /// </summary>
-        public virtual ProcessQueueStatistics CurrentStatistics
-        {
-            get
-            {
-                return m_bufferQueue.CurrentStatistics;
-            }
-        }
-
-        /// <summary>
-        /// Gets current status of <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>.
-        /// </summary>
-        public override string Status
-        {
-            get
-            {
-                StringBuilder status = new StringBuilder();
-
-                status.Append(base.Status);
-                status.Append(m_bufferQueue.Status);
-
-                return status.ToString();
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_bufferQueue != null)
-                        {
-                            m_bufferQueue.ProcessException -= ProcessExceptionHandler;
-                            m_bufferQueue.Dispose();
-                        }
-                        m_bufferQueue = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
 
         /// <summary>
         /// Start the streaming data parser.
@@ -335,7 +278,6 @@ namespace GSF.Parsing
 
             m_unparsedBuffers.Clear();
             m_parsedSourceData.Clear();
-            m_bufferQueue.Start();
         }
 
         /// <summary>
@@ -351,16 +293,6 @@ namespace GSF.Parsing
 
             m_unparsedBuffers.Clear();
             m_parsedSourceData.Clear();
-            m_bufferQueue.Start();
-        }
-
-        /// <summary>
-        /// Stops the streaming data parser.
-        /// </summary>
-        public override void Stop()
-        {
-            m_bufferQueue.Stop();
-            base.Stop();
         }
 
         /// <summary>
@@ -405,7 +337,7 @@ namespace GSF.Parsing
                     Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
 
                     // Add buffer to the queue for parsing
-                    m_bufferQueue.Add(identifiableBuffer);
+                    m_bufferQueue.Enqueue(new SourceIdentifiableBuffer[] { identifiableBuffer });
                 }
             }
             catch
@@ -469,31 +401,6 @@ namespace GSF.Parsing
         }
 
         /// <summary>
-        /// Clears all buffers for this stream and causes any buffered data to be parsed immediately.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// If the user has called <see cref="Start()"/> method, this method will process all remaining buffers on the calling thread until all
-        /// queued buffers have been parsed - the <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/>
-        /// will then be automatically stopped. This method is typically called on shutdown to make sure any remaining queued buffers get
-        /// parsed before the class instance is destructed.
-        /// </para>
-        /// <para>
-        /// It is possible for items to be queued while the flush is executing. The flush will continue to parse buffers as quickly
-        /// as possible until the internal buffer queue is empty. Unless the user stops queuing data to be parsed (i.e. calling the
-        /// <see cref="Parse(TSourceIdentifier,byte[])"/> method), the flush call may never return (not a happy situation on shutdown).
-        /// </para>
-        /// <para>
-        /// The <see cref="MultiSourceFrameImageParserBase{TSourceIdentifier,TTypeIdentifier,TOutputType}"/> does not clear queue prior to destruction.
-        /// If the user fails to call this method before the class is destructed, there may be data that remains unparsed in the internal buffer.
-        /// </para>
-        /// </remarks>
-        public override void Flush()
-        {
-            m_bufferQueue.Flush();
-        }
-
-        /// <summary>
         /// Creates the internal buffer queue.
         /// </summary>
         /// <remarks>
@@ -509,9 +416,12 @@ namespace GSF.Parsing
         /// </para>
         /// </remarks>
         /// <returns>New internal buffer processing queue (i.e., a new <see cref="ProcessQueue{T}"/>).</returns>
-        protected virtual ProcessQueue<SourceIdentifiableBuffer> CreateBufferQueue()
+        protected virtual AsyncDoubleBufferedQueue<SourceIdentifiableBuffer> CreateBufferQueue()
         {
-            return ProcessQueue<SourceIdentifiableBuffer>.CreateRealTimeQueue(ParseQueuedBuffers);
+            AsyncDoubleBufferedQueue<SourceIdentifiableBuffer> queue = new AsyncDoubleBufferedQueue<SourceIdentifiableBuffer>();
+            queue.ProcessItemsFunction = ParseQueuedBuffers;
+            queue.ProcessException += ProcessExceptionHandler;
+            return queue;
         }
 
         /// <summary>
@@ -521,7 +431,7 @@ namespace GSF.Parsing
         /// <remarks>
         /// This is the <see cref="SourceIdentifiableBuffer"/> processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
         /// </remarks>
-        protected virtual void ParseQueuedBuffers(SourceIdentifiableBuffer[] buffers)
+        protected virtual void ParseQueuedBuffers(IList<SourceIdentifiableBuffer> buffers)
         {
             try
             {
