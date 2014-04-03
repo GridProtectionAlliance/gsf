@@ -31,7 +31,6 @@ using System.Linq;
 using System.Text;
 using DataQualityMonitoring.Services;
 using GSF;
-using GSF.Collections;
 using GSF.Data;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -51,35 +50,11 @@ namespace DataQualityMonitoring
         private Dictionary<Guid, List<Alarm>> m_alarmLookup;
         private AlarmService m_alarmService;
 
-        private readonly AsyncDoubleBufferedQueue<IMeasurement> m_measurementQueue;
         private List<IMeasurement> m_alarmEvents;
         private long m_eventCount;
 
         private bool m_supportsTemporalProcessing;
         private bool m_disposed;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new instance of the <see cref="AlarmAdapter"/>.
-        /// </summary>
-        public AlarmAdapter()
-        {
-            m_measurementQueue = new AsyncDoubleBufferedQueue<IMeasurement>();
-            m_measurementQueue.ProcessItemsFunction = ProcessMeasurements;
-
-            m_measurementQueue.ProcessException += (sender, e) =>
-            {
-                if (Enabled)
-                {
-                    Exception ex = e.Argument;
-                    string message = string.Format("Exception occurred while processing alarm measurements: {0}", ex.Message);
-                    OnProcessException(new InvalidOperationException(message, ex));
-                }
-            };
-        }
 
         #endregion
 
@@ -193,7 +168,7 @@ namespace DataQualityMonitoring
         /// <param name="measurements">Measurements to queue for processing.</param>
         public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            m_measurementQueue.Enqueue(measurements);
+            ProcessMeasurements(measurements);
         }
 
         /// <summary>
@@ -283,7 +258,7 @@ namespace DataQualityMonitoring
         }
 
         // Processes measurements in the queue.
-        private void ProcessMeasurements(IList<IMeasurement> measurements)
+        private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
         {
             List<Alarm> alarms;
             List<Alarm> raisedAlarms;
@@ -335,7 +310,7 @@ namespace DataQualityMonitoring
             }
 
             // Increment total count of processed measurements
-            IncrementProcessedMeasurements(measurements.Count);
+            IncrementProcessedMeasurements(measurements.Count());
         }
 
         // Get all the highest severity alarms in a list of alarms
@@ -347,12 +322,6 @@ namespace DataQualityMonitoring
 
         // Processes excpetions thrown by the alarm service.
         private void AlarmService_ServiceProcessException(object sender, EventArgs<Exception> e)
-        {
-            OnProcessException(e.Argument);
-        }
-
-        // Processes exceptions thrown during measurement processing
-        private void m_measurementQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(e.Argument);
         }
