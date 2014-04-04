@@ -46,8 +46,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Xml;
+using GSF.Collections;
 using GSF.Communication;
 using GSF.Configuration;
+using GSF.Console;
 using GSF.Data;
 using GSF.IO;
 using GSF.Net.Security;
@@ -129,9 +131,9 @@ namespace GSF.TimeSeries
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
         private DataQualityReportingProcess m_dataQualityReportingProcess;
+        private ProcessQueue<Tuple<string, Action<bool>>> m_reloadConfigQueue;
         private LongSynchronizedOperation m_configurationCacheOperation;
         private volatile DataSet m_latestConfiguration;
-        private object m_systemConfigurationLoadLock;
 
         private ServiceHelper m_serviceHelper;
         private ServerBase m_remotingServer;
@@ -378,8 +380,10 @@ namespace GSF.TimeSeries
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
+            m_reloadConfigQueue = ProcessQueue<Tuple<string, Action<bool>>>.CreateSynchronousQueue(ExecuteReloadConfig, 500.0D, Timeout.Infinite, false, false);
             m_configurationCacheOperation = new LongSynchronizedOperation(ExecuteConfigurationCache) { IsBackground = true };
-            m_systemConfigurationLoadLock = new object();
+
+            m_reloadConfigQueue.Start();
 
             // Setup default thread pool size
             try
@@ -770,83 +774,83 @@ namespace GSF.TimeSeries
         // Perform system initialization
         private void InitializeSystem(object state)
         {
-            // Attempt to load system configuration
-            if (LoadSystemConfiguration())
+            m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success =>
             {
-                // Initialize and start all session adapters
-                m_iaonSession.Initialize();
+                // Attempt to load system configuration
+                if (success)
+                {
+                    // Initialize and start all session adapters
+                    m_iaonSession.Initialize();
 
-                DisplayStatusMessage("System initialization complete.", UpdateType.Information);
+                    DisplayStatusMessage("System initialization complete.", UpdateType.Information);
 
-                // If any settings have been added to configuration file, we go ahead and save them now
-                m_serviceHelper.SaveSettings(true);
-                ConfigurationFile.Current.Save();
-            }
-            else
-                DisplayStatusMessage("System initialization failed due to unavailable configuration.", UpdateType.Alarm);
+                    // If any settings have been added to configuration file, we go ahead and save them now
+                    m_serviceHelper.SaveSettings(true);
+                    ConfigurationFile.Current.Save();
+                }
+                else
+                    DisplayStatusMessage("System initialization failed due to unavailable configuration.", UpdateType.Alarm);
 
-            // Log current thread pool size
-            int minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads;
+                // Log current thread pool size
+                int minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads;
 
-            ThreadPool.GetMinThreads(out minWorkerThreads, out minIOThreads);
-            ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxIOThreads);
+                ThreadPool.GetMinThreads(out minWorkerThreads, out minIOThreads);
+                ThreadPool.GetMaxThreads(out maxWorkerThreads, out maxIOThreads);
 
-            DisplayStatusMessage("Thread pool size: minimum {0} worker {1} I/O, maximum {2} worker {3} I/O", UpdateType.Information, minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads);
+                DisplayStatusMessage("Thread pool size: minimum {0} worker {1} I/O, maximum {2} worker {3} I/O", UpdateType.Information, minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads);
+            })));
         }
 
         // Load the the system configuration data set
         private bool LoadSystemConfiguration()
         {
-            lock (m_systemConfigurationLoadLock)
+            DataSet dataSource;
+            bool loadedFromCache;
+
+            DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+            loadedFromCache = m_preferCachedConfiguration;
+
+            // Attempt to load (or reload) system configuration
+            if (m_preferCachedConfiguration)
             {
-                DataSet dataSource;
-                bool loadedFromCache;
+                dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
 
-                DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-                loadedFromCache = m_preferCachedConfiguration;
+                if ((object)dataSource == null)
+                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
 
-                // Attempt to load (or reload) system configuration
-                if (m_preferCachedConfiguration)
+                if ((object)dataSource == null)
                 {
-                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
-
-                    if ((object)dataSource == null)
-                        dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
-
-                    if ((object)dataSource == null)
-                    {
-                        loadedFromCache = false;
-                        dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
-                    }
-                }
-                else
-                {
+                    loadedFromCache = false;
                     dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
-
-                    if ((object)dataSource == null)
-                    {
-                        loadedFromCache = true;
-                        dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
-                    }
-
-                    if ((object)dataSource == null)
-                        dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
                 }
-
-                if ((object)dataSource != null)
-                {
-                    // Update data source on all adapters in all collections
-                    m_iaonSession.DataSource = dataSource;
-
-                    // Cache the configuration if it wasn't already loaded from a cache
-                    if (!loadedFromCache)
-                        CacheCurrentConfiguration(dataSource);
-
-                    return true;
-                }
-
-                return false;
             }
+            else
+            {
+                dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
+
+                if ((object)dataSource == null)
+                {
+                    loadedFromCache = true;
+                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
+                }
+
+                if ((object)dataSource == null)
+                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
+            }
+
+            if ((object)dataSource != null)
+            {
+                // Update data source on all adapters in all collections
+                m_iaonSession.DataSource = dataSource;
+
+                // Cache the configuration if it wasn't already loaded from a cache
+                if (!loadedFromCache)
+                    CacheCurrentConfiguration(dataSource);
+
+                return true;
+            }
+
+            return false;
         }
 
         // Load system configuration data set
@@ -1572,7 +1576,7 @@ namespace GSF.TimeSeries
         /// </remarks>
         private void m_iaonSession_ConfigurationChanged(object sender, EventArgs e)
         {
-            LoadSystemConfiguration();
+            m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success => { })));
         }
 
         // Handle task scheduler exceptions
@@ -2236,72 +2240,79 @@ namespace GSF.TimeSeries
                     InitializeSystem(null);
                     SendResponse(requestInfo, true);
                 }
+                else if (requestInfo.Request.Arguments.Exists("SkipReloadConfig"))
+                {
+                    HandleInitializeRequest(requestInfo);
+
+                    // Spawn routing table calculation updates
+                    m_iaonSession.RecalculateRoutingTables();
+                }
                 else
                 {
-                    IAdapterCollection collection;
-
-                    // Reload system configuration
-                    if (requestInfo.Request.Arguments.Exists("SkipReloadConfig") || LoadSystemConfiguration())
+                    m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success =>
                     {
-                        // See if specific ID for an adapter was requested
-                        if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
-                        {
-                            string adapterID = requestInfo.Request.Arguments["OrderedArg1"];
-                            uint id;
-
-                            // Try initializing new adapter by ID searching in any collection if all runtime ID's are unique
-                            if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out id) && m_iaonSession.AllAdapters.TryInitializeAdapterByID(id))
-                            {
-                                IAdapter adapter;
-
-                                if (m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
-                                    SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
-                                else
-                                    SendResponse(requestInfo, true, "Adapter ({1}) was successfully initialized...", id);
-                            }
-                            else
-                            {
-                                IAdapter adapter = GetRequestedAdapter(requestInfo, out collection);
-
-                                // Initialize specified adapter
-                                if (adapter != null && collection != null)
-                                {
-                                    if (collection.TryInitializeAdapterByID(adapter.ID))
-                                        SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
-                                    else
-                                        SendResponse(requestInfo, false, "Adapter \"{0}\" ({1}) failed to initialize.", adapter.Name, adapter.ID);
-                                }
-                                else
-                                {
-                                    SendResponse(requestInfo, false, "Requested adapter was not found.");
-                                }
-                            }
-                        }
+                        if (success)
+                            HandleInitializeRequest(requestInfo);
                         else
-                        {
-                            // Get specified adapter collection
-                            collection = GetRequestedCollection(requestInfo);
+                            SendResponse(requestInfo, false, "Failed to load system configuration.");
+                    })));
+                }
+            }
+        }
 
-                            if (collection != null)
-                            {
-                                DisplayStatusMessage("Initializing all adapters in {0}...", UpdateType.Information, collection.Name);
-                                collection.Initialize();
-                                DisplayStatusMessage("{0} initialization complete.", UpdateType.Information, collection.Name);
-                                SendResponse(requestInfo, true);
-                            }
-                            else
-                            {
-                                SendResponse(requestInfo, false, "Requested collection was unavailable.");
-                            }
-                        }
+        private void HandleInitializeRequest(ClientRequestInfo requestInfo)
+        {
+            IAdapterCollection collection;
+            IAdapter adapter;
+            string adapterID;
+            uint id;
 
-                        // Spawn routing table calculation updates
-                        m_iaonSession.RecalculateRoutingTables();
+            // See if specific ID for an adapter was requested
+            if (requestInfo.Request.Arguments.Exists("OrderedArg1"))
+            {
+                adapterID = requestInfo.Request.Arguments["OrderedArg1"];
+
+                // Try initializing new adapter by ID searching in any collection if all runtime ID's are unique
+                if (m_uniqueAdapterIDs && uint.TryParse(adapterID, out id) && m_iaonSession.AllAdapters.TryInitializeAdapterByID(id))
+                {
+                    if (m_iaonSession.AllAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                        SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
+                    else
+                        SendResponse(requestInfo, true, "Adapter ({1}) was successfully initialized...", id);
+                }
+                else
+                {
+                    adapter = GetRequestedAdapter(requestInfo, out collection);
+
+                    // Initialize specified adapter
+                    if (adapter != null && collection != null)
+                    {
+                        if (collection.TryInitializeAdapterByID(adapter.ID))
+                            SendResponse(requestInfo, true, "Adapter \"{0}\" ({1}) was successfully initialized...", adapter.Name, adapter.ID);
+                        else
+                            SendResponse(requestInfo, false, "Adapter \"{0}\" ({1}) failed to initialize.", adapter.Name, adapter.ID);
                     }
                     else
                     {
-                        SendResponse(requestInfo, false, "Failed to load system configuration.");
+                        SendResponse(requestInfo, false, "Requested adapter was not found.");
                     }
+                }
+            }
+            else
+            {
+                // Get specified adapter collection
+                collection = GetRequestedCollection(requestInfo);
+
+                if (collection != null)
+                {
+                    DisplayStatusMessage("Initializing all adapters in {0}...", UpdateType.Information, collection.Name);
+                    collection.Initialize();
+                    DisplayStatusMessage("{0} initialization complete.", UpdateType.Information, collection.Name);
+                    SendResponse(requestInfo, true);
+                }
+                else
+                {
+                    SendResponse(requestInfo, false, "Requested collection was unavailable.");
                 }
             }
         }
@@ -2830,10 +2841,75 @@ namespace GSF.TimeSeries
             }
             else
             {
-                DataSet dataSource = null;
-                bool systemConfigurationLoaded = false;
+                Arguments arguments = requestInfo.Request.Arguments;
 
-                if (requestInfo.Request.Arguments.Exists(m_configurationType.ToString()))
+                if (arguments.Count == 1)
+                {
+                    if (!arguments.Exists(m_configurationType.ToString()) && !arguments.Exists("BinaryCache") && !arguments.Exists("XmlCache"))
+                    {
+                        SendResponse(requestInfo, false, "Invalid argument supplied to ReloadConfig command.");
+                        return;
+                    }
+                }
+                else if (arguments.Count > 1)
+                {
+                    SendResponse(requestInfo, false, "Invalid arguments supplied to ReloadConfig command.");
+                    return;
+                }
+
+                m_reloadConfigQueue.Add(Tuple.Create(GetReloadConfigType(requestInfo), new Action<bool>(success =>
+                {
+                    if (success)
+                    {
+                        m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
+                        SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
+                    }
+                    else
+                    {
+                        SendResponse(requestInfo, false, "System configuration failed to reload.");
+                    }
+                })));
+            }
+        }
+
+        private string GetReloadConfigType(ClientRequestInfo requestInfo)
+        {
+            Arguments arguments = requestInfo.Request.Arguments;
+
+            if (arguments.Exists(m_configurationType.ToString()))
+                return m_configurationType.ToString();
+
+            if (arguments.Exists("BinaryCache"))
+                return "BinaryCache";
+
+            if (arguments.Exists("XmlCache"))
+                return "XmlCache";
+
+            return "System";
+        }
+
+        private void ExecuteReloadConfig(Tuple<string, Action<bool>>[] items)
+        {
+            List<string> requestTypes;
+            List<string> distinctRequestsTypes;
+
+            DataSet dataSource = null;
+            bool systemConfigurationLoaded = false;
+
+            requestTypes = items
+                .Select(tuple => tuple.Item1)
+                .ToList();
+
+            distinctRequestsTypes = requestTypes
+                .Distinct()
+                .OrderBy(type => requestTypes.LastIndexOf(type))
+                .ToList();
+
+            foreach (string type in distinctRequestsTypes)
+            {
+                string typeInner = type;
+
+                if (type == m_configurationType.ToString())
                 {
                     DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
                     dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
@@ -2842,7 +2918,7 @@ namespace GSF.TimeSeries
                     if ((object)dataSource != null)
                         m_iaonSession.DataSource = dataSource;
                 }
-                else if (requestInfo.Request.Arguments.Exists("BinaryCache"))
+                else if (type == "BinaryCache")
                 {
                     DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
                     dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
@@ -2851,7 +2927,7 @@ namespace GSF.TimeSeries
                     if ((object)dataSource != null)
                         m_iaonSession.DataSource = dataSource;
                 }
-                else if (requestInfo.Request.Arguments.Exists("XmlCache"))
+                else if (type == "XmlCache")
                 {
                     DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
                     dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
@@ -2867,14 +2943,17 @@ namespace GSF.TimeSeries
                     systemConfigurationLoaded = LoadSystemConfiguration();
                 }
 
-                if (systemConfigurationLoaded || (object)dataSource != null)
+                foreach (Action<bool> callback in items.Where(tuple => tuple.Item1 == typeInner).Select(tuple => tuple.Item2))
                 {
-                    m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
-                    SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
-                }
-                else
-                {
-                    SendResponse(requestInfo, false, "System configuration failed to reload.");
+                    try
+                    {
+                        callback(systemConfigurationLoaded || (object)dataSource != null);
+                    }
+                    catch (Exception ex)
+                    {
+                        DisplayStatusMessage("Failed to execute callback for ReloadConfig request of type {0}: {1}", UpdateType.Alarm, type, ex.Message);
+                        m_serviceHelper.ErrorLogger.Log(ex);
+                    }
                 }
 
                 // Spawn routing table calculation updates

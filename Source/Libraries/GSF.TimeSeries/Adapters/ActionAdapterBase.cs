@@ -129,6 +129,9 @@ namespace GSF.TimeSeries.Adapters
             m_stopTimeConstraint = DateTime.MaxValue;
             GenHashCode();
 
+            // Set incoming measurements to none by default
+            m_inputMeasurementKeys = new MeasurementKey[0];
+
             // Create wait handle to use for adapter initialization
             m_initializeWaitHandle = new ManualResetEvent(false);
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;

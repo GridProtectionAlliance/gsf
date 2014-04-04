@@ -140,6 +140,9 @@ namespace GSF.TimeSeries.Adapters
             m_processingInterval = -1;
             GenHashCode();
 
+            // Set incoming measurements to none by default
+            m_inputMeasurementKeys = new MeasurementKey[0];
+
             m_initializationTimeout = DefaultInitializationTimeout;
         }
 

@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  VirtualInputAdapter.cs - Gbtc
+//  VirtualActionAdapter.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,38 +16,26 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/16/2011 - J. Ritchie Carroll
+//  04/03/2014 - Stephen C. Wills
 //       Generated original version of source code.
-//  12/13/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
 
 using System.ComponentModel;
+using System.Linq;
 using GSF;
+using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
 namespace TestingAdapters
 {
     /// <summary>
-    /// Represents a virtual input adapter used for testing purposes - no data gets produced.
+    /// Represents a virtual action adapter used for testing purposes - no data gets produced.
     /// </summary>
-    [Description("Virtual: defines a testing input that does not provide measurements.")]
-    [EditorBrowsable(EditorBrowsableState.Advanced)] // Normally defined as an input device protocol
-    public class VirtualInputAdapter : InputAdapterBase
+    [Description("Virtual: defines a testing action that concentrates, but does not process frames.")]
+    public class VirtualActionAdapter : ActionAdapterBase
     {
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets flag that determines if this <see cref="VirtualInputAdapter"/> uses an asynchronous connection.
-        /// </summary>
-        protected override bool UseAsyncConnect
-        {
-            get
-            {
-                return false;
-            }
-        }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -65,24 +53,20 @@ namespace TestingAdapters
         #region [ Methods ]
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="VirtualInputAdapter"/>.
+        /// Gets a short one-line status of this <see cref="VirtualActionAdapter"/>.
         /// </summary>
         public override string GetShortStatus(int maxLength)
         {
-            return "Virtual input adapter happily exists...".CenterText(maxLength);
+            return "Virtual action adapter happily exists...".CenterText(maxLength);
         }
 
         /// <summary>
-        /// Attempts to connect to this <see cref="VirtualInputAdapter"/>.
+        /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
+        /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
         /// </summary>
-        protected override void AttemptConnection()
-        {
-        }
-
-        /// <summary>
-        /// Attempts to disconnect to this <see cref="VirtualInputAdapter"/>.
-        /// </summary>
-        protected override void AttemptDisconnection()
+        /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
+        /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
+        protected override void PublishFrame(IFrame frame, int index)
         {
         }
 

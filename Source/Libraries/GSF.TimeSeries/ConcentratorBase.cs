@@ -721,7 +721,7 @@ namespace GSF.TimeSeries
 
                     // We calculate the default maximum wait time for frame publication in whole milliseconds per frame plus 20%,
                     // this comes out to be 40 milliseconds at 30 frames per second and 20 milliseconds at 60 frames per second
-                    m_maximumPublicationTimeout = (int)Math.Round((m_ticksPerFrame + m_ticksPerFrame * 0.2D) / Ticks.PerMillisecond);
+                    m_maximumPublicationTimeout = Math.Max((int)Math.Round((m_ticksPerFrame + m_ticksPerFrame * 0.2D) / Ticks.PerMillisecond), 1);
 
                     if (m_frameQueue != null)
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
@@ -2230,7 +2230,7 @@ namespace GSF.TimeSeries
         // Handle attach to frame rate timer
         private void AttachToFrameRateTimer(int framesPerSecond, int processingInterval)
         {
-            Tuple<int, int> key = new Tuple<int, int>(framesPerSecond, processingInterval);
+            Tuple<int, int> key = new Tuple<int, int>(Math.Min(framesPerSecond, 1000), processingInterval);
 
             lock (s_frameRateTimers)
             {
@@ -2242,7 +2242,7 @@ namespace GSF.TimeSeries
                     if (!s_frameRateTimers.TryGetValue(key, out timer))
                     {
                         // Create a new frame rate timer which includes a high-precision timer for frame processing
-                        timer = new FrameRateTimer(framesPerSecond, processingInterval);
+                        timer = new FrameRateTimer(key.Item1, key.Item2);
 
                         // Add timer state for given rate to static collection
                         s_frameRateTimers.Add(key, timer);
@@ -2258,7 +2258,7 @@ namespace GSF.TimeSeries
         // Handle detach from frame rate timer
         private void DetachFromFrameRateTimer(int framesPerSecond, int processingInterval)
         {
-            Tuple<int, int> key = new Tuple<int, int>(framesPerSecond, processingInterval);
+            Tuple<int, int> key = new Tuple<int, int>(Math.Min(framesPerSecond, 1000), processingInterval);
 
             lock (s_frameRateTimers)
             {
