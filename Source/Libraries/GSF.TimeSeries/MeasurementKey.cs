@@ -43,7 +43,8 @@ namespace GSF.TimeSeries
         private Guid m_signalID;
         private uint m_id;
         private string m_source;
-        private int m_hashCode;
+        private readonly int m_hashCode;
+        private readonly ulong m_runtimeID;
 
         #endregion
 
@@ -72,7 +73,8 @@ namespace GSF.TimeSeries
 
                     // Generate a static runtime signal ID associated with this measurement key
                     m_signalID = Guid.NewGuid();
-                    GenHashCode();
+                    m_runtimeID = s_runtimeIDCount++;
+                    m_hashCode = m_runtimeID.GetHashCode();
 
                     // Cache measurement
                     s_idCache[m_signalID] = this;
@@ -86,7 +88,8 @@ namespace GSF.TimeSeries
                     m_id = id;
                     m_source = source.ToUpper();
                     m_signalID = signalID;
-                    GenHashCode();
+                    m_runtimeID = s_runtimeIDCount++;
+                    m_hashCode = m_runtimeID.GetHashCode();
 
                     // Cache measurement based on signal ID
                     s_idCache[m_signalID] = this;
@@ -114,9 +117,7 @@ namespace GSF.TimeSeries
                 {
                     MeasurementKey old;
                     s_idCache.TryRemove(m_signalID, out old);
-
                     m_signalID = value;
-                    GenHashCode();
 
                     // Update measurement caches
                     s_idCache[m_signalID] = this;
@@ -227,7 +228,7 @@ namespace GSF.TimeSeries
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         public int CompareTo(MeasurementKey other)
         {
-            return m_signalID.CompareTo(other.m_signalID);
+            return m_runtimeID.CompareTo(other.m_runtimeID);
         }
 
         /// <summary>
@@ -243,12 +244,6 @@ namespace GSF.TimeSeries
                 return CompareTo((MeasurementKey)obj);
 
             throw new ArgumentException("Object is not a MeasurementKey");
-        }
-
-        private void GenHashCode()
-        {
-            // We cache hash code during construction or after element value change to speed structure usage
-            m_hashCode = m_signalID.GetHashCode();
         }
 
         #endregion
@@ -328,6 +323,7 @@ namespace GSF.TimeSeries
         // Static Fields
         private static readonly ConcurrentDictionary<Guid, MeasurementKey> s_idCache = new ConcurrentDictionary<Guid, MeasurementKey>();
         private static readonly ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_keyCache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
+        private static ulong s_runtimeIDCount;
 
         /// <summary>
         /// Represents an undefined measurement key.
@@ -459,7 +455,6 @@ namespace GSF.TimeSeries
             key.m_signalID = Guid.Empty;
             key.m_source = "__";
             key.m_id = uint.MaxValue;
-            key.m_hashCode = int.MaxValue;
 
             s_keyCache.GetOrAdd("__", kcf => new ConcurrentDictionary<uint, MeasurementKey>())[uint.MaxValue] = key;
 
