@@ -49,11 +49,11 @@ namespace DNP3Adapters
 
         // Nested Types
 
-        // Class used to proxy dnp3 log entries to Iaon session
+        // Class used to proxy dnp3 manager log entries to Iaon session
         private class IaonProxyLogHandler : ILogHandler
         {
             /// <summary>
-            /// Handler for log entires.
+            /// Handler for log entries.
             /// </summary>
             /// <param name="entry"><see cref="LogEntry"/> to handle.</param>
             public void Log(LogEntry entry)
@@ -79,7 +79,13 @@ namespace DNP3Adapters
                         else
                         {
                             // For other messages, we just expose as a normal status
-                            s_statusProxy.OnStatusMessage(FormatLogEntry(entry, true));
+                            string message = FormatLogEntry(entry, true);
+
+                            // The typical pattern in Iaon adapters is to prefix warning messages with "WARNING:"
+                            if ((entry.filter.Flags & LogFilters.WARNING) > 0)
+                                message = "WARNING: " + message;
+
+                            s_statusProxy.OnStatusMessage(message);
                         }
                     }
                 }
@@ -90,7 +96,7 @@ namespace DNP3Adapters
                 StringBuilder entryText = new StringBuilder();
 
                 if (!string.IsNullOrWhiteSpace(entry.loggerName))
-                    entryText.AppendFormat("{0}: ", entry.loggerName);
+                    entryText.AppendFormat("{0} - ", entry.loggerName);
 
                 entryText.Append(entry.message);
                 entryText.AppendFormat(" ({0})", LogFilters.GetFilterString(entry.filter.Flags));
@@ -353,7 +359,7 @@ namespace DNP3Adapters
         // DNP3 manager shared across all of the DNP3 input adapters, concurrency level defaults to number of processors
         private static readonly IDNP3Manager s_manager;
 
-        // We maintain a list of dnp3 adapters that can be used as a status adapter
+        // We maintain a list of dnp3 adapters that can be used as status adapters for proxying messages from manager
         private static readonly List<DNP3InputAdapter> s_adapters;
         private static DNP3InputAdapter s_statusProxy;
 
