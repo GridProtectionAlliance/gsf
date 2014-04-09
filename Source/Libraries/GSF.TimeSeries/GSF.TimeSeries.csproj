@@ -103,6 +103,11 @@
     <Compile Include="Adapters\RoutingTables.cs" />
     <Compile Include="Alarm.cs" />
     <Compile Include="ConcentratorBase.cs" />
+    <Compile Include="Configuration\BinaryFileConfigurationLoader.cs" />
+    <Compile Include="Configuration\DatabaseConfigurationLoader.cs" />
+    <Compile Include="Configuration\IConfigurationLoader.cs" />
+    <Compile Include="Configuration\WebServiceConfigurationLoader.cs" />
+    <Compile Include="Configuration\XMLConfigurationLoader.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
     <Compile Include="IDevice.cs" />

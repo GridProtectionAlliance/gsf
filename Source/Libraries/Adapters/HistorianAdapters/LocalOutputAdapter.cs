@@ -793,7 +793,7 @@ namespace HistorianAdapters
         // Apply historian configuration optimizations at start-up
         // ReSharper disable once UnusedMember.Local
         // ReSharper disable once UnusedParameter.Local
-        private static void OptimizeLocalHistorianSettings(IDbConnection connection, Type adapterType, string nodeIDQueryString, string arguments, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException)
+        private static void OptimizeLocalHistorianSettings(AdoDataConnection database, string nodeIDQueryString, int trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
         {
             // Make sure setting exists to allow user to by-pass local historian optimizations at startup
             ConfigurationFile configFile = ConfigurationFile.Current;
@@ -803,11 +803,11 @@ namespace HistorianAdapters
             // See if this node should optimize local historian settings
             if (settings["OptimizeLocalHistorianSettings"].ValueAsBoolean())
             {
-                statusMessage("LocalOutputAdapter", new EventArgs<string>("Optimizing settings for local historians..."));
+                statusMessage("Optimizing settings for local historians...");
 
                 // Load the defined local system historians
-                IEnumerable<DataRow> historians = connection.RetrieveData(adapterType, string.Format("SELECT AdapterName FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'", nodeIDQueryString)).AsEnumerable();
-                IEnumerable<DataRow> readers = connection.RetrieveData(adapterType, string.Format("SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalInputAdapter'", nodeIDQueryString)).AsEnumerable();
+                IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT AdapterName FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'", nodeIDQueryString)).AsEnumerable();
+                IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalInputAdapter'", nodeIDQueryString)).AsEnumerable();
 
                 List<string> validHistorians = new List<string>();
                 string name, acronym, currentPath, archivePath, fileName, defaultFileName, instanceName;
@@ -915,7 +915,7 @@ namespace HistorianAdapters
 
                         if ((object)archiveFileNames != null && archiveFileNames.Length > 0)
                         {
-                            statusMessage("LocalOutputAdapter", new EventArgs<string>("Relocating existing historical data to \"Archive\" folder..."));
+                            statusMessage("Relocating existing historical data to \"Archive\" folder...");
 
                             foreach (string archiveFileName in archiveFileNames)
                             {
@@ -957,14 +957,14 @@ namespace HistorianAdapters
                                 string query = string.Format("INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " +
                                     "VALUES({0}, @adapterName, 'HistorianAdapters.dll', 'HistorianAdapters.LocalInputAdapter', @connectionString, 0, 1)", nodeIDQueryString);
 
-                                if (adapterType.Name == "OracleDataAdapter")
+                                if (database.IsOracle)
                                     query = query.Replace('@', ':');
 
-                                connection.ExecuteNonQuery(query, adapterName, connectionString);
+                                database.Connection.ExecuteNonQuery(query, adapterName, connectionString);
                             }
                             catch (Exception ex)
                             {
-                                processException("LocalOutputAdapter", new EventArgs<Exception>(new InvalidOperationException("Failed to add associated historian reader input adapter for local historian: " + ex.Message, ex)));
+                                processException(new InvalidOperationException("Failed to add associated historian reader input adapter for local historian: " + ex.Message, ex));
                             }
                         }
                     }
@@ -1014,7 +1014,7 @@ namespace HistorianAdapters
 
                 if (categoriesToRemove.Count > 0)
                 {
-                    statusMessage("LocalOutputAdapter", new EventArgs<string>("Removing unused local historian configuration settings..."));
+                    statusMessage("Removing unused local historian configuration settings...");
 
                     // Remove any unused settings categories
                     foreach (string category in categoriesToRemove)
@@ -1027,22 +1027,6 @@ namespace HistorianAdapters
                 configFile.Save();
             }
         }
-
-        ///// <summary>
-        ///// Creates a parameterized query string for the underlying database type 
-        ///// based on the given format string and the parameter names.
-        ///// </summary>
-        ///// <param name="adapterType">The adapter type used to determine the underlying database type.</param>
-        ///// <param name="format">A composite format string.</param>
-        ///// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
-        ///// <returns>A parameterized query string based on the given format and parameter names.</returns>
-        //private static string ParameterizedQueryString(Type adapterType, string format, params string[] parameterNames)
-        //{
-        //    bool oracle = adapterType.Name == "OracleDataAdapter";
-        //    char paramChar = oracle ? ':' : '@';
-        //    object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
-        //    return string.Format(format, parameters);
-        //}
 
         //// Create an http namespace reservation
         //private static void AddNamespaceReservation(Uri serviceUri)

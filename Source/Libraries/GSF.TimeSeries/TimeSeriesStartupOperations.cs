@@ -39,37 +39,31 @@ namespace GSF.TimeSeries
     public static class TimeSeriesStartupOperations
     {
         // Messaging to the service
-        private static Action<object, EventArgs<string>> s_statusMessage;
-        private static Action<object, EventArgs<Exception>> s_processException;
-
-        // Adapter type of connection
-        private static Type s_adapterType;
+        private static Action<string> s_statusMessage;
+        private static Action<Exception> s_processException;
 
         /// <summary>
         /// Delegates control to the data operations that are to be performed at startup.
         /// </summary>
-        private static void PerformTimeSeriesStartupOperations(IDbConnection connection, Type adapterType, string nodeIDQueryString, string arguments, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException)
+        private static void PerformTimeSeriesStartupOperations(AdoDataConnection database, string nodeIDQueryString, int trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
         {
             // Set up messaging to the service
             s_statusMessage = statusMessage;
             s_processException = processException;
 
-            // Store adapter type for calls to database
-            s_adapterType = adapterType;
-
             // Run data operations
-            ValidateDefaultNode(connection, nodeIDQueryString);
-            ValidateActiveMeasurements(connection, nodeIDQueryString);
-            ValidateAccountsAndGroups(connection, nodeIDQueryString);
-            ValidateDataPublishers(connection, nodeIDQueryString);
-            ValidateStatistics(connection, nodeIDQueryString);
-            ValidateAlarming(connection, nodeIDQueryString);
+            ValidateDefaultNode(database, nodeIDQueryString);
+            ValidateActiveMeasurements(database, nodeIDQueryString);
+            ValidateAccountsAndGroups(database, nodeIDQueryString);
+            ValidateDataPublishers(database, nodeIDQueryString);
+            ValidateStatistics(database, nodeIDQueryString);
+            ValidateAlarming(database, nodeIDQueryString);
         }
 
         /// <summary>
         /// Data operation to validate and ensure there is a node in the database.
         /// </summary>
-        private static void ValidateDefaultNode(IDbConnection connection, string nodeIDQueryString)
+        private static void ValidateDefaultNode(AdoDataConnection database, string nodeIDQueryString)
         {
             // Queries
             const string NodeCountFormat = "SELECT COUNT(*) FROM Node";
@@ -81,12 +75,12 @@ namespace GSF.TimeSeries
             const string NodeUpdateFormat = "UPDATE Node SET ID = {0}";
 
             // Determine whether the node exists in the database and create it if it doesn't.
-            int nodeCount = Convert.ToInt32(connection.ExecuteScalar(NodeCountFormat));
+            int nodeCount = Convert.ToInt32(database.Connection.ExecuteScalar(NodeCountFormat));
 
             if (nodeCount == 0)
             {
-                connection.ExecuteNonQuery(NodeInsertFormat);
-                connection.ExecuteNonQuery(string.Format(NodeUpdateFormat, nodeIDQueryString));
+                database.Connection.ExecuteNonQuery(NodeInsertFormat);
+                database.Connection.ExecuteNonQuery(string.Format(NodeUpdateFormat, nodeIDQueryString));
             }
         }
 
@@ -94,22 +88,22 @@ namespace GSF.TimeSeries
         /// Data operation to validate and ensure there is a record
         /// in the ConfigurationEntity table for ActiveMeasurements.
         /// </summary>
-        private static void ValidateActiveMeasurements(IDbConnection connection, string nodeIDQueryString)
+        private static void ValidateActiveMeasurements(AdoDataConnection database, string nodeIDQueryString)
         {
             const string MeasurementConfigEntityCountFormat = "SELECT COUNT(*) FROM ConfigurationEntity WHERE RuntimeName = 'ActiveMeasurements'";
             const string MeasurementConfigEntityInsertFormat = "INSERT INTO ConfigurationEntity(SourceName, RuntimeName, Description, LoadOrder, Enabled) VALUES('ActiveMeasurement', 'ActiveMeasurements', 'Defines active system measurements for a TSF node', 4, 1)";
 
-            int measurementConfigEntityCount = Convert.ToInt32(connection.ExecuteScalar(MeasurementConfigEntityCountFormat));
+            int measurementConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(MeasurementConfigEntityCountFormat));
 
             if (measurementConfigEntityCount == 0)
-                connection.ExecuteNonQuery(MeasurementConfigEntityInsertFormat);
+                database.Connection.ExecuteNonQuery(MeasurementConfigEntityInsertFormat);
         }
 
         /// <summary>
         /// Data operation to validate accounts and groups to ensure
         /// that account names and group names are converted to SIDs.
         /// </summary>
-        private static void ValidateAccountsAndGroups(IDbConnection connection, string nodeIDQueryString)
+        private static void ValidateAccountsAndGroups(AdoDataConnection database, string nodeIDQueryString)
         {
             const string SelectUserAccountQuery = "SELECT ID, Name, UseADAuthentication FROM UserAccount";
             const string SelectSecurityGroupQuery = "SELECT ID, Name FROM SecurityGroup";
@@ -124,7 +118,7 @@ namespace GSF.TimeSeries
             updateMap = new Dictionary<string, string>();
 
             // Find user accounts that need to be updated
-            using (IDataReader userAccountReader = connection.ExecuteReader(SelectUserAccountQuery))
+            using (IDataReader userAccountReader = database.Connection.ExecuteReader(SelectUserAccountQuery))
             {
                 while (userAccountReader.Read())
                 {
@@ -143,12 +137,12 @@ namespace GSF.TimeSeries
 
             // Update user accounts
             foreach (KeyValuePair<string, string> pair in updateMap)
-                connection.ExecuteNonQuery(string.Format(UpdateUserAccountFormat, pair.Value, pair.Key));
+                database.Connection.ExecuteNonQuery(string.Format(UpdateUserAccountFormat, pair.Value, pair.Key));
 
             updateMap.Clear();
 
             // Find security groups that need to be updated
-            using (IDataReader securityGroupReader = connection.ExecuteReader(SelectSecurityGroupQuery))
+            using (IDataReader securityGroupReader = database.Connection.ExecuteReader(SelectSecurityGroupQuery))
             {
                 while (securityGroupReader.Read())
                 {
@@ -167,38 +161,38 @@ namespace GSF.TimeSeries
 
             // Update security groups
             foreach (KeyValuePair<string, string> pair in updateMap)
-                connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
+                database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
         }
 
         /// <summary>
         /// Data operation to validate and ensure there is a record in the
         /// CustomActionAdapter table for the external and TLS data publishers.
         /// </summary>
-        private static void ValidateDataPublishers(IDbConnection connection, string nodeIDQueryString)
+        private static void ValidateDataPublishers(AdoDataConnection database, string nodeIDQueryString)
         {
             const string DataPublisherCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName='{0}!DATAPUBLISHER' AND NodeID = {1}";
             const string DataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, '{1}!DATAPUBLISHER', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataPublisher', 'securityMode={2}; allowSynchronizedSubscription=false; useBaseTimeOffsets=true; {3}', 1)";
             //const string DataPublisherUpdateformat = "UPDATE CustomActionAdapter SET ConnectionString = '{0}' WHERE AdapterName = '{1}!DATAPUBLISHER'";
 
-            int internalDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "INTERNAL", nodeIDQueryString)));
-            int externalDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "EXTERNAL", nodeIDQueryString)));
-            int tlsDataPublisherCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "TLS", nodeIDQueryString)));
+            int internalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "INTERNAL", nodeIDQueryString)));
+            int externalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "EXTERNAL", nodeIDQueryString)));
+            int tlsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "TLS", nodeIDQueryString)));
 
             if (internalDataPublisherCount == 0)
-                connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}"));
+                database.Connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}"));
 
             if (externalDataPublisherCount == 0)
-                connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway", ""));
+                database.Connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway", ""));
 
             if (tlsDataPublisherCount == 0)
-                connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS", ""));
+                database.Connection.ExecuteNonQuery(string.Format(DataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS", ""));
         }
 
         /// <summary>
         /// Data operation to validate and ensure that certain records that
         /// are required for statistics calculations exist in the database.
         /// </summary>
-        private static void ValidateStatistics(IDbConnection connection, string nodeIDQueryString)
+        private static void ValidateStatistics(AdoDataConnection database, string nodeIDQueryString)
         {
             // SELECT queries
             const string StatConfigEntityCountFormat = "SELECT COUNT(*) FROM ConfigurationEntity WHERE RuntimeName = 'Statistics'";
@@ -312,19 +306,19 @@ namespace GSF.TimeSeries
             string[] PublisherStatFormats = { "{0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0}", "{0:N0} ms", "{0:N0} ms", "{0:N0} ms" };
 
             // Parameterized query string for inserting statistic measurements
-            string statMeasurementInsertQuery = ParameterizedQueryString(connection.GetType(), StatMeasurementInsertFormat, "historianID", "pointTag", "signalTypeID", "signalReference", "description");
-            string deviceStatMeasurementInsertQuery = ParameterizedQueryString(connection.GetType(), DeviceStatMeausrementInsertFormat, "historianID", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
+            string statMeasurementInsertQuery = database.ParameterizedQueryString(StatMeasurementInsertFormat, "historianID", "pointTag", "signalTypeID", "signalReference", "description");
+            string deviceStatMeasurementInsertQuery = database.ParameterizedQueryString(DeviceStatMeausrementInsertFormat, "historianID", "deviceID", "pointTag", "signalTypeID", "signalReference", "description");
 
             // Query for count values to ensure existence of these records
-            int statConfigEntityCount = Convert.ToInt32(connection.ExecuteScalar(StatConfigEntityCountFormat));
-            int statSignalTypeCount = Convert.ToInt32(connection.ExecuteScalar(StatSignalTypeCountFormat));
+            int statConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatConfigEntityCountFormat));
+            int statSignalTypeCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatSignalTypeCountFormat));
 
-            int statHistorianCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatHistorianCountFormat, nodeIDQueryString)));
-            int statEngineCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatEngineCountFormat, nodeIDQueryString)));
-            int systemStatCount = Convert.ToInt32(connection.ExecuteScalar(SystemStatCountFormat));
-            int deviceStatCount = Convert.ToInt32(connection.ExecuteScalar(DeviceStatCountFormat));
-            int subscriberStatCount = Convert.ToInt32(connection.ExecuteScalar(SubscriberStatCountFormat));
-            int publisherStatCount = Convert.ToInt32(connection.ExecuteScalar(PublisherStatCountFormat));
+            int statHistorianCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatHistorianCountFormat, nodeIDQueryString)));
+            int statEngineCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatEngineCountFormat, nodeIDQueryString)));
+            int systemStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(SystemStatCountFormat));
+            int deviceStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(DeviceStatCountFormat));
+            int subscriberStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(SubscriberStatCountFormat));
+            int publisherStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(PublisherStatCountFormat));
 
             // Statistic info for inserting statistics
             int signalIndex;
@@ -354,24 +348,24 @@ namespace GSF.TimeSeries
 
             // Ensure that STAT signal type exists
             if (statSignalTypeCount == 0)
-                connection.ExecuteNonQuery(StatSignalTypeInsertFormat);
+                database.Connection.ExecuteNonQuery(StatSignalTypeInsertFormat);
 
             // Ensure that statistics configuration entity record exists
             if (statConfigEntityCount == 0)
-                connection.ExecuteNonQuery(StatConfigEntityInsertFormat);
+                database.Connection.ExecuteNonQuery(StatConfigEntityInsertFormat);
 
             // Ensure that statistics historian exists
             if (statHistorianCount == 0)
-                connection.ExecuteNonQuery(string.Format(StatHistorianInsertFormat, nodeIDQueryString));
+                database.Connection.ExecuteNonQuery(string.Format(StatHistorianInsertFormat, nodeIDQueryString));
 
             // Ensure that statistics engine exists
             if (statEngineCount == 0)
-                connection.ExecuteNonQuery(string.Format(StatEngineInsertFormat, nodeIDQueryString));
+                database.Connection.ExecuteNonQuery(string.Format(StatEngineInsertFormat, nodeIDQueryString));
 
             // Ensure that system statistics exist
             if (systemStatCount != SystemStatNames.Length)
             {
-                connection.ExecuteNonQuery(string.Format(SystemStatisticDeleteFormat, SystemStatNames.Length));
+                database.Connection.ExecuteNonQuery(string.Format(SystemStatisticDeleteFormat, SystemStatNames.Length));
 
                 for (int i = 0; i < SystemStatNames.Length; i++)
                 {
@@ -379,14 +373,14 @@ namespace GSF.TimeSeries
                     statName = SystemStatNames[i];
                     statDescription = SystemStatDescriptions[i];
                     statMethodSuffix = statName.Replace(" ", "");
-                    connection.ExecuteNonQuery(string.Format(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
+                    database.Connection.ExecuteNonQuery(string.Format(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
                 }
             }
 
             // Ensure that system statistics exist
             if (deviceStatCount != DeviceStatNames.Length)
             {
-                connection.ExecuteNonQuery(string.Format(DeviceStatisticDeleteFormat, DeviceStatNames.Length));
+                database.Connection.ExecuteNonQuery(string.Format(DeviceStatisticDeleteFormat, DeviceStatNames.Length));
 
                 for (int i = 0; i < DeviceStatNames.Length; i++)
                 {
@@ -394,14 +388,14 @@ namespace GSF.TimeSeries
                     statName = DeviceStatNames[i];
                     statDescription = DeviceStatDescriptions[i];
                     statMethodSuffix = statName.Replace(" ", "");
-                    connection.ExecuteNonQuery(string.Format(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
+                    database.Connection.ExecuteNonQuery(string.Format(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
                 }
             }
 
             // Ensure that subscriber statistics exist
             if (subscriberStatCount == SubscriberStatNames.Length)
             {
-                connection.ExecuteNonQuery(string.Format(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length));
+                database.Connection.ExecuteNonQuery(string.Format(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length));
 
                 for (int i = 0; i < SubscriberStatNames.Length; i++)
                 {
@@ -411,14 +405,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = SubscriberStatMethodSuffix[i];
                     statType = SubscriberStatTypes[i];
                     statFormat = SubscriberStatFormats[i];
-                    connection.ExecuteNonQuery(string.Format(SubscriberStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
+                    database.Connection.ExecuteNonQuery(string.Format(SubscriberStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
                 }
             }
 
             // Ensure that subscriber statistics exist
             if (publisherStatCount == PublisherStatNames.Length)
             {
-                connection.ExecuteNonQuery(string.Format(PublisherStatisticDeleteFormat, PublisherStatNames.Length));
+                database.Connection.ExecuteNonQuery(string.Format(PublisherStatisticDeleteFormat, PublisherStatNames.Length));
 
                 for (int i = 0; i < PublisherStatNames.Length; i++)
                 {
@@ -428,14 +422,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = PublisherStatMethodSuffix[i];
                     statType = PublisherStatTypes[i];
                     statFormat = PublisherStatFormats[i];
-                    connection.ExecuteNonQuery(string.Format(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
+                    database.Connection.ExecuteNonQuery(string.Format(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
                 }
             }
 
             // Ensure that system statistic measurements exist
-            statHistorianID = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatHistorianIDFormat, nodeIDQueryString)));
-            statSignalTypeID = Convert.ToInt32(connection.ExecuteScalar(StatSignalTypeIDFormat));
-            nodeName = GetNodeName(connection, nodeIDQueryString);
+            statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatHistorianIDFormat, nodeIDQueryString)));
+            statSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar(StatSignalTypeIDFormat));
+            nodeName = GetNodeName(database, nodeIDQueryString);
 
             // Modify node name so that it can be applied in a measurement point tag
             nodeName = nodeName.RemoveCharacters(c => !char.IsLetterOrDigit(c));
@@ -445,32 +439,32 @@ namespace GSF.TimeSeries
             {
                 signalIndex = i + 1;
                 signalReference = string.Format("{0}!SYSTEM-ST{1}", nodeName, signalIndex);
-                statMeasurementCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
+                statMeasurementCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
 
                 if (statMeasurementCount == 0)
                 {
                     pointTag = string.Format("{0}!SYSTEM:ST{1}", nodeName, signalIndex);
                     measurementDescription = string.Format("System Statistic for {0}", SystemStatDescriptions[i]);
-                    connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                    database.Connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
                 }
             }
 
             // Ensure that subscriber statistic measurements exist
-            foreach (DataRow subscriber in connection.RetrieveData(s_adapterType, string.Format(SubscriberRowsFormat, nodeIDQueryString)).Rows)
+            foreach (DataRow subscriber in database.Connection.RetrieveData(database.AdapterType, string.Format(SubscriberRowsFormat, nodeIDQueryString)).Rows)
             {
                 adapterID = subscriber.ConvertField<int>("ID");
-                adapterSourceID = Convert.ToInt32(connection.ExecuteScalar(string.Format(RuntimeSourceIDFormat, adapterID)));
-                runtimeDeviceCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(RuntimeDeviceCountFormat, adapterID)));
+                adapterSourceID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(RuntimeSourceIDFormat, adapterID)));
+                runtimeDeviceCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(RuntimeDeviceCountFormat, adapterID)));
                 adapterName = subscriber.Field<string>("AdapterName");
 
-                if (!TryGetCompanyAcronymFromDevice(connection, adapterSourceID, out companyAcronym))
-                    companyAcronym = GetCompanyAcronym(connection, nodeIDQueryString);
+                if (!TryGetCompanyAcronymFromDevice(database, adapterSourceID, out companyAcronym))
+                    companyAcronym = GetCompanyAcronym(database, nodeIDQueryString);
 
                 for (int i = 0; i < SubscriberStatNames.Length; i++)
                 {
                     signalIndex = i + 1;
                     signalReference = string.Format("{0}!SUB-ST{1}", adapterName, signalIndex);
-                    statMeasurementCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
+                    statMeasurementCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
 
                     if (statMeasurementCount == 0)
                     {
@@ -480,12 +474,12 @@ namespace GSF.TimeSeries
                         if (runtimeDeviceCount > 0)
                         {
                             // Subscriber is defined in the Device table; include the device ID in the insert query
-                            connection.ExecuteNonQuery(deviceStatMeasurementInsertQuery, (object)statHistorianID, adapterSourceID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                            database.Connection.ExecuteNonQuery(deviceStatMeasurementInsertQuery, (object)statHistorianID, adapterSourceID, pointTag, statSignalTypeID, signalReference, measurementDescription);
                         }
                         else
                         {
                             // Subscriber is not defined in the Device table; do not include a device ID
-                            connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                            database.Connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
                         }
                     }
                 }
@@ -493,7 +487,7 @@ namespace GSF.TimeSeries
                 if (runtimeDeviceCount > 0)
                 {
                     // Ensure that device statistic measurements exist
-                    foreach (DataRow device in connection.RetrieveData(s_adapterType, string.Format(DeviceRowsFormat, adapterSourceID)).Rows)
+                    foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format(DeviceRowsFormat, adapterSourceID)).Rows)
                     {
                         adapterID = device.ConvertField<int>("ID");
                         adapterName = "LOCAL$" + device.Field<string>("Acronym");
@@ -502,13 +496,13 @@ namespace GSF.TimeSeries
                         {
                             signalIndex = i + 1;
                             signalReference = string.Format("{0}!PMU-ST{1}", adapterName, signalIndex);
-                            statMeasurementCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
+                            statMeasurementCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
 
                             if (statMeasurementCount == 0)
                             {
                                 pointTag = string.Format("{0}_{1}!PMU:ST{2}", companyAcronym, adapterName, signalIndex);
                                 measurementDescription = string.Format("Device Statistic local to node '{0}' for {1}", nodeName, DeviceStatDescriptions[i]);
-                                connection.ExecuteNonQuery(deviceStatMeasurementInsertQuery, (object)statHistorianID, adapterID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                                database.Connection.ExecuteNonQuery(deviceStatMeasurementInsertQuery, (object)statHistorianID, adapterID, pointTag, statSignalTypeID, signalReference, measurementDescription);
                             }
                         }
                     }
@@ -516,9 +510,9 @@ namespace GSF.TimeSeries
             }
 
             // Ensure that publisher statistic measurements exist
-            companyAcronym = GetCompanyAcronym(connection, nodeIDQueryString);
+            companyAcronym = GetCompanyAcronym(database, nodeIDQueryString);
 
-            foreach (DataRow publisher in connection.RetrieveData(s_adapterType, string.Format(PublisherRowsFormat, nodeIDQueryString)).Rows)
+            foreach (DataRow publisher in database.Connection.RetrieveData(database.AdapterType, string.Format(PublisherRowsFormat, nodeIDQueryString)).Rows)
             {
                 adapterName = publisher.Field<string>("AdapterName");
 
@@ -526,13 +520,13 @@ namespace GSF.TimeSeries
                 {
                     signalIndex = i + 1;
                     signalReference = string.Format("{0}!PUB-ST{1}", adapterName, signalIndex);
-                    statMeasurementCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
+                    statMeasurementCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatMeasurementCountFormat, signalReference, statHistorianID)));
 
                     if (statMeasurementCount == 0)
                     {
                         pointTag = string.Format("{0}_{1}!PUB:ST{2}", companyAcronym, adapterName, signalIndex);
                         measurementDescription = string.Format("Publisher Statistic for {0}", PublisherStatDescriptions[i]);
-                        connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
+                        database.Connection.ExecuteNonQuery(statMeasurementInsertQuery, (object)statHistorianID, pointTag, statSignalTypeID, signalReference, measurementDescription);
                     }
                 }
             }
@@ -542,7 +536,7 @@ namespace GSF.TimeSeries
         /// Data operation to validate and ensure that certain records
         /// that are required for alarming exist in the database.
         /// </summary>
-        private static void ValidateAlarming(IDbConnection connection, string nodeIDQueryString)
+        private static void ValidateAlarming(AdoDataConnection database, string nodeIDQueryString)
         {
             // SELECT queries
             const string AlarmCountFormat = "SELECT COUNT(*) FROM Alarm";
@@ -564,7 +558,7 @@ namespace GSF.TimeSeries
             {
                 // Determine whether the alarm table exists
                 // before inserting records related to alarming
-                connection.ExecuteScalar(AlarmCountFormat);
+                database.Connection.ExecuteScalar(AlarmCountFormat);
                 alarmTableExists = true;
             }
             catch
@@ -575,43 +569,43 @@ namespace GSF.TimeSeries
             if (alarmTableExists)
             {
                 // Ensure that the alarm adapter is defined.
-                alarmAdapterCount = Convert.ToInt32(connection.ExecuteScalar(string.Format(AlarmAdapterCountFormat, nodeIDQueryString)));
+                alarmAdapterCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(AlarmAdapterCountFormat, nodeIDQueryString)));
 
                 if (alarmAdapterCount == 0)
-                    connection.ExecuteNonQuery(string.Format(AlarmAdapterInsertFormat, nodeIDQueryString));
+                    database.Connection.ExecuteNonQuery(string.Format(AlarmAdapterInsertFormat, nodeIDQueryString));
 
                 // Ensure that the alarm record is defined in the ConfigurationEntity table.
-                alarmConfigEntityCount = Convert.ToInt32(connection.ExecuteScalar(AlarmConfigEntityCountFormat));
+                alarmConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(AlarmConfigEntityCountFormat));
 
                 if (alarmConfigEntityCount == 0)
-                    connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
+                    database.Connection.ExecuteNonQuery(AlarmConfigEntityInsertFormat);
 
                 // Ensure that the alarm record is defined in the SignalType table.
-                alarmSignalTypeCount = Convert.ToInt32(connection.ExecuteScalar(AlarmSignalTypeCountFormat));
+                alarmSignalTypeCount = Convert.ToInt32(database.Connection.ExecuteScalar(AlarmSignalTypeCountFormat));
 
                 if (alarmSignalTypeCount == 0)
-                    connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
+                    database.Connection.ExecuteNonQuery(AlarmSignalTypeInsertFormat);
             }
         }
 
         // Gets the name of the node identified by the given node ID query string.
-        private static string GetNodeName(IDbConnection connection, string nodeIDQueryString)
+        private static string GetNodeName(AdoDataConnection database, string nodeIDQueryString)
         {
             const string NodeNameFormat = "SELECT Name FROM Node WHERE ID = {0}";
-            return connection.ExecuteScalar(string.Format(NodeNameFormat, nodeIDQueryString)).ToString();
+            return database.Connection.ExecuteScalar(string.Format(NodeNameFormat, nodeIDQueryString)).ToString();
         }
 
         // Attempts to get company acronym from device table in database
-        private static bool TryGetCompanyAcronymFromDevice(IDbConnection connection, int deviceID, out string companyAcronym)
+        private static bool TryGetCompanyAcronymFromDevice(AdoDataConnection database, int deviceID, out string companyAcronym)
         {
-            string CompanyIDFormat = "SELECT CompanyID FROM Device WHERE ID = {0}";
-            string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
+            const string CompanyIDFormat = "SELECT CompanyID FROM Device WHERE ID = {0}";
+            const string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
             int companyID;
 
             try
             {
-                companyID = Convert.ToInt32(connection.ExecuteScalar(string.Format(CompanyIDFormat, deviceID)));
-                companyAcronym = connection.ExecuteScalar(string.Format(CompanyAcronymFormat, companyID)).ToNonNullString();
+                companyID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(CompanyIDFormat, deviceID)));
+                companyAcronym = database.Connection.ExecuteScalar(string.Format(CompanyAcronymFormat, companyID)).ToNonNullString();
                 return true;
             }
             catch
@@ -623,7 +617,7 @@ namespace GSF.TimeSeries
 
         // Attempts to get company acronym from database and, failing
         // that, attempts to get it from the configuration file.
-        private static string GetCompanyAcronym(IDbConnection connection, string nodeIDQueryString)
+        private static string GetCompanyAcronym(AdoDataConnection database, string nodeIDQueryString)
         {
             const string NodeCompanyIDFormat = "SELECT CompanyID FROM Node WHERE ID = {0}";
             const string CompanyAcronymFormat = "SELECT MapAcronym FROM Company WHERE ID = {0}";
@@ -631,30 +625,14 @@ namespace GSF.TimeSeries
             int nodeCompanyID;
             string companyAcronym;
 
-            nodeCompanyID = int.Parse(connection.ExecuteScalar(string.Format(NodeCompanyIDFormat, nodeIDQueryString)).ToNonNullString("0"));
+            nodeCompanyID = int.Parse(database.Connection.ExecuteScalar(string.Format(NodeCompanyIDFormat, nodeIDQueryString)).ToNonNullString("0"));
 
             if (nodeCompanyID > 0)
-                companyAcronym = connection.ExecuteScalar(string.Format(CompanyAcronymFormat, nodeCompanyID)).ToNonNullString();
+                companyAcronym = database.Connection.ExecuteScalar(string.Format(CompanyAcronymFormat, nodeCompanyID)).ToNonNullString();
             else
                 companyAcronym = ConfigurationFile.Current.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
 
             return companyAcronym;
-        }
-
-        /// <summary>
-        /// Creates a parameterized query string for the underlying database type 
-        /// based on the given format string and the parameter names.
-        /// </summary>
-        /// <param name="connectionType">The adapter type used to determine the underlying database type.</param>
-        /// <param name="format">A composite format string.</param>
-        /// <param name="parameterNames">A string array that contains zero or more parameter names to format.</param>
-        /// <returns>A parameterized query string based on the given format and parameter names.</returns>
-        private static string ParameterizedQueryString(Type connectionType, string format, params string[] parameterNames)
-        {
-            bool oracle = connectionType.Name == "OracleConnection";
-            char paramChar = oracle ? ':' : '@';
-            object[] parameters = parameterNames.Select(name => paramChar + name).ToArray();
-            return string.Format(format, parameters);
         }
     }
 }

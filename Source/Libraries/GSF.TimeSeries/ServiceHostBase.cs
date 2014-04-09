@@ -36,7 +36,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Runtime;
 using System.Security.Cryptography.X509Certificates;
@@ -54,10 +53,10 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
-using GSF.Security;
 using GSF.ServiceProcess;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Configuration;
 using GSF.Units;
 using Microsoft.Win32;
 using Timer = System.Timers.Timer;
@@ -92,17 +91,6 @@ namespace GSF.TimeSeries
     #endregion
 
     /// <summary>
-    /// Defines a method signature for a bootstrap data source operation.
-    /// </summary>
-    /// <param name="connection">Connection to database.</param>
-    /// <param name="adapterType">Adapter type for database connection.</param>
-    /// <param name="nodeIDQueryString">Formatted node ID Guid query string.</param>
-    /// <param name="arguments">Optional data operation arguments.</param>
-    /// <param name="statusMessage">Reference to host status message function.</param>
-    /// <param name="processException">Reference to host process exception function.</param>
-    public delegate void DataOperationFunction(IDbConnection connection, Type adapterType, string nodeIDQueryString, string arguments, Action<object, EventArgs<string>> statusMessage, Action<object, EventArgs<Exception>> processException);
-
-    /// <summary>
     /// Represents the time-series framework service host.
     /// </summary>
     public partial class ServiceHostBase : ServiceBase
@@ -119,8 +107,9 @@ namespace GSF.TimeSeries
         private IaonSession m_iaonSession;
         private string m_nodeIDQueryString;
         private ConfigurationType m_configurationType;
-        private string m_connectionString;
-        private string m_dataProviderString;
+        private IConfigurationLoader m_configurationLoader;
+        private BinaryFileConfigurationLoader m_binaryCacheConfigurationLoader;
+        private XMLConfigurationLoader m_xmlCacheConfigurationLoader;
         private string m_cachedXmlConfigurationFile;
         private string m_cachedBinaryConfigurationFile;
         private int m_configurationBackups;
@@ -372,8 +361,6 @@ namespace GSF.TimeSeries
 
             // Initialize system settings
             m_configurationType = systemSettings["ConfigurationType"].ValueAs<ConfigurationType>();
-            m_connectionString = systemSettings["ConnectionString"].Value;
-            m_dataProviderString = systemSettings["DataProviderString"].Value;
             m_cachedXmlConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
             m_cachedBinaryConfigurationFile = FilePath.AddPathSuffix(cachePath) + FilePath.GetFileNameWithoutExtension(m_cachedXmlConfigurationFile) + ".bin";
             m_configurationBackups = systemSettings["ConfigurationBackups"].ValueAs(DefaultConfigurationBackups);
@@ -382,8 +369,6 @@ namespace GSF.TimeSeries
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
             m_reloadConfigQueue = ProcessQueue<Tuple<string, Action<bool>>>.CreateSynchronousQueue(ExecuteReloadConfig, 500.0D, Timeout.Infinite, false, false);
             m_configurationCacheOperation = new LongSynchronizedOperation(ExecuteConfigurationCache) { IsBackground = true };
-
-            m_reloadConfigQueue.Start();
 
             // Setup default thread pool size
             try
@@ -409,27 +394,59 @@ namespace GSF.TimeSeries
             }
 
             // Define guid with query string delimiters according to database needs
-            Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
-            string setting;
-
-            if (settings.TryGetValue("Provider", out setting))
-            {
-                // Check if provider is for Access since it uses braces as Guid delimiters
-                if (setting.StartsWith("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase))
-                {
-                    m_nodeIDQueryString = "{" + m_iaonSession.NodeID + "}";
-
-                    // Make sure path to Access database is fully qualified
-                    if (settings.TryGetValue("Data Source", out setting))
-                    {
-                        settings["Data Source"] = FilePath.GetAbsolutePath(setting);
-                        m_connectionString = settings.JoinKeyValuePairs();
-                    }
-                }
-            }
-
             if (string.IsNullOrWhiteSpace(m_nodeIDQueryString))
                 m_nodeIDQueryString = "'" + m_iaonSession.NodeID + "'";
+
+            // Set up the configuration loader
+            switch (m_configurationType)
+            {
+                case ConfigurationType.Database:
+                    m_configurationLoader = new DatabaseConfigurationLoader()
+                    {
+                        ConnectionString = systemSettings["ConnectionString"].Value,
+                        DataProviderString = systemSettings["DataProviderString"].Value,
+                        NodeIDQueryString = m_nodeIDQueryString
+                    };
+
+                    break;
+
+                case ConfigurationType.WebService:
+                    m_configurationLoader = new WebServiceConfigurationLoader()
+                    {
+                        URI = systemSettings["ConnectionString"].Value
+                    };
+
+                    break;
+
+                case ConfigurationType.BinaryFile:
+                    m_configurationLoader = new BinaryFileConfigurationLoader()
+                    {
+                        FilePath = systemSettings["ConnectionString"].Value
+                    };
+
+                    break;
+
+                case ConfigurationType.XmlFile:
+                    m_configurationLoader = new XMLConfigurationLoader()
+                    {
+                        FilePath = systemSettings["ConnectionString"].Value
+                    };
+
+                    break;
+            }
+
+            m_binaryCacheConfigurationLoader = new BinaryFileConfigurationLoader() { FilePath = m_cachedBinaryConfigurationFile };
+            m_xmlCacheConfigurationLoader = new XMLConfigurationLoader() { FilePath = m_cachedXmlConfigurationFile };
+
+            m_configurationLoader.StatusMessage += (o, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
+            m_binaryCacheConfigurationLoader.StatusMessage += (o, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
+            m_xmlCacheConfigurationLoader.StatusMessage += (o, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
+
+            m_configurationLoader.ProcessException += ConfigurationLoader_ProcessException;
+            m_binaryCacheConfigurationLoader.ProcessException += ConfigurationLoader_ProcessException;
+            m_xmlCacheConfigurationLoader.ProcessException += ConfigurationLoader_ProcessException;
+
+            m_reloadConfigQueue.Start();
 
 #if !MONO
             try
@@ -541,17 +558,8 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReportingConfig", "Displays or modifies the configuration of the reporting process", ReportingConfigRequestHandler, false));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("LogEvent", "Logs remote event log entries.", LogEventRequestHandler, false));
 
-            try
-            {
-                // Start system initialization on an independent thread so that service responds in a timely fashion...
-                ThreadPool.QueueUserWorkItem(InitializeSystem);
-            }
-            catch (Exception ex)
-            {
-                // Process exception for logging
-                DisplayStatusMessage("Failed to queue system initialization due to exception: {0}", UpdateType.Alarm, ex.Message);
-                m_serviceHelper.ErrorLogger.Log(ex);
-            }
+            // Start system initialization on an independent thread so that service responds in a timely fashion...
+            InitializeSystem();
         }
 
         /// <summary>
@@ -772,9 +780,9 @@ namespace GSF.TimeSeries
         }
 
         // Perform system initialization
-        private void InitializeSystem(object state)
+        private void InitializeSystem()
         {
-            m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success =>
+            m_reloadConfigQueue.Add(Tuple.Create("Startup", new Action<bool>(success =>
             {
                 // Attempt to load system configuration
                 if (success)
@@ -789,7 +797,9 @@ namespace GSF.TimeSeries
                     ConfigurationFile.Current.Save();
                 }
                 else
+                {
                     DisplayStatusMessage("System initialization failed due to unavailable configuration.", UpdateType.Alarm);
+                }
 
                 // Log current thread pool size
                 int minWorkerThreads, minIOThreads, maxWorkerThreads, maxIOThreads;
@@ -801,517 +811,335 @@ namespace GSF.TimeSeries
             })));
         }
 
-        // Load the the system configuration data set
-        private bool LoadSystemConfiguration()
+        private void ExecuteReloadConfig(Tuple<string, Action<bool>>[] items)
         {
-            DataSet dataSource;
+            List<string> requestTypes;
+            List<string> distinctRequestsTypes;
+
+            DataSet configuration = null;
+            bool systemConfigurationLoaded = false;
+
+            requestTypes = items
+                .Select(tuple => tuple.Item1)
+                .ToList();
+
+            distinctRequestsTypes = requestTypes
+                .Distinct()
+                .OrderBy(type => requestTypes.LastIndexOf(type))
+                .ToList();
+
+            foreach (string type in distinctRequestsTypes)
+            {
+                string typeInner = type;
+
+                if (type == m_configurationType.ToString())
+                {
+                    DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
+                    configuration = GetConfigurationDataSet();
+
+                    // Update data source on all adapters in all collections
+                    if ((object)configuration != null)
+                        PropagateDataSource(configuration);
+                }
+                else if (type == "Augmented")
+                {
+                    DisplayStatusMessage("Augmenting current system configuration...", UpdateType.Information);
+                    configuration = AugmentConfigurationDataSet(DataSource);
+
+                    // Update data source on all adapters in all collections
+                    if ((object)configuration != null)
+                        PropagateDataSource(configuration);
+                }
+                else if (type == "BinaryCache")
+                {
+                    DisplayStatusMessage("Loading binary cached configuration...", UpdateType.Information);
+                    configuration = GetBinaryCachedConfigurationDataSet();
+
+                    // Update data source on all adapters in all collections
+                    if ((object)configuration != null)
+                        PropagateDataSource(configuration);
+                }
+                else if (type == "XmlCache")
+                {
+                    DisplayStatusMessage("Loading XML cached configuration...", UpdateType.Information);
+                    configuration = GetXMLCachedConfigurationDataSet();
+
+                    // Update data source on all adapters in all collections
+                    if ((object)configuration != null)
+                        PropagateDataSource(configuration);
+                }
+                else if (type == "Startup")
+                {
+                    systemConfigurationLoaded = LoadStartupConfiguration();
+                }
+                else
+                {
+                    // No specific reload command was issued;
+                    // load system configuration as normal
+                    systemConfigurationLoaded = LoadSystemConfiguration();
+                }
+
+                foreach (Action<bool> callback in items.Where(tuple => tuple.Item1 == typeInner).Select(tuple => tuple.Item2))
+                {
+                    try
+                    {
+                        callback(systemConfigurationLoaded || (object)configuration != null);
+                    }
+                    catch (Exception ex)
+                    {
+                        DisplayStatusMessage("Failed to execute callback for ReloadConfig request of type {0}: {1}", UpdateType.Alarm, type, ex.Message);
+                        m_serviceHelper.ErrorLogger.Log(ex);
+                    }
+                }
+
+                // Spawn routing table calculation updates
+                m_iaonSession.RecalculateRoutingTables();
+            }
+        }
+
+        // Load the the system configuration data set
+        private bool LoadStartupConfiguration()
+        {
+            DataSet configuration;
             bool loadedFromCache;
 
-            DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-            loadedFromCache = m_preferCachedConfiguration;
+            // If cached configuration is not preferred,
+            // load system configuration normally
+            if (!m_preferCachedConfiguration)
+                return LoadSystemConfiguration();
 
-            // Attempt to load (or reload) system configuration
-            if (m_preferCachedConfiguration)
+            // Cached configuration is preferred, so start by loading cached configuration
+            loadedFromCache = true;
+            configuration = GetBinaryCachedConfigurationDataSet();
+
+            if ((object)configuration == null)
+                configuration = GetXMLCachedConfigurationDataSet();
+
+            // If cached configuration failed to load,
+            // load from regular configuration data source after all
+            if ((object)configuration == null)
             {
-                dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
-
-                if ((object)dataSource == null)
-                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
-
-                if ((object)dataSource == null)
-                {
-                    loadedFromCache = false;
-                    dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
-                }
-            }
-            else
-            {
-                dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
-
-                if ((object)dataSource == null)
-                {
-                    loadedFromCache = true;
-                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
-                }
-
-                if ((object)dataSource == null)
-                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
+                loadedFromCache = false;
+                configuration = GetConfigurationDataSet();
             }
 
-            if ((object)dataSource != null)
+            if ((object)configuration != null)
             {
                 // Update data source on all adapters in all collections
-                m_iaonSession.DataSource = dataSource;
+                if (PropagateDataSource(configuration))
+                {
+                    // Cache the configuration if it wasn't already loaded from a cache
+                    if (!loadedFromCache)
+                        CacheCurrentConfiguration(configuration);
 
-                // Cache the configuration if it wasn't already loaded from a cache
-                if (!loadedFromCache)
-                    CacheCurrentConfiguration(dataSource);
-
-                return true;
+                    return true;
+                }
             }
 
             return false;
         }
 
-        // Load system configuration data set
-        [SuppressMessage("Microsoft.Reliability", "CA2000")]
-        private DataSet GetConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString)
+        // Load the the system configuration data set
+        private bool LoadSystemConfiguration()
         {
+            DatabaseConfigurationLoader dbConfigurationLoader = m_configurationLoader as DatabaseConfigurationLoader;
+
             DataSet configuration = null;
-            bool configException = false;
-            Ticks startTime = DateTime.UtcNow.Ticks;
-            double elapsedTime;
+            DataSet binaryCache = null;
+            DataSet xmlCache = null;
 
-            switch (configType)
-            {
-                case ConfigurationType.Database:
-                    // Attempt to load configuration from a database connection
-                    IDbConnection connection = null;
-                    Dictionary<string, string> settings;
-                    string assemblyName, connectionTypeName, adapterTypeName;
-                    Assembly assembly;
-                    Type connectionType, adapterType;
-                    DataTable entities, source, destination;
-
-                    try
-                    {
-                        settings = dataProviderString.ParseKeyValuePairs();
-                        assemblyName = settings["AssemblyName"].ToNonNullString();
-                        connectionTypeName = settings["ConnectionType"].ToNonNullString();
-                        adapterTypeName = settings["AdapterType"].ToNonNullString();
-
-                        if (string.IsNullOrWhiteSpace(connectionTypeName))
-                            throw new InvalidOperationException("Database connection type was not defined.");
-
-                        if (string.IsNullOrWhiteSpace(adapterTypeName))
-                            throw new InvalidOperationException("Database adapter type was not defined.");
-
-                        assembly = Assembly.Load(new AssemblyName(assemblyName));
-                        connectionType = assembly.GetType(connectionTypeName);
-                        adapterType = assembly.GetType(adapterTypeName);
-
-                        connection = (IDbConnection)Activator.CreateInstance(connectionType);
-                        connection.ConnectionString = connectionString;
-                        connection.Open();
-
-                        DisplayStatusMessage("Database configuration connection opened.", UpdateType.Information);
-
-                        // Execute any defined startup data operations
-                        ExecuteStartupDataOperations(connection, adapterType);
-
-                        configuration = new DataSet("Iaon");
-
-                        // Load configuration entities defined in database
-                        entities = connection.RetrieveData(adapterType, "SELECT * FROM ConfigurationEntity WHERE Enabled <> 0 ORDER BY LoadOrder");
-                        entities.TableName = "ConfigurationEntity";
-
-                        // Add configuration entities table to system configuration for reference
-                        configuration.Tables.Add(entities.Copy());
-
-                        Ticks operationStartTime;
-                        double operationElapsedTime;
-
-                        // Add each configuration entity to the system configuration
-                        foreach (DataRow entityRow in entities.Rows)
-                        {
-                            // Load configuration entity data filtered by node ID
-                            operationStartTime = DateTime.UtcNow.Ticks;
-                            source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], m_nodeIDQueryString));
-                            operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
-
-                            // Update table name as defined in configuration entity
-                            source.TableName = entityRow["RuntimeName"].ToString();
-
-                            DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
-
-                            operationStartTime = DateTime.UtcNow.Ticks;
-
-                            // Clone data source
-                            destination = source.Clone();
-
-                            // Get destination column collection
-                            DataColumnCollection columns = destination.Columns;
-
-                            // Remove redundant node ID column
-                            columns.Remove("NodeID");
-
-                            // Pre-cache column index translation after removal of NodeID column to speed data copy
-                            Dictionary<int, int> columnIndex = new Dictionary<int, int>();
-
-                            foreach (DataColumn column in columns)
-                            {
-                                columnIndex[column.Ordinal] = source.Columns[column.ColumnName].Ordinal;
-                            }
-
-                            // Manually copy-in each row into table
-                            foreach (DataRow sourceRow in source.Rows)
-                            {
-                                DataRow newRow = destination.NewRow();
-
-                                // Copy each column of data in the current row
-                                for (int x = 0; x < columns.Count; x++)
-                                {
-                                    newRow[x] = sourceRow[columnIndex[x]];
-                                }
-
-                                // Add new row to destination table
-                                destination.Rows.Add(newRow);
-                            }
-
-                            operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
-
-                            // Add entity configuration data to system configuration
-                            configuration.Tables.Add(destination);
-
-                            DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
-                        }
-
-                        DisplayStatusMessage("Preparing current security context...", UpdateType.Information);
-
-                        operationStartTime = DateTime.UtcNow.Ticks;
-
-                        // Extract and begin cache of current security context - this does not require an existing security provider
-                        AdoSecurityProvider.ExtractSecurityContext(connection);
-
-                        operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
-
-                        DisplayStatusMessage("Security context prepared in {0}.", UpdateType.Information, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
-
-                        DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        configException = true;
-                        DisplayStatusMessage("Failed to load database configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                        configuration = null;
-                    }
-                    finally
-                    {
-                        if (connection != null)
-                            connection.Dispose();
-
-                        DisplayStatusMessage("Database configuration connection closed.", UpdateType.Information);
-                    }
-
-                    break;
-                case ConfigurationType.WebService:
-                    // Attempt to load configuration from webservice based connection
-                    WebRequest request;
-                    Stream response = null;
-                    try
-                    {
-                        DisplayStatusMessage("Webservice configuration connection opened.", UpdateType.Information);
-
-                        configuration = new DataSet();
-                        request = WebRequest.Create(connectionString);
-                        response = request.GetResponse().GetResponseStream();
-                        configuration.ReadXml(response);
-
-                        DisplayStatusMessage("Webservice configuration successfully loaded.", UpdateType.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        configException = true;
-                        DisplayStatusMessage("Failed to load webservice configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                        configuration = null;
-                    }
-                    finally
-                    {
-                        if (response != null)
-                            response.Dispose();
-
-                        DisplayStatusMessage("Webservice configuration connection closed.", UpdateType.Information);
-                    }
-
-                    break;
-                case ConfigurationType.BinaryFile:
-                    // Attempt to load cached binary configuration file
-                    try
-                    {
-                        DisplayStatusMessage("Loading binary based configuration from \"{0}\".", UpdateType.Information, connectionString);
-
-                        using (FileStream stream = File.OpenRead(connectionString))
-                        {
-                            configuration = stream.DeserializeToDataSet();
-                        }
-
-                        DisplayStatusMessage("Binary based configuration successfully loaded.", UpdateType.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        configException = true;
-                        DisplayStatusMessage("Failed to load binary based configuration due to exception: {0}.", UpdateType.Alarm, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                        configuration = null;
-                    }
-
-                    break;
-                case ConfigurationType.XmlFile:
-                    // Attempt to load cached XML configuration file
-                    try
-                    {
-                        DisplayStatusMessage("Loading XML based configuration from \"{0}\".", UpdateType.Information, connectionString);
-
-                        configuration = new DataSet();
-                        configuration.ReadXml(connectionString);
-
-                        DisplayStatusMessage("XML based configuration successfully loaded.", UpdateType.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        configException = true;
-                        DisplayStatusMessage("Failed to load XML based configuration due to exception: {0}.", UpdateType.Alarm, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                        configuration = null;
-                    }
-
-                    break;
-            }
-
-            if (!configException)
-            {
-                elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, configType, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
-            }
-
-            return configuration;
-        }
-
-        private DataSet GetAugmentedConfigurationDataSet(ConfigurationType configType, string connectionString, string dataProviderString)
-        {
-            DataSet configuration;
-            bool configException = false;
-            Ticks startTime = DateTime.UtcNow.Ticks;
-            double elapsedTime;
-
-            IDbConnection connection = null;
-            Dictionary<string, string> settings;
-            string assemblyName, connectionTypeName, adapterTypeName;
-            Assembly assembly;
-            Type connectionType, adapterType;
-            DataTable entities, source, destination;
-
-            if (configType != ConfigurationType.Database)
-                throw new InvalidOperationException("Configuration augmentation only supported for database configurations.");
+            bool binaryCacheLoadAttempted = false;
+            bool xmlCacheLoadAttempted = false;
+            bool loadedFromCache = false;
 
             try
             {
-                // Attempt to load configuration from a database connection
-                settings = dataProviderString.ParseKeyValuePairs();
-                assemblyName = settings["AssemblyName"].ToNonNullString();
-                connectionTypeName = settings["ConnectionType"].ToNonNullString();
-                adapterTypeName = settings["AdapterType"].ToNonNullString();
+                // If the configuration is a database configuration, make sure
+                // to open the database before we start so we're not constantly
+                // opening and closing connections to the database
+                if ((object)dbConfigurationLoader != null)
+                    dbConfigurationLoader.Open();
 
-                if (string.IsNullOrWhiteSpace(connectionTypeName))
-                    throw new InvalidOperationException("Database connection type was not defined.");
-
-                if (string.IsNullOrWhiteSpace(adapterTypeName))
-                    throw new InvalidOperationException("Database adapter type was not defined.");
-
-                assembly = Assembly.Load(new AssemblyName(assemblyName));
-                connectionType = assembly.GetType(connectionTypeName);
-                adapterType = assembly.GetType(adapterTypeName);
-
-                connection = (IDbConnection)Activator.CreateInstance(connectionType);
-                connection.ConnectionString = connectionString;
-                connection.Open();
-
-                DisplayStatusMessage("Database configuration connection opened.", UpdateType.Information);
-
-                configuration = m_iaonSession.DataSource.Copy();
-
-                // Load configuration entities defined in database
-                entities = connection.RetrieveData(adapterType, "SELECT * FROM ConfigurationEntity WHERE Enabled <> 0 ORDER BY LoadOrder");
-                entities.TableName = "ConfigurationEntity";
-
-                // Add configuration entities table to system configuration for reference
-                configuration.Tables.Remove("ConfigurationEntity");
-                configuration.Tables.Add(entities.Copy());
-
-                Ticks operationStartTime;
-                double operationElapsedTime;
-
-                // Add each configuration entity to the system configuration
-                foreach (DataRow entityRow in entities.Rows)
+                if (m_configurationLoader.CanAugment)
                 {
-                    source = null;
-                    destination = null;
+                    // Get the current running configuration
+                    configuration = DataSource;
 
-                    operationStartTime = DateTime.UtcNow.Ticks;
-
-                    // Attempt to query for updated
-                    if (configuration.Tables.Contains(entityRow["RuntimeName"].ToString()))
+                    if ((object)configuration != null)
                     {
-                        destination = configuration.Tables[entityRow["RuntimeName"].ToString()];
+                        // Existing configuration is available so we attempt to augment that
+                        DisplayStatusMessage("Attempting to augment existing configuration data set...", UpdateType.Information);
+                        configuration = AugmentConfigurationDataSet(configuration.Copy());
+                    }
+                    else
+                    {
+                        // Attempt to load the binary cached configuration
+                        binaryCache = GetBinaryCachedConfigurationDataSet();
+                        binaryCacheLoadAttempted = true;
 
-                        if (destination.Columns.Contains("UpdatedOn"))
+                        if ((object)binaryCache != null)
                         {
-                            IEnumerable<object> column = destination.Rows.Cast<DataRow>().Select(row => row["UpdatedOn"]);
+                            // Binary cached configuration is available so we attempt to augment that
+                            DisplayStatusMessage("Attempting to augment binary cached configuration data set...", UpdateType.Information);
+                            configuration = AugmentConfigurationDataSet(binaryCache.Copy());
+                        }
+                        else
+                        {
+                            // Attempt to load the XML cached configuration
+                            xmlCache = GetXMLCachedConfigurationDataSet();
+                            xmlCacheLoadAttempted = true;
 
-                            object maxValue = null;
-                            DateTime maxTimeOfLastUpdate = DateTime.MinValue;
-                            DateTime timeOfLastUpdate;
-
-                            foreach (object value in column)
+                            if ((object)xmlCache != null)
                             {
-                                if (value == null)
-                                    continue;
-
-                                timeOfLastUpdate = (value as DateTime?) ?? DateTime.Parse(value.ToString());
-
-                                if (maxValue == null || timeOfLastUpdate > maxTimeOfLastUpdate)
-                                {
-                                    maxTimeOfLastUpdate = timeOfLastUpdate;
-                                    maxValue = value;
-                                }
-                            }
-
-                            if (maxValue != null)
-                            {
-                                string param = (adapterType.Name == "OracleDataAdapter") ? ":updatedOn" : "@updatedOn";
-                                string query = string.Format("SELECT * FROM {0} WHERE NodeID = {1} AND UpdatedOn > {2}", entityRow["SourceName"], m_nodeIDQueryString, param);
-                                source = connection.RetrieveData(adapterType, query, DataExtensions.DefaultTimeoutDuration, maxValue);
+                                // XML cached configuration is available so we attempt to augment that
+                                DisplayStatusMessage("Attempting to augment XML cached configuration data set...", UpdateType.Information);
+                                configuration = AugmentConfigurationDataSet(xmlCache.Copy());
                             }
                         }
                     }
-
-                    if ((object)source == null)
-                    {
-                        // Load configuration entity data filtered by node ID
-                        source = connection.RetrieveData(adapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], m_nodeIDQueryString));
-
-                        // Clone data source
-                        destination = source.Clone();
-
-                        // Update table name as defined in configuration entity
-                        source.TableName = entityRow["RuntimeName"].ToString();
-
-                        // Remove old data table from the system configuration
-                        if (configuration.Tables.Contains(source.TableName))
-                            configuration.Tables.Remove(source.TableName);
-
-                        // Add entity configuration data to system configuration
-                        configuration.Tables.Add(destination);
-                    }
-
-                    operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
-                    DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
-
-                    operationStartTime = DateTime.UtcNow.Ticks;
-
-                    // Get destination column collection
-                    DataColumnCollection columns = destination.Columns;
-
-                    // Remove redundant node ID column
-                    if (columns.Contains("NodeID"))
-                        columns.Remove("NodeID");
-
-                    // Pre-cache column index translation after removal of NodeID column to speed data copy
-                    Dictionary<int, int> columnIndex = new Dictionary<int, int>();
-
-                    foreach (DataColumn column in columns)
-                    {
-                        columnIndex[column.Ordinal] = source.Columns[column.ColumnName].Ordinal;
-                    }
-
-                    // Manually copy-in each row into table
-                    foreach (DataRow sourceRow in source.Rows)
-                    {
-                        DataRow newRow = destination.NewRow();
-
-                        // Copy each column of data in the current row
-                        for (int x = 0; x < columns.Count; x++)
-                        {
-                            newRow[x] = sourceRow[columnIndex[x]];
-                        }
-
-                        // Add new row to destination table
-                        destination.Rows.Add(newRow);
-                    }
-
-                    operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
-
-                    DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
                 }
 
-                DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
+                if ((object)configuration == null)
+                {
+                    // Either we cannot augment configuration or augmentation failed,
+                    // so we attempt to load the whole configuration from the source
+                    configuration = GetConfigurationDataSet();
+                }
+
+                if ((object)configuration == null)
+                {
+                    // If all else fails, load configuration from the binary cache
+                    loadedFromCache = true;
+
+                    if (binaryCacheLoadAttempted)
+                        configuration = binaryCache;
+                    else
+                        configuration = GetBinaryCachedConfigurationDataSet();
+                }
+
+                if ((object)configuration == null)
+                {
+                    // If we even failed to load from the
+                    // binary cache, load from the XML cache
+                    if (xmlCacheLoadAttempted)
+                        configuration = xmlCache;
+                    else
+                        configuration = GetXMLCachedConfigurationDataSet();
+                }
+
+                if ((object)configuration != null)
+                {
+                    // Update data source on all adapters in all collections
+                    if (PropagateDataSource(configuration))
+                    {
+                        // Cache the configuration if it wasn't already loaded from a cache
+                        if (!loadedFromCache)
+                            CacheCurrentConfiguration(configuration);
+
+                        return true;
+                    }
+                }
+
+                return false;
             }
             catch (Exception ex)
             {
-                configException = true;
-                DisplayStatusMessage("Failed to load database configuration due to exception: {0} Attempting to use last known good configuration.", UpdateType.Warning, ex.Message);
+                DisplayStatusMessage(ex.Message, UpdateType.Alarm);
                 m_serviceHelper.ErrorLogger.Log(ex);
-                configuration = null;
+
+                // Most of the methods used above have a try-catch implemented to display helpful error messages
+                // and prevent this code from executing. This should only execute when using a database configuration
+                // as the primary configuration source and only if the system is unable to open a connection to the
+                // database. In that case, we simply attempt to load the cached configuration and use that instead
+                DisplayStatusMessage("Failed to open a connection to the database. Falling back on cached configuration...", UpdateType.Warning);
+
+                if ((object)configuration == null)
+                    configuration = GetBinaryCachedConfigurationDataSet();
+
+                if ((object)configuration == null)
+                    configuration = GetXMLCachedConfigurationDataSet();
+
+                if ((object)configuration != null)
+                    return PropagateDataSource(configuration);
+
+                return false;
             }
             finally
             {
-                if (connection != null)
-                    connection.Dispose();
-
-                DisplayStatusMessage("Database configuration connection closed.", UpdateType.Information);
+                if ((object)dbConfigurationLoader != null)
+                    dbConfigurationLoader.Close();
             }
-
-            if (!configException)
-            {
-                elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, configType, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
-            }
-
-            return configuration;
         }
 
-        // Execute any defined startup data operations
-        private void ExecuteStartupDataOperations(IDbConnection connection, Type adapterType)
+        private DataSet GetConfigurationDataSet()
         {
             try
             {
-                string assemblyName = "", typeName = "", methodName = "", arguments;
-                Assembly assembly;
-                Type type;
-                MethodInfo method;
-
-                foreach (DataRow row in connection.RetrieveData(adapterType, string.Format("SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={0}) AND Enabled <> 0 ORDER BY LoadOrder", m_nodeIDQueryString)).Rows)
-                {
-                    try
-                    {
-                        DisplayStatusMessage("Executing startup data operation \"{0}\".", UpdateType.Information, row["Description"].ToNonNullString("Unlabeled"));
-
-                        // Load data operation parameters
-                        assemblyName = row["AssemblyName"].ToNonNullString();
-                        typeName = row["TypeName"].ToNonNullString();
-                        methodName = row["MethodName"].ToNonNullString();
-                        arguments = row["Arguments"].ToNonNullString();
-
-                        if (string.IsNullOrWhiteSpace(assemblyName))
-                            throw new InvalidOperationException("Data operation assembly name was not defined.");
-
-                        if (string.IsNullOrWhiteSpace(typeName))
-                            throw new InvalidOperationException("Data operation type name was not defined.");
-
-                        if (string.IsNullOrWhiteSpace(methodName))
-                            throw new InvalidOperationException("Data operation method name was not defined.");
-
-                        // Load data operation from containing assembly and type
-                        assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
-                        type = assembly.GetType(typeName);
-                        method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
-
-                        // Execute data operation via loaded assembly method
-                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(connection, adapterType, m_nodeIDQueryString, arguments, m_iaonSession.StatusMessageHandler, m_iaonSession.ProcessExceptionHandler);
-                    }
-                    catch (Exception ex)
-                    {
-                        DisplayStatusMessage("Failed to execute startup data operation \"{0} [{1}::{2}()]\" due to exception: {3}", UpdateType.Warning, assemblyName, typeName, methodName, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                    }
-                }
+                return m_configurationLoader.Load();
             }
             catch (Exception ex)
             {
-                DisplayStatusMessage("Failed to execute startup data operations due to exception: {0}", UpdateType.Warning, ex.Message);
+                DisplayStatusMessage("Failed to load {0} configuration due to exception: {1}", UpdateType.Warning, m_configurationType, ex.Message);
                 m_serviceHelper.ErrorLogger.Log(ex);
+                return null;
+            }
+        }
+
+        private DataSet GetBinaryCachedConfigurationDataSet()
+        {
+            try
+            {
+                return m_binaryCacheConfigurationLoader.Load();
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to load cached binary configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+                return null;
+            }
+        }
+
+        private DataSet GetXMLCachedConfigurationDataSet()
+        {
+            try
+            {
+                return m_xmlCacheConfigurationLoader.Load();
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to load cached XML configuration due to exception: {0}", UpdateType.Alarm, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+                return null;
+            }
+        }
+
+        private DataSet AugmentConfigurationDataSet(DataSet configuration)
+        {
+            try
+            {
+                m_configurationLoader.Augment(configuration);
+                return configuration;
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Failed to augment configuration due to exception: {0}", UpdateType.Warning, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+                return null;
+            }
+        }
+
+        private bool PropagateDataSource(DataSet dataSource)
+        {
+            try
+            {
+                m_iaonSession.DataSource = dataSource;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                DisplayStatusMessage("Unable to propagate configuration data set to adapters due to exception: {0}", UpdateType.Alarm, ex.Message);
+                m_serviceHelper.ErrorLogger.Log(ex);
+                return false;
             }
         }
 
@@ -2223,9 +2051,6 @@ namespace GSF.TimeSeries
                 helpMessage.Append("       -O".PadRight(20));
                 helpMessage.Append("Initialize output adapters");
                 helpMessage.AppendLine();
-                helpMessage.Append("       -System".PadRight(20));
-                helpMessage.Append("Performs full system initialization");
-                helpMessage.AppendLine();
                 helpMessage.Append("       -SkipReloadConfig".PadRight(20));
                 helpMessage.Append("Skips configuration reload before initialize");
                 helpMessage.AppendLine();
@@ -2234,13 +2059,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                if (requestInfo.Request.Arguments.Exists("System"))
-                {
-                    DisplayStatusMessage("Starting manual full system initialization...", UpdateType.Information);
-                    InitializeSystem(null);
-                    SendResponse(requestInfo, true);
-                }
-                else if (requestInfo.Request.Arguments.Exists("SkipReloadConfig"))
+                if (requestInfo.Request.Arguments.Exists("SkipReloadConfig"))
                 {
                     HandleInitializeRequest(requestInfo);
 
@@ -2827,6 +2646,9 @@ namespace GSF.TimeSeries
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -Augmented".PadRight(20));
+                helpMessage.AppendFormat("Augments the current running configuration from the {0}, if supported", m_configurationType);
+                helpMessage.AppendLine();
                 helpMessage.Append(string.Format("       -{0}", m_configurationType).PadRight(20));
                 helpMessage.AppendFormat("Loads configuration from the {0}", m_configurationType);
                 helpMessage.AppendLine();
@@ -2876,6 +2698,9 @@ namespace GSF.TimeSeries
         {
             Arguments arguments = requestInfo.Request.Arguments;
 
+            if (arguments.Exists("Augmented"))
+                return "Augmented";
+
             if (arguments.Exists(m_configurationType.ToString()))
                 return m_configurationType.ToString();
 
@@ -2886,132 +2711,6 @@ namespace GSF.TimeSeries
                 return "XmlCache";
 
             return "System";
-        }
-
-        private void ExecuteReloadConfig(Tuple<string, Action<bool>>[] items)
-        {
-            List<string> requestTypes;
-            List<string> distinctRequestsTypes;
-
-            DataSet dataSource = null;
-            bool systemConfigurationLoaded = false;
-
-            requestTypes = items
-                .Select(tuple => tuple.Item1)
-                .ToList();
-
-            distinctRequestsTypes = requestTypes
-                .Distinct()
-                .OrderBy(type => requestTypes.LastIndexOf(type))
-                .ToList();
-
-            foreach (string type in distinctRequestsTypes)
-            {
-                string typeInner = type;
-
-                if (type == m_configurationType.ToString())
-                {
-                    DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-                    dataSource = GetConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
-
-                    // Update data source on all adapters in all collections
-                    if ((object)dataSource != null)
-                        m_iaonSession.DataSource = dataSource;
-                }
-                else if (type == "BinaryCache")
-                {
-                    DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-                    dataSource = GetConfigurationDataSet(ConfigurationType.BinaryFile, m_cachedBinaryConfigurationFile, m_dataProviderString);
-
-                    // Update data source on all adapters in all collections
-                    if ((object)dataSource != null)
-                        m_iaonSession.DataSource = dataSource;
-                }
-                else if (type == "XmlCache")
-                {
-                    DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-                    dataSource = GetConfigurationDataSet(ConfigurationType.XmlFile, m_cachedXmlConfigurationFile, m_dataProviderString);
-
-                    // Update data source on all adapters in all collections
-                    if ((object)dataSource != null)
-                        m_iaonSession.DataSource = dataSource;
-                }
-                else
-                {
-                    // No specific reload command was issued;
-                    // load system configuration as normal
-                    systemConfigurationLoaded = LoadSystemConfiguration();
-                }
-
-                foreach (Action<bool> callback in items.Where(tuple => tuple.Item1 == typeInner).Select(tuple => tuple.Item2))
-                {
-                    try
-                    {
-                        callback(systemConfigurationLoaded || (object)dataSource != null);
-                    }
-                    catch (Exception ex)
-                    {
-                        DisplayStatusMessage("Failed to execute callback for ReloadConfig request of type {0}: {1}", UpdateType.Alarm, type, ex.Message);
-                        m_serviceHelper.ErrorLogger.Log(ex);
-                    }
-                }
-
-                // Spawn routing table calculation updates
-                m_iaonSession.RecalculateRoutingTables();
-            }
-        }
-
-        /// <summary>
-        /// Manually reloads system configuration.
-        /// </summary>
-        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
-        protected virtual void AugmentConfigRequestHandler(ClientRequestInfo requestInfo)
-        {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
-            {
-                StringBuilder helpMessage = new StringBuilder();
-
-                helpMessage.Append("Manually reloads system configuration.");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Usage:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       ReloadConfig [Options]");
-                helpMessage.AppendLine();
-                helpMessage.AppendLine();
-                helpMessage.Append("   Options:");
-                helpMessage.AppendLine();
-                helpMessage.Append("       -?".PadRight(20));
-                helpMessage.Append("Displays this help message");
-                helpMessage.AppendLine();
-
-                DisplayResponseMessage(requestInfo, helpMessage.ToString());
-            }
-            else
-            {
-                DataSet dataSource;
-
-                DisplayStatusMessage("Loading system configuration...", UpdateType.Information);
-                dataSource = GetAugmentedConfigurationDataSet(m_configurationType, m_connectionString, m_dataProviderString);
-
-                if ((object)dataSource != null)
-                {
-                    // Update data source on all adapters in all collections
-                    m_iaonSession.DataSource = dataSource;
-                    m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
-                    SendResponse(requestInfo, true, "System configuration was successfully augmented.");
-
-                    // Cache current configuration
-                    CacheCurrentConfiguration(dataSource);
-                }
-                else
-                {
-                    SendResponse(requestInfo, false, "System configuration failed to augment.");
-                }
-
-                // Spawn routing table calculation updates
-                m_iaonSession.RecalculateRoutingTables();
-            }
         }
 
         /// <summary>
@@ -3407,6 +3106,13 @@ namespace GSF.TimeSeries
                 m_serviceHelper.ErrorLogger.Log(ex);
                 m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
             }
+        }
+
+        // Processes exceptions coming from the configuration loaders.
+        private void ConfigurationLoader_ProcessException(object o, EventArgs<Exception> args)
+        {
+            DisplayStatusMessage(args.Argument.Message, UpdateType.Warning);
+            m_serviceHelper.ErrorLogger.Log(args.Argument);
         }
 
         #endregion

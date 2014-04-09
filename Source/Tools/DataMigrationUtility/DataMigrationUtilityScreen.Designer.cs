@@ -51,7 +51,6 @@ namespace DataMigrationUtility
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataMigrationUtilityScreen));
             this.GroupBox = new System.Windows.Forms.GroupBox();
             this.ExampleConnectionStringLinkLabel = new System.Windows.Forms.LinkLabel();
@@ -86,7 +85,7 @@ namespace DataMigrationUtility
             // 
             // GroupBox
             // 
-            this.GroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.GroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.GroupBox.Controls.Add(this.ExampleConnectionStringLinkLabel);
             this.GroupBox.Controls.Add(this.ToConnectString);
@@ -125,7 +124,7 @@ namespace DataMigrationUtility
             // 
             // ToConnectString
             // 
-            this.ToConnectString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.ToConnectString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ToConnectString.Location = new System.Drawing.Point(16, 122);
             this.ToConnectString.Multiline = true;
@@ -136,7 +135,7 @@ namespace DataMigrationUtility
             // 
             // ToDataType
             // 
-            this.ToDataType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.ToDataType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ToDataType.FormattingEnabled = true;
             this.ToDataType.Location = new System.Drawing.Point(314, 96);
@@ -161,7 +160,7 @@ namespace DataMigrationUtility
             // 
             // FromConnectString
             // 
-            this.FromConnectString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.FromConnectString.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.FromConnectString.Location = new System.Drawing.Point(16, 37);
             this.FromConnectString.Multiline = true;
@@ -172,7 +171,7 @@ namespace DataMigrationUtility
             // 
             // FromDataType
             // 
-            this.FromDataType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.FromDataType.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.FromDataType.FormattingEnabled = true;
             this.FromDataType.Location = new System.Drawing.Point(314, 11);
@@ -337,13 +336,13 @@ namespace DataMigrationUtility
             // 
             // ExcludedTablesTextBox
             // 
-            this.ExcludedTablesTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.ExcludedTablesTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ExcludedTablesTextBox.Location = new System.Drawing.Point(95, 220);
             this.ExcludedTablesTextBox.Name = "ExcludedTablesTextBox";
             this.ExcludedTablesTextBox.Size = new System.Drawing.Size(535, 20);
             this.ExcludedTablesTextBox.TabIndex = 35;
-            this.ExcludedTablesTextBox.Text = "Runtime,ErrorLog,AuditLog";
+            this.ExcludedTablesTextBox.Text = "Runtime,ErrorLog,AuditLog,TrackedChange";
             // 
             // CommaSeparateValuesLabel
             // 
@@ -373,8 +372,8 @@ namespace DataMigrationUtility
             // 
             // Messages
             // 
-            this.Messages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.Messages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.Messages.Location = new System.Drawing.Point(9, 368);
             this.Messages.Multiline = true;
@@ -386,7 +385,7 @@ namespace DataMigrationUtility
             // 
             // OverallProgress
             // 
-            this.OverallProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.OverallProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.OverallProgress.Location = new System.Drawing.Point(9, 336);
             this.OverallProgress.Name = "OverallProgress";
@@ -395,7 +394,7 @@ namespace DataMigrationUtility
             // 
             // ProgressBar
             // 
-            this.ProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.ProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ProgressBar.Location = new System.Drawing.Point(9, 304);
             this.ProgressBar.Name = "ProgressBar";
@@ -404,7 +403,7 @@ namespace DataMigrationUtility
             // 
             // ProgressLabel
             // 
-            this.ProgressLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.ProgressLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.ProgressLabel.BackColor = System.Drawing.SystemColors.Control;
             this.ProgressLabel.Cursor = System.Windows.Forms.Cursors.Default;

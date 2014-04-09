@@ -1,0 +1,666 @@
+﻿//******************************************************************************************************
+//  DatabaseConfigurationLoader.cs - Gbtc
+//
+//  Copyright © 2014, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  04/04/2014 - Stephen C. Wills
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Reflection;
+using GSF.Data;
+using GSF.IO;
+using GSF.Security;
+
+namespace GSF.TimeSeries.Configuration
+{
+    /// <summary>
+    /// Defines a method signature for a bootstrap data source operation.
+    /// </summary>
+    /// <param name="database">Connection to database.</param>
+    /// <param name="nodeIDQueryString">Formatted node ID Guid query string.</param>
+    /// <param name="trackingVersion">Latest version of the configuration to which data operations were previously applied.</param>
+    /// <param name="arguments">Optional data operation arguments.</param>
+    /// <param name="statusMessage">Reference to host status message function.</param>
+    /// <param name="processException">Reference to host process exception function.</param>
+    public delegate void DataOperationFunction(AdoDataConnection database, string nodeIDQueryString, int trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException);
+
+    /// <summary>
+    /// Represents a configuration loader that gets its configuration from a database connection.
+    /// </summary>
+    public class DatabaseConfigurationLoader : IConfigurationLoader, IDisposable
+    {
+        #region [ Members ]
+
+        // Events
+
+        /// <summary>
+        /// Occurs when the configuration loader has a message to provide about its current status.
+        /// </summary>
+        public event EventHandler<EventArgs<string>> StatusMessage;
+
+        /// <summary>
+        /// Occurs when the configuration loader encounters a non-catastrophic exception.
+        /// </summary>
+        public event EventHandler<EventArgs<Exception>> ProcessException;
+
+        // Fields
+        private string m_connectionString;
+        private string m_dataProviderString;
+        private string m_nodeIDQueryString;
+
+        private AdoDataConnection m_database;
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the connection string which
+        /// defines how to connect to the database.
+        /// </summary>
+        public string ConnectionString
+        {
+            get
+            {
+                return m_connectionString;
+            }
+            set
+            {
+                m_connectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the data provider string, which determines the
+        /// .NET types to use when opening connections to the database.
+        /// </summary>
+        public string DataProviderString
+        {
+            get
+            {
+                return m_dataProviderString;
+            }
+            set
+            {
+                m_dataProviderString = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the string to use in queries when filtering results by node ID.
+        /// </summary>
+        public string NodeIDQueryString
+        {
+            get
+            {
+                return m_nodeIDQueryString;
+            }
+            set
+            {
+                m_nodeIDQueryString = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the flag that indicates whether augmentation is supported by this configuration loader.
+        /// </summary>
+        public bool CanAugment
+        {
+            get
+            {
+                try
+                {
+                    int trackedTables = 0;
+                    Execute(database => trackedTables = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM TrackedTable")));
+                    return trackedTables > 0;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Opens the database connection.
+        /// </summary>
+        public void Open()
+        {
+            using (m_database)
+            {
+                m_database = new AdoDataConnection(m_connectionString, m_dataProviderString);
+                OnStatusMessage("Database connection opened.");
+            }
+        }
+
+        /// <summary>
+        /// Loads the entire configuration data set from scratch.
+        /// </summary>
+        /// <returns>The configuration data set.</returns>
+        public DataSet Load()
+        {
+            DataSet configuration = null;
+
+            Execute(database =>
+            {
+                int latestVersion;
+                DataTable entities;
+
+                configuration = new DataSet("Iaon");
+                latestVersion = GetLatestVersion();
+                ExecuteDataOperations();
+
+                // Load configuration entities defined in database
+                entities = GetEntities();
+
+                // Add configuration entities table to system configuration for reference
+                configuration.Tables.Add(entities.Copy());
+
+                // Add each configuration entity to the system configuration
+                foreach (DataRow entityRow in entities.Rows)
+                    configuration.Tables.Add(LoadTable(entityRow));
+
+                AddVersion(configuration, latestVersion);
+                ExtractSecurityContext();
+            });
+
+            return configuration;
+        }
+
+        /// <summary>
+        /// Augments the given configuration data set with the changes
+        /// tracked since the version of the given configuration data set.
+        /// </summary>
+        /// <param name="configuration">The configuration data set to be augmented.</param>
+        public void Augment(DataSet configuration)
+        {
+            // Get the version of the configuration so we know
+            // which changes in the change table need to be updated
+            int version = GetVersion(configuration);
+
+            Execute(database =>
+            {
+                int latestVersion;
+
+                DataTable entities;
+                string sourceName;
+                string runtimeName;
+
+                DataTable trackedChanges;
+                string[] trackedTables;
+                int changeCount;
+
+                DataTable entityTable;
+                string primaryKeyColumn;
+                HashSet<string> primaryKeys;
+
+                DataRow[] entityChanges;
+                Dictionary<string, int> unchangedRecordIndexes;
+                Dictionary<string, DataRow> changedRecords;
+                List<int> rowsToRemove;
+
+                Ticks operationStartTime;
+                double operationElapsedTime;
+                bool success;
+
+                // First check if we can augment
+                if (!CanAugment)
+                    throw new InvalidOperationException("Unable to augment configuration because it is not supported.");
+
+                // First thing we do is get the latest version available from the TrackedChanges
+                // table. This will be the version we are upgrading to. We need to do this first
+                // to prevent potential race conditions that might occur between this and other
+                // processes that may be modifying the database that could result in failure to
+                // update changes to an augmented table
+                latestVersion = GetLatestVersion();
+
+                // Execute data operations before loading anything else from the database
+                ExecuteDataOperations(version);
+
+                // Load configuration entities defined in database
+                entities = GetEntities();
+
+                // If any tables exist in the configuration data set that do not exist
+                // in the ConfigurationEntity table, they were either added at runtime
+                // or removed from ConfigurationEntity. In either case, they can be
+                // safely removed from the configuration data set
+                foreach (DataTable table in configuration.Tables.Cast<DataTable>().ToList())
+                {
+                    if (entities.Select().All(row => row["RuntimeName"].ToNonNullString() != table.TableName))
+                        configuration.Tables.Remove(table);
+                }
+
+                // Add configuration entities table to system configuration for reference
+                configuration.Tables.Add(entities.Copy());
+
+                // Get the changes since the current version of the configuration data set
+                trackedChanges = GetTrackedChanges(version);
+
+                // If there is a gap between the version of this configuration and the minimum version
+                // in the changes table, there might be some changes that were unaccounted for. Therefore,
+                // we pretend there are no tracked tables so that all tables will be reloaded from scratch
+                if (trackedChanges.Select().Select(row => Convert.ToInt32(row["ID"])).DefaultIfEmpty(version + 1).Min() != version + 1)
+                {
+                    version = int.MinValue;
+                    trackedTables = new string[0];
+                }
+                else
+                {
+                    trackedTables = database.Connection.RetrieveData(database.AdapterType, "SELECT Name FROM TrackedTable").Select()
+                        .Select(row => row["Name"].ToNonNullString())
+                        .ToArray();
+                }
+
+                foreach (DataRow entityRow in entities.Rows)
+                {
+                    success = false;
+
+                    // Get the source name and runtime name of the table we are attempting to augment
+                    sourceName = entityRow["SourceName"].ToNonNullString();
+                    runtimeName = entityRow["RuntimeName"].ToNonNullString();
+
+                    // A table can only be augmented if the table is tracked and if it exists in the current configuration
+                    if (configuration.Tables.Contains(runtimeName) && trackedTables.Contains(sourceName))
+                    {
+                        try
+                        {
+                            // Get the list of changes specific to this table
+                            entityChanges = trackedChanges.Select(string.Format("TableName = '{0}'", sourceName));
+
+                            // If there are no changes to this table, there is nothing to do
+                            if (entityChanges.Length > 0)
+                            {
+                                // Track the amount of time it takes to do this operation
+                                operationStartTime = DateTime.UtcNow.Ticks;
+
+                                // Get the actual table to be augmented out of the current configuration
+                                entityTable = configuration.Tables[runtimeName];
+
+                                // Get the name of the column containing the primary key for that table
+                                primaryKeyColumn = entityChanges.Select(row => row["PrimaryKeyColumn"].ToNonNullString()).First();
+
+                                // Get the distinct list of valid primary keys
+                                primaryKeys = new HashSet<string>(entityChanges.Select(row => row["PrimaryKeyValue"]).Where(primaryKey => primaryKey != null && primaryKey != DBNull.Value).Select(primaryKey => primaryKey.ToString()));
+
+                                // Get the relevant records from the entity table as well as the updated values from the database
+                                unchangedRecordIndexes = entityTable.Rows.Cast<DataRow>().Select((row, index) => Tuple.Create(row[primaryKeyColumn].ToString(), index)).Where(tuple => primaryKeys.Contains(tuple.Item1)).ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2, StringComparer.CurrentCultureIgnoreCase);
+                                changedRecords = GetChangedRecords(sourceName, primaryKeyColumn, version).Rows.Cast<DataRow>().ToDictionary(row => row[primaryKeyColumn].ToString(), row => row, StringComparer.CurrentCultureIgnoreCase);
+                                rowsToRemove = new List<int>();
+
+                                // Go through the list of distinct primary key values and query
+                                // the database for the latest changes to each of the modified records
+                                changeCount = 0;
+
+                                foreach (string primaryKey in primaryKeys)
+                                {
+                                    int unchangedIndex;
+                                    DataRow changedRow;
+
+                                    if (changedRecords.TryGetValue(primaryKey, out changedRow))
+                                    {
+                                        // Record was inserted or modified - add or
+                                        // update it in the augmented configuration
+                                        if (unchangedRecordIndexes.TryGetValue(primaryKey, out unchangedIndex))
+                                        {
+                                            unchangedIndex = entityTable.Rows.Count;
+                                            entityTable.Rows.Add(entityTable.NewRow());
+                                        }
+
+                                        Update(entityTable.Rows[unchangedIndex], changedRow);
+                                    }
+                                    else
+                                    {
+                                        // Record was removed so we hang onto the index so we can
+                                        // remove it from the augmented configuration at the end
+                                        if (unchangedRecordIndexes.TryGetValue(primaryKey, out unchangedIndex))
+                                            rowsToRemove.Add(unchangedIndex);
+                                    }
+
+                                    changeCount++;
+                                }
+
+                                // Remove rows in descending index order so that indexes
+                                // don't change for rows that need to be removed
+                                foreach (int index in rowsToRemove.OrderByDescending(index => index))
+                                {
+                                    int lastIndex = entityTable.Rows.Count - 1;
+
+                                    if (index != lastIndex)
+                                        Update(entityTable.Rows[index], entityTable.Rows[lastIndex]);
+
+                                    entityTable.Rows.RemoveAt(lastIndex);
+                                }
+
+                                // Get the amount of time it took to augment the table
+                                operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+
+                                // Display information to the user
+                                OnStatusMessage(string.Format("Loaded {0} change{1} to \"{2}\" in {3}...", changeCount, changeCount == 1 ? "" : "s", runtimeName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds"));
+                            }
+
+                            success = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            OnStatusMessage(string.Format("WARNING: Unable to augment {0} table due to exception: {1}", runtimeName, ex.Message));
+                            OnProcessException(ex);
+                        }
+                    }
+
+                    if (!success)
+                    {
+                        // If we were unable to augment the table, we need to
+                        // drop the current configuration and load the whole table
+                        if (configuration.Tables.Contains(runtimeName))
+                            configuration.Tables.Remove(runtimeName);
+
+                        configuration.Tables.Add(LoadTable(entityRow));
+                    }
+                }
+
+                AddVersion(configuration, latestVersion);
+
+                try
+                {
+                    database.Connection.ExecuteNonQuery(string.Format("DELETE FROM TrackedChange WHERE ID <= {0}", latestVersion));
+                }
+                catch (Exception ex)
+                {
+                    OnStatusMessage(string.Format("WARNING: Unable to curtail the TrackedChange table due to exception: {0}", ex.Message));
+                    OnProcessException(ex);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Closes the database connection.
+        /// </summary>
+        public void Close()
+        {
+            if ((object)m_database != null)
+            {
+                m_database.Dispose();
+                m_database = null;
+
+                OnStatusMessage("Database connection closed.");
+            }
+        }
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="DatabaseConfigurationLoader"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Close();
+        }
+
+        private void ExecuteDataOperations(int trackingVersion = int.MinValue)
+        {
+            Execute(database =>
+            {
+                string assemblyName = "", typeName = "", methodName = "", arguments;
+                Assembly assembly;
+                Type type;
+                MethodInfo method;
+
+                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={0}) AND Enabled <> 0 ORDER BY LoadOrder", m_nodeIDQueryString)).Rows)
+                {
+                    try
+                    {
+                        OnStatusMessage(string.Format("Executing startup data operation \"{0}\".", row["Description"].ToNonNullString("Unlabeled")));
+
+                        // Load data operation parameters
+                        assemblyName = row["AssemblyName"].ToNonNullString();
+                        typeName = row["TypeName"].ToNonNullString();
+                        methodName = row["MethodName"].ToNonNullString();
+                        arguments = row["Arguments"].ToNonNullString();
+
+                        if (string.IsNullOrWhiteSpace(assemblyName))
+                            throw new InvalidOperationException("Data operation assembly name was not defined.");
+
+                        if (string.IsNullOrWhiteSpace(typeName))
+                            throw new InvalidOperationException("Data operation type name was not defined.");
+
+                        if (string.IsNullOrWhiteSpace(methodName))
+                            throw new InvalidOperationException("Data operation method name was not defined.");
+
+                        // Load data operation from containing assembly and type
+                        assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(assemblyName));
+                        type = assembly.GetType(typeName);
+                        method = type.GetMethod(methodName, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.InvokeMethod);
+
+                        // Execute data operation via loaded assembly method
+                        ((DataOperationFunction)Delegate.CreateDelegate(typeof(DataOperationFunction), method))(database, m_nodeIDQueryString, trackingVersion, arguments, OnStatusMessage, OnProcessException);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnStatusMessage(string.Format("WARNING: Failed to execute startup data operation \"{0} [{1}::{2}()]\" due to exception: {3}", assemblyName, typeName, methodName, ex.Message));
+                        OnProcessException(ex);
+                    }
+                }
+            });
+        }
+
+        private DataTable LoadTable(DataRow entityRow)
+        {
+            DataTable destination = null;
+
+            Execute(database =>
+            {
+                DataTable source;
+                DataColumnCollection columns;
+                Dictionary<int, int> columnIndex;
+
+                Ticks operationStartTime;
+                double operationElapsedTime;
+
+                // Load configuration entity data filtered by node ID
+                operationStartTime = DateTime.UtcNow.Ticks;
+                source = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], m_nodeIDQueryString));
+                operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+
+                // Update table name as defined in configuration entity
+                source.TableName = entityRow["RuntimeName"].ToString();
+
+                OnStatusMessage(string.Format("Loaded {0} row{1} from \"{2}\" in {3}...", source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds"));
+
+                operationStartTime = DateTime.UtcNow.Ticks;
+
+                // Clone data source
+                destination = source.Clone();
+
+                // Get destination column collection
+                columns = destination.Columns;
+
+                // Remove redundant node ID column
+                columns.Remove("NodeID");
+
+                // Pre-cache column index translation after removal of NodeID column to speed data copy
+                columnIndex = new Dictionary<int, int>();
+
+                foreach (DataColumn column in columns)
+                {
+                    columnIndex[column.Ordinal] = source.Columns[column.ColumnName].Ordinal;
+                }
+
+                // Manually copy-in each row into table
+                foreach (DataRow sourceRow in source.Rows)
+                {
+                    DataRow newRow = destination.NewRow();
+
+                    // Copy each column of data in the current row
+                    for (int x = 0; x < columns.Count; x++)
+                    {
+                        newRow[x] = sourceRow[columnIndex[x]];
+                    }
+
+                    // Add new row to destination table
+                    destination.Rows.Add(newRow);
+                }
+
+                operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+
+                OnStatusMessage(string.Format("{0} configuration pre-cache completed in {1}.", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds"));
+            });
+
+            return destination;
+        }
+
+        private DataTable GetEntities()
+        {
+            DataTable entities = null;
+
+            Execute(database =>
+            {
+                entities = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ConfigurationEntity WHERE Enabled <> 0 ORDER BY LoadOrder");
+                entities.TableName = "ConfigurationEntity";
+            });
+
+            return entities;
+        }
+
+        private int GetVersion(DataSet configuration)
+        {
+            try
+            {
+                return configuration.Tables["ConfigurationDataSet"].Select()
+                    .Select(row => row.ConvertField<int>("Version"))
+                    .First();
+            }
+            catch
+            {
+                return int.MinValue;
+            }
+        }
+
+        private int GetLatestVersion()
+        {
+            int version = int.MinValue;
+
+            Execute(database =>
+            {
+                try
+                {
+                    version = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT MAX(ID) FROM TrackedChange"));
+                }
+                catch
+                {
+                    version = int.MinValue;
+                }
+            });
+
+            return version;
+        }
+
+        private DataTable GetTrackedChanges(int version)
+        {
+            DataTable table = null;
+            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM TrackedChange WHERE ID > {0}", version)));
+            return table;
+        }
+
+        private DataTable GetChangedRecords(string tableName, string primaryKeyColumn, int version)
+        {
+            DataTable changes = null;
+
+            Execute(database =>
+            {
+                string query = string.Format("SELECT * FROM {0} WHERE {1} IN (SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = '{0}' AND ID > {2}) AND NodeID = {3}", tableName, primaryKeyColumn, version, m_nodeIDQueryString);
+                changes = database.Connection.RetrieveData(database.AdapterType, query);
+            });
+
+            return changes;
+        }
+
+        private void Update(DataRow row, DataRow updates)
+        {
+            foreach (DataColumn column in row.Table.Columns)
+            {
+                if (updates.Table.Columns.Contains(column.ColumnName))
+                    row[column] = updates[column.ColumnName];
+            }
+        }
+
+        private void AddVersion(DataSet configuration, int version)
+        {
+            DataTable configurationDataSetTable = configuration.Tables.Add("ConfigurationDataSet");
+            configurationDataSetTable.Columns.Add("Version");
+            configurationDataSetTable.Rows.Add(version);
+        }
+
+        private void ExtractSecurityContext()
+        {
+            Execute(database =>
+            {
+                Ticks operationStartTime;
+                double operationElapsedTime;
+
+                // Extract and begin cache of current security context - this does not require an existing security provider
+                OnStatusMessage("Preparing current security context...");
+
+                operationStartTime = DateTime.UtcNow.Ticks;
+                AdoSecurityProvider.ExtractSecurityContext(database.Connection);
+                operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
+
+                OnStatusMessage(string.Format("Security context prepared in {0}.", operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds"));
+
+                OnStatusMessage("Database configuration successfully loaded.");
+            });
+        }
+
+        private void Execute(Action<AdoDataConnection> action)
+        {
+            bool isOpen = (object)m_database != null;
+
+            try
+            {
+                if (!isOpen)
+                    Open();
+
+                action(m_database);
+            }
+            finally
+            {
+                if (!isOpen)
+                    Close();
+            }
+        }
+
+        private void OnStatusMessage(string message)
+        {
+            if ((object)StatusMessage != null)
+                StatusMessage(this, new EventArgs<string>(message));
+        }
+
+        private void OnProcessException(Exception ex)
+        {
+            if ((object)ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
+        }
+
+        #endregion
+    }
+}
