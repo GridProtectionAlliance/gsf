@@ -41,7 +41,7 @@ namespace GSF.TimeSeries.Configuration
     /// <param name="arguments">Optional data operation arguments.</param>
     /// <param name="statusMessage">Reference to host status message function.</param>
     /// <param name="processException">Reference to host process exception function.</param>
-    public delegate void DataOperationFunction(AdoDataConnection database, string nodeIDQueryString, int trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException);
+    public delegate void DataOperationFunction(AdoDataConnection database, string nodeIDQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException);
 
     /// <summary>
     /// Represents a configuration loader that gets its configuration from a database connection.
@@ -166,7 +166,7 @@ namespace GSF.TimeSeries.Configuration
 
             Execute(database =>
             {
-                int latestVersion;
+                ulong latestVersion;
                 DataTable entities;
 
                 configuration = new DataSet("Iaon");
@@ -199,11 +199,11 @@ namespace GSF.TimeSeries.Configuration
         {
             // Get the version of the configuration so we know
             // which changes in the change table need to be updated
-            int version = GetVersion(configuration);
+            ulong version = GetVersion(configuration);
 
             Execute(database =>
             {
-                int latestVersion;
+                ulong latestVersion;
 
                 DataTable entities;
                 string sourceName;
@@ -262,9 +262,9 @@ namespace GSF.TimeSeries.Configuration
                 // If there is a gap between the version of this configuration and the minimum version
                 // in the changes table, there might be some changes that were unaccounted for. Therefore,
                 // we pretend there are no tracked tables so that all tables will be reloaded from scratch
-                if (trackedChanges.Select().Select(row => Convert.ToInt32(row["ID"])).DefaultIfEmpty(version + 1).Min() != version + 1)
+                if (trackedChanges.Select().Select(row => Convert.ToUInt64(row["ID"])).DefaultIfEmpty(version + 1).Min() != version + 1)
                 {
-                    version = int.MinValue;
+                    version = ulong.MinValue;
                     trackedTables = new string[0];
                 }
                 else
@@ -417,7 +417,7 @@ namespace GSF.TimeSeries.Configuration
             Close();
         }
 
-        private void ExecuteDataOperations(int trackingVersion = int.MinValue)
+        private void ExecuteDataOperations(ulong trackingVersion = ulong.MinValue)
         {
             Execute(database =>
             {
@@ -542,47 +542,47 @@ namespace GSF.TimeSeries.Configuration
             return entities;
         }
 
-        private int GetVersion(DataSet configuration)
+        private ulong GetVersion(DataSet configuration)
         {
             try
             {
                 return configuration.Tables["ConfigurationDataSet"].Select()
-                    .Select(row => row.ConvertField<int>("Version"))
+                    .Select(row => row.ConvertField<ulong>("Version"))
                     .First();
             }
             catch
             {
-                return int.MinValue;
+                return ulong.MinValue;
             }
         }
 
-        private int GetLatestVersion()
+        private ulong GetLatestVersion()
         {
-            int version = int.MinValue;
+            ulong version = ulong.MinValue;
 
             Execute(database =>
             {
                 try
                 {
-                    version = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT MAX(ID) FROM TrackedChange"));
+                    version = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT MAX(ID) FROM TrackedChange"));
                 }
                 catch
                 {
-                    version = int.MinValue;
+                    version = ulong.MinValue;
                 }
             });
 
             return version;
         }
 
-        private DataTable GetTrackedChanges(int version)
+        private DataTable GetTrackedChanges(ulong version)
         {
             DataTable table = null;
             Execute(database => table = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM TrackedChange WHERE ID > {0}", version)));
             return table;
         }
 
-        private DataTable GetChangedRecords(string tableName, string primaryKeyColumn, int version)
+        private DataTable GetChangedRecords(string tableName, string primaryKeyColumn, ulong version)
         {
             DataTable changes = null;
 
@@ -604,7 +604,7 @@ namespace GSF.TimeSeries.Configuration
             }
         }
 
-        private void AddVersion(DataSet configuration, int version)
+        private void AddVersion(DataSet configuration, ulong version)
         {
             DataTable configurationDataSetTable = configuration.Tables.Add("ConfigurationDataSet");
             configurationDataSetTable.Columns.Add("Version");

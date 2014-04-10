@@ -354,7 +354,7 @@ namespace PhasorProtocolAdapters
         /// <param name="statusMessage">The delegate which will display a status message to the user.</param>
         /// <param name="processException">The delegate which will handle exception logging.</param>
         [SuppressMessage("Microsoft.Maintainability", "CA1502"), SuppressMessage("Microsoft.Maintainability", "CA1505")]
-        private static void PhasorDataSourceValidation(AdoDataConnection database, string nodeIDQueryString, int trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
+        private static void PhasorDataSourceValidation(AdoDataConnection database, string nodeIDQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
         {
             // Make sure setting exists to allow user to by-pass phasor data source validation at startup
             ConfigurationFile configFile = ConfigurationFile.Current;
@@ -479,12 +479,12 @@ namespace PhasorProtocolAdapters
                 bool firstStatisticExisted;
 
                 string[] trackedTables;
-                int changes;
+                ulong changes;
 
                 try
                 {
                     // Determine the tables for which changes are tracked
-                    if (trackingVersion != int.MinValue)
+                    if (trackingVersion != ulong.MinValue)
                     {
                         trackedTables = database.Connection.RetrieveData(database.AdapterType, "SELECT Name FROM TrackedTable").Select()
                             .Select(row => row["Name"].ToNonNullString())
@@ -556,16 +556,16 @@ namespace PhasorProtocolAdapters
                     // Determine how many changes were made to devices and measurements -
                     // if no changes were made, we can skip the next few steps
                     if (trackedTables.Contains("Device") && trackedTables.Contains("Measurement"))
-                        changes = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'Device' OR TableName = 'Measurement') AND ID > {0}", trackingVersion)));
+                        changes = Convert.ToUInt64(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'Device' OR TableName = 'Measurement') AND ID > {0}", trackingVersion)));
                     else
-                        changes = int.MaxValue;
+                        changes = ulong.MaxValue;
                 }
                 catch
                 {
-                    changes = int.MaxValue;
+                    changes = ulong.MaxValue;
                 }
 
-                if (skipOptimization || changes != 0)
+                if (skipOptimization || changes != 0L)
                 {
                     statusMessage("Validating device measurements...");
 
@@ -693,16 +693,16 @@ namespace PhasorProtocolAdapters
                     // Determine how many changes were made to output streams, devices, and measurements -
                     // if no changes were made, we can skip the next few steps
                     if (trackedTables.Contains("OutputStream") && trackedTables.Contains("OutputStreamDevice") && trackedTables.Contains("OutputStreamMeasurement") && trackedTables.Contains("Measurement"))
-                        changes = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'OutputStream' OR TableName = 'OutputStreamDevice' OR TableName = 'OutputStreamMeasurement' OR TableName = 'Measurement') AND ID > {0}", trackingVersion)));
+                        changes = Convert.ToUInt64(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'OutputStream' OR TableName = 'OutputStreamDevice' OR TableName = 'OutputStreamMeasurement' OR TableName = 'Measurement') AND ID > {0}", trackingVersion)));
                     else
-                        changes = int.MaxValue;
+                        changes = ulong.MaxValue;
                 }
                 catch
                 {
-                    changes = int.MaxValue;
+                    changes = ulong.MaxValue;
                 }
 
-                if (skipOptimization || changes != 0)
+                if (skipOptimization || changes != 0L)
                 {
                     statusMessage("Validating output stream measurements...");
 

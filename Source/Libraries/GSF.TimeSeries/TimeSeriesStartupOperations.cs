@@ -45,7 +45,7 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Delegates control to the data operations that are to be performed at startup.
         /// </summary>
-        private static void PerformTimeSeriesStartupOperations(AdoDataConnection database, string nodeIDQueryString, int trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
+        private static void PerformTimeSeriesStartupOperations(AdoDataConnection database, string nodeIDQueryString, ulong trackingVersion, string arguments, Action<string> statusMessage, Action<Exception> processException)
         {
             // Set up messaging to the service
             s_statusMessage = statusMessage;

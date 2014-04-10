@@ -210,7 +210,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[TrackedChange](
-    [ID] [int] IDENTITY(1,1) NOT NULL,
+    [ID] [bigint] IDENTITY(1,1) NOT NULL,
     [TableName] [varchar](200) NOT NULL,
     [PrimaryKeyColumn] [varchar](200) NOT NULL,
     [PrimaryKeyValue] [varchar](max) NULL,
