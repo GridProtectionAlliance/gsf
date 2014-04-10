@@ -1089,7 +1089,10 @@ namespace GSF.TimeSeries
         {
             try
             {
-                return m_binaryCacheConfigurationLoader.Load();
+                if (File.Exists(m_binaryCacheConfigurationLoader.FilePath))
+                    return m_binaryCacheConfigurationLoader.Load();
+
+                return null;
             }
             catch (Exception ex)
             {
@@ -1103,7 +1106,10 @@ namespace GSF.TimeSeries
         {
             try
             {
-                return m_xmlCacheConfigurationLoader.Load();
+                if (File.Exists(m_xmlCacheConfigurationLoader.FilePath))
+                    return m_xmlCacheConfigurationLoader.Load();
+
+                return null;
             }
             catch (Exception ex)
             {
