@@ -1485,6 +1485,11 @@ CREATE TRIGGER Measurement_UpdateTracker AFTER UPDATE ON Measurement FOR EACH RO
 BEGIN
     INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('Measurement', 'PointID', NEW.PointID);
     INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('ActiveMeasurement', 'SignalID', NEW.SignalID);
+    
+    CASE WHEN OLD.SignalID <> NEW.SignalID
+    THEN
+        INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('ActiveMeasurement', 'SignalID', OLD.SignalID);
+    END;
 END$$
 DELIMITER ;
 

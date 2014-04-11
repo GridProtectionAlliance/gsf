@@ -1482,6 +1482,11 @@ CREATE TRIGGER Measurement_UpdateTracker AFTER UPDATE ON Measurement FOR EACH RO
 BEGIN
     INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('Measurement', 'PointID', NEW.PointID);
     INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('ActiveMeasurement', 'SignalID', NEW.SignalID);
+    
+    CASE WHEN NEW.SignalID <> OLD.SignalID
+    THEN
+        INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('ActiveMeasurement', 'SignalID', OLD.SignalID);
+    END;
 END;
 
 CREATE TRIGGER Measurement_DeleteTracker AFTER DELETE ON Measurement FOR EACH ROW

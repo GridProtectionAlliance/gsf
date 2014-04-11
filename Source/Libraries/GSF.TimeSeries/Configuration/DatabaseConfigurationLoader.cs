@@ -170,7 +170,7 @@ namespace GSF.TimeSeries.Configuration
                 DataTable entities;
 
                 configuration = new DataSet("Iaon");
-                latestVersion = GetLatestVersion();
+                latestVersion = GetLatestVersion(0Lu);
                 ExecuteDataOperations();
 
                 // Load configuration entities defined in database
@@ -199,7 +199,7 @@ namespace GSF.TimeSeries.Configuration
         {
             // Get the version of the configuration so we know
             // which changes in the change table need to be updated
-            ulong version = GetVersion(configuration);
+            ulong currentVersion = GetVersion(configuration);
 
             Execute(database =>
             {
@@ -235,10 +235,10 @@ namespace GSF.TimeSeries.Configuration
                 // to prevent potential race conditions that might occur between this and other
                 // processes that may be modifying the database that could result in failure to
                 // update changes to an augmented table
-                latestVersion = GetLatestVersion();
+                latestVersion = GetLatestVersion(currentVersion);
 
                 // Execute data operations before loading anything else from the database
-                ExecuteDataOperations(version);
+                ExecuteDataOperations(currentVersion);
 
                 // Load configuration entities defined in database
                 entities = GetEntities();
@@ -257,14 +257,14 @@ namespace GSF.TimeSeries.Configuration
                 configuration.Tables.Add(entities.Copy());
 
                 // Get the changes since the current version of the configuration data set
-                trackedChanges = GetTrackedChanges(version);
+                trackedChanges = GetTrackedChanges(currentVersion);
 
                 // If there is a gap between the version of this configuration and the minimum version
                 // in the changes table, there might be some changes that were unaccounted for. Therefore,
                 // we pretend there are no tracked tables so that all tables will be reloaded from scratch
-                if (trackedChanges.Select().Select(row => Convert.ToUInt64(row["ID"])).DefaultIfEmpty(version + 1).Min() != version + 1)
+                if (trackedChanges.Select().Select(row => Convert.ToUInt64(row["ID"])).DefaultIfEmpty(currentVersion + 1Lu).Min() != currentVersion + 1Lu)
                 {
-                    version = ulong.MinValue;
+                    currentVersion = ulong.MinValue;
                     trackedTables = new string[0];
                 }
                 else
@@ -303,11 +303,11 @@ namespace GSF.TimeSeries.Configuration
                                 primaryKeyColumn = entityChanges.Select(row => row["PrimaryKeyColumn"].ToNonNullString()).First();
 
                                 // Get the distinct list of valid primary keys
-                                primaryKeys = new HashSet<string>(entityChanges.Select(row => row["PrimaryKeyValue"]).Where(primaryKey => primaryKey != null && primaryKey != DBNull.Value).Select(primaryKey => primaryKey.ToString()));
+                                primaryKeys = new HashSet<string>(entityChanges.Select(row => row["PrimaryKeyValue"]).Where(primaryKey => primaryKey != null && primaryKey != DBNull.Value).Select(primaryKey => primaryKey.ToString()), StringComparer.CurrentCultureIgnoreCase);
 
                                 // Get the relevant records from the entity table as well as the updated values from the database
                                 unchangedRecordIndexes = entityTable.Rows.Cast<DataRow>().Select((row, index) => Tuple.Create(row[primaryKeyColumn].ToString(), index)).Where(tuple => primaryKeys.Contains(tuple.Item1)).ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2, StringComparer.CurrentCultureIgnoreCase);
-                                changedRecords = GetChangedRecords(sourceName, primaryKeyColumn, version).Rows.Cast<DataRow>().ToDictionary(row => row[primaryKeyColumn].ToString(), row => row, StringComparer.CurrentCultureIgnoreCase);
+                                changedRecords = GetChangedRecords(sourceName, primaryKeyColumn, currentVersion).Rows.Cast<DataRow>().ToDictionary(row => row[primaryKeyColumn].ToString(), row => row, StringComparer.CurrentCultureIgnoreCase);
                                 rowsToRemove = new List<int>();
 
                                 // Go through the list of distinct primary key values and query
@@ -323,7 +323,7 @@ namespace GSF.TimeSeries.Configuration
                                     {
                                         // Record was inserted or modified - add or
                                         // update it in the augmented configuration
-                                        if (unchangedRecordIndexes.TryGetValue(primaryKey, out unchangedIndex))
+                                        if (!unchangedRecordIndexes.TryGetValue(primaryKey, out unchangedIndex))
                                         {
                                             unchangedIndex = entityTable.Rows.Count;
                                             entityTable.Rows.Add(entityTable.NewRow());
@@ -556,15 +556,17 @@ namespace GSF.TimeSeries.Configuration
             }
         }
 
-        private ulong GetLatestVersion()
+        private ulong GetLatestVersion(ulong currentVersion)
         {
             ulong version = ulong.MinValue;
+            string query;
 
             Execute(database =>
             {
                 try
                 {
-                    version = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT MAX(ID) FROM TrackedChange"));
+                    query = string.Format("SELECT CASE WHEN COUNT(ID) = 0 THEN {0} ELSE MAX(ID) END FROM TrackedChange", currentVersion);
+                    version = Convert.ToUInt64(database.Connection.ExecuteScalar(query));
                 }
                 catch
                 {
@@ -575,20 +577,20 @@ namespace GSF.TimeSeries.Configuration
             return version;
         }
 
-        private DataTable GetTrackedChanges(ulong version)
+        private DataTable GetTrackedChanges(ulong currentVersion)
         {
             DataTable table = null;
-            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM TrackedChange WHERE ID > {0}", version)));
+            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM TrackedChange WHERE ID > {0}", currentVersion)));
             return table;
         }
 
-        private DataTable GetChangedRecords(string tableName, string primaryKeyColumn, ulong version)
+        private DataTable GetChangedRecords(string tableName, string primaryKeyColumn, ulong currentVersion)
         {
             DataTable changes = null;
 
             Execute(database =>
             {
-                string query = string.Format("SELECT * FROM {0} WHERE {1} IN (SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = '{0}' AND ID > {2}) AND NodeID = {3}", tableName, primaryKeyColumn, version, m_nodeIDQueryString);
+                string query = string.Format("SELECT * FROM {0} WHERE {1} IN (SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = '{0}' AND ID > {2}) AND NodeID = {3}", tableName, primaryKeyColumn, currentVersion, m_nodeIDQueryString);
                 changes = database.Connection.RetrieveData(database.AdapterType, query);
             });
 
