@@ -135,6 +135,12 @@ namespace GSF.Collections
     /// safe to use this class with multiple consumer threads.
     /// </remarks>
     /// <typeparam name="T">The types of items to be queued.</typeparam>
+    /// <remarks>
+    /// It is not safe to use this class with multiple consumer threads.
+    /// The list returned by <see cref="Dequeue"/> is not thread-safe and
+    /// is reused on each Dequeue operation, so no other thread should
+    /// access the list while another thread is calling Dequeue.
+    /// </remarks>
     public class DoubleBufferedQueueManager<T>
     {
         #region [ Members ]
@@ -261,9 +267,21 @@ namespace GSF.Collections
                 foreach (DoubleBufferedQueue<T> queue in m_queues)
                 {
                     if (queue.TryDequeue(out dequeuedItems) <= 0)
+                    {
                         m_dequeuedItems.AddRange(dequeuedItems);
+
+                        // Clearing the list is not necessary, but is a nice
+                        // optimization allowing the garbage collector to
+                        // potentially clean up the items before the next
+                        // dequeue and to reduce the amount of time spent in
+                        // the DoubleBufferedQueue's lock since it won't have
+                        // to clear the list during its dequeue operation
+                        dequeuedItems.Clear();
+                    }
                     else
+                    {
                         m_itemsLeft = true;
+                    }
                 }
             }
 

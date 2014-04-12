@@ -3736,7 +3736,10 @@ namespace GSF.PhasorProtocols
 
             // If injecting a simulated timestamp, use the last received time
             if (m_injectSimulatedTimestamp)
+            {
                 sourceFrame.Timestamp = simulatedTimestamp;
+                sourceFrame.ReceivedTimestamp = simulatedTimestamp;
+            }
 
             // Read next buffer if output frames are almost all processed
             if (QueuedOutputs < 2)
@@ -4087,9 +4090,14 @@ namespace GSF.PhasorProtocols
             try
             {
                 if (m_transportProtocol == TransportProtocol.File)
+                {
                     MaintainCapturedFrameReplayTiming(e.Argument);
+                }
                 else if (m_injectSimulatedTimestamp)
+                {
                     e.Argument.Timestamp = DateTime.UtcNow.Ticks;
+                    e.Argument.ReceivedTimestamp = e.Argument.Timestamp;
+                }
 
                 if ((object)ReceivedDataFrame != null)
                     ReceivedDataFrame(this, e);

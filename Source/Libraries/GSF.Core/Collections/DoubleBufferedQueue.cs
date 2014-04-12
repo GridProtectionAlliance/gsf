@@ -33,6 +33,12 @@ namespace GSF.Collections
     /// item processing in single-producer, single-consumer scenarios.
     /// </summary>
     /// <typeparam name="T">Type of items being queued.</typeparam>
+    /// <remarks>
+    /// It is not safe to use this class with multiple consumer threads.
+    /// The <see cref="Dequeue"/> method must be called by one thread at
+    /// a time, and the consumer must not access a list returned by Dequeue
+    /// after its next call to Dequeue.
+    /// </remarks>
     public class DoubleBufferedQueue<T>
     {
         #region [ Members ]
@@ -118,6 +124,7 @@ namespace GSF.Collections
             {
                 m_swapLock.Enter(ref lockTaken);
                 m_lists[m_listIndex].AddRange(items);
+                m_count = m_lists[m_listIndex].Count;
             }
             finally
             {
@@ -148,8 +155,30 @@ namespace GSF.Collections
                 listIndex = m_listIndex;
                 m_listIndex = 1 - m_listIndex;
                 m_lists[m_listIndex].Clear();
+                m_count = 0;
 
                 return m_lists[listIndex];
+            }
+            finally
+            {
+                if (lockTaken)
+                    m_swapLock.Exit();
+            }
+        }
+
+        /// <summary>
+        /// Empties the producer's buffer so that the
+        /// items can no longer be consumed by the consumer.
+        /// </summary>
+        public void Clear()
+        {
+            bool lockTaken = false;
+
+            try
+            {
+                m_swapLock.Enter(ref lockTaken);
+                m_lists[m_listIndex].Clear();
+                m_count = 0;
             }
             finally
             {
@@ -230,6 +259,35 @@ namespace GSF.Collections
                 if (lockTaken)
                     m_swapLock.Exit();
             }
+        }
+
+        /// <summary>
+        /// Attempts to enqueue a collection of items into the double-buffered queue.
+        /// </summary>
+        /// <returns>
+        /// True if the items were successfully enqueued; false otherwise.
+        /// </returns>
+        public bool TryClear()
+        {
+            bool lockTaken = false;
+
+            try
+            {
+                m_swapLock.TryEnter(ref lockTaken);
+
+                if (lockTaken)
+                {
+                    m_lists[m_listIndex].Clear();
+                    m_count = 0;
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                    m_swapLock.Exit();
+            }
+
+            return lockTaken;
         }
 
         // Attempts to dequeue and process items from the queue.

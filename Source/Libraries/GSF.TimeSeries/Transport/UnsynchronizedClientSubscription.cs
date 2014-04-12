@@ -29,7 +29,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Timers;
-using GSF.Collections;
 using GSF.IO;
 using GSF.Parsing;
 using GSF.TimeSeries.Adapters;

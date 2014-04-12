@@ -219,11 +219,11 @@ namespace GSF.TimeSeries.Statistics
                 string assemblyName, typeName, methodName;
                 bool reenable;
 
-                lock (s_statisticSources)
+                lock (StatisticSources)
                 {
                     // Clear the statistic measurements for each source
                     // so that they will reload on next calculation
-                    foreach (StatisticSource source in s_statisticSources)
+                    foreach (StatisticSource source in StatisticSources)
                     {
                         source.StatisticMeasurements = null;
                     }
@@ -368,11 +368,11 @@ namespace GSF.TimeSeries.Statistics
 
             try
             {
-                lock (s_statisticSources)
+                lock (StatisticSources)
                 {
                     // Get a snapshot of the current list of sources
                     // that can be iterated safely without locking
-                    sources = s_statisticSources.ToArray();
+                    sources = StatisticSources.ToArray();
                 }
 
                 lock (m_statisticsLock)
@@ -452,15 +452,15 @@ namespace GSF.TimeSeries.Statistics
                 {
                     // Calculate the current value of the statistic measurement
                     return new Measurement
-                        {
-                            ID = signalID,
-                            Key = MeasurementKey.Parse(measurement["ID"].ToString(), signalID),
-                            TagName = measurement["PointTag"].ToNonNullString(),
-                            Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
-                            Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
-                            Value = statistic.Method(source.Source, statistic.Arguments),
-                            Timestamp = serverTime
-                        };
+                    {
+                        ID = signalID,
+                        Key = MeasurementKey.Parse(measurement["ID"].ToString(), signalID),
+                        TagName = measurement["PointTag"].ToNonNullString(),
+                        Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
+                        Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),
+                        Value = statistic.Method(source.Source, statistic.Arguments),
+                        Timestamp = serverTime
+                    };
                 }
             }
             catch (Exception ex)
@@ -510,9 +510,7 @@ namespace GSF.TimeSeries.Statistics
         #region [ Static ]
 
         // Static Fields
-        private static readonly List<StatisticSource> s_statisticSources;
-        private static int? s_statSignalTypeID;
-        private static int? s_statHistorianID;
+        private static readonly List<StatisticSource> StatisticSources;
 
         // Static Constructor
 
@@ -521,7 +519,7 @@ namespace GSF.TimeSeries.Statistics
         /// </summary>
         static StatisticsEngine()
         {
-            s_statisticSources = new List<StatisticSource>();
+            StatisticSources = new List<StatisticSource>();
         }
 
         // Static Methods
@@ -557,12 +555,12 @@ namespace GSF.TimeSeries.Statistics
                     SourceAcronym = sourceAcronym
                 };
 
-            lock (s_statisticSources)
+            lock (StatisticSources)
             {
-                if (s_statisticSources.Any(registeredSource => registeredSource.Source == source))
+                if (StatisticSources.Any(registeredSource => registeredSource.Source == source))
                     throw new InvalidOperationException(string.Format("Unable to register {0} as statistic source because it is already registered.", sourceName));
 
-                s_statisticSources.Add(sourceInfo);
+                StatisticSources.Add(sourceInfo);
             }
 
             adapter = source as IAdapter;
@@ -586,72 +584,18 @@ namespace GSF.TimeSeries.Statistics
         {
             if (source != null)
             {
-                lock (s_statisticSources)
+                lock (StatisticSources)
                 {
-                    for (int i = 0; i < s_statisticSources.Count; i++)
+                    for (int i = 0; i < StatisticSources.Count; i++)
                     {
-                        if (s_statisticSources[i].Source == source)
+                        if (StatisticSources[i].Source == source)
                         {
-                            s_statisticSources.RemoveAt(i);
+                            StatisticSources.RemoveAt(i);
                             break;
                         }
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets the signal type ID used for statistic measurements.
-        /// </summary>
-        /// <param name="database">The database to be queried.</param>
-        /// <returns>The signal type ID used for statistic measurements.</returns>
-        private static int GetStatSignalTypeID(AdoDataConnection database)
-        {
-            const string statSignalTypeQuery = "SELECT ID FROM SignalType WHERE Acronym = 'STAT'";
-
-            if ((object)s_statSignalTypeID == null)
-                s_statSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar(statSignalTypeQuery));
-
-            return (int)s_statSignalTypeID;
-        }
-
-        /// <summary>
-        /// Gets the ID of the statistics historian.
-        /// </summary>
-        /// <param name="database">The database to be queried.</param>
-        /// <returns>The ID of the statistics historian.</returns>
-        private static int GetStatHistorianID(AdoDataConnection database)
-        {
-            const string statHistorianQuery = "SELECT ID FROM Historian WHERE Acronym = 'STAT'";
-
-            if ((object)s_statHistorianID == null)
-                s_statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar(statHistorianQuery));
-
-            return (int)s_statHistorianID;
-        }
-
-        /// <summary>
-        /// Gets the device ID of the given adapter, or <see cref="DBNull.Value"/> if the adapter is not a device.
-        /// </summary>
-        /// <param name="database">The database to be queried.</param>
-        /// <param name="adapter">The adapter whose device ID is queried.</param>
-        /// <returns>The device ID of the given adapter, or <see cref="DBNull.Value"/> if the adapter is not a device.</returns>
-        private static object GetDeviceID(AdoDataConnection database, IAdapter adapter)
-        {
-            const string runtimeCountQueryFormat = "SELECT COUNT(*) FROM Runtime WHERE ID = {0} AND SourceTable = 'Device'";
-            const string deviceIDQueryFormat = "SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable = 'Device'";
-            object deviceID = DBNull.Value;
-            int runtimeCount;
-
-            if ((object)adapter != null)
-            {
-                runtimeCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(runtimeCountQueryFormat, adapter.ID)));
-
-                if (runtimeCount > 0)
-                    deviceID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(deviceIDQueryFormat, adapter.ID)));
-            }
-
-            return deviceID;
         }
 
         /// <summary>
