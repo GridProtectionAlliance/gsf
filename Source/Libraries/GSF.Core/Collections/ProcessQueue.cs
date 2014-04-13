@@ -1270,11 +1270,15 @@ namespace GSF.Collections
             }
             else
             {
-                // Start intervaled processing, if there items in the queue
-                lock (m_processLock)
+                // Lock SyncRoot before m_processLock to prevent deadlocks
+                lock (SyncRoot)
                 {
-                    // Enabled flag changes are always in a critical section to ensure all items will be processed
-                    m_processTimer.Enabled = Count > 0;
+                    // Start intervaled processing, if there items in the queue
+                    lock (m_processLock)
+                    {
+                        // Enabled flag changes are always in a critical section to ensure all items will be processed
+                        m_processTimer.Enabled = Count > 0;
+                    }
                 }
             }
         }
@@ -2732,12 +2736,16 @@ namespace GSF.Collections
 
             if ((object)m_processTimer != null)
             {
-                // Stop the process timer if there is no more data to process.
-                lock (m_processLock)
+                // Lock SyncRoot before m_processLock to prevent deadlocks
+                lock (SyncRoot)
                 {
-                    // Enabled flag changes are always in a critical section to ensure all items will be processed
-                    if (IsEmpty)
-                        m_processTimer.Enabled = false;
+                    // Stop the process timer if there is no more data to process.
+                    lock (m_processLock)
+                    {
+                        // Enabled flag changes are always in a critical section to ensure all items will be processed
+                        if (IsEmpty)
+                            m_processTimer.Enabled = false;
+                    }
                 }
             }
         }

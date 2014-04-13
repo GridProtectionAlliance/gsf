@@ -275,7 +275,7 @@ namespace GSF.Collections
                         // potentially clean up the items before the next
                         // dequeue and to reduce the amount of time spent in
                         // the DoubleBufferedQueue's lock since it won't have
-                        // to clear the list during its dequeue operation
+                        // to clear the list during the next dequeue operation
                         if (!dequeuedItems.IsReadOnly)
                             dequeuedItems.Clear();
                     }
