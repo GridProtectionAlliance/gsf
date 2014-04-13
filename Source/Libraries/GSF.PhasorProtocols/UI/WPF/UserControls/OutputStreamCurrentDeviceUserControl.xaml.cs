@@ -110,15 +110,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 foreach (OutputStreamDevice outputStreamDevice in m_currentDevices)
                 {
                     if (outputStreamDevice.Selected)
-                    {
                         OutputStreamDevice.Delete(null, m_outputStreamID, outputStreamDevice.Acronym);
-                        LoadCurrentDevices();
-                        LoadNewDevices(string.Empty);
-                    }
                 }
 
-                //if (popupSettings != null)
-                //    popupSettings.IsOpen = true;
+                LoadCurrentDevices();
+                LoadNewDevices(string.Empty);
             }
             catch (Exception ex)
             {
