@@ -492,8 +492,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     if (Confirm("Do you want to update configuration?", ""))
                     {
                         string runtimeID = CommonFunctions.GetRuntimeID("OutputStream", CurrentItem.ID);
-                        string result = CommonFunctions.SendCommandToService("reloadconfig");
-                        result = CommonFunctions.SendCommandToService("Invoke " + runtimeID + " UpdateConfiguration");
+                        string result = CommonFunctions.SendCommandToService(string.Format("ReloadConfig -Invoke=\"Invoke {0} UpdateConfiguration\"", runtimeID));
                         Popup(result, "", MessageBoxImage.Information);
                     }
                 }

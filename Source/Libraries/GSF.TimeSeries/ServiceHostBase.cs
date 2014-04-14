@@ -38,6 +38,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime;
+using System.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.ServiceProcess;
 using System.Text;
@@ -53,6 +54,7 @@ using GSF.Data;
 using GSF.IO;
 using GSF.Net.Security;
 using GSF.Reflection;
+using GSF.Security;
 using GSF.ServiceProcess;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
@@ -2635,7 +2637,14 @@ namespace GSF.TimeSeries
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void ReloadConfigRequestHandler(ClientRequestInfo requestInfo)
         {
-            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            Arguments arguments = requestInfo.Request.Arguments;
+
+            ClientRequestInfo invokeInfo = null;
+            ClientRequestHandler invokeHandler = null;
+            string resource;
+            bool invoking;
+
+            if (arguments.ContainsHelpRequest)
             {
                 StringBuilder helpMessage = new StringBuilder();
 
@@ -2651,6 +2660,9 @@ namespace GSF.TimeSeries
                 helpMessage.AppendLine();
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -Invoke=\"Command [Args]\"".PadRight(20));
+                helpMessage.AppendFormat("Invokes another command once the reload config is complete");
                 helpMessage.AppendLine();
                 helpMessage.Append("       -Augmented".PadRight(20));
                 helpMessage.AppendFormat("Augments the current running configuration from the {0}, if supported", m_configurationType);
@@ -2669,17 +2681,33 @@ namespace GSF.TimeSeries
             }
             else
             {
-                Arguments arguments = requestInfo.Request.Arguments;
+                invoking = arguments.Exists("Invoke");
 
-                if (arguments.Count == 1)
+                if (invoking)
                 {
-                    if (!arguments.Exists(m_configurationType.ToString()) && !arguments.Exists("BinaryCache") && !arguments.Exists("XmlCache"))
+                    invokeInfo = new ClientRequestInfo(requestInfo.Sender, ClientRequest.Parse(arguments["Invoke"]));
+                    resource = invokeInfo.Request.Command;
+
+                    // Check if remote client has permission to invoke the requested command.
+                    if (m_serviceHelper.SecureRemoteInteractions)
+                    {
+                        // Validate current client principal
+                        if (SecurityProviderUtility.IsResourceSecurable(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
+                            throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
+                    }
+
+                    invokeHandler = m_serviceHelper.FindClientRequestHandler(resource);
+                }
+
+                if (arguments.Count == (invoking ? 2 : 1))
+                {
+                    if (!arguments.Exists(m_configurationType.ToString()) && !arguments.Exists("Augmented") && !arguments.Exists("BinaryCache") && !arguments.Exists("XmlCache"))
                     {
                         SendResponse(requestInfo, false, "Invalid argument supplied to ReloadConfig command.");
                         return;
                     }
                 }
-                else if (arguments.Count > 1)
+                else if (arguments.Count > (invoking ? 2 : 1))
                 {
                     SendResponse(requestInfo, false, "Invalid arguments supplied to ReloadConfig command.");
                     return;
@@ -2690,7 +2718,11 @@ namespace GSF.TimeSeries
                     if (success)
                     {
                         m_iaonSession.AllAdapters.UpdateCollectionConfigurations();
-                        SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
+
+                        if (invoking && (object)invokeHandler != null)
+                            invokeHandler.HandlerMethod(invokeInfo);
+                        else
+                            SendResponse(requestInfo, true, "System configuration was successfully reloaded.");
                     }
                     else
                     {
