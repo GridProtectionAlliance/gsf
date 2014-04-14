@@ -74,7 +74,6 @@ using GSF.Historian.Files;
 using GSF.Historian.MetadataProviders;
 using GSF.Historian.Replication;
 using GSF.IO;
-using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -93,7 +92,6 @@ namespace HistorianAdapters
         private DataServices m_dataServices;
         private MetadataProviders m_metadataProviders;
         private ReplicationProviders m_replicationProviders;
-        private LongSynchronizedOperation m_metadataRefreshOperation;
         private bool m_autoRefreshMetadata;
         private string m_instanceName;
         private string m_archivePath;
@@ -115,7 +113,7 @@ namespace HistorianAdapters
             m_archive.MetadataFile = new MetadataFile();
             m_archive.StateFile = new StateFile();
             m_archive.IntercomFile = new IntercomFile();
-            m_metadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh, OnProcessException);
+            MetadataRefreshOperation.IsBackground = false;
         }
 
         #endregion
@@ -248,20 +246,12 @@ namespace HistorianAdapters
         /// <summary>
         /// Refreshes metadata using all available and enabled providers.
         /// </summary>
-        [AdapterCommand("Refreshes metadata using all available and enabled providers.", "Administrator", "Editor")]
-        public override void RefreshMetadata()
-        {
-            m_metadataRefreshOperation.RunOnceAsync();
-        }
-
-        private void ExecuteMetadataRefresh()
+        protected override void ExecuteMetadataRefresh()
         {
             bool queueEnabled = false;
 
             try
             {
-                base.RefreshMetadata();
-
                 if ((object)m_archive != null && m_archive.IsOpen && (object)m_archive.StateFile != null && m_archive.StateFile.IsOpen && (object)m_archive.MetadataFile != null && m_archive.MetadataFile.IsOpen)
                 {
                     queueEnabled = InternalProcessQueue.Enabled;

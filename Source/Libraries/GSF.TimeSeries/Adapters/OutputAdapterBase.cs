@@ -26,11 +26,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Timers;
 using GSF.Collections;
+using GSF.Threading;
 using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Adapters
@@ -64,6 +66,7 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<int>> UnprocessedMeasurements;
 
         // Fields
+        private LongSynchronizedOperation m_metadataRefreshOperation;
         private ProcessQueue<IMeasurement> m_measurementQueue;
         private List<string> m_inputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
@@ -80,6 +83,8 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected OutputAdapterBase()
         {
+            m_metadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh) { IsBackground = true };
+
             m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
             m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
 
@@ -103,6 +108,22 @@ namespace GSF.TimeSeries.Adapters
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="OutputAdapterBase"/>.
+        /// </summary>
+        public override DataSet DataSource
+        {
+            get
+            {
+                return base.DataSource;
+            }
+            set
+            {
+                base.DataSource = value;
+                RefreshMetadata();
+            }
+        }
 
         /// <summary>
         /// Gets or sets whether or not to automatically place measurements back into the processing
@@ -295,6 +316,17 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
+        /// Gets the operation that calls <see cref="ExecuteMetadataRefresh"/>.
+        /// </summary>
+        protected LongSynchronizedOperation MetadataRefreshOperation
+        {
+            get
+            {
+                return m_metadataRefreshOperation;
+            }
+        }
+
+        /// <summary>
         /// Allows derived class access to internal processing queue.
         /// </summary>
         protected ProcessQueue<IMeasurement> InternalProcessQueue
@@ -438,7 +470,7 @@ namespace GSF.TimeSeries.Adapters
         /// Initiates request for metadata refresh for <see cref="OutputAdapterBase"/>, if implemented.
         /// </summary>
         [AdapterCommand("Requests metadata refresh of output adapter.", "Administrator", "Editor")]
-        public virtual void RefreshMetadata()
+        public void RefreshMetadata()
         {
             // Force a recalculation of input measurement keys so that system can appropriately update routing tables
             string setting;
@@ -449,6 +481,14 @@ namespace GSF.TimeSeries.Adapters
                 InputMeasurementKeys = new MeasurementKey[0];
 
             InputSourceIDs = InputSourceIDs;
+            m_metadataRefreshOperation.RunOnceAsync();
+        }
+
+        /// <summary>
+        /// Executes the metadata refresh in a synchronous fashion.
+        /// </summary>
+        protected virtual void ExecuteMetadataRefresh()
+        {
         }
 
         /// <summary>

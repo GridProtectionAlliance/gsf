@@ -31,7 +31,6 @@ using System.Linq;
 using System.Threading;
 using GSF;
 using GSF.IO;
-using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using PISDK;
@@ -56,7 +55,6 @@ namespace PIAdapters
         private Server m_server;                                                // PI server object for archiving data
         private ConcurrentDictionary<MeasurementKey, PIPoint> m_tagMap;         // Cache the mapping between GSFSchema measurements and PI points
         private int m_processedMeasurements;                                    // Track the processed measurements
-        private readonly LongSynchronizedOperation m_metadataRefreshOperation;  // Operation that handles metadata refresh
         private bool m_runMetadataSync;                                         // Whether or not to automatically create/update PI points on the server
         private string m_piPointSource;                                         // Point source to set on PI points when automatically created by the adapter
         private string m_piPointClass;                                          // Point class to use for new PI points when automatically created by the adapter
@@ -74,7 +72,6 @@ namespace PIAdapters
         public PIOutputAdapter()
         {
             m_connectTimeout = 30000;
-            m_metadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh) { IsBackground = true };
             m_tagMap = new ConcurrentDictionary<MeasurementKey, PIPoint>();
             m_processedMeasurements = 0;
             m_runMetadataSync = true;
@@ -506,22 +503,16 @@ namespace PIAdapters
             }
 
             // Determine which tags no longer exist
-            List<MeasurementKey> tagsToRemove = new List<MeasurementKey>();
             PIPoint removedPoint;
+            List<MeasurementKey> tagsToRemove;
 
             newTags.Sort();
 
-            foreach (MeasurementKey key in m_tagMap.Keys)
-            {
-                // If existing tags exist that are not part of new updates, these need to be removed
-                if (newTags.BinarySearch(key) < 0)
-                    tagsToRemove.Add(key);
-            }
+            // If existing tags exist that are not part of new updates, these need to be removed
+            tagsToRemove = m_tagMap.Keys.Where(key => newTags.BinarySearch(key) < 0).ToList();
 
             foreach (MeasurementKey key in tagsToRemove)
-            {
                 m_tagMap.TryRemove(key, out removedPoint);
-            }
 
             // Cache tag-map for faster future PI adapter startup
             try
@@ -531,13 +522,7 @@ namespace PIAdapters
                 using (FileStream tagMapCache = File.Create(m_tagMapCacheFileName))
                 {
                     Stream fileStream = tagMapCache;
-                    Dictionary<MeasurementKey, string> tagNames = new Dictionary<MeasurementKey, string>();
-
-                    foreach (KeyValuePair<MeasurementKey, PIPoint> kvp in m_tagMap)
-                    {
-                        tagNames.Add(kvp.Key, kvp.Value.Name);
-                    }
-
+                    Dictionary<MeasurementKey, string> tagNames = m_tagMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name);
                     Serialization.Serialize(tagNames, GSF.SerializationFormat.Binary, ref fileStream);
                 }
 
@@ -552,16 +537,9 @@ namespace PIAdapters
         }
 
         /// <summary>
-        /// Refreshes metadata using all available and enabled providers.
+        /// Sends updated metadata to PI.
         /// </summary>
-        [AdapterCommand("Sends updated metadata to PI", "Administrator", "Editor")]
-        public override void RefreshMetadata()
-        {
-            if (m_runMetadataSync)
-                m_metadataRefreshOperation.RunOnceAsync();
-        }
-
-        private void ExecuteMetadataRefresh()
+        protected override void ExecuteMetadataRefresh()
         {
             // Map measurements to any existing point tags to start archiving what is possible right away...
             if (File.Exists(m_tagMapCacheFileName))
@@ -614,8 +592,6 @@ namespace PIAdapters
 
             try
             {
-                base.RefreshMetadata();
-
                 if (InputMeasurementKeys != null && InputMeasurementKeys.Any())
                 {
                     int processed = 0, total = InputMeasurementKeys.Length;

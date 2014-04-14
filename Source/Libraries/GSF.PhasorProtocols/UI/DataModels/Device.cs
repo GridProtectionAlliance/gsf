@@ -1708,25 +1708,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     // We do this to make sure all statistical measurements are in the system.
                     CommonFunctions.SendCommandToService("ReloadConfig");
                 }
-
-                if (device.HistorianID != null)
-                    CommonFunctions.SendCommandToService("Invoke " + CommonFunctions.GetRuntimeID("Historian", (int)device.HistorianID) + " RefreshMetadata");
             }
             else
             {
                 CommonFunctions.SendCommandToService("ReloadConfig");
-
-                if (historianID != null)
-                    CommonFunctions.SendCommandToService("Invoke " + CommonFunctions.GetRuntimeID("Historian", (int)historianID) + " RefreshMetadata");
             }
-
-            Historian statHistorian = Historian.GetHistorian(null, "WHERE Acronym = 'STAT'");
-
-            if (statHistorian != null)
-                CommonFunctions.SendCommandToService("Invoke " + CommonFunctions.GetRuntimeID("Historian", statHistorian.ID) + " RefreshMetadata");
-
-            CommonFunctions.SendCommandToService("INVOKE /a STATISTIC!SERVICES ReloadStatistics");
-            CommonFunctions.SendCommandToService("RefreshRoutes");
         }
 
         private static string ParseConnectionString(string connectionString)
