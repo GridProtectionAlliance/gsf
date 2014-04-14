@@ -564,6 +564,17 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             int frameSize;
 
+            if (IsNewRecord)
+            {
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ConfigFrameSizeColor = Brushes.Gray;
+                    ConfigFrameSizeText = "You must save the new record to calculate frame size.";
+                }));
+
+                return;
+            }
+
             using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
             {
                 dataSource = new DataSet();
@@ -625,7 +636,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             Application.Current.Dispatcher.Invoke(() =>
             {
                 ConfigFrameSizeColor = new SolidColorBrush(Colors.Black);
-                ConfigFrameSizeText = string.Format("{0} bytes ({1:0.##%} of maximum)", frameSize, frameSize / (double)MaxFrameSize);
+                ConfigFrameSizeText = string.Format("{0:N0} bytes ({1:0.##%} of maximum)", frameSize, frameSize / (double)MaxFrameSize);
 
                 if (CurrentItem.Type == 2)
                     ConfigFrameSizeText += " - BPA PDCstream is typically limited by its data frame size.";

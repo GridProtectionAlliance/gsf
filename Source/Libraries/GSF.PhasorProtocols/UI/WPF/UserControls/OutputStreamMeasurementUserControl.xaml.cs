@@ -66,7 +66,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             InitializeComponent();
             m_outputStreamID = outputStreamID;
-            m_dataContext = new OutputStreamMeasurements(outputStreamID, 24);
+            m_dataContext = new OutputStreamMeasurements(outputStreamID, 23);
             this.DataContext = m_dataContext;
             m_dataContext.PropertyChanged += ViewModel_PropertyChanged;
             m_newMeasurements = new ObservableCollection<Measurement>();
