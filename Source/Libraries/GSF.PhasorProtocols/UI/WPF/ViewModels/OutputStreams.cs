@@ -25,16 +25,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Data;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using GSF.Data;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.Modal;
 using GSF.PhasorProtocols.UI.UserControls;
+using GSF.Threading;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.Commands;
 using GSF.TimeSeries.UI.DataModels;
+using PhasorProtocolAdapters;
 
 namespace GSF.PhasorProtocols.UI.ViewModels
 {
@@ -48,6 +53,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private Dictionary<string, string> m_coordinateFormatLookupList;
         private Dictionary<int, string> m_typeLookupList;
         private Dictionary<string, string> m_mirroringSourceLookupList;
+        
         private RelayCommand m_initializeCommand;
         private RelayCommand m_copyCommand;
         private RelayCommand m_updateConfigurationCommand;
@@ -56,8 +62,22 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private RelayCommand m_wizardCommand;
         private RelayCommand m_buildCommandChannelCommand;
         private RelayCommand m_buildDataChannelCommand;
+
+        private LongSynchronizedOperation m_configFrameSizeCalculation;
+        
         private string m_runtimeID;
         private bool m_mirrorMode;
+        private string m_configFrameSizeText;
+        private Brush m_configFrameSizeColor;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public OutputStreams(int itemsPerPage, bool autoSave = true)
+            : base(itemsPerPage, autoSave)
+        {
+        }
 
         #endregion
 
@@ -288,13 +308,36 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
-        #endregion
-
-        #region [ Constructor ]
-
-        public OutputStreams(int itemsPerPage, bool autoSave = true)
-            : base(itemsPerPage, autoSave)
+        /// <summary>
+        /// Gets or sets the text to be displayed as the configuration frame size.
+        /// </summary>
+        public string ConfigFrameSizeText
         {
+            get
+            {
+                return m_configFrameSizeText;
+            }
+            set
+            {
+                m_configFrameSizeText = value;
+                OnPropertyChanged("ConfigFrameSizeText");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the color of the text to be displayed as the configuration frame size.
+        /// </summary>
+        public Brush ConfigFrameSizeColor
+        {
+            get
+            {
+                return m_configFrameSizeColor;
+            }
+            set
+            {
+                m_configFrameSizeColor = value;
+                OnPropertyChanged("ConfigFrameSizeColor");
+            }
         }
 
         #endregion
@@ -319,6 +362,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         public override void Initialize()
         {
+            m_configFrameSizeCalculation = new LongSynchronizedOperation(UpdateConfigFrameSize, UpdateConfigFrameSizeError) { IsBackground = true };
+
             base.Initialize();
 
             m_nodelookupList = Node.GetLookupList(null);
@@ -327,6 +372,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             if (m_mirrorMode)
                 MirroringSourceLookupList = Device.GetDevicesForMirroringOutputStream(null);
+
+            ConfigFrameSizeColor = new SolidColorBrush(Colors.Black);
+            ConfigFrameSizeText = "Calculating...";
 
             m_typeLookupList = new Dictionary<int, string>();
             m_typeLookupList.Add(1, "IEEE C37.118-2005");
@@ -351,7 +399,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         public override void Load()
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            List<int> pageKeys = null;
+            List<int> pageKeys;
 
             try
             {
@@ -427,41 +475,42 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 if (Confirm("Do you want to make a copy of " + CurrentItem.Acronym + " output stream?", "This will only copy the output stream configuration, not associated devices."))
                 {
                     OutputStream newOutputStream = new OutputStream
-                        {
-                            ID = 0, // Set it to zero so it will be inserted instead of updated.
-                            Enabled = false,
-                            Acronym = CurrentItem.Acronym,
-                            Name = "Copy of " + CurrentItem.Name,
-                            AllowPreemptivePublishing = CurrentItem.AllowPreemptivePublishing,
-                            AllowSortsByArrival = CurrentItem.AllowSortsByArrival,
-                            AnalogScalingValue = CurrentItem.AnalogScalingValue,
-                            AutoPublishConfigFrame = CurrentItem.AutoPublishConfigFrame,
-                            AutoStartDataChannel = CurrentItem.AutoStartDataChannel,
-                            CommandChannel = CurrentItem.CommandChannel,
-                            ConnectionString = CurrentItem.ConnectionString,
-                            CoordinateFormat = CurrentItem.CoordinateFormat,
-                            CurrentScalingValue = CurrentItem.CurrentScalingValue,
-                            DataChannel = CurrentItem.DataChannel,
-                            DataFormat = CurrentItem.DataFormat,
-                            DigitalMaskValue = CurrentItem.DigitalMaskValue,
-                            DownSamplingMethod = CurrentItem.DownSamplingMethod,
-                            FramesPerSecond = CurrentItem.FramesPerSecond,
-                            IDCode = CurrentItem.IDCode,
-                            IgnoreBadTimeStamps = CurrentItem.IgnoreBadTimeStamps,
-                            LagTime = CurrentItem.LagTime,
-                            LeadTime = CurrentItem.LeadTime,
-                            LoadOrder = CurrentItem.LoadOrder,
-                            NodeID = CurrentItem.NodeID,
-                            NominalFrequency = CurrentItem.NominalFrequency,
-                            PerformTimestampReasonabilityCheck = CurrentItem.PerformTimestampReasonabilityCheck,
-                            TimeResolution = CurrentItem.TimeResolution,
-                            Type = CurrentItem.Type,
-                            UseLocalClockAsRealTime = CurrentItem.UseLocalClockAsRealTime,
-                            VoltageScalingValue = CurrentItem.VoltageScalingValue
-                        };
+                    {
+                        ID = 0, // Set it to zero so it will be inserted instead of updated.
+                        Enabled = false,
+                        Acronym = CurrentItem.Acronym,
+                        Name = "Copy of " + CurrentItem.Name,
+                        AllowPreemptivePublishing = CurrentItem.AllowPreemptivePublishing,
+                        AllowSortsByArrival = CurrentItem.AllowSortsByArrival,
+                        AnalogScalingValue = CurrentItem.AnalogScalingValue,
+                        AutoPublishConfigFrame = CurrentItem.AutoPublishConfigFrame,
+                        AutoStartDataChannel = CurrentItem.AutoStartDataChannel,
+                        CommandChannel = CurrentItem.CommandChannel,
+                        ConnectionString = CurrentItem.ConnectionString,
+                        CoordinateFormat = CurrentItem.CoordinateFormat,
+                        CurrentScalingValue = CurrentItem.CurrentScalingValue,
+                        DataChannel = CurrentItem.DataChannel,
+                        DataFormat = CurrentItem.DataFormat,
+                        DigitalMaskValue = CurrentItem.DigitalMaskValue,
+                        DownSamplingMethod = CurrentItem.DownSamplingMethod,
+                        FramesPerSecond = CurrentItem.FramesPerSecond,
+                        IDCode = CurrentItem.IDCode,
+                        IgnoreBadTimeStamps = CurrentItem.IgnoreBadTimeStamps,
+                        LagTime = CurrentItem.LagTime,
+                        LeadTime = CurrentItem.LeadTime,
+                        LoadOrder = CurrentItem.LoadOrder,
+                        NodeID = CurrentItem.NodeID,
+                        NominalFrequency = CurrentItem.NominalFrequency,
+                        PerformTimestampReasonabilityCheck = CurrentItem.PerformTimestampReasonabilityCheck,
+                        TimeResolution = CurrentItem.TimeResolution,
+                        Type = CurrentItem.Type,
+                        UseLocalClockAsRealTime = CurrentItem.UseLocalClockAsRealTime,
+                        VoltageScalingValue = CurrentItem.VoltageScalingValue
+                    };
 
                     string originalAcronym = newOutputStream.Acronym;
                     int i = 1;
+
                     do
                     {
                         newOutputStream.Acronym = originalAcronym + i.ToString();
@@ -503,19 +552,127 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
         }
 
+        private void UpdateConfigFrameSize()
+        {
+            const int MaxFrameSize = ushort.MaxValue + 1;
+
+            PhasorDataConcentratorBase concentrator;
+            DataSet dataSource;
+            DataTable table;
+
+            string iniFilePath = null;
+
+            int frameSize;
+
+            using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
+            {
+                dataSource = new DataSet();
+
+                table = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM RuntimeOutputStreamDevice");
+                table.TableName = "OutputStreamDevices";
+                dataSource.Tables.Add(table.Copy());
+
+                // We just need the schema information from this table - not the actual data
+                table = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM RuntimeOutputStreamMeasurement WHERE AdapterID = 0");
+                table.TableName = "OutputStreamMeasurements";
+                dataSource.Tables.Add(table.Copy());
+
+                table = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDevicePhasor");
+                table.TableName = "OutputStreamDevicePhasors";
+                dataSource.Tables.Add(table.Copy());
+
+                table = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceAnalog");
+                table.TableName = "OutputStreamDeviceAnalogs";
+                dataSource.Tables.Add(table.Copy());
+
+                table = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceDigital");
+                table.TableName = "OutputStreamDeviceDigitals";
+                dataSource.Tables.Add(table.Copy());
+            }
+
+            switch (CurrentItem.Type)
+            {
+                case 1:
+                    concentrator = new PhasorProtocolAdapters.IeeeC37_118.Concentrator();
+                    break;
+
+                case 2:
+                    iniFilePath = Path.GetTempFileName();
+
+                    concentrator = new PhasorProtocolAdapters.BpaPdcStream.Concentrator()
+                    {
+                        IniFileName = iniFilePath
+                    };
+
+                    break;
+
+                case 3:
+                    concentrator = new PhasorProtocolAdapters.Iec61850_90_5.Concentrator();
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Invalid concentrator type.");
+            }
+
+            using (concentrator)
+            {
+                concentrator.ID = Convert.ToUInt32(RuntimeID);
+                concentrator.DataSource = dataSource;
+                concentrator.UpdateConfiguration();
+                frameSize = concentrator.ConfigurationFrame.BinaryLength;
+            }
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ConfigFrameSizeColor = new SolidColorBrush(Colors.Black);
+                ConfigFrameSizeText = string.Format("{0} bytes ({1:0.##%} of maximum)", frameSize, frameSize / (double)MaxFrameSize);
+
+                if (CurrentItem.Type == 2)
+                    ConfigFrameSizeText += " - BPA PDCstream is typically limited by its data frame size.";
+
+                if (frameSize > MaxFrameSize)
+                {
+                    ConfigFrameSizeColor = new SolidColorBrush(Colors.Red);
+                    ConfigFrameSizeText += string.Format(" - WARNING: Exceeds maximum config frame size for {0}. Remove devices.", CurrentItem.TypeName);
+                }
+            });
+
+            try
+            {
+                if ((object)iniFilePath != null)
+                    File.Delete(iniFilePath);
+            }
+            catch
+            {
+                // Doesn't matter if the
+                // file doesn't get deleted
+            }
+        }
+
+        private void UpdateConfigFrameSizeError(Exception ex)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                ConfigFrameSizeColor = new SolidColorBrush(Colors.Gray);
+                ConfigFrameSizeText = string.Format("Error calculating frame size: {0}", ex.Message);
+            });
+        }
+
         private void BuildCommandChannel()
         {
             if (CurrentItem != null)
             {
                 ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.CommandChannel);
+
                 if (!string.IsNullOrEmpty(CurrentItem.CommandChannel))
                     csb.ConnectionString = CurrentItem.CommandChannel;
 
                 csb.Closed += delegate
-                    {
-                        if ((bool)csb.DialogResult)
-                            CurrentItem.CommandChannel = csb.ConnectionString;
-                    };
+                {
+                    if ((bool)csb.DialogResult)
+                        CurrentItem.CommandChannel = csb.ConnectionString;
+                };
+
                 csb.Owner = Application.Current.MainWindow;
                 csb.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 csb.ShowDialog();
@@ -527,14 +684,16 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             if (CurrentItem != null)
             {
                 ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.DataChannel);
+
                 if (!string.IsNullOrEmpty(CurrentItem.DataChannel))
                     csb.ConnectionString = CurrentItem.DataChannel;
 
                 csb.Closed += delegate
-                    {
-                        if ((bool)csb.DialogResult)
-                            CurrentItem.DataChannel = csb.ConnectionString;
-                    };
+                {
+                    if ((bool)csb.DialogResult)
+                        CurrentItem.DataChannel = csb.ConnectionString;
+                };
+
                 csb.Owner = Application.Current.MainWindow;
                 csb.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 csb.ShowDialog();
@@ -574,17 +733,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     RuntimeID = string.Empty;
                 else
                     RuntimeID = CommonFunctions.GetRuntimeID("OutputStream", CurrentItem.ID);
+
+                ConfigFrameSizeColor = new SolidColorBrush(Colors.Black);
+                ConfigFrameSizeText = "Calculating...";
+                m_configFrameSizeCalculation.RunOnceAsync();
             }
-        }
-
-        protected override void m_currentItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "MirroringSourceDevice")
-            {
-
-            }
-
-            base.m_currentItem_PropertyChanged(sender, e);
         }
 
         public override void Save()
@@ -612,6 +765,12 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     {
                         ItemsKeys = null;
                         Load();
+                    }
+                    else
+                    {
+                        ConfigFrameSizeColor = new SolidColorBrush(Colors.Black);
+                        ConfigFrameSizeText = "Calculating...";
+                        m_configFrameSizeCalculation.RunOnceAsync();
                     }
                 }
                 catch (Exception ex)
