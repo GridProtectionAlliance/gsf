@@ -429,7 +429,6 @@ namespace GSF.Collections
         private bool m_disposed;
 
         private Timer m_processTimer;
-        private readonly object m_processLock;
 
         #endregion
 
@@ -489,7 +488,6 @@ namespace GSF.Collections
             m_requeueOnException = requeueOnException;
             m_requeueModeOnTimeout = DefaultRequeueModeOnTimeout;
             m_requeueModeOnException = DefaultRequeueModeOnException;
-            m_processLock = new object();
 
             if (processInterval == RealTimeProcessInterval)
             {
@@ -741,10 +739,13 @@ namespace GSF.Collections
             }
             set
             {
+
                 if (m_processingIsRealTime)
                     throw new InvalidOperationException("Cannot change process interval when " + Name + " is configured for real-time processing");
-
-                m_processTimer.Interval = value;
+                lock (SyncRoot)
+                {
+                    m_processTimer.Interval = value;
+                }
             }
         }
 
@@ -879,10 +880,13 @@ namespace GSF.Collections
             }
             set
             {
-                if (m_enabled && !value)
-                    Stop();
-                else if (!m_enabled && value)
-                    Start();
+                lock (SyncRoot)
+                {
+                    if (m_enabled && !value)
+                        Stop();
+                    else if (!m_enabled && value)
+                        Start();
+                }
             }
         }
 
@@ -896,7 +900,7 @@ namespace GSF.Collections
                 if (m_processingIsRealTime)
                     return ((object)m_synchronizedOperation != null);
 
-                lock (m_processLock)
+                lock (SyncRoot)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
                     return m_processTimer.Enabled;
@@ -1270,15 +1274,11 @@ namespace GSF.Collections
             }
             else
             {
-                // Lock SyncRoot before m_processLock to prevent deadlocks
+                // Start intervaled processing, if there items in the queue
                 lock (SyncRoot)
                 {
-                    // Start intervaled processing, if there items in the queue
-                    lock (m_processLock)
-                    {
-                        // Enabled flag changes are always in a critical section to ensure all items will be processed
-                        m_processTimer.Enabled = Count > 0;
-                    }
+                    // Enabled flag changes are always in a critical section to ensure all items will be processed
+                    m_processTimer.Enabled = Count > 0;
                 }
             }
         }
@@ -1307,7 +1307,7 @@ namespace GSF.Collections
                 // Stops intervaled processing, if active.
                 if ((object)m_processTimer != null)
                 {
-                    lock (m_processLock)
+                    lock (SyncRoot)
                     {
                         // Enabled flag changes are always in a critical section to ensure all items will be processed
                         m_processTimer.Enabled = false;
@@ -1475,7 +1475,7 @@ namespace GSF.Collections
             }
             else
             {
-                lock (m_processLock)
+                lock (SyncRoot)
                 {
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
                     if (m_enabled && !m_processTimer.Enabled)
@@ -1753,14 +1753,14 @@ namespace GSF.Collections
                                 foundIndex = currentIndex;
                                 break;
                             }
-                            
+
                             if (startIndex == stopIndex)
                             {
                                 // Met in the middle and didn't find match, so we are finished,
                                 foundIndex = startIndex ^ -1;
                                 break;
                             }
-                            
+
                             if (result > 0)
                             {
                                 if (currentIndex < count - 1)
@@ -1796,7 +1796,7 @@ namespace GSF.Collections
 
                     return foundIndex;
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.BinarySearch(index, count, item, comparer);
             }
@@ -1822,7 +1822,7 @@ namespace GSF.Collections
 
                     return InternalList.Select(item => converter(item)).ToList();
                 }
-                
+
                 // Otherwise, we will call native implementation
                 return processList.ConvertAll(converter);
             }
@@ -1848,7 +1848,7 @@ namespace GSF.Collections
 
                     return InternalList.Any(t => match(t));
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.Exists(match);
             }
@@ -1880,7 +1880,7 @@ namespace GSF.Collections
 
                     return foundItem;
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.Find(match);
             }
@@ -1905,7 +1905,7 @@ namespace GSF.Collections
 
                     return InternalList.Where(item => match(item)).ToList();
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.FindAll(match);
             }
@@ -1976,7 +1976,7 @@ namespace GSF.Collections
 
                     return foundindex;
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.FindIndex(startIndex, count, match);
             }
@@ -2006,7 +2006,7 @@ namespace GSF.Collections
 
                     return foundItem;
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.FindLast(match);
             }
@@ -2076,7 +2076,7 @@ namespace GSF.Collections
 
                     return foundindex;
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.FindLastIndex(startIndex, count, match);
             }
@@ -2140,7 +2140,7 @@ namespace GSF.Collections
 
                     return items;
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.GetRange(index, count);
             }
@@ -2194,7 +2194,7 @@ namespace GSF.Collections
 
                     return foundindex;
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.IndexOf(item, index, count);
             }
@@ -2294,7 +2294,7 @@ namespace GSF.Collections
 
                     return foundindex;
                 }
-                
+
                 // Otherwise, we'll call native implementation.
                 return processList.LastIndexOf(item, index, count);
             }
@@ -2330,7 +2330,7 @@ namespace GSF.Collections
 
                     return removedItems;
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.RemoveAll(match);
             }
@@ -2531,7 +2531,7 @@ namespace GSF.Collections
 
                     return InternalList.All(item => match(item));
                 }
-                
+
                 // Otherwise, we will call native implementation.
                 return processList.TrueForAll(match);
             }
@@ -2736,16 +2736,12 @@ namespace GSF.Collections
 
             if ((object)m_processTimer != null)
             {
-                // Lock SyncRoot before m_processLock to prevent deadlocks
+                // Stop the process timer if there is no more data to process.
                 lock (SyncRoot)
                 {
-                    // Stop the process timer if there is no more data to process.
-                    lock (m_processLock)
-                    {
-                        // Enabled flag changes are always in a critical section to ensure all items will be processed
-                        if (IsEmpty)
-                            m_processTimer.Enabled = false;
-                    }
+                    // Enabled flag changes are always in a critical section to ensure all items will be processed
+                    if (IsEmpty)
+                        m_processTimer.Enabled = false;
                 }
             }
         }
