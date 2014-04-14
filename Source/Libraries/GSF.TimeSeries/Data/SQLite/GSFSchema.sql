@@ -1478,15 +1478,16 @@ BEGIN
     INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) SELECT 'ActiveMeasurement', 'SignalID', SignalID FROM Measurement WHERE PointID = NEW.PointID AND SignalID IS NOT NULL;
 END;
 
-CREATE TRIGGER Measurement_UpdateTracker AFTER UPDATE ON Measurement FOR EACH ROW
+CREATE TRIGGER Measurement_UpdateTracker1 AFTER UPDATE ON Measurement FOR EACH ROW
 BEGIN
     INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('Measurement', 'PointID', NEW.PointID);
     INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('ActiveMeasurement', 'SignalID', NEW.SignalID);
-    
-    CASE WHEN NEW.SignalID <> OLD.SignalID
-    THEN
-        INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('ActiveMeasurement', 'SignalID', OLD.SignalID);
-    END;
+END;
+
+CREATE TRIGGER Measurement_UpdateTracker2 AFTER UPDATE ON Measurement FOR EACH ROW
+WHEN NEW.SignalID <> OLD.SignalID
+BEGIN
+    INSERT INTO TrackedChange(TableName, PrimaryKeyColumn, PrimaryKeyValue) VALUES('ActiveMeasurement', 'SignalID', OLD.SignalID);
 END;
 
 CREATE TRIGGER Measurement_DeleteTracker AFTER DELETE ON Measurement FOR EACH ROW
