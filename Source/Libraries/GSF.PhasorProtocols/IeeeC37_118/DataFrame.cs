@@ -44,6 +44,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         // Fields
         private CommonFrameHeader m_frameHeader;
+        private uint m_qualityFlags;
 
         #endregion
 
@@ -72,7 +73,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public DataFrame(Ticks timestamp, ConfigurationFrame1 configurationFrame)
             : base(new DataCellCollection(), timestamp, configurationFrame)
         {
-            // Pass timebase along to DataFrame's common header
+            // Pass time-base along to DataFrame's common header
             if (configurationFrame != null)
                 CommonHeader.Timebase = configurationFrame.Timebase;
         }
@@ -159,7 +160,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
-                if (m_frameHeader == null)
+                if ((object)m_frameHeader == null)
                     m_frameHeader = new CommonFrameHeader(TypeID, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
@@ -168,10 +169,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 m_frameHeader = value;
 
-                if (m_frameHeader != null)
+                if ((object)m_frameHeader != null)
                 {
                     State = m_frameHeader.State as DataFrameParsingState;
                     base.Timestamp = m_frameHeader.Timestamp;
+                    m_qualityFlags = ((uint)m_frameHeader.TimeQualityFlags | (uint)m_frameHeader.TimeQualityIndicatorCode);
                 }
             }
         }
@@ -186,6 +188,27 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set
             {
                 CommonHeader = value as CommonFrameHeader;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets protocol specific quality flags for this <see cref="DataFrame"/>.
+        /// </summary>
+        public override uint QualityFlags
+        {
+            get
+            {
+                return m_qualityFlags;
+            }
+            set
+            {
+                m_qualityFlags = value;
+
+                // Set time quality flags
+                TimeQualityFlags = (TimeQualityFlags)(m_qualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
+
+                // Set time quality indicator code
+                TimeQualityIndicatorCode = (TimeQualityIndicatorCode)(m_qualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
             }
         }
 

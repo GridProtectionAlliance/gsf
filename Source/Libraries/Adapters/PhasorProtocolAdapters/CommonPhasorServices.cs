@@ -19,7 +19,7 @@
 //  4/9/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
 //  3/11/2011 - Mehulbhai P Thakkar
-//       Fixed bug in PhasorDataSourceValidation when CompanyID is NULL in Device table.
+//       Fixed issue in PhasorDataSourceValidation when CompanyID is NULL in Device table.
 //  12/04/2012 - J. Ritchie Carroll
 //       Migrated to PhasorProtocolAdapters project.
 //  12/13/2012 - Starlynn Danyelle Gilliam
@@ -41,7 +41,6 @@ using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
 using GSF.PhasorProtocols;
-using GSF.PhasorProtocols.Anonymous;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
@@ -49,6 +48,10 @@ using GSF.Units;
 
 namespace PhasorProtocolAdapters
 {
+    // ReSharper disable UnusedMember.Local
+    // ReSharper disable UnusedParameter.Local
+    // ReSharper disable ObjectCreationAsStatement
+
     /// <summary>
     /// Provides common phasor services.
     /// </summary>
@@ -217,7 +220,7 @@ namespace PhasorProtocolAdapters
                     m_configurationFrame = null;
 
                     // Inform user of temporary loss of command access
-                    OnStatusMessage("\r\n{0}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nNo other commands will be accepted until this request succeeds or fails.\r\n\r\n{0}", stars, stars);
+                    OnStatusMessage("\r\n{0}\r\n\r\nAttempting to request remote device configuration.\r\n\r\nThis request could take up to sixty seconds to complete.\r\n\r\nOther CPS config requests will not be accepted until request succeeds or fails.\r\n\r\n{0}", stars, stars);
 
                     // Make sure the wait handle is not set
                     m_configurationWaitHandle.Reset();
@@ -252,7 +255,7 @@ namespace PhasorProtocolAdapters
                     Monitor.Exit(m_frameParser);
 
                     // Inform user of restoration of command access
-                    OnStatusMessage("\r\n{0}\r\n\r\nRemote device configuration request completed.\r\n\r\nCommand access has been restored.\r\n\r\n{0}", stars, stars);
+                    OnStatusMessage("\r\n{0}\r\n\r\nRemote device configuration request completed.\r\n\r\nCPS config requests have been restored.\r\n\r\n{0}", stars, stars);
                 }
             }
             else
@@ -395,10 +398,13 @@ namespace PhasorProtocolAdapters
                 if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE Acronym='STAT'")) == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, Source, EngineeringUnits) VALUES('Statistic', 'STAT', 'ST', 'P', 'Any', '')");
 
+                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE Acronym='QUAL'")) == 0)
+                    database.Connection.ExecuteNonQuery("INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, Source, EngineeringUnits) VALUES('Quality Flags', 'QUAL', 'QF', 'Q', 'Frame', '')");
+
                 statusMessage("Validating output stream device ID codes...");
 
                 // Validate all ID codes for output stream devices are not set their default value
-                database.Connection.ExecuteNonQuery("UPDATE OutputStreamDevice SET IDCode=ID WHERE IDCode=0");
+                database.Connection.ExecuteNonQuery("UPDATE OutputStreamDevice SET IDCode = ID WHERE IDCode = 0");
 
                 statusMessage("Verifying statistics archive exists...");
 
@@ -470,13 +476,15 @@ namespace PhasorProtocolAdapters
                 IEnumerable<DataRow> inputStreamStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "InputStream", true) == 0).ToList();
                 IEnumerable<DataRow> outputStreamStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "OutputStream", true) == 0).ToList();
 
-                IEnumerable<DataRow> outputStreamDevices;
-                SignalKind[] validOutputSignalKinds = { SignalKind.Angle, SignalKind.Magnitude, SignalKind.Frequency, SignalKind.DfDt, SignalKind.Status, SignalKind.Analog, SignalKind.Digital, SignalKind.Calculation };
-                List<int> measurementIDsToDelete = new List<int>();
+                // Define kinds of output signal that will designate a location in an output stream protocol frame - other non-mappable measurements will be removed from output stream measurements
+                SignalKind[] validOutputSignalKinds = { SignalKind.Angle, SignalKind.Magnitude, SignalKind.Frequency, SignalKind.DfDt, SignalKind.Status, SignalKind.Analog, SignalKind.Digital, SignalKind.Quality };
+
+                HashSet<int> measurementIDsToDelete = new HashSet<int>();
                 SignalReference deviceSignalReference;
                 string query, acronym, signalReference, pointTag, company, vendorDevice, description, protocolIDs;
-                int adapterID, signalIndex;
+                int adapterID, deviceID, signalIndex;
                 bool firstStatisticExisted;
+                int? historianID;
 
                 string[] trackedTables;
                 ulong changes;
@@ -569,6 +577,52 @@ namespace PhasorProtocolAdapters
                 {
                     statusMessage("Validating device measurements...");
 
+                    // Get protocol ID list for those protocols that support time quality flags
+                    DataTable timeQualityProtocols = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM Protocol WHERE Acronym = 'IeeeC37_118V1' OR Acronym = 'IeeeC37_118V2' OR Acronym = 'IeeeC37_118D6' OR Acronym = 'Iec61850_90_5'");
+                    StringBuilder timeQualityProtocolIDList = new StringBuilder();
+                    string timeQualityProtocolIDs;
+
+                    foreach (DataRow timeQualityProtocol in timeQualityProtocols.Rows)
+                    {
+                        if (timeQualityProtocolIDList.Length > 0)
+                            timeQualityProtocolIDList.Append(", ");
+
+                        timeQualityProtocolIDList.Append(timeQualityProtocol.ConvertField<int>("ID"));
+                    }
+
+                    timeQualityProtocolIDs = timeQualityProtocolIDList.ToString();
+
+                    string qualityFlagsAcronym = SignalReference.GetSignalKindAcronym(SignalKind.Quality);
+                    int qualityFlagsSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='QUAL'"));
+
+                    // Make sure one device quality flags measurement exists for each "connection" for devices that support time quality flags
+                    foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE ((IsConcentrator = 0 AND ParentID IS NULL) OR IsConcentrator = 1) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, timeQualityProtocolIDs)).Rows)
+                    {
+                        deviceID = device.ConvertField<int>("ID");
+                        acronym = device.Field<string>("Acronym");
+                        signalReference = string.Format("{0}-{1}", acronym, qualityFlagsAcronym);
+
+                        // See if quality flags measurement exists for device
+                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND DeviceID = {1}", signalReference, deviceID))) == 0)
+                        {
+                            historianID = device.ConvertNullableField<int>("HistorianID");
+
+                            company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID = {0}", device.ConvertNullableField<int>("CompanyID") ?? 0));
+
+                            if (string.IsNullOrEmpty(company))
+                                company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
+
+                            pointTag = string.Format("{0}_{1}:Q", company, acronym);
+                            description = string.Format("{0} Time Quality Flags", device.Field<string>("Name"));
+
+                            query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
+                                "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "historianID", "deviceID", "pointTag",
+                                "signalTypeID", "signalReference", "description");
+
+                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, historianID, deviceID, pointTag, qualityFlagsSignalTypeID, signalReference, description);
+                        }
+                    }
+
                     // Make sure needed device statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
                     foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
                     {
@@ -614,7 +668,7 @@ namespace PhasorProtocolAdapters
                             }
                             else
                             {
-                                // To reduce time required to execute these steps, only first statistic is verfied to exist
+                                // To reduce time required to execute these steps, only first statistic is verified to exist
                                 if (!skipOptimization && firstStatisticExisted)
                                     break;
                             }
@@ -641,7 +695,7 @@ namespace PhasorProtocolAdapters
                                 if (string.IsNullOrEmpty(company))
                                     company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
 
-                                vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", inputStream.ConvertNullableField<int>("VendorDeviceID") ?? 0)); // Modified to retrieve VendorDeviceID into Nullable of Int as it is not a required field.
+                                vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", inputStream.ConvertNullableField<int>("VendorDeviceID") ?? 0)); // Modified to retrieve VendorDeviceID into nullable of int as it is not a required field.
                                 pointTag = string.Format("{0}_{1}:ST{2}", company, acronym, signalIndex);
                                 description = string.Format("{0} {1} Statistic for {2}", inputStream.Field<string>("Name"), vendorDevice, statistic.Field<string>("Description"));
 
@@ -653,7 +707,7 @@ namespace PhasorProtocolAdapters
                             }
                             else
                             {
-                                // To reduce time required to execute these steps, only first statistic is verfied to exist
+                                // To reduce time required to execute these steps, only first statistic is verified to exist
                                 if (!skipOptimization && firstStatisticExisted)
                                     break;
                             }
@@ -672,7 +726,7 @@ namespace PhasorProtocolAdapters
                             signalIndex = statistic.ConvertField<int>("SignalIndex");
                             signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
 
-                            // To reduce time required to execute these steps, only first statistic is verfied to exist
+                            // To reduce time required to execute these steps, only first statistic is verified to exist
                             if (!skipOptimization && !firstStatisticExisted)
                             {
                                 firstStatisticExisted = (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}'", signalReference))) > 0);
@@ -737,14 +791,25 @@ namespace PhasorProtocolAdapters
                             }
                             else
                             {
-                                // To reduce time required to execute these steps, only first statistic is verfied to exist
+                                // To reduce time required to execute these steps, only first statistic is verified to exist
                                 if (!skipOptimization && firstStatisticExisted)
                                     break;
                             }
                         }
 
-                        // Load devices associated with this output stream
-                        outputStreamDevices = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM OutputStreamDevice WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString)).AsEnumerable();
+                        // Load devices acronyms associated with this output stream
+                        List<string> deviceAcronyms =
+                            database.Connection.RetrieveData(database.AdapterType,
+                            string.Format("SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString))
+                            .AsEnumerable()
+                            .Select(row => row.Field<string>("Acronym"))
+                            .ToList();
+
+                        // Since measurements can be added to the output stream device itself (e.g., quality flags) - we add it as a valid mapping destination as well
+                        deviceAcronyms.Add(outputStream.Field<string>("Acronym"));
+
+                        // Sort list so binary search can be used to speed lookups
+                        deviceAcronyms.Sort(StringComparer.InvariantCultureIgnoreCase);
 
                         // Validate measurements associated with this output stream
                         foreach (DataRow outputStreamMeasurement in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM OutputStreamMeasurement WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString)).Rows)
@@ -753,19 +818,17 @@ namespace PhasorProtocolAdapters
                             deviceSignalReference = new SignalReference(outputStreamMeasurement.Field<string>("SignalReference"));
 
                             // Validate that the signal reference is associated with one of the output stream's devices
-                            if (outputStreamDevices.All(row => string.Compare(row.Field<string>("Acronym"), deviceSignalReference.Acronym, true) != 0))
+                            if (deviceAcronyms.BinarySearch(deviceSignalReference.Acronym, StringComparer.InvariantCultureIgnoreCase) < 0)
                             {
                                 // This measurement has a signal reference for a device that is not part of the associated output stream, so we mark it for deletion
                                 measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
                             }
-                            else
+
+                            // Validate that the signal reference type is valid for an output stream
+                            if (!validOutputSignalKinds.Any(validSignalKind => deviceSignalReference.Kind == validSignalKind))
                             {
-                                // Validate that the signal reference type is valid for an output stream
-                                if (!validOutputSignalKinds.Any(type => type == deviceSignalReference.Kind))
-                                {
-                                    // This measurement has a signal reference type that is invalid for an output stream, so we mark it for deletion
-                                    measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
-                                }
+                                // This measurement has a signal reference type that is not valid for an output stream, so we mark it for deletion
+                                measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
                             }
                         }
                     }
@@ -784,12 +847,13 @@ namespace PhasorProtocolAdapters
                 if (skipOptimization)
                 {
                     // If skipOptimization is set to true, automatically set it back to false
-                    string unskipOptimizationQuery = "UPDATE DataOperation SET Arguments = '' " +
+                    const string UnskipOptimizationQuery =
+                        "UPDATE DataOperation SET Arguments = '' " +
                         "WHERE AssemblyName = 'PhasorProtocolAdapters.dll' " +
                         "AND TypeName = 'PhasorProtocolAdapters.CommonPhasorServices' " +
                         "AND MethodName = 'PhasorDataSourceValidation'";
 
-                    database.Connection.ExecuteNonQuery(unskipOptimizationQuery);
+                    database.Connection.ExecuteNonQuery(UnskipOptimizationQuery);
                 }
             }
         }
@@ -933,12 +997,12 @@ namespace PhasorProtocolAdapters
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('InputStream', 16, 'Actual Frame Rate', 'Latest actual mean frame rate for data received from input stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetInputStreamStatistic_ActualFrameRate', '', 1, 'System.Double', @displayFormat, 0, 14)", "{0:N3} frames / second");
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('InputStream', 17, 'Actual Data Rate', 'Latest actual mean Mbps data rate for data received from input stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetInputStreamStatistic_ActualDataRate', '', 1, 'System.Double', @displayFormat, 0, 15)", "{0:N3} Mbps");
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 1, 'Discarded Measurements', 'Number of discarded measurements reported by output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_DiscardedMeasurements', '', 1, 'System.Int32', @displayFormat, 0, 4)", "{0:N0}");
-                LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 2, 'Received Measurements', 'Number of received measurements reported by the output strean during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_ReceivedMeasurements', '', 1, 'System.Int32', @displayFormat, 0, 2)", "{0:N0}");
+                LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 2, 'Received Measurements', 'Number of received measurements reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_ReceivedMeasurements', '', 1, 'System.Int32', @displayFormat, 0, 2)", "{0:N0}");
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 3, 'Expected Measurements', 'Number of expected measurements reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_ExpectedMeasurements', '', 1, 'System.Int32', @displayFormat, 0, 1)", "{0:N0}");
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 4, 'Processed Measurements', 'Number of processed measurements reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_ProcessedMeasurements', '', 1, 'System.Int32', @displayFormat, 0, 3)", "{0:N0}");
-                LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 5, 'Measurements Sorted by Arrival', 'Number of measurments sorted by arrival reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_MeasurementsSortedByArrival', '', 1, 'System.Int32', @displayFormat, 0, 7)", "{0:N0}");
+                LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 5, 'Measurements Sorted by Arrival', 'Number of measurements sorted by arrival reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_MeasurementsSortedByArrival', '', 1, 'System.Int32', @displayFormat, 0, 7)", "{0:N0}");
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 6, 'Published Measurements', 'Number of published measurements reported by output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_PublishedMeasurements', '', 1, 'System.Int32', @displayFormat, 0, 5)", "{0:N0}");
-                LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 7, 'Downsampled Measurements', 'Number of downsampled measurements reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_DownsampledMeasurements', '', 1, 'System.Int32', @displayFormat, 0, 6)", "{0:N0}");
+                LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 7, 'Down-sampled Measurements', 'Number of down-sampled measurements reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_DownsampledMeasurements', '', 1, 'System.Int32', @displayFormat, 0, 6)", "{0:N0}");
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 8, 'Missed Sorts by Timeout', 'Number of missed sorts by timeout reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_MissedSortsByTimeout', '', 1, 'System.Int32', @displayFormat, 0, 8)", "{0:N0}");
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 9, 'Frames Ahead of Schedule', 'Number of frames ahead of schedule reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_FramesAheadOfSchedule', '', 1, 'System.Int32', @displayFormat, 0, 9)", "{0:N0}");
                 LoadStatistic(database, "INSERT INTO Statistic(Source, SignalIndex, Name, Description, AssemblyName, TypeName, MethodName, Arguments, Enabled, DataType, DisplayFormat, IsConnectedState, LoadOrder) VALUES('OutputStream', 10, 'Published Frames', 'Number of published frames reported by the output stream during last reporting interval.', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.CommonPhasorServices', 'GetOutputStreamStatistic_PublishedFrames', '', 1, 'System.Int32', @displayFormat, 0, 10)", "{0:N0}");
@@ -989,14 +1053,14 @@ namespace PhasorProtocolAdapters
             {
                 keyID = measurement["ID"].ToNonNullString();
 
-                if (!string.IsNullOrWhiteSpace(keyID))
-                {
-                    elems = keyID.Split(':');
+                if (string.IsNullOrWhiteSpace(keyID))
+                    continue;
 
-                    // Cache new measurement key with associated Guid signal ID
-                    if (elems.Length == 2)
-                        new MeasurementKey(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), uint.Parse(elems[1].Trim()), elems[0].Trim());
-                }
+                elems = keyID.Split(':');
+
+                // Cache new measurement key with associated Guid signal ID
+                if (elems.Length == 2)
+                    new MeasurementKey(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), uint.Parse(elems[1].Trim()), elems[0].Trim());
             }
         }
 
@@ -1456,7 +1520,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Calculates number of received measurements reported by the output strean during last reporting interval.
+        /// Calculates number of received measurements reported by the output stream during last reporting interval.
         /// </summary>
         /// <param name="source">Source OutputStream.</param>
         /// <param name="arguments">Any needed arguments for statistic calculation.</param>
@@ -1513,7 +1577,7 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Calculates number of measurments sorted by arrival reported by the output stream during last reporting interval.
+        /// Calculates number of measurements sorted by arrival reported by the output stream during last reporting interval.
         /// </summary>
         /// <param name="source">Source OutputStream.</param>
         /// <param name="arguments">Any needed arguments for statistic calculation.</param>
@@ -1547,11 +1611,11 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Calculates number of downsampled measurements reported by the output stream during last reporting interval.
+        /// Calculates number of down-sampled measurements reported by the output stream during last reporting interval.
         /// </summary>
         /// <param name="source">Source OutputStream.</param>
         /// <param name="arguments">Any needed arguments for statistic calculation.</param>
-        /// <returns>Downsampled Measurements Statistic.</returns>
+        /// <returns>Down-sampled Measurements Statistic.</returns>
         private static double GetOutputStreamStatistic_DownsampledMeasurements(object source, string arguments)
         {
             double statistic = 0.0D;

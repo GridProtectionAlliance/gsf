@@ -156,8 +156,11 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <param name="buffer">Buffer that contains data to parse.</param>
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
         /// <param name="length">Maximum length of valid data from offset.</param>
+        // ReSharper disable once UnusedParameter.Local
         public CommonFrameHeader(ConfigurationFrame configurationFrame, bool useETRConfiguration, bool guessConfiguration, bool parseRedundantASDUs, bool ignoreSignatureValidationFailures, bool ignoreSampleSizeValidationFailures, AngleFormat angleFormat, byte[] buffer, int startIndex, int length)
         {
+            const byte VersionNumberMask = (byte)IEC61850_90_5.FrameType.VersionNumberMask;
+
             // Cache behavioral connection parameters
             m_useETRConfiguration = useETRConfiguration;
             m_guessConfiguration = guessConfiguration;
@@ -173,8 +176,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             if (buffer[startIndex] == PhasorProtocols.Common.SyncByte)
             {
                 // Strip out frame type and version information...
-                m_frameType = (FrameType)buffer[startIndex + 1] & ~IEC61850_90_5.FrameType.VersionNumberMask;
-                m_version = (byte)(buffer[startIndex + 1] & (byte)IEC61850_90_5.FrameType.VersionNumberMask);
+                m_frameType = (FrameType)(buffer[startIndex + 1] & ~VersionNumberMask);
+                m_version = (byte)(buffer[startIndex + 1] & VersionNumberMask);
 
                 m_frameLength = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 2);
                 m_idCode = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
@@ -203,7 +206,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     // Manually assign frame type - this is an IEC 61850-90-5 data frame
                     m_frameType = IEC61850_90_5.FrameType.DataFrame;
 
-                    // Calulate CLTP tag length
+                    // Calculate CLTP tag length
                     int cltpTagLength = buffer[startIndex] + 1;
 
                     // Initialize buffer parsing index starting past connectionless transport protocol header
@@ -280,7 +283,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                     // Check for signature tag
                                     if (buffer[hmacIndex++] == 0x85)
                                     {
-                                        // KeyID is tehcnically a lookup into derived rotating keys, but all these are using dummy key for now
+                                        // KeyID is technically a lookup into derived rotating keys, but all these are using dummy key for now
                                         HMAC hmac = m_signatureAlgorithm <= SignatureAlgorithm.Sha256 ? (HMAC)(new ShaHmac(Common.DummyKey)) : (HMAC)(new AesHmac(Common.DummyKey));
                                         int result = 0;
 
@@ -597,15 +600,12 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             get
             {
+                // Data length will be frame length minus common header length minus crc16
                 if (m_frameType != IEC61850_90_5.FrameType.DataFrame)
-                {
-                    // Data length will be frame length minus common header length minus crc16
+
                     return (ushort)(FrameLength - FixedLength - 2);
-                }
-                else
-                {
-                    return m_dataLength;
-                }
+
+                return m_dataLength;
             }
             set
             {
@@ -614,8 +614,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 {
                     if (value > Common.MaximumDataLength)
                         throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
-                    else
-                        FrameLength = (ushort)(value + FixedLength + 2);
+
+                    FrameLength = (ushort)(value + FixedLength + 2);
                 }
                 else
                 {
@@ -1032,7 +1032,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     EndianOrder.BigEndian.CopyBytes(FrameLength, buffer, 2);
                     EndianOrder.BigEndian.CopyBytes(IDCode, buffer, 4);
                     EndianOrder.BigEndian.CopyBytes(SecondOfCentury, buffer, 6);
-                    EndianOrder.BigEndian.CopyBytes(FractionOfSecond | (int)TimeQualityFlags, buffer, 10);
+                    EndianOrder.BigEndian.CopyBytes(FractionOfSecond | (int)m_timeQualityFlags, buffer, 10);
                 }
 
                 return buffer;

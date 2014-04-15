@@ -25,10 +25,10 @@
 //
 //******************************************************************************************************
 
-using GSF.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using GSF.Parsing;
 
 namespace GSF.PhasorProtocols.IEEEC37_118
 {
@@ -84,12 +84,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
         public CommonFrameHeader(ConfigurationFrame1 configurationFrame, byte[] buffer, int startIndex)
         {
+            const byte VersionNumberMask = (byte)IEEEC37_118.FrameType.VersionNumberMask;
+
             if (buffer[startIndex] != PhasorProtocols.Common.SyncByte)
                 throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in IEEE C37.118 frame, got 0x" + buffer[startIndex].ToString("X").PadLeft(2, '0'));
 
             // Strip out frame type and version information...
-            m_frameType = (FrameType)buffer[startIndex + 1] & ~IEEEC37_118.FrameType.VersionNumberMask;
-            m_version = (byte)(buffer[startIndex + 1] & (byte)IEEEC37_118.FrameType.VersionNumberMask);
+            m_frameType = (FrameType)(buffer[startIndex + 1] & ~VersionNumberMask);
+            m_version = (byte)(buffer[startIndex + 1] & VersionNumberMask);
 
             m_frameLength = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 2);
             m_idCode = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
@@ -219,8 +221,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 if (value > Common.MaximumDataLength)
                     throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
-                else
-                    FrameLength = (ushort)(value + FixedLength + 2);
+
+                FrameLength = (ushort)(value + FixedLength + 2);
             }
         }
 
@@ -391,7 +393,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 EndianOrder.BigEndian.CopyBytes(FrameLength, buffer, 2);
                 EndianOrder.BigEndian.CopyBytes(IDCode, buffer, 4);
                 EndianOrder.BigEndian.CopyBytes(SecondOfCentury, buffer, 6);
-                EndianOrder.BigEndian.CopyBytes(FractionOfSecond | (int)TimeQualityFlags, buffer, 10);
+                EndianOrder.BigEndian.CopyBytes(FractionOfSecond | (int)m_timeQualityFlags, buffer, 10);
 
                 return buffer;
             }

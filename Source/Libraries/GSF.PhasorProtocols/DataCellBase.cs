@@ -98,19 +98,7 @@ namespace GSF.PhasorProtocols
         private IFrequencyValue m_frequencyValue;
         private readonly AnalogValueCollection m_analogValues;
         private readonly DigitalValueCollection m_digitalValues;
-
-        // IMeasurement implementation fields
-        private MeasurementKey m_key;
-        private Guid m_id;
-        private MeasurementStateFlags m_stateFlags;
-        private string m_tagName;
-        private Ticks m_timestamp;
-        private Ticks m_receivedTimestamp;
-        private Ticks m_publishedTimestamp;
-        private double m_adder;
-        private double m_multiplier;
         private bool m_isDiscarded;
-        private MeasurementValueFilterFunction m_measurementValueFilter;
 
         #endregion
 
@@ -133,14 +121,6 @@ namespace GSF.PhasorProtocols
             m_phasorValues = new PhasorValueCollection(maximumPhasors);
             m_analogValues = new AnalogValueCollection(maximumAnalogs);
             m_digitalValues = new DigitalValueCollection(maximumDigitals);
-
-            // Initialize IMeasurement members
-            m_key = Common.UndefinedKey;
-            m_stateFlags = MeasurementStateFlags.Normal;
-            m_receivedTimestamp = DateTime.UtcNow.Ticks;
-            m_timestamp = -1;
-            m_adder = 0.0D;
-            m_multiplier = 1.0D;
         }
 
         /// <summary>
@@ -526,7 +506,7 @@ namespace GSF.PhasorProtocols
                 index += parsedLength;
             }
 
-            // Parse out frequency and df/dt values
+            // Parse out frequency and dF/dt values
             m_frequencyValue = parsingState.CreateNewFrequencyValue(this, m_configurationCell.FrequencyDefinition, buffer, index, out parsedLength);
             index += parsedLength;
 
@@ -568,309 +548,14 @@ namespace GSF.PhasorProtocols
             info.AddValue("digitalValues", m_digitalValues, typeof(DigitalValueCollection));
         }
 
-        /// <summary>
-        /// Gets the string respresentation of this <see cref="DataCellBase"/>.
-        /// </summary>
-        /// <returns>String respresentation of this <see cref="DataCellBase"/>.</returns>
-        public override string ToString()
+        // Gets the status flags of the data cell as a measurement value.
+        IMeasurement IDataCell.GetStatusFlagsMeasurement()
         {
-            string stationName = StationName;
-            string measurementID = null;
-
-            if (m_key.ID != uint.MaxValue && m_key.Source != "__")
-                measurementID = Measurement.ToString(this);
-
-            if (!string.IsNullOrWhiteSpace(stationName))
+            return new Measurement()
             {
-                if (measurementID != null)
-                    stationName += " [" + measurementID + "]";
-
-                return stationName;
-            }
-
-            if (measurementID != null)
-                return measurementID;
-
-            return base.ToString();
-        }
-
-        /// <summary>
-        /// Determines whether the specified object is equal to the <see cref="DataCellBase"/>.
-        /// </summary>
-        /// <param name="obj">The <see cref="System.Object"/> to compare with the <see cref="DataCellBase"/>.</param>
-        /// <returns>true if the specified object is equal to the <see cref="DataCellBase"/>; otherwise, false.</returns>
-        public override bool Equals(object obj)
-        {
-            ITimeSeriesValue measurement = obj as ITimeSeriesValue;
-
-            // If comparing to another measurment, use hash code for equality
-            if (measurement != null)
-                return ((ITimeSeriesValue)this).Equals(measurement);
-
-            // Otherwise use default equality comparison
-            return base.Equals(obj);
-        }
-
-        /// <summary>
-        /// Serves as a hash function for the <see cref="DataCellBase"/>.
-        /// </summary>
-        /// <returns>A hash code for the <see cref="DataCellBase"/>.</returns>
-        /// <remarks>Hash code based on value of measurement key associated with the <see cref="DataCellBase"/>.</remarks>
-        public override int GetHashCode()
-        {
-            return ((ITimeSeriesValue)this).GetHashCode();
-        }
-
-        #endregion
-
-        #region [ IMeasurement Implementation ]
-
-        // We keep the IMeasurement implementation of the DataCell completely private.  Exposing
-        // these properties publically would only stand to add confusion as to where measurements
-        // typically come from (i.e., the IDataCell's values) - the only value the cell itself has
-        // to offer is the "CommonStatusFlags" property, which we expose below...
-
-        BigBinaryValue ITimeSeriesValue.Value
-        {
-            get
-            {
-                return CommonStatusFlags;
-            }
-            set
-            {
-                switch (value.TypeCode)
-                {
-                    case TypeCode.Byte:
-                        CommonStatusFlags = (uint)(Byte)value;
-                        break;
-                    case TypeCode.SByte:
-                        CommonStatusFlags = (uint)(SByte)value;
-                        break;
-                    case TypeCode.Int16:
-                        CommonStatusFlags = (uint)(Int16)value;
-                        break;
-                    case TypeCode.UInt16:
-                        CommonStatusFlags = (UInt16)value;
-                        break;
-                    case TypeCode.Int32:
-                        CommonStatusFlags = (uint)(Int32)value;
-                        break;
-                    case TypeCode.UInt32:
-                        CommonStatusFlags = (UInt32)value;
-                        break;
-                    case TypeCode.Int64:
-                        CommonStatusFlags = (uint)(Int64)value;
-                        break;
-                    case TypeCode.UInt64:
-                        CommonStatusFlags = (uint)(UInt64)value;
-                        break;
-                    case TypeCode.Single:
-                        CommonStatusFlags = (uint)(Single)value;
-                        break;
-                    case TypeCode.Double:
-                        CommonStatusFlags = (uint)(Double)value;
-                        break;
-                    //case TypeCode.Boolean:
-                    //    break;
-                    //case TypeCode.Char:
-                    //    break;
-                    //case TypeCode.DateTime:
-                    //    break;
-                    //case TypeCode.Decimal:
-                    //    break;
-                    //case TypeCode.String:
-                    //    m_value = double.Parse(value);
-                    //    break;
-                    default:
-                        CommonStatusFlags = value;
-                        break;
-                }
-            }
-        }
-
-        double ITimeSeriesValue<double>.Value
-        {
-            get
-            {
-                return CommonStatusFlags;
-            }
-            set
-            {
-                CommonStatusFlags = (uint)value;
-            }
-        }
-
-        // The only "measured value" a data cell exposes is its "StatusFlags"
-        double IMeasurement.AdjustedValue
-        {
-            get
-            {
-                return (double)CommonStatusFlags * m_multiplier + m_adder;
-            }
-        }
-
-        // I don't imagine you would want offsets for status flags - but this may yet be handy for
-        // "forcing" a particular set of quality flags to come through the system (M=0, A=New Flags)
-        double IMeasurement.Adder
-        {
-            get
-            {
-                return m_adder;
-            }
-            set
-            {
-                m_adder = value;
-            }
-        }
-
-        double IMeasurement.Multiplier
-        {
-            get
-            {
-                return m_multiplier;
-            }
-            set
-            {
-                m_multiplier = value;
-            }
-        }
-
-        Ticks ITimeSeriesValue.Timestamp
-        {
-            get
-            {
-                if (m_timestamp == -1)
-                    m_timestamp = Parent.Timestamp;
-
-                return m_timestamp;
-            }
-            set
-            {
-                m_timestamp = value;
-            }
-        }
-
-        Ticks IMeasurement.ReceivedTimestamp
-        {
-            get
-            {
-                return m_receivedTimestamp;
-            }
-            set
-            {
-                m_receivedTimestamp = value;
-            }
-        }
-
-        Ticks IMeasurement.PublishedTimestamp
-        {
-            get
-            {
-                return m_publishedTimestamp;
-            }
-            set
-            {
-                m_publishedTimestamp = value;
-            }
-        }
-
-        MeasurementKey IMeasurement.Key
-        {
-            get
-            {
-                return m_key;
-            }
-            set
-            {
-                m_key = value;
-            }
-        }
-
-        Guid ITimeSeriesValue.ID
-        {
-            get
-            {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
-            }
-        }
-
-        MeasurementValueFilterFunction IMeasurement.MeasurementValueFilter
-        {
-            get
-            {
-                // If measurement user has assigned another filter for this measurement,
-                // we'll use it instead
-                if (m_measurementValueFilter != null)
-                    return m_measurementValueFilter;
-
-                // Otherwise, status flags are digital in nature, so we return a majority item filter
-                return Measurement.MajorityValueFilter;
-            }
-            set
-            {
-                m_measurementValueFilter = value;
-            }
-        }
-
-        MeasurementStateFlags IMeasurement.StateFlags
-        {
-            get
-            {
-                // The quality of the status flags "measurement" is always assumed to be good since it consists
-                // of the flags that make up the actual quality of the incoming device data, as a result this
-                // property will always return true so as to not affect archived data quality
-                return m_stateFlags & ~MeasurementStateFlags.BadTime & ~MeasurementStateFlags.BadData;
-            }
-            set
-            {
-                m_stateFlags = value;
-
-                // Updates to data quality are applied to status flags
-                this.DataIsValid = (m_stateFlags & MeasurementStateFlags.BadData) == 0;
-
-                // Updates to time quality are applied to status flags
-                this.SynchronizationIsValid = (m_stateFlags & MeasurementStateFlags.BadTime) == 0;
-            }
-        }
-        string IMeasurement.TagName
-        {
-            get
-            {
-                return m_tagName;
-            }
-            set
-            {
-                m_tagName = value;
-            }
-        }
-
-        int ITimeSeriesValue.GetHashCode()
-        {
-            return m_id.GetHashCode();
-        }
-
-        int IComparable.CompareTo(object obj)
-        {
-            IMeasurement measurement = obj as IMeasurement;
-
-            if (measurement != null)
-                return (this as IComparable<IMeasurement>).CompareTo(measurement);
-
-            throw new ArgumentException("Measurement can only be compared with other IMeasurements...");
-        }
-
-        int IComparable<ITimeSeriesValue>.CompareTo(ITimeSeriesValue other)
-        {
-            return (this as ITimeSeriesValue).GetHashCode().CompareTo(other.GetHashCode());
-        }
-
-        bool IEquatable<ITimeSeriesValue>.Equals(ITimeSeriesValue other)
-        {
-            return ((this as IComparable<ITimeSeriesValue>).CompareTo(other) == 0);
+                Timestamp = Parent.Timestamp,
+                Value = CommonStatusFlags
+            };
         }
 
         #endregion

@@ -203,9 +203,15 @@ namespace GSF.PhasorProtocols
                 case SignalType.FLAG:
                     return "Status flags";
                 case SignalType.DIGI:
-                    return "Digital";
+                    return "Digital Values";
                 case SignalType.CALC:
-                    return "Calculated";
+                    return "Calculated Value";
+                case SignalType.STAT:
+                    return "Statistic";
+                case SignalType.ALRM:
+                    return "Alarm";
+                case SignalType.QUAL:
+                    return "Quality Flags";
                 case SignalType.NONE:
                     return "Undefined";
                 default:

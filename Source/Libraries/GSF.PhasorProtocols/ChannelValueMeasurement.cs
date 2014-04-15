@@ -249,7 +249,7 @@ namespace GSF.PhasorProtocols
                 // Convert phase angles to the -180 degrees to 180 degrees range
                 if (m_parent is PhasorValueBase && m_valueIndex == (int)CompositePhasorValue.Angle)
                     adjustedValue = Angle.FromDegrees(adjustedValue).ToRange(-Math.PI, false).ToDegrees();
-                    
+
                 return adjustedValue;
             }
         }
@@ -270,7 +270,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Defines a mulplicative offset to apply to the measurement value. This defaults to 1.0.
+        /// Defines a multiplicative offset to apply to the measurement value. This defaults to 1.0.
         /// </summary>
         public virtual double Multiplier
         {
@@ -293,8 +293,8 @@ namespace GSF.PhasorProtocols
             {
                 if (m_stateFlagsAssigned)
                     return m_stateFlags;
-                else
-                    return (m_parent.Parent.SynchronizationIsValid && Timestamp != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (m_parent.Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
+
+                return (m_parent.Parent.SynchronizationIsValid && Timestamp != -1 ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadTime) | (m_parent.Parent.DataIsValid ? MeasurementStateFlags.Normal : MeasurementStateFlags.BadData);
             }
             set
             {
@@ -304,7 +304,7 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// Gets or sets function used to apply a down-sampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
         public virtual MeasurementValueFilterFunction MeasurementValueFilter
         {

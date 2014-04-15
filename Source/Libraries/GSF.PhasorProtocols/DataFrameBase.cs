@@ -29,6 +29,7 @@
 
 using System;
 using System.Runtime.Serialization;
+using GSF.TimeSeries;
 
 namespace GSF.PhasorProtocols
 {
@@ -128,6 +129,15 @@ namespace GSF.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets or sets protocol specific quality flags for this <see cref="DataFrameBase"/>.
+        /// </summary>
+        public virtual uint QualityFlags
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the numeric ID code for this <see cref="DataFrameBase"/>.
         /// </summary>
         /// <remarks>
@@ -193,6 +203,16 @@ namespace GSF.PhasorProtocols
 
             // Serialize data frame
             info.AddValue("configurationFrame", m_configurationFrame, typeof(IConfigurationFrame));
+        }
+
+        // Gets the quality flags of the data frame as a measurement value.
+        IMeasurement IDataFrame.GetQualityFlagsMeasurement()
+        {
+            return new Measurement()
+            {
+                Timestamp = Timestamp,
+                Value = QualityFlags
+            };
         }
 
         #endregion

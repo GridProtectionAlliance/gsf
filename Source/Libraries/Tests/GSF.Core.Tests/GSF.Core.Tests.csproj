@@ -123,6 +123,7 @@
     <Compile Include="DataSetSerializationTest.cs" />
     <Compile Include="DateTimeExtensionTest.cs" />
     <Compile Include="EnumExtensionsTest.cs" />
+    <Compile Include="GSF.IO.Checksums\CRC-CCITTTest.cs" />
     <Compile Include="PatternCompressorTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="GSF.Adapters\AdapterTest.cs" />

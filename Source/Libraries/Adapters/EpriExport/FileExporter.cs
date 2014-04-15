@@ -31,11 +31,11 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using GSF;
 using GSF.Collections;
 using GSF.IO;
 using GSF.PhasorProtocols;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
@@ -65,6 +65,8 @@ namespace EpriExport
         private string m_modelIdentifier;
         private bool m_statusDisplayed;
         private long m_skippedExports;
+        private readonly LongSynchronizedOperation m_fileExport;
+        private readonly object m_fileDataLock;
         private StringBuilder m_fileData;
         private Ticks m_startTime;
         private long m_rowCount;
@@ -72,6 +74,18 @@ namespace EpriExport
         //private Dictionary<MeasurementKey, double> m_baseVoltages;
 
         #endregion
+
+        /// <summary>
+        /// Creates a new instance of the EPRI <see cref="FileExporter"/>.
+        /// </summary>
+        public FileExporter()
+        {
+            m_fileExport = new LongSynchronizedOperation(WriteFileData, OnProcessException)
+            {
+                IsBackground = true
+            };
+            m_fileDataLock = new object();
+        }
 
         #region [ Properties ]
 
@@ -180,6 +194,8 @@ namespace EpriExport
                 status.AppendLine();
                 status.AppendFormat("     Reference angle point: {0}", m_referenceAngleKey);
                 status.AppendLine();
+                status.AppendFormat("             Total exports: {0}", m_totalExports);
+                status.AppendLine();
                 status.AppendFormat("           Skipped exports: {0}", m_skippedExports);
                 status.AppendLine();
 
@@ -194,7 +210,7 @@ namespace EpriExport
         #region [ Methods ]
 
         /// <summary>
-        /// Intializes <see cref="FileExporter"/>.
+        /// Initializes <see cref="FileExporter"/>.
         /// </summary>
         public override void Initialize()
         {
@@ -217,7 +233,7 @@ namespace EpriExport
             if (m_exportInterval <= 0)
                 throw new ArgumentException("exportInterval should not be 0 - Example: exportInterval=5.5");
 
-            if (InputMeasurementKeys == null || InputMeasurementKeys.Length == 0)
+            if ((object)InputMeasurementKeys == null || InputMeasurementKeys.Length == 0)
                 throw new InvalidOperationException("There are no input measurements defined. You must define \"inputMeasurementKeys\" to define which measurements to export.");
 
             // Reference angle measurement has to be defined if using reference angle
@@ -351,74 +367,93 @@ namespace EpriExport
         protected override void PublishFrame(IFrame frame, int index)
         {
             Ticks timestamp = frame.Timestamp;
-            IMeasurement measurement;
-            MeasurementKey inputMeasurementKey;
-            SignalType signalType;
-            double measurementValue;
-            bool displayedWarning = false;
-
             ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
 
             if (measurements.Count > 0)
             {
-                if (m_fileData == null)
+                lock (m_fileDataLock)
                 {
-                    m_startTime = frame.Timestamp;
-                    m_fileData = new StringBuilder();
-                    m_rowCount = 0;
-                }
+                    IMeasurement measurement;
+                    MeasurementKey inputMeasurementKey;
+                    SignalType signalType;
+                    double measurementValue;
 
-                //m_fileData.AppendFormat("{0}", (timestamp - m_startTime).ToSeconds());
-                m_fileData.AppendFormat("{0}", timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
-
-                // Export all defined input measurements
-                for (int i = 0; i < InputMeasurementKeys.Length; i++)
-                {
-                    m_fileData.Append(',');
-                    inputMeasurementKey = InputMeasurementKeys[i];
-                    signalType = InputMeasurementKeyTypes[i];
-
-                    // Get measurement for this frame, falling back on latest value
-                    measurementValue = measurements.TryGetValue(inputMeasurementKey, out measurement) ? measurement.AdjustedValue : LatestMeasurements[inputMeasurementKey.SignalID];
-
-                    // Export measurement value making any needed adjustments based on signal type
-                    if (signalType == SignalType.VPHM)
+                    if ((object)m_fileData == null)
                     {
-                        // Convert voltages to base units
-                        m_fileData.Append(measurementValue / SI.Kilo);
+                        m_fileData = new StringBuilder();
+                        m_startTime = timestamp;
+                        m_rowCount = 0;
                     }
-                    else
-                    {
-                        // Export all other types of measurements as their raw value
-                        m_fileData.Append(measurementValue);
-                    }
-                }
 
-                // Terminate line
-                m_fileData.AppendLine();
-                m_rowCount++;
+                    m_fileData.AppendFormat("{0}", timestamp.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+
+                    // Export all defined input measurements
+                    for (int i = 0; i < InputMeasurementKeys.Length; i++)
+                    {
+                        m_fileData.Append(',');
+                        inputMeasurementKey = InputMeasurementKeys[i];
+                        signalType = InputMeasurementKeyTypes[i];
+
+                        // Get measurement for this frame, falling back on latest value
+                        measurementValue = measurements.TryGetValue(inputMeasurementKey, out measurement) ? measurement.AdjustedValue : LatestMeasurements[inputMeasurementKey.SignalID];
+
+                        // Export measurement value making any needed adjustments based on signal type
+                        if (signalType == SignalType.VPHM)
+                        {
+                            // Convert voltages to base units
+                            m_fileData.Append(measurementValue / SI.Kilo);
+                        }
+                        else
+                        {
+                            // Export all other types of measurements as their raw value
+                            m_fileData.Append(measurementValue);
+                        }
+                    }
+
+                    // Terminate line
+                    m_fileData.AppendLine();
+                    m_rowCount++;
+                }
             }
 
             // Only publish when the export interval time has passed
             if ((timestamp - m_startTime).ToMilliseconds() > m_exportInterval)
+                m_fileExport.TryRunAsync();
+        }
+
+        private void WriteFileData()
+        {
+            string fileData = null;
+            long rowCount = 0;
+            Ticks startTime = 0;
+            bool displayedWarning = false;
+
+            // Get current file data and reset buffer
+            lock (m_fileDataLock)
             {
-                // Queue up measurement export to data exporter - this will only allow one export at a time
+                if ((object)m_fileData != null)
+                {
+                    fileData = m_fileData.ToString();
+                    rowCount = m_rowCount;
+                    startTime = m_startTime;
+                    m_fileData = null;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(fileData))
+            {
                 try
                 {
-                    string fileName = Path.Combine(FilePath.GetAbsolutePath(m_fileExportPath), "EPRI-VS-Input-" + m_startTime.ToString("yyyyMMddHHmmss") + ".csv");
+                    string fileName = Path.Combine(FilePath.GetAbsolutePath(m_fileExportPath), "EPRI-VS-Input-" + startTime.ToString("yyyyMMddHHmmss") + ".csv");
 
                     using (StreamWriter writer = new StreamWriter(fileName))
                     {
                         // Update actual row count
-                        writer.Write(m_header.Replace(RowCountMarker, m_rowCount.ToString()));
-                        writer.Write(m_fileData.ToString());
+                        writer.Write(m_header.Replace(RowCountMarker, rowCount.ToString()));
+                        writer.Write(fileData);
                     }
 
                     m_totalExports++;
-                }
-                catch (ThreadAbortException)
-                {
-                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -426,16 +461,11 @@ namespace EpriExport
                     OnStatusMessage("WARNING: Skipped export due to exception: " + ex.Message);
                     displayedWarning = true;
                 }
-                finally
-                {
-                    // Reset file data
-                    m_fileData = null;
-                }
 
                 // We display export status every other minute
-                if (new DateTime(timestamp).Minute % 2 == 0 && !displayedWarning)
+                if (DateTime.UtcNow.Minute % 2 == 0 && !displayedWarning)
                 {
-                    //Make sure message is only displayed once during the minute
+                    // Make sure message is only displayed once during the minute
                     if (!m_statusDisplayed)
                     {
                         OnStatusMessage("{0} successful file based measurement exports...", m_totalExports);

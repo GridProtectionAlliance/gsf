@@ -36,15 +36,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Communication;
-using GSF.Parsing;
-using GSF.PhasorProtocols;
-using GSF.PhasorProtocols.Anonymous;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
-using GSF.Units;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -56,6 +47,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Timers;
+using GSF;
+using GSF.Communication;
+using GSF.Parsing;
+using GSF.PhasorProtocols;
+using GSF.PhasorProtocols.Anonymous;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
+using GSF.Units;
 using Timer = System.Timers.Timer;
 
 namespace PhasorProtocolAdapters
@@ -86,7 +86,7 @@ namespace PhasorProtocolAdapters
         // device, the EIRA PMU, which defines the calculated interconnection reference angle - this includes
         // an average interconnection frequency - hence you have a virtual device consisting entirely of
         // of composed measurement points. Normally you just want to retransmit the received device data
-        // which is forwared as a cell in the combined outgoing data stream - this typically excludes any
+        // which is forwarded as a cell in the combined outgoing data stream - this typically excludes any
         // digital or analog values - but there may be cases where this data should be retransmitted as well.
 
         // It is fairly straight forward to reverse the process of mapping device signals to measurements
@@ -110,9 +110,9 @@ namespace PhasorProtocolAdapters
 
         // In the end a set of tables needs to exist that defines the outgoing data streams, the devices
         // that will appear in these streams (technically these do not need to already exist) and the
-        // points that make up the field defintitions in these devices along with their signal references
-        // that designate their destination field location - this will not necessarily be the perordained 
-        // signal reference that was used to orginally map this field to a measurement - but rather an
+        // points that make up the field definitions in these devices along with their signal references
+        // that designate their destination field location - this will not necessarily be the preordained 
+        // signal reference that was used to originally map this field to a measurement - but rather an
         // outgoing data stream specific signal reference that exists for this measurement mapped into
         // this device.
 
@@ -211,7 +211,7 @@ namespace PhasorProtocolAdapters
             // Create a new signal reference dictionary indexed on measurement keys
             m_signalReferences = new ConcurrentDictionary<MeasurementKey, SignalReference[]>();
 
-            // Create a cached signal reference dictionary for generated signal referencs
+            // Create a cached signal reference dictionary for generated signal references
             m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
 
             // Create a new connection ID cache
@@ -489,7 +489,7 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                if (m_commandChannel != null && m_commandChannel.CurrentState == ServerState.Running)
+                if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ServerState.Running)
                 {
                     try
                     {
@@ -542,7 +542,7 @@ namespace PhasorProtocolAdapters
             }
             set
             {
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ClientConnectingException -= m_dataChannel_ClientConnectingException;
@@ -558,7 +558,7 @@ namespace PhasorProtocolAdapters
                 // Assign new data channel reference
                 m_dataChannel = value;
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     // Attach to events on new data channel reference
                     m_dataChannel.ClientConnectingException += m_dataChannel_ClientConnectingException;
@@ -581,7 +581,7 @@ namespace PhasorProtocolAdapters
             }
             set
             {
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     // Detach from events on existing command channel reference
                     m_commandChannel.ClientConnected -= m_commandChannel_ClientConnected;
@@ -599,7 +599,7 @@ namespace PhasorProtocolAdapters
                 // Assign new command channel reference
                 m_commandChannel = value;
 
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     // Attach to events on new command channel reference
                     m_commandChannel.ClientConnected += m_commandChannel_ClientConnected;
@@ -637,19 +637,19 @@ namespace PhasorProtocolAdapters
             {
                 StringBuilder status = new StringBuilder();
 
-                if (m_configurationFrame != null)
+                if ((object)m_configurationFrame != null)
                 {
                     status.AppendFormat("  Configuration frame size: {0} bytes", m_configurationFrame.BinaryLength);
                     status.AppendLine();
                 }
 
-                if (m_baseConfigurationFrame != null && m_baseConfigurationFrame.Cells != null)
+                if ((object)m_baseConfigurationFrame != null && (object)m_baseConfigurationFrame.Cells != null)
                 {
                     status.AppendFormat("  Total configured devices: {0}", m_baseConfigurationFrame.Cells.Count);
                     status.AppendLine();
                 }
 
-                if (m_signalReferences != null)
+                if ((object)m_signalReferences != null)
                 {
                     status.AppendFormat(" Total device measurements: {0}", m_signalReferences.Count);
                     status.AppendLine();
@@ -689,7 +689,7 @@ namespace PhasorProtocolAdapters
                 status.AppendFormat(" Digital valid inputs mask: {0} (big-endian)", ByteEncoding.BigEndianBinary.GetString(BitConverter.GetBytes(m_digitalMaskValue.HighWord())));
                 status.AppendLine();
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     status.AppendLine();
                     status.AppendLine("Data Channel Status".CenterText(50));
@@ -697,7 +697,7 @@ namespace PhasorProtocolAdapters
                     status.Append(m_dataChannel.Status);
                 }
 
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     status.AppendLine();
                     status.AppendLine("Command Channel Status".CenterText(50));
@@ -708,11 +708,11 @@ namespace PhasorProtocolAdapters
                 status.AppendLine();
                 status.Append(base.Status);
 
-                if (m_commandChannel != null)
+                if ((object)m_commandChannel != null)
                 {
                     Guid[] clientIDs = m_commandChannel.ClientIDs;
 
-                    if (clientIDs != null && clientIDs.Length > 0)
+                    if ((object)clientIDs != null && clientIDs.Length > 0)
                     {
                         status.AppendLine();
                         status.AppendFormat("Command channel has {0} connected clients:\r\n\r\n", clientIDs.Length);
@@ -841,12 +841,12 @@ namespace PhasorProtocolAdapters
                     if (disposing)
                     {
                         // Dispose command channel restart timer
-                        if (m_commandChannelRestartTimer != null)
+                        if ((object)m_commandChannelRestartTimer != null)
                         {
                             m_commandChannelRestartTimer.Elapsed -= m_commandChannelRestartTimer_Elapsed;
                             m_commandChannelRestartTimer.Dispose();
+                            m_commandChannelRestartTimer = null;
                         }
-                        m_commandChannelRestartTimer = null;
 
                         // Dispose and detach from data and command channel events
                         this.DataChannel = null;
@@ -874,10 +874,10 @@ namespace PhasorProtocolAdapters
             m_configurationFramePublished = false;
 
             // Start communications servers
-            if ((m_autoStartDataChannel || m_commandChannel == null) && m_dataChannel != null && m_dataChannel.CurrentState == ServerState.NotRunning)
+            if ((m_autoStartDataChannel || (object)m_commandChannel == null) && (object)m_dataChannel != null && m_dataChannel.CurrentState == ServerState.NotRunning)
                 m_dataChannel.Start();
 
-            if (m_commandChannel != null && m_commandChannel.CurrentState == ServerState.NotRunning)
+            if ((object)m_commandChannel != null && m_commandChannel.CurrentState == ServerState.NotRunning)
                 m_commandChannel.Start();
 
             // Make sure publication channel is defined
@@ -903,10 +903,10 @@ namespace PhasorProtocolAdapters
             StopDataChannel();
 
             // Stop communications servers
-            if (m_dataChannel != null)
+            if ((object)m_dataChannel != null)
                 m_dataChannel.Stop();
 
-            if (m_commandChannel != null)
+            if ((object)m_commandChannel != null)
                 m_commandChannel.Stop();
         }
 
@@ -925,7 +925,7 @@ namespace PhasorProtocolAdapters
             EstablishPublicationChannel();
 
             // Make sure publication channel has started
-            if (m_publishChannel != null)
+            if ((object)m_publishChannel != null)
             {
                 if (m_publishChannel.CurrentState == ServerState.NotRunning)
                 {
@@ -939,11 +939,9 @@ namespace PhasorProtocolAdapters
                     }
                 }
 
+                // Start concentration engine
                 if (!Enabled)
-                {
-                    // Start concentration engine
                     base.Start();
-                }
             }
         }
 
@@ -952,7 +950,7 @@ namespace PhasorProtocolAdapters
         {
             // If data channel is not defined and command channel is defined system assumes
             // you want to make data available over TCP connection
-            if (m_dataChannel == null && m_commandChannel != null)
+            if ((object)m_dataChannel == null && (object)m_commandChannel != null)
                 m_publishChannel = m_commandChannel;
             else
                 m_publishChannel = m_dataChannel;
@@ -1027,7 +1025,9 @@ namespace PhasorProtocolAdapters
                     m_currentScalingValue = unchecked((uint)int.Parse(setting));
             }
             else
+            {
                 m_currentScalingValue = 2423U;
+            }
 
             if (settings.TryGetValue("voltageScalingValue", out setting))
             {
@@ -1035,7 +1035,9 @@ namespace PhasorProtocolAdapters
                     m_voltageScalingValue = unchecked((uint)int.Parse(setting));
             }
             else
+            {
                 m_voltageScalingValue = 2725785U;
+            }
 
             if (settings.TryGetValue("analogScalingValue", out setting))
             {
@@ -1043,7 +1045,9 @@ namespace PhasorProtocolAdapters
                     m_analogScalingValue = unchecked((uint)int.Parse(setting));
             }
             else
+            {
                 m_analogScalingValue = 1373291U;
+            }
 
             if (settings.TryGetValue("digitalMaskValue", out setting))
             {
@@ -1051,7 +1055,9 @@ namespace PhasorProtocolAdapters
                     m_digitalMaskValue = unchecked((uint)int.Parse(setting));
             }
             else
+            {
                 m_digitalMaskValue = Word.MakeDword(0xFFFF, 0x0000);
+            }
 
             if (settings.TryGetValue("processDataValidFlag", out setting))
                 m_processDataValidFlag = setting.ParseBoolean();
@@ -1076,13 +1082,9 @@ namespace PhasorProtocolAdapters
             }
 
             if (settings.TryGetValue("useAdjustedValue", out setting))
-            {
                 m_useAdjustedValue = Boolean.Parse(setting);
-            }
             else
-            {
                 m_useAdjustedValue = true;
-            }
 
             // Initialize data channel if defined
             if (!string.IsNullOrEmpty(dataChannel))
@@ -1110,11 +1112,8 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Reloads the phasor data concentrator configuration.", "Administrator", "Editor")]
         public void UpdateConfiguration()
         {
-            const int labelLength = 16;
-            Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>();
-            SignalReference signal;
-            SignalReference[] signals;
-            MeasurementKey measurementKey;
+            const int LabelLength = 16;
+
             PhasorType type;
             AnalogType analogType;
             char phase;
@@ -1167,7 +1166,7 @@ namespace PhasorProtocolAdapters
                     foreach (DataRow phasorRow in DataSource.Tables["OutputStreamDevicePhasors"].Select(string.Format("OutputStreamDeviceID={0}", deviceID), "LoadOrder"))
                     {
                         order = int.Parse(phasorRow["LoadOrder"].ToNonNullString("0"));
-                        label = phasorRow["Label"].ToNonNullString("Phasor " + order).Trim().TruncateRight(labelLength);
+                        label = phasorRow["Label"].ToNonNullString("Phasor " + order).Trim().TruncateRight(LabelLength);
                         type = phasorRow["Type"].ToNonNullString("V").Trim().ToUpper().StartsWith("V") ? PhasorType.Voltage : PhasorType.Current;
                         phase = phasorRow["Phase"].ToNonNullString("+").Trim().ToUpper()[0];
                         scale = phasorRow["ScalingValue"].ToNonNullString("0");
@@ -1183,17 +1182,16 @@ namespace PhasorProtocolAdapters
                         if (scalingValue == 0)
                             scalingValue = (type == PhasorType.Voltage ? m_voltageScalingValue : m_currentScalingValue);
 
-                        cell.PhasorDefinitions.Add(
-                            new PhasorDefinition(
-                                cell,
-                                GeneratePhasorLabel(label, phase, type),
-                                scalingValue,
-                                type,
-                                null));
+                        cell.PhasorDefinitions.Add(new PhasorDefinition(
+                            cell,
+                            GeneratePhasorLabel(label, phase, type),
+                            scalingValue,
+                            type,
+                            null));
                     }
 
                     // Add frequency definition
-                    label = string.Format("{0} Freq", cell.IDLabel.TruncateRight(labelLength - 5)).Trim();
+                    label = string.Format("{0} Freq", cell.IDLabel.TruncateRight(LabelLength - 5)).Trim();
                     cell.FrequencyDefinition = new FrequencyDefinition(cell, label);
 
                     // Optionally define all the analogs configured for this device
@@ -1202,7 +1200,7 @@ namespace PhasorProtocolAdapters
                         foreach (DataRow analogRow in DataSource.Tables["OutputStreamDeviceAnalogs"].Select(string.Format("OutputStreamDeviceID={0}", deviceID), "LoadOrder"))
                         {
                             order = int.Parse(analogRow["LoadOrder"].ToNonNullString("0"));
-                            label = analogRow["Label"].ToNonNullString("Analog " + order).Trim().TruncateRight(labelLength);
+                            label = analogRow["Label"].ToNonNullString("Analog " + order).Trim().TruncateRight(LabelLength);
                             analogType = (AnalogType)int.Parse(analogRow["Type"].ToNonNullString("0"));
                             scale = analogRow["ScalingValue"].ToNonNullString("0");
 
@@ -1213,12 +1211,11 @@ namespace PhasorProtocolAdapters
                             if (!uint.TryParse(scale, out scalingValue))
                                 scalingValue = unchecked((uint)int.Parse(scale));
 
-                            cell.AnalogDefinitions.Add(
-                                new AnalogDefinition(
-                                    cell,
-                                    label,
-                                    scalingValue == 0 ? m_analogScalingValue : scalingValue,
-                                    analogType));
+                            cell.AnalogDefinitions.Add(new AnalogDefinition(
+                                cell,
+                                label,
+                                scalingValue == 0 ? m_analogScalingValue : scalingValue,
+                                analogType));
                         }
                     }
 
@@ -1231,7 +1228,7 @@ namespace PhasorProtocolAdapters
                             scale = digitalRow["MaskValue"].ToNonNullString("0");
 
                             // IEEE C37.118 digital labels are defined with all 16-labels (one for each bit) in one large formatted string
-                            label = digitalRow["Label"].ToNonNullString("Digital " + order).Trim().TruncateRight(labelLength * 16);
+                            label = digitalRow["Label"].ToNonNullString("Digital " + order).Trim().TruncateRight(LabelLength * 16);
 
                             if (m_replaceWithSpaceChar != Char.MinValue)
                                 label = label.Replace(m_replaceWithSpaceChar, ' ');
@@ -1240,11 +1237,10 @@ namespace PhasorProtocolAdapters
                             if (!uint.TryParse(scale, out scalingValue))
                                 scalingValue = unchecked((uint)int.Parse(scale));
 
-                            cell.DigitalDefinitions.Add(
-                                new DigitalDefinition(
-                                    cell,
-                                    label,
-                                    scalingValue == 0 ? m_digitalMaskValue : scalingValue));
+                            cell.DigitalDefinitions.Add(new DigitalDefinition(
+                                cell,
+                                label,
+                                scalingValue == 0 ? m_digitalMaskValue : scalingValue));
                         }
                     }
 
@@ -1261,26 +1257,53 @@ namespace PhasorProtocolAdapters
             // Clear any existing signal references
             m_signalReferences.Clear();
 
+            Dictionary<string, int> signalCellIndexes = new Dictionary<string, int>();
+            SignalReference signal;
+            SignalReference[] signals;
+            MeasurementKey measurementKey;
+            bool foundQualityFlagsMeasurement = false;
+            bool isQualityFlagsMeasurement;
+
             // Define measurement to signals cross reference dictionary
             foreach (DataRow measurementRow in DataSource.Tables["OutputStreamMeasurements"].Select(string.Format("AdapterID={0}", ID)))
             {
+                isQualityFlagsMeasurement = false;
+
                 try
                 {
                     // Create a new signal reference
                     signal = new SignalReference(measurementRow["SignalReference"].ToString());
 
-                    // Lookup cell index by acronym - doing this work upfront will save a huge amount
-                    // of work during primary measurement sorting
-                    if (!signalCellIndexes.TryGetValue(signal.Acronym, out signal.CellIndex))
+                    // See if this is the quality flags designation for this output stream 
+                    if (signal.Kind == SignalKind.Quality)
                     {
-                        // We cache these indices locally to speed up initialization as we'll be
-                        // requesting them for the same devices over and over
-                        signal.CellIndex = m_baseConfigurationFrame.Cells.IndexOfStationName(signal.Acronym);
-                        signalCellIndexes.Add(signal.Acronym, signal.CellIndex);
+                        if (Name.Equals(signal.Acronym, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            if (foundQualityFlagsMeasurement)
+                                throw new Exception("Only one quality flags measurement can be assigned to an output stream - additional quality flags will be ignored.");
+
+                            foundQualityFlagsMeasurement = true;
+                            isQualityFlagsMeasurement = true;
+                        }
+                        else
+                        {
+                            throw new Exception(string.Format("Unexpected quality flags measurement assignment to \"{0}\". A single quality flags measurement can be assigned to output stream \"{1}\".", signal.Acronym, Name));
+                        }
+                    }
+                    else
+                    {
+                        // Lookup cell index by acronym - doing this work upfront will save a huge amount of work during primary measurement sorting
+                        if (!signalCellIndexes.TryGetValue(signal.Acronym, out signal.CellIndex))
+                        {
+                            // We cache these indices locally to speed up initialization as we'll be
+                            // requesting them for the same devices over and over
+                            signal.CellIndex = m_baseConfigurationFrame.Cells.IndexOfStationName(signal.Acronym);
+                            signalCellIndexes.Add(signal.Acronym, signal.CellIndex);
+                        }
                     }
 
                     // No need to define this measurement for sorting unless it has a destination in the outgoing frame
-                    if (signal.CellIndex > -1)
+                    if (signal.CellIndex > -1 || isQualityFlagsMeasurement)
                     {
                         // Get historian field
                         string historian = measurementRow["Historian"].ToNonNullString();
@@ -1299,6 +1322,7 @@ namespace PhasorProtocolAdapters
                             object activeMeasurementSignalID = null;
                             object activeMeasurementID = null;
 
+                            // OPTIMIZE: This select query will be slow on very large ActiveMeasurement implementations, consider optimization.
                             if ((object)activeMeasurements != null)
                                 activeMeasurementRows = activeMeasurements.Select(string.Format("ID LIKE '*:{0}'", pointID));
 
@@ -1309,7 +1333,7 @@ namespace PhasorProtocolAdapters
                             }
 
                             // If we still can't find the measurement key, now is the time to give up
-                            if (activeMeasurementSignalID == null && activeMeasurementID == null)
+                            if ((object)activeMeasurementSignalID == null && (object)activeMeasurementID == null)
                                 throw new Exception(string.Format("Cannot find measurement key for measurement with pointID {0}", pointID));
 
                             measurementKey = MeasurementKey.Parse(activeMeasurementID.ToString(), Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()));
@@ -1338,7 +1362,7 @@ namespace PhasorProtocolAdapters
                 }
                 catch (Exception ex)
                 {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to associate measurement key to signal reference \"{0}\" due to exception: {1}", measurementRow["SignalReference"].ToString().Trim(), ex.Message), ex));
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to associate measurement key to signal reference \"{0}\" due to exception: {1}", measurementRow["SignalReference"].ToNonNullString(), ex.Message), ex));
                 }
             }
 
@@ -1349,7 +1373,7 @@ namespace PhasorProtocolAdapters
             // Allow for spaces in output stream device names if a replacement character has been defined for spaces
             if (m_replaceWithSpaceChar != Char.MinValue)
             {
-                foreach (ConfigurationCell cell in m_baseConfigurationFrame.Cells)
+                foreach (IConfigurationCell cell in m_baseConfigurationFrame.Cells)
                 {
                     cell.StationName = cell.StationName.Replace(m_replaceWithSpaceChar, ' ');
                 }
@@ -1506,7 +1530,7 @@ namespace PhasorProtocolAdapters
             SignalReferenceMeasurement signalMeasurement = measurement as SignalReferenceMeasurement;
             IDataFrame dataFrame = frame as IDataFrame;
 
-            if ((object)signalMeasurement != null && dataFrame != null)
+            if ((object)signalMeasurement != null && (object)dataFrame != null)
             {
                 PhasorValueCollection phasorValues;
                 SignalReference signal = signalMeasurement.SignalReference;
@@ -1557,6 +1581,10 @@ namespace PhasorProtocolAdapters
                         if (analogValues.Count >= signalIndex)
                             analogValues[signalIndex - 1].Value = signalValue;
                         break;
+                    case SignalKind.Quality:
+                        // Assign "quality flags" measurement to data frame
+                        dataFrame.QualityFlags = unchecked((uint)signalValue);
+                        break;
                 }
 
                 // So that we can accurately track the total measurements that were sorted into this frame,
@@ -1570,7 +1598,7 @@ namespace PhasorProtocolAdapters
             }
 
             // This is not expected to occur - but just in case
-            if ((object)signalMeasurement == null && measurement != null)
+            if ((object)signalMeasurement == null && (object)measurement != null)
                 OnProcessException(new InvalidCastException(string.Format("Attempt was made to assign an invalid measurement to phasor data concentration frame, expected a \"SignalReferenceMeasurement\" but received a \"{0}\"", measurement.GetType().Name)));
 
             if ((object)dataFrame == null)
@@ -1587,7 +1615,7 @@ namespace PhasorProtocolAdapters
         {
             IDataFrame dataFrame = frame as IDataFrame;
 
-            if (dataFrame != null && m_publishChannel != null)
+            if ((object)dataFrame != null && (object)m_publishChannel != null)
             {
                 byte[] image;
 
@@ -1920,7 +1948,7 @@ namespace PhasorProtocolAdapters
                 if (count == references.Length)
                 {
                     // Create and cache new signal reference if it doesn't exist
-                    if (references[index] == null)
+                    if ((object)references[index] == null)
                         references[index] = SignalReference.ToString(Name + "!OS", type, index + 1);
 
                     return references[index];
@@ -2096,7 +2124,7 @@ namespace PhasorProtocolAdapters
                 OnStatusMessage("Command channel was unexpectedly terminated, restarting...");
 
                 // We must wait for command channel to completely shutdown before trying to restart...
-                if (m_commandChannelRestartTimer != null)
+                if ((object)m_commandChannelRestartTimer != null)
                     m_commandChannelRestartTimer.Start();
             }
             else
@@ -2105,7 +2133,7 @@ namespace PhasorProtocolAdapters
 
         private void m_commandChannelRestartTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (m_commandChannel != null)
+            if ((object)m_commandChannel != null)
             {
                 try
                 {

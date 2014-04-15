@@ -146,7 +146,7 @@ namespace ProtocolTester
                     Console.WriteLine("PMU {0} Phasor {1} Magnitude = {2}", device.IDCode, x, device.PhasorValues[x].Magnitude);
                 }
 
-                Console.WriteLine("    Last Timestamp: {0}", ((DateTime)device.Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                Console.WriteLine("    Last Timestamp: {0}", device.GetStatusFlagsMeasurement().Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 if ((object)concentrator != null)
                     Console.WriteLine(concentrator.Status);
@@ -223,7 +223,7 @@ namespace ProtocolTester
 
                     // Map status flags (SF) from device data cell itself (IDataCell implements IMeasurement
                     // and exposes the status flags as its value)
-                    MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Status), parsedDevice);
+                    MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Status), parsedDevice.GetStatusFlagsMeasurement());
 
                     // Map phase angles (PAn) and magnitudes (PMn)
                     phasors = parsedDevice.PhasorValues;

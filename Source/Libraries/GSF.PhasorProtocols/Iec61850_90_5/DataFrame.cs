@@ -72,6 +72,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
         // Fields
         private CommonFrameHeader m_frameHeader;
+        private uint m_qualityFlags;
         private string m_msvID;
         private readonly int m_asduCount;
         private readonly byte[][] m_asduImages;
@@ -256,6 +257,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 {
                     State = m_frameHeader.State as IDataFrameParsingState;
                     base.Timestamp = m_frameHeader.Timestamp;
+                    m_qualityFlags = ((uint)m_frameHeader.TimeQualityFlags | (uint)m_frameHeader.TimeQualityIndicatorCode);
 
                     // Reference header MSVID in data frame if it's defined
                     if ((object)m_frameHeader.MsvID != null)
@@ -274,6 +276,57 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             set
             {
                 CommonHeader = value as CommonFrameHeader;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets protocol specific quality flags for this <see cref="DataFrame"/>.
+        /// </summary>
+        public override uint QualityFlags
+        {
+            get
+            {
+                return m_qualityFlags;
+            }
+            set
+            {
+                m_qualityFlags = value;
+
+                // Set time quality flags
+                TimeQualityFlags = (TimeQualityFlags)(m_qualityFlags & ~(uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
+
+                // Set time quality indicator code
+                TimeQualityIndicatorCode = (TimeQualityIndicatorCode)(m_qualityFlags & (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="TimeQualityFlags"/> associated with this <see cref="DataFrame"/>.
+        /// </summary>
+        public TimeQualityFlags TimeQualityFlags
+        {
+            get
+            {
+                return CommonHeader.TimeQualityFlags;
+            }
+            set
+            {
+                CommonHeader.TimeQualityFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="TimeQualityIndicatorCode"/> associated with this <see cref="DataFrame"/>.
+        /// </summary>
+        public TimeQualityIndicatorCode TimeQualityIndicatorCode
+        {
+            get
+            {
+                return CommonHeader.TimeQualityIndicatorCode;
+            }
+            set
+            {
+                CommonHeader.TimeQualityIndicatorCode = value;
             }
         }
 
@@ -364,7 +417,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     // Set signature tag
                     buffer[0] = 0x85;
 
-                    // KeyID in common header is tehcnically a lookup into derived rotating keys, but all implementations are using dummy key for now
+                    // KeyID in common header is technically a lookup into derived rotating keys, but all implementations are using dummy key for now
                     HMAC hmac = (byte)algorithm <= (byte)SignatureAlgorithm.Sha256 ? (HMAC)(new CommonFrameHeader.ShaHmac(Common.DummyKey)) : (HMAC)(new CommonFrameHeader.AesHmac(Common.DummyKey));
 
                     switch (algorithm)
@@ -571,7 +624,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                         };
 
                         // Add a copy of the current data cell to the new frame 
-                        foreach (DataCell cell in Cells)
+                        foreach (IDataCell cell in Cells)
                         {
                             dataFrame.Cells.Add(cell);
                         }
@@ -742,7 +795,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                         SignalType signalType, lastSignalType = SignalType.NONE;
                         string label;
                         bool statusDefined = false;
-                        bool endOfFile = false;
+                        bool endOfFile;
                         int magnitudeSignals = 0;
                         int angleSignals = 0;
 

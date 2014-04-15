@@ -87,6 +87,10 @@ namespace GSF.PhasorProtocols
         /// </summary>
         Alarm,
         /// <summary>
+        /// Quality flags.
+        /// </summary>
+        Quality,
+        /// <summary>
         /// Undetermined signal type.
         /// </summary>
         Unknown
@@ -155,6 +159,10 @@ namespace GSF.PhasorProtocols
         /// Alarm value.
         /// </summary>
         ALRM = 12,
+        /// <summary>
+        /// Quality flags.
+        /// </summary>
+        QUAL = 13,
         /// <summary>
         /// Undefined signal.
         /// </summary>
@@ -295,11 +303,11 @@ namespace GSF.PhasorProtocols
 
                 if (signalTypeCompare == 0)
                     return Index.CompareTo(other.Index);
-                else
-                    return signalTypeCompare;
+
+                return signalTypeCompare;
             }
-            else
-                return acronymCompare;
+
+            return acronymCompare;
         }
 
         /// <summary>
@@ -421,6 +429,8 @@ namespace GSF.PhasorProtocols
                     return SignalKind.Statistic;
                 case "AL": // Alarm Value
                     return SignalKind.Alarm;
+                case "QF": // Quality Flags
+                    return SignalKind.Quality;
                 default:
                     return SignalKind.Unknown;
             }
@@ -455,6 +465,8 @@ namespace GSF.PhasorProtocols
                     return "ST"; // Statistical Value
                 case SignalKind.Alarm:
                     return "AL"; // Alarm Value
+                case SignalKind.Quality:
+                    return "QF"; // Quality Flags
                 default:
                     return "??";
             }
@@ -482,8 +494,8 @@ namespace GSF.PhasorProtocols
         {
             if (index > 0)
                 return string.Format("{0}-{1}{2}", acronym, GetSignalKindAcronym(type), index);
-            else
-                return string.Format("{0}-{1}", acronym, GetSignalKindAcronym(type));
+
+            return string.Format("{0}-{1}", acronym, GetSignalKindAcronym(type));
         }
 
         #endregion

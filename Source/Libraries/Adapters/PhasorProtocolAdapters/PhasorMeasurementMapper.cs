@@ -51,7 +51,6 @@ namespace PhasorProtocolAdapters
     /// Represents an <see cref="IInputAdapter"/> used to map measured values from a connection
     /// to a phasor measurement device to new <see cref="IMeasurement"/> values.
     /// </summary>
-    //private const double SqrtOf3 = 1.7320508075688772935274463415059D;
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class PhasorMeasurementMapper : InputAdapterBase
     {
@@ -1358,7 +1357,9 @@ namespace PhasorProtocolAdapters
                     OnStatusMessage("Sent device command \"{0}\"...", command);
             }
             else
+            {
                 OnStatusMessage("Failed to send device command \"{0}\", no frame parser is defined.", command);
+            }
         }
 
         /// <summary>
@@ -1382,7 +1383,9 @@ namespace PhasorProtocolAdapters
                 OnStatusMessage("Statistics reset for all devices associated with this connection.");
             }
             else
+            {
                 OnStatusMessage("Failed to reset statistics, no devices are defined.");
+            }
         }
 
         /// <summary>
@@ -1408,10 +1411,14 @@ namespace PhasorProtocolAdapters
                     OnStatusMessage("Statistics reset for device with ID code \"{0}\" associated with this connection.", idCode);
                 }
                 else
+                {
                     OnStatusMessage("WARNING: Failed to find device with ID code \"{0}\" associated with this connection.", idCode);
+                }
             }
             else
+            {
                 OnStatusMessage("Failed to reset statistics, no devices are defined.");
+            }
         }
 
         /// <summary>
@@ -1576,17 +1583,17 @@ namespace PhasorProtocolAdapters
                                 uptime = connectionTime.ToMinutes().ToString("0.0") + " minutes";
                         }
                         else
+                        {
                             uptime = connectionTime.ToHours().ToString("0.00") + " hours";
+                        }
                     }
                     else
+                    {
                         uptime = connectionTime.ToDays().ToString("0.00") + " days";
+                    }
 
-                    string uptimeStats = string.Format("Up for {0}, {1} errors",
-                        uptime, totalDataErrors);
-
-                    string runtimeStats = string.Format(" {0} {1} fps",
-                        ((DateTime)m_lastReportTime).ToString("MM/dd/yyyy HH:mm:ss.fff"),
-                        m_frameParser.CalculatedFrameRate.ToString("0.00"));
+                    string uptimeStats = string.Format("Up for {0}, {1} errors", uptime, totalDataErrors);
+                    string runtimeStats = string.Format(" {0} {1} fps", ((DateTime)m_lastReportTime).ToString("MM/dd/yyyy HH:mm:ss.fff"), m_frameParser.CalculatedFrameRate.ToString("0.00"));
 
                     uptimeStats = uptimeStats.TruncateRight(maxLength - runtimeStats.Length).PadLeft(maxLength - runtimeStats.Length, '\xA0');
 
@@ -1603,7 +1610,9 @@ namespace PhasorProtocolAdapters
                 }
             }
             else
+            {
                 status.Append("  ** Not connected");
+            }
 
             return status.ToString();
         }
@@ -1613,8 +1622,6 @@ namespace PhasorProtocolAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            long now = DateTime.UtcNow.Ticks;
-
             m_lastReportTime = 0;
             m_bytesReceived = 0;
             m_outOfOrderFrames = 0;
@@ -1735,6 +1742,9 @@ namespace PhasorProtocolAdapters
             m_lifetimeTotalLatency += latency;
             m_lifetimeLatencyFrames++;
 
+            // Map quality flags (QF) from device frame, if any
+            MapMeasurementAttributes(mappedMeasurements, string.Format("{0}-{1}", Name, SignalReference.GetSignalKindAcronym(SignalKind.Quality)), frame.GetQualityFlagsMeasurement());
+
             // Loop through each parsed device in the data frame
             foreach (IDataCell parsedDevice in frame.Cells)
             {
@@ -1763,9 +1773,8 @@ namespace PhasorProtocolAdapters
                         if (parsedDevice.DeviceError)
                             definedDevice.DeviceErrors++;
 
-                        // Map status flags (SF) from device data cell itself (IDataCell implements IMeasurement
-                        // and exposes the status flags as its value)
-                        MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Status), parsedDevice);
+                        // Map status flags (SF) from device data cell itself
+                        MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Status), parsedDevice.GetStatusFlagsMeasurement());
 
                         // Map phase angles (PAn) and magnitudes (PMn)
                         phasors = parsedDevice.PhasorValues;
@@ -1992,21 +2001,23 @@ namespace PhasorProtocolAdapters
             m_measurementsPerSecondCount = 0L;
         }
 
-        // Primary data source connection has terminated, engage backup connection
-        private void m_primaryDataSource_ConnectionTerminated(object sender, EventArgs e)
-        {
-            OnStatusMessage("WARNING: Primary data source connection was terminated, attempting to engage backup connection...");
-            Start();
-        }
+        // Replace with secure notification mechanism handlers for notification when subordinate phasor adapter needs to kick on when primary data feed goes offline (if feature is still deemed useful)
 
-        // Primary data source connection has been reestablished, disengage backup connection
-        private void m_primaryDataSource_ConnectionEstablished(object sender, EventArgs e)
-        {
-            if (Enabled)
-                OnStatusMessage("Primary data source connection has been reestablished, disengaging backup connection...");
+        //// Primary data source connection has terminated, engage backup connection
+        //private void m_primaryDataSource_ConnectionTerminated(object sender, EventArgs e)
+        //{
+        //    OnStatusMessage("WARNING: Primary data source connection was terminated, attempting to engage backup connection...");
+        //    Start();
+        //}
 
-            Stop();
-        }
+        //// Primary data source connection has been reestablished, disengage backup connection
+        //private void m_primaryDataSource_ConnectionEstablished(object sender, EventArgs e)
+        //{
+        //    if (Enabled)
+        //        OnStatusMessage("Primary data source connection has been reestablished, disengaging backup connection...");
+
+        //    Stop();
+        //}
 
         private void m_frameParser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)
         {
@@ -2028,7 +2039,7 @@ namespace PhasorProtocolAdapters
                 }
 
                 m_missingDataMonitor.RedundantFramesPerPacket = m_frameParser.RedundantFramesPerPacket;
-                m_missingDataMonitor.SortMeasurements(e.Argument.Cells);
+                m_missingDataMonitor.SortMeasurements(e.Argument.Cells.Select(cell => cell.GetStatusFlagsMeasurement()));
             }
         }
 

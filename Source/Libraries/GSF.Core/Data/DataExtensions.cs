@@ -76,6 +76,8 @@ using System.Text.RegularExpressions;
 
 namespace GSF.Data
 {
+    // ReSharper disable UnusedVariable
+
     /// <summary>
     /// Defines extension functions related to database and SQL interaction.
     /// </summary>
@@ -2137,8 +2139,8 @@ namespace GSF.Data
 
             if ((object)value == null)
                 return null;
-            else
-                return (T)Convert.ChangeType(value, typeof(T));
+
+            return (T)Convert.ChangeType(value, typeof(T));
         }
 
         #endregion
@@ -2412,7 +2414,7 @@ namespace GSF.Data
                     .Distinct()
                     .Where(IsValidToken)
                     .ToArray();
-                
+
                 int i = 0;
 
                 if (tokens.Length != values.Length)
