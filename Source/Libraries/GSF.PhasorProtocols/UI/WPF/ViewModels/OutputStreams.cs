@@ -554,7 +554,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void UpdateConfigFrameSize()
         {
-            const int MaxFrameSize = ushort.MaxValue + 1;
+            const int MaxFrameSize = ushort.MaxValue;
 
             PhasorDataConcentratorBase concentrator;
             DataSet dataSource;
@@ -566,11 +566,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             if (IsNewRecord)
             {
-                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                Application.Current.Dispatcher.Invoke(() =>
                 {
                     ConfigFrameSizeColor = Brushes.Gray;
                     ConfigFrameSizeText = "You must save the new record to calculate frame size.";
-                }));
+                });
 
                 return;
             }

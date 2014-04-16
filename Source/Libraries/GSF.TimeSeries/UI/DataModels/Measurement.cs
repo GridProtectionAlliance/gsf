@@ -1138,18 +1138,21 @@ namespace GSF.TimeSeries.UI.DataModels
         public static Measurement GetMeasurement(AdoDataConnection database, string whereClause)
         {
             bool createdConnection = false;
+            DataTable measurementTable;
+            DataRow row;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
+                measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
 
                 if (measurementTable.Rows.Count == 0)
                     return null;
 
-                DataRow row = measurementTable.Rows[0];
+                row = measurementTable.Rows[0];
+
                 Measurement measurement = new Measurement
-                    {
+                {
                     SignalID = database.Guid(row, "SignalID"),
                     HistorianID = row.ConvertNullableField<int>("HistorianID"),
                     PointID = row.ConvertField<int>("PointID"),
@@ -1402,6 +1405,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     if (row.Field<string>("SignalAcronym") == "STAT") // Just one more filter.
                     {
                         bool continueProcess = false;
+
                         if (!string.IsNullOrEmpty(outputStreamAcronym))
                         {
                             if (row.Field<string>("SignalReference").StartsWith(outputStreamAcronym + "!OS"))
@@ -1415,7 +1419,7 @@ namespace GSF.TimeSeries.UI.DataModels
                         if (continueProcess)
                         {
                             measurementList.Add(new Measurement
-                                {
+                            {
                                 SignalID = database.Guid(row, "SignalID"),
                                 HistorianID = row.ConvertNullableField<int>("HistorianID"),
                                 PointID = row.ConvertField<int>("PointID"),

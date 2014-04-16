@@ -959,12 +959,30 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     if (oldOutputStream != null && oldOutputStream.Acronym != outputStream.Acronym.Replace(" ", "").ToUpper())
                     {
                         ObservableCollection<Measurement> measurementList = Measurement.GetOutputStatisticMeasurements(database, oldOutputStream.Acronym);
+
                         foreach (Measurement measurement in measurementList)
                         {
                             measurement.SignalReference = measurement.SignalReference.Replace(oldOutputStream.Acronym, outputStream.Acronym.Replace(" ", "").ToUpper());
                             measurement.PointTag = measurement.PointTag.Replace(oldOutputStream.Acronym, outputStream.Acronym.Replace(" ", "").ToUpper());
                             measurement.Description = Regex.Replace(measurement.Description, oldOutputStream.Name, outputStream.Name ?? outputStream.Acronym.Replace(" ", "").ToUpper(), RegexOptions.IgnoreCase);
                             Measurement.Save(database, measurement);
+                        }
+
+                        SignalType qualityType = SignalType.Load(database).FirstOrDefault(type => type.Acronym == "QUAL");
+
+                        if ((object)qualityType != null)
+                        {
+                            IList<int> keys = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM OutputStreamMeasurement WHERE AdapterID = {0}", outputStream.ID))
+                                .Select().Select(row => row.ConvertField<int>("ID")).ToList();
+
+                            foreach (OutputStreamMeasurement measurement in OutputStreamMeasurement.Load(database, keys))
+                            {
+                                if (Regex.IsMatch(measurement.SignalReference, string.Format("{0}-{1}", oldOutputStream.Acronym, qualityType.Suffix)))
+                                {
+                                    measurement.SignalReference = measurement.SignalReference.Replace(oldOutputStream.Acronym, outputStream.Acronym.Replace(" ", "").ToUpper());
+                                    OutputStreamMeasurement.Save(database, measurement);
+                                }
+                            }
                         }
                     }
                 }

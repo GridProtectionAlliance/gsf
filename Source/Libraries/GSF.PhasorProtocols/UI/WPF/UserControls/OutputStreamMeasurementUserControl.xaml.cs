@@ -102,14 +102,14 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             // Add measurements to output stream measurements
             OutputStreamMeasurement.AddMeasurements(null, m_outputStreamID, addedMeasurements);
-            m_dataContext = new OutputStreamMeasurements(m_outputStreamID, 24);
+            m_dataContext = new OutputStreamMeasurements(m_outputStreamID, 23);
             this.DataContext = m_dataContext;
             PopupAddMore.IsOpen = false;
         }
 
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)
         {
-            m_dataContext = new OutputStreamMeasurements(m_outputStreamID, 24);
+            m_dataContext = new OutputStreamMeasurements(m_outputStreamID, 23);
             this.DataContext = m_dataContext;
             PopupAddMore.IsOpen = false;
         }
