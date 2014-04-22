@@ -46,7 +46,11 @@ namespace GSF.TimeSeries.UI
         #region [ Members ]
 
         // Constants
-        private const int DefaultRefreshInterval = 10;
+
+        /// <summary>
+        /// Default refresh interval for alarm monitor.
+        /// </summary>
+        public const int DefaultRefreshInterval = 10;
 
         // For future use we may want an alarm sound for a given severity
         //private const string DefaultSoundFile = "";
@@ -136,7 +140,7 @@ namespace GSF.TimeSeries.UI
             }
             set
             {
-                m_refreshTimer.Interval = value;
+                m_refreshTimer.Interval = value * 1000;
                 m_refreshInterval = value;
             }
         }

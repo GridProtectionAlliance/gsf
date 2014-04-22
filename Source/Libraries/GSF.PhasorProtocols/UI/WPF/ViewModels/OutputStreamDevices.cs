@@ -273,7 +273,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         public override void Load()
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            List<int> pageKeys = null;
+            List<int> pageKeys;
 
             try
             {
@@ -397,7 +397,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             if (!m_mirrorMode)
             {
                 OutputStream outputStream = OutputStream.GetOutputStream(null, " WHERE ID = " + m_outputStreamID);
-                CommonFunctions.LoadUserControl("Manage Devices for " + outputStream.Acronym, typeof(OutputStreamCurrentDeviceUserControl), m_outputStreamID, outputStream.Acronym);
+                CommonFunctions.LoadUserControl("Manage Devices for " + outputStream.Acronym, typeof(OutputStreamCurrentDeviceUserControl), m_outputStreamID);
             }
         }
 

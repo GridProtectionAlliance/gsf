@@ -35,7 +35,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
     /// <summary>
     /// Interaction logic for RealTimeMeasurementUserControl.xaml
     /// </summary>
-    public partial class RealTimeMeasurementUserControl : UserControl
+    public partial class RealTimeMeasurementUserControl
     {
         #region [ Members ]
 
@@ -93,7 +93,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 IsolatedStorageManager.InitializeStorageForRealTimeMeasurements(true);
             }
 
-            TextBlockMeasurementRefreshInterval.Text = m_measurementsDataRefreshInterval.ToString() + " sec";
+            TextBlockMeasurementRefreshInterval.Text = m_measurementsDataRefreshInterval + " sec";
             TextBoxRefreshInterval.Text = m_measurementsDataRefreshInterval.ToString();
             m_dataContext = CreateDataContext();
             this.DataContext = m_dataContext;
@@ -124,9 +124,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 m_dataContext.RestartConnectionCycle = false;
                 m_dataContext.UnsubscribeUnsynchronizedData();
                 IsolatedStorageManager.WriteToIsolatedStorage("RealtimeMeasurementsDataRefreshInterval", m_measurementsDataRefreshInterval);
-                int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("RealtimeMeasurementsDataRefreshInterval").ToString(), out m_measurementsDataRefreshInterval);
+                //int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("RealtimeMeasurementsDataRefreshInterval").ToString(), out m_measurementsDataRefreshInterval);
                 PopupSettings.IsOpen = false;
-                CommonFunctions.LoadUserControl("Real-Time Device Measurements", typeof(RealTimeMeasurementUserControl));
+                CommonFunctions.LoadUserControl(CommonFunctions.GetHeaderText("Monitor Device Outputs"), typeof(RealTimeMeasurementUserControl));
             }
             else
             {
@@ -146,7 +146,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             IsolatedStorageManager.InitializeStorageForRealTimeMeasurements(true);
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("RealtimeMeasurementsDataRefreshInterval").ToString(), out m_measurementsDataRefreshInterval);
             PopupSettings.IsOpen = false;
-            CommonFunctions.LoadUserControl("Real-Time Device Measurements", typeof(RealTimeMeasurementUserControl));
+            CommonFunctions.LoadUserControl(CommonFunctions.GetHeaderText("Monitor Device Outputs"), typeof(RealTimeMeasurementUserControl));
         }
 
         private void ButtonStatusFlagReference_Click(object sender, RoutedEventArgs e)

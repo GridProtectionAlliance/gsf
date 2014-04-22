@@ -27,7 +27,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using GSF.PhasorProtocols.UI.DataModels;
 
@@ -36,12 +35,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
     /// <summary>
     /// Interaction logic for OutputStreamCurrentDeviceUserControl.xaml
     /// </summary>
-    public partial class OutputStreamCurrentDeviceUserControl : UserControl
+    public partial class OutputStreamCurrentDeviceUserControl
     {
         #region [ Members ]
 
         private readonly int m_outputStreamID;
-        private string m_outputStreamAcronym;
+        //private string m_outputStreamAcronym;
         private ObservableCollection<OutputStreamDevice> m_currentDevices;
         private ObservableCollection<Device> m_newDevices;
         //private TsfPopup popupSettings;
@@ -53,13 +52,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
         /// <summary>
         /// Creates an instance of <see cref="OutputStreamCurrentDeviceUserControl"/>.
         /// <param name="outputStreamID">ID of the output stream to filter data.</param>
-        /// <param name="outputStreamAcronym">Acronym of the output stream for display purpose.</param>
         /// </summary>
-        public OutputStreamCurrentDeviceUserControl(int outputStreamID, string outputStreamAcronym)
+        public OutputStreamCurrentDeviceUserControl(int outputStreamID)
         {
             InitializeComponent();
             m_outputStreamID = outputStreamID;
-            m_outputStreamAcronym = outputStreamAcronym;
+            //m_outputStreamAcronym = outputStreamAcronym;
             m_currentDevices = new ObservableCollection<OutputStreamDevice>();
             m_newDevices = new ObservableCollection<Device>();
             this.Loaded += OutputStreamCurrentDeviceUserControl_Loaded;

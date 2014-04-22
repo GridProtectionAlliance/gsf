@@ -88,7 +88,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void RealTimeStatisticUserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString(), out m_statisticDataRefreshInterval);
+            int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StreamStatisticsDataRefreshInterval").ToString(), out m_statisticDataRefreshInterval);
 
             if (m_statisticDataRefreshInterval == 0)
             {
@@ -119,11 +119,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (int.TryParse(TextBoxRefreshInterval.Text, out m_statisticDataRefreshInterval))
             {
                 m_dataContext.Stop();
-                IsolatedStorageManager.WriteToIsolatedStorage("StatisticsDataRefreshInterval", m_statisticDataRefreshInterval);
-                int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString(), out m_statisticDataRefreshInterval);
+                IsolatedStorageManager.WriteToIsolatedStorage("StreamStatisticsDataRefreshInterval", m_statisticDataRefreshInterval);
+                //int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StreamStatisticsDataRefreshInterval").ToString(), out m_statisticDataRefreshInterval);
                 TextBlockMeasurementRefreshInterval.Text = m_statisticDataRefreshInterval.ToString();
                 PopupSettings.IsOpen = false;
-                CommonFunctions.LoadUserControl("Real-Time Stream Statistics", typeof(RealTimeStatisticUserControl));
+                CommonFunctions.LoadUserControl(CommonFunctions.GetHeaderText("Stream Statistics"), typeof(RealTimeStatisticUserControl));
             }
             else
             {
@@ -135,11 +135,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             m_dataContext.Stop();
             IsolatedStorageManager.InitializeStorageForStreamStatistics(true);
-            int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString(), out m_statisticDataRefreshInterval);
+            int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("StreamStatisticsDataRefreshInterval").ToString(), out m_statisticDataRefreshInterval);
             TextBlockMeasurementRefreshInterval.Text = m_statisticDataRefreshInterval.ToString();
             TextBoxRefreshInterval.Text = m_statisticDataRefreshInterval.ToString();
             PopupSettings.IsOpen = false;
-            CommonFunctions.LoadUserControl("Real-Time Stream Statistics", typeof(RealTimeStatisticUserControl));
+            CommonFunctions.LoadUserControl(CommonFunctions.GetHeaderText("Stream Statistics"), typeof(RealTimeStatisticUserControl));
         }
 
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)

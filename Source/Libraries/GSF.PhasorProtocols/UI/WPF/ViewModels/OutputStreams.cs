@@ -53,7 +53,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private Dictionary<string, string> m_coordinateFormatLookupList;
         private Dictionary<int, string> m_typeLookupList;
         private Dictionary<string, string> m_mirroringSourceLookupList;
-        
+
         private RelayCommand m_initializeCommand;
         private RelayCommand m_copyCommand;
         private RelayCommand m_updateConfigurationCommand;
@@ -64,7 +64,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         private RelayCommand m_buildDataChannelCommand;
 
         private LongSynchronizedOperation m_configFrameSizeCalculation;
-        
+
         private string m_runtimeID;
         private bool m_mirrorMode;
         private string m_configFrameSizeText;
@@ -362,7 +362,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         public override void Initialize()
         {
-            m_configFrameSizeCalculation = new LongSynchronizedOperation(UpdateConfigFrameSize, UpdateConfigFrameSizeError) { IsBackground = true };
+            m_configFrameSizeCalculation = new LongSynchronizedOperation(UpdateConfigFrameSize, UpdateConfigFrameSizeError)
+            {
+                IsBackground = true
+            };
 
             base.Initialize();
 
@@ -725,7 +728,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             else
             {
                 if (!MirrorMode)
-                    CommonFunctions.LoadUserControl("Current Devices for " + CurrentItem.Acronym, typeof(OutputStreamCurrentDeviceUserControl), CurrentItem.ID, CurrentItem.Acronym);
+                    CommonFunctions.LoadUserControl("Current Devices for " + CurrentItem.Acronym, typeof(OutputStreamCurrentDeviceUserControl), CurrentItem.ID);
             }
         }
 

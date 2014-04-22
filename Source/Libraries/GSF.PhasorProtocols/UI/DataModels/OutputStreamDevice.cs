@@ -686,7 +686,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         int analogIndex = 0;
                         foreach (Measurement measurement in measurements)
                         {
-                            if (measurement.SignalAcronym != "STAT")
+                            if (measurement.SignalAcronym != "STAT" && measurement.SignalAcronym != "QUAL")
                             {
                                 measurement.SignalReference = measurement.SignalReference.Substring(measurement.SignalReference.LastIndexOf("!") + 1);
 
@@ -762,21 +762,21 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 OutputStreamDevice device = new OutputStreamDevice
                     {
-                    NodeID = database.Guid(row, "NodeID"),
-                    AdapterID = row.ConvertField<int>("AdapterID"),
-                    ID = row.ConvertField<int>("ID"),
-                    IDCode = row.ConvertField<int>("IDCode"),
-                    Acronym = row.Field<string>("Acronym"),
-                    BpaAcronym = row.Field<string>("BpaAcronym"),
-                    Name = row.Field<string>("Name"),
-                    PhasorDataFormat = row.Field<string>("PhasorDataFormat"),
-                    FrequencyDataFormat = row.Field<string>("FrequencyDataFormat"),
-                    AnalogDataFormat = row.Field<string>("AnalogDataFormat"),
-                    CoordinateFormat = row.Field<string>("CoordinateFormat"),
-                    LoadOrder = row.ConvertField<int>("LoadOrder"),
-                    Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                    m_virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
-                };
+                        NodeID = database.Guid(row, "NodeID"),
+                        AdapterID = row.ConvertField<int>("AdapterID"),
+                        ID = row.ConvertField<int>("ID"),
+                        IDCode = row.ConvertField<int>("IDCode"),
+                        Acronym = row.Field<string>("Acronym"),
+                        BpaAcronym = row.Field<string>("BpaAcronym"),
+                        Name = row.Field<string>("Name"),
+                        PhasorDataFormat = row.Field<string>("PhasorDataFormat"),
+                        FrequencyDataFormat = row.Field<string>("FrequencyDataFormat"),
+                        AnalogDataFormat = row.Field<string>("AnalogDataFormat"),
+                        CoordinateFormat = row.Field<string>("CoordinateFormat"),
+                        LoadOrder = row.ConvertField<int>("LoadOrder"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        m_virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
+                    };
 
                 return device;
 
@@ -809,21 +809,21 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     outputStreamDeviceList.Add(new OutputStreamDevice
                         {
-                        NodeID = database.Guid(row, "NodeID"),
-                        AdapterID = row.ConvertField<int>("AdapterID"),
-                        ID = row.ConvertField<int>("ID"),
-                        IDCode = row.ConvertField<int>("IDCode"),
-                        Acronym = row.Field<string>("Acronym"),
-                        BpaAcronym = row.Field<string>("BpaAcronym"),
-                        Name = row.Field<string>("Name"),
-                        PhasorDataFormat = row.Field<string>("PhasorDataFormat"),
-                        FrequencyDataFormat = row.Field<string>("FrequencyDataFormat"),
-                        AnalogDataFormat = row.Field<string>("AnalogDataFormat"),
-                        CoordinateFormat = row.Field<string>("CoordinateFormat"),
-                        LoadOrder = row.ConvertField<int>("LoadOrder"),
-                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                        m_virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
-                    });
+                            NodeID = database.Guid(row, "NodeID"),
+                            AdapterID = row.ConvertField<int>("AdapterID"),
+                            ID = row.ConvertField<int>("ID"),
+                            IDCode = row.ConvertField<int>("IDCode"),
+                            Acronym = row.Field<string>("Acronym"),
+                            BpaAcronym = row.Field<string>("BpaAcronym"),
+                            Name = row.Field<string>("Name"),
+                            PhasorDataFormat = row.Field<string>("PhasorDataFormat"),
+                            FrequencyDataFormat = row.Field<string>("FrequencyDataFormat"),
+                            AnalogDataFormat = row.Field<string>("AnalogDataFormat"),
+                            CoordinateFormat = row.Field<string>("CoordinateFormat"),
+                            LoadOrder = row.ConvertField<int>("LoadOrder"),
+                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                            m_virtual = Convert.ToBoolean(row.Field<object>("Virtual"))
+                        });
                 }
 
                 return outputStreamDeviceList;

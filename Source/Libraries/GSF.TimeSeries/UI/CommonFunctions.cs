@@ -41,8 +41,8 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using GSF.Communication;
 using GSF.Data;
-using GSF.IO;
 using GSF.Identity;
+using GSF.IO;
 using GSF.Security;
 using GSF.TimeSeries.UI.DataModels;
 using Timer = System.Timers.Timer;
@@ -856,6 +856,19 @@ namespace GSF.TimeSeries.UI
             }
 
             return minMaxPointIDs;
+        }
+
+        /// <summary>
+        /// Attempts to retrieve current header text from user control group box host.
+        /// </summary>
+        /// <param name="defaultText">Default text to display.</param>
+        /// <returns>Current header text from user control group box host, if possible; otherwise, <paramref name="defaultText"/>.</returns>
+        public static string GetHeaderText(string defaultText)
+        {
+            if ((object)s_currentPage != null && (object)s_currentPage.Value != null)
+                defaultText = s_currentPage.Value.Item1.ToNonNullNorWhiteSpace(defaultText);
+
+            return defaultText;
         }
 
         /// <summary>

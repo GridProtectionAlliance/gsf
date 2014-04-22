@@ -33,7 +33,7 @@ namespace GSF.TimeSeries.UI.UserControls
     /// <summary>
     /// Interaction logic for AlarmStatusUserControl.xaml
     /// </summary>
-    public partial class AlarmStatusUserControl : UserControl
+    public partial class AlarmStatusUserControl
     {
         #region [ Members ]
 
@@ -170,7 +170,11 @@ namespace GSF.TimeSeries.UI.UserControls
         {
             int refreshInterval;
 
-            int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("AlarmStatusRefreshInterval").ToString(), out refreshInterval);
+            IsolatedStorageManager.InitializeStorageForAlarmStatus(true);
+
+            if (!int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("AlarmStatusRefreshInterval").ToString(), out refreshInterval) || refreshInterval < 0)
+                refreshInterval = AlarmMonitor.DefaultRefreshInterval;
+
             TextBlockAlarmRefreshInterval.Text = refreshInterval.ToString();
             TextBoxRefreshInterval.Text = refreshInterval.ToString();
             m_dataContext.Monitor.RefreshInterval = refreshInterval;

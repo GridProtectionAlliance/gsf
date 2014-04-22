@@ -31,26 +31,33 @@ using System.Text;
 namespace GSF.TimeSeries.UI
 {
     /// <summary>
-    /// Static class to read/write data from/to IsolatedStorage.
+    /// Static class to access data settings in isolated storage.
     /// </summary>
     public static class IsolatedStorageManager
     {
-        private static readonly IsolatedStorageFile s_userStoreForAssembly = IsolatedStorageFile.GetUserStoreForAssembly();
+        private static readonly object s_userStoreLock = new object();
 
         /// <summary>
-        /// Writes collection values by converting collection to semi-colon seperated string to IsolatedStorage.
+        /// Writes collection values by converting collection to semi-colon separated string to IsolatedStorage.
         /// </summary>
         /// <param name="key">Name of the isolated storage.</param>
         /// <param name="valueList"><see cref="IEnumerable{T}"/> collection to be stored in isolated storage.</param>
         public static void WriteCollectionToIsolatedStorage(string key, IEnumerable<object> valueList)
         {
-            using (StreamWriter writer = new StreamWriter(new IsolatedStorageFileStream(key, FileMode.Create, s_userStoreForAssembly)))
+            lock (s_userStoreLock)
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (object value in valueList)
-                    sb.Append(value + ";");
+                using (IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly())
+                using (StreamWriter writer = new StreamWriter(new IsolatedStorageFileStream(key, FileMode.Create, userStore)))
+                {
+                    StringBuilder sb = new StringBuilder();
 
-                writer.Write(sb.ToString());
+                    foreach (object value in valueList)
+                        sb.Append(value + ";");
+
+                    writer.Write(sb.ToString());
+                    writer.Flush();
+                }
+
             }
         }
 
@@ -61,8 +68,15 @@ namespace GSF.TimeSeries.UI
         /// <param name="value">Value to be written to isolated storage.</param>
         public static void WriteToIsolatedStorage(string key, object value)
         {
-            using (StreamWriter writer = new StreamWriter(new IsolatedStorageFileStream(key, FileMode.Create, s_userStoreForAssembly)))
-                writer.Write(value.ToString());
+            lock (s_userStoreLock)
+            {
+                using (IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly())
+                using (StreamWriter writer = new StreamWriter(new IsolatedStorageFileStream(key, FileMode.Create, userStore)))
+                {
+                    writer.Write(value.ToString());
+                    writer.Flush();
+                }
+            }
         }
 
         /// <summary>
@@ -72,12 +86,27 @@ namespace GSF.TimeSeries.UI
         /// <returns>Object from the isolated storage.</returns>
         public static object ReadFromIsolatedStorage(string key)
         {
-            using (StreamReader reader = new StreamReader(new IsolatedStorageFileStream(key, FileMode.OpenOrCreate, s_userStoreForAssembly)))
+            lock (s_userStoreLock)
             {
-                if (reader != null)
+                using (IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly())
+                using (StreamReader reader = new StreamReader(new IsolatedStorageFileStream(key, FileMode.OpenOrCreate, userStore)))
+                {
                     return reader.ReadToEnd();
-                else
-                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines if isolated storage setting exists.
+        /// </summary>
+        /// <param name="setting">Setting name.</param>
+        /// <returns><c>true</c> if isolated storage <paramref name="setting"/> exists; otherwise, <c>false</c>.</returns>
+        public static bool SettingExists(string setting)
+        {
+            lock (s_userStoreLock)
+            {
+                using (IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly())
+                    return userStore.FileExists(setting);
             }
         }
 
@@ -87,61 +116,61 @@ namespace GSF.TimeSeries.UI
         /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
         public static void InitializeStorageForInputStatusMonitor(bool overWriteExisting)
         {
-            if (!s_userStoreForAssembly.FileExists("ForceIPv4") || overWriteExisting || ReadFromIsolatedStorage("ForceIPv4") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("ForceIPv4").ToString()))
+            if (!SettingExists("ForceIPv4") || overWriteExisting || ReadFromIsolatedStorage("ForceIPv4") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("ForceIPv4").ToString()))
                 WriteToIsolatedStorage("ForceIPv4", "true");
 
-            if (!s_userStoreForAssembly.FileExists("InputMonitoringPoints") || overWriteExisting)
+            if (!SettingExists("InputMonitoringPoints") || overWriteExisting)
                 WriteToIsolatedStorage("InputMonitoringPoints", string.Empty);
 
-            if (!s_userStoreForAssembly.FileExists("NumberOfDataPointsToPlot") || overWriteExisting || ReadFromIsolatedStorage("NumberOfDataPointsToPlot") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("NumberOfDataPointsToPlot").ToString()))
+            if (!SettingExists("NumberOfDataPointsToPlot") || overWriteExisting || ReadFromIsolatedStorage("NumberOfDataPointsToPlot") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("NumberOfDataPointsToPlot").ToString()))
                 WriteToIsolatedStorage("NumberOfDataPointsToPlot", 150);
 
-            if (!s_userStoreForAssembly.FileExists("DataResolution") || overWriteExisting || ReadFromIsolatedStorage("DataResolution") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DataResolution").ToString()))
+            if (!SettingExists("DataResolution") || overWriteExisting || ReadFromIsolatedStorage("DataResolution") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DataResolution").ToString()))
                 WriteToIsolatedStorage("DataResolution", 30);
 
-            if (!s_userStoreForAssembly.FileExists("LagTime") || overWriteExisting || ReadFromIsolatedStorage("LagTime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("LagTime").ToString()))
+            if (!SettingExists("LagTime") || overWriteExisting || ReadFromIsolatedStorage("LagTime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("LagTime").ToString()))
                 WriteToIsolatedStorage("LagTime", 3);
 
-            if (!s_userStoreForAssembly.FileExists("LeadTime") || overWriteExisting || ReadFromIsolatedStorage("LeadTime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("LeadTime").ToString()))
+            if (!SettingExists("LeadTime") || overWriteExisting || ReadFromIsolatedStorage("LeadTime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("LeadTime").ToString()))
                 WriteToIsolatedStorage("LeadTime", 1);
 
-            if (!s_userStoreForAssembly.FileExists("UseLocalClockAsRealtime") || overWriteExisting || ReadFromIsolatedStorage("UseLocalClockAsRealtime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("UseLocalClockAsRealtime").ToString()))
+            if (!SettingExists("UseLocalClockAsRealtime") || overWriteExisting || ReadFromIsolatedStorage("UseLocalClockAsRealtime") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("UseLocalClockAsRealtime").ToString()))
                 WriteToIsolatedStorage("UseLocalClockAsRealtime", "false");
 
-            if (!s_userStoreForAssembly.FileExists("IgnoreBadTimestamps") || overWriteExisting || ReadFromIsolatedStorage("IgnoreBadTimestamps") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("IgnoreBadTimestamps").ToString()))
+            if (!SettingExists("IgnoreBadTimestamps") || overWriteExisting || ReadFromIsolatedStorage("IgnoreBadTimestamps") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("IgnoreBadTimestamps").ToString()))
                 WriteToIsolatedStorage("IgnoreBadTimestamps", "false");
 
-            if (!s_userStoreForAssembly.FileExists("ChartRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("ChartRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("ChartRefreshInterval").ToString()))
+            if (!SettingExists("ChartRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("ChartRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("ChartRefreshInterval").ToString()))
                 WriteToIsolatedStorage("ChartRefreshInterval", 250);
 
-            if (!s_userStoreForAssembly.FileExists("StatisticsDataRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("StatisticsDataRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString()))
+            if (!SettingExists("StatisticsDataRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("StatisticsDataRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("StatisticsDataRefreshInterval").ToString()))
                 WriteToIsolatedStorage("StatisticsDataRefreshInterval", 2);
 
-            if (!s_userStoreForAssembly.FileExists("MeasurementsDataRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("MeasurementsDataRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("MeasurementsDataRefreshInterval").ToString()))
+            if (!SettingExists("MeasurementsDataRefreshInterval") || overWriteExisting || ReadFromIsolatedStorage("MeasurementsDataRefreshInterval") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("MeasurementsDataRefreshInterval").ToString()))
                 WriteToIsolatedStorage("MeasurementsDataRefreshInterval", 2);
 
-            if (!s_userStoreForAssembly.FileExists("DisplayXAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayXAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayXAxis").ToString()))
+            if (!SettingExists("DisplayXAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayXAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayXAxis").ToString()))
                 WriteToIsolatedStorage("DisplayXAxis", "false");
 
-            if (!s_userStoreForAssembly.FileExists("DisplayFrequencyYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayFrequencyYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayFrequencyYAxis").ToString()))
+            if (!SettingExists("DisplayFrequencyYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayFrequencyYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayFrequencyYAxis").ToString()))
                 WriteToIsolatedStorage("DisplayFrequencyYAxis", "true");
 
-            if (!s_userStoreForAssembly.FileExists("DisplayPhaseAngleYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayPhaseAngleYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayPhaseAngleYAxis").ToString()))
+            if (!SettingExists("DisplayPhaseAngleYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayPhaseAngleYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayPhaseAngleYAxis").ToString()))
                 WriteToIsolatedStorage("DisplayPhaseAngleYAxis", "false");
 
-            if (!s_userStoreForAssembly.FileExists("DisplayVoltageYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayVoltageYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayVoltageYAxis").ToString()))
+            if (!SettingExists("DisplayVoltageYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayVoltageYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayVoltageYAxis").ToString()))
                 WriteToIsolatedStorage("DisplayVoltageYAxis", "false");
 
-            if (!s_userStoreForAssembly.FileExists("DisplayCurrentYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayCurrentYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayCurrentYAxis").ToString()))
+            if (!SettingExists("DisplayCurrentYAxis") || overWriteExisting || ReadFromIsolatedStorage("DisplayCurrentYAxis") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayCurrentYAxis").ToString()))
                 WriteToIsolatedStorage("DisplayCurrentYAxis", "false");
 
-            if (!s_userStoreForAssembly.FileExists("FrequencyRangeMin") || overWriteExisting || ReadFromIsolatedStorage("FrequencyRangeMin") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("FrequencyRangeMin").ToString()))
+            if (!SettingExists("FrequencyRangeMin") || overWriteExisting || ReadFromIsolatedStorage("FrequencyRangeMin") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("FrequencyRangeMin").ToString()))
                 WriteToIsolatedStorage("FrequencyRangeMin", 59.95);
 
-            if (!s_userStoreForAssembly.FileExists("FrequencyRangeMax") || overWriteExisting || ReadFromIsolatedStorage("FrequencyRangeMax") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("FrequencyRangeMax").ToString()))
+            if (!SettingExists("FrequencyRangeMax") || overWriteExisting || ReadFromIsolatedStorage("FrequencyRangeMax") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("FrequencyRangeMax").ToString()))
                 WriteToIsolatedStorage("FrequencyRangeMax", 60.05);
 
-            if (!s_userStoreForAssembly.FileExists("DisplayLegend") || overWriteExisting || ReadFromIsolatedStorage("DisplayLegend") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayLegend").ToString()))
+            if (!SettingExists("DisplayLegend") || overWriteExisting || ReadFromIsolatedStorage("DisplayLegend") == null || string.IsNullOrEmpty(ReadFromIsolatedStorage("DisplayLegend").ToString()))
                 WriteToIsolatedStorage("DisplayLegend", "true");
         }
 
@@ -151,7 +180,7 @@ namespace GSF.TimeSeries.UI
         /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
         public static void InitializeStorageForRemoteConsole(bool overWriteExisting)
         {
-            if (!s_userStoreForAssembly.FileExists("NumberOfMessages") || overWriteExisting)
+            if (!SettingExists("NumberOfMessages") || overWriteExisting)
                 WriteToIsolatedStorage("NumberOfMessages", 75);
         }
 
@@ -161,8 +190,8 @@ namespace GSF.TimeSeries.UI
         /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
         public static void InitializeStorageForStreamStatistics(bool overWriteExisting)
         {
-            if (!s_userStoreForAssembly.FileExists("StreamStatisticsDataRefreshInterval") || overWriteExisting)
-                WriteToIsolatedStorage("StreamStatisticsDataRefreshInterval", 10);
+            if (!SettingExists("StreamStatisticsDataRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("StreamStatisticsDataRefreshInterval", 5);
         }
 
         /// <summary>
@@ -171,8 +200,18 @@ namespace GSF.TimeSeries.UI
         /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
         public static void InitializeStorageForRealTimeMeasurements(bool overWriteExisting)
         {
-            if (!s_userStoreForAssembly.FileExists("RealtimeMeasurementsDataRefreshInterval") || overWriteExisting)
-                WriteToIsolatedStorage("RealtimeMeasurementsDataRefreshInterval", 10);
+            if (!SettingExists("RealtimeMeasurementsDataRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("RealtimeMeasurementsDataRefreshInterval", 5);
+        }
+
+        /// <summary>
+        /// Initializes or resets existing settings for alarm status screen in <see cref="IsolatedStorageFile"/> to default values.
+        /// </summary>
+        /// <param name="overWriteExisting">Boolean flag indicating if existing values should be reset to default value.</param>
+        public static void InitializeStorageForAlarmStatus(bool overWriteExisting)
+        {
+            if (!SettingExists("AlarmStatusRefreshInterval") || overWriteExisting)
+                WriteToIsolatedStorage("AlarmStatusRefreshInterval", AlarmMonitor.DefaultRefreshInterval);
         }
 
         /// <summary>
@@ -185,6 +224,7 @@ namespace GSF.TimeSeries.UI
             InitializeStorageForRealTimeMeasurements(overWriteExisting);
             InitializeStorageForRemoteConsole(overWriteExisting);
             InitializeStorageForStreamStatistics(overWriteExisting);
+            InitializeStorageForAlarmStatus(overWriteExisting);
         }
     }
 }

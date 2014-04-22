@@ -58,7 +58,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
     /// <summary>
     /// Interaction logic for InputStatusMonitorUserControl.xaml
     /// </summary>
-    public partial class InputStatusMonitorUserControl : UserControl
+    public partial class InputStatusMonitorUserControl
     {
         #region [ Members ]
 
@@ -180,7 +180,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 saveDialog.Title = "Save Current Display Settings";
                 saveDialog.Filter = "Input Status Monitoring Display Settings (*.ismsettings)|*.ismsettings|All Files (*.*)|*.*";
                 bool? result = saveDialog.ShowDialog(Window.GetWindow(this));
-                if (result != null && (bool)result)
+                if (result.GetValueOrDefault())
                 {
                     using (StreamWriter writer = new StreamWriter(saveDialog.FileName))
                         writer.Write(m_selectedSignalIDs);
@@ -201,11 +201,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 openDialog.Multiselect = false;
                 openDialog.Filter = "Input Status Monitoring Display Settings (*.ismsettings)|*.ismsettings|All Files (*.*)|*.*";
                 bool? result = openDialog.ShowDialog(Window.GetWindow(this));
-                if (result != null && (bool)result)
+                if (result.GetValueOrDefault())
                 {
                     using (StreamReader reader = new StreamReader(openDialog.OpenFile()))
                     {
-                        string selection = reader.ReadLine();
+                        string selection = reader.ReadLine().ToNonNullString();
                         string[] signalIDs = selection.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
                         AutoSelectMeasurements(signalIDs);
                     }
@@ -252,7 +252,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void Initialize()
         {
-            RetrieveSettingsFromIsolatedStorage();
+            RetrieveSettingsFromIsolatedStorage(false);
             m_timeStampList = new ConcurrentQueue<string>();
             m_yAxisDataCollection = new ConcurrentDictionary<Guid, ConcurrentQueue<double>>();
             m_yAxisBindingCollection = new ConcurrentDictionary<Guid, EnumerableDataSource<double>>();
@@ -301,15 +301,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     GetStatistics(stream.Acronym);
                     break;
                 }
-                else
+
+                foreach (RealTimeDevice device in stream.DeviceList)
                 {
-                    foreach (RealTimeDevice device in stream.DeviceList)
+                    if (device.ID > 0)
                     {
-                        if (device.ID > 0)
-                        {
-                            GetStatistics(device.Acronym);
-                            break;
-                        }
+                        GetStatistics(device.Acronym);
+                        break;
                     }
                 }
             }
@@ -364,9 +362,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_xAxisBindingCollection.SetXMapping(x => x);
         }
 
-        private void RetrieveSettingsFromIsolatedStorage()
+        private void RetrieveSettingsFromIsolatedStorage(bool reloadSelectedMeasurements = true)
         {
-            // Retreive values from IsolatedStorage.
+            // Retrieve values from IsolatedStorage.            
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("NumberOfDataPointsToPlot").ToString(), out m_numberOfDataPointsToPlot);
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("DataResolution").ToString(), out m_framesPerSecond);
             int.TryParse(IsolatedStorageManager.ReadFromIsolatedStorage("ChartRefreshInterval").ToString(), out m_chartRefreshInterval);
@@ -385,11 +383,18 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_displayVoltageYAxis = IsolatedStorageManager.ReadFromIsolatedStorage("DisplayVoltageYAxis").ToString().ParseBoolean();
             m_useLocalClockAsRealtime = IsolatedStorageManager.ReadFromIsolatedStorage("UseLocalClockAsRealtime").ToString().ParseBoolean();
             m_ignoreBadTimestamps = IsolatedStorageManager.ReadFromIsolatedStorage("IgnoreBadTimestamps").ToString().ParseBoolean();
+
+            if (reloadSelectedMeasurements)
+            {
+                m_selectedSignalIDs = IsolatedStorageManager.ReadFromIsolatedStorage("InputMonitoringPoints").ToString();
+                string[] signalIDs = m_selectedSignalIDs.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                AutoSelectMeasurements(signalIDs);
+            }
         }
 
         private void AutoSelectMeasurements(string[] signalIDs)
         {
-            if (signalIDs.Count() > 0)
+            if (signalIDs.Any())
             {
                 foreach (RealTimeStream stream in m_dataContext.ItemsSource)
                 {
@@ -431,7 +436,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
             foreach (KeyValuePair<Guid, RealTimeMeasurement> measurement in m_selectedMeasurements)
             {
-                sb.Append(measurement.Value.SignalID.ToString());
+                sb.Append(measurement.Value.SignalID);
                 sb.Append(";");
             }
 
@@ -572,7 +577,6 @@ namespace GSF.PhasorProtocols.UI.UserControls
                         }));
                     }
 
-                    bool processedTimestamp = false;
                     bool refreshMeasurementValueBelowChart = false;
                     if (DateTime.UtcNow.Ticks - m_lastRefreshTime > m_refreshRate)
                     {
@@ -582,14 +586,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
                     foreach (IMeasurement newMeasurement in e.Argument)
                     {
-                        if (!processedTimestamp)
+                        m_timeStampList.Enqueue(newMeasurement.Timestamp.ToString("HH:mm:ss.fff"));
+
+                        if (m_timeStampList.Count > m_numberOfDataPointsToPlot)
                         {
-                            m_timeStampList.Enqueue(newMeasurement.Timestamp.ToString("HH:mm:ss.fff"));
-                            if (m_timeStampList.Count > m_numberOfDataPointsToPlot)
-                            {
-                                string oldValue;
-                                m_timeStampList.TryDequeue(out oldValue);
-                            }
+                            string oldValue;
+                            m_timeStampList.TryDequeue(out oldValue);
                         }
 
                         double tempValue = newMeasurement.AdjustedValue;
@@ -634,10 +636,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
                                             else if (measurement.SignalAcronym == "IPHM")
                                                 lineGraph = CurrentPlotter.AddLineGraph(new CompositeDataSource(m_xAxisBindingCollection, tempDataSource), m_lineColors[colorIndex], 1, measurement.SignalReference);
 
-                                            if (lineGraph != null)
+                                            if ((object)lineGraph != null)
+                                            {
                                                 m_lineGraphCollection.TryAdd(tempSignalID, lineGraph);
-
-                                            measurement.Foreground = (SolidColorBrush)lineGraph.LinePen.Brush;
+                                                measurement.Foreground = (SolidColorBrush)lineGraph.LinePen.Brush;
+                                            }
                                         });
                                 }
                             }
@@ -683,10 +686,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void m_subscriber_ProcessingComplete(object sender, EventArgs<string> e)
         {
-            Dispatcher.BeginInvoke(new Action(delegate
-            {
-                ButtonReturnToRealtime_Click(null, null);
-            }));
+            Dispatcher.BeginInvoke(new Action(() => ButtonReturnToRealtime_Click(null, null)));
         }
 
         private void InitializeSubscription()
@@ -781,10 +781,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                         }
                     }
 
-                    ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)delegate
-                    {
-                        StartRefreshTimer();
-                    });
+                    ChartPlotterDynamic.Dispatcher.BeginInvoke((Action)StartRefreshTimer);
                 }
             }
         }
@@ -826,36 +823,37 @@ namespace GSF.PhasorProtocols.UI.UserControls
             RetrieveSettingsFromIsolatedStorage();
             PopulateSettings();
             PopupSettings.IsOpen = false;
-            CommonFunctions.LoadUserControl("Input Status &amp; Monitoring", typeof(InputStatusMonitorUserControl));
+            CommonFunctions.LoadUserControl(CommonFunctions.GetHeaderText("Graph Real-time Measurements"), typeof(InputStatusMonitorUserControl));
         }
 
         private void ButtonSaveSettings_Click(object sender, RoutedEventArgs e)
         {
-            IsolatedStorageManager.WriteToIsolatedStorage("ForceIPv4", (bool)CheckBoxForceIPv4.IsChecked);
             IsolatedStorageManager.WriteToIsolatedStorage("InputMonitoringPoints", TextBoxLastSelectedMeasurements.Text);
+            IsolatedStorageManager.WriteToIsolatedStorage("ForceIPv4", CheckBoxForceIPv4.IsChecked.GetValueOrDefault());
             IsolatedStorageManager.WriteToIsolatedStorage("NumberOfDataPointsToPlot", TextBoxNumberOFDataPointsToPlot.Text);
             IsolatedStorageManager.WriteToIsolatedStorage("DataResolution", TextBoxDataResolution.Text);
             IsolatedStorageManager.WriteToIsolatedStorage("LagTime", TextBoxLagTime.Text);
             IsolatedStorageManager.WriteToIsolatedStorage("LeadTime", TextBoxLeadTime.Text);
-            IsolatedStorageManager.WriteToIsolatedStorage("UseLocalClockAsRealtime", (bool)CheckBoxUseLocalClockAsRealTime.IsChecked);
-            IsolatedStorageManager.WriteToIsolatedStorage("IgnoreBadTimestamps", (bool)CheckBoxIgnoreBadTimestamps.IsChecked);
+            IsolatedStorageManager.WriteToIsolatedStorage("UseLocalClockAsRealtime", CheckBoxUseLocalClockAsRealTime.IsChecked.GetValueOrDefault());
+            IsolatedStorageManager.WriteToIsolatedStorage("IgnoreBadTimestamps", CheckBoxIgnoreBadTimestamps.IsChecked.GetValueOrDefault());
             IsolatedStorageManager.WriteToIsolatedStorage("ChartRefreshInterval", TextBoxChartRefreshInterval.Text);
             IsolatedStorageManager.WriteToIsolatedStorage("StatisticsDataRefreshInterval", TextBoxStatisticDataRefreshInterval.Text);
             IsolatedStorageManager.WriteToIsolatedStorage("MeasurementsDataRefreshInterval", TextBoxMeasurementDataRefreshInterval.Text);
-            IsolatedStorageManager.WriteToIsolatedStorage("DisplayXAxis", (bool)CheckBoxDisplayXAxis.IsChecked);
-            IsolatedStorageManager.WriteToIsolatedStorage("DisplayFrequencyYAxis", (bool)CheckBoxDisplayFrequencyYAxis.IsChecked);
-            IsolatedStorageManager.WriteToIsolatedStorage("DisplayPhaseAngleYAxis", (bool)CheckBoxDisplayPhaseAngleYAxis.IsChecked);
-            IsolatedStorageManager.WriteToIsolatedStorage("DisplayVoltageYAxis", (bool)CheckBoxDisplayVoltageMagnitudeYAxis.IsChecked);
-            IsolatedStorageManager.WriteToIsolatedStorage("DisplayCurrentYAxis", (bool)CheckBoxDisplayCurrentMagnitudeYAxis.IsChecked);
+            IsolatedStorageManager.WriteToIsolatedStorage("DisplayXAxis", CheckBoxDisplayXAxis.IsChecked.GetValueOrDefault());
+            IsolatedStorageManager.WriteToIsolatedStorage("DisplayFrequencyYAxis", CheckBoxDisplayFrequencyYAxis.IsChecked.GetValueOrDefault());
+            IsolatedStorageManager.WriteToIsolatedStorage("DisplayPhaseAngleYAxis", CheckBoxDisplayPhaseAngleYAxis.IsChecked.GetValueOrDefault());
+            IsolatedStorageManager.WriteToIsolatedStorage("DisplayVoltageYAxis", CheckBoxDisplayVoltageMagnitudeYAxis.IsChecked.GetValueOrDefault());
+            IsolatedStorageManager.WriteToIsolatedStorage("DisplayCurrentYAxis", CheckBoxDisplayCurrentMagnitudeYAxis.IsChecked.GetValueOrDefault());
             IsolatedStorageManager.WriteToIsolatedStorage("FrequencyRangeMin", TextBoxFrequencyRangeMin.Text);
             IsolatedStorageManager.WriteToIsolatedStorage("FrequencyRangeMax", TextBoxFrequencyRangeMax.Text);
-            IsolatedStorageManager.WriteToIsolatedStorage("DisplayLegend", (bool)CheckBoxDisplayLegend.IsChecked);
+            IsolatedStorageManager.WriteToIsolatedStorage("DisplayLegend", CheckBoxDisplayLegend.IsChecked.GetValueOrDefault());
             RetrieveSettingsFromIsolatedStorage();
+
             PopulateSettings();
 
             PopupSettings.IsOpen = false;
 
-            CommonFunctions.LoadUserControl("Input Status Monitoring", typeof(InputStatusMonitorUserControl));
+            CommonFunctions.LoadUserControl(CommonFunctions.GetHeaderText("Graph Real-time Measurements"), typeof(InputStatusMonitorUserControl));
         }
 
         private void PopulateSettings()
@@ -884,6 +882,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void ButtonManageSettings_Click(object sender, RoutedEventArgs e)
         {
+            TextBoxLastSelectedMeasurements.Text = m_selectedSignalIDs;
             PopupSettings.Placement = PlacementMode.Center;
             PopupSettings.IsOpen = true;
         }
