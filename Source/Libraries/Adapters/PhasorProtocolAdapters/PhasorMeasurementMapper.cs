@@ -1693,7 +1693,6 @@ namespace PhasorProtocolAdapters
             const int DfDtIndex = (int)CompositeFrequencyValue.DfDt;
 
             ICollection<IMeasurement> mappedMeasurements = new List<IMeasurement>();
-            IEnumerable<IMeasurement> parsedMeasurements;
             DeviceStatisticsHelper<ConfigurationCell> statisticsHelper;
             ConfigurationCell definedDevice;
             PhasorValueCollection phasors;
@@ -1701,7 +1700,7 @@ namespace PhasorProtocolAdapters
             DigitalValueCollection digitals;
             IMeasurement[] measurements;
             Ticks timestamp;
-            int x, count;
+            int x, count, parsedMeasurementCount;
 
             // Adjust time to UTC based on source time zone
             if (!m_timezone.Equals(TimeZoneInfo.Utc))
@@ -1790,6 +1789,7 @@ namespace PhasorProtocolAdapters
 
                             // Map magnitude
                             MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Magnitude, x, count), measurements[MagnitudeIndex]);
+
                         }
 
                         // Map frequency (FQ) and dF/dt (DF)
@@ -1821,15 +1821,61 @@ namespace PhasorProtocolAdapters
                             MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Digital, x, count), digitals[x].Measurements[0]);
                         }
 
+                        //// Track measurement count statistics for this device
+                        //parsedMeasurements = parsedDevice.PhasorValues.SelectMany(phasor => phasor.Measurements)
+                        //    .Concat(parsedDevice.DigitalValues.SelectMany(digital => digital.Measurements))
+                        //    .Concat(parsedDevice.AnalogValues.SelectMany(analog => analog.Measurements));
+
+                        //if (parsedDevice.FrequencyValue.Frequency != 0.0D)
+                        //    parsedMeasurements = parsedMeasurements.Concat(parsedDevice.FrequencyValue.Measurements);
+
+                        //statisticsHelper.AddToMeasurementsReceived(parsedMeasurements.Count(measurement => !double.IsNaN(measurement.Value)));
+
                         // Track measurement count statistics for this device
-                        parsedMeasurements = parsedDevice.PhasorValues.SelectMany(phasor => phasor.Measurements)
-                            .Concat(parsedDevice.DigitalValues.SelectMany(digital => digital.Measurements))
-                            .Concat(parsedDevice.AnalogValues.SelectMany(analog => analog.Measurements));
+                        parsedMeasurementCount = 0;
+                        foreach (var values in parsedDevice.PhasorValues)
+                        {
+                            foreach (var measurement in values.Measurements)
+                            {
+                                if (!double.IsNaN(measurement.Value))
+                                {
+                                    parsedMeasurementCount++;
+                                }
+                            }
+                        }
 
+                        foreach (var values in parsedDevice.DigitalValues)
+                        {
+                            foreach (var measurement in values.Measurements)
+                            {
+                                if (!double.IsNaN(measurement.Value))
+                                {
+                                    parsedMeasurementCount++;
+                                }
+                            }
+                        }
+
+                        foreach (var values in parsedDevice.AnalogValues)
+                        {
+                            foreach (var measurement in values.Measurements)
+                            {
+                                if (!double.IsNaN(measurement.Value))
+                                {
+                                    parsedMeasurementCount++;
+                                }
+                            }
+                        }
                         if (parsedDevice.FrequencyValue.Frequency != 0.0D)
-                            parsedMeasurements = parsedMeasurements.Concat(parsedDevice.FrequencyValue.Measurements);
-
-                        statisticsHelper.AddToMeasurementsReceived(parsedMeasurements.Count(measurement => !double.IsNaN(measurement.Value)));
+                        {
+                            foreach (var measurement in parsedDevice.FrequencyValue.Measurements)
+                            {
+                                if (!double.IsNaN(measurement.Value))
+                                {
+                                    parsedMeasurementCount++;
+                                }
+                            }
+                        }
+                        statisticsHelper.AddToMeasurementsReceived(parsedMeasurementCount);
                     }
                     else
                     {
