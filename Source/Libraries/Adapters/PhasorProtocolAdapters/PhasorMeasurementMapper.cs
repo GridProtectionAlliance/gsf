@@ -1700,7 +1700,7 @@ namespace PhasorProtocolAdapters
             DigitalValueCollection digitals;
             IMeasurement[] measurements;
             Ticks timestamp;
-            int x, count, parsedMeasurementCount;
+            int x, count;
 
             // Adjust time to UTC based on source time zone
             if (!m_timezone.Equals(TimeZoneInfo.Utc))
@@ -1821,61 +1821,8 @@ namespace PhasorProtocolAdapters
                             MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Digital, x, count), digitals[x].Measurements[0]);
                         }
 
-                        //// Track measurement count statistics for this device
-                        //parsedMeasurements = parsedDevice.PhasorValues.SelectMany(phasor => phasor.Measurements)
-                        //    .Concat(parsedDevice.DigitalValues.SelectMany(digital => digital.Measurements))
-                        //    .Concat(parsedDevice.AnalogValues.SelectMany(analog => analog.Measurements));
-
-                        //if (parsedDevice.FrequencyValue.Frequency != 0.0D)
-                        //    parsedMeasurements = parsedMeasurements.Concat(parsedDevice.FrequencyValue.Measurements);
-
-                        //statisticsHelper.AddToMeasurementsReceived(parsedMeasurements.Count(measurement => !double.IsNaN(measurement.Value)));
-
                         // Track measurement count statistics for this device
-                        parsedMeasurementCount = 0;
-                        foreach (var values in parsedDevice.PhasorValues)
-                        {
-                            foreach (var measurement in values.Measurements)
-                            {
-                                if (!double.IsNaN(measurement.Value))
-                                {
-                                    parsedMeasurementCount++;
-                                }
-                            }
-                        }
-
-                        foreach (var values in parsedDevice.DigitalValues)
-                        {
-                            foreach (var measurement in values.Measurements)
-                            {
-                                if (!double.IsNaN(measurement.Value))
-                                {
-                                    parsedMeasurementCount++;
-                                }
-                            }
-                        }
-
-                        foreach (var values in parsedDevice.AnalogValues)
-                        {
-                            foreach (var measurement in values.Measurements)
-                            {
-                                if (!double.IsNaN(measurement.Value))
-                                {
-                                    parsedMeasurementCount++;
-                                }
-                            }
-                        }
-                        if (parsedDevice.FrequencyValue.Frequency != 0.0D)
-                        {
-                            foreach (var measurement in parsedDevice.FrequencyValue.Measurements)
-                            {
-                                if (!double.IsNaN(measurement.Value))
-                                {
-                                    parsedMeasurementCount++;
-                                }
-                            }
-                        }
-                        statisticsHelper.AddToMeasurementsReceived(parsedMeasurementCount);
+                        statisticsHelper.AddToMeasurementsReceived(CountParsedMeasurements(parsedDevice));
                     }
                     else
                     {
@@ -1906,6 +1853,52 @@ namespace PhasorProtocolAdapters
             int measurementCount = mappedMeasurements.Count;
             m_lifetimeMeasurements += measurementCount;
             UpdateMeasurementsPerSecond(measurementCount);
+        }
+
+        // Could parsed measurements for this device
+        private int CountParsedMeasurements(IDataCell parsedDevice)
+        {
+            int parsedMeasurementCount = 0;
+
+            foreach (IPhasorValue values in parsedDevice.PhasorValues)
+            {
+                foreach (IMeasurement measurement in values.Measurements)
+                {
+                    if (!double.IsNaN(measurement.Value))
+                        parsedMeasurementCount++;
+                }
+            }
+
+            foreach (IDigitalValue values in parsedDevice.DigitalValues)
+            {
+                foreach (IMeasurement measurement in values.Measurements)
+                {
+                    if (!double.IsNaN(measurement.Value))
+                        parsedMeasurementCount++;
+                }
+            }
+
+            foreach (IAnalogValue values in parsedDevice.AnalogValues)
+            {
+                foreach (IMeasurement measurement in values.Measurements)
+                {
+                    if (!double.IsNaN(measurement.Value))
+                        parsedMeasurementCount++;
+                }
+            }
+
+            // Ignore frequency measurements when frequency value is zero - some PDCs use
+            // zero for missing frequency values
+            if (parsedDevice.FrequencyValue.Frequency != 0.0D)
+            {
+                foreach (IMeasurement measurement in parsedDevice.FrequencyValue.Measurements)
+                {
+                    if (!double.IsNaN(measurement.Value))
+                        parsedMeasurementCount++;
+                }
+            }
+
+            return parsedMeasurementCount;
         }
 
         /// <summary>
