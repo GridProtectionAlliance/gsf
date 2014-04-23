@@ -137,7 +137,7 @@ namespace PhasorProtocolAdapters
 
         // Fields
         private MultiProtocolFrameParser m_frameParser;
-        private ConcurrentDictionary<string, IMeasurement> m_definedMeasurements;
+        private Dictionary<string, IMeasurement> m_definedMeasurements;
         private ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>> m_definedDevices;
         private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
@@ -182,7 +182,8 @@ namespace PhasorProtocolAdapters
         private long m_lifetimeMinimumLatency;
         private long m_lifetimeMaximumLatency;
         private long m_lifetimeLatencyFrames;
-
+        private string m_qualityFlagsSignalReferenceName;
+        private int m_lastMeasurementMappedCount = 4;
         private bool m_disposed;
 
         #endregion
@@ -194,6 +195,8 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public PhasorMeasurementMapper()
         {
+            m_qualityFlagsSignalReferenceName = string.Format("{0}-{1}", Name, SignalReference.GetSignalKindAcronym(SignalKind.Quality));
+
             // Create a cached signal reference dictionary for generated signal references
             m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
 
@@ -535,6 +538,26 @@ namespace PhasorProtocolAdapters
                     return m_frameParser.ByteRate;
 
                 return 0.0D;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets or sets the name of this <see cref="AdapterBase"/>.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes should provide a name for the adapter.
+        /// </remarks>
+        public override string Name
+        {
+            get
+            {
+                return base.Name;
+            }
+            set
+            {
+                base.Name = value;
+                m_qualityFlagsSignalReferenceName = string.Format("{0}-{1}", value, SignalReference.GetSignalKindAcronym(SignalKind.Quality));
             }
         }
 
@@ -1302,7 +1325,7 @@ namespace PhasorProtocolAdapters
             Guid signalID;
             string signalReference;
 
-            m_definedMeasurements = new ConcurrentDictionary<string, IMeasurement>();
+            var definedMeasurements = new Dictionary<string, IMeasurement>();
 
             foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select(string.Format("DeviceID={0}", SharedMappingID)))
             {
@@ -1326,7 +1349,8 @@ namespace PhasorProtocolAdapters
                         };
 
                         // Add measurement to definition list keyed by signal reference
-                        m_definedMeasurements.TryAdd(signalReference, definedMeasurement);
+                        if (!definedMeasurements.ContainsKey(signalReference))
+                            definedMeasurements.Add(signalReference, definedMeasurement);
                     }
                     catch (Exception ex)
                     {
@@ -1335,13 +1359,16 @@ namespace PhasorProtocolAdapters
                 }
             }
 
+            m_definedMeasurements = definedMeasurements;
+
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
-            if (m_definedMeasurements.Count > 0)
-                OutputMeasurements = m_definedMeasurements.Values.ToArray();
+            if (definedMeasurements.Count > 0)
+                OutputMeasurements = definedMeasurements.Values.ToArray();
             else
                 OutputMeasurements = null;
 
-            OnStatusMessage("Loaded {0} active device measurements...", m_definedMeasurements.Count);
+            OnStatusMessage("Loaded {0} active device measurements...", definedMeasurements.Count);
+
         }
 
         /// <summary>
@@ -1659,7 +1686,7 @@ namespace PhasorProtocolAdapters
         /// This procedure is used to identify a parsed measurement value by its derived signal reference and apply the
         /// additional needed measurement meta-data attributes (i.e., ID, Source, Adder and Multiplier).
         /// </remarks>
-        protected void MapMeasurementAttributes(ICollection<IMeasurement> mappedMeasurements, string signalReference, IMeasurement parsedMeasurement)
+        protected void MapMeasurementAttributes(List<IMeasurement> mappedMeasurements, string signalReference, IMeasurement parsedMeasurement)
         {
             // Coming into this function the parsed measurement value will only have a "value" and a "timestamp";
             // the measurement will not yet be associated with an actual historian measurement ID as the measurement
@@ -1692,7 +1719,8 @@ namespace PhasorProtocolAdapters
             const int FrequencyIndex = (int)CompositeFrequencyValue.Frequency;
             const int DfDtIndex = (int)CompositeFrequencyValue.DfDt;
 
-            ICollection<IMeasurement> mappedMeasurements = new List<IMeasurement>();
+
+            List<IMeasurement> mappedMeasurements = new List<IMeasurement>(m_lastMeasurementMappedCount);
             DeviceStatisticsHelper<ConfigurationCell> statisticsHelper;
             ConfigurationCell definedDevice;
             PhasorValueCollection phasors;
@@ -1742,7 +1770,7 @@ namespace PhasorProtocolAdapters
             m_lifetimeLatencyFrames++;
 
             // Map quality flags (QF) from device frame, if any
-            MapMeasurementAttributes(mappedMeasurements, string.Format("{0}-{1}", Name, SignalReference.GetSignalKindAcronym(SignalKind.Quality)), frame.GetQualityFlagsMeasurement());
+            MapMeasurementAttributes(mappedMeasurements, m_qualityFlagsSignalReferenceName, frame.GetQualityFlagsMeasurement());
 
             // Loop through each parsed device in the data frame
             foreach (IDataCell parsedDevice in frame.Cells)
@@ -1846,6 +1874,8 @@ namespace PhasorProtocolAdapters
                     OnProcessException(new InvalidOperationException(string.Format("Exception encountered while mapping \"{0}\" data frame cell \"{1}\" elements to measurements: {2}", Name, parsedDevice.StationName.ToNonNullString("[undefined]"), ex.Message), ex));
                 }
             }
+
+            m_lastMeasurementMappedCount = mappedMeasurements.Count;
 
             // Provide real-time measurements where needed
             OnNewMeasurements(mappedMeasurements);
