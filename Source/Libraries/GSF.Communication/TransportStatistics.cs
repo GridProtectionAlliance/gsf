@@ -39,12 +39,12 @@ namespace GSF.Communication
         // Fields
 
         /// <summary>
-        /// <see cref="DateTime"/> of the last send operation.
+        /// <see cref="DateTime"/> of the last send operation. (UTC Time)
         /// </summary>
         public DateTime LastSend;
 
         /// <summary>
-        /// <see cref="DateTime"/> of the last receive operation.
+        /// <see cref="DateTime"/> of the last receive operation. (UTC Time)
         /// </summary>
         public DateTime LastReceive;
 
@@ -96,7 +96,7 @@ namespace GSF.Communication
         /// <param name="bytesSent">Number of bytes sent in the send operation.</param>
         public void UpdateBytesSent(int bytesSent)
         {
-            LastSend = DateTime.Now;
+            LastSend = DateTime.UtcNow;
             LastBytesSent = bytesSent;
             TotalBytesSent += LastBytesSent;
         }
@@ -107,7 +107,7 @@ namespace GSF.Communication
         /// <param name="bytesReceived">Number of bytes received in the receive operation.</param>
         public void UpdateBytesReceived(int bytesReceived)
         {
-            LastReceive = DateTime.Now;
+            LastReceive = DateTime.UtcNow;
             LastBytesReceived = bytesReceived;
             TotalBytesReceived += LastBytesReceived;
         }
