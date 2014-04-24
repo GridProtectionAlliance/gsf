@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
 namespace GSF.PhasorProtocols
@@ -223,6 +224,38 @@ namespace GSF.PhasorProtocols
 
             base.ClearItems();
         }
+        
+        /// <summary>
+        /// Returns an enumerable that iterates through the List
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public new List<TValue>.Enumerator GetEnumerator()
+        {
+            //Note: Since the constructor that includes IList<T> is not used, Items will always be a List<T>
+            return (Items as List<TValue>).GetEnumerator();
+        }
+
+        /// <summary>
+        /// Gets or sets the element at the specified index.
+        /// </summary>
+        /// <param name="index">the zero-based index of the element</param>
+        /// <returns></returns>
+        public new TValue this[int index]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return (Items as List<TValue>)[index];
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                base[index] = value;
+            }
+        }
+
+
 
         #endregion
     }
