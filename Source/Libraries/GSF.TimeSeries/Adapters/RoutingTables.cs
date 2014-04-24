@@ -39,7 +39,7 @@ namespace GSF.TimeSeries.Adapters
     /// <summary>
     /// Represents the routing tables for the Iaon adapters.
     /// </summary>
-    public class RoutingTables : IDisposable
+    public partial class RoutingTables : IDisposable
     {
         #region [ Members ]
 
@@ -47,7 +47,7 @@ namespace GSF.TimeSeries.Adapters
 
         private class GlobalCache
         {
-            public HashSet<IAdapter> ProducerAdapters; 
+            public HashSet<IAdapter> ProducerAdapters;
             public Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
             public Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
             public List<Consumer> BroadcastConsumers;
@@ -210,6 +210,8 @@ namespace GSF.TimeSeries.Adapters
 
         private bool m_disposed;
 
+        private RoutingTableInputBuffer m_inputBuffer;
+
         #endregion
 
         #region [ Constructors ]
@@ -220,6 +222,8 @@ namespace GSF.TimeSeries.Adapters
         public RoutingTables()
         {
             m_calculateRoutingTablesOperation = new LongSynchronizedOperation(CalculateRoutingTables) { IsBackground = true };
+            m_inputBuffer = new RoutingTableInputBuffer(this);
+
         }
 
         /// <summary>
@@ -304,6 +308,7 @@ namespace GSF.TimeSeries.Adapters
                 {
                     if (disposing)
                     {
+                        m_inputBuffer.Dispose();
                         m_inputAdapters = null;
                         m_actionAdapters = null;
                         m_outputAdapters = null;
@@ -470,7 +475,7 @@ namespace GSF.TimeSeries.Adapters
 
                 // Start or stop any connect on demand adapters
                 HandleConnectOnDemandAdapters(new HashSet<MeasurementKey>(m_inputMeasurementKeysRestriction ?? Enumerable.Empty<MeasurementKey>()), inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-                
+
                 elapsedTime = Ticks.ToSeconds(DateTime.UtcNow.Ticks - startTime);
                 routeCount = globalSignalLookup.Count;
 
@@ -493,6 +498,7 @@ namespace GSF.TimeSeries.Adapters
         /// <returns>The measurement handler used for routing.</returns>
         public virtual EventHandler<EventArgs<ICollection<IMeasurement>>> GetRoutedMeasurementsHandler()
         {
+            return (sender, args) => m_inputBuffer.Route(args.Argument);
             LocalCache localCache = new LocalCache(this);
             return (sender, args) => localCache.Route(args.Argument);
         }
