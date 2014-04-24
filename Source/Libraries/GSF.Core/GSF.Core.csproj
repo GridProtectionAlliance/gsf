@@ -339,13 +339,8 @@
     <Compile Include="Threading\ManagedThreads.cs" />
     <Compile Include="Threading\NamespaceDoc.cs" />
     <Compile Include="Threading\ReaderWriterSpinLock.cs" />
-    <Compile Include="Threading\ScheduledTask.cs" />
     <Compile Include="Threading\ShortSynchronizedOperation.cs" />
     <Compile Include="Threading\SynchronizedOperationBase.cs" />
-    <Compile Include="Threading\ThreadContainerBase.cs" />
-    <Compile Include="Threading\ThreadContainerDedicated.cs" />
-    <Compile Include="Threading\ThreadContainerThreadpool.cs" />
-    <Compile Include="Threading\WeakActionFast.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="TimeTagBase.cs" />

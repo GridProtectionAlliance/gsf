@@ -100,7 +100,6 @@
     <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
     <Compile Include="Adapters\CustomConfigurationEditorAttribute.cs" />
     <Compile Include="Adapters\IaonSession.cs" />
-    <Compile Include="Adapters\RoutingTableInputBuffer.cs" />
     <Compile Include="Adapters\RoutingTables.cs" />
     <Compile Include="Alarm.cs" />
     <Compile Include="ConcentratorBase.cs" />
