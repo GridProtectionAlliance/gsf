@@ -35,7 +35,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using GSF.Data;
-using GSF.PhasorProtocols.UI.DataModels;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
 
@@ -128,7 +127,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Output stream acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Output stream acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
         public string Acronym
         {
             get
@@ -879,7 +878,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 OutputStreamDevice outputStreamDevice = outputStreamDevices[0];
 
                 // Get OriginalSource value for the above outputstreamdevice from the input Device table.
-                 Device device = Device.GetDevice(database, " WHERE Acronym LIKE '%" + outputStreamDevice.Acronym + "'");
+                Device device = Device.GetDevice(database, " WHERE Acronym LIKE '%" + outputStreamDevice.Acronym + "'");
 
                 if (device == null)
                     return "";
@@ -1065,13 +1064,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 // Get Acronym of output stream we need to delete and save it
                 DataTable outputStreamAcronym = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT Acronym FROM OutputStream WHERE ID = {0}", "outputStreamID"), DefaultTimeout, outputStreamID);
-                
+
                 // Delete output stream from database
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStream WHERE ID = {0}", "outputStreamID"), DefaultTimeout, outputStreamID);
 
                 // Delete statistic measurements from database using the output stream acronym we have just deleted
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Measurement WHERE SignalReference LIKE '" + outputStreamAcronym.Rows[0].Field<string>("Acronym") + "!OS-ST%'"), DefaultTimeout);
-                
+
                 CommonFunctions.SendCommandToService("ReloadConfig");
 
                 return "Output Stream Deleted Successfully";
@@ -1106,39 +1105,39 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 OutputStream outputStream = new OutputStream
                     {
-                    NodeID = database.Guid(row, "NodeID"),
-                    ID = Convert.ToInt32(row.Field<object>("ID")),
-                    Acronym = row.Field<string>("Acronym"),
-                    Name = row.Field<string>("Name"),
-                    Type = type,
-                    ConnectionString = row.Field<string>("ConnectionString"),
-                    IDCode = Convert.ToInt32(row.Field<object>("IDCode")),
-                    CommandChannel = row.Field<string>("CommandChannel"),
-                    DataChannel = row.Field<string>("DataChannel"),
-                    AutoPublishConfigFrame = Convert.ToBoolean(row.Field<object>("AutoPublishConfigFrame")),
-                    AutoStartDataChannel = Convert.ToBoolean(row.Field<object>("AutoStartDataChannel")),
-                    NominalFrequency = Convert.ToInt32(row.Field<object>("NominalFrequency")),
-                    FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
-                    LagTime = row.ConvertField<double>("LagTime"),
-                    LeadTime = row.ConvertField<double>("LeadTime"),
-                    UseLocalClockAsRealTime = Convert.ToBoolean(row.Field<object>("UseLocalClockAsRealTime")),
-                    AllowSortsByArrival = Convert.ToBoolean(row.Field<object>("AllowSortsByArrival")),
-                    LoadOrder = Convert.ToInt32(row.Field<object>("LoadOrder")),
-                    Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                    m_nodeName = row.Field<string>("NodeName"),
-                    m_typeName = (type == 1) ? "IEEE C37.118" : (type == 2) ? "BPA" : "IEC 61850-90-5",
-                    IgnoreBadTimeStamps = Convert.ToBoolean(row.Field<object>("IgnoreBadTimeStamps")),
-                    TimeResolution = Convert.ToInt32(row.Field<object>("TimeResolution")),
-                    AllowPreemptivePublishing = Convert.ToBoolean(row.Field<object>("AllowPreemptivePublishing")),
-                    DownSamplingMethod = row.Field<string>("DownsamplingMethod"),
-                    DataFormat = row.Field<string>("DataFormat"),
-                    CoordinateFormat = row.Field<string>("CoordinateFormat"),
-                    CurrentScalingValue = Convert.ToInt32(row.Field<object>("CurrentScalingValue")),
-                    VoltageScalingValue = Convert.ToInt32(row.Field<object>("VoltageScalingValue")),
-                    AnalogScalingValue = Convert.ToInt32(row.Field<object>("AnalogScalingValue")),
-                    DigitalMaskValue = Convert.ToInt32(row.Field<object>("DigitalMaskValue")),
-                    PerformTimestampReasonabilityCheck = Convert.ToBoolean(row.Field<object>("PerformTimeReasonabilityCheck"))
-                };
+                        NodeID = database.Guid(row, "NodeID"),
+                        ID = Convert.ToInt32(row.Field<object>("ID")),
+                        Acronym = row.Field<string>("Acronym"),
+                        Name = row.Field<string>("Name"),
+                        Type = type,
+                        ConnectionString = row.Field<string>("ConnectionString"),
+                        IDCode = Convert.ToInt32(row.Field<object>("IDCode")),
+                        CommandChannel = row.Field<string>("CommandChannel"),
+                        DataChannel = row.Field<string>("DataChannel"),
+                        AutoPublishConfigFrame = Convert.ToBoolean(row.Field<object>("AutoPublishConfigFrame")),
+                        AutoStartDataChannel = Convert.ToBoolean(row.Field<object>("AutoStartDataChannel")),
+                        NominalFrequency = Convert.ToInt32(row.Field<object>("NominalFrequency")),
+                        FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                        LagTime = row.ConvertField<double>("LagTime"),
+                        LeadTime = row.ConvertField<double>("LeadTime"),
+                        UseLocalClockAsRealTime = Convert.ToBoolean(row.Field<object>("UseLocalClockAsRealTime")),
+                        AllowSortsByArrival = Convert.ToBoolean(row.Field<object>("AllowSortsByArrival")),
+                        LoadOrder = Convert.ToInt32(row.Field<object>("LoadOrder")),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        m_nodeName = row.Field<string>("NodeName"),
+                        m_typeName = (type == 1) ? "IEEE C37.118" : (type == 2) ? "BPA" : "IEC 61850-90-5",
+                        IgnoreBadTimeStamps = Convert.ToBoolean(row.Field<object>("IgnoreBadTimeStamps")),
+                        TimeResolution = Convert.ToInt32(row.Field<object>("TimeResolution")),
+                        AllowPreemptivePublishing = Convert.ToBoolean(row.Field<object>("AllowPreemptivePublishing")),
+                        DownSamplingMethod = row.Field<string>("DownsamplingMethod"),
+                        DataFormat = row.Field<string>("DataFormat"),
+                        CoordinateFormat = row.Field<string>("CoordinateFormat"),
+                        CurrentScalingValue = Convert.ToInt32(row.Field<object>("CurrentScalingValue")),
+                        VoltageScalingValue = Convert.ToInt32(row.Field<object>("VoltageScalingValue")),
+                        AnalogScalingValue = Convert.ToInt32(row.Field<object>("AnalogScalingValue")),
+                        DigitalMaskValue = Convert.ToInt32(row.Field<object>("DigitalMaskValue")),
+                        PerformTimestampReasonabilityCheck = Convert.ToBoolean(row.Field<object>("PerformTimeReasonabilityCheck"))
+                    };
 
                 return outputStream;
             }

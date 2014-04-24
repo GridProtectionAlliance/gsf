@@ -112,7 +112,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Historian acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Historian acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
         public string Acronym
         {
             get
@@ -611,20 +611,20 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 Historian historian = new Historian
                     {
-                    NodeID = database.Guid(row, "NodeID"),
-                    ID = row.ConvertField<int>("ID"),
-                    Acronym = row.Field<string>("Acronym"),
-                    Name = row.Field<string>("Name"),
-                    AssemblyName = row.Field<string>("AssemblyName"),
-                    TypeName = row.Field<string>("TypeName"),
-                    ConnectionString = row.Field<string>("ConnectionString"),
-                    IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
-                    Description = row.Field<string>("Description"),
-                    LoadOrder = row.ConvertField<int>("LoadOrder"),
-                    Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                    MeasurementReportingInterval = row.ConvertField<int>("MeasurementReportingInterval"),
-                    m_nodeName = row.Field<string>("NodeName")
-                };
+                        NodeID = database.Guid(row, "NodeID"),
+                        ID = row.ConvertField<int>("ID"),
+                        Acronym = row.Field<string>("Acronym"),
+                        Name = row.Field<string>("Name"),
+                        AssemblyName = row.Field<string>("AssemblyName"),
+                        TypeName = row.Field<string>("TypeName"),
+                        ConnectionString = row.Field<string>("ConnectionString"),
+                        IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
+                        Description = row.Field<string>("Description"),
+                        LoadOrder = row.ConvertField<int>("LoadOrder"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        MeasurementReportingInterval = row.ConvertField<int>("MeasurementReportingInterval"),
+                        m_nodeName = row.Field<string>("NodeName")
+                    };
 
                 return historian;
             }

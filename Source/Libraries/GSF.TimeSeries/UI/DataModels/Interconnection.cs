@@ -70,8 +70,8 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Interconnection"/> Acronym.
         /// </summary>
         [Required(ErrorMessage = "Interconnection acronym is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Interconnection Acronym cannot exceed 50 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
+        [StringLength(200, ErrorMessage = "Interconnection Acronym cannot exceed 200 characters.")]
+        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
         public string Acronym
         {
             get
@@ -89,7 +89,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Interconnection"/> Name.
         /// </summary>
         [Required(ErrorMessage = "Interconnection name is a required field, please provide value.")]
-        [StringLength(100, ErrorMessage = "Interconnection Name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Interconnection Name cannot exceed 200 characters.")]
         public string Name
         {
             get

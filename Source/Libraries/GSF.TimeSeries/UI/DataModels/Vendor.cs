@@ -83,7 +83,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets the <see cref="Vendor"/> Acronym.
         /// </summary>
         [StringLength(200, ErrorMessage = "Vendor acronym cannot exceed 200 characters")]
-        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
         public string Acronym
         {
             get

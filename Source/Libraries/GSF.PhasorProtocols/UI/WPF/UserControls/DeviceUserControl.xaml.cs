@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System.Windows;
-using System.Windows.Controls;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.ViewModels;
 
@@ -31,7 +30,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
     /// <summary>
     /// Interaction logic for DeviceUserControl.xaml
     /// </summary>
-    public partial class DeviceUserControl : UserControl
+    public partial class DeviceUserControl
     {
         #region [ Constructor ]
 
@@ -50,12 +49,13 @@ namespace GSF.PhasorProtocols.UI.UserControls
         public DeviceUserControl(Device device)
         {
             InitializeComponent();
-            this.Loaded += DeviceUserControl_Loaded;
-            this.Unloaded += DeviceUserControl_Unloaded;
-            if (device == null)
-                this.DataContext = new Devices(0, false);
+            Loaded += DeviceUserControl_Loaded;
+            Unloaded += DeviceUserControl_Unloaded;
+
+            if ((object)device == null)
+                DataContext = new Devices(0, false);
             else
-                this.DataContext = new Devices(0, false, device);
+                DataContext = new Devices(0, false, device);
         }
 
         #endregion
@@ -74,12 +74,17 @@ namespace GSF.PhasorProtocols.UI.UserControls
         /// <param name="e">Arguments for the event.</param>
         void DeviceUserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            (this.DataContext as Devices).ProcessPropertyChange();
+            Devices devices = DataContext as Devices;
+
+            if ((object)devices != null)
+                devices.ProcessPropertyChange();
         }
 
         private void GridDetailView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if ((this.DataContext as Devices).IsNewRecord)
+            Devices devices = DataContext as Devices;
+
+            if ((object)devices != null && devices.IsNewRecord)
                 DataGridList.SelectedIndex = -1;
         }
 

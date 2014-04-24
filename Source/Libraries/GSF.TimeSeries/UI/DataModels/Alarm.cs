@@ -122,7 +122,8 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Alarm"/> TagName
         /// </summary>
         [Required(ErrorMessage = " Alarm tag name is a required field, please select a value.")]
-        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
+        [StringLength(200, ErrorMessage = "Alarm tag name cannot exceed 200 characters.")]
+        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
         public string TagName
         {
             get

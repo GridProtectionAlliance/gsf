@@ -77,8 +77,8 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Protocol"/> Acronym.
         /// </summary>
         [Required(ErrorMessage = "Protocol acronym is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Protocol Acronym cannot exceed 50 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
+        [StringLength(200, ErrorMessage = "Protocol Acronym cannot exceed 200 characters.")]
+        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
         public string Acronym
         {
             get
@@ -96,7 +96,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Gets or sets <see cref="Protocol"/> Name.
         /// </summary>
         [Required(ErrorMessage = "Protocol name is a required field, please provide value.")]
-        [StringLength(100, ErrorMessage = "Protocol Name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Protocol Name cannot exceed 200 characters.")]
         public string Name
         {
             get

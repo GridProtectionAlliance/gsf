@@ -85,7 +85,7 @@ namespace GSF.TimeSeries.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Company acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Company acronym cannot exceed 200 characters.")]
-        [RegularExpression("^[A-Z0-9-'!'_'@#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' and '$' are allowed.")]
+        [RegularExpression("^[A-Z0-9-'!'_''.' @#\\$]+$", ErrorMessage = "Only upper case letters, numbers, '!', '-', '@', '#', '_' , '.'and '$' are allowed.")]
         public string Acronym
         {
             get
