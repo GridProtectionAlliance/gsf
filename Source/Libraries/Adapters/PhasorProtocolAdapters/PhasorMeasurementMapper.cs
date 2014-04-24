@@ -195,8 +195,6 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public PhasorMeasurementMapper()
         {
-            m_qualityFlagsSignalReferenceName = string.Format("{0}-{1}", Name, SignalReference.GetSignalKindAcronym(SignalKind.Quality));
-
             // Create a cached signal reference dictionary for generated signal references
             m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
 
@@ -538,26 +536,6 @@ namespace PhasorProtocolAdapters
                     return m_frameParser.ByteRate;
 
                 return 0.0D;
-            }
-        }
-
-
-        /// <summary>
-        /// Gets or sets the name of this <see cref="AdapterBase"/>.
-        /// </summary>
-        /// <remarks>
-        /// Derived classes should provide a name for the adapter.
-        /// </remarks>
-        public override string Name
-        {
-            get
-            {
-                return base.Name;
-            }
-            set
-            {
-                base.Name = value;
-                m_qualityFlagsSignalReferenceName = string.Format("{0}-{1}", value, SignalReference.GetSignalKindAcronym(SignalKind.Quality));
             }
         }
 
@@ -937,7 +915,7 @@ namespace PhasorProtocolAdapters
 
                         if ((object)m_measurementCounter != null)
                         {
-                            m_measurementCounter.Elapsed -= MeasurementCounter_Elapsed;
+                            m_measurementCounter.Elapsed -= m_measurementCounter_Elapsed;
                             m_measurementCounter.Dispose();
                             m_measurementCounter = null;
                         }
@@ -969,6 +947,9 @@ namespace PhasorProtocolAdapters
 
             Dictionary<string, string> settings = Settings;
             string setting;
+
+            // Cache signal reference name for connected device quality flags - in normal usage, name will not change for adapter lifetime
+            m_qualityFlagsSignalReferenceName = string.Format("{0}-{1}", Name, SignalReference.GetSignalKindAcronym(SignalKind.Quality));
 
             // Load optional mapper specific connection parameters
             if (settings.TryGetValue("isConcentrator", out setting))
@@ -1213,7 +1194,6 @@ namespace PhasorProtocolAdapters
                             if (m_definedDevices.ContainsKey(definedDevice.IDCode))
                             {
                                 OnProcessException(new InvalidOperationException(string.Format("ERROR: Device ID \"{0}\", labeled \"{1}\", was not unique in the {2} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified.", definedDevice.IDCode, definedDevice.StationName, Name)));
-                                definedDevice.Dispose();
                             }
                             else
                             {
@@ -1241,7 +1221,6 @@ namespace PhasorProtocolAdapters
                             if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
                             {
                                 OnProcessException(new InvalidOperationException(string.Format("ERROR: Device ID \"{0}\", labeled \"{1}\", was not unique in the {2} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified.", definedDevice.IDCode, definedDevice.StationName, Name)));
-                                definedDevice.Dispose();
                             }
                             else
                             {
@@ -1325,7 +1304,7 @@ namespace PhasorProtocolAdapters
             Guid signalID;
             string signalReference;
 
-            var definedMeasurements = new Dictionary<string, IMeasurement>();
+            Dictionary<string, IMeasurement> definedMeasurements = new Dictionary<string, IMeasurement>();
 
             foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select(string.Format("DeviceID={0}", SharedMappingID)))
             {
@@ -1817,7 +1796,6 @@ namespace PhasorProtocolAdapters
 
                             // Map magnitude
                             MapMeasurementAttributes(mappedMeasurements, definedDevice.GetSignalReference(SignalKind.Magnitude, x, count), measurements[MagnitudeIndex]);
-
                         }
 
                         // Map frequency (FQ) and dF/dt (DF)
@@ -2030,7 +2008,7 @@ namespace PhasorProtocolAdapters
             {
                 // Create the timer if it doesn't already exist
                 m_measurementCounter = new Timer(1000.0D);
-                m_measurementCounter.Elapsed += MeasurementCounter_Elapsed;
+                m_measurementCounter.Elapsed += m_measurementCounter_Elapsed;
             }
 
             // Start the measurement counter timer
@@ -2244,7 +2222,7 @@ namespace PhasorProtocolAdapters
             m_bytesReceived = 0;
         }
 
-        private void MeasurementCounter_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void m_measurementCounter_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
             long now = DateTime.UtcNow.Ticks;
             IEnumerable<DeviceStatisticsHelper<ConfigurationCell>> statisticsHelpers = StatisticsHelpers;

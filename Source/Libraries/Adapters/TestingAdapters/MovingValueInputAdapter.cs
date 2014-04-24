@@ -363,7 +363,7 @@ namespace TestingAdapters
                 .ToArray();
 
             m_moveFlags = new bool[OutputMeasurements.Length];
-            m_lastPublication = ToPublicationTime(DateTime.Now.Ticks);
+            m_lastPublication = ToPublicationTime(DateTime.UtcNow.Ticks);
 
             m_totalMoveTimes = new double[OutputMeasurements.Length];
             m_accelerations = new double[OutputMeasurements.Length];
@@ -423,7 +423,7 @@ namespace TestingAdapters
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
-            long now = DateTime.Now.Ticks;
+            long now = DateTime.UtcNow.Ticks;
             long nextPublication = GetNextPublicationTime(m_lastPublication);
             double delta;
 

@@ -742,7 +742,7 @@ namespace GSF.Scheduling
             {
                 OnStarting();
 
-                if (DateTime.Now.Second == 0)
+                if (DateTime.UtcNow.Second == 0)
                 {
                     // We'll start the timer that will check the schedules at top of the minute.
                     m_timer.Start();
@@ -751,11 +751,10 @@ namespace GSF.Scheduling
                     CheckAllSchedules();
                     break;
                 }
-                else
-                {
-                    Thread.Sleep(1000);
-                }
+
+                Thread.Sleep(1000);
             }
+
             m_startTimerThread = null;
         }
 

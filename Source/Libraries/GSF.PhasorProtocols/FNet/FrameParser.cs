@@ -311,7 +311,7 @@ namespace GSF.PhasorProtocols.FNET
                         string[] data = parsedFrameHeader.DataElements;
 
                         // Create virtual configuration frame
-                        m_configurationFrame = new ConfigurationFrame(ushort.Parse(data[Element.UnitID]), DateTime.Now.Ticks, m_frameRate, m_nominalFrequency, m_timeOffset, m_stationName);
+                        m_configurationFrame = new ConfigurationFrame(ushort.Parse(data[Element.UnitID]), DateTime.UtcNow.Ticks, m_frameRate, m_nominalFrequency, m_timeOffset, m_stationName);
 
                         // Notify clients of new configuration frame
                         OnReceivedChannelFrame(m_configurationFrame);

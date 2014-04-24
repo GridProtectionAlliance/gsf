@@ -42,9 +42,9 @@ using GSF.TimeSeries.Adapters;
 namespace DataQualityMonitoring
 {
     /// <summary>
-    /// Tests measurements to determine whether they have flatlined.
+    /// Tests measurements to determine whether they have flat-lined.
     /// </summary>
-    [Description("Flatline Test: notifies when measurements are received whose values do not change")]
+    [Description("Flat-line Test: notifies when measurements are received whose values do not change")]
     public class FlatlineTest : ActionAdapterBase
     {
         #region [ Members ]
@@ -87,10 +87,10 @@ namespace DataQualityMonitoring
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the length of time, in seconds, that a measurement's value must remain stale to be considered flatlined.
+        /// Gets or sets the length of time, in seconds, that a measurement's value must remain stale to be considered flat-lined.
         /// </summary>
         [ConnectionStringParameter,
-        Description("Define the length of time, in seconds, that a measurement's value must remain stale to be considered flatlined."),
+        Description("Define the length of time, in seconds, that a measurement's value must remain stale to be considered flat-lined."),
         DefaultValue(4)]
         public double MinFlatline
         {
@@ -254,7 +254,8 @@ namespace DataQualityMonitoring
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
-            IMeasurement measurement = null;
+            IMeasurement measurement;
+
             lock (m_lastChange)
             {
                 foreach (MeasurementKey key in frame.Measurements.Keys)
@@ -272,16 +273,17 @@ namespace DataQualityMonitoring
         }
 
         /// <summary>
-        /// Returns a collection of measurements that are flatlined.
+        /// Returns a collection of measurements that are flat-lined.
         /// </summary>
-        /// <returns>A collection of flatlined measurements.</returns>
+        /// <returns>A collection of flat-lined measurements.</returns>
         public ICollection<IMeasurement> GetFlatlinedMeasurements()
         {
             ICollection<IMeasurement> flatlinedMeasurements = new List<IMeasurement>();
 
             lock (m_lastChange)
             {
-                IMeasurement measurement = null;
+                IMeasurement measurement;
+
                 foreach (MeasurementKey key in m_lastChange.Keys)
                 {
                     measurement = m_lastChange[key];
@@ -343,8 +345,11 @@ namespace DataQualityMonitoring
                         {
                             m_lastChange.Add(key, new Measurement
                                 {
-                                ID = new Guid(signalID), Key = key, Value = double.NaN, Timestamp = timestamp
-                            });
+                                    ID = new Guid(signalID),
+                                    Key = key,
+                                    Value = double.NaN,
+                                    Timestamp = timestamp
+                                });
                         }
                     }
                 }
@@ -354,16 +359,18 @@ namespace DataQualityMonitoring
                 {
                     m_lastChange.Add(key, new Measurement
                         {
-                        Key = key, Value = double.NaN, Timestamp = timestamp
-                    });
+                            Key = key,
+                            Value = double.NaN,
+                            Timestamp = timestamp
+                        });
                 }
             }
         }
 
-        // Sends email notifications about changes in the flatlined status of measurements.
+        // Sends email notifications about changes in the flat-lined status of measurements.
         private void SendEmailNotifications()
         {
-            Ticks now = DateTime.Now.Ticks;
+            Ticks now = DateTime.UtcNow.Ticks;
             ICollection<IMeasurement> allFlatlinedMeasurements = GetFlatlinedMeasurements();
             IEnumerable<IMeasurement> flatlined, noLongerFlatlined;
 
@@ -376,19 +383,19 @@ namespace DataQualityMonitoring
                     .ToList();
 
                 noLongerFlatlined = m_lastNotified
-                    .Where(pair => !allFlatlinedMeasurements.Any(measurement => pair.Key == measurement.Key))
+                    .Where(pair => allFlatlinedMeasurements.All(measurement => pair.Key != measurement.Key))
                     .Select(pair => m_lastChange[pair.Key])
                     .ToList();
             }
 
-            if (flatlined.Count() > 0)
+            if (flatlined.Any())
                 SendEmailNotification(flatlined, true);
 
-            if (noLongerFlatlined.Count() > 0)
+            if (noLongerFlatlined.Any())
                 SendEmailNotification(noLongerFlatlined, false);
         }
 
-        // Send an email address notifying the admin of a changes in the flatlined status of measurements.
+        // Send an email address notifying the admin of a changes in the flat-lined status of measurements.
         private void SendEmailNotification(IEnumerable<IMeasurement> measurements, bool flatlined)
         {
             Ticks now = DateTime.Now.Ticks;
@@ -413,9 +420,9 @@ namespace DataQualityMonitoring
             }
 
             if (flatlined)
-                message.Subject = "Flatlined measurements";
+                message.Subject = "Flat-lined measurements";
             else
-                message.Subject = "No longer flatlined measurements";
+                message.Subject = "No longer flat-lined measurements";
 
             message.Body = body.ToString();
             message.Send();
@@ -429,7 +436,7 @@ namespace DataQualityMonitoring
             foreach (IMeasurement measurement in flatlinedMeasurements)
             {
                 Ticks timeDiff = RealTime - measurement.Timestamp;
-                OnStatusMessage(string.Format("{0} flatlined for {1} seconds.", measurement, (int)timeDiff.ToSeconds()));
+                OnStatusMessage(string.Format("{0} flat-lined for {1} seconds.", measurement, (int)timeDiff.ToSeconds()));
             }
         }
 

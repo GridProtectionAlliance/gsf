@@ -95,7 +95,7 @@ namespace GSF.Net.Ftp
                                 return DateTime.Parse(RawValue);
                             case RawDataStyle.UnixDateTime:
                                 string[] sa = RawValue.Split(' ');
-                                return Convert.ToDateTime(sa[0] + " " + sa[1] + " " + DateTime.Now.Year + " " + sa[2]);
+                                return Convert.ToDateTime(sa[0] + " " + sa[1] + " " + DateTime.UtcNow.Year + " " + sa[2]);
                             case RawDataStyle.DosDateTime:
                                 return DateTime.Parse(RawValue);
                             default:

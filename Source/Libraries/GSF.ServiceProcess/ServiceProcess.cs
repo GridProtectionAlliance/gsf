@@ -139,7 +139,7 @@ namespace GSF.ServiceProcess
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("Name");
+                    throw new ArgumentNullException("value");
 
                 m_name = value;
             }
@@ -259,7 +259,7 @@ namespace GSF.ServiceProcess
 
                 if (m_executionStopTime != DateTime.MinValue)
                 {
-                    status.Append(m_executionStopTime.ToString());
+                    status.Append(m_executionStopTime);
                 }
                 else
                 {
@@ -365,7 +365,7 @@ namespace GSF.ServiceProcess
             if (m_executionMethod != null)
             {
                 CurrentState = ServiceProcessState.Processing;
-                m_executionStartTime = DateTime.Now;
+                m_executionStartTime = DateTime.UtcNow;
                 m_executionStopTime = DateTime.MinValue;
 
                 try
@@ -387,7 +387,7 @@ namespace GSF.ServiceProcess
                 }
                 finally
                 {
-                    m_executionStopTime = DateTime.Now;
+                    m_executionStopTime = DateTime.UtcNow;
                 }
             }
             m_processThread = null;

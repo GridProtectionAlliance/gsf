@@ -398,7 +398,7 @@ namespace GSF
         {
             get
             {
-                return Ticks.ToSeconds(DateTime.Now.Ticks);
+                return Ticks.ToSeconds(DateTime.UtcNow.Ticks);
             }
         }
 

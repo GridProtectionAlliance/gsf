@@ -445,7 +445,7 @@ namespace GSF.Net.Ftp
         protected void OnStatus(string status)
         {
             if ((object)Status != null)
-                Status(this, new EventArgs<string>("[" + DateTime.Now + "] " + status));
+                Status(this, new EventArgs<string>("[" + DateTime.UtcNow + "] " + status));
         }
 
         /// <summary>

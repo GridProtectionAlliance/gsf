@@ -116,7 +116,7 @@ namespace GSF.Adapters
         /// </summary>
         public Adapter()
         {
-            m_created = DateTime.Now;
+            m_created = DateTime.UtcNow;
             m_settingsCategory = this.GetType().Name;
         }
 
@@ -261,7 +261,7 @@ namespace GSF.Adapters
 #if !MONO
                 if (!Domain.IsDefaultAppDomain() && AppDomain.MonitoringIsEnabled)
                     // Both app domain isolation and app domain resource monitoring is enabled.
-                    return Domain.MonitoringTotalProcessorTime.TotalSeconds / Ticks.ToSeconds(DateTime.Now.Ticks - m_created.Ticks) / Environment.ProcessorCount * 100;
+                    return Domain.MonitoringTotalProcessorTime.TotalSeconds / Ticks.ToSeconds(DateTime.UtcNow.Ticks - m_created.Ticks) / Environment.ProcessorCount * 100;
                 else
 #endif
                     return double.NaN;

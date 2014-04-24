@@ -30,17 +30,17 @@ namespace GSF.PhasorProtocols
     #region [ Enumerations ]
 
     /// <summary>
-    /// Fundamental signal types enumeration.
+    /// Fundamental signal type enumeration that represents a kind of signal, not an explicit type.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This signal type represents the basic type of a signal used to suffix a formatted signal reference. When
-    /// used in context along with an optional index the fundamental signal type will identify a signal's location
-    /// within a frame of data (see <see cref="SignalReference"/>).
+    /// This enumeration represents the basic type of a signal used to suffix a formatted signal
+    /// reference. When used in context along with an optional index the fundamental signal type
+    /// will identify a signal's location within a frame of data (see <see cref="SignalReference"/>).
     /// </para>
     /// <para>
-    /// Contrast this to the <see cref="SignalType"/> enumeration which further defines an
-    /// explicit type for a signal (e.g., a voltage or current type for an angle).
+    /// Contrast this to the <see cref="SignalType"/> enumeration which further defines an explicit
+    /// type for a signal (e.g., a voltage or current type for an angle).
     /// </para>
     /// </remarks>
     [Serializable]
@@ -97,11 +97,11 @@ namespace GSF.PhasorProtocols
     }
 
     /// <summary>
-    /// Signal type enumeration.
+    /// Fundamental signal type enumeration that represents an explicit type of signal.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The signal type represents the explicit type of a signal that a value represents.
+    /// This enumeration represents the explicit type of a signal that a value represents.
     /// </para>
     /// <para>
     /// Contrast this to the <see cref="SignalKind"/> enumeration which only defines an

@@ -103,7 +103,7 @@ namespace GSF.NumericalAnalysis
         {
             get
             {
-                return (m_regressionInterval + Ticks.ToSeconds(DateTime.Now.Ticks - m_slopeRun.Ticks));
+                return (m_regressionInterval + Ticks.ToSeconds(DateTime.UtcNow.Ticks - m_slopeRun.Ticks));
             }
         }
 
@@ -153,7 +153,7 @@ namespace GSF.NumericalAnalysis
         /// <param name="estimatedRefreshInterval">Estimated data points per second.</param>
         public void Initialize(int regressionInterval, double estimatedRefreshInterval)
         {
-            m_slopeRun = DateTime.Now;
+            m_slopeRun = DateTime.UtcNow;
             m_regressionInterval = regressionInterval;
             m_pointCount = m_regressionInterval * (int)(1 / estimatedRefreshInterval);
 
@@ -212,9 +212,8 @@ namespace GSF.NumericalAnalysis
             }
 
             if (Math.Sign(m_slope) != Math.Sign(m_lastSlope))
-            {
-                m_slopeRun = DateTime.Now;
-            }
+                m_slopeRun = DateTime.UtcNow;
+
             m_lastSlope = m_slope;
 
             // Notifies consumer of new calculated slope.

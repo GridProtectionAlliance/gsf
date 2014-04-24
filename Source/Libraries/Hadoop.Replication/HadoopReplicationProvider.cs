@@ -652,7 +652,7 @@ namespace Hadoop.Replication
 
         private static void WriteTrace(string message, params object[] args)
         {
-            Trace.WriteLine(DateTime.Now + ": " + string.Format(message, args), typeof(HadoopReplicationProvider).Name);
+            Trace.WriteLine(DateTime.UtcNow + ": " + string.Format(message, args), typeof(HadoopReplicationProvider).Name);
         }
 
         #endregion

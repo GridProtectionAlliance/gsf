@@ -1890,11 +1890,11 @@ namespace GSF.ServiceProcess
             int suppressedUpdates = 0;
             foreach (StatusUpdate item in items)
             {
-                if ((DateTime.Now.Ticks - m_lastStatusUpdateTime).ToSeconds() > 1)
+                if ((DateTime.UtcNow.Ticks - m_lastStatusUpdateTime).ToSeconds() > 1)
                 {
                     displayUpdate = true;
                     m_statusUpdatesDisplayed = 1;
-                    m_lastStatusUpdateTime = DateTime.Now.Ticks;
+                    m_lastStatusUpdateTime = DateTime.UtcNow.Ticks;
                 }
                 else
                 {
@@ -2046,7 +2046,7 @@ namespace GSF.ServiceProcess
                     if ((object)client != null)
                     {
                         client.ClientID = e.Argument1;
-                        client.ConnectedAt = DateTime.Now;
+                        client.ConnectedAt = DateTime.UtcNow;
 
                         if (TrySetCurrentThreadPrincipal(client))
                         {

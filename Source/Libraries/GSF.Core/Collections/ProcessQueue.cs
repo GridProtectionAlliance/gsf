@@ -972,7 +972,7 @@ namespace GSF.Collections
                     if (m_stopTime > 0)
                         processingTime = m_stopTime - m_startTime;
                     else
-                        processingTime = DateTime.Now.Ticks - m_startTime;
+                        processingTime = DateTime.UtcNow.Ticks - m_startTime;
                 }
 
                 if (processingTime < 0)
@@ -1250,7 +1250,7 @@ namespace GSF.Collections
             m_threadCount = 0;
             m_itemsProcessed = 0;
             m_stopTime = 0;
-            m_startTime = DateTime.Now.Ticks;
+            m_startTime = DateTime.UtcNow.Ticks;
 
             // Note that real-time queues have their main thread running continually, but for
             // intervaled queues, processing occurs only when data is available to be processed.
@@ -1268,7 +1268,10 @@ namespace GSF.Collections
                         break;
 
                     case SynchronizedOperationType.LongBackground:
-                        m_synchronizedOperation = new LongSynchronizedOperation(RealTimeThreadProc, OnProcessException) { IsBackground = true };
+                        m_synchronizedOperation = new LongSynchronizedOperation(RealTimeThreadProc, OnProcessException)
+                        {
+                            IsBackground = true
+                        };
                         break;
                 }
             }
@@ -1315,7 +1318,7 @@ namespace GSF.Collections
                 }
             }
 
-            m_stopTime = DateTime.Now.Ticks;
+            m_stopTime = DateTime.UtcNow.Ticks;
         }
 
         /// <summary>

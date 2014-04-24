@@ -515,7 +515,7 @@ namespace GSF.Communication
                 {
                     if (m_currentState == ServerState.Running)
                         // Server is running.
-                        serverRunTime = (DateTime.Now.Ticks - m_startTime).ToSeconds();
+                        serverRunTime = (DateTime.UtcNow.Ticks - m_startTime).ToSeconds();
                     else
                         // Server is not running.
                         serverRunTime = (m_stopTime - m_startTime).ToSeconds();
@@ -892,13 +892,9 @@ namespace GSF.Communication
         public virtual WaitHandle SendToAsync(Guid clientID, byte[] data, int offset, int length)
         {
             if (m_currentState == ServerState.Running)
-            {
                 return SendDataToAsync(clientID, data, offset, length);
-            }
-            else
-            {
-                throw new InvalidOperationException("Server is not running");
-            }
+
+            throw new InvalidOperationException("Server is not running");
         }
 
         /// <summary>
@@ -958,7 +954,9 @@ namespace GSF.Communication
             {
                 m_currentState = ServerState.Running;
                 m_stopTime = 0;
-                m_startTime = DateTime.Now.Ticks;   // Save the time when server is started.
+
+                // Save the time when server is started.
+                m_startTime = DateTime.UtcNow.Ticks;
 
                 if (ServerStarted != null)
                     ServerStarted(this, EventArgs.Empty);
@@ -977,7 +975,9 @@ namespace GSF.Communication
             try
             {
                 m_currentState = ServerState.NotRunning;
-                m_stopTime = DateTime.Now.Ticks;    // Save the time when server is stopped.
+
+                // Save the time when server is stopped.
+                m_stopTime = DateTime.UtcNow.Ticks;
 
                 if (ServerStopped != null)
                     ServerStopped(this, EventArgs.Empty);
@@ -1243,7 +1243,7 @@ namespace GSF.Communication
         public static IServer Create(string configurationString)
         {
             Dictionary<string, string> configurationSettings = configurationString.ParseKeyValuePairs();
-            IServer server = null;
+            IServer server;
             string protocol;
 
             if (configurationSettings.TryGetValue("protocol", out protocol))

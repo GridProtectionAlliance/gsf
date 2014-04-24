@@ -355,10 +355,8 @@ namespace GSF.Scheduling
                 m_lastDueAt = currentDateTime;
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         /// <summary>

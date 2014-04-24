@@ -548,12 +548,12 @@ namespace GSF.TimeSeries.Statistics
             IAdapter adapter;
 
             sourceInfo = new StatisticSource
-                {
-                    Source = source,
-                    SourceName = sourceName,
-                    SourceCategory = sourceCategory,
-                    SourceAcronym = sourceAcronym
-                };
+            {
+                Source = source,
+                SourceName = sourceName,
+                SourceCategory = sourceCategory,
+                SourceAcronym = sourceAcronym
+            };
 
             lock (StatisticSources)
             {

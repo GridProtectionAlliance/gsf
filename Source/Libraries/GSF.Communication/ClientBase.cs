@@ -471,11 +471,15 @@ namespace GSF.Communication
                 if (m_connectTime > 0)
                 {
                     if (m_currentState == ClientState.Connected)
+                    {
                         // Client is connected to the server.
-                        clientConnectionTime = (DateTime.Now.Ticks - m_connectTime).ToSeconds();
+                        clientConnectionTime = (DateTime.UtcNow.Ticks - m_connectTime).ToSeconds();
+                    }
                     else
+                    {
                         // Client is not connected to the server.
                         clientConnectionTime = (m_disconnectTime - m_connectTime).ToSeconds();
+                    }
                 }
 
                 return clientConnectionTime;
@@ -713,10 +717,8 @@ namespace GSF.Communication
                 m_connectHandle = new ManualResetEvent(false);
                 return m_connectHandle;
             }
-            else
-            {
-                throw new InvalidOperationException("Client is currently not disconnected");
-            }
+
+            throw new InvalidOperationException("Client is currently not disconnected");
         }
 
         /// <summary>
@@ -797,13 +799,9 @@ namespace GSF.Communication
         public virtual WaitHandle SendAsync(byte[] data, int offset, int length)
         {
             if (m_currentState == ClientState.Connected)
-            {
                 return SendDataAsync(data, offset, length);
-            }
-            else
-            {
-                throw new InvalidOperationException("Client is not connected");
-            }
+
+            throw new InvalidOperationException("Client is not connected");
         }
 
         /// <summary>
@@ -841,10 +839,13 @@ namespace GSF.Communication
             {
                 m_currentState = ClientState.Connected;
                 m_disconnectTime = 0;
-                m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
 
+                // Save the time when the client connected to the server.
+                m_connectTime = DateTime.UtcNow.Ticks;
+
+                // Signal any waiting threads about successful connection.
                 if (m_connectHandle != null)
-                    m_connectHandle.Set();              // Signal any waiting threads about successful connection.
+                    m_connectHandle.Set();
 
                 if (ConnectionEstablished != null)
                     ConnectionEstablished(this, EventArgs.Empty);
@@ -863,7 +864,9 @@ namespace GSF.Communication
             try
             {
                 m_currentState = ClientState.Disconnected;
-                m_disconnectTime = DateTime.Now.Ticks;  // Save the time when client was disconnected from the server.
+
+                // Save the time when client was disconnected from the server.
+                m_disconnectTime = DateTime.UtcNow.Ticks;
 
                 if (ConnectionTerminated != null)
                     ConnectionTerminated(this, EventArgs.Empty);
@@ -1063,10 +1066,12 @@ namespace GSF.Communication
             if (m_currentState == ClientState.Connected)
             {
                 Disconnect();
+
                 while (m_currentState != ClientState.Disconnected)
                 {
                     Thread.Sleep(100);
                 }
+
                 Connect();
             }
         }
@@ -1086,7 +1091,7 @@ namespace GSF.Communication
         public static IClient Create(string connectionString)
         {
             Dictionary<string, string> connectionSettings = connectionString.ParseKeyValuePairs();
-            IClient client = null;
+            IClient client;
             string protocol;
 
             if (connectionSettings.TryGetValue("protocol", out protocol))

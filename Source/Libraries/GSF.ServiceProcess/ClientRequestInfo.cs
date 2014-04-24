@@ -47,7 +47,7 @@ namespace GSF.ServiceProcess
         {
             Request = request;
             Sender = sender;
-            ReceivedAt = DateTime.Now;
+            ReceivedAt = DateTime.UtcNow;
         }
 
         #endregion
@@ -57,17 +57,29 @@ namespace GSF.ServiceProcess
         /// <summary>
         /// Gets or sets the <see cref="ClientInfo"/> object of the <see cref="Request"/> sender.
         /// </summary>
-        public ClientInfo Sender { get; set; }
+        public ClientInfo Sender
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="ClientRequest"/> object sent by the <see cref="Sender"/>.
         /// </summary>
-        public ClientRequest Request { get; set; }
+        public ClientRequest Request
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="DateTime"/> when the <see cref="Request"/> was received from the <see cref="Sender"/>.
         /// </summary>
-        public DateTime ReceivedAt { get; set; }
+        public DateTime ReceivedAt
+        {
+            get;
+            set;
+        }
 
         #endregion
     }

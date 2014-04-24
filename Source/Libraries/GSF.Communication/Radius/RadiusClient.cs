@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  12/13/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  04/24/2014 - J. Ritchie Carroll
+//       Code clean-up.
 //
 //******************************************************************************************************
 
@@ -136,6 +138,7 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (!string.IsNullOrEmpty(value))
                 {
                     Dictionary<string, string> parts = m_udpClient.ConnectionString.ParseKeyValuePairs();
@@ -144,7 +147,7 @@ namespace GSF.Communication.Radius
                 }
                 else
                 {
-                    throw (new ArgumentNullException("ServerName"));
+                    throw new ArgumentNullException("value");
                 }
             }
         }
@@ -163,6 +166,7 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (value >= 0 && value <= 65535)
                 {
                     Dictionary<string, string> parts = m_udpClient.ConnectionString.ParseKeyValuePairs();
@@ -171,7 +175,7 @@ namespace GSF.Communication.Radius
                 }
                 else
                 {
-                    throw new ArgumentOutOfRangeException("ServerPort", "Value must be between 0 and 65535.");
+                    throw new ArgumentOutOfRangeException("value", "Value must be between 0 and 65535.");
                 }
             }
         }
@@ -190,14 +194,11 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (value >= 1 && value <= 10)
-                {
                     m_requestAttempts = value;
-                }
                 else
-                {
-                    throw new ArgumentOutOfRangeException("RequestAttempts", "Value must be between 1 and 10.");
-                }
+                    throw new ArgumentOutOfRangeException("value", "Value must be between 1 and 10.");
             }
         }
 
@@ -215,14 +216,11 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (value >= 1000 && value <= 60000)
-                {
                     m_reponseTimeout = value;
-                }
                 else
-                {
-                    throw new ArgumentOutOfRangeException("ResponseTimeout", "Value must be between 1000 and 60000.");
-                }
+                    throw new ArgumentOutOfRangeException("value", "Value must be between 1000 and 60000.");
             }
         }
 
@@ -240,14 +238,11 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (!string.IsNullOrEmpty(value))
-                {
                     m_sharedSecret = value;
-                }
                 else
-                {
-                    throw new ArgumentNullException("SharedSecret");
-                }
+                    throw new ArgumentNullException("value");
             }
         }
 
@@ -267,14 +262,11 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (!string.IsNullOrEmpty(value))
-                {
                     m_newPinModeMessage1 = value;
-                }
                 else
-                {
-                    throw new ArgumentNullException("NewPinModeMessage1");
-                }
+                    throw new ArgumentNullException("value");
             }
         }
 
@@ -294,14 +286,11 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (!string.IsNullOrEmpty(value))
-                {
                     m_newPinModeMessage2 = value;
-                }
                 else
-                {
-                    throw new ArgumentNullException("NewPinModeMessage2");
-                }
+                    throw new ArgumentNullException("value");
             }
         }
 
@@ -321,14 +310,11 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (!string.IsNullOrEmpty(value))
-                {
                     m_newPinModeMessage3 = value;
-                }
                 else
-                {
-                    throw new ArgumentNullException("NewPinModeMessage3");
-                }
+                    throw new ArgumentNullException("value");
             }
         }
 
@@ -347,14 +333,11 @@ namespace GSF.Communication.Radius
             set
             {
                 CheckDisposed();
+
                 if (!string.IsNullOrEmpty(value))
-                {
                     m_nextTokenModeMessage = value;
-                }
                 else
-                {
-                    throw new ArgumentNullException("NextTokenModeMessage");
-                }
+                    throw new ArgumentNullException("value");
             }
         }
 
@@ -370,46 +353,45 @@ namespace GSF.Communication.Radius
         public RadiusPacket ProcessRequest(RadiusPacket request)
         {
             CheckDisposed();
-            RadiusPacket response = null;
+
             // We wait indefinitely for the connection to establish. But since this is UDP, the connection
             // will always be successful (locally we're binding to any available UDP port).
-            if (m_udpClient.CurrentState == ClientState.Connected)
+            if (m_udpClient.CurrentState != ClientState.Connected)
+                return null;
+
+            RadiusPacket response = null;
+
+            // We have a UDP socket we can use for exchanging packets.
+            DateTime stopTime;
+
+            for (int i = 1; i <= m_requestAttempts; i++)
             {
-                // We have a UDP socket we can use for exchanging packets.
-                DateTime stopTime;
-                for (int i = 1; i <= m_requestAttempts; i++)
+                m_responseBytes = null;
+                m_udpClient.Send(request.BinaryImage());
+
+                stopTime = DateTime.UtcNow.AddMilliseconds(m_reponseTimeout);
+
+                while (true)
                 {
-                    m_responseBytes = null;
-                    m_udpClient.Send(request.BinaryImage());
+                    Thread.Sleep(1);
 
-                    stopTime = DateTime.Now.AddMilliseconds(m_reponseTimeout);
-                    while (true)
-                    {
-                        Thread.Sleep(1);
-                        // Stay in the loop until:
-                        // 1) We receive a response OR
-                        // 2) We exceed the response timeout duration
-                        if ((m_responseBytes != null) || DateTime.Now > stopTime)
-                        {
-                            break;
-                        }
-                    }
+                    // Stay in the loop until:
+                    // 1) We receive a response OR
+                    // 2) We exceed the response timeout duration
+                    if ((object)m_responseBytes != null || DateTime.UtcNow > stopTime)
+                        break;
+                }
 
-                    if (m_responseBytes != null)
-                    {
-                        // The server sent a response.
-                        response = new RadiusPacket(m_responseBytes, 0, m_responseBytes.Length);
-                        if (response.Identifier == request.Identifier && response.Authenticator.CompareTo(RadiusPacket.CreateResponseAuthenticator(m_sharedSecret, request, response)) == 0)
-                        {
-                            // The response has passed the verification.
-                            break;
-                        }
-                        else
-                        {
-                            // The response failed the verification, so we'll silently discard it.
-                            response = null;
-                        }
-                    }
+                if ((object)m_responseBytes != null)
+                {
+                    // The server sent a response.
+                    response = new RadiusPacket(m_responseBytes, 0, m_responseBytes.Length);
+
+                    if (response.Identifier == request.Identifier && response.Authenticator.CompareTo(RadiusPacket.CreateResponseAuthenticator(m_sharedSecret, request, response)) == 0)
+                        break;
+
+                    // The response failed the verification, so we'll silently discard it.
+                    response = null;
                 }
             }
 
@@ -427,47 +409,36 @@ namespace GSF.Communication.Radius
         public bool CreateNewPin(string username, string token, string pin)
         {
             CheckDisposed();
-            if (!string.IsNullOrEmpty(pin))
-            {
-                byte[] reply;
-                RadiusPacket response;
 
-                // Step 1: Send username and token for password, receive a challenge response with reply
-                //         message worded "Enter a new PIN". [Verification]
-                // Step 2: Send username and new ping for password, receive a challenge response with reply
-                //         message worded "Please re-enter.  [Attempt #1]
-                // Step 3: Send username and new ping for password, receive a challenge response with reply
-                //         message worded "PIN Accepted".    [Attempt #2]
-
-                response = Authenticate(username, token);
-                if (IsUserInNewPinMode(response))
-                {
-                    // User account is really in "New Pin" mode.
-                    response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State));
-                    reply = response.GetAttributeValue(AttributeType.ReplyMessage);
-                    if (!RadiusPacket.Encoding.GetString(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage2.ToLower()))
-                    {
-                        return false; // New pin not accepted in attempt #1.
-                    }
-
-                    response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State));
-                    reply = response.GetAttributeValue(AttributeType.ReplyMessage);
-                    if (!RadiusPacket.Encoding.GetString(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage3.ToLower()))
-                    {
-                        return false; // New pin not accepted in attempt #2.
-                    }
-
-                    return true; // All is good - new pin is created for the user.
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
+            if (string.IsNullOrEmpty(pin))
                 throw new ArgumentNullException("pin");
-            }
+
+            byte[] reply;
+            RadiusPacket response;
+
+            // Step 1: Send username and token for password, receive a challenge response with reply
+            //         message worded "Enter a new PIN". [Verification]
+            // Step 2: Send username and new ping for password, receive a challenge response with reply
+            //         message worded "Please re-enter.  [Attempt #1]
+            // Step 3: Send username and new ping for password, receive a challenge response with reply
+            //         message worded "PIN Accepted".    [Attempt #2]
+
+            response = Authenticate(username, token);
+
+            if (!IsUserInNewPinMode(response))
+                return false;
+
+            // User account is really in "New Pin" mode.
+            response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State));
+            reply = response.GetAttributeValue(AttributeType.ReplyMessage);
+
+            if (!RadiusPacket.Encoding.GetString(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage2.ToLower()))
+                return false; // New pin not accepted in attempt #1.
+
+            response = Authenticate(username, pin, response.GetAttributeValue(AttributeType.State));
+            reply = response.GetAttributeValue(AttributeType.ReplyMessage);
+
+            return RadiusPacket.Encoding.GetString(reply, 0, reply.Length).ToLower().Contains(m_newPinModeMessage3.ToLower());
         }
 
         /// <summary>
@@ -525,26 +496,22 @@ namespace GSF.Communication.Radius
         public RadiusPacket Authenticate(string username, string password, byte[] state)
         {
             CheckDisposed();
-            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-            {
-                RadiusPacket request = new RadiusPacket(PacketType.AccessRequest);
-                byte[] authenticator = RadiusPacket.CreateRequestAuthenticator(m_sharedSecret);
 
-                request.Authenticator = authenticator;
-                request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserName, username));
-                request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserPassword, RadiusPacket.EncryptPassword(password, m_sharedSecret, authenticator)));
-                if (state != null)
-                {
-                    // State attribute is used when responding to a AccessChallenge response.
-                    request.Attributes.Add(new RadiusPacketAttribute(AttributeType.State, state));
-                }
-
-                return ProcessRequest(request);
-            }
-            else
-            {
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 throw new ArgumentException("Username and Password cannot be null.");
-            }
+
+            RadiusPacket request = new RadiusPacket(PacketType.AccessRequest);
+            byte[] authenticator = RadiusPacket.CreateRequestAuthenticator(m_sharedSecret);
+
+            request.Authenticator = authenticator;
+            request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserName, username));
+            request.Attributes.Add(new RadiusPacketAttribute(AttributeType.UserPassword, RadiusPacket.EncryptPassword(password, m_sharedSecret, authenticator)));
+
+            // State attribute is used when responding to a AccessChallenge response.
+            if ((object)state != null)
+                request.Attributes.Add(new RadiusPacketAttribute(AttributeType.State, state));
+
+            return ProcessRequest(request);
         }
 
         /// <summary>
@@ -560,33 +527,19 @@ namespace GSF.Communication.Radius
         {
             CheckDisposed();
 
-            if (response != null)
-            {
-                byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
-                if (messageBytes != null)
-                {
-                    // Unfortunately, the only way of determining whether or not a user account is in the
-                    // "New Pin" mode is from the text present in the ReplyMessage attribute of the
-                    // AccessChallenge response from server.
-                    string messageString = RadiusPacket.Encoding.GetString(messageBytes, 0, messageBytes.Length);
-                    if (messageString.ToLower().Contains(m_newPinModeMessage1.ToLower()))
-                    {
-                        return true; // User account is in "New Pin" mode.
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException("ReplyMessage attribute is not present", "response");
-                }
-            }
-            else
-            {
+            if ((object)response == null)
                 throw new ArgumentNullException("response");
-            }
+
+            byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
+
+            if ((object)messageBytes == null)
+                throw new ArgumentException("ReplyMessage attribute is not present", "response");
+
+            // Unfortunately, the only way of determining whether or not a user account is in the
+            // "New Pin" mode is from the text present in the ReplyMessage attribute of the
+            // AccessChallenge response from server.
+            string messageString = RadiusPacket.Encoding.GetString(messageBytes, 0, messageBytes.Length);
+            return messageString.ToLower().Contains(m_newPinModeMessage1.ToLower());
         }
 
         /// <summary>
@@ -605,33 +558,20 @@ namespace GSF.Communication.Radius
         public bool IsUserInNextTokenMode(RadiusPacket response)
         {
             CheckDisposed();
-            if (response != null)
-            {
-                byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
-                if (messageBytes != null)
-                {
-                    // Unfortunately, the only way of determining whether or not a user account is in the
-                    // "Next Token" mode is from the text present in the ReplyMessage attribute of the
-                    // AccessChallenge response from server.
-                    string messageString = RadiusPacket.Encoding.GetString(messageBytes, 0, messageBytes.Length);
-                    if (messageString.ToLower().Contains(m_nextTokenModeMessage.ToLower()))
-                    {
-                        return true; // User account is in "Next Token" mode.
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    throw new ArgumentException("ReplyMessage attribute is not present", "response");
-                }
-            }
-            else
-            {
+
+            if ((object)response == null)
                 throw new ArgumentNullException("response");
-            }
+
+            byte[] messageBytes = response.GetAttributeValue(AttributeType.ReplyMessage);
+
+            if ((object)messageBytes == null)
+                throw new ArgumentException("ReplyMessage attribute is not present", "response");
+
+            // Unfortunately, the only way of determining whether or not a user account is in the
+            // "Next Token" mode is from the text present in the ReplyMessage attribute of the
+            // AccessChallenge response from server.
+            string messageString = RadiusPacket.Encoding.GetString(messageBytes, 0, messageBytes.Length);
+            return messageString.ToLower().Contains(m_nextTokenModeMessage.ToLower());
         }
 
         /// <summary>
@@ -650,9 +590,7 @@ namespace GSF.Communication.Radius
         protected void CheckDisposed()
         {
             if (m_disposed)
-            {
-                throw (new ObjectDisposedException(this.GetType().Name));
-            }
+                throw new ObjectDisposedException(this.GetType().Name);
         }
 
         /// <summary>
@@ -664,7 +602,7 @@ namespace GSF.Communication.Radius
             {
                 if (disposing)
                 {
-                    if (m_udpClient != null)
+                    if ((object)m_udpClient != null)
                     {
                         m_udpClient.ReceiveDataComplete -= m_udpClient_ReceivedData;
                         m_udpClient.Dispose();

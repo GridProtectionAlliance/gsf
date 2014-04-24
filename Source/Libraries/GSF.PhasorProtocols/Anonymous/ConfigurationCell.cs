@@ -26,7 +26,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Linq;
 using System.Runtime.Serialization;
 using GSF.TimeSeries;
 
@@ -36,16 +35,9 @@ namespace GSF.PhasorProtocols.Anonymous
     /// Represents a protocol independent implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
     /// </summary>
     [Serializable]
-    public class ConfigurationCell : ConfigurationCellBase, IDevice, IDisposable
+    public class ConfigurationCell : ConfigurationCellBase, IDevice
     {
         #region [ Members ]
-
-        // Events
-
-        /// <summary>
-        /// Event is raised when <see cref="ConfigurationCell"/> is disposed.
-        /// </summary>
-        public event EventHandler Disposed;
 
         // Fields
         private DataFormat m_analogDataFormat;
@@ -54,7 +46,7 @@ namespace GSF.PhasorProtocols.Anonymous
         private CoordinateFormat m_phasorCoordinateFormat;
 
         // We add cached signal type and statistical tracking information to our protocol independent configuration cell
-        private string[][] m_generatedSignalReferenceCache;
+        private readonly string[][] m_generatedSignalReferenceCache;
         private Ticks m_lastReportTime;
         private long m_totalFrames;
         private long m_dataQualityErrors;
@@ -63,7 +55,6 @@ namespace GSF.PhasorProtocols.Anonymous
         private long m_measurementsReceived;
         private long m_measurementsExpected;
         private object m_source;
-        private bool m_disposed;
 
         #endregion
 
@@ -86,8 +77,8 @@ namespace GSF.PhasorProtocols.Anonymous
         public ConfigurationCell(ConfigurationFrame parent, ushort idCode)
             : base(parent, idCode, int.MaxValue, int.MaxValue, int.MaxValue)
         {
-            int maxIndex = (int)Enum.GetValues(typeof(SignalKind)).Cast<SignalKind>().Max();
-            m_generatedSignalReferenceCache = new string[maxIndex + 1][];
+            // Create a cached signal reference dictionary for generated signal references
+            m_generatedSignalReferenceCache = new string[Enum.GetValues(typeof(SignalKind)).Length][];
 
             m_analogDataFormat = DataFormat.FloatingPoint;
             m_frequencyDataFormat = DataFormat.FloatingPoint;
@@ -103,23 +94,15 @@ namespace GSF.PhasorProtocols.Anonymous
         protected ConfigurationCell(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            // Deserialize configuration cell
-            var maxIndex = (int)Enum.GetValues(typeof(SignalKind)).Cast<SignalKind>().Max();
-            m_generatedSignalReferenceCache = new string[maxIndex + 1][];
+            // Create a cached signal reference dictionary for generated signal references
+            m_generatedSignalReferenceCache = new string[Enum.GetValues(typeof(SignalKind)).Length][];
 
+            // Deserialize configuration cell
             m_lastReportTime = info.GetInt64("lastReportTime");
             m_analogDataFormat = (DataFormat)info.GetValue("analogDataFormat", typeof(DataFormat));
             m_frequencyDataFormat = (DataFormat)info.GetValue("frequencyDataFormat", typeof(DataFormat));
             m_phasorDataFormat = (DataFormat)info.GetValue("phasorDataFormat", typeof(DataFormat));
             m_phasorCoordinateFormat = (CoordinateFormat)info.GetValue("phasorCoordinateFormat", typeof(CoordinateFormat));
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the <see cref="ConfigurationCell"/> object is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~ConfigurationCell()
-        {
-            Dispose(false);
         }
 
         #endregion
@@ -311,40 +294,6 @@ namespace GSF.PhasorProtocols.Anonymous
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="ConfigurationCell"/> object.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="ConfigurationCell"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        m_generatedSignalReferenceCache = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-
-                    if (Disposed != null)
-                        Disposed(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        /// <summary>
         /// Get signal reference for specified <see cref="SignalKind"/>.
         /// </summary>
         /// <param name="type"><see cref="SignalKind"/> to request signal reference for.</param>
@@ -354,29 +303,24 @@ namespace GSF.PhasorProtocols.Anonymous
             // We cache non-indexed signal reference strings so they don't need to be generated at each mapping call.
             // This helps with performance since the mappings for each signal occur 30 times per second.
             string[] references;
+            int typeIndex = (int)type;
 
             // Look up synonym in dictionary based on signal type, if found return single element
-            if ((int)type >= 0 && (int)type < m_generatedSignalReferenceCache.Length)
-            {
-                references = m_generatedSignalReferenceCache[(int)type];
-                if (references != null)
-                    return references[0];
+            references = m_generatedSignalReferenceCache[typeIndex];
 
-
-                // Create a new signal reference array (for single element)
-                references = new string[1];
-
-                // Create and cache new non-indexed signal reference
-                references[0] = SignalReference.ToString(IDLabel, type);
-
-                // Cache generated signal synonym
-                m_generatedSignalReferenceCache[(int)type] = references;
-
+            if ((object)references != null)
                 return references[0];
-            }
 
-            //Signal Kind is not a valid enum. We can either throw an exception here, or allow a passthrough
-            return SignalReference.ToString(IDLabel, type);
+            // Create a new signal reference array (for single element)
+            references = new string[1];
+
+            // Create and cache new non-indexed signal reference
+            references[0] = SignalReference.ToString(IDLabel, type);
+
+            // Cache generated signal synonym
+            m_generatedSignalReferenceCache[typeIndex] = references;
+
+            return references[0];
         }
 
         /// <summary>
@@ -393,39 +337,34 @@ namespace GSF.PhasorProtocols.Anonymous
             // For speed purposes we intentionally do not validate that signalIndex falls within signalCount, be
             // sure calling procedures are very careful with parameters...
             string[] references;
+            int typeIndex = (int)type;
 
             // Look up synonym in dictionary based on signal type
-            if ((int)type >= 0 && (int)type < m_generatedSignalReferenceCache.Length)
+            references = m_generatedSignalReferenceCache[typeIndex];
+
+            if ((object)references != null)
             {
-                references = m_generatedSignalReferenceCache[(int)type];
-                if (references != null)
+                // Verify signal count has not changed (we may have received new configuration from device)
+                if (count == references.Length)
                 {
-                    // Verify signal count has not changed (we may have received new configuration from device)
-                    if (count == references.Length)
-                    {
-                        // Create and cache new signal reference if it doesn't exist
-                        if (references[index] == null)
-                            references[index] = SignalReference.ToString(IDLabel, type, index + 1);
+                    // Create and cache new signal reference if it doesn't exist
+                    if ((object)references[index] == null)
+                        references[index] = SignalReference.ToString(IDLabel, type, index + 1);
 
-                        return references[index];
-                    }
+                    return references[index];
                 }
-
-                // Create a new indexed signal reference array
-                references = new string[count];
-
-                // Create and cache new signal reference
-                references[index] = SignalReference.ToString(IDLabel, type, index + 1);
-
-                // Cache generated signal synonym array
-                m_generatedSignalReferenceCache[(int)type] = references;
-
-                return references[index];
             }
 
-            //Signal Kind is not a valid enum. We can either throw an exception here, or allow a passthrough
-            return SignalReference.ToString(IDLabel, type, index + 1);
+            // Create a new indexed signal reference array
+            references = new string[count];
 
+            // Create and cache new signal reference
+            references[index] = SignalReference.ToString(IDLabel, type, index + 1);
+
+            // Cache generated signal synonym array
+            m_generatedSignalReferenceCache[typeIndex] = references;
+
+            return references[index];
         }
 
         /// <summary>

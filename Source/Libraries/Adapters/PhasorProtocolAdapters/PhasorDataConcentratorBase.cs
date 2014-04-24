@@ -157,7 +157,6 @@ namespace PhasorProtocolAdapters
         private IConfigurationFrame m_configurationFrame;
         private ConfigurationFrame m_baseConfigurationFrame;
         private readonly ConcurrentDictionary<MeasurementKey, SignalReference[]> m_signalReferences;
-        private readonly ConcurrentDictionary<SignalKind, string[]> m_generatedSignalReferenceCache;
         private readonly ConcurrentDictionary<Guid, string> m_connectionIDCache;
         private Timer m_commandChannelRestartTimer;
         private readonly object m_reinitializationLock;
@@ -210,9 +209,6 @@ namespace PhasorProtocolAdapters
         {
             // Create a new signal reference dictionary indexed on measurement keys
             m_signalReferences = new ConcurrentDictionary<MeasurementKey, SignalReference[]>();
-
-            // Create a cached signal reference dictionary for generated signal references
-            m_generatedSignalReferenceCache = new ConcurrentDictionary<SignalKind, string[]>();
 
             // Create a new connection ID cache
             m_connectionIDCache = new ConcurrentDictionary<Guid, string>();
@@ -966,7 +962,7 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Manually stops the real-time data stream.", "Administrator", "Editor")]
         public virtual void StopDataChannel()
         {
-            // Undefine publication channel. This effectively haults socket based data publication.
+            // Undefine publication channel. This effectively halts socket based data publication.
             m_publishChannel = null;
         }
 
@@ -1899,72 +1895,6 @@ namespace PhasorProtocolAdapters
                 // Process exception for logging
                 OnProcessException(new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
             }
-        }
-
-        /// <summary>
-        /// Get signal reference for specified <see cref="SignalKind"/>.
-        /// </summary>
-        /// <param name="type"><see cref="SignalKind"/> to request signal reference for.</param>
-        /// <returns>Signal reference of given <see cref="SignalKind"/>.</returns>
-        public string GetSignalReference(SignalKind type)
-        {
-            // We cache non-indexed signal reference strings so they don't need to be generated at each mapping call.
-            string[] references;
-
-            // Look up synonym in dictionary based on signal type, if found return single element
-            if (m_generatedSignalReferenceCache.TryGetValue(type, out references))
-                return references[0];
-
-            // Create a new signal reference array (for single element)
-            references = new string[1];
-
-            // Create and cache new non-indexed signal reference
-            references[0] = SignalReference.ToString(Name + "!OS", type);
-
-            // Cache generated signal synonym
-            m_generatedSignalReferenceCache.TryAdd(type, references);
-
-            return references[0];
-        }
-
-        /// <summary>
-        /// Get signal reference for specified <see cref="SignalKind"/> and <paramref name="index"/>.
-        /// </summary>
-        /// <param name="type"><see cref="SignalKind"/> to request signal reference for.</param>
-        /// <param name="index">Index <see cref="SignalKind"/> to request signal reference for.</param>
-        /// <param name="count">Number of signals defined for this <see cref="SignalKind"/>.</param>
-        /// <returns>Signal reference of given <see cref="SignalKind"/> and <paramref name="index"/>.</returns>
-        public string GetSignalReference(SignalKind type, int index, int count)
-        {
-            // We cache indexed signal reference strings so they don't need to be generated at each mapping call.
-            // For speed purposes we intentionally do not validate that signalIndex falls within signalCount, be
-            // sure calling procedures are very careful with parameters...
-            string[] references;
-
-            // Look up synonym in dictionary based on signal type
-            if (m_generatedSignalReferenceCache.TryGetValue(type, out references))
-            {
-                // Verify signal count has not changed (we may have received new configuration from device)
-                if (count == references.Length)
-                {
-                    // Create and cache new signal reference if it doesn't exist
-                    if ((object)references[index] == null)
-                        references[index] = SignalReference.ToString(Name + "!OS", type, index + 1);
-
-                    return references[index];
-                }
-            }
-
-            // Create a new indexed signal reference array
-            references = new string[count];
-
-            // Create and cache new signal reference
-            references[index] = SignalReference.ToString(Name + "!OS", type, index + 1);
-
-            // Cache generated signal synonym array
-            m_generatedSignalReferenceCache.TryAdd(type, references);
-
-            return references[index];
         }
 
         /// <summary>

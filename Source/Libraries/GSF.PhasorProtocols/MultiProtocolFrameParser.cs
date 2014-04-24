@@ -3449,10 +3449,10 @@ namespace GSF.PhasorProtocols
             if ((object)ParsingException != null && !(ex is ThreadAbortException) && !(ex is ObjectDisposedException))
                 ParsingException(this, new EventArgs<Exception>(ex));
 
-            if (DateTime.Now.Ticks - m_lastParsingExceptionTime > m_parsingExceptionWindow)
+            if (DateTime.UtcNow.Ticks - m_lastParsingExceptionTime > m_parsingExceptionWindow)
             {
                 // Exception window has passed since last exception, so we reset counters
-                m_lastParsingExceptionTime = DateTime.Now.Ticks;
+                m_lastParsingExceptionTime = DateTime.UtcNow.Ticks;
                 m_parsingExceptionCount = 0;
             }
 
@@ -3650,7 +3650,7 @@ namespace GSF.PhasorProtocols
         // Calculate frame and data rates
         private void m_rateCalcTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            double time = Ticks.ToSeconds(DateTime.Now.Ticks - m_dataStreamStartTime);
+            double time = Ticks.ToSeconds(DateTime.UtcNow.Ticks - m_dataStreamStartTime);
 
             m_calculatedFrameRate = (double)m_frameRateTotal / time;
             m_calculatedByteRate = (double)m_byteRateTotal / time;
@@ -3673,7 +3673,7 @@ namespace GSF.PhasorProtocols
 
             m_frameRateTotal = 0;
             m_byteRateTotal = 0;
-            m_dataStreamStartTime = DateTime.Now.Ticks;
+            m_dataStreamStartTime = DateTime.UtcNow.Ticks;
         }
 
         // Handles needed start-up actions once a client is connected

@@ -331,18 +331,15 @@ namespace GSF.Historian.Exporters
         /// <returns><see cref="Boolean"/> indicating whether it is time to process the <see cref="Export"/>.</returns>
         public bool ShouldProcess()
         {
-            DateTime currentTime = DateTime.Now;
-            if (m_type == ExportType.Intervaled &&
-                m_interval > 0 &&
-                currentTime.Subtract(m_lastProcessTimestamp).TotalSeconds >= m_interval)
+            DateTime currentTime = DateTime.UtcNow;
+
+            if (m_type == ExportType.Intervaled && m_interval > 0 && currentTime.Subtract(m_lastProcessTimestamp).TotalSeconds >= m_interval)
             {
                 m_lastProcessTimestamp = currentTime;
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         /// <summary>
@@ -353,11 +350,12 @@ namespace GSF.Historian.Exporters
         public override bool Equals(object obj)
         {
             Export other = obj as Export;
+
             if (other == null)
                 return false;
-            else
-                // We'll compare name since *Name* is considered as the "ID" for *Export*.
-                return (string.Compare(m_name, other.Name, true) == 0);
+
+            // We'll compare name since *Name* is considered as the "ID" for *Export*.
+            return (string.Compare(m_name, other.Name, true) == 0);
         }
 
         /// <summary>
