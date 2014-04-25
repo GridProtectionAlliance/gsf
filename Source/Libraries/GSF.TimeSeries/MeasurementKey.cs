@@ -302,32 +302,24 @@ namespace GSF.TimeSeries
             {
                 // Create a new measurement key and add it to the KeyCache
                 ConcurrentDictionary<uint, MeasurementKey> idLookup = KeyCache.GetOrAdd(source, s => new ConcurrentDictionary<uint, MeasurementKey>());
-
-                return idLookup.AddOrUpdate(id,
-                    i => new MeasurementKey(guid, i, source),
-                    (i, key) => new MeasurementKey(guid, i, source));
+                return idLookup[id] = new MeasurementKey(guid, id, source);
             };
 
             updateValueFactory = (guid, key) =>
             {
                 ConcurrentDictionary<uint, MeasurementKey> idLookup;
-                MeasurementKey k;
 
                 // If existing measurement key is exactly the same as the
                 // one we are trying to create, simply return that key
                 if (key.ID == id && key.Source == source)
                     return key;
 
-                // Source and/or ID changed, so we need to remove it from its current location in the KeyCache
-                idLookup = KeyCache.GetOrAdd(key.Source, s => new ConcurrentDictionary<uint, MeasurementKey>());
-                idLookup.TryRemove(key.ID, out k);
-
-                // Now update source and ID and put it back into the KeyCache
+                // Update source and ID and re-insert it into the KeyCache
                 key.m_source = source;
                 key.m_id = id;
 
                 idLookup = KeyCache.GetOrAdd(source, s => new ConcurrentDictionary<uint, MeasurementKey>());
-                idLookup.TryAdd(id, key);
+                idLookup[id] = key;
 
                 return key;
             };
