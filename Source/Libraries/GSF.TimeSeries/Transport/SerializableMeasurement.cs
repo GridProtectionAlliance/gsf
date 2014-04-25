@@ -152,7 +152,7 @@ namespace GSF.TimeSeries.Transport
             index += 16;
 
             // Apply parsed key changes
-            Key = new MeasurementKey(ID, keyID, keySource);
+            Key = MeasurementKey.LookUpOrCreate(ID, keySource, keyID);
 
             // Decode tag name string length
             size = EndianOrder.BigEndian.ToInt32(buffer, index);

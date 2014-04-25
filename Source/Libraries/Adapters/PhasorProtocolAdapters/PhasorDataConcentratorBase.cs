@@ -1308,7 +1308,7 @@ namespace PhasorProtocolAdapters
                         // Define measurement key
                         if (!string.IsNullOrEmpty(historian))
                         {
-                            measurementKey = new MeasurementKey(Guid.Empty, uint.Parse(pointID), historian);
+                            measurementKey = MeasurementKey.LookUpOrCreate(historian, uint.Parse(pointID));
                         }
                         else
                         {
@@ -1332,7 +1332,7 @@ namespace PhasorProtocolAdapters
                             if ((object)activeMeasurementSignalID == null && (object)activeMeasurementID == null)
                                 throw new Exception(string.Format("Cannot find measurement key for measurement with pointID {0}", pointID));
 
-                            measurementKey = MeasurementKey.Parse(activeMeasurementID.ToString(), Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()));
+                            measurementKey = MeasurementKey.LookUpOrCreate(Guid.Parse(activeMeasurementRows[0]["SignalID"].ToString()), activeMeasurementID.ToString());
                         }
 
                         // It is possible, but not as common, that a single measurement will have multiple destinations

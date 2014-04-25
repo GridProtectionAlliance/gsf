@@ -513,10 +513,10 @@ namespace AdoAdapters
                                                     DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("SignalID = '{0}'", id));
 
                                                     if (filteredRows.Length > 0)
-                                                        MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
+                                                        key = MeasurementKey.LookUpOrCreate(id, filteredRows[0]["ID"].ToString());
                                                 }
 
-                                                if (key != default(MeasurementKey))
+                                                if (key != MeasurementKey.Undefined)
                                                 {
                                                     // Cache measurement key associated with ID
                                                     lookupCache[id] = key;
@@ -531,32 +531,17 @@ namespace AdoAdapters
                                         }
                                         break;
                                     case "Key":
-                                        if (MeasurementKey.TryParse(value.ToString(), Guid.Empty, out key))
+                                        if (MeasurementKey.TryParse(value.ToString(), out key))
                                         {
-                                            // Attempt to update empty signal ID if available
-                                            if (key.SignalID == Guid.Empty)
+                                            measurement.ID = key.SignalID;
+
+                                            if (!lookupCache.ContainsKey(measurement.ID))
                                             {
-                                                if (DataSource.Tables.Contains(MeasurementTable))
-                                                {
-                                                    DataRow[] filteredRows = DataSource.Tables[MeasurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
+                                                // Cache measurement key associated with ID
+                                                lookupCache[measurement.ID] = key;
 
-                                                    if (filteredRows.Length > 0)
-                                                        key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                                                }
-                                            }
-
-                                            if (key.SignalID != Guid.Empty)
-                                            {
-                                                measurement.ID = key.SignalID;
-
-                                                if (!lookupCache.ContainsKey(measurement.ID))
-                                                {
-                                                    // Cache measurement key associated with ID
-                                                    lookupCache[measurement.ID] = key;
-
-                                                    // Assign a runtime index optimization for distinct measurements
-                                                    signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.ID));
-                                                }
+                                                // Assign a runtime index optimization for distinct measurements
+                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.ID));
                                             }
 
                                             measurement.Key = key;

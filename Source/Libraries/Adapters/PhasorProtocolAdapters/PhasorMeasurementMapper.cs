@@ -1321,7 +1321,7 @@ namespace PhasorProtocolAdapters
                         definedMeasurement = new Measurement
                         {
                             ID = signalID,
-                            Key = MeasurementKey.Parse(row["ID"].ToString(), signalID),
+                            Key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString()),
                             TagName = signalReference,
                             Adder = double.Parse(row["Adder"].ToNonNullString("0.0")),
                             Multiplier = double.Parse(row["Multiplier"].ToNonNullString("1.0"))

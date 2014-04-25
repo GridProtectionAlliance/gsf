@@ -292,15 +292,17 @@ namespace HistorianAdapters
             try
             {
                 List<IMeasurement> measurements = new List<IMeasurement>();
+
                 foreach (IDataPoint dataPoint in e.Argument)
                 {
                     measurements.Add(new Measurement
-                        {
-                            Key = new MeasurementKey(Guid.Empty, (uint)dataPoint.HistorianID, m_historianDataListener.ID),
-                            Value = dataPoint.Value,
-                            Timestamp = dataPoint.Time
-                        });
+                    {
+                        Key = MeasurementKey.LookUpOrCreate(m_historianDataListener.ID, (uint)dataPoint.HistorianID),
+                        Value = dataPoint.Value,
+                        Timestamp = dataPoint.Time
+                    });
                 }
+
                 OnNewMeasurements(measurements);
             }
             catch (Exception ex)

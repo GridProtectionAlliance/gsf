@@ -33,7 +33,6 @@ namespace MongoAdapters
     /// </summary>
     public class MeasurementWrapper
     {
-
         #region [ Constructors ]
 
         /// <summary>
@@ -147,17 +146,17 @@ namespace MongoAdapters
         /// <returns>The wrapped measurement.</returns>
         public IMeasurement GetMeasurement()
         {
-            Guid signalID = Guid.Parse(this.SignalID);
+            Guid signalID = Guid.Parse(SignalID);
 
-            IMeasurement measurement = new Measurement
-                {
-                Adder = this.Adder,
+            IMeasurement measurement = new Measurement()
+            {
+                Adder = Adder,
                 ID = signalID,
-                Key = new MeasurementKey(signalID, unchecked((uint)this.ID), this.Source),
-                Multiplier = this.Multiplier,
-                TagName = this.TagName,
-                Timestamp = this.Timestamp,
-                Value = this.Value
+                Key = MeasurementKey.LookUpOrCreate(signalID, Source, unchecked((uint)ID)),
+                Multiplier = Multiplier,
+                TagName = TagName,
+                Timestamp = Timestamp,
+                Value = Value
             };
 
             return measurement;

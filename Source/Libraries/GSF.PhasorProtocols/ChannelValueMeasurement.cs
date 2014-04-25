@@ -73,7 +73,7 @@ namespace GSF.PhasorProtocols
         {
             m_parent = parent;
             m_valueIndex = valueIndex;
-            m_key = Common.UndefinedKey;
+            m_key = MeasurementKey.Undefined;
             m_timestamp = -1;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_multiplier = 1.0D;

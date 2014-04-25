@@ -365,16 +365,13 @@ namespace DynamicCalculator
         // may be either a signal ID or measurement key.
         private MeasurementKey GetKey(string token)
         {
-            MeasurementKey undefined;
-            Guid signalId;
-
+            Guid signalID;
             MeasurementKey key;
 
-            if (Guid.TryParse(token, out signalId))
+            if (Guid.TryParse(token, out signalID))
             {
                 // Defined using the measurement's GUID
-                undefined = MeasurementKey.Undefined;
-                key = new MeasurementKey(signalId, undefined.ID, undefined.Source);
+                key = MeasurementKey.LookUpBySignalID(signalID);
             }
             else
             {

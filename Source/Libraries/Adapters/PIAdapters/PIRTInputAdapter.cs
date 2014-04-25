@@ -312,7 +312,7 @@ namespace PIAdapters
                 {
                     var measurement = new Measurement();
                     measurement.ID = new Guid(row["SIGNALID"].ToString());
-                    measurement.Key = new MeasurementKey(measurement.ID, uint.Parse(row["ID"].ToString().Split(':')[1]), row["ID"].ToString().Split(':')[0]);
+                    measurement.Key = MeasurementKey.LookUpOrCreate(measurement.ID, row["ID"].ToString());
                     outputMeasurements.Add(measurement);
                 }
 

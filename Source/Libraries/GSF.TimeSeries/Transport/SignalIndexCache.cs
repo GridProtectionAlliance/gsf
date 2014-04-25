@@ -100,7 +100,7 @@ namespace GSF.TimeSeries.Transport
                     if (filteredRows.Length > 0)
                     {
                         DataRow row = filteredRows[0];
-                        MeasurementKey key = MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), signalID);
+                        MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()));
                         m_reference.TryAdd(signalIndex.Key, new Tuple<Guid, string, uint>(signalID, key.Source, key.ID));
                     }
                 }

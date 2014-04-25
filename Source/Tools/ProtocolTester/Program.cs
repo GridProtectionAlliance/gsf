@@ -288,26 +288,22 @@ namespace ProtocolTester
             IMeasurement definedMeasurement = m_definedMeasurements.GetOrAdd(signalReference, signal =>
             {
                 Guid id = Guid.NewGuid();
+
                 return new Measurement
-                    {
-                        Key = new MeasurementKey(id, ++measurementID, signal),
-                        ID = id
-                    };
+                {
+                    Key = MeasurementKey.LookUpOrCreate(id, signal, ++measurementID),
+                    ID = id
+                };
             });
 
-            // Lookup signal reference in defined measurement list
-            if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
-            {
-                // Assign ID and other relevant attributes to the parsed measurement value
-                parsedMeasurement.ID = definedMeasurement.ID;
-                parsedMeasurement.Key = definedMeasurement.Key;
-                parsedMeasurement.Adder = definedMeasurement.Adder;              // Allows for run-time additive measurement value adjustments
-                parsedMeasurement.Multiplier = definedMeasurement.Multiplier;    // Allows for run-time mulplicative measurement value adjustments
+            // Assign ID and other relevant attributes to the parsed measurement value
+            parsedMeasurement.ID = definedMeasurement.ID;
+            parsedMeasurement.Key = definedMeasurement.Key;
+            parsedMeasurement.Adder = definedMeasurement.Adder;              // Allows for run-time additive measurement value adjustments
+            parsedMeasurement.Multiplier = definedMeasurement.Multiplier;    // Allows for run-time mulplicative measurement value adjustments
 
-                // Add the updated measurement value to the destination measurement collection
-                mappedMeasurements.Add(parsedMeasurement);
-            }
+            // Add the updated measurement value to the destination measurement collection
+            mappedMeasurements.Add(parsedMeasurement);
         }
-
     }
 }

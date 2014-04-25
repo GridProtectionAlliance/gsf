@@ -516,7 +516,7 @@ namespace HistorianAdapters
                     do
                     {
                         // Lookup measurement key for this point
-                        key = new MeasurementKey(Guid.Empty, unchecked((uint)currentPoint.HistorianID), m_instanceName);
+                        key = MeasurementKey.LookUpOrCreate(m_instanceName, unchecked((uint)currentPoint.HistorianID));
 
                         // Add current measurement to the collection for publication
                         measurements.Add(new Measurement

@@ -441,9 +441,9 @@ namespace CsvAdapters
                         if (Guid.TryParse(measurementID, out id))
                         {
                             measurement.ID = id;
-                            measurement.Key = MeasurementKey.LookupBySignalID(id);
+                            measurement.Key = MeasurementKey.LookUpBySignalID(id);
                         }
-                        else if (MeasurementKey.TryParse(measurementID, Guid.Empty, out key))
+                        else if (MeasurementKey.TryParse(measurementID, out key))
                         {
                             measurement.Key = key;
                             measurement.ID = key.SignalID;
@@ -653,10 +653,19 @@ namespace CsvAdapters
                         measurement = new Measurement();
 
                         if (m_columns.ContainsKey("Signal ID"))
+                        {
                             measurement.ID = new Guid(fields[m_columns["Signal ID"]]);
 
-                        if (m_columns.ContainsKey("Measurement Key"))
-                            measurement.Key = MeasurementKey.Parse(fields[m_columns["Measurement Key"]], measurement.ID);
+                            if (m_columns.ContainsKey("Measurement Key"))
+                                measurement.Key = MeasurementKey.LookUpOrCreate(measurement.ID, fields[m_columns["Measurement Key"]]);
+                            else
+                                measurement.Key = MeasurementKey.LookUpBySignalID(measurement.ID);
+                        }
+                        else if (m_columns.ContainsKey("Measurement Key"))
+                        {
+                            measurement.Key = MeasurementKey.Parse(fields[m_columns["Measurement Key"]]);
+                            measurement.ID = measurement.Key.SignalID;
+                        }
 
                         if (m_simulateTimestamp)
                             measurement.Timestamp = currentTime;

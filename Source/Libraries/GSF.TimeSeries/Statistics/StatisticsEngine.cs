@@ -454,7 +454,7 @@ namespace GSF.TimeSeries.Statistics
                     return new Measurement
                     {
                         ID = signalID,
-                        Key = MeasurementKey.Parse(measurement["ID"].ToString(), signalID),
+                        Key = MeasurementKey.LookUpOrCreate(signalID, measurement["ID"].ToString()),
                         TagName = measurement["PointTag"].ToNonNullString(),
                         Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),
                         Multiplier = double.Parse(measurement["Multiplier"].ToNonNullString("1.0")),

@@ -1043,8 +1043,8 @@ namespace PhasorProtocolAdapters
         [SuppressMessage("Microsoft.Usage", "CA1806")]
         private static void EstablishDefaultMeasurementKeyCache(AdoDataConnection database, Action<string> statusMessage, Action<Exception> processException)
         {
+            MeasurementKey key;
             string keyID;
-            string[] elems;
 
             statusMessage("Establishing default measurement key cache...");
 
@@ -1056,11 +1056,8 @@ namespace PhasorProtocolAdapters
                 if (string.IsNullOrWhiteSpace(keyID))
                     continue;
 
-                elems = keyID.Split(':');
-
                 // Cache new measurement key with associated Guid signal ID
-                if (elems.Length == 2)
-                    new MeasurementKey(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), uint.Parse(elems[1].Trim()), elems[0].Trim());
+                MeasurementKey.TryCreateOrUpdate(measurement["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), keyID, out key);
             }
         }
 

@@ -1265,7 +1265,7 @@ namespace GSF.TimeSeries.Adapters
                         MeasurementKey[] sourceIDKeys = null;
 
                         if (filteredRows.Length > 0)
-                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
+                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()))).ToArray();
 
                         if (sourceIDKeys != null)
                         {
@@ -1323,7 +1323,7 @@ namespace GSF.TimeSeries.Adapters
                         MeasurementKey[] sourceIDKeys = null;
 
                         if (filteredRows.Length > 0)
-                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>())).ToArray();
+                            sourceIDKeys = filteredRows.Select(row => MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row["ID"].ToNonNullString(MeasurementKey.Undefined.ToString()))).ToArray();
 
                         if (sourceIDKeys != null)
                         {
@@ -1332,10 +1332,10 @@ namespace GSF.TimeSeries.Adapters
                             foreach (MeasurementKey key in sourceIDKeys)
                             {
                                 // Create a new measurement for the provided field level information
-                                Measurement measurement = new Measurement
-                                    {
-                                        Key = key
-                                    };
+                                Measurement measurement = new Measurement();
+
+                                measurement.ID = key.SignalID;
+                                measurement.Key = key;
 
                                 // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
                                 try
@@ -1348,13 +1348,7 @@ namespace GSF.TimeSeries.Adapters
                                         {
                                             DataRow row = filteredRows[0];
 
-                                            measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
                                             measurement.TagName = row["PointTag"].ToNonNullString();
-
-                                            // Attempt to update empty signal ID if available
-                                            if (measurement.Key.SignalID == Guid.Empty)
-                                                measurement.Key.UpdateSignalID(measurement.ID);
-
                                             measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
                                             measurement.Adder = double.Parse(row["Adder"].ToString());
                                         }
@@ -1363,7 +1357,6 @@ namespace GSF.TimeSeries.Adapters
                                 catch
                                 {
                                     // Errors here are not catastrophic, this simply limits the available meta-data
-                                    measurement.ID = Guid.Empty;
                                     measurement.TagName = string.Empty;
                                 }
 
@@ -1434,7 +1427,9 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
                 {
-                    if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
+                    key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row["ID"].ToString());
+
+                    if (key != MeasurementKey.Undefined)
                         keys.Add(key);
                 }
             }
@@ -1456,7 +1451,9 @@ namespace GSF.TimeSeries.Adapters
 
                             foreach (DataRow row in results.Rows)
                             {
-                                if (MeasurementKey.TryParse(row["ID"].ToString(), row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), out key))
+                                key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row["ID"].ToString());
+
+                                if (key != MeasurementKey.Undefined)
                                     keys.Add(key);
                             }
                         }
@@ -1479,35 +1476,24 @@ namespace GSF.TimeSeries.Adapters
                     if (string.IsNullOrWhiteSpace(item))
                         continue;
 
-                    if (MeasurementKey.TryParse(item, Guid.Empty, out key))
+                    if (MeasurementKey.TryParse(item, out key))
                     {
-                        // Attempt to update empty signal ID if available
-                        if (dataSourceAvailable && key.SignalID == Guid.Empty)
-                        {
-                            if (dataSource.Tables.Contains(measurementTable))
-                            {
-                                DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", key.ToString()));
-
-                                if (filteredRows.Length > 0)
-                                    key.SignalID = filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                            }
-                        }
-
                         keys.Add(key);
                     }
                     else if (Guid.TryParse(item, out id))
                     {
-                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                        key = MeasurementKey.LookUpBySignalID(id);
+
+                        if (key == MeasurementKey.Undefined && dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
                             DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
 
-                            if (filteredRows.Length > 0 && MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key))
-                                keys.Add(key);
+                            if (filteredRows.Length > 0)
+                                MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
                         }
-                        else
-                        {
-                            keys.Add(MeasurementKey.LookupBySignalID(id));
-                        }
+
+                        if (key != MeasurementKey.Undefined)
+                            keys.Add(key);
                     }
                     else
                     {
@@ -1518,15 +1504,15 @@ namespace GSF.TimeSeries.Adapters
 
                             if (filteredRows.Length > 0)
                             {
-                                key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
-                                keys.Add(key);
+                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
+
+                                if (key != MeasurementKey.Undefined)
+                                    keys.Add(key);
                             }
                         }
 
-                        if (key == default(MeasurementKey))
-                        {
+                        if (key == MeasurementKey.Undefined)
                             throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
-                        }
                     }
                 }
             }
@@ -1587,7 +1573,7 @@ namespace GSF.TimeSeries.Adapters
                     measurement = new Measurement
                     {
                         ID = id,
-                        Key = MeasurementKey.Parse(row["ID"].ToString(), id),
+                        Key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString()),
                         TagName = row["PointTag"].ToNonNullString(),
                         Adder = double.Parse(row["Adder"].ToString()),
                         Multiplier = double.Parse(row["Multiplier"].ToString())
@@ -1619,7 +1605,7 @@ namespace GSF.TimeSeries.Adapters
                                 measurement = new Measurement
                                 {
                                     ID = id,
-                                    Key = MeasurementKey.Parse(row["ID"].ToString(), id),
+                                    Key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString()),
                                     TagName = row["PointTag"].ToNonNullString(),
                                     Adder = double.Parse(row["Adder"].ToString()),
                                     Multiplier = double.Parse(row["Multiplier"].ToString())
@@ -1651,20 +1637,18 @@ namespace GSF.TimeSeries.Adapters
 
                     elem = item.Trim().Split(',');
 
-                    if (!MeasurementKey.TryParse(elem[0], Guid.Empty, out key))
+                    if (!MeasurementKey.TryParse(elem[0], out key))
                     {
                         if (Guid.TryParse(item, out id))
                         {
-                            if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                            key = MeasurementKey.LookUpBySignalID(id);
+
+                            if (key == MeasurementKey.Undefined && dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                             {
                                 DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("SignalID = '{0}'", id));
 
                                 if (filteredRows.Length > 0)
-                                    MeasurementKey.TryParse(filteredRows[0]["ID"].ToString(), id, out key);
-                            }
-                            else
-                            {
-                                key = MeasurementKey.LookupBySignalID(id);
+                                    MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
                             }
                         }
                         else
@@ -1675,15 +1659,11 @@ namespace GSF.TimeSeries.Adapters
                                 DataRow[] filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
 
                                 if (filteredRows.Length > 0)
-                                {
-                                    key = MeasurementKey.LookupBySignalID(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
-                                }
+                                    key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
                             }
 
-                            if (key == default(MeasurementKey))
-                            {
+                            if (key == MeasurementKey.Undefined)
                                 throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
-                            }
                         }
                     }
 
@@ -1728,12 +1708,7 @@ namespace GSF.TimeSeries.Adapters
                             {
                                 DataRow row = filteredRows[0];
 
-                                measurement.ID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
                                 measurement.TagName = row["PointTag"].ToNonNullString();
-
-                                // Attempt to update empty signal ID if available
-                                if (measurement.Key.SignalID == Guid.Empty)
-                                    measurement.Key.UpdateSignalID(measurement.ID);
 
                                 // Manually specified adder and multiplier take precedence, but if none were specified,
                                 // then those defined in the meta-data are used instead

@@ -114,8 +114,8 @@ namespace DataPublisherTest
                 for (int i = 1; i <= MeasurementCount; i++)
                 {
                     measurement = new Measurement
-                        {
-                        Key = new MeasurementKey(Guid.Empty, (uint)i, "DEVARCHIVE"),
+                    {
+                        Key = MeasurementKey.LookUpOrCreate("DEVARCHIVE", (uint)i),
                         Value = Random.Between(-65535.0D, 65536.0D),
                         Timestamp = DateTime.UtcNow.Ticks
                     };

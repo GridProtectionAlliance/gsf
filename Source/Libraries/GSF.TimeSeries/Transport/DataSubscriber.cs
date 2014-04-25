@@ -1431,7 +1431,6 @@ namespace GSF.TimeSeries.Transport
                     // Filter to points associated with this subscriber that have been requested for subscription, are enabled and not owned locally
                     DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select("Subscribed <> 0");
                     List<IMeasurement> subscribedMeasurements = new List<IMeasurement>();
-                    MeasurementKey key;
                     Guid signalID;
 
                     foreach (DataRow row in filteredRows)
@@ -1443,8 +1442,7 @@ namespace GSF.TimeSeries.Transport
                         signalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
 
                         // Set measurement key if defined
-                        if (MeasurementKey.TryParse(row["ID"].ToString(), signalID, out key))
-                            measurement.Key = key;
+                        measurement.Key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
 
                         // Assign other attributes
                         measurement.ID = signalID;
@@ -2728,7 +2726,7 @@ namespace GSF.TimeSeries.Transport
                                 bufferBlockMeasurement = new BufferBlockMeasurement(buffer, responseIndex + 6, responseLength - 6)
                                 {
                                     ID = measurementKey.Item1,
-                                    Key = new MeasurementKey(measurementKey.Item1, measurementKey.Item3, measurementKey.Item2)
+                                    Key = MeasurementKey.LookUpOrCreate(measurementKey.Item1, measurementKey.Item2, measurementKey.Item3)
                                 };
 
                                 // Determine if this is the next buffer block in the sequence
