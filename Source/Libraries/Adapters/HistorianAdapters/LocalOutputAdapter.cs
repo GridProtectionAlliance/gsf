@@ -67,8 +67,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
+using GSF.Historian;
 using GSF.Historian.DataServices;
 using GSF.Historian.Files;
 using GSF.Historian.MetadataProviders;
@@ -97,6 +99,8 @@ namespace HistorianAdapters
         private string m_archivePath;
         private long m_archivedMeasurements;
         private volatile int m_adapterLoadedCount;
+        private readonly Dictionary<int, ulong> m_outOfSequenceCounts;
+        private readonly ProcessQueue<IDataPoint> m_outOfSequenceQueue;
         private bool m_disposed;
 
         #endregion
@@ -114,6 +118,8 @@ namespace HistorianAdapters
             m_archive.StateFile = new StateFile();
             m_archive.IntercomFile = new IntercomFile();
             MetadataRefreshOperation.IsBackground = false;
+            m_outOfSequenceCounts = new Dictionary<int, ulong>();
+            m_outOfSequenceQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(HandleOutOfSequenceData);
         }
 
         #endregion
@@ -605,14 +611,35 @@ namespace HistorianAdapters
             OnProcessException(new InvalidOperationException(string.Format("Archive offload exception: {0}", e.Argument.Message), e.Argument));
         }
 
-        private void m_archive_FutureDataReceived(object sender, EventArgs<GSF.Historian.IDataPoint> e)
+        private void m_archive_FutureDataReceived(object sender, EventArgs<IDataPoint> e)
         {
             OnStatusMessage("Received data for point {0}:{1} with an unreasonable future timestamp. Data with a timestamp beyond {2:0.00} minutes of the local clock will not be archived. Check local system clock and data source clock for accuracy.", m_instanceName, e.Argument.HistorianID, m_archive.LeadTimeTolerance);
         }
 
-        private void m_archive_OutOfSequenceDataReceived(object sender, EventArgs<GSF.Historian.IDataPoint> e)
+        private void m_archive_OutOfSequenceDataReceived(object sender, EventArgs<IDataPoint> e)
         {
-            OnStatusMessage("Received out-of-sequence data for point {0}:{1}. Data not received in order will not be archived, per configuration.", m_instanceName, e.Argument.HistorianID);
+            // In case we are receiving many out-of-sequence points, we throttle user messages
+            if ((object)m_outOfSequenceQueue != null)
+                m_outOfSequenceQueue.Add(e.Argument);
+        }
+
+        private void HandleOutOfSequenceData(IDataPoint point)
+        {
+            if ((object)point == null)
+                return;
+
+            int id = point.HistorianID;
+            ulong total = m_outOfSequenceCounts.GetOrAdd(id, 0UL);
+
+            if (total % 100UL == 0UL)
+            {
+                if (total > 0UL)
+                    OnStatusMessage("Received {0} points of out-of-sequence data for {1}:{2}. Data received out of order will not be archived, per configuration.", total, m_instanceName, id);
+                else
+                    OnStatusMessage("Received out-of-sequence data for {0}:{1}. Data received out of order will not be archived, per configuration.", m_instanceName, id);
+            }
+
+            m_outOfSequenceCounts[id] = total + 1UL;
         }
 
         private void DataServices_AdapterCreated(object sender, EventArgs<IDataService> e)

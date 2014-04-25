@@ -447,10 +447,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="phasor">Information about <see cref="Phasor"/>.</param>
+        /// <param name="skipMeasurementUpdate">Skips associated measurement update if this is already being handled.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Phasor phasor)
+        public static string Save(AdoDataConnection database, Phasor phasor, bool skipMeasurementUpdate = false)
         {
-            return SaveAndReorder(database, phasor, phasor.SourceIndex);
+            return SaveAndReorder(database, phasor, phasor.SourceIndex, skipMeasurementUpdate);
         }
 
         /// <summary>
@@ -459,8 +460,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="phasor">Information about <see cref="Phasor"/>.</param>
         /// <param name="oldSourceIndex">The old source index of the phasor.</param>
+        /// <param name="skipMeasurementUpdate">Skips associated measurement update if this is already being handled.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string SaveAndReorder(AdoDataConnection database, Phasor phasor, int oldSourceIndex)
+        public static string SaveAndReorder(AdoDataConnection database, Phasor phasor, int oldSourceIndex, bool skipMeasurementUpdate = false)
         {
             bool createdConnection = false;
             string query;
@@ -507,18 +509,30 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     if ((object)measurement == null)
                     {
                         measurement = new Measurement();
+
+                        measurement.DeviceID = device.ID;
+                        measurement.HistorianID = device.HistorianID;
+                        measurement.PointTag = device.CompanyAcronym + "_" + device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex + ":" + device.VendorAcronym + signal.Abbreviation;
+                        measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
                         measurement.SignalTypeID = signal.ID;
-                        measurement.Enabled = true;
                         measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
+                        measurement.PhasorSourceIndex = addedPhasor.SourceIndex;
+                        measurement.Enabled = true;
+
+                        Measurement.Save(database, measurement);
                     }
+                    else if (!skipMeasurementUpdate || addedPhasor.SourceIndex != oldSourceIndex) //  || measurement.SignalTypeID != signal.ID
+                    {
+                        // Update existing record when needed or when phasor source index has changed
+                        measurement.HistorianID = device.HistorianID;
+                        measurement.PointTag = device.CompanyAcronym + "_" + device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex + ":" + device.VendorAcronym + signal.Abbreviation;
+                        measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
+                        measurement.SignalTypeID = signal.ID;
+                        measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
+                        measurement.PhasorSourceIndex = addedPhasor.SourceIndex;
 
-                    measurement.HistorianID = device.HistorianID;
-                    measurement.DeviceID = device.ID;
-                    measurement.PointTag = device.CompanyAcronym + "_" + device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex.ToString() + ":" + device.VendorAcronym + signal.Abbreviation;
-                    measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex.ToString();
-                    measurement.PhasorSourceIndex = addedPhasor.SourceIndex;
-
-                    Measurement.Save(database, measurement);
+                        Measurement.Save(database, measurement);
+                    }
                 }
 
                 return "Phasor information saved successfully";
@@ -594,13 +608,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataRow row = phasorTable.Rows[0];
                 Phasor phasor = new Phasor
                     {
-                    ID = row.ConvertField<int>("ID"),
-                    DeviceID = row.ConvertField<int>("DeviceID"),
-                    Label = row.Field<string>("Label"),
-                    Type = row.Field<string>("Type"),
-                    Phase = row.Field<string>("Phase"),
-                    SourceIndex = row.ConvertField<int>("SourceIndex")
-                };
+                        ID = row.ConvertField<int>("ID"),
+                        DeviceID = row.ConvertField<int>("DeviceID"),
+                        Label = row.Field<string>("Label"),
+                        Type = row.Field<string>("Type"),
+                        Phase = row.Field<string>("Phase"),
+                        SourceIndex = row.ConvertField<int>("SourceIndex")
+                    };
 
                 return phasor;
             }

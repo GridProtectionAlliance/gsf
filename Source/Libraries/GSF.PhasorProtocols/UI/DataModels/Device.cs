@@ -27,15 +27,15 @@
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL value and Guid parameter handling for Save() operation.
 //  05/12/2011 - Aniket Salver
-//                  Modified the way Guid is retrived from the Data Base.
+//       Modified the way Guid is retrieved from the Data Base.
 //  05/13/2011 - Mehulbhai P Thakkar
-//       Added regular expression validator for Acronym.
+//       Added regular expression validation for Acronym.
 //  05/21/2011 - Mehulbhai P Thakkar
 //       Modified Save method to create or update associated measurements.
 //  09/23/2011 - Mehulbhai P Thakkar
 //       Added static method to retrieve new devices for output stream.
 //  09/14/2012 - Aniket Salver 
-//          Added paging and sorting technique. 
+//       Added paging and sorting technique. 
 //******************************************************************************************************
 
 using System;
@@ -1266,7 +1266,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 object nodeID;
-                if (device.NodeID == null || device.NodeID == Guid.Empty)
+
+                if (device.NodeID == Guid.Empty)
                     nodeID = database.CurrentNodeID();
                 else
                     nodeID = database.Guid(device.NodeID);
@@ -1322,20 +1323,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 Device savedDevice = GetDevice(database, "WHERE Acronym = '" + device.Acronym.Replace(" ", "").ToUpper() + "'");
 
-                // If device is concentrator then we do not want to create default measurements for it. So exit function.                                
-                if (device.IsConcentrator)
-                {
-                    if (notifyService)
-                        NotifyService(savedDevice);
-
-                    return "Device information saved successfully";
-                }
-
-                if (savedDevice == null)
+                if ((object)savedDevice == null)
                     return "Device information saved successfully but failed to create measurements";
 
-                if (savedDevice.ProtocolCategory == "Phasor")   // Add default measurements only if device protocol category is Phasor.
+                // Determine if device is using a phasor protocol
+                bool deviceIsUsingPhasorProtocol = (string.Compare(savedDevice.ProtocolCategory, "Phasor", StringComparison.OrdinalIgnoreCase) == 0);
+
+                // Add default measurements for non-concentrator devices when device protocol category is Phasor 
+                if (!savedDevice.IsConcentrator && deviceIsUsingPhasorProtocol)
                 {
+                    // Setup and/or validate default signals associated with non-concentrator devices (e.g., directly connected PMUs or PMUs in a concentrator)
                     foreach (SignalType signal in SignalType.GetPmuSignalTypes())
                     {
                         Measurement measurement;
@@ -1344,66 +1341,64 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         {
                             for (int i = 1; i <= analogCount; i++)
                             {
-                                measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalReference = '" +
-                                    savedDevice.Acronym + "-AV" + i.ToString() + "'");
+                                measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalReference = '" + savedDevice.Acronym + "-AV" + i + "'");
 
                                 if ((object)measurement == null)
                                 {
                                     measurement = new Measurement();
-                                    measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + "A" + i.ToString();
-                                    measurement.Description = savedDevice.Name + " " + savedDevice.VendorDeviceName + " Analog Value " + i.ToString();
 
-                                    if (analogLabels != null && analogLabels[i - 1] != null)
+                                    measurement.DeviceID = savedDevice.ID;
+                                    measurement.HistorianID = savedDevice.HistorianID;
+                                    measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + "A" + i;
+                                    measurement.SignalReference = savedDevice.Acronym + "-AV" + i;
+                                    measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " Analog Value " + i;
+                                    measurement.SignalTypeID = signal.ID;
+                                    measurement.PhasorSourceIndex = (int?)null;
+                                    measurement.Enabled = true;
+
+                                    if ((object)analogLabels != null && (object)analogLabels[i - 1] != null)
                                         measurement.AlternateTag = analogLabels[i - 1];
+
+                                    Measurement.Save(database, measurement);
                                 }
-                                else
+                                else if (measurement.SignalTypeID != signal.ID)
                                 {
-                                    measurement.PointTag = measurement.PointTag.Replace(oldDevice.Acronym, savedDevice.Acronym);
-                                    measurement.AlternateTag = measurement.AlternateTag.ToNonNullString().Replace(oldDevice.Acronym, savedDevice.Acronym);
-                                    measurement.Description = Regex.Replace(measurement.Description, oldDevice.Name, savedDevice.Name, RegexOptions.IgnoreCase);
+                                    // Correct signal type if it has been changed
+                                    measurement.SignalTypeID = signal.ID;
+                                    Measurement.Save(database, measurement);
                                 }
-
-                                measurement.HistorianID = savedDevice.HistorianID;
-                                measurement.DeviceID = savedDevice.ID;
-                                measurement.SignalReference = savedDevice.Acronym + "-AV" + i.ToString();
-                                measurement.SignalTypeID = signal.ID;
-                                measurement.PhasorSourceIndex = (int?)null;
-                                measurement.Enabled = true;
-
-                                Measurement.Save(database, measurement);
                             }
                         }
                         else if (signal.Suffix == "DV" && digitalCount > 0)
                         {
                             for (int i = 1; i <= digitalCount; i++)
                             {
-                                measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalReference = '" +
-                                    savedDevice.Acronym + "-DV" + i.ToString() + "'");
+                                measurement = Measurement.GetMeasurement(database, "WHERE DeviceID = " + savedDevice.ID + " AND SignalReference = '" + savedDevice.Acronym + "-DV" + i + "'");
 
                                 if ((object)measurement == null)
                                 {
                                     measurement = new Measurement();
-                                    measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + "D" + i.ToString();
-                                    measurement.Description = savedDevice.Name + " " + savedDevice.VendorDeviceName + " Digital Value " + i.ToString();
 
-                                    if (digitalLabels != null && digitalLabels[i - 1] != null)
+                                    measurement.DeviceID = savedDevice.ID;
+                                    measurement.HistorianID = savedDevice.HistorianID;
+                                    measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + "D" + i;
+                                    measurement.SignalReference = savedDevice.Acronym + "-DV" + i;
+                                    measurement.SignalTypeID = signal.ID;
+                                    measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " Digital Value " + i;
+                                    measurement.PhasorSourceIndex = (int?)null;
+                                    measurement.Enabled = true;
+
+                                    if ((object)digitalLabels != null && (object)digitalLabels[i - 1] != null)
                                         measurement.AlternateTag = digitalLabels[i - 1];
+
+                                    Measurement.Save(database, measurement);
                                 }
-                                else
+                                else if (measurement.SignalTypeID != signal.ID)
                                 {
-                                    measurement.PointTag = measurement.PointTag.Replace(oldDevice.Acronym, savedDevice.Acronym);
-                                    measurement.AlternateTag = measurement.AlternateTag.ToNonNullString().Replace(oldDevice.Acronym, savedDevice.Acronym);
-                                    measurement.Description = Regex.Replace(measurement.Description, oldDevice.Name, savedDevice.Name, RegexOptions.IgnoreCase);
+                                    // Correct signal type if it has been changed
+                                    measurement.SignalTypeID = signal.ID;
+                                    Measurement.Save(database, measurement);
                                 }
-
-                                measurement.HistorianID = savedDevice.HistorianID;
-                                measurement.DeviceID = savedDevice.ID;
-                                measurement.SignalReference = savedDevice.Acronym + "-DV" + i.ToString();
-                                measurement.SignalTypeID = signal.ID;
-                                measurement.PhasorSourceIndex = (int?)null;
-                                measurement.Enabled = true;
-
-                                Measurement.Save(database, measurement);
                             }
                         }
                         else if (signal.Suffix == "FQ" || signal.Suffix == "DF" || signal.Suffix == "SF")
@@ -1413,59 +1408,94 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             if ((object)measurement == null)
                             {
                                 measurement = new Measurement();
+
+                                measurement.DeviceID = savedDevice.ID;
+                                measurement.HistorianID = savedDevice.HistorianID;
                                 measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + signal.Abbreviation;
-                                measurement.Description = savedDevice.Name + " " + savedDevice.VendorDeviceName + " " + signal.Name;
-                            }
-                            else
-                            {
-                                measurement.PointTag = measurement.PointTag.Replace(oldDevice.Acronym, savedDevice.Acronym);
-                                measurement.AlternateTag = measurement.AlternateTag.ToNonNullString().Replace(oldDevice.Acronym, savedDevice.Acronym);
-                                measurement.Description = Regex.Replace(measurement.Description, oldDevice.Name, savedDevice.Name, RegexOptions.IgnoreCase);
+                                measurement.SignalReference = savedDevice.Acronym + "-" + signal.Suffix;
+                                measurement.SignalTypeID = signal.ID;
+                                measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " " + signal.Name;
+                                measurement.PhasorSourceIndex = (int?)null;
+                                measurement.Enabled = true;
+
+                                Measurement.Save(database, measurement);
                             }
 
-                            measurement.HistorianID = savedDevice.HistorianID;
-                            measurement.DeviceID = savedDevice.ID;
-                            measurement.SignalReference = savedDevice.Acronym + "-" + signal.Suffix;
-                            measurement.SignalTypeID = signal.ID;
-                            measurement.PhasorSourceIndex = (int?)null;
-                            measurement.Enabled = true;
-
-                            Measurement.Save(database, measurement);
+                            // Based on query filter of SignalTypeSuffix, the following will never be true
+                            //else if (measurement.SignalTypeID != signal.ID)
+                            //{
+                            //    // Correct signal type if it has been changed
+                            //    measurement.SignalTypeID = signal.ID;
+                            //    Measurement.Save(database, measurement);
+                            //}
                         }
                     }
                 }
 
-                // For existing devices, just call Save on each phasors so that measurements related to those phasor will reflect changes made to device.
-                // Nothing will change in phasor itself.
                 if (device.ID > 0)
                 {
-                    IList<int> keys = Phasor.LoadKeys(database, device.ID);
-
-                    foreach (Phasor phasor in Phasor.Load(database, keys))
+                    if (!device.IsConcentrator)
                     {
-                        Phasor.Save(database, phasor);
+                        // For existing non-concentrator devices, call Save on each phasor so that measurements related to those phasors will reflect possible device changes.
+                        IList<int> keys = Phasor.LoadKeys(database, device.ID);
+
+                        foreach (Phasor phasor in Phasor.Load(database, keys))
+                        {
+                            Phasor.Save(database, phasor, true);
+                        }
                     }
 
-                    // Also update statistic measurements to reflect any changes in the acronym of the device.
-                    if (oldDevice != null && savedDevice.Acronym != oldDevice.Acronym)
+                    // Update existing device measurements to reflect possible device changes
+                    if ((object)oldDevice != null)
                     {
-                        foreach (Measurement measurement in Measurement.GetInputStatisticMeasurements(database, oldDevice.ID))
+                        bool companyUpdated = (deviceIsUsingPhasorProtocol && savedDevice.CompanyID != oldDevice.CompanyID);
+                        bool deviceRenamed = (deviceIsUsingPhasorProtocol && (string.CompareOrdinal(savedDevice.Acronym, oldDevice.Acronym) != 0 || string.CompareOrdinal(savedDevice.Name, oldDevice.Name) != 0));
+                        bool historianUpdated = (savedDevice.HistorianID != oldDevice.HistorianID);
+
+                        if (companyUpdated || deviceRenamed || historianUpdated)
                         {
-                            measurement.SignalReference = measurement.SignalReference.Replace(oldDevice.Acronym, savedDevice.Acronym);
-                            measurement.PointTag = measurement.PointTag.Replace(oldDevice.Acronym, savedDevice.Acronym);
-                            measurement.AlternateTag = measurement.AlternateTag.ToNonNullString().Replace(oldDevice.Acronym, savedDevice.Acronym);
-                            measurement.Description = Regex.Replace(measurement.Description, oldDevice.Name, savedDevice.Name, RegexOptions.IgnoreCase);
-                            Measurement.Save(database, measurement);
+                            string companyAcronym = "";
+                            int underScoreIndex;
+
+                            if (companyUpdated)
+                            {
+                                if (savedDevice.CompanyID.HasValue && !string.IsNullOrWhiteSpace(savedDevice.CompanyAcronym))
+                                    companyAcronym = savedDevice.CompanyAcronym;
+                            }
+
+                            foreach (Measurement measurement in Measurement.GetMeasurements(database, "WHERE DeviceID = " + oldDevice.ID))
+                            {
+                                if (companyUpdated)
+                                {
+                                    underScoreIndex = measurement.PointTag.ToNonNullString().IndexOf('_');
+
+                                    if (underScoreIndex > -1)
+                                        measurement.PointTag = companyAcronym + measurement.PointTag.Substring(underScoreIndex);
+                                }
+
+                                if (deviceRenamed)
+                                {
+                                    measurement.PointTag = measurement.PointTag.Replace(oldDevice.Acronym, savedDevice.Acronym);
+                                    measurement.SignalReference = measurement.SignalReference.Replace(oldDevice.Acronym, savedDevice.Acronym);
+                                    measurement.Description = Regex.Replace(measurement.Description.ToNonNullString(), oldDevice.Name, savedDevice.Name, RegexOptions.IgnoreCase);
+                                }
+
+                                if (historianUpdated && string.Compare(measurement.HistorianAcronym, "STAT", StringComparison.OrdinalIgnoreCase) != 0)
+                                    measurement.HistorianID = savedDevice.HistorianID;
+
+                                Measurement.Save(database, measurement);
+                            }
                         }
 
-                        // Also make sure if any digital or analogs are left out from update then update them now.
-                        foreach (Measurement measurement in Measurement.GetMeasurements(database, " WHERE SignalTypeSuffix IN ('DV', 'AV', 'CV')"))
+                        // If changing the historian for a concentrator style device - must assume desire to change historian for all children devices
+                        if (historianUpdated && device.IsConcentrator)
                         {
-                            measurement.SignalReference = measurement.SignalReference.Replace(oldDevice.Acronym, savedDevice.Acronym);
-                            measurement.PointTag = measurement.PointTag.Replace(oldDevice.Acronym, savedDevice.Acronym);
-                            measurement.AlternateTag = measurement.AlternateTag.ToNonNullString().Replace(oldDevice.Acronym, savedDevice.Acronym);
-                            measurement.Description = Regex.Replace(measurement.Description, oldDevice.Name, savedDevice.Name, RegexOptions.IgnoreCase);
-                            Measurement.Save(database, measurement);
+                            foreach (Device childDevice in GetDevices(database, "WHERE ParentID = " + device.ID))
+                            {
+                                // Recursively call this function for each child device with updated historian which will also fix measurement's historian
+                                childDevice.HistorianID = savedDevice.HistorianID;
+                                SaveWithAnalogsDigitals(database, childDevice, false, 0, 0);
+                            }
                         }
                     }
                 }
@@ -1523,7 +1553,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        /// Retrieve a <see cref="Device"/> infomration from the database based on query string filter.
+        /// Retrieve a <see cref="Device"/> information from the database based on query string filter.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="whereClause">query string to filter data.</param>
@@ -1608,7 +1638,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        /// Retrieves <see cref="ObservableCollection{T}"/> type list of <see cref="Device"/> infomration from the database based on query string filter.
+        /// Retrieves <see cref="ObservableCollection{T}"/> type list of <see cref="Device"/> information from the database based on query string filter.
         /// </summary>
         /// <param name="database"></param>
         /// <param name="whereClause"></param>
@@ -1717,9 +1747,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         private static string ParseConnectionString(string connectionString)
         {
-
-            Dictionary<string, string> settings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            settings = connectionString.ParseKeyValuePairs();
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             if (settings.ContainsKey("commandchannel"))
             {
@@ -1732,8 +1760,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         private static string ParseAlternateCommand(string connectionString)
         {
-            Dictionary<string, string> settings = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            settings = connectionString.ParseKeyValuePairs();
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
             if (settings.ContainsKey("commandchannel"))
                 return settings["commandchannel"].Replace("{", "").Replace("}", "");
@@ -1747,6 +1774,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 return string.Empty;
 
             string connectionString = device.ConnectionString;
+
             if (!string.IsNullOrEmpty(device.AlternateCommandChannel))
             {
                 if (!connectionString.EndsWith(";"))
@@ -1776,7 +1804,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 DataTable deviceTable;
                 string query;
 
-                // this check was added because oledb does not support parameterized subquery.
+                // Note that OleDB does not support parameterized sub-query.
                 if (database.DatabaseType == DatabaseType.Access)
                 {
                     query = database.ParameterizedQueryString("SELECT * FROM DeviceDetail WHERE NodeID = {0} AND IsConcentrator = {1} AND Acronym NOT IN "

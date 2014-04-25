@@ -83,11 +83,13 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         public Devices(int itemsPerPage, bool autoSave = true, Device device = null)
             : base(itemsPerPage, autoSave)
         {
-            if (device != null)     // i.e. user wants to edit existing device's configuration. So we will load that by default.
+            // When device is null, user wants to edit existing device's configuration. So we will load that by default.
+            if ((object)device != null)
             {
                 CurrentItem = device;
                 OnPropertyChanged("IsNewRecord");
                 OnPropertyChanged("CanGoToPhasorOrMeasurement");
+
                 if (device.IsConcentrator)
                     PdcDevices = Device.GetDevices(null, "WHERE ParentID = " + device.ID);
             }
@@ -104,7 +106,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_buildConnectionStringCommand == null)
+                if ((object)m_buildConnectionStringCommand == null)
                     m_buildConnectionStringCommand = new RelayCommand(BuildConnectionString);
 
                 return m_buildConnectionStringCommand;
@@ -118,7 +120,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_buildAlternateCommandChannelCommand == null)
+                if ((object)m_buildAlternateCommandChannelCommand == null)
                     m_buildAlternateCommandChannelCommand = new RelayCommand(BuildAlternateCommandChannel);
 
                 return m_buildAlternateCommandChannelCommand;
@@ -247,7 +249,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_editCommand == null)
+                if ((object)m_editCommand == null)
                     m_editCommand = new RelayCommand(GoToEdit);
 
                 return m_editCommand;
@@ -261,7 +263,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_copyCommand == null)
+                if ((object)m_copyCommand == null)
                     m_copyCommand = new RelayCommand(MakeCopy);
 
                 return m_copyCommand;
@@ -275,7 +277,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_updateConfigurationCommand == null)
+                if ((object)m_updateConfigurationCommand == null)
                     m_updateConfigurationCommand = new RelayCommand(UpdateConfiguration);
 
                 return m_updateConfigurationCommand;
@@ -289,7 +291,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_phasorCommand == null)
+                if ((object)m_phasorCommand == null)
                     m_phasorCommand = new RelayCommand(GoToPhasors, () => CanGoToPhasorOrMeasurement);
 
                 return m_phasorCommand;
@@ -314,7 +316,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_measurementCommand == null)
+                if ((object)m_measurementCommand == null)
                     m_measurementCommand = new RelayCommand(GoToMeasurements, () => CanGoToPhasorOrMeasurement);
 
                 return m_measurementCommand;
@@ -328,7 +330,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_initializeCommand == null)
+                if ((object)m_initializeCommand == null)
                     m_initializeCommand = new RelayCommand(InitializeDevice, () => CanSave);
 
                 return m_initializeCommand;
@@ -342,8 +344,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_searchCommand == null)
-                    m_searchCommand = new RelayCommand(Search, (param) => true);
+                if ((object)m_searchCommand == null)
+                    m_searchCommand = new RelayCommand(Search, param => true);
 
                 return m_searchCommand;
             }
@@ -356,7 +358,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_showAllCommand == null)
+                if ((object)m_showAllCommand == null)
                     m_showAllCommand = new RelayCommand(ShowAll);
 
                 return m_showAllCommand;
@@ -367,7 +369,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             get
             {
-                if (m_configureConcentratorCommand == null)
+                if ((object)m_configureConcentratorCommand == null)
                     m_configureConcentratorCommand = new RelayCommand(ConfigureConcentrator);
 
                 return m_configureConcentratorCommand;
@@ -479,7 +481,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         public override void Load()
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            List<int> pageKeys = null;
+            List<int> pageKeys;
 
             try
             {
@@ -509,7 +511,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
+                if ((object)ex.InnerException != null)
                 {
                     Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load Devices Exception:", MessageBoxImage.Error);
                     CommonFunctions.LogException(null, "Load Devices", ex.InnerException);
@@ -532,55 +534,55 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         public override void Save()
         {
             Mouse.OverrideCursor = Cursors.Wait;
+
             try
             {
                 Device originalDevice = null;
-                if (CurrentItem.ID > 0) // if it is an existing device being modified, then we need to make necessary changes in the output stream if this device exists there.
-                {
-                    originalDevice = Device.GetDevice(null, "WHERE ID = " + CurrentItem.ID);
-                }
 
+                // If it is an existing device being modified, get prior state so we can determine if a rename occurred.
+                if (CurrentItem.ID > 0)
+                    originalDevice = Device.GetDevice(null, "WHERE ID = " + CurrentItem.ID);
+
+                // Attempt to save base record before possible rename attempt as base record save can fail
                 base.Save();
 
                 try
                 {
-                    if (originalDevice != null && CurrentItem.Acronym != originalDevice.Acronym && Confirm("Do you want to update corresponding output stream device?", "Update Output Stream Device")) // if acronym was modified then make changes to output stream devices.
+                    // If renaming a phasor device (e.g., a PMU not a PDC), check if user would like to update device acronym in output streams - this happens here
+                    // instead of in the view model such that a message box can be displayed in the UI to engage user about desire to update output streams. We only
+                    // perform this task for phasor style connections since renaming subscribed devices, although functional, will not "stick" - renamed devices will
+                    // be reverted back to their original names at the next meta-data refresh.
+                    if (!CurrentItem.IsConcentrator && (object)originalDevice != null && string.Compare(CurrentItem.ProtocolCategory, "Phasor", StringComparison.OrdinalIgnoreCase) == 0 &&
+                        (string.CompareOrdinal(CurrentItem.Acronym, originalDevice.Acronym) != 0 || string.CompareOrdinal(CurrentItem.Name, originalDevice.Name) != 0) &&
+                        Confirm("Device was renamed, do you want to also update the device name where it may exist in output streams?", "Update Output Stream Device"))
                     {
                         ObservableCollection<OutputStreamDevice> outputStreamDevices = OutputStreamDevice.GetOutputStreamDevices(null, "WHERE Acronym = '" + originalDevice.Acronym + "'");
+
                         foreach (OutputStreamDevice device in outputStreamDevices)
                         {
                             device.Acronym = CurrentItem.Acronym;
                             device.BpaAcronym = CurrentItem.Acronym.Substring(0, 4);
+                            device.Name = CurrentItem.Name;
                             OutputStreamDevice.Save(null, device);
-                        }
-
-                        // To update device Measurements with the updated Device Name
-                        // We are getting device Measurement data from Measuremnt table and updating with new device name in PointTag and Signal Reference fields
-                        ObservableCollection<Measurement> deviceMeasurements = Measurement.GetMeasurements(null, "WHERE DeviceAcronym = '" + CurrentItem.Acronym + "'");
-                        foreach (Measurement measurement in deviceMeasurements)
-                        {
-                            measurement.PointTag = measurement.PointTag.Replace(originalDevice.Acronym, CurrentItem.Acronym);
-                            measurement.SignalReference = measurement.SignalReference.Replace(originalDevice.Acronym, CurrentItem.Acronym);
-
-                            Measurement.Save(null, measurement);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    if (ex.InnerException != null)
+                    if ((object)ex.InnerException != null)
                     {
-                        Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Update Output Stream Devices:", MessageBoxImage.Error);
-                        CommonFunctions.LogException(null, "Update Output Stream Devices", ex.InnerException);
+                        Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Device Rename:", MessageBoxImage.Error);
+                        CommonFunctions.LogException(null, "Device Rename", ex.InnerException);
                     }
                     else
                     {
-                        Popup(ex.Message, "Update Output Stream Devices Exception:", MessageBoxImage.Error);
-                        CommonFunctions.LogException(null, "Update Output Stream Devices", ex);
+                        Popup(ex.Message, "Device Rename Exception:", MessageBoxImage.Error);
+                        CommonFunctions.LogException(null, "Device Rename", ex);
                     }
                 }
 
-                if (ItemsPerPage == 0) // i.e. if user is on form page then go back to list page after save.
+                // If user is on form page then go back to list page after save.
+                if (ItemsPerPage == 0)
                 {
                     if (!m_stayOnConfigurationScreen)
                         CommonFunctions.LoadUserControl("Browse Devices", typeof(DeviceListUserControl));
@@ -588,7 +590,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
+                if ((object)ex.InnerException != null)
                 {
                     Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Save Device Exception:", MessageBoxImage.Error);
                     CommonFunctions.LogException(null, "Save Device", ex.InnerException);
@@ -608,7 +610,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Handles <see cref="EditCommand"/>.
         /// </summary>
-        /// <param name="parameter">Parameter to use for the command provided by commandparameter from UI.</param>
+        /// <param name="parameter">Parameter to use for the command provided by command parameter from UI.</param>
         private void GoToEdit(object parameter)
         {
             CommonFunctions.LoadUserControl("Manage Device Configuration", typeof(DeviceUserControl), (Device)parameter);
@@ -617,24 +619,27 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// <summary>
         /// Handles <see cref="CopyCommand"/>.
         /// </summary>
-        /// <param name="parameter">Parameter to use for the command provided by commandparameter from UI.</param>
+        /// <param name="parameter">Parameter to use for the command provided by command parameter from UI.</param>
         private void MakeCopy(object parameter)
         {
             Device deviceToCopy = (Device)parameter;
             string newAcronym;
-            ;
-            int i = 1;
-            do  // Find unique acronym.
-            {
-                newAcronym = deviceToCopy.Acronym + i.ToString();
-                i++;
-            } while (DeviceExists(newAcronym));
 
-            deviceToCopy.Acronym = newAcronym; // Change acronym of the device before going to edit screen.
+            int i = 1;
+
+            // Find unique acronym.
+            do
+            {
+                newAcronym = deviceToCopy.Acronym + i;
+                i++;
+            }
+            while (DeviceExists(newAcronym));
+
+            deviceToCopy.Acronym = newAcronym;                  // Change acronym of the device before going to edit screen.
             deviceToCopy.Name = "Copy of " + deviceToCopy.Name; // Change name of the device before going to edit screen.            
-            deviceToCopy.ID = 0;    // Set id to zero so that it will be added as a new device.
-            ItemsPerPage = 0; // Set this so that on Save() user will be sent back to list screen.
-            deviceToCopy.Enabled = false; // Always set enabled to false for copied device.
+            deviceToCopy.ID = 0;                                // Set id to zero so that it will be added as a new device.
+            ItemsPerPage = 0;                                   // Set this so that on Save() user will be sent back to list screen.
+            deviceToCopy.Enabled = false;                       // Always set enabled to false for copied device.
 
             // Go to edit screen.
             CommonFunctions.LoadUserControl("Manage Device Configuration", typeof(DeviceUserControl), deviceToCopy);
@@ -647,13 +652,13 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private bool DeviceExists(string acronym)
         {
-            bool deviceExists = false;
             foreach (Device device in ItemsSource)
             {
                 if (device.Acronym == acronym)
                     return true;
             }
-            return deviceExists;
+
+            return false;
         }
 
         /// <summary>
@@ -678,7 +683,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             if (propertyName == "CurrentItem")
             {
-                if (CurrentItem == null)
+                if ((object)CurrentItem == null)
                     RuntimeID = string.Empty;
                 else
                     RuntimeID = CommonFunctions.GetRuntimeID("Device", CurrentItem.ID);
@@ -707,17 +712,19 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void BuildConnectionString()
         {
-            if (CurrentItem != null)
+            if ((object)CurrentItem != null)
             {
                 ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.DeviceConnection);
+
                 if (!string.IsNullOrEmpty(CurrentItem.ConnectionString))
                     csb.ConnectionString = CurrentItem.ConnectionString;
 
                 csb.Closed += delegate
-                    {
-                        if ((bool)csb.DialogResult)
-                            CurrentItem.ConnectionString = csb.ConnectionString;
-                    };
+                {
+                    if (csb.DialogResult.GetValueOrDefault())
+                        CurrentItem.ConnectionString = csb.ConnectionString;
+                };
+
                 csb.Owner = Application.Current.MainWindow;
                 csb.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 csb.ShowDialog();
@@ -726,9 +733,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void BuildAlternateCommandChannel()
         {
-            if (CurrentItem != null)
+            if ((object)CurrentItem != null)
             {
                 ConnectionStringBuilder csb = new ConnectionStringBuilder(ConnectionStringBuilder.ConnectionType.AlternateCommandChannel);
+
                 if (!string.IsNullOrEmpty(CurrentItem.AlternateCommandChannel))
                     csb.ConnectionString = CurrentItem.AlternateCommandChannel;
 
@@ -738,10 +746,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     csb.PgConnection = false;
 
                 csb.Closed += delegate
-                    {
-                        if ((bool)csb.DialogResult)
-                            CurrentItem.AlternateCommandChannel = csb.ConnectionString;
-                    };
+                {
+                    if (csb.DialogResult.GetValueOrDefault())
+                        CurrentItem.AlternateCommandChannel = csb.ConnectionString;
+                };
+
                 csb.Owner = Application.Current.MainWindow;
                 csb.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 csb.ShowDialog();
@@ -810,7 +819,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
+                if ((object)ex.InnerException != null)
                 {
                     Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Delete Device Exception:", MessageBoxImage.Error);
                     CommonFunctions.LogException(null, "Delete Device", ex.InnerException);
@@ -824,7 +833,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         }
 
         /// <summary>
-        /// Hanldes <see cref="SearchCommand"/>.
+        /// Handles <see cref="SearchCommand"/>.
         /// </summary>
         /// <param name="parameter">string value to search for in measurement collection.</param>
         public void Search(object parameter)
@@ -843,7 +852,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         /// </summary>
         public void ShowAll()
         {
-            if (AllKeys != ItemsKeys)
+            if (!ReferenceEquals(AllKeys, ItemsKeys))
             {
                 SetCurrentPageNumber(1);
                 m_searchText = null;
@@ -854,11 +863,13 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void ConfigureConcentrator()
         {
-            if (CurrentItem.ParentID != null && CurrentItem.ParentID > 0)
+            if ((object)CurrentItem.ParentID != null && CurrentItem.ParentID > 0)
             {
                 m_stayOnConfigurationScreen = true;
+
                 Device device = Device.GetDevice(null, "WHERE ID = " + CurrentItem.ParentID);
-                if (device != null)
+
+                if ((object)device != null)
                 {
                     PdcDevices = Device.GetDevices(null, "WHERE ParentID = " + CurrentItem.ParentID);
                     CurrentItem = device;

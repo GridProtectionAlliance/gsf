@@ -97,7 +97,7 @@
                 <TextBlock Text="ID Code" Style="{StaticResource RequiredLabel}"/>
                 <TextBlock Style="{StaticResource RequiredMarker}"/>
             </StackPanel>
-            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=IDCode}" Width="35" />
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=IDCode}" Width="45" />
 
             <!--Button-->
             <CheckBox Content="Enabled" Grid.Row="5" Grid.Column="3" IsChecked="{tsfBinding:Column Path=Enabled}"/>

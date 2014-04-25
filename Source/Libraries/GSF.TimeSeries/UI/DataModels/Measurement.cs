@@ -25,7 +25,7 @@
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL handling for Save() operation.
 //  05/13/2011 - Aniket Salver
-//       Modified the way Guid is retrived from the Data Base.
+//       Modified the way Guid is retrieved from the Data Base.
 //  05/13/2011 - Mehulbhai P Thakkar
 //       Modified static methods to filter data by device.
 //  12/20/2012 - Starlynn Danyelle Gilliam
@@ -813,16 +813,16 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Loads information about <see cref="Measurement"/> assigned to MeasurementGroup as <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="measurementGroupId">ID of the MeasurementGroup to filter data.</param>
+        /// <param name="measurementGroupID">ID of the MeasurementGroup to filter data.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
-        public static ObservableCollection<Measurement> GetMeasurementsByGroup(AdoDataConnection database, int measurementGroupId)
+        public static ObservableCollection<Measurement> GetMeasurementsByGroup(AdoDataConnection database, int measurementGroupID)
         {
             bool createdConnection = false;
             try
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (measurementGroupId == 0)
+                if (measurementGroupID == 0)
                     return Load(database);
 
                 ObservableCollection<Measurement> possibleMeasurements = new ObservableCollection<Measurement>();
@@ -830,12 +830,12 @@ namespace GSF.TimeSeries.UI.DataModels
                 string query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE SignalID NOT IN " +
                     "(SELECT SignalID FROM MeasurementGroupMeasurement WHERE MeasurementGroupID = {0}) ORDER BY PointTag", "measurementGroupID");
 
-                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, measurementGroupId);
+                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, measurementGroupID);
 
                 foreach (DataRow row in possibleMeasurementTable.Rows)
                 {
                     possibleMeasurements.Add(new Measurement
-                        {
+                    {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
                         PointID = row.ConvertField<int>("PointID"),
@@ -877,16 +877,16 @@ namespace GSF.TimeSeries.UI.DataModels
         /// Loads information about <see cref="Measurement"/> assigned to Subscriber as <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="subscriberId">ID of the Subscriber to filter data.</param>
+        /// <param name="subscriberID">ID of the Subscriber to filter data.</param>
         /// <returns>Collection of <see cref="Measurement"/>.</returns>
-        public static ObservableCollection<Measurement> GetMeasurementsBySubscriber(AdoDataConnection database, Guid subscriberId)
+        public static ObservableCollection<Measurement> GetMeasurementsBySubscriber(AdoDataConnection database, Guid subscriberID)
         {
             bool createdConnection = false;
             try
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (subscriberId == null || subscriberId == Guid.Empty)
+                if (subscriberID == Guid.Empty)
                     return Load(database);
 
                 ObservableCollection<Measurement> possibleMeasurements = new ObservableCollection<Measurement>();
@@ -894,12 +894,12 @@ namespace GSF.TimeSeries.UI.DataModels
                 string query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE SignalID NOT IN " +
                     "(SELECT SignalID FROM SubscriberMeasurement WHERE SubscriberID = {0}) ORDER BY PointTag", "subscriberID");
 
-                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberId));
+                DataTable possibleMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Guid(subscriberID));
 
                 foreach (DataRow row in possibleMeasurementTable.Rows)
                 {
                     possibleMeasurements.Add(new Measurement
-                        {
+                    {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
                         PointID = row.ConvertField<int>("PointID"),
@@ -1011,7 +1011,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 foreach (DataRow row in measurementTable.Rows)
                 {
                     measurementList.Add(new Measurement
-                        {
+                    {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
                         PointID = row.ConvertField<int>("PointID"),
@@ -1080,9 +1080,9 @@ namespace GSF.TimeSeries.UI.DataModels
                 }
                 else
                 {
-                    query = database.ParameterizedQueryString("Update Measurement Set HistorianID = {0}, DeviceID = {1}, PointTag = {2}, AlternateTag = {3}, " +
+                    query = database.ParameterizedQueryString("UPDATE Measurement SET HistorianID = {0}, DeviceID = {1}, PointTag = {2}, AlternateTag = {3}, " +
                         "SignalTypeID = {4}, PhasorSourceIndex = {5}, SignalReference = {6}, Adder = {7}, Multiplier = {8}, Description = {9}, Subscribed = {10}, " +
-                        "Internal = {11}, Enabled = {12}, UpdatedBy = {13}, UpdatedOn = {14} Where PointID = {15}", "historianID", "deviceID", "pointTag",
+                        "Internal = {11}, Enabled = {12}, UpdatedBy = {13}, UpdatedOn = {14} WHERE PointID = {15}", "historianID", "deviceID", "pointTag",
                         "alternateTag", "signalTypeID", "phasorSourceINdex", "signalReference", "adder", "multiplier", "description", "subscribed", "internal",
                         "enabled", "updatedBy", "updatedOn", "pointID");
 
@@ -1206,7 +1206,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 foreach (DataRow row in measurementTable.Rows)
                 {
                     measurementList.Add(new Measurement
-                        {
+                    {
                         SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.ConvertNullableField<int>("HistorianID"),
                         PointID = row.ConvertField<int>("PointID"),
@@ -1268,7 +1268,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     if (row.Field<string>("SignalAcronym") != "STAT")
                     {
                         measurementList.Add(new Measurement
-                            {
+                        {
                             SignalID = database.Guid(row, "SignalID"),
                             HistorianID = row.ConvertNullableField<int>("HistorianID"),
                             PointID = row.ConvertField<int>("PointID"),
@@ -1342,33 +1342,33 @@ namespace GSF.TimeSeries.UI.DataModels
                     {
                         measurementList.Add(new Measurement
                             {
-                            SignalID = database.Guid(row, "SignalID"),
-                            HistorianID = row.ConvertNullableField<int>("HistorianID"),
-                            PointID = row.ConvertField<int>("PointID"),
-                            DeviceID = row.ConvertNullableField<int>("DeviceID"),
-                            PointTag = row.Field<string>("PointTag"),
-                            AlternateTag = row.Field<string>("AlternateTag"),
-                            SignalTypeID = row.ConvertField<int>("SignalTypeID"),
-                            PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
-                            SignalReference = row.Field<string>("SignalReference"),
-                            Adder = row.ConvertField<double>("Adder"),
-                            Multiplier = row.ConvertField<double>("Multiplier"),
-                            Internal = Convert.ToBoolean(row.Field<object>("Internal")),
-                            Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
-                            Description = row.Field<string>("Description"),
-                            Enabled = row.ConvertField<bool>("Enabled"),
-                            m_historianAcronym = row.Field<string>("HistorianAcronym"),
-                            m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
-                            m_signalName = row.Field<string>("SignalName"),
-                            m_signalAcronym = row.Field<string>("SignalAcronym"),
-                            m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
-                            m_phasorLabel = row.Field<string>("PhasorLabel"),
-                            m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
-                            m_id = row.Field<string>("ID"),
-                            m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
-                            m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
-                            Selected = false
-                        });
+                                SignalID = database.Guid(row, "SignalID"),
+                                HistorianID = row.ConvertNullableField<int>("HistorianID"),
+                                PointID = row.ConvertField<int>("PointID"),
+                                DeviceID = row.ConvertNullableField<int>("DeviceID"),
+                                PointTag = row.Field<string>("PointTag"),
+                                AlternateTag = row.Field<string>("AlternateTag"),
+                                SignalTypeID = row.ConvertField<int>("SignalTypeID"),
+                                PhasorSourceIndex = row.ConvertNullableField<int>("PhasorSourceIndex"),
+                                SignalReference = row.Field<string>("SignalReference"),
+                                Adder = row.ConvertField<double>("Adder"),
+                                Multiplier = row.ConvertField<double>("Multiplier"),
+                                Internal = Convert.ToBoolean(row.Field<object>("Internal")),
+                                Subscribed = Convert.ToBoolean(row.Field<object>("Subscribed")),
+                                Description = row.Field<string>("Description"),
+                                Enabled = row.ConvertField<bool>("Enabled"),
+                                m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                                m_deviceAcronym = row.Field<object>("DeviceAcronym") == null ? string.Empty : row.Field<string>("DeviceAcronym"),
+                                m_signalName = row.Field<string>("SignalName"),
+                                m_signalAcronym = row.Field<string>("SignalAcronym"),
+                                m_signalSuffix = row.Field<string>("SignalTypeSuffix"),
+                                m_phasorLabel = row.Field<string>("PhasorLabel"),
+                                m_framesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                                m_id = row.Field<string>("ID"),
+                                m_companyAcronym = row.Field<object>("CompanyAcronym") == null ? string.Empty : row.Field<string>("CompanyAcronym"),
+                                m_companyName = row.Field<object>("CompanyName") == null ? string.Empty : row.Field<string>("CompanyName"),
+                                Selected = false
+                            });
                     }
                 }
 

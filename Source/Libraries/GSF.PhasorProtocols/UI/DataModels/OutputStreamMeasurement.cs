@@ -24,9 +24,9 @@
 //       Added OnPropertyChanged() on all properties to reflect changes on UI.
 //       Fixed Load() and GetLookupList() static methods.
 //   09/21/2011 - Aniket Salver
-//       Fixed Bug, which helps in enabling the save button  on the screen.
-//  09/15/2012 - Aniket Salver 
-//          Added paging and sorting technique. 
+//       Fixed issue, which helps in enabling the save button  on the screen.
+//   09/15/2012 - Aniket Salver 
+//       Added paging and sorting technique. 
 //
 //******************************************************************************************************
 
@@ -334,7 +334,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             NodeID = database.Guid(row, "NodeID"),
                             AdapterID = row.ConvertField<int>("AdapterID"),
                             ID = id,
-                            HistorianID = row["HistorianID"] == null ? (int?)null : row.ConvertField<int>("HistorianID"),
+                            HistorianID = row.ConvertNullableField<int>("HistorianID"),
                             PointID = row.ConvertField<int>("PointID"),
                             SignalReference = row.Field<string>("SignalReference"),
                             m_sourcePointTag = row.Field<string>("SourcePointTag"),
@@ -477,7 +477,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 foreach (Measurement measurement in measurements)
                 {
                     OutputStreamMeasurement outputStreamMeasurement = new OutputStreamMeasurement
-                        {
+                    {
                         NodeID = (Guid)database.CurrentNodeID(),
                         AdapterID = outputStreamID,
                         HistorianID = measurement.HistorianID,
