@@ -59,7 +59,7 @@ namespace GSF.TimeSeries.Transport
         private Guid[] m_unauthorizedSignalIDs;
 
         [NonSerialized] // SignalID reverse lookup runtime cache (used to speed deserialization)
-        private readonly ConcurrentDictionary<Guid, ushort> m_signalIDCache;
+        private Dictionary<Guid, ushort> m_signalIDCache;
 
         [NonSerialized]
         private Encoding m_encoding;
@@ -74,7 +74,7 @@ namespace GSF.TimeSeries.Transport
         public SignalIndexCache()
         {
             m_reference = new ConcurrentDictionary<ushort, Tuple<Guid, string, uint>>();
-            m_signalIDCache = new ConcurrentDictionary<Guid, ushort>();
+            m_signalIDCache = new Dictionary<Guid, ushort>();
         }
 
         /// <summary>
@@ -145,8 +145,10 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                m_signalIDCache.Clear();
+                Dictionary<Guid, ushort> signalIDCache = value.ToDictionary(pair => pair.Value.Item1, pair => pair.Key);
+
                 m_reference = value;
+                m_signalIDCache = signalIDCache;
             }
         }
 
@@ -253,21 +255,7 @@ namespace GSF.TimeSeries.Transport
             ushort index;
 
             if (!m_signalIDCache.TryGetValue(signalID, out index))
-            {
-                index = ushort.MaxValue;
-
-                foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> item in m_reference)
-                {
-                    if (item.Value.Item1 == signalID)
-                    {
-                        index = item.Key;
-                        break;
-                    }
-                }
-
-                if (index != ushort.MaxValue)
-                    m_signalIDCache.TryAdd(signalID, index);
-            }
+                return ushort.MaxValue;
 
             return index;
         }
