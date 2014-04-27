@@ -28,6 +28,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using GSF.Data;
+using GSF.IO.Checksums;
 
 namespace GSF.TimeSeries
 {
@@ -40,10 +41,9 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private Guid m_signalID;
+        private readonly Guid m_signalID;
         private uint m_id;
         private string m_source;
-
         private readonly int m_hashCode;
 
         #endregion
@@ -55,7 +55,7 @@ namespace GSF.TimeSeries
             m_signalID = signalID;
             m_id = id;
             m_source = source;
-            m_hashCode = base.GetHashCode();
+            m_hashCode = GuidSHA1Helper.ComputeHashCode(signalID);
         }
 
         #endregion
@@ -130,7 +130,7 @@ namespace GSF.TimeSeries
         /// </returns>
         public bool Equals(MeasurementKey other)
         {
-            return (m_signalID == other.m_signalID);
+            return ReferenceEquals(this, other);
         }
 
         /// <summary>
@@ -144,11 +144,7 @@ namespace GSF.TimeSeries
         /// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="MeasurementKey"/>.</exception>
         public override bool Equals(object obj)
         {
-            // Can't use cast "as" on a structure...
-            if (obj is MeasurementKey)
-                return Equals((MeasurementKey)obj);
-
-            return false;
+            return ReferenceEquals(this, obj);
         }
 
         /// <summary>
@@ -158,7 +154,15 @@ namespace GSF.TimeSeries
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         public int CompareTo(MeasurementKey other)
         {
-            return m_hashCode.CompareTo(other.m_hashCode);
+            if (ReferenceEquals(this, other))
+                return 0;
+            if ((object)other == null)
+                return 1;
+            if (m_hashCode < other.m_hashCode)
+                return -1;
+            if (m_hashCode > other.m_hashCode)
+                return 1;
+            return m_signalID.CompareTo(other.m_hashCode);
         }
 
         /// <summary>
@@ -169,11 +173,14 @@ namespace GSF.TimeSeries
         /// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="MeasurementKey"/>.</exception>
         public int CompareTo(object obj)
         {
-            // Can't use cast "as" on a structure...
-            if (obj is MeasurementKey)
-                return CompareTo((MeasurementKey)obj);
+            if ((object)obj == null)
+                return 1;
 
-            throw new ArgumentException("Object is not a MeasurementKey");
+            MeasurementKey key = obj as MeasurementKey;
+            if ((object)key != null)
+                return CompareTo(key);
+
+            throw new ArgumentException("Object is not a MeasurementKey", "obj");
         }
 
         #endregion
@@ -188,7 +195,7 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator ==(MeasurementKey key1, MeasurementKey key2)
         {
-            return key1.Equals(key2);
+            return ReferenceEquals(key1, key2);
         }
 
         /// <summary>
@@ -199,7 +206,7 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator !=(MeasurementKey key1, MeasurementKey key2)
         {
-            return !key1.Equals(key2);
+            return !ReferenceEquals(key1, key2);
         }
 
         /// <summary>
@@ -210,6 +217,16 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator >(MeasurementKey key1, MeasurementKey key2)
         {
+            if ((object)key1 == null)
+            {
+                return false;
+
+                //if ((object)key2 == null)
+                //    return false;
+
+                ////null comes before non-null;
+                //return false;
+            }
             return key1.CompareTo(key2) > 0;
         }
 
@@ -221,6 +238,14 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator >=(MeasurementKey key1, MeasurementKey key2)
         {
+            if ((object)key1 == null)
+            {
+                if ((object)key2 == null)
+                    return true;
+
+                //null comes before non-null;
+                return false;
+            }
             return key1.CompareTo(key2) >= 0;
         }
 
@@ -232,6 +257,14 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator <(MeasurementKey key1, MeasurementKey key2)
         {
+            if ((object)key1 == null)
+            {
+                if ((object)key2 == null)
+                    return false;
+
+                //null comes before non-null;
+                return true;
+            }
             return key1.CompareTo(key2) < 0;
         }
 
@@ -243,6 +276,15 @@ namespace GSF.TimeSeries
         /// <returns>A boolean representing the result.</returns>
         public static bool operator <=(MeasurementKey key1, MeasurementKey key2)
         {
+            if ((object)key1 == null)
+            {
+                return true;
+                //if ((object)key2 == null)
+                //    return true;
+
+                ////null comes before non-null;
+                //return true;
+            }
             return key1.CompareTo(key2) <= 0;
         }
 
@@ -639,7 +681,7 @@ namespace GSF.TimeSeries
         /// <returns>true if the specified objects are equal; otherwise, false.</returns>
         public bool Equals(MeasurementKey x, MeasurementKey y)
         {
-            return x.Equals(y);
+            return ReferenceEquals(x, y);
         }
 
         /// <summary>
@@ -649,6 +691,8 @@ namespace GSF.TimeSeries
         /// <returns>A hash code for the specified object.</returns>
         public int GetHashCode(MeasurementKey obj)
         {
+            if ((object)obj == null)
+                return 0;
             return obj.GetHashCode();
         }
 
