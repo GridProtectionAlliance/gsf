@@ -27,9 +27,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using GSF;
+using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
-using Timer = System.Timers.Timer;
 
 namespace TestingAdapters
 {
@@ -51,7 +51,7 @@ namespace TestingAdapters
         // Fields
         private double m_publishRate;
 
-        private Timer m_timer;
+        private ScheduledTask m_timer;
         private long m_lastPublication;
 
         private bool m_disposed;
@@ -146,11 +146,17 @@ namespace TestingAdapters
 
             if ((object)m_timer == null)
             {
-                m_timer = new Timer();
-                m_timer.AutoReset = false;
-                m_timer.Elapsed += (sender, args) => PublishFrames();
+                m_timer = new ScheduledTask(ThreadingMode.ThreadPool);
+                m_timer.Running += m_timer_Running;
                 ScheduleNextFramePublication();
             }
+        }
+
+        void m_timer_Running(object sender, EventArgs<ScheduledTaskRunningReason> eventArgs)
+        {
+            if (eventArgs.Argument == ScheduledTaskRunningReason.Disposing)
+                return;
+            PublishFrames();
         }
 
         /// <summary>
@@ -160,7 +166,6 @@ namespace TestingAdapters
         {
             if ((object)m_timer != null)
             {
-                m_timer.Stop();
                 m_timer.Dispose();
                 m_timer = null;
             }
@@ -180,7 +185,6 @@ namespace TestingAdapters
                     {
                         if ((object)m_timer != null)
                         {
-                            m_timer.Stop();
                             m_timer.Dispose();
                             m_timer = null;
                         }
@@ -205,12 +209,11 @@ namespace TestingAdapters
 
             if (delta < 1.0D)
             {
-                ThreadPool.QueueUserWorkItem(state => PublishFrames());
+                m_timer.Start();
             }
             else if ((object)m_timer != null)
             {
-                m_timer.Interval = delta;
-                m_timer.Start();
+                m_timer.Start((int)delta);
             }
         }
 
