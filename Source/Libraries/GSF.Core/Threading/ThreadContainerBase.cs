@@ -40,9 +40,16 @@ namespace GSF.Threading
         public class CallbackArgs
         {
             public bool ShouldDispose;
+
+            /// <summary>
+            /// Gets if StartDisposal() method is the only item that triggered this run.
+            /// </summary>
+            public bool StartDisposalCallSuccessful;
+
             public void Clear()
             {
                 ShouldDispose = false;
+                StartDisposalCallSuccessful = false;
             }
         }
 
@@ -97,6 +104,8 @@ namespace GSF.Threading
 
         CallbackArgs m_args;
 
+        volatile bool m_startDisposalCallSuccessful = false;
+
         protected ThreadContainerBase(WeakActionFast<CallbackArgs> callback)
         {
             m_runAgain = false;
@@ -128,6 +137,7 @@ namespace GSF.Threading
 
             Thread.MemoryBarrier();
 
+            m_args.StartDisposalCallSuccessful = m_startDisposalCallSuccessful;
             bool failedRun = !m_callback.TryInvoke(m_args);
 
             if (m_args.ShouldDispose || failedRun)
@@ -155,6 +165,48 @@ namespace GSF.Threading
             {
                 InternalDoNothing_FromWorkerThread();
                 Interlocked.Exchange(ref m_state, State.NotRunning);
+            }
+        }
+
+        /// <summary>
+        /// Same as Start() except notifies on the callback during a race condition that this is the one that was first to schedule the task.
+        /// </summary>
+        /// <returns></returns>
+        public void StartDisposal()
+        {
+            m_runAgain = true;
+            SpinWait wait = new SpinWait();
+            while (true)
+            {
+                int state = Interlocked.CompareExchange(ref m_state, 0, 0);
+                switch (state)
+                {
+                    case State.Disposed:
+                    case State.ScheduledToRun:
+                    case State.Running:
+                        return;
+                    case State.NotRunning:
+                        if (Interlocked.CompareExchange(ref m_state, State.Invalid, State.NotRunning) == State.NotRunning)
+                        {
+                            m_startDisposalCallSuccessful = true;
+                            InternalStart();
+                            Interlocked.Exchange(ref m_state, State.ScheduledToRun);
+                            return;
+                        }
+                        break;
+                    case State.ScheduledToRunAfterDelay:
+                        if (Interlocked.CompareExchange(ref m_state, State.Invalid, State.ScheduledToRunAfterDelay) == State.ScheduledToRunAfterDelay)
+                        {
+                            InternalCancelTimer();
+                            Interlocked.Exchange(ref m_state, State.ScheduledToRun);
+                            return;
+                        }
+                        break;
+                    case State.AfterRunning:
+                    case State.Invalid:
+                        wait.SpinOnce();
+                        break;
+                }
             }
         }
 

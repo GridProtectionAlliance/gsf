@@ -143,7 +143,7 @@ namespace GSF.Threading
         /// </summary>
         void OnRunningCallback(ThreadContainerBase.CallbackArgs args)
         {
-            if (m_disposing)
+            if (m_disposing && args.StartDisposalCallSuccessful)
             {
                 args.ShouldDispose = true;
                 TryCallback(ScheduledTaskRunningReason.Disposing);
@@ -161,11 +161,15 @@ namespace GSF.Threading
         }
 
         /// <summary>
-        /// Immediately starts the task. 
+        /// Starts the task immediately, or if one was scheduled, starts the scheduled task immediately
         /// </summary>
         /// <remarks>
-        /// If this is called after a Start(Delay) the timer will be short circuited 
+        /// If this is called after a Start(Delay) the timer will be canceled
         /// and the process will still start immediately. 
+        /// 
+        /// This method is safe to call from any thread, including the worker thread.
+        /// 
+        /// If disposed, this method will no nothing.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Start()
@@ -178,8 +182,15 @@ namespace GSF.Threading
         /// </summary>
         /// <param name="delay">the delay in milliseconds before the task should run</param>
         /// <remarks>
-        /// If already running on a timer, this function will do nothing. Do not use this function to
-        /// reset or restart an existing timer.
+        /// If a timer is currently pending, this function will do nothing. 
+        /// Do not use this function to reset or restart an existing timer.
+        /// 
+        /// If called while working, a subsequent timer will be scheduled, 
+        /// but delay will not start until after the worker has completed.
+        /// 
+        /// This method is safe to call from any thread, including the worker thread.
+        /// 
+        /// If disposed, this method will no nothing.
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Start(int delay)
@@ -195,7 +206,7 @@ namespace GSF.Threading
         {
             m_disposing = true;
             Thread.MemoryBarrier();
-            m_thread.Start();
+            m_thread.StartDisposal();
             InternalDisposeAllResources();
         }
 
