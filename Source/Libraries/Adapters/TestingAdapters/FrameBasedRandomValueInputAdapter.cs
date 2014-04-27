@@ -222,7 +222,7 @@ namespace TestingAdapters
             while (nextPublication < now)
             {
                 OnNewMeasurements(OutputMeasurements
-                    .Select((measurement, index) => Measurement.Clone(measurement, Generator.NextDouble(), nextPublication))
+                    .Select((measurement, index) => Measurement.Clone(measurement, ThreadLocalGenerator.Value.NextDouble(), nextPublication))
                     .ToList<IMeasurement>());
 
                 m_lastPublication = nextPublication;
@@ -254,6 +254,16 @@ namespace TestingAdapters
 
         // Static Fields
         private static readonly Random Generator = new Random();
+        private static readonly ThreadLocal<Random> ThreadLocalGenerator = new ThreadLocal<Random>(CreateGenerator);
+
+        // Static Methods
+        private static Random CreateGenerator()
+        {
+            lock (Generator)
+            {
+                return new Random(Generator.Next());
+            }
+        }
 
         #endregion
     }
