@@ -327,7 +327,7 @@ namespace GSF.TimeSeries.Transport
         /// <summary>
         /// Defines default value for <see cref="DataSubscriber.OperationalModes"/>.
         /// </summary>
-        public const OperationalModes DefaultOperationalModes = OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.CompressPayloadData | OperationalModes.ReceiveInternalMetadata | OperationalModes.UseCommonSerializationFormat;
+        public const OperationalModes DefaultOperationalModes = OperationalModes.CompressMetadata | OperationalModes.CompressSignalIndexCache | OperationalModes.ReceiveInternalMetadata | OperationalModes.UseCommonSerializationFormat;
 
         /// <summary>
         /// Defines the default value for the <see cref="MetadataSynchronizationTimeout"/> property.
