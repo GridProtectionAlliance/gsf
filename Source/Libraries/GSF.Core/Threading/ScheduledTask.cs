@@ -233,7 +233,8 @@ namespace GSF.Threading
         // Executed by the worker thread
         private void OnRunningCallback(ThreadContainerBase.CallbackArgs args)
         {
-            if (m_disposing && args.StartDisposalCallSuccessful)
+            bool disposing = m_disposing;
+            if (disposing && args.StartDisposalCallSuccessful)
             {
                 args.ShouldDispose = true;
                 TryCallback(ScheduledTaskRunningReason.Disposing);
@@ -242,7 +243,7 @@ namespace GSF.Threading
 
             TryCallback(ScheduledTaskRunningReason.Running);
 
-            if (m_disposing)
+            if (disposing)
             {
                 args.ShouldDispose = true;
                 TryCallback(ScheduledTaskRunningReason.Disposing);
