@@ -39,7 +39,7 @@ namespace GSF.Threading
         /// </summary>
         private ManualResetEvent m_waitObject;
 
-        public ThreadContainerThreadpool(WeakActionFast<CallbackArgs> callback)
+        public ThreadContainerThreadpool(WeakAction<CallbackArgs> callback)
             : base(callback)
         {
             m_waitObject = new ManualResetEvent(false);

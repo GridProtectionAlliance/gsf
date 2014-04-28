@@ -39,7 +39,7 @@ namespace GSF.Threading
         private ManualResetEvent m_threadSleepWaitHandler;
         private volatile int m_sleepTime;
 
-        public ThreadContainerDedicated(WeakActionFast<CallbackArgs> callback, bool isBackground, ThreadPriority priority)
+        public ThreadContainerDedicated(WeakAction<CallbackArgs> callback, bool isBackground, ThreadPriority priority)
             : base(callback)
         {
             m_shouldReRunImmediately = false;

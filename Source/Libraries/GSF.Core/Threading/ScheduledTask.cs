@@ -16,17 +16,16 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  3/8/2014 - Steven E. Chisholm
+//  03/08/2014 - Steven E. Chisholm
 //       Generated original version of source code. 
-//       
 //
 //******************************************************************************************************
 
 //------------------------------------------------------------------------------------------------------
-// Warning: This class contains very low-level logic and optimized to have minimal locking
-//          Before making any changes, be sure to consult the experts. Any bugs can introduce
-//          a race condition that will be very difficult to detect and fix.
-//          Additional Functional Requests should result in another class being created rather than modifying this one.
+// WARNING: This class contains very low-level logic and optimized to have minimal locking. Before
+//          making any changes, be sure to consult the author as any bugs can introduce a race
+//          condition that will be very difficult to detect and fix. Additional desired functionality
+//          should likely result in another class being created rather than modifying this one.
 //------------------------------------------------------------------------------------------------------
 
 using System;
@@ -36,6 +35,8 @@ using System.Threading;
 
 namespace GSF.Threading
 {
+    #region [ Enumerations ]
+
     /// <summary>
     /// Specifies the threading mode to use for the <see cref="ScheduledTask"/>
     /// </summary>
@@ -70,12 +71,17 @@ namespace GSF.Threading
         Disposing,
     }
 
+    #endregion
+
     /// <summary>
-    /// A way to schedule a task to be executed on a seperate thread immediately, or after a given time delay.
+    /// Represents a way to schedule a task to be executed on a separate thread immediately or after a given time delay.
     /// </summary>
-    public class ScheduledTask
-        : IDisposable
+    public class ScheduledTask : IDisposable
     {
+        #region [ Members ]
+
+        // Events
+
         /// <summary>
         /// Occurs every time the task should run.
         /// </summary>
@@ -91,42 +97,42 @@ namespace GSF.Threading
         /// </summary>
         public event EventHandler<EventArgs<Exception>> UnhandledException;
 
-        int m_workerThreadId;
+        // Fields
+        private int m_workerThreadID;
+        private readonly ThreadContainerBase m_thread;  // This cannot be null as it would cause duplicate calls to Start to throw a null reference exception
+        private object m_weakCallbackToken;             // A strong reference to the callback
+        private ManualResetEvent m_waitForDispose;
+        private readonly object m_disposeSync;
+        private volatile bool m_disposing;
 
-        object m_disposeSync;
-        volatile bool m_disposing;
+        #endregion
 
-        // This cannot be null, because it would cause duplicate calls to Start to throw a null referenced exception.
-        readonly ThreadContainerBase m_thread;
-        // A strong reference to the callback
-        object m_weakCallbackToken;
-        ManualResetEvent m_waitForDispose;
+        #region [ Constructors ]
 
         /// <summary>
-        /// Creates a <see cref="ScheduledTask"/>
+        /// Creates a <see cref="ScheduledTask"/>.
         /// </summary>
-        /// <param name="threadMode">the mannor in which the scheduled task executes</param>
-        /// <param name="priority">the thread priority to assign if a dedicated thread is used. This is ignored if using the threadpool</param>
+        /// <param name="threadMode">The manner in which the scheduled task executes.</param>
+        /// <param name="priority">The thread priority to assign if a dedicated thread is used. This is ignored if using the thread-pool.</param>
         public ScheduledTask(ThreadingMode threadMode = ThreadingMode.ThreadPool, ThreadPriority priority = ThreadPriority.Normal)
         {
-            m_workerThreadId = -1;
+            m_workerThreadID = -1;
             m_waitForDispose = new ManualResetEvent(false);
             m_disposeSync = new object();
-            if (threadMode == ThreadingMode.DedicatedForeground)
+
+            switch (threadMode)
             {
-                m_thread = new ThreadContainerDedicated(new WeakActionFast<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken), false, priority);
-            }
-            else if (threadMode == ThreadingMode.DedicatedBackground)
-            {
-                m_thread = new ThreadContainerDedicated(new WeakActionFast<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken), true, priority);
-            }
-            else if (threadMode == ThreadingMode.ThreadPool)
-            {
-                m_thread = new ThreadContainerThreadpool(new WeakActionFast<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken));
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException("threadMode");
+                case ThreadingMode.DedicatedForeground:
+                    m_thread = new ThreadContainerDedicated(new WeakAction<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken), false, priority);
+                    break;
+                case ThreadingMode.DedicatedBackground:
+                    m_thread = new ThreadContainerDedicated(new WeakAction<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken), true, priority);
+                    break;
+                case ThreadingMode.ThreadPool:
+                    m_thread = new ThreadContainerThreadpool(new WeakAction<ThreadContainerBase.CallbackArgs>(OnRunningCallback, out m_weakCallbackToken));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("threadMode");
             }
         }
 
@@ -141,10 +147,91 @@ namespace GSF.Threading
             m_thread.Start();
         }
 
+        #endregion
+
+        #region [ Methods ]
+
         /// <summary>
-        /// Executed by the worker thread
+        /// Starts the task immediately, or if one was scheduled, starts the scheduled task immediately
         /// </summary>
-        void OnRunningCallback(ThreadContainerBase.CallbackArgs args)
+        /// <remarks>
+        /// <para>
+        /// If this is called after a <see cref="Start(int)"/> the timer will be canceled
+        /// and the process will still start immediately. 
+        /// </para>
+        /// <para>
+        /// This method is safe to call from any thread, including the worker thread.
+        /// If disposed, this method will no nothing.
+        /// </para>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Start()
+        {
+            m_thread.Start();
+        }
+
+        /// <summary>
+        /// Starts a timer to run the task after a provided interval. 
+        /// </summary>
+        /// <param name="delay">the delay in milliseconds before the task should run</param>
+        /// <remarks>
+        /// <para>
+        /// If a timer is currently pending, this function will do nothing. Do not use this
+        /// function to reset or restart an existing timer.
+        /// </para>
+        /// <para>
+        /// If called while working, a subsequent timer will be scheduled, but delay will not
+        /// start until after the worker has completed.
+        /// </para>
+        /// <para>
+        /// This method is safe to call from any thread, including the worker thread.
+        /// If disposed, this method will no nothing.
+        /// </para>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Start(int delay)
+        {
+            m_thread.Start(delay);
+        }
+
+        /// <summary>
+        /// Starts the disposing process of exiting the worker thread. 
+        /// </summary>
+        /// <remarks>
+        /// <para>Callback will be invoked one more time. Duplicate calls are ignored.</para>
+        /// <para>
+        /// Unless called from the worker thread, this method will block until the dispose
+        /// has successfully completed.
+        /// </para>
+        /// </remarks>
+        public void Dispose()
+        {
+            m_disposing = true;
+            Thread.MemoryBarrier();
+            m_thread.StartDisposal();
+
+            if (m_workerThreadID != Thread.CurrentThread.ManagedThreadId)
+                InternalDisposeAllResources();
+        }
+
+        // Completes the disposal of the class.
+        private void InternalDisposeAllResources()
+        {
+            lock (m_disposeSync)
+            {
+                if ((object)m_waitForDispose != null)
+                {
+                    m_waitForDispose.WaitOne();
+                    m_waitForDispose.Dispose();
+                    m_weakCallbackToken = null;
+                    m_waitForDispose = null;
+                    GC.SuppressFinalize(this);
+                }
+            }
+        }
+
+        // Executed by the worker thread
+        private void OnRunningCallback(ThreadContainerBase.CallbackArgs args)
         {
             if (m_disposing && args.StartDisposalCallSuccessful)
             {
@@ -159,94 +246,23 @@ namespace GSF.Threading
             {
                 args.ShouldDispose = true;
                 TryCallback(ScheduledTaskRunningReason.Disposing);
-                return;
             }
         }
 
-        /// <summary>
-        /// Starts the task immediately, or if one was scheduled, starts the scheduled task immediately
-        /// </summary>
-        /// <remarks>
-        /// If this is called after a Start(Delay) the timer will be canceled
-        /// and the process will still start immediately. 
-        /// 
-        /// This method is safe to call from any thread, including the worker thread.
-        /// 
-        /// If disposed, this method will no nothing.
-        /// </remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start()
+        private void TryCallback(ScheduledTaskRunningReason args)
         {
-            m_thread.Start();
-        }
+            m_workerThreadID = Thread.CurrentThread.ManagedThreadId;
 
-        /// <summary>
-        /// Starts a timer to run the task after a provided interval. 
-        /// </summary>
-        /// <param name="delay">the delay in milliseconds before the task should run</param>
-        /// <remarks>
-        /// If a timer is currently pending, this function will do nothing. 
-        /// Do not use this function to reset or restart an existing timer.
-        /// 
-        /// If called while working, a subsequent timer will be scheduled, 
-        /// but delay will not start until after the worker has completed.
-        /// 
-        /// This method is safe to call from any thread, including the worker thread.
-        /// 
-        /// If disposed, this method will no nothing.
-        /// </remarks>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Start(int delay)
-        {
-            m_thread.Start(delay);
-        }
-
-        /// <summary>
-        /// Starts the disposing process of exiting the worker thread. Will invoke the callback one more time.
-        /// Duplicate calls are ignored. 
-        /// Unless called from the worker thread, this method will block until the dispose has successfully completed.
-        /// </summary>
-        public void Dispose()
-        {
-            m_disposing = true;
-            Thread.MemoryBarrier();
-            m_thread.StartDisposal();
-
-            if (m_workerThreadId != Thread.CurrentThread.ManagedThreadId)
-                InternalDisposeAllResources();
-        }
-
-        /// <summary>
-        /// Completes the disposal of the class.
-        /// </summary>
-        void InternalDisposeAllResources()
-        {
-            lock (m_disposeSync)
-            {
-                if (m_waitForDispose != null)
-                {
-                    m_waitForDispose.WaitOne();
-                    m_waitForDispose.Dispose();
-                    m_weakCallbackToken = null;
-                    m_waitForDispose = null;
-                    GC.SuppressFinalize(this);
-                }
-            }
-        }
-
-        void TryCallback(ScheduledTaskRunningReason args)
-        {
-            m_workerThreadId = Thread.CurrentThread.ManagedThreadId;
             try
             {
-                if (Running != null)
+                if ((object)Running != null)
                     Running(this, new EventArgs<ScheduledTaskRunningReason>(args));
             }
             catch (Exception ex)
             {
                 try
                 {
-                    if (UnhandledException != null)
+                    if ((object)UnhandledException != null)
                         UnhandledException(this, new EventArgs<Exception>(ex));
                 }
                 catch (Exception ex2)
@@ -259,14 +275,14 @@ namespace GSF.Threading
             {
                 try
                 {
-                    if (Disposing != null)
+                    if ((object)Disposing != null)
                         Disposing(this, EventArgs.Empty);
                 }
                 catch (Exception ex)
                 {
                     try
                     {
-                        if (UnhandledException != null)
+                        if ((object)UnhandledException != null)
                             UnhandledException(this, new EventArgs<Exception>(ex));
                     }
                     catch (Exception ex2)
@@ -278,7 +294,9 @@ namespace GSF.Threading
                 InternalDisposeAllResources();
             }
 
-            m_workerThreadId = -1;
+            m_workerThreadID = -1;
         }
+
+        #endregion
     }
 }

@@ -16,17 +16,16 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  3/8/2014 - Steven E. Chisholm
+//  03/08/2014 - Steven E. Chisholm
 //       Generated original version of source code. 
-//       
 //
 //******************************************************************************************************
 
 //------------------------------------------------------------------------------------------------------
-// Warning: This class contains very low-level logic and optimized to have minimal locking
-//          Before making any changes, be sure to consult the experts. Any bugs can introduce
-//          a race condition that will be very difficult to detect and fix.
-//          Additional Functional Requests should result in another class being created rather than modifying this one.
+// WARNING: This class contains very low-level logic and optimized to have minimal locking. Before
+//          making any changes, be sure to consult the author as any bugs can introduce a race
+//          condition that will be very difficult to detect and fix. Additional desired functionality
+//          should likely result in another class being created rather than modifying this one.
 //------------------------------------------------------------------------------------------------------
 
 using System;
@@ -100,13 +99,13 @@ namespace GSF.Threading
 
         volatile int m_state;
 
-        WeakActionFast<CallbackArgs> m_callback;
+        WeakAction<CallbackArgs> m_callback;
 
         CallbackArgs m_args;
 
         volatile bool m_startDisposalCallSuccessful = false;
 
-        protected ThreadContainerBase(WeakActionFast<CallbackArgs> callback)
+        protected ThreadContainerBase(WeakAction<CallbackArgs> callback)
         {
             m_runAgain = false;
             m_runAgainAfterDelay = -1;

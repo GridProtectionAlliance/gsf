@@ -346,7 +346,7 @@
     <Compile Include="Threading\ThreadContainerBase.cs" />
     <Compile Include="Threading\ThreadContainerDedicated.cs" />
     <Compile Include="Threading\ThreadContainerThreadpool.cs" />
-    <Compile Include="Threading\WeakActionFast.cs" />
+    <Compile Include="Threading\WeakAction.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TimeSpanExtensions.cs" />
     <Compile Include="TimeTagBase.cs" />
