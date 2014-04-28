@@ -91,6 +91,8 @@ namespace GSF.Threading
         /// </summary>
         public event EventHandler<EventArgs<Exception>> UnhandledException;
 
+        int m_workerThreadId;
+
         object m_disposeSync;
         volatile bool m_disposing;
 
@@ -107,6 +109,7 @@ namespace GSF.Threading
         /// <param name="priority">the thread priority to assign if a dedicated thread is used. This is ignored if using the threadpool</param>
         public ScheduledTask(ThreadingMode threadMode = ThreadingMode.ThreadPool, ThreadPriority priority = ThreadPriority.Normal)
         {
+            m_workerThreadId = -1;
             m_waitForDispose = new ManualResetEvent(false);
             m_disposeSync = new object();
             if (threadMode == ThreadingMode.DedicatedForeground)
@@ -200,14 +203,17 @@ namespace GSF.Threading
 
         /// <summary>
         /// Starts the disposing process of exiting the worker thread. Will invoke the callback one more time.
-        /// Duplicate calls are ignored. This method will block until the dispose has successfully completed.
+        /// Duplicate calls are ignored. 
+        /// Unless called from the worker thread, this method will block until the dispose has successfully completed.
         /// </summary>
         public void Dispose()
         {
             m_disposing = true;
             Thread.MemoryBarrier();
             m_thread.StartDisposal();
-            InternalDisposeAllResources();
+
+            if (m_workerThreadId != Thread.CurrentThread.ManagedThreadId)
+                InternalDisposeAllResources();
         }
 
         /// <summary>
@@ -230,6 +236,7 @@ namespace GSF.Threading
 
         void TryCallback(ScheduledTaskRunningReason args)
         {
+            m_workerThreadId = Thread.CurrentThread.ManagedThreadId;
             try
             {
                 if (Running != null)
@@ -270,6 +277,8 @@ namespace GSF.Threading
                 m_waitForDispose.Set();
                 InternalDisposeAllResources();
             }
+
+            m_workerThreadId = -1;
         }
     }
 }
