@@ -162,7 +162,7 @@ namespace GSF.TimeSeries
                 return -1;
             if (m_hashCode > other.m_hashCode)
                 return 1;
-            return m_signalID.CompareTo(other.m_hashCode);
+            return m_signalID.CompareTo(other.m_signalID);
         }
 
         /// <summary>
