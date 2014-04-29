@@ -136,6 +136,22 @@ namespace GSF.PQDIF.Logical
         }
 
         /// <summary>
+        /// Gets the notes stored in the file.
+        /// </summary>
+        public string Notes
+        {
+            get
+            {
+                VectorElement notesVector = m_physicalRecord.Body.Collection.GetVectorByTag(NotesTag);
+
+                if ((object)notesVector == null)
+                    return null;
+
+                return Encoding.ASCII.GetString(notesVector.GetValues()).Trim((char)0);
+            }
+        }
+
+        /// <summary>
         /// Gets the style of compression used to compress the PQDIF file.
         /// </summary>
         public CompressionStyle CompressionStyle
@@ -191,6 +207,11 @@ namespace GSF.PQDIF.Logical
         /// Tag that identifies the date and time of creation.
         /// </summary>
         public static readonly Guid CreationTag = new Guid("89738609-f1c3-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the notes stored in the PQDIF file.
+        /// </summary>
+        public static readonly Guid NotesTag = new Guid("89738617-f1c3-11cf-9d89-0080c72e70a3");
 
         /// <summary>
         /// Tag that identifies the compression style of the PQDIF file.
