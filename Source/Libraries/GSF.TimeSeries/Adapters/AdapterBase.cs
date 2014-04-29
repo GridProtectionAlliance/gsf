@@ -1334,7 +1334,6 @@ namespace GSF.TimeSeries.Adapters
                                 // Create a new measurement for the provided field level information
                                 Measurement measurement = new Measurement();
 
-                                measurement.ID = key.SignalID;
                                 measurement.Key = key;
 
                                 // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
@@ -1568,7 +1567,6 @@ namespace GSF.TimeSeries.Adapters
 
                     measurement = new Measurement
                     {
-                        ID = id,
                         Key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString()),
                         TagName = row["PointTag"].ToNonNullString(),
                         Adder = double.Parse(row["Adder"].ToString()),
@@ -1600,7 +1598,6 @@ namespace GSF.TimeSeries.Adapters
 
                                 measurement = new Measurement
                                 {
-                                    ID = id,
                                     Key = MeasurementKey.LookUpOrCreate(id, row["ID"].ToString()),
                                     TagName = row["PointTag"].ToNonNullString(),
                                     Adder = double.Parse(row["Adder"].ToString()),
@@ -1686,7 +1683,6 @@ namespace GSF.TimeSeries.Adapters
                     // Create a new measurement for the provided field level information
                     measurement = new Measurement
                     {
-                        ID = key.SignalID,
                         Key = key,
                         Adder = adder,
                         Multiplier = multipler

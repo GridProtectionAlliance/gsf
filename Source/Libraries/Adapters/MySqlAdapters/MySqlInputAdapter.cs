@@ -353,12 +353,16 @@ namespace MySqlAdapters
                 while (reader.Read())
                 {
                     Ticks timeStamp = m_fakeTimestamps ? new Ticks(DateTime.UtcNow) : new Ticks(reader.GetInt64(timestampColumn));
-                    measurements.Add(new Measurement
+                    MeasurementKey key = MeasurementKey.LookUpBySignalID(reader.GetGuid(idColumn));
+                    if (key != MeasurementKey.Undefined)
+                    {
+                        measurements.Add(new Measurement
                         {
-                        ID = reader.GetGuid(idColumn),
-                        Value = reader.GetDouble(valueColumn),
-                        Timestamp = timeStamp
-                    });
+                            Key = key,
+                            Value = reader.GetDouble(valueColumn),
+                            Timestamp = timeStamp
+                        });
+                    }
                 }
             }
             OnNewMeasurements(measurements);

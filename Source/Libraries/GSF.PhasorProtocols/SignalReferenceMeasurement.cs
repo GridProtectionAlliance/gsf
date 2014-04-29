@@ -96,10 +96,6 @@ namespace GSF.PhasorProtocols
             {
                 return m_measurement.ID;
             }
-            set
-            {
-                m_measurement.ID = value;
-            }
         }
 
         /// <summary>

@@ -345,7 +345,7 @@ namespace DataQualityMonitoring
                         {
                             m_lastChange.Add(key, new Measurement
                                 {
-                                    ID = new Guid(signalID),
+                                    //Assumption made that key.SignalID == signalId
                                     Key = key,
                                     Value = double.NaN,
                                     Timestamp = timestamp

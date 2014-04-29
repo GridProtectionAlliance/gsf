@@ -526,22 +526,19 @@ namespace AdoAdapters
                                                 }
                                             }
 
-                                            measurement.ID = id;
                                             measurement.Key = key;
                                         }
                                         break;
                                     case "Key":
                                         if (MeasurementKey.TryParse(value.ToString(), out key))
                                         {
-                                            measurement.ID = key.SignalID;
-
-                                            if (!lookupCache.ContainsKey(measurement.ID))
+                                            if (!lookupCache.ContainsKey(key.SignalID))
                                             {
                                                 // Cache measurement key associated with ID
-                                                lookupCache[measurement.ID] = key;
+                                                lookupCache[key.SignalID] = key;
 
                                                 // Assign a runtime index optimization for distinct measurements
-                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(measurement.ID, key.Source, key.ID));
+                                                signalIndexCache.Reference.TryAdd(index++, new Tuple<Guid, string, uint>(key.SignalID, key.Source, key.ID));
                                             }
 
                                             measurement.Key = key;

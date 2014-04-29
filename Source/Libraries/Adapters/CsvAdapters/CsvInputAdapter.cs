@@ -440,13 +440,11 @@ namespace CsvAdapters
 
                         if (Guid.TryParse(measurementID, out id))
                         {
-                            measurement.ID = id;
                             measurement.Key = MeasurementKey.LookUpBySignalID(id);
                         }
                         else if (MeasurementKey.TryParse(measurementID, out key))
                         {
                             measurement.Key = key;
-                            measurement.ID = key.SignalID;
                         }
 
                         try
@@ -638,7 +636,6 @@ namespace CsvAdapters
                         else
                         {
                             measurement = new Measurement();
-                            measurement.ID = Guid.Empty;
                             measurement.Key = MeasurementKey.Undefined;
                             measurement.Value = double.NaN;
                         }
@@ -654,17 +651,16 @@ namespace CsvAdapters
 
                         if (m_columns.ContainsKey("Signal ID"))
                         {
-                            measurement.ID = new Guid(fields[m_columns["Signal ID"]]);
+                            Guid measurementID = new Guid(fields[m_columns["Signal ID"]]);
 
                             if (m_columns.ContainsKey("Measurement Key"))
-                                measurement.Key = MeasurementKey.LookUpOrCreate(measurement.ID, fields[m_columns["Measurement Key"]]);
+                                measurement.Key = MeasurementKey.LookUpOrCreate(measurementID, fields[m_columns["Measurement Key"]]);
                             else
-                                measurement.Key = MeasurementKey.LookUpBySignalID(measurement.ID);
+                                measurement.Key = MeasurementKey.LookUpBySignalID(measurementID);
                         }
                         else if (m_columns.ContainsKey("Measurement Key"))
                         {
                             measurement.Key = MeasurementKey.Parse(fields[m_columns["Measurement Key"]]);
-                            measurement.ID = measurement.Key.SignalID;
                         }
 
                         if (m_simulateTimestamp)

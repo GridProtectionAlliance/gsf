@@ -444,13 +444,11 @@ namespace EpriExport
 
                     if (Guid.TryParse(measurementID, out id))
                     {
-                        measurement.ID = id;
                         measurement.Key = MeasurementKey.LookUpBySignalID(id);
                     }
                     else if (MeasurementKey.TryParse(measurementID, out key))
                     {
                         measurement.Key = key;
-                        measurement.ID = key.SignalID;
                     }
 
                     if (measurement.ID != Guid.Empty)

@@ -42,7 +42,6 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Fields
-        private Guid m_id;
         private MeasurementKey m_key;
         private MeasurementStateFlags m_stateFlags;
         private string m_tagName;
@@ -63,6 +62,7 @@ namespace GSF.TimeSeries
         /// </summary>
         public Measurement()
         {
+            m_key = MeasurementKey.Undefined;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_multiplier = 1.0D;
         }
@@ -74,22 +74,18 @@ namespace GSF.TimeSeries
         /// <summary>
         /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="Measurement"/>, if available.
         /// </summary>
-        public virtual Guid ID
+        public Guid ID
         {
             get
             {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
+                return m_key.SignalID;
             }
         }
 
         /// <summary>
         /// Gets or sets the primary <see cref="MeasurementKey"/> of this <see cref="Measurement"/>.
         /// </summary>
-        public virtual MeasurementKey Key
+        public MeasurementKey Key
         {
             get
             {
@@ -97,7 +93,14 @@ namespace GSF.TimeSeries
             }
             set
             {
-                m_key = value;
+                if ((object)value == null)
+                {
+                    m_key = MeasurementKey.Undefined;
+                }
+                else
+                {
+                    m_key = value;
+                }
             }
         }
 
@@ -405,7 +408,7 @@ namespace GSF.TimeSeries
         /// <remarks>Hash code based on value of measurement.</remarks>
         public override int GetHashCode()
         {
-            return m_id.GetHashCode();
+            return m_key.GetHashCode();
         }
 
         #endregion
@@ -499,7 +502,6 @@ namespace GSF.TimeSeries
         {
             return new Measurement
                 {
-                    ID = measurementToClone.ID,
                     Key = measurementToClone.Key,
                     Value = measurementToClone.Value,
                     Adder = measurementToClone.Adder,
@@ -520,7 +522,6 @@ namespace GSF.TimeSeries
         {
             return new Measurement
                 {
-                    ID = measurementToClone.ID,
                     Key = measurementToClone.Key,
                     Value = measurementToClone.Value,
                     Adder = measurementToClone.Adder,
@@ -542,7 +543,6 @@ namespace GSF.TimeSeries
         {
             return new Measurement
                 {
-                    ID = measurementToClone.ID,
                     Key = measurementToClone.Key,
                     Value = value,
                     Adder = measurementToClone.Adder,

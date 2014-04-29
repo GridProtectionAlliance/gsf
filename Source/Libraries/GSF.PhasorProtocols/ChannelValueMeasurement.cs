@@ -48,7 +48,6 @@ namespace GSF.PhasorProtocols
         // Fields
         private IChannelValue<T> m_parent;
         private MeasurementKey m_key;
-        private Guid m_id;
         private MeasurementStateFlags m_stateFlags;
         private bool m_stateFlagsAssigned;
         private string m_tagName;
@@ -101,22 +100,18 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="ChannelValueMeasurement{T}"/>, if available.
         /// </summary>
-        public virtual Guid ID
+        public Guid ID
         {
             get
             {
-                return m_id;
-            }
-            set
-            {
-                m_id = value;
+                return m_key.SignalID;
             }
         }
 
         /// <summary>
         /// Gets the primary key (a <see cref="MeasurementKey"/>, of this <see cref="ChannelValueMeasurement{T}"/>.
         /// </summary>
-        public virtual MeasurementKey Key
+        public MeasurementKey Key
         {
             get
             {
@@ -124,7 +119,14 @@ namespace GSF.PhasorProtocols
             }
             set
             {
-                m_key = value;
+                if ((object)value == null)
+                {
+                    m_key = MeasurementKey.Undefined;
+                }
+                else
+                {
+                    m_key = value;
+                }
             }
         }
 

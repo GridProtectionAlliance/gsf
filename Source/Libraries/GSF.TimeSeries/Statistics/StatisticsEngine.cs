@@ -453,7 +453,6 @@ namespace GSF.TimeSeries.Statistics
                     // Calculate the current value of the statistic measurement
                     return new Measurement
                     {
-                        ID = signalID,
                         Key = MeasurementKey.LookUpOrCreate(signalID, measurement["ID"].ToString()),
                         TagName = measurement["PointTag"].ToNonNullString(),
                         Adder = double.Parse(measurement["Adder"].ToNonNullString("0.0")),

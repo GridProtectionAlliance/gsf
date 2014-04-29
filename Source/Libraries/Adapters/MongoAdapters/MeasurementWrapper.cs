@@ -151,7 +151,6 @@ namespace MongoAdapters
             IMeasurement measurement = new Measurement()
             {
                 Adder = Adder,
-                ID = signalID,
                 Key = MeasurementKey.LookUpOrCreate(signalID, Source, unchecked((uint)ID)),
                 Multiplier = Multiplier,
                 TagName = TagName,

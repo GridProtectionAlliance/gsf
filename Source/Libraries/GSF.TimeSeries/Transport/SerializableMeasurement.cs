@@ -78,7 +78,6 @@ namespace GSF.TimeSeries.Transport
         public SerializableMeasurement(IMeasurement measurement, Encoding encoding)
             : this(encoding)
         {
-            ID = measurement.ID;
             Key = measurement.Key;
             Value = measurement.Value;
             Adder = measurement.Adder;
@@ -148,11 +147,11 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Decode signal ID
-            ID = EndianOrder.BigEndian.ToGuid(buffer, index);
+            Guid signalID = EndianOrder.BigEndian.ToGuid(buffer, index);
             index += 16;
 
             // Apply parsed key changes
-            Key = MeasurementKey.LookUpOrCreate(ID, keySource, keyID);
+            Key = MeasurementKey.LookUpOrCreate(signalID, keySource, keyID);
 
             // Decode tag name string length
             size = EndianOrder.BigEndian.ToInt32(buffer, index);

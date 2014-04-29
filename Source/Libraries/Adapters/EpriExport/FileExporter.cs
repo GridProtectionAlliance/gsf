@@ -395,7 +395,7 @@ namespace EpriExport
                         signalType = InputMeasurementKeyTypes[i];
 
                         // Get measurement for this frame, falling back on latest value
-                        measurementValue = measurements.TryGetValue(inputMeasurementKey, out measurement) ? measurement.AdjustedValue : LatestMeasurements[inputMeasurementKey.SignalID];
+                        measurementValue = measurements.TryGetValue(inputMeasurementKey, out measurement) ? measurement.AdjustedValue : LatestMeasurements[inputMeasurementKey];
 
                         // Export measurement value making any needed adjustments based on signal type
                         if (signalType == SignalType.VPHM)

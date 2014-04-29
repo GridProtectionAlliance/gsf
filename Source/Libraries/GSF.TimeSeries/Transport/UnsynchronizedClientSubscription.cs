@@ -554,7 +554,6 @@ namespace GSF.TimeSeries.Transport
                     {
                         newMeasurement = new Measurement
                         {
-                            ID = measurement.ID,
                             Key = measurement.Key,
                             Value = measurement.GetValue(RealTime),
                             Adder = measurement.Adder,

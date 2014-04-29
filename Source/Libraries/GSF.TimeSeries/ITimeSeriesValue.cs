@@ -41,7 +41,6 @@ namespace GSF.TimeSeries
         Guid ID
         {
             get;
-            set;
         }
 
         /// <summary>

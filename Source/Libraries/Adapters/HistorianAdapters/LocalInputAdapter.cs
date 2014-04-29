@@ -521,7 +521,6 @@ namespace HistorianAdapters
                         // Add current measurement to the collection for publication
                         measurements.Add(new Measurement
                         {
-                            ID = key.SignalID,
                             Key = key,
                             Timestamp = m_simulateTimestamp ? DateTime.UtcNow.Ticks : timestamp,
                             Value = currentPoint.Value,

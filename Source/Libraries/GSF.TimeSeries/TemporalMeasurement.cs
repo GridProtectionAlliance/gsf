@@ -62,7 +62,6 @@ namespace GSF.TimeSeries
         {
             if (measurement != null)
             {
-                ID = measurement.ID;
                 Key = measurement.Key;
                 Value = measurement.Value;
                 Adder = measurement.Adder;

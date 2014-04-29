@@ -420,7 +420,7 @@ namespace ICCPExport
                                 else
                                 {
                                     // Didn't find measurement in this frame, try using a recent value
-                                    measurementValue = LatestMeasurements[inputMeasurementKey.SignalID];
+                                    measurementValue = LatestMeasurements[inputMeasurementKey];
 
                                     // Interpret data quality flags - if no recent measurement is available, we mark it as bad
                                     measurementQuality = (Double.IsNaN(measurementValue) ? DataQuality.Bad : DataQuality.Good);

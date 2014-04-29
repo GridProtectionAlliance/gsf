@@ -292,12 +292,10 @@ namespace ProtocolTester
                 return new Measurement
                 {
                     Key = MeasurementKey.LookUpOrCreate(id, signal, ++measurementID),
-                    ID = id
                 };
             });
 
             // Assign ID and other relevant attributes to the parsed measurement value
-            parsedMeasurement.ID = definedMeasurement.ID;
             parsedMeasurement.Key = definedMeasurement.Key;
             parsedMeasurement.Adder = definedMeasurement.Adder;              // Allows for run-time additive measurement value adjustments
             parsedMeasurement.Multiplier = definedMeasurement.Multiplier;    // Allows for run-time mulplicative measurement value adjustments

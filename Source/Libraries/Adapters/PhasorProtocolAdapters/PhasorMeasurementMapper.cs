@@ -1320,7 +1320,6 @@ namespace PhasorProtocolAdapters
                         // Create a measurement with a reference associated with this adapter
                         definedMeasurement = new Measurement
                         {
-                            ID = signalID,
                             Key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString()),
                             TagName = signalReference,
                             Adder = double.Parse(row["Adder"].ToNonNullString("0.0")),
@@ -1677,7 +1676,6 @@ namespace PhasorProtocolAdapters
             if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
             {
                 // Assign ID and other relevant attributes to the parsed measurement value
-                parsedMeasurement.ID = definedMeasurement.ID;
                 parsedMeasurement.Key = definedMeasurement.Key;
                 parsedMeasurement.Adder = definedMeasurement.Adder;              // Allows for run-time additive measurement value adjustments
                 parsedMeasurement.Multiplier = definedMeasurement.Multiplier;    // Allows for run-time multiplicative measurement value adjustments

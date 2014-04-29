@@ -42,8 +42,8 @@ namespace GSF.TimeSeries
 
         // Fields
         private ConcentratorBase m_parent;
-        private ConcurrentDictionary<Guid, TemporalMeasurement> m_measurements;
-        private ConcurrentDictionary<string, List<Guid>> m_taggedMeasurements;
+        private ConcurrentDictionary<MeasurementKey, TemporalMeasurement> m_measurements;
+        private ConcurrentDictionary<string, List<MeasurementKey>> m_taggedMeasurements;
         private Func<Ticks> m_realTimeFunction;
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
@@ -58,8 +58,8 @@ namespace GSF.TimeSeries
         /// </summary>
         public ImmediateMeasurements()
         {
-            m_measurements = new ConcurrentDictionary<Guid, TemporalMeasurement>();
-            m_taggedMeasurements = new ConcurrentDictionary<string, List<Guid>>();
+            m_measurements = new ConcurrentDictionary<MeasurementKey, TemporalMeasurement>();
+            m_taggedMeasurements = new ConcurrentDictionary<string, List<MeasurementKey>>();
             m_realTimeFunction = () => DateTime.UtcNow.Ticks;
         }
 
@@ -91,7 +91,7 @@ namespace GSF.TimeSeries
         /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
         /// <param name="id">A <see cref="Guid"/> representing the measurement ID.</param>
         /// <returns>A <see cref="Double"/> representing the adjusted measurement value.</returns>
-        public double this[Guid id]
+        public double this[MeasurementKey id]
         {
             get
             {
@@ -100,7 +100,7 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>Returns collection of measurement ID's.</summary>
-        public ICollection<Guid> MeasurementIDs
+        public ICollection<MeasurementKey> MeasurementIDs
         {
             get
             {
@@ -126,7 +126,7 @@ namespace GSF.TimeSeries
                 double minValue = double.MaxValue;
                 double measurement;
 
-                foreach (Guid id in m_measurements.Keys)
+                foreach (MeasurementKey id in m_measurements.Keys)
                 {
                     measurement = this[id];
                     if (!double.IsNaN(measurement))
@@ -151,7 +151,7 @@ namespace GSF.TimeSeries
                 double maxValue = double.MinValue;
                 double measurement;
 
-                foreach (Guid id in m_measurements.Keys)
+                foreach (MeasurementKey id in m_measurements.Keys)
                 {
                     measurement = this[id];
                     if (!double.IsNaN(measurement))
@@ -203,7 +203,7 @@ namespace GSF.TimeSeries
 
                 m_lagTime = value;
 
-                foreach (Guid id in m_measurements.Keys)
+                foreach (MeasurementKey id in m_measurements.Keys)
                 {
                     Measurement(id).LagTime = m_lagTime;
                 }
@@ -231,7 +231,7 @@ namespace GSF.TimeSeries
 
                 m_leadTime = value;
 
-                foreach (Guid id in m_measurements.Keys)
+                foreach (MeasurementKey id in m_measurements.Keys)
                 {
                     Measurement(id).LeadTime = m_leadTime;
                 }
@@ -291,9 +291,9 @@ namespace GSF.TimeSeries
         /// <summary>Returns measurement list of specified tag, if it exists.</summary>
         /// <param name="tag">A <see cref="String"/> that indicates the tag to use.</param>
         /// <returns>A collection of measurement keys.</returns>
-        public ReadOnlyCollection<Guid> TaggedMeasurementKeys(string tag)
+        public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag)
         {
-            return new ReadOnlyCollection<Guid>(m_taggedMeasurements[tag]);
+            return new ReadOnlyCollection<MeasurementKey>(m_taggedMeasurements[tag]);
         }
 
         /// <summary>Store new measurement.</summary>
@@ -311,11 +311,11 @@ namespace GSF.TimeSeries
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
         /// <param name="id"><see cref="Guid"/> based signal ID of measurement.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(Guid id)
+        public TemporalMeasurement Measurement(MeasurementKey id)
         {
             return m_measurements.GetOrAdd(id, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
-                ID = key
+                Key = key
             });
         }
 
@@ -324,9 +324,9 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
         public TemporalMeasurement Measurement(IMeasurement measurement)
         {
-            return m_measurements.GetOrAdd(measurement.RuntimeSignalID(), key => new TemporalMeasurement(m_lagTime, m_leadTime)
+            return m_measurements.GetOrAdd(measurement.Key, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
-                ID = key
+                Key = key
             });
         }
 
@@ -345,7 +345,12 @@ namespace GSF.TimeSeries
         {
             foreach (DataRow row in taggedMeasurements.Rows)
             {
-                AddTaggedMeasurement(row["Tag"].ToNonNullString("_tag_"), row["ID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>());
+                Guid id = row["ID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                MeasurementKey key = MeasurementKey.LookUpBySignalID(id);
+                if (key != MeasurementKey.Undefined)
+                {
+                    AddTaggedMeasurement(row["Tag"].ToNonNullString("_tag_"), key);
+                }
             }
         }
 
@@ -353,10 +358,10 @@ namespace GSF.TimeSeries
         /// <remarks>Allows you to define "grouped" points so you can aggregate certain measurements.</remarks>
         /// <param name="tag">A <see cref="String"/> to represent the key.</param>
         /// <param name="id">A <see cref="Guid"/> ID to associate with the tag.</param>
-        public void AddTaggedMeasurement(string tag, Guid id)
+        public void AddTaggedMeasurement(string tag, MeasurementKey id)
         {
             // Get tag's measurement list
-            List<Guid> measurements = m_taggedMeasurements.GetOrAdd(tag, new List<Guid>());
+            List<MeasurementKey> measurements = m_taggedMeasurements.GetOrAdd(tag, new List<MeasurementKey>());
 
             if (measurements.BinarySearch(id) < 0)
             {
@@ -374,7 +379,7 @@ namespace GSF.TimeSeries
             double measurement;
             double total = 0.0D;
 
-            foreach (Guid id in m_measurements.Keys)
+            foreach (MeasurementKey id in m_measurements.Keys)
             {
                 measurement = this[id];
                 if (!double.IsNaN(measurement))
@@ -396,7 +401,7 @@ namespace GSF.TimeSeries
             double measurement;
             double total = 0.0D;
 
-            foreach (Guid id in m_taggedMeasurements[tag])
+            foreach (MeasurementKey id in m_taggedMeasurements[tag])
             {
                 measurement = this[id];
                 if (!double.IsNaN(measurement))
@@ -417,7 +422,7 @@ namespace GSF.TimeSeries
             double minValue = double.MaxValue;
             double measurement;
 
-            foreach (Guid id in m_taggedMeasurements[tag])
+            foreach (MeasurementKey id in m_taggedMeasurements[tag])
             {
                 measurement = this[id];
                 if (!double.IsNaN(measurement))
@@ -440,7 +445,7 @@ namespace GSF.TimeSeries
             double maxValue = double.MinValue;
             double measurement;
 
-            foreach (Guid id in m_taggedMeasurements[tag])
+            foreach (MeasurementKey id in m_taggedMeasurements[tag])
             {
                 measurement = this[id];
                 if (!double.IsNaN(measurement))

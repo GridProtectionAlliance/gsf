@@ -1445,7 +1445,6 @@ namespace GSF.TimeSeries.Transport
                         measurement.Key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
 
                         // Assign other attributes
-                        measurement.ID = signalID;
                         measurement.TagName = row["PointTag"].ToNonNullString();
                         measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
                         measurement.Adder = double.Parse(row["Adder"].ToString());
@@ -2725,7 +2724,6 @@ namespace GSF.TimeSeries.Transport
                                 // Skip the sequence number and signal index when creating the buffer block measurement
                                 bufferBlockMeasurement = new BufferBlockMeasurement(buffer, responseIndex + 6, responseLength - 6)
                                 {
-                                    ID = measurementKey.Item1,
                                     Key = MeasurementKey.LookUpOrCreate(measurementKey.Item1, measurementKey.Item2, measurementKey.Item3)
                                 };
 

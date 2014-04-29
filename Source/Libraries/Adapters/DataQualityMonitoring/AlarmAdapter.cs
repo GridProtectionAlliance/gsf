@@ -291,8 +291,8 @@ namespace DataQualityMonitoring
 
                     if ((object)alarm.AssociatedMeasurementID != null)
                     {
-                        alarmEvent.ID = alarm.AssociatedMeasurementID.GetValueOrDefault();
-                        alarmEvent.Key = MeasurementKey.LookUpBySignalID(alarmEvent.ID);
+                        Guid alarmEventID = alarm.AssociatedMeasurementID.GetValueOrDefault();
+                        alarmEvent.Key = MeasurementKey.LookUpBySignalID(alarmEventID);
                     }
 
                     m_alarmEvents.Add(alarmEvent);
