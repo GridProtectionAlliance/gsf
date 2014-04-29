@@ -28,7 +28,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using GSF.Data;
-using GSF.IO.Checksums;
 
 namespace GSF.TimeSeries
 {
@@ -55,7 +54,7 @@ namespace GSF.TimeSeries
             m_signalID = signalID;
             m_id = id;
             m_source = source;
-            m_hashCode = GuidSHA1Helper.ComputeHashCode(signalID);
+            m_hashCode = signalID.GetHashCode();
         }
 
         #endregion

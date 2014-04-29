@@ -251,7 +251,6 @@
     <Compile Include="IO\Checksums\Crc16.cs" />
     <Compile Include="IO\Checksums\Crc32.cs" />
     <Compile Include="IO\Checksums\CrcCCITT.cs" />
-    <Compile Include="IO\Checksums\GuidSHA1Helper.cs" />
     <Compile Include="IO\Checksums\NamespaceDoc.cs" />
     <Compile Include="IO\Checksums\Xor16.cs" />
     <Compile Include="IO\Checksums\Xor32.cs" />
