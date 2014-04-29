@@ -112,6 +112,8 @@ using GSF.Reflection;
 using GSF.Scheduling;
 using GSF.Security;
 using GSF.Security.Cryptography;
+using GSF.Threading;
+using GSF.Units;
 
 namespace GSF.ServiceProcess
 {
@@ -355,7 +357,8 @@ namespace GSF.ServiceProcess
         private Guid m_remoteCommandClientID;
         private Process m_remoteCommandProcess;
         private Ticks m_lastStatusUpdateTime;
-        private int m_statusUpdatesDisplayed;
+        private long m_statusUpdateCount;
+        private bool m_supressStatusUpdates;
 
         #endregion
 
@@ -386,7 +389,8 @@ namespace GSF.ServiceProcess
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
 
             // Components
-            m_statusUpdateQueue = ProcessQueue<StatusUpdate>.CreateSynchronousQueue(ProcessStatusUpdates);
+            m_statusUpdateQueue = ProcessQueue<StatusUpdate>.CreateRealTimeQueue(ProcessStatusUpdates);
+            m_statusUpdateQueue.SynchronizedOperationType = SynchronizedOperationType.LongBackground;
             m_statusUpdateQueue.Name = "StatusUpdateQueue";
             m_statusUpdateQueue.ProcessException += StatusUpdateQueue_ProcessException;
 
@@ -1346,7 +1350,7 @@ namespace GSF.ServiceProcess
                         message = string.Format(status, args) + "\r\n\r\n";
                 }
 
-                ServiceResponse response = new ServiceResponse(responseType, message);
+                ServiceResponse response = new ServiceResponse(responseType, CurtailMessageLength(message));
 
                 // Add any specified attachment to the service response
                 if ((object)attachment != null)
@@ -1884,49 +1888,89 @@ namespace GSF.ServiceProcess
             return client.ClientUser.Identity.IsAuthenticated;
         }
 
+        // Curtail response message size if needed
+        private string CurtailMessageLength(string message)
+        {
+            const int OneHalfK = (int)SI.Kilo / 2;
+
+            // Don't curtail unless we are at least 512 characters over message length threshold,
+            // seems superfluous in warning message to curtail just a handful of characters
+            if (message.Length > m_maxStatusUpdatesLength + OneHalfK)
+            {
+                //                                                             1         2         3         4         5         6         7         8
+                //                                                    12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                string warningMessage = string.Format("\r\n...\r\n\r\nMaximum status message size exceeded - suppressed over {0:N2}K characters.\r\n\r\n...\r\n", (message.Length - m_maxStatusUpdatesLength) / SI.Kilo);
+                int availableLength = (m_maxStatusUpdatesLength - warningMessage.Length) / 2;
+
+                if (availableLength > 0 && message.Length > availableLength)
+                {
+                    string top = message.Substring(0, availableLength);
+                    string bottom = message.Substring(message.Length - availableLength);
+                    int newLineIndex;
+
+                    newLineIndex = top.LastIndexOf("\r\n", StringComparison.Ordinal);
+
+                    if (newLineIndex > 0)
+                        top = top.Substring(0, newLineIndex).TrimEnd('\r', '\n');
+
+                    newLineIndex = bottom.IndexOf("\r\n", StringComparison.Ordinal);
+
+                    if (newLineIndex > -1 && newLineIndex + 1 < bottom.Length)
+                        bottom = bottom.Substring(newLineIndex + 1).TrimStart('\r', '\n');
+
+                    message = string.Format("{0}{1}{2}", top, warningMessage, bottom);
+                }
+            }
+
+            return message;
+        }
+
         private void ProcessStatusUpdates(StatusUpdate[] items)
         {
-            bool displayUpdate;
-            int suppressedUpdates = 0;
-            foreach (StatusUpdate item in items)
+            // Reset status update frequency counters after one second
+            if ((DateTime.UtcNow.Ticks - m_lastStatusUpdateTime).ToSeconds() >= 1.0D)
             {
-                if ((DateTime.UtcNow.Ticks - m_lastStatusUpdateTime).ToSeconds() > 1)
-                {
-                    displayUpdate = true;
-                    m_statusUpdatesDisplayed = 1;
-                    m_lastStatusUpdateTime = DateTime.UtcNow.Ticks;
-                }
-                else
-                {
-                    displayUpdate = m_statusUpdatesDisplayed <= m_maxStatusUpdatesFrequency;
-                    m_statusUpdatesDisplayed++;
-                }
+                m_lastStatusUpdateTime = DateTime.UtcNow.Ticks;
 
-                // Send the status update to specified client(s).
-                if (displayUpdate)
-                {
-                    if (item.Message.Length <= m_maxStatusUpdatesLength)
-                    {
-                        SendUpdateClientStatusResponse(item.Client, item.Type, item.Message);
-                    }
-                    else
-                    {
-                        SendUpdateClientStatusResponse(item.Client, item.Type, item.Message.TruncateRight(m_maxStatusUpdatesLength));
-                        SendUpdateClientStatusResponse(item.Client, UpdateType.Warning, string.Format("\r\nSuppressed {0:N0} status update character(s) from being displayed to avoid flooding.\r\n\r\n", item.Message.Length - m_maxStatusUpdatesLength));
-                    }
-                }
-                else
-                {
-                    suppressedUpdates++;
-                }
+                if (m_supressStatusUpdates)
+                    SendUpdateClientStatusResponse(Guid.Empty, UpdateType.Warning, string.Format("Suppressed {0:N0} status updates due to high frequency to avoid flooding.\r\n\r\n", m_statusUpdateCount));
 
-                // Log the status update to the log file if logging is enabled.
+                m_supressStatusUpdates = (m_statusUpdateCount > m_maxStatusUpdatesFrequency);
+                m_statusUpdateCount = 0;
+            }
+
+            // Handle priority messages
+            IEnumerable<StatusUpdate> priorityStatuses = items.Where(status => status.Client != Guid.Empty || status.Type != UpdateType.Information);
+
+            foreach (StatusUpdate clientStatus in priorityStatuses)
+            {
+                m_statusUpdateCount++;
+
+                // All messages sent directly to client should be displayed
+                if (clientStatus.Client != Guid.Empty || !m_supressStatusUpdates)
+                    SendUpdateClientStatusResponse(clientStatus.Client, clientStatus.Type, clientStatus.Message);
+
+                if (m_logStatusUpdates)
+                    m_statusLog.WriteTimestampedLine(clientStatus.Message);
+            }
+
+            // Handle broadcast messages
+            IEnumerable<StatusUpdate> broadcastStatuses = items.Where(status => status.Client == Guid.Empty && status.Type == UpdateType.Information);
+            StringBuilder broadcastMessages = new StringBuilder();
+
+            foreach (StatusUpdate item in broadcastStatuses)
+            {
+                broadcastMessages.Append(item.Message);
+
                 if (m_logStatusUpdates)
                     m_statusLog.WriteTimestampedLine(item.Message);
             }
 
-            if (suppressedUpdates > 0)
-                SendUpdateClientStatusResponse(Guid.Empty, UpdateType.Warning, string.Format("\r\nSuppressed {0:N0} status update(s) from being displayed to avoid flooding.\r\n\r\n", suppressedUpdates));
+            // Counting bulk broadcast status set as one update
+            m_statusUpdateCount++;
+
+            if (!m_supressStatusUpdates)
+                SendUpdateClientStatusResponse(Guid.Empty, UpdateType.Information, broadcastMessages.ToString());
         }
 
         private void SendAuthenticationSuccessResponse(Guid clientID)
@@ -1934,6 +1978,7 @@ namespace GSF.ServiceProcess
             SendResponse(clientID, new ServiceResponse("AuthenticationSuccess"));
         }
 
+        // ReSharper disable once UnusedMember.Local
         private void SendAuthenticationFailureResponse(Guid clientID)
         {
             SendResponse(clientID, new ServiceResponse("AuthenticationFailure"));
@@ -1941,9 +1986,12 @@ namespace GSF.ServiceProcess
 
         private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string response)
         {
+            if (string.IsNullOrEmpty(response))
+                return;
+
             ServiceResponse serviceResponse = new ServiceResponse();
             serviceResponse.Type = "UPDATECLIENTSTATUS-" + type.ToString().ToUpper();
-            serviceResponse.Message = response;
+            serviceResponse.Message = CurtailMessageLength(response);
             SendResponse(clientID, serviceResponse);
         }
 

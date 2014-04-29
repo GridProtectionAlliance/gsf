@@ -50,6 +50,7 @@ using System.Threading;
 using System.Timers;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Threading;
 using Timer = System.Timers.Timer;
 
 namespace GSF.IO
@@ -203,6 +204,7 @@ namespace GSF.IO
             m_operationWaitHandle = new ManualResetEvent(true);
             m_savedFilesWithTime = new Dictionary<DateTime, string>();
             m_logEntryQueue = ProcessQueue<string>.CreateRealTimeQueue(WriteLogEntries);
+            m_logEntryQueue.SynchronizedOperationType = SynchronizedOperationType.Long;
             m_flushTimer = new Timer();
             m_flushTimerInterval = 10.0D;
 
@@ -444,6 +446,7 @@ namespace GSF.IO
             get
             {
                 StringBuilder status = new StringBuilder();
+
                 status.Append("     Configuration section: ");
                 status.Append(m_settingsCategory);
                 status.AppendLine();
@@ -601,6 +604,7 @@ namespace GSF.IO
 
                 // Open the log file (if it exists) or creates it (if it does not exist).
                 m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+
                 // Scrolls to the end of the file so that existing data is not overwritten.
                 m_fileStream.Seek(0, SeekOrigin.End);
 
@@ -634,11 +638,9 @@ namespace GSF.IO
             if (IsOpen)
             {
                 if (flushQueuedEntries)
-                    // Writes all queued log entries to the file.
-                    Flush();
+                    Flush();                // Write all queued log entries to the file
                 else
-                    // Stops processing the queued log entries.
-                    m_logEntryQueue.Stop();
+                    m_logEntryQueue.Stop(); // Stop processing the queued log entries
 
                 if ((object)m_fileStream != null)
                 {
@@ -709,7 +711,7 @@ namespace GSF.IO
 
             if (IsOpen)
             {
-                byte[] buffer = null;
+                byte[] buffer;
 
                 lock (m_fileStream)
                 {
@@ -720,10 +722,8 @@ namespace GSF.IO
 
                 return m_textEncoding.GetString(buffer);
             }
-            else
-            {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
-            }
+
+            throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
         }
 
         /// <summary>
@@ -822,7 +822,7 @@ namespace GSF.IO
 
         private void WriteLogEntries(string[] items)
         {
-            long currentFileSize = 0;
+            long currentFileSize;
             long maximumFileSize = (long)(m_fileSize * 1048576);
 
             if ((object)m_flushTimer != null)

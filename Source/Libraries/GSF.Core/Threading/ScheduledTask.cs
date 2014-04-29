@@ -22,7 +22,7 @@
 //******************************************************************************************************
 
 //------------------------------------------------------------------------------------------------------
-// WARNING: This class contains very low-level logic and optimized to have minimal locking. Before
+// WARNING: This class contains very low-level logic and is optimized to have minimal locking. Before
 //          making any changes, be sure to consult the author as any bugs can introduce a race
 //          condition that will be very difficult to detect and fix. Additional desired functionality
 //          should likely result in another class being created rather than modifying this one.
@@ -234,6 +234,7 @@ namespace GSF.Threading
         private void OnRunningCallback(ThreadContainerBase.CallbackArgs args)
         {
             bool disposing = m_disposing;
+
             if (disposing && args.StartDisposalCallSuccessful)
             {
                 args.ShouldDispose = true;
