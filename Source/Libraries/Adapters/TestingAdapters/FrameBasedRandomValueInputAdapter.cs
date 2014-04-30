@@ -24,8 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Threading;
 using GSF;
 using GSF.Threading;
 using GSF.TimeSeries;
@@ -47,12 +45,23 @@ namespace TestingAdapters
         /// Default value for the <see cref="PublishRate"/> property.
         /// </summary>
         public const double DefaultPublishRate = 30.0;
+        /// <summary>
+        /// The default number of milliseconds for the dealy;
+        /// </summary>
+        public const double DefaultLatency = 125.0;
+        /// <summary>
+        /// The default jitter in the channel (1 standard deviation);
+        /// </summary>
+        public const double DefaultJitter = 30;
+
 
         // Fields
         private double m_publishRate;
-
+        private GaussianDistribution m_latency;
         private ScheduledTask m_timer;
-        private long m_lastPublication;
+        private Random m_random;
+        private long m_nextPublicationTime;
+        private long m_nextPublicationTimeWithLatency;
 
         private bool m_disposed;
 
@@ -112,6 +121,7 @@ namespace TestingAdapters
         /// </summary>
         public override void Initialize()
         {
+            m_random = new Random();
             Dictionary<string, string> settings;
             string setting;
 
@@ -123,6 +133,17 @@ namespace TestingAdapters
 
             if (m_publishRate <= 0.0D)
                 throw new InvalidOperationException(string.Format("publishRate({0}) must be greater than zero", m_publishRate));
+
+            double latency;
+            double jitter;
+            if (!settings.TryGetValue("latency", out setting) || !double.TryParse(setting, out latency))
+                latency = DefaultLatency;
+
+            if (!settings.TryGetValue("jitter", out setting) || !double.TryParse(setting, out jitter))
+                jitter = DefaultJitter;
+
+            //Clips at 3 time the latency and 1/3 latency
+            m_latency = new GaussianDistribution(latency, jitter, latency / 3, latency * 3);
         }
 
         /// <summary>
@@ -142,14 +163,15 @@ namespace TestingAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_lastPublication = ToPublicationTime(DateTime.UtcNow.Ticks);
+            m_nextPublicationTime = ToPublicationTime(DateTime.UtcNow.Ticks);
+            m_nextPublicationTimeWithLatency = m_nextPublicationTime + (long)(m_latency.Next() * TimeSpan.TicksPerMillisecond);
 
             if ((object)m_timer == null)
             {
                 m_timer = new ScheduledTask(ThreadingMode.ThreadPool);
                 m_timer.Running += m_timer_Running;
-                ScheduleNextFramePublication();
             }
+            m_timer.Start();
         }
 
         void m_timer_Running(object sender, EventArgs<ScheduledTaskRunningReason> eventArgs)
@@ -198,41 +220,37 @@ namespace TestingAdapters
             }
         }
 
-        private void ScheduleNextFramePublication()
+        private void PublishFrames()
         {
-            long now = DateTime.UtcNow.Ticks;
-            long nextPublication = GetNextPublicationTime(m_lastPublication);
-            double delta = Ticks.ToMilliseconds(nextPublication - now);
+            while (m_nextPublicationTimeWithLatency - DateTime.UtcNow.Ticks < 1 * TimeSpan.TicksPerMillisecond)
+            {
+                if (!Enabled)
+                    return;
+
+                IMeasurement[] outputMeasurements = OutputMeasurements;
+                IMeasurement[] newMeasurements = new IMeasurement[outputMeasurements.Length];
+                for (int x = 0; x < outputMeasurements.Length; x++)
+                {
+                    newMeasurements[x] = Measurement.Clone(outputMeasurements[x], m_random.NextDouble(), m_nextPublicationTime);
+                }
+                OnNewMeasurements(newMeasurements);
+
+                m_nextPublicationTime = GetNextPublicationTime(m_nextPublicationTime);
+                m_nextPublicationTimeWithLatency = m_nextPublicationTime + (long)(m_latency.Next() * TimeSpan.TicksPerMillisecond);
+            }
 
             if (!Enabled)
                 return;
 
-            if (delta < 1.0D)
-            {
+            long delay = ((m_nextPublicationTimeWithLatency - DateTime.UtcNow.Ticks) / TimeSpan.TicksPerMillisecond);
+           
+            if (delay < 1)
                 m_timer.Start();
-            }
-            else if ((object)m_timer != null)
-            {
-                m_timer.Start((int)delta);
-            }
-        }
+            else if (delay > 10000)
+                m_timer.Start(10000);
+            else
+                m_timer.Start((int)delay);
 
-        private void PublishFrames()
-        {
-            long now = DateTime.UtcNow.Ticks;
-            long nextPublication = GetNextPublicationTime(m_lastPublication);
-
-            while (nextPublication < now)
-            {
-                OnNewMeasurements(OutputMeasurements
-                    .Select((measurement, index) => Measurement.Clone(measurement, ThreadLocalGenerator.Value.NextDouble(), nextPublication))
-                    .ToList<IMeasurement>());
-
-                m_lastPublication = nextPublication;
-                nextPublication = GetNextPublicationTime(m_lastPublication);
-            }
-
-            ScheduleNextFramePublication();
         }
 
         private long GetNextPublicationTime(long time)
@@ -253,21 +271,5 @@ namespace TestingAdapters
 
         #endregion
 
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly Random Generator = new Random();
-        private static readonly ThreadLocal<Random> ThreadLocalGenerator = new ThreadLocal<Random>(CreateGenerator);
-
-        // Static Methods
-        private static Random CreateGenerator()
-        {
-            lock (Generator)
-            {
-                return new Random(Generator.Next());
-            }
-        }
-
-        #endregion
     }
 }
