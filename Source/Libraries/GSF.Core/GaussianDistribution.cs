@@ -62,7 +62,7 @@ namespace GSF
                 throw new ArgumentOutOfRangeException("max", "must be greater than 1/4 standard deviations away from the mean");
 
 
-            m_random = new Random();
+            m_random = new Random(Guid.NewGuid().GetHashCode());
             m_mean = mean;
             m_standardDeviation = standardDeviation;
             m_min = min;

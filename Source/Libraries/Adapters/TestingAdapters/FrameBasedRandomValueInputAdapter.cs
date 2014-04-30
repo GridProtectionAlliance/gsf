@@ -59,10 +59,11 @@ namespace TestingAdapters
         private double m_publishRate;
         private GaussianDistribution m_latency;
         private ScheduledTask m_timer;
+        private ScheduledTask m_statusUpdate;
         private Random m_random;
         private long m_nextPublicationTime;
         private long m_nextPublicationTimeWithLatency;
-
+        private int m_unprocessedMeasurements;
         private bool m_disposed;
 
         #endregion
@@ -121,7 +122,7 @@ namespace TestingAdapters
         /// </summary>
         public override void Initialize()
         {
-            m_random = new Random();
+            m_random = new Random(Guid.NewGuid().GetHashCode());
             Dictionary<string, string> settings;
             string setting;
 
@@ -171,7 +172,13 @@ namespace TestingAdapters
                 m_timer = new ScheduledTask(ThreadingMode.ThreadPool);
                 m_timer.Running += m_timer_Running;
             }
+            if ((object)m_statusUpdate == null)
+            {
+                m_statusUpdate = new ScheduledTask(ThreadingMode.ThreadPool);
+                m_statusUpdate.Running += m_statusUpdate_Running;
+            }
             m_timer.Start();
+            m_statusUpdate.Start(10000);
         }
 
         void m_timer_Running(object sender, EventArgs<ScheduledTaskRunningReason> eventArgs)
@@ -179,6 +186,22 @@ namespace TestingAdapters
             if (eventArgs.Argument == ScheduledTaskRunningReason.Disposing)
                 return;
             PublishFrames();
+        }
+
+        void m_statusUpdate_Running(object sender, EventArgs<ScheduledTaskRunningReason> eventArgs)
+        {
+            if (eventArgs.Argument == ScheduledTaskRunningReason.Disposing)
+                return;
+
+            if (!Enabled)
+                return;
+
+            if (m_unprocessedMeasurements > 10 * m_publishRate)
+            {
+                OnStatusMessage(string.Format("{0} unprocessed messages", m_unprocessedMeasurements));
+            }
+            m_statusUpdate.Start(10000);
+
         }
 
         /// <summary>
@@ -190,6 +213,11 @@ namespace TestingAdapters
             {
                 m_timer.Dispose();
                 m_timer = null;
+            }
+            if ((object)m_statusUpdate != null)
+            {
+                m_statusUpdate.Dispose();
+                m_statusUpdate = null;
             }
         }
 
@@ -237,13 +265,16 @@ namespace TestingAdapters
 
                 m_nextPublicationTime = GetNextPublicationTime(m_nextPublicationTime);
                 m_nextPublicationTimeWithLatency = m_nextPublicationTime + (long)(m_latency.Next() * TimeSpan.TicksPerMillisecond);
+
+                m_unprocessedMeasurements = (int)((DateTime.UtcNow.Ticks - m_nextPublicationTime) / (Ticks.PerSecond / m_publishRate));
+
             }
 
             if (!Enabled)
                 return;
 
             long delay = ((m_nextPublicationTimeWithLatency - DateTime.UtcNow.Ticks) / TimeSpan.TicksPerMillisecond);
-           
+
             if (delay < 1)
                 m_timer.Start();
             else if (delay > 10000)
