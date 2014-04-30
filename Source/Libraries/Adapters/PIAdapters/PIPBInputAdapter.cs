@@ -426,7 +426,6 @@ namespace PIAdapters
                             {
                                 Measurement measurement = new Measurement();
                                 measurement.Key = m_tagKeyMap[point.Name];
-                                measurement.ID = measurement.Key.SignalID;
                                 measurement.Value = (double)value.Value;
                                 measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
                                 measToAdd.Add(measurement);

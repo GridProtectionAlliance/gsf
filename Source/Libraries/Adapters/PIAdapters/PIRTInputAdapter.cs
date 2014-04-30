@@ -311,8 +311,8 @@ namespace PIAdapters
                 foreach (DataRow row in measurements)
                 {
                     var measurement = new Measurement();
-                    measurement.ID = new Guid(row["SIGNALID"].ToString());
-                    measurement.Key = MeasurementKey.LookUpOrCreate(measurement.ID, row["ID"].ToString());
+                    var signalID = new Guid(row["SIGNALID"].ToString());
+                    measurement.Key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
                     outputMeasurements.Add(measurement);
                 }
 
@@ -539,7 +539,6 @@ namespace PIAdapters
                                 {
                                     Measurement measurement = new Measurement();
                                     measurement.Key = m_tagKeyMap[point.Name];
-                                    measurement.ID = measurement.Key.SignalID;
                                     measurement.Value = Convert.ToDouble(value.Value);
                                     measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
                                     measToAdd.Add(measurement);
@@ -638,7 +637,6 @@ namespace PIAdapters
                         MeasurementKey key = m_tagKeyMap[pointvalue.PIPoint.Name];
 
                         Measurement measurement = new Measurement();
-                        measurement.ID = key.SignalID;
                         measurement.Key = key;
                         measurement.Timestamp = pointvalue.PIValue.TimeStamp.LocalDate.ToUniversalTime();
                         measurement.Value = value;
