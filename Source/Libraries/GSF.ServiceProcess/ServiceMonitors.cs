@@ -21,10 +21,43 @@
 //
 //******************************************************************************************************
 
+using System;
 using GSF.Adapters;
 
 namespace GSF.ServiceProcess
 {
+    /// <summary>
+    /// A special exception thrown by error handlers.
+    /// </summary>
+    public class ErrorHandlerException : Exception
+    {
+        /// <summary>
+        /// Creates a new instance of the <see cref="ErrorHandlerException"/> class.
+        /// </summary>
+        public ErrorHandlerException()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="ErrorHandlerException"/> class.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        public ErrorHandlerException(string message)
+            : base(message)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="ErrorHandlerException"/> class.
+        /// </summary>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null reference if no inner exception is specified.</param>
+        public ErrorHandlerException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
+    }
+
     /// <summary>
     /// Adapter loader that loads implementations of <see cref="IServiceMonitor"/>
     /// and delegates messages to the enabled monitors.
@@ -38,25 +71,27 @@ namespace GSF.ServiceProcess
         /// </summary>
         public void HandleServiceHeartbeat()
         {
-            foreach (IServiceMonitor serviceMonitor in Adapters)
-            {
-                if (serviceMonitor.Enabled)
-                    serviceMonitor.HandleServiceHeartbeat();
-            }
+            OperationQueue.Enqueue(new Action<IServiceMonitor>(serviceMonitor => serviceMonitor.HandleServiceHeartbeat()));
         }
 
         /// <summary>
         /// Handles messages received by the service
         /// whenever the service encounters an error.
         /// </summary>
-        /// <param name="message">The error message received from the service.</param>
-        public void HandleServiceErrorMessage(string message)
+        /// <param name="ex">The exception received from the service.</param>
+        public void HandleServiceError(Exception ex)
         {
-            foreach (IServiceMonitor serviceMonitor in Adapters)
+            OperationQueue.Enqueue(new Action<IServiceMonitor>(serviceMonitor =>
             {
-                if (serviceMonitor.Enabled)
-                    serviceMonitor.HandleServiceErrorMessage(message);
-            }
+                try
+                {
+                    serviceMonitor.HandleServiceError(ex);
+                }
+                catch (Exception errorHandlerException)
+                {
+                    throw new ErrorHandlerException(errorHandlerException.Message, errorHandlerException);
+                }
+            }));
         }
 
         /// <summary>
@@ -65,11 +100,20 @@ namespace GSF.ServiceProcess
         /// <param name="args">Arguments provided by the client.</param>
         public void HandleClientMessage(string[] args)
         {
-            foreach (IServiceMonitor serviceMonitor in Adapters)
-            {
-                if (serviceMonitor.Enabled)
-                    serviceMonitor.HandleClientMessage(args);
-            }
+            OperationQueue.Enqueue(new Action<IServiceMonitor>(serviceMonitor => serviceMonitor.HandleClientMessage(args)));
+        }
+
+        /// <summary>
+        /// Executes an operation on the <paramref name="adapter"/> with the given <paramref name="data"/>.
+        /// </summary>
+        /// <param name="adapter">Adapter on which an operation is to be executed.</param>
+        /// <param name="data">The operation to be executed.</param>
+        protected override void ExecuteAdapterOperation(IServiceMonitor adapter, object data)
+        {
+            Action<IServiceMonitor> operation = data as Action<IServiceMonitor>;
+
+            if ((object)operation != null)
+                operation(adapter);
         }
     }
 }

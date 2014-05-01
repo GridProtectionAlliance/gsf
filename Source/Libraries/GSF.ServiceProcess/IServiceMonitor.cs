@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using GSF.Adapters;
 
 namespace GSF.ServiceProcess
@@ -41,8 +42,8 @@ namespace GSF.ServiceProcess
         /// Handles messages received by the service
         /// whenever the service encounters an error.
         /// </summary>
-        /// <param name="message">The error message received from the service.</param>
-        void HandleServiceErrorMessage(string message);
+        /// <param name="ex">The exception received from the service.</param>
+        void HandleServiceError(Exception ex);
 
         /// <summary>
         /// Handles messages sent by a client.
