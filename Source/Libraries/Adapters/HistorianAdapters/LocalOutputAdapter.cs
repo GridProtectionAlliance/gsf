@@ -95,6 +95,7 @@ namespace HistorianAdapters
         private MetadataProviders m_metadataProviders;
         private ReplicationProviders m_replicationProviders;
         private bool m_autoRefreshMetadata;
+        private bool m_attemptingConnection;
         private string m_instanceName;
         private string m_archivePath;
         private long m_archivedMeasurements;
@@ -254,14 +255,15 @@ namespace HistorianAdapters
         /// </summary>
         protected override void ExecuteMetadataRefresh()
         {
-            bool queueEnabled = false;
-
             try
             {
                 if ((object)m_archive != null && m_archive.IsOpen && (object)m_archive.StateFile != null && m_archive.StateFile.IsOpen && (object)m_archive.MetadataFile != null && m_archive.MetadataFile.IsOpen)
                 {
-                    queueEnabled = InternalProcessQueue.Enabled;
-                    InternalProcessQueue.Stop();
+                    if (!m_attemptingConnection)
+                    {
+                        OnStatusMessage("Pausing measurement processing...");
+                        InternalProcessQueue.Stop();
+                    }
 
                     // Synchronously refresh the meta-base.
                     lock (m_metadataProviders.Adapters)
@@ -288,8 +290,20 @@ namespace HistorianAdapters
             }
             finally
             {
-                if (queueEnabled)
-                    InternalProcessQueue.Start();
+                if (Enabled && !InternalProcessQueue.Enabled)
+                {
+                    if (m_attemptingConnection)
+                    {
+                        // OnConnected starts the internal process queue
+                        // and sets m_attemptingConnection to false
+                        OnConnected();
+                    }
+                    else
+                    {
+                        OnStatusMessage("Resuming measurement processing...");
+                        InternalProcessQueue.Start();
+                    }
+                }
             }
         }
 
@@ -484,10 +498,21 @@ namespace HistorianAdapters
         }
 
         /// <summary>
+        /// Called when data output source connection is established.
+        /// </summary>
+        protected override void OnConnected()
+        {
+            m_attemptingConnection = false;
+            base.OnConnected();
+        }
+
+        /// <summary>
         /// Attempts to connect to this <see cref="LocalOutputAdapter"/>.
         /// </summary>
         protected override void AttemptConnection()
         {
+            m_attemptingConnection = true;
+
             // Open archive files
             m_archive.MetadataFile.Open();
             m_archive.StateFile.Open();
@@ -512,12 +537,9 @@ namespace HistorianAdapters
 
             // Kick off a meta-data refresh...
             if (m_autoRefreshMetadata)
-            {
                 RefreshMetadata();
-                m_autoRefreshMetadata = false;
-            }
-
-            OnConnected();
+            else
+                OnConnected();
         }
 
         /// <summary>
@@ -525,6 +547,8 @@ namespace HistorianAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
+            m_attemptingConnection = false;
+
             if ((object)m_archive != null)
             {
                 if (m_archive.IsOpen)

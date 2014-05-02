@@ -517,7 +517,7 @@ namespace GSF.TimeSeries.Adapters
         protected abstract void AttemptConnection();
 
         /// <summary>
-        /// Called when data input source connection is established.
+        /// Called when data output source connection is established.
         /// </summary>
         /// <remarks>
         /// Derived classes should call this method manually if <see cref="UseAsyncConnect"/> is <c>true</c>.
