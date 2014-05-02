@@ -2818,6 +2818,10 @@ namespace GSF.Historian.Files
 
             try
             {
+                // Validate the file name to determine whether the given file is actually a historic file
+                if (!Regex.IsMatch(fileName, string.Format(".+_.+_to_.+\\{0}$", FileExtension)))
+                    return null;
+
                 if (File.Exists(fileName))
                 {
                     // We'll open the file and get relevant information about it.
@@ -2892,18 +2896,12 @@ namespace GSF.Historian.Files
                     searchTime.CompareTo(fileInfo.EndTimeTag) <= 0);
         }
 
+        // Determines if the historic file is in the primary archive location (not offloaded).
         private bool IsNewHistoricArchiveFile(Info fileInfo, string fileName)
         {
             return ((object)fileInfo != null &&
                     string.Compare(FilePath.GetDirectoryName(fileName), FilePath.GetDirectoryName(fileInfo.FileName), StringComparison.OrdinalIgnoreCase) == 0);
         }
-
-        //private bool IsOldHistoricArchiveFile(Info fileInfo)
-        //{
-        //    return ((object)fileInfo != null &&
-        //            !string.IsNullOrEmpty(m_archiveOffloadLocation) &&
-        //            string.Compare(FilePath.GetDirectoryName(m_archiveOffloadLocation), FilePath.GetDirectoryName(fileInfo.FileName), true) == 0);
-        //}
 
         #endregion
 
