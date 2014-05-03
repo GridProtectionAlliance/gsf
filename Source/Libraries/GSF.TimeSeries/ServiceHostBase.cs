@@ -1246,15 +1246,18 @@ namespace GSF.TimeSeries
 
             try
             {
-                // Back up current configuration file, if any
-                if (File.Exists(configurationFile))
+                if (m_configurationBackups > 0)
                 {
-                    string backupConfigFile = configurationFile + ".backup";
+                    // Back up current configuration file, if any
+                    if (File.Exists(configurationFile))
+                    {
+                        string backupConfigFile = configurationFile + ".backup";
 
-                    if (File.Exists(backupConfigFile))
-                        File.Delete(backupConfigFile);
+                        if (File.Exists(backupConfigFile))
+                            File.Delete(backupConfigFile);
 
-                    File.Move(configurationFile, backupConfigFile);
+                        File.Move(configurationFile, backupConfigFile);
+                    }
                 }
             }
             catch (Exception ex)
@@ -1474,10 +1477,10 @@ namespace GSF.TimeSeries
         /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void ReportingProcessHandler(string name, object[] parameters)
         {
-                DataQualityReportingProcess dataQualityReportingProcess = m_dataQualityReportingProcess;
+            DataQualityReportingProcess dataQualityReportingProcess = m_dataQualityReportingProcess;
 
             if ((object)dataQualityReportingProcess != null)
-                {
+            {
                 dataQualityReportingProcess.CleanReportLocation();
                 dataQualityReportingProcess.GenerateReport(DateTime.Today - TimeSpan.FromDays(1));
             }
@@ -2143,7 +2146,7 @@ namespace GSF.TimeSeries
                 }
             }
         }
-        
+
         private void ListReportsRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
@@ -2215,7 +2218,7 @@ namespace GSF.TimeSeries
                             listBuilder.AppendFormat("Expires in {0:0} days", expiration.TotalDays);
 
                         listBuilder.AppendLine();
-        }
+                    }
 
                     foreach (string report in pendingReportsList)
                     {

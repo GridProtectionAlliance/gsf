@@ -217,15 +217,18 @@ namespace GSF.PhasorProtocols.Anonymous
 
                 try
                 {
-                    // Back up current configuration file, if any
-                    if (File.Exists(configurationCacheFileName))
+                    if (ConfigurationBackups > 0)
                     {
-                        string backupConfigFile = configurationCacheFileName + ".backup";
+                        // Back up current configuration file, if any
+                        if (File.Exists(configurationCacheFileName))
+                        {
+                            string backupConfigFile = configurationCacheFileName + ".backup";
 
-                        if (File.Exists(backupConfigFile))
-                            File.Delete(backupConfigFile);
+                            if (File.Exists(backupConfigFile))
+                                File.Delete(backupConfigFile);
 
-                        File.Move(configurationCacheFileName, backupConfigFile);
+                            File.Move(configurationCacheFileName, backupConfigFile);
+                        }
                     }
                 }
                 catch (Exception ex)
