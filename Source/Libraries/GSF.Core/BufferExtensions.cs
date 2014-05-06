@@ -41,6 +41,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Runtime.CompilerServices;
 using GSF.IO;
 
 namespace GSF
@@ -59,7 +60,17 @@ namespace GSF
         /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
         /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
         /// </exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ValidateParameters(this byte[] buffer, int startIndex, int length)
+        {
+            if ((object)buffer == null || startIndex < 0 || length < 0 || startIndex + length > buffer.Length)
+                RaiseValidationError(buffer, startIndex, length);
+        }
+
+        //This method will raise the actual error. 
+        //Needed since .net will not inline anything that might throw an exception.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void RaiseValidationError(byte[] buffer, int startIndex, int length)
         {
             if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");

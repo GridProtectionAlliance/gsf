@@ -72,6 +72,7 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace GSF
 {
@@ -1160,6 +1161,647 @@ namespace GSF
         {
             BigEndian = new EndianOrder(Endianness.BigEndian);
             LittleEndian = new EndianOrder(Endianness.LittleEndian);
+        }
+
+        /// <summary>
+        /// Represents a set of big endian conversions that can be inlined.
+        /// Bounds will not be checked as part of this function call, so, if bounds are violated
+        /// the exception will be thrown at the <see cref="Array"/> level.
+        /// </summary>
+        public static class BigEndianInline
+        {
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Returns a <see cref="Boolean"/> value converted from one byte at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes.</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>true if the byte at startIndex in value is nonzero; otherwise, false.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [SuppressMessage("Microsoft.Performance", "CA1822")]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool ToBoolean(byte[] value, int startIndex)
+            {
+                return value[startIndex] != 0;
+            }
+
+            /// <summary>
+            /// Returns a Unicode character converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A character formed by two bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static char ToChar(byte[] value, int startIndex)
+            {
+                return (char)ToInt16(value, startIndex);
+            }
+
+            /// <summary>
+            /// Returns a double-precision floating point number converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A double-precision floating point number formed by eight bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static unsafe double ToDouble(byte[] value, int startIndex)
+            {
+                long int64 = ToInt64(value, startIndex);
+                return *(double*)&int64;
+            }
+
+            /// <summary>
+            /// Returns a 16-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 16-bit signed integer formed by two bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static short ToInt16(byte[] value, int startIndex)
+            {
+                return (short)((int)value[startIndex] << 8 | (int)value[startIndex + 1]);
+            }
+
+            /// <summary>
+            /// Returns a 32-bit signed integer converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 32-bit signed integer formed by four bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int ToInt32(byte[] value, int startIndex)
+            {
+                return (int)value[startIndex + 0] << 24 |
+                       (int)value[startIndex + 1] << 16 |
+                       (int)value[startIndex + 2] << 8 |
+                       (int)value[startIndex + 3];
+            }
+
+            /// <summary>
+            /// Returns a 64-bit signed integer converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 64-bit signed integer formed by eight bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static long ToInt64(byte[] value, int startIndex)
+            {
+                return (long)value[startIndex + 0] << 56 |
+                       (long)value[startIndex + 1] << 48 |
+                       (long)value[startIndex + 2] << 40 |
+                       (long)value[startIndex + 3] << 32 |
+                       (long)value[startIndex + 4] << 24 |
+                       (long)value[startIndex + 5] << 16 |
+                       (long)value[startIndex + 6] << 8 |
+                       (long)value[startIndex + 7];
+            }
+
+            /// <summary>
+            /// Returns a single-precision floating point number converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A single-precision floating point number formed by four bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static unsafe float ToSingle(byte[] value, int startIndex)
+            {
+                int int32 = ToInt32(value, startIndex);
+                return *(float*)&int32;
+            }
+
+            /// <summary>
+            /// Returns a 16-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 16-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static ushort ToUInt16(byte[] value, int startIndex)
+            {
+                return (ushort)ToInt16(value, startIndex);
+            }
+
+            /// <summary>
+            /// Returns a 32-bit unsigned integer converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 32-bit unsigned integer formed by four bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static uint ToUInt32(byte[] value, int startIndex)
+            {
+                return (uint)ToInt32(value, startIndex);
+            }
+
+            /// <summary>
+            /// Returns a 64-bit unsigned integer converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 64-bit unsigned integer formed by eight bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static ulong ToUInt64(byte[] value, int startIndex)
+            {
+                return (ulong)ToInt64(value, startIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified <see cref="Boolean"/> value as an array of 1 byte in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The <see cref="Boolean"/> value to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
+            {
+                if (value)
+                    destinationArray[destinationIndex] = 1;
+                else
+                    destinationArray[destinationIndex] = 0;
+
+                return 1;
+            }
+
+            /// <summary>
+            /// Copies the specified Unicode character value as an array of 2 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The Unicode character value to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(char value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes((short)value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified double-precision floating point value as an array of 8 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public unsafe static int CopyBytes(double value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes(*(long*)&value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified 16-bit signed integer value as an array of 2 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(short value, byte[] destinationArray, int destinationIndex)
+            {
+                destinationArray[destinationIndex] = (byte)(value >> 8);
+                destinationArray[destinationIndex + 1] = (byte)(value);
+
+                return 2;
+            }
+
+
+            /// <summary>
+            /// Copies the specified 32-bit signed integer value as an array of 4 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(int value, byte[] destinationArray, int destinationIndex)
+            {
+                destinationArray[destinationIndex + 0] = (byte)(value >> 24);
+                destinationArray[destinationIndex + 1] = (byte)(value >> 16);
+                destinationArray[destinationIndex + 2] = (byte)(value >> 8);
+                destinationArray[destinationIndex + 3] = (byte)(value);
+                return 4;
+            }
+
+            /// <summary>
+            /// Copies the specified 64-bit signed integer value as an array of 8 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(long value, byte[] destinationArray, int destinationIndex)
+            {
+
+                destinationArray[destinationIndex + 0] = (byte)(value >> 56);
+                destinationArray[destinationIndex + 1] = (byte)(value >> 48);
+                destinationArray[destinationIndex + 2] = (byte)(value >> 40);
+                destinationArray[destinationIndex + 3] = (byte)(value >> 32);
+                destinationArray[destinationIndex + 4] = (byte)(value >> 24);
+                destinationArray[destinationIndex + 5] = (byte)(value >> 16);
+                destinationArray[destinationIndex + 6] = (byte)(value >> 8);
+                destinationArray[destinationIndex + 7] = (byte)(value);
+
+                return 8;
+            }
+
+            /// <summary>
+            /// Copies the specified single-precision floating point value as an array of 4 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static unsafe int CopyBytes(float value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes(*(int*)&value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified 16-bit unsigned integer value as an array of 2 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(ushort value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes((short)value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified 32-bit unsigned integer value as an array of 4 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(uint value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes((int)value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified 64-bit unsigned integer value as an array of 8 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(ulong value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes((long)value, destinationArray, destinationIndex);
+            }
+
+            #endregion
+
+
+        }
+
+        /// <summary>
+        /// Represents a set of little endian conversions that can be inlined.
+        /// Bounds will not be checked as part of this function call, so, if bounds are violated
+        /// the exception will be thrown at the <see cref="Array"/> level.
+        /// </summary>
+        public static class LittleEndianInline
+        {
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Returns a <see cref="Boolean"/> value converted from one byte at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes.</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>true if the byte at startIndex in value is nonzero; otherwise, false.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [SuppressMessage("Microsoft.Performance", "CA1822")]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static bool ToBoolean(byte[] value, int startIndex)
+            {
+                return value[startIndex] != 0;
+            }
+
+            /// <summary>
+            /// Returns a Unicode character converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A character formed by two bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static char ToChar(byte[] value, int startIndex)
+            {
+                return (char)ToInt16(value, startIndex);
+            }
+
+            /// <summary>
+            /// Returns a double-precision floating point number converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A double-precision floating point number formed by eight bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static unsafe double ToDouble(byte[] value, int startIndex)
+            {
+                long int64 = ToInt64(value, startIndex);
+                return *(double*)&int64;
+            }
+
+            /// <summary>
+            /// Returns a 16-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 16-bit signed integer formed by two bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static short ToInt16(byte[] value, int startIndex)
+            {
+                return (short)((int)value[startIndex] | (int)value[startIndex + 1] << 8);
+            }
+
+            /// <summary>
+            /// Returns a 32-bit signed integer converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 32-bit signed integer formed by four bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int ToInt32(byte[] value, int startIndex)
+            {
+                return (int)value[startIndex + 0] |
+                       (int)value[startIndex + 1] << 8 |
+                       (int)value[startIndex + 2] << 16 |
+                       (int)value[startIndex + 3] << 24;
+            }
+
+            /// <summary>
+            /// Returns a 64-bit signed integer converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 64-bit signed integer formed by eight bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static long ToInt64(byte[] value, int startIndex)
+            {
+                return (long)value[startIndex + 0] |
+                       (long)value[startIndex + 1] << 8 |
+                       (long)value[startIndex + 2] << 16 |
+                       (long)value[startIndex + 3] << 24 |
+                       (long)value[startIndex + 4] << 32 |
+                       (long)value[startIndex + 5] << 40 |
+                       (long)value[startIndex + 6] << 48 |
+                       (long)value[startIndex + 7] << 56;
+
+
+            }
+
+            /// <summary>
+            /// Returns a single-precision floating point number converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A single-precision floating point number formed by four bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static unsafe float ToSingle(byte[] value, int startIndex)
+            {
+                int int32 = ToInt32(value, startIndex);
+                return *(float*)&int32;
+            }
+
+            /// <summary>
+            /// Returns a 16-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 16-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static ushort ToUInt16(byte[] value, int startIndex)
+            {
+                return (ushort)ToInt16(value, startIndex);
+            }
+
+            /// <summary>
+            /// Returns a 32-bit unsigned integer converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 32-bit unsigned integer formed by four bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static uint ToUInt32(byte[] value, int startIndex)
+            {
+                return (uint)ToInt32(value, startIndex);
+            }
+
+            /// <summary>
+            /// Returns a 64-bit unsigned integer converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
+            /// </summary>
+            /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+            /// <param name="startIndex">The starting position within value.</param>
+            /// <returns>A 64-bit unsigned integer formed by eight bytes beginning at startIndex.</returns>
+            /// <exception cref="ArgumentNullException">value is null.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static ulong ToUInt64(byte[] value, int startIndex)
+            {
+                return (ulong)ToInt64(value, startIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified <see cref="Boolean"/> value as an array of 1 byte in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The <see cref="Boolean"/> value to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
+            {
+                if (value)
+                    destinationArray[destinationIndex] = 1;
+                else
+                    destinationArray[destinationIndex] = 0;
+
+                return 1;
+            }
+
+            /// <summary>
+            /// Copies the specified Unicode character value as an array of 2 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The Unicode character value to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(char value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes((short)value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified double-precision floating point value as an array of 8 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public unsafe static int CopyBytes(double value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes(*(long*)&value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified 16-bit signed integer value as an array of 2 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(short value, byte[] destinationArray, int destinationIndex)
+            {
+                destinationArray[destinationIndex] = (byte)value;
+                destinationArray[destinationIndex + 1] = (byte)(value >> 8);
+                return 2;
+            }
+
+
+            /// <summary>
+            /// Copies the specified 32-bit signed integer value as an array of 4 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(int value, byte[] destinationArray, int destinationIndex)
+            {
+                destinationArray[destinationIndex + 0] = (byte)value;
+                destinationArray[destinationIndex + 1] = (byte)(value >> 8);
+                destinationArray[destinationIndex + 2] = (byte)(value >> 16);
+                destinationArray[destinationIndex + 3] = (byte)(value >> 24);
+                return 4;
+            }
+
+            /// <summary>
+            /// Copies the specified 64-bit signed integer value as an array of 8 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(long value, byte[] destinationArray, int destinationIndex)
+            {
+                destinationArray[destinationIndex + 0] = (byte)value;
+                destinationArray[destinationIndex + 1] = (byte)(value >> 8);
+                destinationArray[destinationIndex + 2] = (byte)(value >> 16);
+                destinationArray[destinationIndex + 3] = (byte)(value >> 24);
+                destinationArray[destinationIndex + 4] = (byte)(value >> 32);
+                destinationArray[destinationIndex + 5] = (byte)(value >> 40);
+                destinationArray[destinationIndex + 6] = (byte)(value >> 48);
+                destinationArray[destinationIndex + 7] = (byte)(value >> 56);
+                return 8;
+            }
+
+            /// <summary>
+            /// Copies the specified single-precision floating point value as an array of 4 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static unsafe int CopyBytes(float value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes(*(int*)&value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified 16-bit unsigned integer value as an array of 2 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(ushort value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes((short)value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified 32-bit unsigned integer value as an array of 4 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(uint value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes((int)value, destinationArray, destinationIndex);
+            }
+
+            /// <summary>
+            /// Copies the specified 64-bit unsigned integer value as an array of 8 bytes in the target endian-order to the destination array.
+            /// </summary>
+            /// <param name="value">The number to convert and copy.</param>
+            /// <param name="destinationArray">The destination buffer.</param>
+            /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+            /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static int CopyBytes(ulong value, byte[] destinationArray, int destinationIndex)
+            {
+                return CopyBytes((long)value, destinationArray, destinationIndex);
+            }
+
+            #endregion
+
+
         }
 
         #endregion
