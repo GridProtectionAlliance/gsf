@@ -67,10 +67,9 @@ namespace GSF
                 RaiseValidationError(buffer, startIndex, length);
         }
 
-        //This method will raise the actual error. 
-        //Needed since .net will not inline anything that might throw an exception.
+        // This method will raise the actual error - this is needed since .NET will not inline anything that might throw an exception
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static void RaiseValidationError(byte[] buffer, int startIndex, int length)
+        private static void RaiseValidationError(byte[] buffer, int startIndex, int length)
         {
             if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");

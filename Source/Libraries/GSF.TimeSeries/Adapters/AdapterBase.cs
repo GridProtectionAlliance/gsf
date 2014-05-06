@@ -23,9 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.Data;
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -36,6 +33,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.Units;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -1417,10 +1417,10 @@ namespace GSF.TimeSeries.Adapters
             int takeCount;
             bool dataSourceAvailable = ((object)dataSource != null);
 
-            value = value.Trim();
-
             if (string.IsNullOrWhiteSpace(value))
                 return keys.ToArray();
+
+            value = value.Trim();
 
             if (dataSourceAvailable && ParseFilterExpression(value, out tableName, out expression, out sortField, out takeCount))
             {
@@ -1554,10 +1554,10 @@ namespace GSF.TimeSeries.Adapters
             int takeCount;
             bool dataSourceAvailable = ((object)dataSource != null);
 
-            value = value.Trim();
-
             if (string.IsNullOrWhiteSpace(value))
                 return measurements.ToArray();
+
+            value = value.Trim();
 
             if (dataSourceAvailable && ParseFilterExpression(value, out tableName, out expression, out sortField, out takeCount))
             {

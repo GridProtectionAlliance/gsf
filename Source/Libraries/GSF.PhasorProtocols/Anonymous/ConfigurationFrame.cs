@@ -33,10 +33,11 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
-using System.Threading;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.IO;
 using GSF.IO.Checksums;
+using GSF.Threading;
 
 namespace GSF.PhasorProtocols.Anonymous
 {
@@ -106,8 +107,17 @@ namespace GSF.PhasorProtocols.Anonymous
         #region [ Static ]
 
         // Static Fields
+        private static readonly ProcessQueue<Tuple<IConfigurationFrame, Action<Exception>, string>> s_configurationCacheQueue;
         private static string s_configurationCachePath;
         private static int s_configurationBackups = -1;
+
+        // Static Constructor
+        static ConfigurationFrame()
+        {
+            s_configurationCacheQueue = ProcessQueue<Tuple<IConfigurationFrame, Action<Exception>, string>>.CreateRealTimeQueue(CacheConfigurationFile);
+            s_configurationCacheQueue.SynchronizedOperationType = SynchronizedOperationType.LongBackground;
+            s_configurationCacheQueue.Start();
+        }
 
         // Static Properties
 
@@ -175,16 +185,14 @@ namespace GSF.PhasorProtocols.Anonymous
         /// <param name="configurationName"><see cref="string"/> representing the configuration name.</param>
         public static void Cache(IConfigurationFrame configurationFrame, Action<Exception> exceptionHandler, string configurationName)
         {
-            Tuple<IConfigurationFrame, Action<Exception>, string> state = new Tuple<IConfigurationFrame, Action<Exception>, string>(configurationFrame, exceptionHandler, configurationName);
-            ThreadPool.QueueUserWorkItem(Cache, (object)state);
+            Tuple<IConfigurationFrame, Action<Exception>, string> cacheState = new Tuple<IConfigurationFrame, Action<Exception>, string>(configurationFrame, exceptionHandler, configurationName);
+            s_configurationCacheQueue.Add(cacheState);
         }
 
         // Cache configuration file
-        private static void Cache(object state)
+        private static void CacheConfigurationFile(Tuple<IConfigurationFrame, Action<Exception>, string> args)
         {
-            Tuple<IConfigurationFrame, Action<Exception>, string> args = state as Tuple<IConfigurationFrame, Action<Exception>, string>;
-
-            if (args != null)
+            if ((object)args != null)
             {
                 FileStream configFile = null;
                 IConfigurationFrame configurationFrame = args.Item1;
@@ -252,7 +260,7 @@ namespace GSF.PhasorProtocols.Anonymous
                 }
                 finally
                 {
-                    if (configFile != null)
+                    if ((object)configFile != null)
                         configFile.Close();
                 }
             }

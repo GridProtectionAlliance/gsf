@@ -26,18 +26,6 @@
 //
 //******************************************************************************************************
 
-using System.Text.RegularExpressions;
-using GSF.Collections;
-using GSF.Communication;
-using GSF.Configuration;
-using GSF.Data;
-using GSF.IO;
-using GSF.Net.Security;
-using GSF.Reflection;
-using GSF.Security.Cryptography;
-using GSF.Threading;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -49,9 +37,21 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Timers;
 using System.Xml;
+using GSF.Collections;
+using GSF.Communication;
+using GSF.Configuration;
+using GSF.Data;
+using GSF.IO;
+using GSF.Net.Security;
+using GSF.Reflection;
+using GSF.Security.Cryptography;
+using GSF.Threading;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
@@ -401,7 +401,7 @@ namespace GSF.TimeSeries.Transport
         // Fields
         private volatile Dictionary<Guid, DeviceStatisticsHelper<SubscribedDevice>> m_subscribedDevicesLookup;
         private volatile List<DeviceStatisticsHelper<SubscribedDevice>> m_statisticsHelpers;
-        private LongSynchronizedOperation m_registerStatisticsOperation;
+        private readonly LongSynchronizedOperation m_registerStatisticsOperation;
         private IClient m_commandChannel;
         private UdpClient m_dataChannel;
         private LocalConcentrator m_localConcentrator;
@@ -440,7 +440,7 @@ namespace GSF.TimeSeries.Transport
         private bool m_autoSynchronizeMetadata;
         private bool m_useTransactionForMetadata;
         private int m_metadataSynchronizationTimeout;
-        private LongSynchronizedOperation m_synchronizeMetadataOperation;
+        private readonly LongSynchronizedOperation m_synchronizeMetadataOperation;
         private volatile DataSet m_receivedMetadata;
         private DataSet m_synchronizedMetadata;
         private OperationalModes m_operationalModes;
@@ -479,13 +479,23 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public DataSubscriber()
         {
-            m_registerStatisticsOperation = new LongSynchronizedOperation(HandleDeviceStatisticsRegistration) { IsBackground = true };
+            m_registerStatisticsOperation = new LongSynchronizedOperation(HandleDeviceStatisticsRegistration)
+            {
+                IsBackground = true
+            };
+
             m_requests = new List<ServerCommand>();
-            m_synchronizeMetadataOperation = new LongSynchronizedOperation(SynchronizeMetadata) { IsBackground = true };
+
+            m_synchronizeMetadataOperation = new LongSynchronizedOperation(SynchronizeMetadata)
+            {
+                IsBackground = true
+            };
+
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
             m_useTransactionForMetadata = DefaultUseTransactionForMetadata;
+
             DataLossInterval = 10.0D;
 
             m_bufferBlockCache = new List<BufferBlockMeasurement>();
@@ -3709,7 +3719,9 @@ namespace GSF.TimeSeries.Transport
                             {
                                 if (Guid.TryParse(measurementRow["SignalID"].ToNonNullString(), out signalID))
                                 {
-                                    subscribedDevicesLookup.Add(signalID, statisticsHelper);
+                                    // In some rare cases duplicate signal ID's have been encountered (likely bad configuration),
+                                    // as a result we use a GetOrAdd instead of an Add
+                                    subscribedDevicesLookup.GetOrAdd(signalID, statisticsHelper);
 
                                     switch (measurementRow["SignalType"].ToNonNullString())
                                     {

@@ -147,6 +147,7 @@ namespace PhasorProtocolAdapters
         private Timer m_measurementCounter;
         private bool m_allowUseOfCachedConfiguration;
         private bool m_cachedConfigLoadAttempted;
+        private readonly object m_configurationOperationLock;
         private TimeZoneInfo m_timezone;
         private Ticks m_timeAdjustmentTicks;
         private Ticks m_lastReportTime;
@@ -205,6 +206,7 @@ namespace PhasorProtocolAdapters
             m_dataStreamMonitor.Enabled = false;
 
             m_undefinedDevices = new ConcurrentDictionary<string, long>();
+            m_configurationOperationLock = new object();
         }
 
         #endregion
@@ -1459,17 +1461,20 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Attempts to delete the last known good configuration.", "Administrator", "Editor")]
         public void DeleteCachedConfiguration()
         {
-            try
+            lock (m_configurationOperationLock)
             {
-                ConfigurationFrame.DeleteCachedConfiguration(Name);
-                m_frameParser.ConfigurationFrame = null;
-                m_receivedConfigFrame = false;
-                OnStatusMessage("Cached configuration file \"{0}\" was deleted.", ConfigurationCacheFileName);
-                SendCommand(DeviceCommand.SendConfigurationFrame2);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to delete cached configuration \"{0}\": {1}", ConfigurationCacheFileName, ex.Message), ex));
+                try
+                {
+                    ConfigurationFrame.DeleteCachedConfiguration(Name);
+                    m_frameParser.ConfigurationFrame = null;
+                    m_receivedConfigFrame = false;
+                    OnStatusMessage("Cached configuration file \"{0}\" was deleted.", ConfigurationCacheFileName);
+                    SendCommand(DeviceCommand.SendConfigurationFrame2);
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to delete cached configuration \"{0}\": {1}", ConfigurationCacheFileName, ex.Message), ex));
+                }
             }
         }
 
@@ -1489,25 +1494,30 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Attempts to load the last known good configuration.", "Administrator", "Editor")]
         public void LoadCachedConfiguration()
         {
-            try
+            lock (m_configurationOperationLock)
             {
-                IConfigurationFrame configFrame = ConfigurationFrame.GetCachedConfiguration(Name, true);
-
-                // As soon as a configuration frame is made available to the frame parser, regardless of source,
-                // full parsing of data frames can begin...
-                if ((object)configFrame != null)
+                try
                 {
-                    m_frameParser.ConfigurationFrame = configFrame;
-                    StartMeasurementCounter();
-                    m_receivedConfigFrame = true;
-                    m_configurationChanges++;
+                    IConfigurationFrame configFrame = ConfigurationFrame.GetCachedConfiguration(Name, true);
+
+                    // As soon as a configuration frame is made available to the frame parser, regardless of source,
+                    // full parsing of data frames can begin...
+                    if ((object)configFrame != null)
+                    {
+                        m_frameParser.ConfigurationFrame = configFrame;
+                        StartMeasurementCounter();
+                        m_receivedConfigFrame = true;
+                        m_configurationChanges++;
+                    }
+                    else
+                    {
+                        OnStatusMessage("NOTICE: Cannot load cached configuration, file \"{0}\" does not exist.", ConfigurationCacheFileName);
+                    }
                 }
-                else
-                    OnStatusMessage("NOTICE: Cannot load cached configuration, file \"{0}\" does not exist.", ConfigurationCacheFileName);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to load cached configuration \"{0}\": {1}", ConfigurationCacheFileName, ex.Message), ex));
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to load cached configuration \"{0}\": {1}", ConfigurationCacheFileName, ex.Message), ex));
+                }
             }
         }
 
@@ -1518,38 +1528,43 @@ namespace PhasorProtocolAdapters
         [AdapterCommand("Attempts to load the specified configuration.", "Administrator", "Editor")]
         public void LoadConfiguration(string configurationFileName)
         {
-            try
+            lock (m_configurationOperationLock)
             {
-                IConfigurationFrame configFrame = ConfigurationFrame.GetCachedConfiguration(configurationFileName, false);
-
-                // As soon as a configuration frame is made available to the frame parser, regardless of source,
-                // full parsing of data frames can begin...
-                if ((object)configFrame != null)
+                try
                 {
-                    m_frameParser.ConfigurationFrame = configFrame;
+                    IConfigurationFrame configFrame = ConfigurationFrame.GetCachedConfiguration(configurationFileName, false);
 
-                    try
+                    // As soon as a configuration frame is made available to the frame parser, regardless of source,
+                    // full parsing of data frames can begin...
+                    if ((object)configFrame != null)
                     {
-                        // Cache this configuration frame since its being loaded as the new last known good configuration
-                        ConfigurationFrame.Cache(configFrame, OnProcessException, Name);
+                        m_frameParser.ConfigurationFrame = configFrame;
+
+                        try
+                        {
+                            // Cache this configuration frame since its being loaded as the new last known good configuration
+                            ConfigurationFrame.Cache(configFrame, OnProcessException, Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Process exception for logging
+                            OnProcessException(new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
+                        }
+
+                        StartMeasurementCounter();
+
+                        m_receivedConfigFrame = true;
+                        m_configurationChanges++;
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        // Process exception for logging
-                        OnProcessException(new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
+                        OnStatusMessage("NOTICE: Cannot load configuration, file \"{0}\" does not exist.", configurationFileName);
                     }
-
-                    StartMeasurementCounter();
-
-                    m_receivedConfigFrame = true;
-                    m_configurationChanges++;
                 }
-                else
-                    OnStatusMessage("NOTICE: Cannot load configuration, file \"{0}\" does not exist.", configurationFileName);
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(new InvalidOperationException(string.Format("Failed to load configuration \"{0}\": {1}", configurationFileName, ex.Message), ex));
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to load configuration \"{0}\": {1}", configurationFileName, ex.Message), ex));
+                }
             }
         }
 
@@ -2090,24 +2105,27 @@ namespace PhasorProtocolAdapters
 
         private void m_frameParser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
         {
-            if (!m_receivedConfigFrame)
+            lock (m_configurationOperationLock)
             {
-                OnStatusMessage("Received configuration frame at {0}", DateTime.UtcNow);
-
-                try
+                if (!m_receivedConfigFrame)
                 {
-                    // Cache configuration on an independent thread in case this takes some time
-                    ConfigurationFrame.Cache(e.Argument, OnProcessException, Name);
-                }
-                catch (Exception ex)
-                {
-                    // Process exception for logging
-                    OnProcessException(new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
-                }
+                    OnStatusMessage("Received configuration frame at {0}", DateTime.UtcNow);
 
-                StartMeasurementCounter();
+                    try
+                    {
+                        // Cache configuration on an independent thread in case this takes some time
+                        ConfigurationFrame.Cache(e.Argument, OnProcessException, Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Process exception for logging
+                        OnProcessException(new InvalidOperationException("Failed to queue caching of config frame due to exception: " + ex.Message, ex));
+                    }
 
-                m_receivedConfigFrame = true;
+                    StartMeasurementCounter();
+
+                    m_receivedConfigFrame = true;
+                }
             }
 
             m_configurationChanges++;

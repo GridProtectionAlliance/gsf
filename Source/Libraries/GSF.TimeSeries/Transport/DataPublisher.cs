@@ -647,7 +647,7 @@ namespace GSF.TimeSeries.Transport
         private Timer m_commandChannelRestartTimer;
         private Timer m_cipherKeyRotationTimer;
         private RoutingTables m_routingTables;
-        private EventHandler<EventArgs<ICollection<IMeasurement>>> m_routedMeasurementsHandler;
+        private readonly EventHandler<EventArgs<ICollection<IMeasurement>>> m_routedMeasurementsHandler;
         private string m_metadataTables;
         private string m_cacheMeasurementKeys;
         private SecurityMode m_securityMode;
@@ -2335,10 +2335,11 @@ namespace GSF.TimeSeries.Transport
         // Update rights for the given subscription.
         private void UpdateRights(ClientConnection connection)
         {
+            if ((object)connection == null)
+                return;
+
             try
             {
-                // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
-                // from the remote subscription - this will prevent possible SQL injection attacks.
                 IClientSubscription subscription = connection.Subscription;
                 MeasurementKey[] requestedInputs;
                 HashSet<MeasurementKey> authorizedSignals;
@@ -2346,12 +2347,14 @@ namespace GSF.TimeSeries.Transport
                 string message;
 
                 // Determine if the connection has been disabled or removed - make sure to set authenticated to false if necessary
-                if (!DataSource.Tables["Subscribers"].Select(string.Format("ID = '{0}' AND Enabled <> 0", connection.SubscriberID)).Any())
+                if ((object)DataSource != null && DataSource.Tables.Contains("Subscribers") &&
+                    !DataSource.Tables["Subscribers"].Select(string.Format("ID = '{0}' AND Enabled <> 0", connection.SubscriberID)).Any())
                     connection.Authenticated = false;
 
                 if ((object)subscription != null)
                 {
-                    // Update the subscription associated with this connection based on newly acquired or revoked rights
+                    // It is important here that "SELECT" not be allowed in parsing the input measurement keys expression since this key comes
+                    // from the remote subscription - this will prevent possible SQL injection attacks.
                     requestedInputs = AdapterBase.ParseInputMeasurementKeys(DataSource, false, subscription.RequestedInputFilter);
                     authorizedSignals = new HashSet<MeasurementKey>();
                     subscriberID = subscription.SubscriberID;
@@ -2364,6 +2367,7 @@ namespace GSF.TimeSeries.Transport
 
                     if (!authorizedSignals.SetEquals(subscription.InputMeasurementKeys))
                     {
+                        // Update the subscription associated with this connection based on newly acquired or revoked rights
                         message = string.Format("Update to authorized signals caused subscription to change. Now subscribed to {0} signals.", authorizedSignals.Count);
                         subscription.InputMeasurementKeys = authorizedSignals.ToArray();
                         SendClientResponse(subscription.ClientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
