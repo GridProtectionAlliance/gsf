@@ -1535,9 +1535,10 @@ namespace GSF
         public static Ticks[] SubsecondDistribution(int samplesPerSecond)
         {
             Ticks[] sampleTimes = new Ticks[samplesPerSecond];
+            double sampleFraction = 1.0D / samplesPerSecond;
 
             for (int i = 0; i < samplesPerSecond; i++)
-                sampleTimes[i] = new Ticks((long)(Ticks.PerSecond * (i * (1.0D / samplesPerSecond))));
+                sampleTimes[i] = new Ticks((long)(Ticks.PerSecond * (i * sampleFraction)));
 
             return sampleTimes;
         }
