@@ -235,6 +235,7 @@
     <Compile Include="FuzzyStrings\SorensenDiceDistance.cs" />
     <Compile Include="FuzzyStrings\TanimotoCoefficient.cs" />
     <Compile Include="GaussianDistribution.cs" />
+    <Compile Include="GuidExtensions.cs" />
     <Compile Include="IdentifiableItem.cs" />
     <Compile Include="Identity\NamespaceDoc.cs" />
     <Compile Include="Identity\UserAccountControl.cs" />

@@ -354,6 +354,7 @@ namespace GSF
         /// <param name="destinationBuffer">The destination buffer.</param>
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationBuffer"/>.</param>
         /// <param name="length">The number of bytes to copy.</param>
+        [Obsolete("This method may be removed from future builds", false)]
         public void CopyBuffer(byte[] sourceBuffer, int sourceIndex, byte[] destinationBuffer, int destinationIndex, int length)
         {
             // For non-standard length byte manipulations, we expose copy function that will copy OS-ordered source buffer into proper target endian-order
@@ -365,6 +366,7 @@ namespace GSF
         /// </summary>
         /// <param name="buffer">Byte buffer to be coerced.</param>
         /// <returns>Coerced byte array.</returns>
+        [Obsolete("This method may be removed from future builds", false)]
         public byte[] CoerceByteOrder(byte[] buffer)
         {
             return m_coerceByteOrder(buffer);
@@ -613,12 +615,10 @@ namespace GSF
         [Obsolete("This method may be removed from future builds", false)]
         public Guid ToGuid(byte[] value, int startIndex)
         {
-            // TODO: Bug Identified - Bytes must never be swapped for Guid since it is serialized platform independent. Also, MS-GUID format does not match RFC standard.
-            byte[] buffer = new byte[16];
-
-            m_copyBuffer(value, startIndex, buffer, 0, 16);
-
-            return new Guid(buffer);
+            if (TargetEndianness == Endianness.BigEndian)
+                return GuidExtensions.__ToBigEndianOrderGuid(value, startIndex);
+            else
+                return GuidExtensions.__ToLittleEndianOrderGuid(value, startIndex);
         }
 
         /// <summary>
@@ -846,8 +846,10 @@ namespace GSF
         [Obsolete("This method may be removed from future builds", false)]
         public byte[] GetBytes(Guid value)
         {
-            // TODO: Fix bug in changing the order of a Guid. Also, MS-GUID format does not match RFC standard - perhaps need a RfcGuid class.
-            return m_coerceByteOrder(value.ToByteArray());
+            if (TargetEndianness == Endianness.BigEndian)
+                return GuidExtensions.__ToBigEndianOrderBytes(value);
+            else
+                return GuidExtensions.__ToLittleEndianOrderBytes(value);
         }
 
         /// <summary>
@@ -1142,8 +1144,11 @@ namespace GSF
         [Obsolete("This method may be removed from future builds", false)]
         public int CopyBytes(Guid value, byte[] destinationArray, int destinationIndex)
         {
-            // TODO: Bug Identified - Bytes must never be swapped for Guid since it is serialized platform independent. Also, MS-GUID format does not match RFC standard.
-            m_copyBuffer(value.ToByteArray(), 0, destinationArray, destinationIndex, 16);
+            if (TargetEndianness == Endianness.BigEndian)
+                GuidExtensions.__ToBigEndianOrderBytes(value, destinationArray, destinationIndex);
+            else
+                GuidExtensions.__ToLittleEndianOrderBytes(value, destinationArray, destinationIndex);
+
             return 16;
         }
 
