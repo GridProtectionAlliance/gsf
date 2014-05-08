@@ -173,7 +173,10 @@ namespace GSF
         public const long PerDay = 24L * Ticks.PerHour;
 
         // Fields
-        private readonly long m_value; // Time value stored in ticks
+        /// <summary>
+        /// Time value stored in ticks.
+        /// </summary>
+        public readonly long Value; // Time value stored in ticks
 
         #endregion
 
@@ -185,7 +188,7 @@ namespace GSF
         /// <param name="value">New time value in ticks.</param>
         public Ticks(long value)
         {
-            m_value = value;
+            Value = value;
         }
 
         /// <summary>
@@ -194,7 +197,7 @@ namespace GSF
         /// <param name="value">New time value as a <see cref="DateTime"/>.</param>
         public Ticks(DateTime value)
         {
-            m_value = value.Ticks;
+            Value = value.Ticks;
         }
 
         /// <summary>
@@ -203,7 +206,7 @@ namespace GSF
         /// <param name="value">New time value as a <see cref="TimeSpan"/>.</param>
         public Ticks(TimeSpan value)
         {
-            m_value = value.Ticks;
+            Value = value.Ticks;
         }
 
         #endregion
@@ -220,7 +223,7 @@ namespace GSF
         /// </remarks>
         public double ToSeconds()
         {
-            return m_value / (double)Ticks.PerSecond;
+            return Value / (double)Ticks.PerSecond;
         }
 
         /// <summary>
@@ -233,7 +236,7 @@ namespace GSF
         /// </remarks>
         public double ToMilliseconds()
         {
-            return m_value / (double)Ticks.PerMillisecond;
+            return Value / (double)Ticks.PerMillisecond;
         }
 
         /// <summary>
@@ -246,7 +249,7 @@ namespace GSF
         /// </remarks>
         public double ToMicroseconds()
         {
-            return m_value / (double)Ticks.PerMicrosecond;
+            return Value / (double)Ticks.PerMicrosecond;
         }
 
         /// <summary>
@@ -356,7 +359,7 @@ namespace GSF
             if (leadTime <= 0)
                 throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
-            double distance = (currentTime.m_value - m_value) / (double)Ticks.PerSecond;
+            double distance = (currentTime.Value - Value) / (double)Ticks.PerSecond;
 
             return (distance >= -leadTime && distance <= lagTime);
         }
@@ -379,15 +382,15 @@ namespace GSF
         /// </exception>
         public bool TimeIsValid(Ticks currentTime, Ticks lagTime, Ticks leadTime)
         {
-            if (lagTime.m_value <= 0)
+            if (lagTime.Value <= 0)
                 throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero");
 
-            if (leadTime.m_value <= 0)
+            if (leadTime.Value <= 0)
                 throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero");
 
-            long distance = (currentTime.m_value - m_value);
+            long distance = (currentTime.Value - Value);
 
-            return (distance >= -leadTime.m_value && distance <= lagTime.m_value);
+            return (distance >= -leadTime.Value && distance <= lagTime.Value);
         }
 
         /// <summary>
@@ -399,7 +402,7 @@ namespace GSF
         /// </returns>
         public Ticks DistanceBeyondSecond()
         {
-            return m_value - (m_value - m_value % Ticks.PerSecond);
+            return Value - (Value - Value % Ticks.PerSecond);
         }
 
         /// <summary>
@@ -432,18 +435,18 @@ namespace GSF
             switch (interval)
             {
                 case BaselineTimeInterval.Second:
-                    return m_value - m_value % Ticks.PerSecond;
+                    return Value - Value % Ticks.PerSecond;
                 case BaselineTimeInterval.Minute:
-                    return m_value - m_value % Ticks.PerMinute;
+                    return Value - Value % Ticks.PerMinute;
                 case BaselineTimeInterval.Hour:
-                    return m_value - m_value % Ticks.PerHour;
+                    return Value - Value % Ticks.PerHour;
                 case BaselineTimeInterval.Day:
-                    return m_value - m_value % Ticks.PerDay;
+                    return Value - Value % Ticks.PerDay;
                 case BaselineTimeInterval.Month:
-                    DateTime toMonth = new DateTime(m_value);
+                    DateTime toMonth = new DateTime(Value);
                     return new DateTime(toMonth.Year, toMonth.Month, 1, 0, 0, 0, 0).Ticks;
                 case BaselineTimeInterval.Year:
-                    return new DateTime((new DateTime(m_value)).Year, 1, 1, 0, 0, 0, 0).Ticks;
+                    return new DateTime((new DateTime(Value)).Year, 1, 1, 0, 0, 0, 0).Ticks;
                 default:
                     return this;
             }
@@ -720,7 +723,7 @@ namespace GSF
             if (value is long)
                 num = (long)value;
             else if (value is Ticks)
-                num = ((Ticks)value).m_value;
+                num = ((Ticks)value).Value;
             else if (value is DateTime)
                 num = ((DateTime)value).Ticks;
             else if (value is TimeSpan)
@@ -728,7 +731,7 @@ namespace GSF
             else
                 throw new ArgumentException("Argument must be an Int64 or a Ticks");
 
-            return (m_value < num ? -1 : (m_value > num ? 1 : 0));
+            return (Value < num ? -1 : (Value > num ? 1 : 0));
         }
 
         /// <summary>
@@ -743,7 +746,7 @@ namespace GSF
         /// </returns>
         public int CompareTo(Ticks value)
         {
-            return CompareTo(value.m_value);
+            return CompareTo(value.Value);
         }
 
         /// <summary>
@@ -788,7 +791,7 @@ namespace GSF
         /// </returns>
         public int CompareTo(long value)
         {
-            return (m_value < value ? -1 : (m_value > value ? 1 : 0));
+            return (Value < value ? -1 : (Value > value ? 1 : 0));
         }
 
         /// <summary>
@@ -802,13 +805,13 @@ namespace GSF
         public override bool Equals(object obj)
         {
             if (obj is long)
-                return m_value == (long)obj;
+                return Value == (long)obj;
             if (obj is Ticks)
-                return m_value == ((Ticks)obj).m_value;
+                return Value == ((Ticks)obj).Value;
             if (obj is DateTime)
-                return m_value == ((DateTime)obj).Ticks;
+                return Value == ((DateTime)obj).Ticks;
             if (obj is TimeSpan)
-                return m_value == ((TimeSpan)obj).Ticks;
+                return Value == ((TimeSpan)obj).Ticks;
 
             return false;
         }
@@ -822,7 +825,7 @@ namespace GSF
         /// </returns>
         public bool Equals(Ticks obj)
         {
-            return (m_value == obj.m_value);
+            return (Value == obj.Value);
         }
 
         /// <summary>
@@ -834,7 +837,7 @@ namespace GSF
         /// </returns>
         public bool Equals(DateTime obj)
         {
-            return (m_value == obj.Ticks);
+            return (Value == obj.Ticks);
         }
 
         /// <summary>
@@ -846,7 +849,7 @@ namespace GSF
         /// </returns>
         public bool Equals(TimeSpan obj)
         {
-            return (m_value == obj.Ticks);
+            return (Value == obj.Ticks);
         }
 
         /// <summary>
@@ -858,7 +861,7 @@ namespace GSF
         /// </returns>
         public bool Equals(long obj)
         {
-            return (m_value == obj);
+            return (Value == obj);
         }
 
         /// <summary>
@@ -869,7 +872,7 @@ namespace GSF
         /// </returns>
         public override int GetHashCode()
         {
-            return m_value.GetHashCode();
+            return Value.GetHashCode();
         }
 
         /// <summary>
@@ -887,77 +890,77 @@ namespace GSF
 
         bool IConvertible.ToBoolean(IFormatProvider provider)
         {
-            return Convert.ToBoolean(m_value, provider);
+            return Convert.ToBoolean(Value, provider);
         }
 
         char IConvertible.ToChar(IFormatProvider provider)
         {
-            return Convert.ToChar(m_value, provider);
+            return Convert.ToChar(Value, provider);
         }
 
         sbyte IConvertible.ToSByte(IFormatProvider provider)
         {
-            return Convert.ToSByte(m_value, provider);
+            return Convert.ToSByte(Value, provider);
         }
 
         byte IConvertible.ToByte(IFormatProvider provider)
         {
-            return Convert.ToByte(m_value, provider);
+            return Convert.ToByte(Value, provider);
         }
 
         short IConvertible.ToInt16(IFormatProvider provider)
         {
-            return Convert.ToInt16(m_value, provider);
+            return Convert.ToInt16(Value, provider);
         }
 
         ushort IConvertible.ToUInt16(IFormatProvider provider)
         {
-            return Convert.ToUInt16(m_value, provider);
+            return Convert.ToUInt16(Value, provider);
         }
 
         int IConvertible.ToInt32(IFormatProvider provider)
         {
-            return Convert.ToInt32(m_value, provider);
+            return Convert.ToInt32(Value, provider);
         }
 
         uint IConvertible.ToUInt32(IFormatProvider provider)
         {
-            return Convert.ToUInt32(m_value, provider);
+            return Convert.ToUInt32(Value, provider);
         }
 
         long IConvertible.ToInt64(IFormatProvider provider)
         {
-            return m_value;
+            return Value;
         }
 
         ulong IConvertible.ToUInt64(IFormatProvider provider)
         {
-            return Convert.ToUInt64(m_value, provider);
+            return Convert.ToUInt64(Value, provider);
         }
 
         float IConvertible.ToSingle(IFormatProvider provider)
         {
-            return Convert.ToSingle(m_value, provider);
+            return Convert.ToSingle(Value, provider);
         }
 
         double IConvertible.ToDouble(IFormatProvider provider)
         {
-            return Convert.ToDouble(m_value, provider);
+            return Convert.ToDouble(Value, provider);
         }
 
         decimal IConvertible.ToDecimal(IFormatProvider provider)
         {
-            return Convert.ToDecimal(m_value, provider);
+            return Convert.ToDecimal(Value, provider);
         }
 
         DateTime IConvertible.ToDateTime(IFormatProvider provider)
         {
-            return Convert.ToDateTime(m_value, provider);
+            return Convert.ToDateTime(Value, provider);
         }
 
         object IConvertible.ToType(Type type, IFormatProvider provider)
         {
-            return Convert.ChangeType(m_value, type, provider);
+            return Convert.ChangeType(Value, type, provider);
         }
 
         #endregion
@@ -978,7 +981,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator ==(Ticks value1, Ticks value2)
         {
-            return value1.m_value == value2.m_value;
+            return value1.Value == value2.Value;
         }
 
         /// <summary>
@@ -989,7 +992,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator !=(Ticks value1, Ticks value2)
         {
-            return value1.m_value != value2.m_value;
+            return value1.Value != value2.Value;
         }
 
         /// <summary>
@@ -1000,7 +1003,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator <(Ticks value1, Ticks value2)
         {
-            return value1.m_value < value2.m_value;
+            return value1.Value < value2.Value;
         }
 
         /// <summary>
@@ -1011,7 +1014,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator <=(Ticks value1, Ticks value2)
         {
-            return value1.m_value <= value2.m_value;
+            return value1.Value <= value2.Value;
         }
 
         /// <summary>
@@ -1022,7 +1025,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator >(Ticks value1, Ticks value2)
         {
-            return value1.m_value > value2.m_value;
+            return value1.Value > value2.Value;
         }
 
         /// <summary>
@@ -1033,7 +1036,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator >=(Ticks value1, Ticks value2)
         {
-            return value1.m_value >= value2.m_value;
+            return value1.Value >= value2.Value;
         }
 
         #endregion
@@ -1087,7 +1090,7 @@ namespace GSF
         /// <returns><see cref="Int64"/> value representing the result.</returns>
         public static implicit operator Int64(Ticks value)
         {
-            return value.m_value;
+            return value.Value;
         }
 
         /// <summary>
@@ -1097,7 +1100,7 @@ namespace GSF
         /// <returns><see cref="DateTime"/> value representing the result.</returns>
         public static implicit operator DateTime(Ticks value)
         {
-            return new DateTime(value.m_value);
+            return new DateTime(value.Value);
         }
 
         /// <summary>
@@ -1107,7 +1110,7 @@ namespace GSF
         /// <returns><see cref="TimeSpan"/> value representing the result.</returns>
         public static implicit operator TimeSpan(Ticks value)
         {
-            return new TimeSpan(value.m_value);
+            return new TimeSpan(value.Value);
         }
 
         /// <summary>
@@ -1117,7 +1120,7 @@ namespace GSF
         /// <returns><see cref="NtpTimeTag"/> value representing the result.</returns>
         public static implicit operator NtpTimeTag(Ticks value)
         {
-            return new NtpTimeTag(new DateTime(value.m_value));
+            return new NtpTimeTag(new DateTime(value.Value));
         }
 
         /// <summary>
@@ -1127,7 +1130,7 @@ namespace GSF
         /// <returns><see cref="UnixTimeTag"/> value representing the result.</returns>
         public static implicit operator UnixTimeTag(Ticks value)
         {
-            return new UnixTimeTag(new DateTime(value.m_value));
+            return new UnixTimeTag(new DateTime(value.Value));
         }
 
         #endregion
@@ -1141,7 +1144,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator true(Ticks value)
         {
-            return (value.m_value != 0);
+            return (value.Value != 0);
         }
 
         /// <summary>
@@ -1151,7 +1154,7 @@ namespace GSF
         /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator false(Ticks value)
         {
-            return (value.m_value == 0);
+            return (value.Value == 0);
         }
 
         /// <summary>
@@ -1161,7 +1164,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator ~(Ticks value)
         {
-            return new Ticks(~value.m_value);
+            return new Ticks(~value.Value);
         }
 
         /// <summary>
@@ -1172,7 +1175,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator &(Ticks value1, Ticks value2)
         {
-            return new Ticks(value1.m_value & value2.m_value);
+            return new Ticks(value1.Value & value2.Value);
         }
 
         /// <summary>
@@ -1183,7 +1186,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator |(Ticks value1, Ticks value2)
         {
-            return new Ticks(value1.m_value | value2.m_value);
+            return new Ticks(value1.Value | value2.Value);
         }
 
         /// <summary>
@@ -1194,7 +1197,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator ^(Ticks value1, Ticks value2)
         {
-            return new Ticks(value1.m_value ^ value2.m_value);
+            return new Ticks(value1.Value ^ value2.Value);
         }
 
         /// <summary>
@@ -1205,7 +1208,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator >>(Ticks value, int shifts)
         {
-            return new Ticks((value.m_value >> shifts));
+            return new Ticks((value.Value >> shifts));
         }
 
         /// <summary>
@@ -1216,7 +1219,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator <<(Ticks value, int shifts)
         {
-            return new Ticks((value.m_value << shifts));
+            return new Ticks((value.Value << shifts));
         }
 
         #endregion
@@ -1231,7 +1234,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator %(Ticks value1, Ticks value2)
         {
-            return new Ticks(value1.m_value % value2.m_value);
+            return new Ticks(value1.Value % value2.Value);
         }
 
         /// <summary>
@@ -1242,7 +1245,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator +(Ticks value1, Ticks value2)
         {
-            return new Ticks(value1.m_value + value2.m_value);
+            return new Ticks(value1.Value + value2.Value);
         }
 
         /// <summary>
@@ -1253,7 +1256,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator -(Ticks value1, Ticks value2)
         {
-            return new Ticks(value1.m_value - value2.m_value);
+            return new Ticks(value1.Value - value2.Value);
         }
 
         /// <summary>
@@ -1264,7 +1267,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator *(Ticks value1, Ticks value2)
         {
-            return new Ticks(value1.m_value * value2.m_value);
+            return new Ticks(value1.Value * value2.Value);
         }
 
         // Integer division operators
@@ -1277,7 +1280,7 @@ namespace GSF
         /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator /(Ticks value1, Ticks value2)
         {
-            return new Ticks(value1.m_value / value2.m_value);
+            return new Ticks(value1.Value / value2.Value);
         }
 
         // C# doesn't expose an exponent operator but some other .NET languages do,
@@ -1292,7 +1295,7 @@ namespace GSF
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName]
         public static double op_Exponent(Ticks value1, Ticks value2)
         {
-            return Math.Pow((double)value1.m_value, (double)value2.m_value);
+            return Math.Pow((double)value1.Value, (double)value2.Value);
         }
 
         #endregion
@@ -1605,7 +1608,7 @@ namespace GSF
         public static Ticks AlignToSubsecondDistribution(Ticks timestamp, int samplesPerSecond, long timeResolution)
         {
             // Calculate destination ticks for this frame
-            long ticks = timestamp.m_value, baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
+            long ticks = timestamp.Value, baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
 
             // Baseline timestamp to the top of the second
             baseTicks = ticks - ticks % Ticks.PerSecond;
