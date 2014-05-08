@@ -50,14 +50,6 @@ namespace GSF.TimeSeries.Adapters
         // Events
 
         /// <summary>
-        /// Notifies dependent adapters that this adapter has finished processing a measurement.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
-        /// </remarks>
-        public event EventHandler<EventArgs<IMeasurement>> Notify;
-
-        /// <summary>
         /// Provides status messages to consumer.
         /// </summary>
         /// <remarks>
@@ -1276,37 +1268,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="Notify"/> event with a collection of measurements that have been processed.
-        /// </summary>
-        /// <param name="measurements">The processed measurements.</param>
-        protected virtual void OnNotify(IEnumerable<IMeasurement> measurements)
-        {
-            if ((object)measurements != null)
-            {
-                foreach (IMeasurement measurement in measurements)
-                    OnNotify(measurement);
-            }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="Notify"/> event with a measurement that has been processed.
-        /// </summary>
-        /// <param name="measurement">The processed measurement.</param>
-        protected virtual void OnNotify(IMeasurement measurement)
-        {
-            try
-            {
-                if ((object)Notify != null)
-                    Notify(this, new EventArgs<IMeasurement>(measurement));
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for Notify event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
         /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
         /// <param name="status">New status message.</param>
@@ -1400,7 +1361,7 @@ namespace GSF.TimeSeries.Adapters
         private void GenHashCode()
         {
             // We cache hash code during construction or after element value change to speed usage
-            m_hashCode = (Name + ID.ToString()).GetHashCode();
+            m_hashCode = (Name + ID).GetHashCode();
         }
 
         #endregion

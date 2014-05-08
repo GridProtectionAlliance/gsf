@@ -52,14 +52,6 @@ namespace GSF.TimeSeries.Adapters
         // Events
 
         /// <summary>
-        /// Notifies dependent adapters that this adapter has finished processing a measurement.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the processed measurement.
-        /// </remarks>
-        public event EventHandler<EventArgs<IMeasurement>> Notify;
-
-        /// <summary>
         /// Provides status messages to consumer.
         /// </summary>
         /// <remarks>
@@ -1303,37 +1295,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="Notify"/> event with a collection of measurements that have been processed.
-        /// </summary>
-        /// <param name="measurements">The processed measurements.</param>
-        protected virtual void OnNotify(IEnumerable<IMeasurement> measurements)
-        {
-            if ((object)measurements != null)
-            {
-                foreach (IMeasurement measurement in measurements)
-                    OnNotify(measurement);
-            }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="Notify"/> event with a measurement that has been processed.
-        /// </summary>
-        /// <param name="measurement">The processed measurement.</param>
-        protected virtual void OnNotify(IMeasurement measurement)
-        {
-            try
-            {
-                if ((object)Notify != null)
-                    Notify(this, new EventArgs<IMeasurement>(measurement));
-            }
-            catch (Exception ex)
-            {
-                // We protect our code from consumer thrown exceptions
-                OnProcessException(new InvalidOperationException(string.Format("Exception in consumer handler for Notify event: {0}", ex.Message), ex));
-            }
-        }
-
-        /// <summary>
         /// Raises <see cref="ProcessException"/> event.
         /// </summary>
         /// <param name="ex">Processing <see cref="Exception"/>.</param>
@@ -1511,7 +1472,6 @@ namespace GSF.TimeSeries.Adapters
             if ((object)item != null)
             {
                 // Wire up events
-                item.Notify += item_Notify;
                 item.StatusMessage += item_StatusMessage;
                 item.ProcessException += item_ProcessException;
                 item.InputMeasurementKeysUpdated += item_InputMeasurementKeysUpdated;
@@ -1554,7 +1514,6 @@ namespace GSF.TimeSeries.Adapters
             if ((object)item != null)
             {
                 // Un-wire events
-                item.Notify -= item_Notify;
                 item.StatusMessage -= item_StatusMessage;
                 item.ProcessException -= item_ProcessException;
                 item.InputMeasurementKeysUpdated -= item_InputMeasurementKeysUpdated;
@@ -1565,13 +1524,6 @@ namespace GSF.TimeSeries.Adapters
                 item.Dispose();
                 item.Disposed -= item_Disposed;
             }
-        }
-
-        // Raise notify event on behalf of each item in collection
-        private void item_Notify(object sender, EventArgs<IMeasurement> e)
-        {
-            if ((object)Notify != null)
-                Notify(sender, e);
         }
 
         // Raise status message event on behalf of each item in collection

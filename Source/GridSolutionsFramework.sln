@@ -247,7 +247,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{B486
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rebroadcasters", "Rebroadcasters", "{B15B1BEF-7631-43C0-B048-AD51692FD0C7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Time-series Framework", "Time-series Framework", "{B3986636-8741-4D97-AE46-2A5BA1338B41}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Time-series", "Time-series", "{B3986636-8741-4D97-AE46-2A5BA1338B41}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Synchrophasor", "Synchrophasor", "{51797AFD-D313-4E14-A3E9-531F28C698C2}"
 EndProject

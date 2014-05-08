@@ -97,11 +97,11 @@ namespace GSF.Core.Tests
             // --- Test case1 ---
             buffer = new MemoryStream();
 
-            foreach (int i in case1)
+            foreach (uint i in case1)
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length);
 
             Assert.AreEqual(14, compressedLen);
             // ------------------
@@ -109,11 +109,11 @@ namespace GSF.Core.Tests
             // --- Test case2 ---
             buffer = new MemoryStream();
 
-            foreach (int i in case2)
+            foreach (uint i in case2)
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length);
 
             Assert.AreEqual(23, compressedLen);
             // ------------------
@@ -121,11 +121,11 @@ namespace GSF.Core.Tests
             // --- Test case3 ---
             buffer = new MemoryStream();
 
-            foreach (int i in case3)
+            foreach (uint i in case3)
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length);
 
             Assert.AreEqual(32, compressedLen);
             // ------------------
@@ -133,11 +133,11 @@ namespace GSF.Core.Tests
             // --- Test case4 ---
             buffer = new MemoryStream();
 
-            foreach (int i in case4)
+            foreach (uint i in case4)
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length);
 
             Assert.AreEqual(41, compressedLen);
             // ------------------
@@ -145,11 +145,11 @@ namespace GSF.Core.Tests
             // --- Test case5 ---
             buffer = new MemoryStream();
 
-            foreach (int i in case5)
+            foreach (uint i in case5)
                 buffer.Write(BitConverter.GetBytes(i), 0, 4);
 
             data = buffer.ToArray();
-            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length, 5);
+            compressedLen = PatternCompressor.CompressBuffer(data, 0, data.Length - 4, data.Length);
 
             Assert.AreEqual(41, compressedLen);
             // ------------------
@@ -164,17 +164,17 @@ namespace GSF.Core.Tests
             Random rnd = new Random();
 
             PatternCompressor compressor = new PatternCompressor
-                {
-                    CompressedBuffer = new byte[4 * TotalTestSampleSize],
-                    CompressionStrength = compressionStrength
-                };
+            {
+                CompressedBuffer = new byte[4 * TotalTestSampleSize],
+                CompressionStrength = compressionStrength
+            };
 
             byte[] arrayOfInts;
             int bufferLength;
             int dataLength;
             int compressedLen;
 
-            bool match = true;
+            //bool match;
 
             for (int i = 0; i < TotalTestSampleSize; i++)
             {
@@ -183,7 +183,7 @@ namespace GSF.Core.Tests
                 compressor.Compress(value);
             }
 
-            // Add one byte of extra space to accomodate compression algorithm
+            // Add one byte of extra space to accommodate compression algorithm
             buffer.WriteByte(0xFF);
 
             arrayOfInts = buffer.ToArray();
@@ -204,7 +204,7 @@ namespace GSF.Core.Tests
             //}
 
             Assert.AreEqual(compressedLen, compressor.CompressedBufferLength);
-            Assert.IsTrue(match);
+            //Assert.IsTrue(match);
         }
 
         [TestMethod]
@@ -216,13 +216,13 @@ namespace GSF.Core.Tests
             byte[] original;
             byte[] decompressed;
 
-            bool match = true;
+            bool match;
 
             PatternCompressor compressor = new PatternCompressor
-                {
-                    CompressedBuffer = new byte[4 * TotalTestSampleSize],
-                    CompressionStrength = 31
-                };
+            {
+                CompressedBuffer = new byte[4 * TotalTestSampleSize],
+                CompressionStrength = 31
+            };
 
             PatternDecompressor decompressor = new PatternDecompressor();
 
@@ -265,7 +265,7 @@ namespace GSF.Core.Tests
             byte[] decompressed;
             int decompressedLen;
 
-            bool match = true;
+            bool match;
 
             PatternCompressor compressor = new PatternCompressor
                 {
@@ -296,9 +296,6 @@ namespace GSF.Core.Tests
         }
 
         [TestMethod]
-        // Sequential data averages ~66% with a compression stength of 5
-        // Compression on same buffer using GZip has less than 1% compression (0.19%)
-        // Sample calculation speed = 17.9 MB/s
         public void TestArrayOfFloatCompressionOnSequentialData()
         {
             StringBuilder results = new StringBuilder();
@@ -317,7 +314,7 @@ namespace GSF.Core.Tests
                 buffer.Write(BitConverter.GetBytes(value), 0, 4);
             }
 
-            // Add one byte of extra space to accomodate compression algorithm
+            // Add one byte of extra space to accommodate compression algorithm
             buffer.WriteByte(0xFF);
 
             byte[] arrayOfFloats = buffer.ToArray();
@@ -331,7 +328,7 @@ namespace GSF.Core.Tests
             Ticks compressTime, decompressTime;
             Ticks stopTime, startTime;
 
-            bool lossless = true;
+            bool lossless;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
             startTime = DateTime.UtcNow.Ticks;
@@ -385,9 +382,6 @@ namespace GSF.Core.Tests
         }
 
         [TestMethod]
-        // Sequential data averages ~71% with a compression stength of 5
-        // Compression on same buffer using GZip averages ~16% compression
-        // Sample calculation speed = 18.5 MB/s
         public void TestArrayOfIntCompressionOnSequentialData()
         {
             StringBuilder results = new StringBuilder();
@@ -409,7 +403,7 @@ namespace GSF.Core.Tests
                 buffer.Write(BitConverter.GetBytes(value), 0, 4);
             }
 
-            // Add one byte of extra space to accomodate compression algorithm
+            // Add one byte of extra space to accommodate compression algorithm
             buffer.WriteByte(0xFF);
 
             byte[] arrayOfInts = buffer.ToArray();
@@ -423,7 +417,7 @@ namespace GSF.Core.Tests
             Ticks compressTime, decompressTime;
             Ticks stopTime, startTime;
 
-            bool lossless = true;
+            bool lossless;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
             startTime = DateTime.UtcNow.Ticks;
@@ -477,9 +471,6 @@ namespace GSF.Core.Tests
         }
 
         [TestMethod]
-        // Random data averages ~25% compression with a compression strength of 15
-        // Compression on same buffer using GZip has no compression (-0.12%)
-        // Sample calculation speed = 5.5 MB/s
         public void TestArrayOfFloatCompressionOnRandomData()
         {
             StringBuilder results = new StringBuilder();
@@ -494,7 +485,7 @@ namespace GSF.Core.Tests
                 buffer.Write(BitConverter.GetBytes(value), 0, 4);
             }
 
-            // Add one byte of extra space to accomodate compression algorithm
+            // Add one byte of extra space to accommodate compression algorithm
             buffer.WriteByte(0xFF);
 
             byte[] arrayOfFloats = buffer.ToArray();
@@ -508,7 +499,7 @@ namespace GSF.Core.Tests
             Ticks compressTime, decompressTime;
             Ticks stopTime, startTime;
 
-            bool lossless = true;
+            bool lossless;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
             startTime = DateTime.UtcNow.Ticks;
@@ -562,9 +553,6 @@ namespace GSF.Core.Tests
         }
 
         [TestMethod]
-        // Random data averages ~51% compression with a compression strength of 15
-        // Compression on same buffer using GZip has no compression (-0.12%)
-        // Sample calculation speed = 5.1 MB/s
         public void TestArrayOfIntCompressionOnRandomData()
         {
             StringBuilder results = new StringBuilder();
@@ -593,7 +581,7 @@ namespace GSF.Core.Tests
             Ticks compressTime, decompressTime;
             Ticks stopTime, startTime;
 
-            bool lossless = true;
+            bool lossless;
 
             // Make sure a buffer exists in the buffer pool so that operation time will not be skewed by buffer initialization:
             startTime = DateTime.UtcNow.Ticks;
@@ -647,9 +635,6 @@ namespace GSF.Core.Tests
         }
 
         //[TestMethod]
-        //// Sequential data averages ~30.5% with compression strength of 5
-        //// Compression on same buffer using GZip has no compression (-0.12%)
-        //// Sample calculation speed = 20 MB/s
         //public void TestArrayOfDoubleCompressionOnSequentialData()
         //{
         //    StringBuilder results = new StringBuilder();
@@ -668,7 +653,7 @@ namespace GSF.Core.Tests
         //        buffer.Write(BitConverter.GetBytes(value), 0, 8);
         //    }
 
-        //    // Add one byte of extra space to accomodate compression algorithm
+        //    // Add one byte of extra space to accommodate compression algorithm
         //    buffer.WriteByte(0xff);
 
         //    byte[] arrayOfDoubles = buffer.ToArray();
@@ -706,9 +691,6 @@ namespace GSF.Core.Tests
         //}
 
         //[TestMethod]
-        //// Sequential data averages ~73% with compression strength of 5
-        //// Compression on same buffer using GZip averages ~59% compression
-        //// Sample calculation speed = 30 MB/s
         //public void TestArrayOfLongCompressionOnSequentialData()
         //{
         //    StringBuilder results = new StringBuilder();
@@ -768,9 +750,6 @@ namespace GSF.Core.Tests
         //}
 
         //[TestMethod]
-        //// Random data averages ~11% compression with compression strength of 150
-        //// Compression on same buffer using GZip has no compression (-0.12%)
-        //// Sample calculation speed = 1.4 MB/s
         //public void TestArrayOfDoubleCompressionOnRandomData()
         //{
         //    StringBuilder results = new StringBuilder();
@@ -823,9 +802,6 @@ namespace GSF.Core.Tests
         //}
 
         //[TestMethod]
-        //// Random data averages ~66.5% compression with compression strength of 150
-        //// Compression on same buffer using GZip averages 50% compression
-        //// Sample calculation speed = 1 MB/s
         //public void TestArrayOfLongCompressionOnRandomData()
         //{
         //    StringBuilder results = new StringBuilder();

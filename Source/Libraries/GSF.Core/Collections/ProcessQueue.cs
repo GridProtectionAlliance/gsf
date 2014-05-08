@@ -739,9 +739,9 @@ namespace GSF.Collections
             }
             set
             {
-
                 if (m_processingIsRealTime)
                     throw new InvalidOperationException("Cannot change process interval when " + Name + " is configured for real-time processing");
+
                 lock (SyncRoot)
                 {
                     m_processTimer.Interval = value;
@@ -1252,8 +1252,6 @@ namespace GSF.Collections
             m_stopTime = 0;
             m_startTime = DateTime.UtcNow.Ticks;
 
-            // Note that real-time queues have their main thread running continually, but for
-            // intervaled queues, processing occurs only when data is available to be processed.
             if (m_processingIsRealTime)
             {
                 // Start real-time processing thread
@@ -1334,8 +1332,8 @@ namespace GSF.Collections
         /// </para>
         /// <para>
         /// It is possible for items to be added to the <see cref="ProcessQueue{T}"/> while the flush is executing. The flush will continue to
-        /// process items as quickly as possible until the <see cref="ProcessQueue{T}"/> is empty. Unless the user stops queueing items to be
-        /// processed, the flush call may never return (not a happy situtation on shutdown). For this reason, during this
+        /// process items as quickly as possible until the <see cref="ProcessQueue{T}"/> is empty. Unless the user stops queuing items to be
+        /// processed, the flush call may never return (not a happy situation on shutdown). For this reason, during this
         /// function call, requeuing of items on exception or process timeout is temporarily disabled.
         /// </para>
         /// <para>
@@ -2708,9 +2706,9 @@ namespace GSF.Collections
         private void RealTimeThreadProc()
         {
             if ((object)m_processItemsFunction == null)
-                ProcessNextItem();
+                ProcessNextItem();  // Process one item at a time.
             else
-                ProcessNextItems();
+                ProcessNextItems(); // Process multiple items at once.
 
             if (Count > 0 && (object)m_synchronizedOperation != null)
                 m_synchronizedOperation.RunOnceAsync();
@@ -2727,15 +2725,9 @@ namespace GSF.Collections
             // call hasn't completed before next interval, multiple processing calls will be spawned thereby
             // distributing item processing across multiple threads as needed.
             if ((object)m_processItemsFunction == null)
-            {
-                // Process one item at a time.
-                ProcessNextItem();
-            }
+                ProcessNextItem();  // Process one item at a time.
             else
-            {
-                // Process multiple items at once.
-                ProcessNextItems();
-            }
+                ProcessNextItems(); // Process multiple items at once.
 
             if ((object)m_processTimer != null)
             {
