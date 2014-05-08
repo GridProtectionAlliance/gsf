@@ -1432,22 +1432,23 @@ namespace GSF
         public static byte[] GetBytes(Int24 value)
         {
             // We use a 32-bit integer to store 24-bit integer internally
-            byte[] int32Bytes = BitConverter.GetBytes((int)value);
-            byte[] int24Bytes = new byte[3];
-
+            byte[] data = new byte[3];
+            int valueInt = value;
             if (BitConverter.IsLittleEndian)
             {
-                // Copy little-endian bytes starting at index 0
-                Buffer.BlockCopy(int32Bytes, 0, int24Bytes, 0, 3);
+                data[0] = (byte)valueInt;
+                data[1] = (byte)(valueInt >> 8);
+                data[2] = (byte)(valueInt >> 16);
             }
             else
             {
-                // Copy big-endian bytes starting at index 1
-                Buffer.BlockCopy(int32Bytes, 1, int24Bytes, 0, 3);
+                data[0] = (byte)(valueInt >> 16);
+                data[1] = (byte)(valueInt >> 8);
+                data[2] = (byte)(valueInt);
             }
 
             // Return serialized 3-byte representation of Int24
-            return int24Bytes;
+            return data;
         }
 
         /// <summary>Returns a 24-bit signed integer from three bytes at a specified position in a byte array.</summary>
@@ -1463,31 +1464,23 @@ namespace GSF
         /// <exception cref="ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent an <see cref="Int24"/>.</exception>
         public static Int24 GetValue(byte[] value, int startIndex)
         {
-            if ((object)value == null)
-                throw new ArgumentNullException("value");
-
-            if (startIndex >= value.Length)
-                throw new ArgumentOutOfRangeException("startIndex", "startIndex is greater than value length");
-
-            if (startIndex > value.Length - 3)
-                throw new ArgumentException("value length from startIndex is too small to represent an Int24");
-
-            // We use a 32-bit integer to store 24-bit integer internally
-            byte[] bytes = new byte[4];
-
+            value.ValidateParameters(startIndex, 3);
+            int valueInt;
             if (BitConverter.IsLittleEndian)
             {
-                // Copy little-endian bytes starting at index 0 leaving byte at index 3 blank
-                Buffer.BlockCopy(value, 0, bytes, 0, 3);
+                valueInt = value[0] |
+                         value[1] << 8 |
+                         value[2] << 16;
             }
             else
             {
-                // Copy big-endian bytes starting at index 1 leaving byte at index 0 blank
-                Buffer.BlockCopy(value, 0, bytes, 1, 3);
-            }
+                valueInt = value[0] << 16 |
+                         value[1] << 8 |
+                         value[2];
 
+            }
             // Deserialize value
-            return (Int24)ApplyBitMask(BitConverter.ToInt32(bytes, 0));
+            return (Int24)ApplyBitMask(valueInt);
         }
 
         private static void ValidateNumericRange(int value)
