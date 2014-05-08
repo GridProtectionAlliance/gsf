@@ -1719,7 +1719,7 @@ namespace PhasorProtocolAdapters
             AnalogValueCollection analogs;
             DigitalValueCollection digitals;
             IMeasurement[] measurements;
-            Ticks timestamp;
+            long timestamp;
             int x, count;
 
             // Adjust time to UTC based on source time zone
@@ -1727,21 +1727,21 @@ namespace PhasorProtocolAdapters
                 frame.Timestamp = TimeZoneInfo.ConvertTimeToUtc(frame.Timestamp, m_timezone);
 
             // We also allow "fine tuning" of time for fickle GPS clocks...
-            if (m_timeAdjustmentTicks != 0)
+            if (m_timeAdjustmentTicks.Value != 0)
                 frame.Timestamp += m_timeAdjustmentTicks;
 
             // Get adjusted timestamp of this frame
             timestamp = frame.Timestamp;
 
             // Track latest reporting time for mapper
-            if (timestamp > m_lastReportTime)
+            if (timestamp > m_lastReportTime.Value)
                 m_lastReportTime = timestamp;
             else
                 m_outOfOrderFrames++;
 
             // Track latency statistics against system time - in order for these statistics
             // to be useful, the local clock must be fairly accurate
-            long latency = frame.ReceivedTimestamp - (long)timestamp;
+            long latency = frame.ReceivedTimestamp.Value - timestamp;
 
             if (m_minimumLatency > latency || m_minimumLatency == 0)
                 m_minimumLatency = latency;
@@ -1777,7 +1777,7 @@ namespace PhasorProtocolAdapters
                         definedDevice = statisticsHelper.Device;
 
                         // Track latest reporting time for this device
-                        if (timestamp > definedDevice.LastReportTime)
+                        if (timestamp > definedDevice.LastReportTime.Value)
                             definedDevice.LastReportTime = timestamp;
 
                         // Track quality statistics for this device

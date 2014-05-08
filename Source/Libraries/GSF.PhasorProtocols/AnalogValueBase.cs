@@ -195,9 +195,9 @@ namespace GSF.PhasorProtocols
                 unchecked
                 {
                     if (DataFormat == DataFormat.FixedInteger)
-                        EndianOrder.BigEndian.CopyBytes((short)m_value, buffer, 0);
+                        BigEndian.CopyBytes((short)m_value, buffer, 0);
                     else
-                        EndianOrder.BigEndian.CopyBytes((float)m_value, buffer, 0);
+                        BigEndian.CopyBytes((float)m_value, buffer, 0);
                 }
 
                 return buffer;
@@ -258,13 +258,13 @@ namespace GSF.PhasorProtocols
 
             if (DataFormat == DataFormat.FixedInteger)
             {
-                m_value = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
+                m_value = BigEndian.ToInt16(buffer, startIndex);
                 m_valueAssigned = true;
                 return 2;
             }
             else
             {
-                m_value = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
+                m_value = BigEndian.ToSingle(buffer, startIndex);
                 m_valueAssigned = true;
                 return 4;
             }

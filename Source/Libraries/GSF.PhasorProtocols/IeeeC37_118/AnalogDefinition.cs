@@ -110,7 +110,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 buffer[0] = (byte)this.AnalogType;
 
                 // Store scaling in last three bytes
-                EndianOrder.BigEndian.CopyBytes(scalingFactor, buffer, 1);
+                BigEndian.CopyBytes(scalingFactor, buffer, 1);
 
                 return buffer;
             }
@@ -131,7 +131,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             this.AnalogType = (AnalogType)buffer[startIndex];
 
             // Last three bytes represent scaling factor
-            ScalingValue = EndianOrder.BigEndian.ToUInt24(buffer, startIndex + 1);
+            ScalingValue = BigEndian.ToUInt24(buffer, startIndex + 1);
 
             return ConversionFactorLength;
         }

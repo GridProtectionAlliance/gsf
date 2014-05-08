@@ -429,7 +429,7 @@ namespace GSF.PhasorProtocols
                 int index = 0;
 
                 // Copy in common cell image
-                EndianOrder.BigEndian.CopyBytes(m_statusFlags, buffer, index);
+                BigEndian.CopyBytes(m_statusFlags, buffer, index);
                 index += 2;
 
                 m_phasorValues.CopyImage(buffer, ref index);
@@ -492,7 +492,7 @@ namespace GSF.PhasorProtocols
             IDigitalValue digitalValue;
             int x, parsedLength, index = startIndex;
 
-            StatusFlags = EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
+            StatusFlags = BigEndian.ToUInt16(buffer, startIndex);
             index += 2;
 
             // By the very nature of the major phasor protocols supporting the same order of phasors, frequency, df/dt, analog and digitals

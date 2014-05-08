@@ -166,7 +166,7 @@ namespace GSF.PhasorProtocols
                 byte[] buffer = new byte[BodyLength];
                 int index = 2;
 
-                EndianOrder.BigEndian.CopyBytes((short)m_command, buffer, 0);
+                BigEndian.CopyBytes((short)m_command, buffer, 0);
                 base.BodyImage.CopyImage(buffer, ref index, base.BodyLength);
 
                 return buffer;
@@ -208,7 +208,7 @@ namespace GSF.PhasorProtocols
         {
             int parsedLength = 2;
 
-            m_command = (DeviceCommand)EndianOrder.BigEndian.ToInt16(buffer, startIndex);
+            m_command = (DeviceCommand)BigEndian.ToInt16(buffer, startIndex);
             parsedLength += base.ParseBodyImage(buffer, startIndex + 2, length);
 
             return parsedLength;

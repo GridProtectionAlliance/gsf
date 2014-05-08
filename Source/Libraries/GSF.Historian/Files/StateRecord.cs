@@ -329,10 +329,11 @@ namespace GSF.Historian.Files
             m_archivedData.GenerateBinaryImage(buffer, startIndex);
             m_previousData.GenerateBinaryImage(buffer, startIndex + 16);
             m_currentData.GenerateBinaryImage(buffer, startIndex + 32);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_activeDataBlockIndex), 0, buffer, startIndex + 48, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_activeDataBlockSlot), 0, buffer, startIndex + 52, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_slope1), 0, buffer, startIndex + 56, 8);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_slope2), 0, buffer, startIndex + 64, 8);
+
+            LittleEndian.CopyBytes(m_activeDataBlockIndex, buffer, startIndex + 48);
+            LittleEndian.CopyBytes(m_activeDataBlockSlot, buffer, startIndex + 52);
+            LittleEndian.CopyBytes(m_slope1, buffer, startIndex + 56);
+            LittleEndian.CopyBytes(m_slope2, buffer, startIndex + 64);
 
             return length;
         }

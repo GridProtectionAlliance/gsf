@@ -569,7 +569,7 @@ namespace GSF.PhasorProtocols
             if (ValidateCheckSum)
             {
                 int sumLength = BinaryLength - 2;
-                return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
+                return BigEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
             }
 
             return true;
@@ -586,7 +586,7 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         protected virtual void AppendChecksum(byte[] buffer, int startIndex)
         {
-            EndianOrder.BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
+            BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
         }
 
         /// <summary>

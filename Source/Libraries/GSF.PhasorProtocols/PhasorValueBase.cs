@@ -320,34 +320,34 @@ namespace GSF.PhasorProtocols
                     {
                         if (DataFormat == DataFormat.FixedInteger)
                         {
-                            EndianOrder.BigEndian.CopyBytes((short)UnscaledReal, buffer, 0);
-                            EndianOrder.BigEndian.CopyBytes((short)UnscaledImaginary, buffer, 2);
+                            BigEndian.CopyBytes((short)UnscaledReal, buffer, 0);
+                            BigEndian.CopyBytes((short)UnscaledImaginary, buffer, 2);
                         }
                         else
                         {
-                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.Real, buffer, 0);
-                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.Imaginary, buffer, 4);
+                            BigEndian.CopyBytes((float)m_phasor.Real, buffer, 0);
+                            BigEndian.CopyBytes((float)m_phasor.Imaginary, buffer, 4);
                         }
                     }
                     else
                     {
                         if (DataFormat == DataFormat.FixedInteger)
                         {
-                            EndianOrder.BigEndian.CopyBytes((ushort)(m_phasor.Magnitude / Definition.ConversionFactor), buffer, 0);
+                            BigEndian.CopyBytes((ushort)(m_phasor.Magnitude / Definition.ConversionFactor), buffer, 0);
 
                             if (AngleFormat == AngleFormat.Radians)
-                                EndianOrder.BigEndian.CopyBytes((short)(m_phasor.Angle * 10000.0D), buffer, 2);
+                                BigEndian.CopyBytes((short)(m_phasor.Angle * 10000.0D), buffer, 2);
                             else
-                                EndianOrder.BigEndian.CopyBytes((short)(m_phasor.Angle.ToDegrees() * 10000.0D), buffer, 2);
+                                BigEndian.CopyBytes((short)(m_phasor.Angle.ToDegrees() * 10000.0D), buffer, 2);
                         }
                         else
                         {
-                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.Magnitude, buffer, 0);
+                            BigEndian.CopyBytes((float)m_phasor.Magnitude, buffer, 0);
 
                             if (AngleFormat == AngleFormat.Radians)
-                                EndianOrder.BigEndian.CopyBytes((float)m_phasor.Angle, buffer, 4);
+                                BigEndian.CopyBytes((float)m_phasor.Angle, buffer, 4);
                             else
-                                EndianOrder.BigEndian.CopyBytes((float)m_phasor.Angle.ToDegrees(), buffer, 4);
+                                BigEndian.CopyBytes((float)m_phasor.Angle.ToDegrees(), buffer, 4);
                         }
                     }
                 }
@@ -445,18 +445,18 @@ namespace GSF.PhasorProtocols
                 if (CoordinateFormat == CoordinateFormat.Rectangular)
                 {
                     // Parse from fixed-integer, rectangular
-                    UnscaledReal = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
-                    UnscaledImaginary = EndianOrder.BigEndian.ToInt16(buffer, startIndex + 2);
+                    UnscaledReal = BigEndian.ToInt16(buffer, startIndex);
+                    UnscaledImaginary = BigEndian.ToInt16(buffer, startIndex + 2);
                 }
                 else
                 {
                     // Parse from fixed-integer, polar
-                    m_phasor.Magnitude = EndianOrder.BigEndian.ToUInt16(buffer, startIndex) * Definition.ConversionFactor;
+                    m_phasor.Magnitude = BigEndian.ToUInt16(buffer, startIndex) * Definition.ConversionFactor;
 
                     if (AngleFormat == AngleFormat.Radians)
-                        m_phasor.Angle = EndianOrder.BigEndian.ToInt16(buffer, startIndex + 2) / 10000.0D;
+                        m_phasor.Angle = BigEndian.ToInt16(buffer, startIndex + 2) / 10000.0D;
                     else
-                        m_phasor.Angle = Angle.FromDegrees(EndianOrder.BigEndian.ToInt16(buffer, startIndex + 2) / 10000.0D);
+                        m_phasor.Angle = Angle.FromDegrees(BigEndian.ToInt16(buffer, startIndex + 2) / 10000.0D);
                 }
 
                 return 4;
@@ -466,18 +466,18 @@ namespace GSF.PhasorProtocols
                 if (CoordinateFormat == CoordinateFormat.Rectangular)
                 {
                     // Parse from single-precision floating-point, rectangular
-                    m_phasor.Real = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
-                    m_phasor.Imaginary = EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4);
+                    m_phasor.Real = BigEndian.ToSingle(buffer, startIndex);
+                    m_phasor.Imaginary = BigEndian.ToSingle(buffer, startIndex + 4);
                 }
                 else
                 {
                     // Parse from single-precision floating-point, polar
-                    m_phasor.Magnitude = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
+                    m_phasor.Magnitude = BigEndian.ToSingle(buffer, startIndex);
 
                     if (AngleFormat == AngleFormat.Radians)
-                        m_phasor.Angle = EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4);
+                        m_phasor.Angle = BigEndian.ToSingle(buffer, startIndex + 4);
                     else
-                        m_phasor.Angle = Angle.FromDegrees(EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4));
+                        m_phasor.Angle = Angle.FromDegrees(BigEndian.ToSingle(buffer, startIndex + 4));
                 }
 
                 return 8;

@@ -256,13 +256,13 @@ namespace GSF.PhasorProtocols
                 {
                     if (DataFormat == DataFormat.FixedInteger)
                     {
-                        EndianOrder.BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes((short)UnscaledDfDt, buffer, 2);
+                        BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
+                        BigEndian.CopyBytes((short)UnscaledDfDt, buffer, 2);
                     }
                     else
                     {
-                        EndianOrder.BigEndian.CopyBytes((float)m_frequency, buffer, 0);
-                        EndianOrder.BigEndian.CopyBytes((float)m_dfdt, buffer, 4);
+                        BigEndian.CopyBytes((float)m_frequency, buffer, 0);
+                        BigEndian.CopyBytes((float)m_dfdt, buffer, 4);
                     }
                 }
 
@@ -332,15 +332,15 @@ namespace GSF.PhasorProtocols
 
             if (DataFormat == DataFormat.FixedInteger)
             {
-                UnscaledFrequency = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
-                UnscaledDfDt = EndianOrder.BigEndian.ToInt16(buffer, startIndex + 2);
+                UnscaledFrequency = BigEndian.ToInt16(buffer, startIndex);
+                UnscaledDfDt = BigEndian.ToInt16(buffer, startIndex + 2);
 
                 return 4;
             }
             else
             {
-                m_frequency = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
-                m_dfdt = EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4);
+                m_frequency = BigEndian.ToSingle(buffer, startIndex);
+                m_dfdt = BigEndian.ToSingle(buffer, startIndex + 4);
 
                 m_frequencyAssigned = true;
                 m_dfdtAssigned = true;

@@ -244,8 +244,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 byte[] buffer = new byte[ConversionFactorLength];
 
-                EndianOrder.BigEndian.CopyBytes(m_normalStatus, buffer, 0);
-                EndianOrder.BigEndian.CopyBytes(m_validInputs, buffer, 2);
+                BigEndian.CopyBytes(m_normalStatus, buffer, 0);
+                BigEndian.CopyBytes(m_validInputs, buffer, 2);
 
                 return buffer;
             }
@@ -406,8 +406,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
         internal int ParseConversionFactor(byte[] buffer, int startIndex)
         {
-            m_normalStatus = EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
-            m_validInputs = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 2);
+            m_normalStatus = BigEndian.ToUInt16(buffer, startIndex);
+            m_validInputs = BigEndian.ToUInt16(buffer, startIndex + 2);
 
             return ConversionFactorLength;
         }

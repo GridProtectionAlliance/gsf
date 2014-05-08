@@ -93,11 +93,11 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             m_frameType = (FrameType)(buffer[startIndex + 1] & ~VersionNumberMask);
             m_version = (byte)(buffer[startIndex + 1] & VersionNumberMask);
 
-            m_frameLength = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 2);
-            m_idCode = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
+            m_frameLength = BigEndian.ToUInt16(buffer, startIndex + 2);
+            m_idCode = BigEndian.ToUInt16(buffer, startIndex + 4);
 
-            uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 6);
-            uint fractionOfSecond = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 10);
+            uint secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 6);
+            uint fractionOfSecond = BigEndian.ToUInt32(buffer, startIndex + 10);
 
             // Without timebase, the best timestamp you can get is down to the whole second
             m_timestamp = (new UnixTimeTag((double)secondOfCentury)).ToDateTime().Ticks;
@@ -390,10 +390,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                 buffer[0] = PhasorProtocols.Common.SyncByte;
                 buffer[1] = (byte)((byte)TypeID | Version);
-                EndianOrder.BigEndian.CopyBytes(FrameLength, buffer, 2);
-                EndianOrder.BigEndian.CopyBytes(IDCode, buffer, 4);
-                EndianOrder.BigEndian.CopyBytes(SecondOfCentury, buffer, 6);
-                EndianOrder.BigEndian.CopyBytes(FractionOfSecond | (int)m_timeQualityFlags, buffer, 10);
+                BigEndian.CopyBytes(FrameLength, buffer, 2);
+                BigEndian.CopyBytes(IDCode, buffer, 4);
+                BigEndian.CopyBytes(SecondOfCentury, buffer, 6);
+                BigEndian.CopyBytes(FractionOfSecond | (int)m_timeQualityFlags, buffer, 10);
 
                 return buffer;
             }

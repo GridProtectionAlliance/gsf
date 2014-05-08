@@ -280,8 +280,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 int index = 0;
 
                 CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
-                EndianOrder.BigEndian.CopyBytes(m_timebase, buffer, index);
-                EndianOrder.BigEndian.CopyBytes((ushort)Cells.Count, buffer, index + 4);
+                BigEndian.CopyBytes(m_timebase, buffer, index);
+                BigEndian.CopyBytes((ushort)Cells.Count, buffer, index + 4);
 
                 return buffer;
             }
@@ -307,7 +307,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 byte[] buffer = new byte[2];
 
-                EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 0);
+                BigEndian.CopyBytes(FrameRate, buffer, 0);
 
                 return buffer;
             }
@@ -345,9 +345,9 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // Skip past header that was already parsed...
             startIndex += CommonFrameHeader.FixedLength;
 
-            m_timebase = EndianOrder.BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
+            m_timebase = BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
             CommonHeader.Timebase = m_timebase;
-            State.CellCount = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
+            State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 4);
 
             return FixedHeaderLength;
         }
@@ -361,7 +361,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseFooterImage(byte[] buffer, int startIndex, int length)
         {
-            FrameRate = EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
+            FrameRate = BigEndian.ToUInt16(buffer, startIndex);
             return 2;
         }
 

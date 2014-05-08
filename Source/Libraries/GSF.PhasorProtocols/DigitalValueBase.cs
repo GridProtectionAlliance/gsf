@@ -151,7 +151,7 @@ namespace GSF.PhasorProtocols
             {
                 byte[] buffer = new byte[BodyLength];
 
-                EndianOrder.BigEndian.CopyBytes(m_value, buffer, 0);
+                BigEndian.CopyBytes(m_value, buffer, 0);
 
                 return buffer;
             }
@@ -221,7 +221,7 @@ namespace GSF.PhasorProtocols
             // Length is validated at a frame level well in advance so that low level parsing routines do not have
             // to re-validate that enough length is available to parse needed information as an optimization...
 
-            m_value = EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
+            m_value = BigEndian.ToUInt16(buffer, startIndex);
             m_valueAssigned = true;
 
             return 2;
