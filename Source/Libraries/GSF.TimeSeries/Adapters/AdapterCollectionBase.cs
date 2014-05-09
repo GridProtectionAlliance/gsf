@@ -34,6 +34,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Timers;
+using GSF.Collections;
 using GSF.IO;
 using GSF.Units;
 using Timer = System.Timers.Timer;
@@ -45,7 +46,7 @@ namespace GSF.TimeSeries.Adapters
     /// </summary>
     /// <typeparam name="T">Type of <see cref="IAdapter"/> this collection contains.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public abstract class AdapterCollectionBase<T> : Collection<T>, IAdapterCollection where T : class, IAdapter
+    public abstract class AdapterCollectionBase<T> : ListCollection<T>, IAdapterCollection where T : class, IAdapter
     {
         #region [ Members ]
 

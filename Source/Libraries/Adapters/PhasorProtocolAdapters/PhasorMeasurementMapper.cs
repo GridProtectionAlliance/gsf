@@ -58,6 +58,14 @@ namespace PhasorProtocolAdapters
 
         // Nested Types
 
+        private class DefinedMeasurement
+        {
+            public string TagName;
+            public MeasurementKey Key;
+            public double Adder;
+            public double Multiplier;
+        }
+
         private class MissingDataMonitor : ConcentratorBase
         {
             #region [ Members ]
@@ -137,7 +145,7 @@ namespace PhasorProtocolAdapters
 
         // Fields
         private MultiProtocolFrameParser m_frameParser;
-        private Dictionary<string, IMeasurement> m_definedMeasurements;
+        private Dictionary<string, DefinedMeasurement> m_definedMeasurements;
         private ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>> m_definedDevices;
         private ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>> m_labelDefinedDevices;
         private readonly ConcurrentDictionary<string, long> m_undefinedDevices;
@@ -1302,11 +1310,11 @@ namespace PhasorProtocolAdapters
         // Load active device measurements for this mapper connection
         private void LoadDeviceMeasurements()
         {
-            Measurement definedMeasurement;
+            DefinedMeasurement definedMeasurement;
             Guid signalID;
             string signalReference;
 
-            Dictionary<string, IMeasurement> definedMeasurements = new Dictionary<string, IMeasurement>();
+            Dictionary<string, DefinedMeasurement> definedMeasurements = new Dictionary<string, DefinedMeasurement>();
 
             foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select(string.Format("DeviceID={0}", SharedMappingID)))
             {
@@ -1320,7 +1328,7 @@ namespace PhasorProtocolAdapters
                         signalID = new Guid(row["SignalID"].ToNonNullString(Guid.NewGuid().ToString()));
 
                         // Create a measurement with a reference associated with this adapter
-                        definedMeasurement = new Measurement
+                        definedMeasurement = new DefinedMeasurement
                         {
                             Key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString()),
                             TagName = signalReference,
@@ -1343,7 +1351,22 @@ namespace PhasorProtocolAdapters
 
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
             if (definedMeasurements.Count > 0)
-                OutputMeasurements = definedMeasurements.Values.ToArray();
+            {
+                IMeasurement[] measurements = new IMeasurement[definedMeasurements.Count];
+                int i = 0;
+                foreach (var measurement in definedMeasurements.Values)
+                {
+                    measurements[i] = new Measurement()
+                    {
+                        Key = measurement.Key,
+                        TagName = measurement.TagName,
+                        Adder = measurement.Adder,
+                        Multiplier = measurement.Multiplier
+                    };
+                    i++;
+                }
+                OutputMeasurements = measurements;
+            }
             else
                 OutputMeasurements = null;
 
@@ -1685,7 +1708,7 @@ namespace PhasorProtocolAdapters
             // the measurement will not yet be associated with an actual historian measurement ID as the measurement
             // will have come directly out of the parsed phasor protocol data frame.  We take the generated signal
             // reference and use that to lookup the actual historian measurement ID, source, adder and multiplier.
-            IMeasurement definedMeasurement;
+            DefinedMeasurement definedMeasurement;
 
             // Lookup signal reference in defined measurement list
             if (m_definedMeasurements.TryGetValue(signalReference, out definedMeasurement))
@@ -1881,27 +1904,36 @@ namespace PhasorProtocolAdapters
         {
             int parsedMeasurementCount = 0;
 
-            foreach (IPhasorValue values in parsedDevice.PhasorValues)
+            var phasorValues = parsedDevice.PhasorValues;
+            var digitalValues = parsedDevice.DigitalValues;
+            var analogValues = parsedDevice.AnalogValues;
+            var frequencyValue = parsedDevice.FrequencyValue;
+            int count;
+
+            count = phasorValues.Count;
+            for (int x = 0; x < count; x++)
             {
-                foreach (IMeasurement measurement in values.Measurements)
+                foreach (IMeasurement measurement in phasorValues[x].Measurements)
                 {
                     if (!double.IsNaN(measurement.Value))
                         parsedMeasurementCount++;
                 }
             }
 
-            foreach (IDigitalValue values in parsedDevice.DigitalValues)
+            count = digitalValues.Count;
+            for (int x = 0; x < count; x++)
             {
-                foreach (IMeasurement measurement in values.Measurements)
+                foreach (IMeasurement measurement in digitalValues[x].Measurements)
                 {
                     if (!double.IsNaN(measurement.Value))
                         parsedMeasurementCount++;
                 }
             }
 
-            foreach (IAnalogValue values in parsedDevice.AnalogValues)
+            count = analogValues.Count;
+            for (int x = 0; x < count; x++)
             {
-                foreach (IMeasurement measurement in values.Measurements)
+                foreach (IMeasurement measurement in analogValues[x].Measurements)
                 {
                     if (!double.IsNaN(measurement.Value))
                         parsedMeasurementCount++;
@@ -1910,9 +1942,9 @@ namespace PhasorProtocolAdapters
 
             // Ignore frequency measurements when frequency value is zero - some PDCs use
             // zero for missing frequency values
-            if (parsedDevice.FrequencyValue.Frequency != 0.0D)
+            if (frequencyValue.Frequency != 0.0D)
             {
-                foreach (IMeasurement measurement in parsedDevice.FrequencyValue.Measurements)
+                foreach (IMeasurement measurement in frequencyValue.Measurements)
                 {
                     if (!double.IsNaN(measurement.Value))
                         parsedMeasurementCount++;

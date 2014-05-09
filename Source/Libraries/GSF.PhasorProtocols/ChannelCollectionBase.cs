@@ -27,9 +27,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Runtime.Serialization;
+using GSF.Collections;
 using GSF.Parsing;
 
 namespace GSF.PhasorProtocols
@@ -45,7 +45,7 @@ namespace GSF.PhasorProtocols
     /// </remarks>
     /// <typeparam name="T">Specific <see cref="IChannel"/> type that the <see cref="ChannelCollectionBase{T}"/> contains.</typeparam>
     [Serializable]
-    public abstract class ChannelCollectionBase<T> : Collection<T>, IChannelCollection<T>, INotifyCollectionChanged where T : IChannel
+    public abstract class ChannelCollectionBase<T> : ListCollection<T>, IChannelCollection<T>, INotifyCollectionChanged where T : IChannel
     {
         #region [ Members ]
 
