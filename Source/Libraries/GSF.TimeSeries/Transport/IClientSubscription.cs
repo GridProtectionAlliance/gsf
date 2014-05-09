@@ -131,6 +131,14 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets the status of the active temporal session, if any.
+        /// </summary>
+        string TemporalSessionStatus
+        {
+            get;
+        }
+
+        /// <summary>
         /// Handles the confirmation message received from the
         /// subscriber to indicate that a buffer block was received.
         /// </summary>

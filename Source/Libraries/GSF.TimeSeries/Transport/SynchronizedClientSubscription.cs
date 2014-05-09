@@ -248,7 +248,7 @@ namespace GSF.TimeSeries.Transport
                 base.ProcessingInterval = value;
 
                 // Update processing interval in private temporal session, if defined
-                if (m_iaonSession != null && m_iaonSession.AllAdapters != null)
+                if ((object)m_iaonSession != null && (object)m_iaonSession.AllAdapters != null)
                     m_iaonSession.AllAdapters.ProcessingInterval = value;
             }
         }
@@ -271,7 +271,7 @@ namespace GSF.TimeSeries.Transport
                 lock (this)
                 {
                     // Update signal index cache unless "detaching" from real-time
-                    if (value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
+                    if ((object)value != null && !(value.Length == 1 && value[0] == MeasurementKey.Undefined))
                     {
                         m_parent.UpdateSignalIndexCache(m_clientID, m_signalIndexCache, value);
 
@@ -318,10 +318,24 @@ namespace GSF.TimeSeries.Transport
 
                 status.Append(base.Status);
 
-                if (m_iaonSession != null)
+                if ((object)m_iaonSession != null)
                     status.Append(m_iaonSession.Status);
 
                 return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets the status of the active temporal session, if any.
+        /// </summary>
+        public string TemporalSessionStatus
+        {
+            get
+            {
+                if ((object)m_iaonSession == null)
+                    return null;
+
+                return m_iaonSession.Status;
             }
         }
 
@@ -423,7 +437,7 @@ namespace GSF.TimeSeries.Transport
                 IMeasurement measurement = measurements.FirstOrDefault(m => m != null);
                 Ticks timestamp = 0;
 
-                if (measurement != null)
+                if ((object)measurement != null)
                     timestamp = measurement.Timestamp;
 
                 m_parent.SendDataStartTime(m_clientID, timestamp);
@@ -432,25 +446,11 @@ namespace GSF.TimeSeries.Transport
             if (m_isNaNFiltered)
                 measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
 
-            if (ProcessMeasurementFilter)
-            {
-                lock (this)
-                {
-                    // Order measurements by signal type for better compression when enabled
-                    if (m_usePayloadCompression)
-                        base.QueueMeasurementsForProcessing(measurements.OrderBy(m => m.GetSignalType(DataSource)));
-                    else
-                        base.QueueMeasurementsForProcessing(measurements);
-                }
-            }
+            // Order measurements by signal type for better compression when enabled
+            if (m_usePayloadCompression)
+                base.QueueMeasurementsForProcessing(measurements.OrderBy(m => m.GetSignalType(DataSource)));
             else
-            {
-                // Order measurements by signal type for better compression when enabled
-                if (m_usePayloadCompression)
-                    base.QueueMeasurementsForProcessing(measurements.OrderBy(m => m.GetSignalType(DataSource)));
-                else
-                    base.QueueMeasurementsForProcessing(measurements);
-            }
+                base.QueueMeasurementsForProcessing(measurements);
         }
 
         /// <summary>
@@ -641,7 +641,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Publish data packet to client
-            if (m_parent != null)
+            if ((object)m_parent != null)
                 m_parent.SendClientResponse(m_workingBuffer, m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, m_workingBuffer.ToArray());
         }
 
@@ -685,7 +685,7 @@ namespace GSF.TimeSeries.Transport
         // Explicitly implement processing completed event bubbler to satisfy IClientSubscription interface
         void IClientSubscription.OnProcessingCompleted(object sender, EventArgs e)
         {
-            if (ProcessingComplete != null)
+            if ((object)ProcessingComplete != null)
                 ProcessingComplete(sender, new EventArgs<IClientSubscription, EventArgs>(this, e));
         }
 

@@ -138,25 +138,23 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Int24 ToInt24(byte[] value, int startIndex)
         {
-            const int bitMask = -16777216;
-
-            int valueInt = value[startIndex + 0] |
-                         value[startIndex + 1] << 8 |
-                         value[startIndex + 2] << 16;
+            int int32 = value[startIndex + 0] |
+                        value[startIndex + 1] << 8 |
+                        value[startIndex + 2] << 16;
 
             // Check bit 23, the sign bit in a signed 24-bit integer
-            if ((valueInt & 0x00800000) > 0)
+            if ((int32 & 0x00800000) > 0)
             {
                 // If the sign-bit is set, this number will be negative - set all high-byte bits (keeps 32-bit number in 24-bit range)
-                valueInt |= bitMask;
+                int32 |= Int24.BitMask;
             }
             else
             {
                 // If the sign-bit is not set, this number will be positive - clear all high-byte bits (keeps 32-bit number in 24-bit range)
-                valueInt &= ~bitMask;
+                int32 &= ~Int24.BitMask;
             }
 
-            return (Int24)valueInt;
+            return (Int24)int32;
         }
 
         /// <summary>
@@ -238,8 +236,8 @@ namespace GSF
         public static UInt24 ToUInt24(byte[] value, int startIndex)
         {
             return (UInt24)((uint)value[startIndex + 0] |
-                           (uint)value[startIndex + 1] << 8 |
-                           (uint)value[startIndex + 2] << 16);
+                            (uint)value[startIndex + 1] << 8 |
+                            (uint)value[startIndex + 2] << 16);
         }
 
         /// <summary>
@@ -321,7 +319,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(bool value)
         {
-            return new[] { (byte)(value ? 1 : 0) };
+            return new[] { value ? (byte)1 : (byte)0 };
         }
 
         /// <summary>
@@ -354,7 +352,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(short value)
         {
-            return new byte[]
+            return new[]
             {
                 (byte)value,
                 (byte)(value >> 8)
@@ -369,12 +367,13 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(Int24 value)
         {
-            int value1 = value;
-            return new byte[]
+            int int32 = value;
+
+            return new[]
             {
-                (byte)value1,
-                (byte)(value1 >> 8),
-                (byte)(value1 >> 16)
+                (byte)int32,
+                (byte)(int32 >> 8),
+                (byte)(int32 >> 16)
             };
         }
 
@@ -386,7 +385,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(int value)
         {
-            return new byte[]
+            return new[]
             {
                 (byte)value,
                 (byte)(value >> 8),
@@ -403,7 +402,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(long value)
         {
-            return new byte[]
+            return new[]
             {
                 (byte)value,
                 (byte)(value >> 8),
@@ -446,12 +445,13 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(UInt24 value)
         {
-            uint value1 = (uint)value;
-            return new byte[]
+            uint uint32 = (uint)value;
+
+            return new[]
             {
-                (byte)value1,
-                (byte)(value1 >> 8),
-                (byte)(value1 >> 16)
+                (byte)uint32,
+                (byte)(uint32 >> 8),
+                (byte)(uint32 >> 16)
             };
         }
 
@@ -533,11 +533,7 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
         {
-            if (value)
-                destinationArray[destinationIndex] = 1;
-            else
-                destinationArray[destinationIndex] = 0;
-
+            destinationArray[destinationIndex] = value ? (byte)1 : (byte)0;
             return 1;
         }
 
@@ -583,7 +579,6 @@ namespace GSF
             return 2;
         }
 
-
         /// <summary>
         /// Copies the specified 24-bit signed integer value as an array of 3 bytes in the target endian-order to the destination array.
         /// </summary>
@@ -594,11 +589,11 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int CopyBytes(Int24 value, byte[] destinationArray, int destinationIndex)
         {
+            int int32 = value;
 
-            int value1 = value;
-            destinationArray[destinationIndex + 0] = (byte)value1;
-            destinationArray[destinationIndex + 1] = (byte)(value1 >> 8);
-            destinationArray[destinationIndex + 2] = (byte)(value1 >> 16);
+            destinationArray[destinationIndex + 0] = (byte)int32;
+            destinationArray[destinationIndex + 1] = (byte)(int32 >> 8);
+            destinationArray[destinationIndex + 2] = (byte)(int32 >> 16);
 
             return 3;
         }
@@ -679,10 +674,11 @@ namespace GSF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int CopyBytes(UInt24 value, byte[] destinationArray, int destinationIndex)
         {
-            uint value1 = value;
-            destinationArray[destinationIndex + 0] = (byte)value1;
-            destinationArray[destinationIndex + 1] = (byte)(value1 >> 8);
-            destinationArray[destinationIndex + 2] = (byte)(value1 >> 16);
+            uint uint32 = value;
+
+            destinationArray[destinationIndex + 0] = (byte)uint32;
+            destinationArray[destinationIndex + 1] = (byte)(uint32 >> 8);
+            destinationArray[destinationIndex + 2] = (byte)(uint32 >> 16);
 
             return 3;
         }

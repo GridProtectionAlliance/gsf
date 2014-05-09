@@ -25,7 +25,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data;
 using GSF.Data;
 
@@ -35,7 +34,7 @@ namespace GSF.TimeSeries
     /// Represents a primary key for a measurement.
     /// </summary>
     [Serializable]
-    public class MeasurementKey : IEquatable<MeasurementKey>, IComparable<MeasurementKey>, IComparable
+    public class MeasurementKey
     {
         #region [ Members ]
 
@@ -54,7 +53,7 @@ namespace GSF.TimeSeries
             m_signalID = signalID;
             m_id = id;
             m_source = source;
-            m_hashCode = signalID.GetHashCode();
+            m_hashCode = base.GetHashCode();
         }
 
         #endregion
@@ -117,174 +116,6 @@ namespace GSF.TimeSeries
         public override int GetHashCode()
         {
             return m_hashCode;
-        }
-
-        /// <summary>
-        /// Determines whether the specified <see cref="MeasurementKey"/> is equal to the current <see cref="MeasurementKey"/>.
-        /// </summary>
-        /// <param name="other">The <see cref="MeasurementKey"/> to compare with the current <see cref="MeasurementKey"/>.</param>
-        /// <returns>
-        /// true if the specified <see cref="MeasurementKey"/> is equal to the current <see cref="MeasurementKey"/>;
-        /// otherwise, false.
-        /// </returns>
-        public bool Equals(MeasurementKey other)
-        {
-            return ReferenceEquals(this, other);
-        }
-
-        /// <summary>
-        /// Determines whether the specified <see cref="Object"/> is equal to the current <see cref="MeasurementKey"/>.
-        /// </summary>
-        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="MeasurementKey"/>.</param>
-        /// <returns>
-        /// true if the specified <see cref="Object"/> is equal to the current <see cref="MeasurementKey"/>;
-        /// otherwise, false.
-        /// </returns>
-        /// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="MeasurementKey"/>.</exception>
-        public override bool Equals(object obj)
-        {
-            return ReferenceEquals(this, obj);
-        }
-
-        /// <summary>
-        /// Compares the <see cref="MeasurementKey"/> with another <see cref="MeasurementKey"/>.
-        /// </summary>
-        /// <param name="other">The <see cref="MeasurementKey"/> to compare with the current <see cref="MeasurementKey"/>.</param>
-        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        public int CompareTo(MeasurementKey other)
-        {
-            if (ReferenceEquals(this, other))
-                return 0;
-            if ((object)other == null)
-                return 1;
-            if (m_hashCode < other.m_hashCode)
-                return -1;
-            if (m_hashCode > other.m_hashCode)
-                return 1;
-            return m_signalID.CompareTo(other.m_signalID);
-        }
-
-        /// <summary>
-        /// Compares the <see cref="MeasurementKey"/> with the specified <see cref="Object"/>.
-        /// </summary>
-        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="MeasurementKey"/>.</param>
-        /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        /// <exception cref="ArgumentException"><paramref name="obj"/> is not a <see cref="MeasurementKey"/>.</exception>
-        public int CompareTo(object obj)
-        {
-            if ((object)obj == null)
-                return 1;
-
-            MeasurementKey key = obj as MeasurementKey;
-            if ((object)key != null)
-                return CompareTo(key);
-
-            throw new ArgumentException("Object is not a MeasurementKey", "obj");
-        }
-
-        #endregion
-
-        #region [ Operators ]
-
-        /// <summary>
-        /// Compares two <see cref="MeasurementKey"/> values for equality.
-        /// </summary>
-        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
-        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
-        /// <returns>A boolean representing the result.</returns>
-        public static bool operator ==(MeasurementKey key1, MeasurementKey key2)
-        {
-            return ReferenceEquals(key1, key2);
-        }
-
-        /// <summary>
-        /// Compares two <see cref="MeasurementKey"/> values for inequality.
-        /// </summary>
-        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
-        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
-        /// <returns>A boolean representing the result.</returns>
-        public static bool operator !=(MeasurementKey key1, MeasurementKey key2)
-        {
-            return !ReferenceEquals(key1, key2);
-        }
-
-        /// <summary>
-        /// Returns true if left <see cref="MeasurementKey"/> value is greater than right <see cref="MeasurementKey"/> value.
-        /// </summary>
-        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
-        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
-        /// <returns>A boolean representing the result.</returns>
-        public static bool operator >(MeasurementKey key1, MeasurementKey key2)
-        {
-            if ((object)key1 == null)
-            {
-                return false;
-
-                //if ((object)key2 == null)
-                //    return false;
-
-                ////null comes before non-null;
-                //return false;
-            }
-            return key1.CompareTo(key2) > 0;
-        }
-
-        /// <summary>
-        /// Returns true if left <see cref="MeasurementKey"/> value is greater than or equal to right <see cref="MeasurementKey"/> value.
-        /// </summary>
-        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
-        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
-        /// <returns>A boolean representing the result.</returns>
-        public static bool operator >=(MeasurementKey key1, MeasurementKey key2)
-        {
-            if ((object)key1 == null)
-            {
-                if ((object)key2 == null)
-                    return true;
-
-                //null comes before non-null;
-                return false;
-            }
-            return key1.CompareTo(key2) >= 0;
-        }
-
-        /// <summary>
-        /// Returns true if left <see cref="MeasurementKey"/> value is less than right <see cref="MeasurementKey"/> value.
-        /// </summary>
-        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
-        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
-        /// <returns>A boolean representing the result.</returns>
-        public static bool operator <(MeasurementKey key1, MeasurementKey key2)
-        {
-            if ((object)key1 == null)
-            {
-                if ((object)key2 == null)
-                    return false;
-
-                //null comes before non-null;
-                return true;
-            }
-            return key1.CompareTo(key2) < 0;
-        }
-
-        /// <summary>
-        /// Returns true if left <see cref="MeasurementKey"/> value is less than or equal to right <see cref="MeasurementKey"/> value.
-        /// </summary>
-        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
-        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
-        /// <returns>A boolean representing the result.</returns>
-        public static bool operator <=(MeasurementKey key1, MeasurementKey key2)
-        {
-            if ((object)key1 == null)
-            {
-                return true;
-                //if ((object)key2 == null)
-                //    return true;
-
-                ////null comes before non-null;
-                //return true;
-            }
-            return key1.CompareTo(key2) <= 0;
         }
 
         #endregion
@@ -660,56 +491,6 @@ namespace GSF.TimeSeries
             source = Undefined.Source;
             id = Undefined.ID;
             return false;
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// Represents an instance of the <see cref="IEqualityComparer{T}"/> for a <see cref="MeasurementKey"/>.
-    /// </summary>
-    public class MeasurementKeyComparer : IEqualityComparer<MeasurementKey>
-    {
-        #region [ Methods ]
-
-        /// <summary>
-        /// Determines whether the specified objects are equal.
-        /// </summary>
-        /// <param name="x">The first <see cref="MeasurementKey"/> to compare.</param>
-        /// <param name="y">The second <see cref="MeasurementKey"/> to compare.</param>
-        /// <returns>true if the specified objects are equal; otherwise, false.</returns>
-        public bool Equals(MeasurementKey x, MeasurementKey y)
-        {
-            return ReferenceEquals(x, y);
-        }
-
-        /// <summary>
-        /// Returns a hash code for the specified object.
-        /// </summary>
-        /// <param name="obj">The <see cref="MeasurementKey"/> for which a hash code is to be returned.</param>
-        /// <returns>A hash code for the specified object.</returns>
-        public int GetHashCode(MeasurementKey obj)
-        {
-            if ((object)obj == null)
-                return 0;
-            return obj.GetHashCode();
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        private static MeasurementKeyComparer s_comparer;
-
-        /// <summary>
-        /// Returns the default instance of the <see cref="MeasurementKeyComparer"/> class.
-        /// </summary>
-        public static MeasurementKeyComparer Default
-        {
-            get
-            {
-                return s_comparer ?? (s_comparer = new MeasurementKeyComparer());
-            }
         }
 
         #endregion

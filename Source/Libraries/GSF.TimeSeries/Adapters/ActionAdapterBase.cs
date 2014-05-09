@@ -90,9 +90,7 @@ namespace GSF.TimeSeries.Adapters
         private bool m_autoStart;
         private bool m_respectInputDemands;
         private bool m_respectOutputDemands;
-        private bool m_processMeasurementFilter;
         private MeasurementKey[] m_inputMeasurementKeys;
-        private List<MeasurementKey> m_inputMeasurementKeysHash;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
         private MeasurementKey[] m_requestedOutputMeasurementKeys;
@@ -303,21 +301,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
-        /// </summary>
-        public virtual bool ProcessMeasurementFilter
-        {
-            get
-            {
-                return m_processMeasurementFilter;
-            }
-            set
-            {
-                m_processMeasurementFilter = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the number of frames per second.
         /// </summary>
         /// <remarks>
@@ -412,21 +395,9 @@ namespace GSF.TimeSeries.Adapters
 
                 m_inputMeasurementKeys = value;
 
-                // Update input key lookup hash table
-                if (value != null && value.Length > 0)
-                {
-                    m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
-                    m_inputMeasurementKeysHash.Sort();
-
-                    // The input measurements typically define the "expected measurements" of the action adapter, so
-                    // we use the number of these items to define the expected measurement count
-                    ExpectedMeasurements = m_inputMeasurementKeys.Length;
-                }
-                else
-                {
-                    m_inputMeasurementKeysHash = null;
-                    ExpectedMeasurements = 0;
-                }
+                // The input measurements typically define the "expected measurements" of the action adapter, so
+                // we use the number of these items to define the expected measurement count
+                ExpectedMeasurements = (object)m_inputMeasurementKeys != null ? m_inputMeasurementKeys.Length : 0;
 
                 OnInputMeasurementKeysUpdated();
             }
@@ -463,14 +434,14 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                if (m_inputSourceIDs == null)
+                if ((object)m_inputSourceIDs == null)
                     return null;
 
                 return m_inputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -496,14 +467,14 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                if (m_outputSourceIDs == null)
+                if ((object)m_outputSourceIDs == null)
                     return null;
 
                 return m_outputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_outputSourceIDs = null;
                 }
@@ -594,7 +565,7 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 // Default to all measurements if minimum is not specified
-                if (m_minimumMeasurementsToUse < 1 && InputMeasurementKeys != null)
+                if (m_minimumMeasurementsToUse < 1 && (object)InputMeasurementKeys != null)
                     return InputMeasurementKeys.Length;
 
                 return m_minimumMeasurementsToUse;
@@ -687,16 +658,16 @@ namespace GSF.TimeSeries.Adapters
                 StringBuilder status = new StringBuilder();
                 DataSet dataSource = this.DataSource;
 
-                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
+                status.AppendFormat("       Data source defined: {0}", (object)dataSource != null);
                 status.AppendLine();
-                if (dataSource != null)
+
+                if ((object)dataSource != null)
                 {
                     status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
                     status.AppendLine();
                 }
-                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
-                status.AppendLine();
-                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
+
+                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout + " milliseconds");
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
@@ -754,7 +725,7 @@ namespace GSF.TimeSeries.Adapters
 
                 status.AppendLine();
 
-                if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
+                if ((object)OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
                     status.AppendLine();
@@ -773,7 +744,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
+                if ((object)InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
                 {
                     status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
                     status.AppendLine();
@@ -790,7 +761,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
+                if ((object)RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
                 {
                     status.AppendFormat("      Requested input keys: {0} defined measurements", RequestedInputMeasurementKeys.Length);
                     status.AppendLine();
@@ -807,7 +778,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
+                if ((object)RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
                 {
                     status.AppendFormat("     Requested output keys: {0} defined measurements", RequestedOutputMeasurementKeys.Length);
                     status.AppendLine();
@@ -1046,30 +1017,13 @@ namespace GSF.TimeSeries.Adapters
         {
             int inputCount = 0, outputCount = 0;
 
-            if (InputMeasurementKeys != null)
+            if ((object)InputMeasurementKeys != null)
                 inputCount = InputMeasurementKeys.Length;
 
-            if (OutputMeasurements != null)
+            if ((object)OutputMeasurements != null)
                 outputCount = OutputMeasurements.Length;
 
             return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
-        }
-
-        /// <summary>
-        /// Queues a single measurement for processing. Measurements is automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
-        /// </summary>
-        /// <param name="measurement">Measurement to queue for processing.</param>
-        /// <remarks>
-        /// Measurement is filtered against the defined <see cref="InputMeasurementKeys"/>.
-        /// </remarks>
-        public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
-        {
-            if (m_disposed)
-                return;
-
-            // If this is an input measurement to this adapter, sort it!
-            if (!ProcessMeasurementFilter || IsInputMeasurement(measurement.Key))
-                SortMeasurement(measurement);
         }
 
         /// <summary>
@@ -1084,37 +1038,7 @@ namespace GSF.TimeSeries.Adapters
             if (m_disposed)
                 return;
 
-            if (ProcessMeasurementFilter)
-            {
-                List<IMeasurement> inputMeasurements = new List<IMeasurement>();
-
-                foreach (IMeasurement measurement in measurements)
-                {
-                    if (IsInputMeasurement(measurement.Key))
-                        inputMeasurements.Add(measurement);
-                }
-
-                if (inputMeasurements.Count > 0)
-                    SortMeasurements(inputMeasurements);
-            }
-            else
-            {
-                SortMeasurements(measurements);
-            }
-        }
-
-        /// <summary>
-        /// Determines if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.
-        /// </summary>
-        /// <param name="item">Primary key of measurement to find.</param>
-        /// <returns>true if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.</returns>
-        public virtual bool IsInputMeasurement(MeasurementKey item)
-        {
-            if (m_inputMeasurementKeysHash != null)
-                return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
-
-            // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
-            return true;
+            SortMeasurements(measurements);
         }
 
         /// <summary>
@@ -1218,10 +1142,10 @@ namespace GSF.TimeSeries.Adapters
             IDictionary<MeasurementKey, IMeasurement> frameMeasurements = frame.Measurements;
             MeasurementKey[] measurementKeys = InputMeasurementKeys;
 
-            if (measurements == null || measurements.Length < minNeeded)
+            if ((object)measurements == null || measurements.Length < minNeeded)
                 measurements = new IMeasurement[minNeeded];
 
-            if (measurementKeys == null)
+            if ((object)measurementKeys == null)
             {
                 // No input measurements are defined, just get first set of measurements in this frame
                 foreach (IMeasurement measurement in frameMeasurements.Values)

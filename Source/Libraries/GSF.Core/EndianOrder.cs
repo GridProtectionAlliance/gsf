@@ -72,18 +72,23 @@
 
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace GSF
 {
     #region [ Enumerations ]
 
-    /// <summary>Endian Byte Order Enumeration</summary>
+    /// <summary>
+    /// Endian Byte Order Enumeration.
+    /// </summary>
     public enum Endianness
     {
-        /// <summary>Big-endian byte order.</summary>
+        /// <summary>
+        /// Big-endian byte order.
+        /// </summary>
         BigEndian,
-        /// <summary>Little-endian byte order.</summary>
+        /// <summary>
+        /// Little-endian byte order.
+        /// </summary>
         LittleEndian
     }
 
@@ -617,8 +622,8 @@ namespace GSF
         {
             if (TargetEndianness == Endianness.BigEndian)
                 return GuidExtensions.__ToBigEndianOrderGuid(value, startIndex);
-            else
-                return GuidExtensions.__ToLittleEndianOrderGuid(value, startIndex);
+
+            return GuidExtensions.__ToLittleEndianOrderGuid(value, startIndex);
         }
 
         /// <summary>
@@ -1170,5 +1175,5 @@ namespace GSF
 
         #endregion
     }
-   
+
 }

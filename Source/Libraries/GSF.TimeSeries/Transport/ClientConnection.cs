@@ -168,13 +168,13 @@ namespace GSF.TimeSeries.Transport
 
             if (string.IsNullOrWhiteSpace(m_hostName))
             {
-                if (m_ipAddress != null)
+                if ((object)m_ipAddress != null)
                     m_hostName = m_ipAddress.ToString();
                 else
                     m_hostName = m_connectionID;
             }
 
-            if (m_ipAddress == null)
+            if ((object)m_ipAddress == null)
                 m_ipAddress = IPAddress.None;
         }
 
@@ -212,9 +212,9 @@ namespace GSF.TimeSeries.Transport
             }
             set
             {
-                m_connectionEstablished = (value != null);
+                m_connectionEstablished = ((object)value != null);
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     // Detach from events on existing data channel reference
                     m_dataChannel.ClientConnectingException -= m_dataChannel_ClientConnectingException;
@@ -229,7 +229,7 @@ namespace GSF.TimeSeries.Transport
                 // Assign new data channel reference
                 m_dataChannel = value;
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     // Save UDP settings so channel can be reestablished if needed
                     m_configurationString = m_dataChannel.ConfigurationString;
@@ -496,7 +496,7 @@ namespace GSF.TimeSeries.Transport
             {
                 m_subscription = value;
 
-                if (m_subscription != null)
+                if ((object)m_subscription != null)
                     m_subscription.HostName = m_hostName;
             }
         }
@@ -576,10 +576,10 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
                 status.AppendFormat(formatString, "Publish channel protocol", PublishChannel.TransportProtocol);
                 status.AppendLine();
-                status.AppendFormat(formatString, "Data packet security", m_keyIVs == null ? "unencrypted" : "encrypted");
+                status.AppendFormat(formatString, "Data packet security", (object)m_keyIVs == null ? "unencrypted" : "encrypted");
                 status.AppendLine();
 
-                if (m_dataChannel != null)
+                if ((object)m_dataChannel != null)
                 {
                     status.AppendLine();
                     status.Append(m_dataChannel.Status);
@@ -614,19 +614,19 @@ namespace GSF.TimeSeries.Transport
                 {
                     if (disposing)
                     {
-                        if (m_pingTimer != null)
+                        if ((object)m_pingTimer != null)
                         {
                             m_pingTimer.Elapsed -= m_pingTimer_Elapsed;
                             m_pingTimer.Dispose();
+                            m_pingTimer = null;
                         }
-                        m_pingTimer = null;
 
-                        if (m_reconnectTimer != null)
+                        if ((object)m_reconnectTimer != null)
                         {
                             m_reconnectTimer.Elapsed -= m_reconnectTimer_Elapsed;
                             m_reconnectTimer.Dispose();
+                            m_reconnectTimer = null;
                         }
-                        m_reconnectTimer = null;
 
                         DataChannel = null;
                         m_commandChannel = null;
@@ -653,7 +653,7 @@ namespace GSF.TimeSeries.Transport
                 symmetricAlgorithm.GenerateKey();
                 symmetricAlgorithm.GenerateIV();
 
-                if (m_keyIVs == null)
+                if ((object)m_keyIVs == null)
                 {
                     // Initialize new key set
                     m_keyIVs = new byte[2][][];
@@ -815,7 +815,7 @@ namespace GSF.TimeSeries.Transport
             {
                 m_parent.OnStatusMessage("Data channel stopped unexpectedly, restarting data channel...");
 
-                if (m_reconnectTimer != null)
+                if ((object)m_reconnectTimer != null)
                     m_reconnectTimer.Start();
             }
             else

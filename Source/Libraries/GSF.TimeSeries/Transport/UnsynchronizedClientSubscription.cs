@@ -348,6 +348,20 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Gets the status of the active temporal session, if any.
+        /// </summary>
+        public string TemporalSessionStatus
+        {
+            get
+            {
+                if ((object)m_iaonSession == null)
+                    return null;
+
+                return m_iaonSession.Status;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -520,18 +534,6 @@ namespace GSF.TimeSeries.Transport
 
             if (m_isNaNFiltered)
                 measurements = measurements.Where(measurement => !double.IsNaN(measurement.Value));
-
-            if (ProcessMeasurementFilter)
-            {
-                List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
-
-                lock (this)
-                {
-                    filteredMeasurements.AddRange(measurements.Where(measurement => IsInputMeasurement(measurement.Key)));
-                }
-
-                measurements = filteredMeasurements;
-            }
 
             if (!measurements.Any() || !Enabled)
                 return;

@@ -100,10 +100,8 @@ namespace GSF.TimeSeries.Adapters
         private DataSet m_dataSource;
         private int m_initializationTimeout;
         private bool m_autoStart;
-        private bool m_processMeasurementFilter;
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
-        private List<MeasurementKey> m_inputMeasurementKeysHash;
         private long m_processedMeasurements;
         private int m_measurementReportingInterval;
         private bool m_enabled;
@@ -305,21 +303,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
-        /// </summary>
-        public virtual bool ProcessMeasurementFilter
-        {
-            get
-            {
-                return m_processMeasurementFilter;
-            }
-            set
-            {
-                m_processMeasurementFilter = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
         /// </summary>
         /// <remarks>
@@ -347,16 +330,6 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 m_inputMeasurementKeys = value;
-
-                // Update input key lookup hash table
-                if (value != null && value.Length > 0)
-                {
-                    m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
-                    m_inputMeasurementKeysHash.Sort();
-                }
-                else
-                    m_inputMeasurementKeysHash = null;
-
                 OnInputMeasurementKeysUpdated();
             }
         }
@@ -589,8 +562,6 @@ namespace GSF.TimeSeries.Adapters
                 }
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
                 status.AppendLine();
-                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
-                status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
@@ -805,20 +776,6 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public abstract string GetShortStatus(int maxLength);
-
-        /// <summary>
-        /// Determines if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.
-        /// </summary>
-        /// <param name="item">Primary key of measurement to find.</param>
-        /// <returns>true if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.</returns>
-        public virtual bool IsInputMeasurement(MeasurementKey item)
-        {
-            if (m_inputMeasurementKeysHash != null)
-                return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
-
-            // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
-            return true;
-        }
 
         /// <summary>
         /// Defines a temporal processing constraint for the adapter.
@@ -1449,6 +1406,7 @@ namespace GSF.TimeSeries.Adapters
 
                             if (filteredRows.Length > 0)
                                 MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
+
                         }
                     }
                     else if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
@@ -1467,7 +1425,12 @@ namespace GSF.TimeSeries.Adapters
 
                     // If all else fails, attempt to parse the item as a measurement key
                     if (key == MeasurementKey.Undefined && !MeasurementKey.TryParse(item, out key))
-                        throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+                    {
+                        if (id == Guid.Empty)
+                            throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+
+                        throw new InvalidOperationException(string.Format("Measurement (targeted for input) with an ID of \"{0}\" is not defined or is not enabled", item));
+                    }
 
                     keys.Add(key);
                 }
@@ -1632,7 +1595,12 @@ namespace GSF.TimeSeries.Adapters
 
                     // If all else fails, attempt to parse the item as a measurement key
                     if (key == MeasurementKey.Undefined && !MeasurementKey.TryParse(elem[0], out key))
-                        throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+                    {
+                        if (id == Guid.Empty)
+                            throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+
+                        throw new InvalidOperationException(string.Format("Measurement (targeted for output) with an ID of \"{0}\" is not defined or is not enabled", item));
+                    }
 
                     // Adder and multiplier may be optionally specified
                     if (elem.Length < 2 || !double.TryParse(elem[1], out adder))

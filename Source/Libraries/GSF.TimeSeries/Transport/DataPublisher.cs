@@ -1485,10 +1485,7 @@ namespace GSF.TimeSeries.Transport
         {
             int measurementCount;
 
-            if (ProcessMeasurementFilter)
-                base.QueueMeasurementsForProcessing(measurements);
-            else
-                m_routedMeasurementsHandler(this, new EventArgs<ICollection<IMeasurement>>(measurements.ToList()));
+            m_routedMeasurementsHandler(this, new EventArgs<ICollection<IMeasurement>>(measurements.ToList()));
 
             measurementCount = measurements.Count();
             m_lifetimeMeasurements += measurementCount;
@@ -1539,29 +1536,59 @@ namespace GSF.TimeSeries.Transport
         [AdapterCommand("Enumerates connected clients.", "Administrator", "Editor", "Viewer")]
         public virtual void EnumerateClients()
         {
+            OnStatusMessage(EnumerateClients(false));
+        }
+
+        /// <summary>
+        /// Enumerates connected clients with active temporal sessions.
+        /// </summary>
+        [AdapterCommand("Enumerates connected clients with active temporal sessions.", "Administrator", "Editor", "Viewer")]
+        public virtual void EnumerateTemporalClients()
+        {
+            OnStatusMessage(EnumerateClients(true));
+        }
+
+        private string EnumerateClients(bool filterToTemporalSessions)
+        {
             StringBuilder clientEnumeration = new StringBuilder();
             Guid[] clientIDs = (Guid[])m_commandChannel.ClientIDs.Clone();
             ClientConnection connection;
             string timestampFormat;
+            bool hasActiveTemporalSession;
 
-            clientEnumeration.AppendFormat("\r\nIndices for {0} connected clients:\r\n\r\n", clientIDs.Length);
+            if (filterToTemporalSessions)
+                clientEnumeration.AppendFormat("\r\nIndices for connected clients with active temporal sessions:\r\n\r\n");
+            else
+                clientEnumeration.AppendFormat("\r\nIndices for {0} connected clients:\r\n\r\n", clientIDs.Length);
 
             for (int i = 0; i < clientIDs.Length; i++)
             {
                 if (m_clientConnections.TryGetValue(clientIDs[i], out connection) && (object)connection != null && (object)connection.Subscription != null)
                 {
-                    if (connection.Subscription is UnsynchronizedClientSubscription)
-                        timestampFormat = string.Format("{0} Format, {1}-byte timestamps", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full", connection.Subscription.TimestampSize);
-                    else
-                        timestampFormat = string.Format("{0} Format, 8-byte frame-level timestamp", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full");
+                    hasActiveTemporalSession = connection.Subscription.TemporalConstraintIsDefined();
 
-                    clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n          {4}\r\n\r\n", i.ToString().PadLeft(3), connection.ConnectionID, connection.SubscriberInfo, timestampFormat, connection.OperationalModes);
+                    if (!filterToTemporalSessions || hasActiveTemporalSession)
+                    {
+                        if (connection.Subscription is UnsynchronizedClientSubscription)
+                            timestampFormat = string.Format("{0} Format, {1}-byte timestamps", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full", connection.Subscription.TimestampSize);
+                        else
+                            timestampFormat = string.Format("{0} Format, 8-byte frame-level timestamp", connection.Subscription.UseCompactMeasurementFormat ? "Compact" : "Full");
+
+                        clientEnumeration.AppendFormat("  {0} - {1}\r\n          {2}\r\n          {3}\r\n          {4}\r\n          Active Temporal Session = {5}\r\n\r\n",
+                                i.ToString().PadLeft(3),
+                                connection.ConnectionID,
+                                connection.SubscriberInfo,
+                                timestampFormat,
+                                connection.OperationalModes,
+                                hasActiveTemporalSession ? "Yes" : "No");
+                    }
                 }
             }
 
-            // Display enumeration
-            OnStatusMessage(clientEnumeration.ToString());
+            // Return enumeration
+            return clientEnumeration.ToString();
         }
+
 
         /// <summary>
         /// Rotates cipher keys for specified client connection.
@@ -1620,6 +1647,54 @@ namespace GSF.TimeSeries.Transport
 
                 if (m_clientConnections.TryGetValue(clientID, out connection))
                     return connection.SubscriberInfo;
+
+                OnStatusMessage("ERROR: Failed to find connected client " + clientID);
+            }
+
+            return "";
+        }
+
+        /// <summary>
+        /// Gets temporal status for a specified client connection.
+        /// </summary>
+        /// <param name="clientIndex">Enumerated index for client connection.</param>
+        [AdapterCommand("Gets temporal status for a subscriber, if any, using its enumerated index.", "Administrator", "Editor", "Viewer")]
+        public virtual string GetTemporalStatus(int clientIndex)
+        {
+            Guid clientID = Guid.Empty;
+            bool success = true;
+
+            try
+            {
+                clientID = m_commandChannel.ClientIDs[clientIndex];
+            }
+            catch
+            {
+                success = false;
+                OnStatusMessage("ERROR: Failed to find connected client with enumerated index " + clientIndex);
+            }
+
+            if (success)
+            {
+                ClientConnection connection;
+
+                if (m_clientConnections.TryGetValue(clientID, out connection))
+                {
+                    string temporalStatus = null;
+
+                    if ((object)connection.Subscription != null)
+                    {
+                        if (connection.Subscription.TemporalConstraintIsDefined())
+                            temporalStatus = connection.Subscription.TemporalSessionStatus;
+                        else
+                            temporalStatus = "Subscription does not have an active temporal session.";
+                    }
+
+                    if (string.IsNullOrWhiteSpace(temporalStatus))
+                        temporalStatus = "Temporal session status is unavailable.";
+
+                    return temporalStatus;
+                }
 
                 OnStatusMessage("ERROR: Failed to find connected client " + clientID);
             }

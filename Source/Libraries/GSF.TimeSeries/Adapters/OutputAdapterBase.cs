@@ -25,7 +25,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -83,7 +82,10 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected OutputAdapterBase()
         {
-            m_metadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh) { IsBackground = true };
+            m_metadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh)
+            {
+                IsBackground = true
+            };
 
             m_measurementQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
             m_measurementQueue.ProcessException += m_measurementQueue_ProcessException;
@@ -603,28 +605,8 @@ namespace GSF.TimeSeries.Adapters
             if (m_disposed)
                 return;
 
-            if (!ProcessMeasurementFilter || InputMeasurementKeys == null)
-            {
-                // No further filtering of incoming measurement required
-                m_measurementQueue.AddRange(measurements);
-                IncrementProcessedMeasurements(measurements.Count());
-            }
-            else
-            {
-                // Filter measurements down to specified input measurements
-                List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
-                foreach (IMeasurement measurement in measurements)
-                {
-                    if (IsInputMeasurement(measurement.Key))
-                        filteredMeasurements.Add(measurement);
-                }
-
-                if (filteredMeasurements.Count > 0)
-                {
-                    m_measurementQueue.AddRange(filteredMeasurements);
-                    IncrementProcessedMeasurements(filteredMeasurements.Count());
-                }
-            }
+            m_measurementQueue.AddRange(measurements);
+            IncrementProcessedMeasurements(measurements.Count());
         }
 
         /// <summary>

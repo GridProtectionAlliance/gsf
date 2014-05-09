@@ -1469,15 +1469,6 @@ namespace PhasorProtocolAdapters
         }
 
         /// <summary>
-        /// Queues a single measurement for processing.
-        /// </summary>
-        /// <param name="measurement">Measurement to queue for processing.</param>
-        public override void QueueMeasurementForProcessing(IMeasurement measurement)
-        {
-            QueueMeasurementsForProcessing(new[] { measurement });
-        }
-
-        /// <summary>
         /// Queues a collection of measurements for processing.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for processing.</param>

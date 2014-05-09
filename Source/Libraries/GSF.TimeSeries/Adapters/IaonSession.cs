@@ -40,13 +40,6 @@ namespace GSF.TimeSeries.Adapters
     {
         #region [ Members ]
 
-        // Constants
-
-        /// <summary>
-        /// Default value for <see cref="UseMeasurementRouting"/> property.
-        /// </summary>
-        public const bool DefaultUseMeasurementRouting = true;
-
         // Events
 
         /// <summary>
@@ -126,7 +119,6 @@ namespace GSF.TimeSeries.Adapters
         private OutputAdapterCollection m_outputAdapters;
         private readonly ConcurrentDictionary<object, string> m_derivedNameCache;
         private MeasurementKey[] m_inputMeasurementKeysRestriction;
-        private bool m_useMeasurementRouting;
         private readonly int m_measurementWarningThreshold;
         private readonly int m_measurementDumpingThreshold;
         private readonly int m_defaultSampleSizeWarningThreshold;
@@ -149,10 +141,7 @@ namespace GSF.TimeSeries.Adapters
             CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
 
             systemSettings.Add("NodeID", Guid.NewGuid().ToString(), "Unique Node ID");
-            systemSettings.Add("UseMeasurementRouting", DefaultUseMeasurementRouting, "Set to true to use optimized adapter measurement routing.");
-
             m_nodeID = systemSettings["NodeID"].ValueAs<Guid>();
-            m_useMeasurementRouting = systemSettings["UseMeasurementRouting"].ValueAsBoolean(DefaultUseMeasurementRouting);
 
             // Initialize threshold settings
             CategorizedSettingsElementCollection thresholdSettings = configFile.Settings["thresholdSettings"];
@@ -186,32 +175,21 @@ namespace GSF.TimeSeries.Adapters
 
             // Create input adapters collection
             m_inputAdapters = new InputAdapterCollection();
-            m_inputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
 
             // Create action adapters collection
             m_actionAdapters = new ActionAdapterCollection();
-            m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
             m_actionAdapters.RequestTemporalSupport += RequestTemporalSupportHandler;
 
             // Create output adapters collection
             m_outputAdapters = new OutputAdapterCollection();
-            m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
             m_outputAdapters.UnprocessedMeasurements += UnprocessedMeasurementsHandler;
 
             // Associate adapter collections with routing tables
-            if (m_useMeasurementRouting)
-            {
-                m_routingTables.InputAdapters = m_inputAdapters;
-                m_routingTables.ActionAdapters = m_actionAdapters;
-                m_routingTables.OutputAdapters = m_outputAdapters;
-            }
-            else
-            {
-                m_inputAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
-                m_actionAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
-            }
+            m_routingTables.InputAdapters = m_inputAdapters;
+            m_routingTables.ActionAdapters = m_actionAdapters;
+            m_routingTables.OutputAdapters = m_outputAdapters;
 
             // We group these adapters such that they are initialized in the following order: output, input, action. This
             // is done so that the archival capabilities will be setup before we start receiving input and the input data
@@ -276,40 +254,6 @@ namespace GSF.TimeSeries.Adapters
             get
             {
                 return m_outputAdapters;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets flag that determines if measurement routing should be used.
-        /// </summary>
-        public virtual bool UseMeasurementRouting
-        {
-            get
-            {
-                return m_useMeasurementRouting;
-            }
-            set
-            {
-                if (m_useMeasurementRouting != value)
-                {
-                    if (!m_useMeasurementRouting)
-                        m_inputAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
-
-                    if (!m_useMeasurementRouting)
-                        m_actionAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
-
-                    m_useMeasurementRouting = value;
-
-                    if (!m_useMeasurementRouting)
-                        m_inputAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
-
-                    if (!m_useMeasurementRouting)
-                        m_actionAdapters.NewMeasurements += m_routingTables.BroadcastMeasurementsHandler;
-
-                    m_inputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-                    m_actionAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-                    m_outputAdapters.ProcessMeasurementFilter = !m_useMeasurementRouting;
-                }
             }
         }
 
@@ -449,10 +393,6 @@ namespace GSF.TimeSeries.Adapters
                         if (m_inputAdapters != null)
                         {
                             m_inputAdapters.Stop();
-
-                            if (!m_useMeasurementRouting)
-                                m_inputAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
-
                             m_inputAdapters.ProcessingComplete -= ProcessingCompleteHandler;
                             m_inputAdapters.Dispose();
                         }
@@ -462,10 +402,6 @@ namespace GSF.TimeSeries.Adapters
                         if (m_actionAdapters != null)
                         {
                             m_actionAdapters.Stop();
-
-                            if (!m_useMeasurementRouting)
-                                m_actionAdapters.NewMeasurements -= m_routingTables.BroadcastMeasurementsHandler;
-
                             m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
                             m_actionAdapters.RequestTemporalSupport -= RequestTemporalSupportHandler;
                             m_actionAdapters.Dispose();
@@ -588,7 +524,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public virtual void RecalculateRoutingTables()
         {
-            if (m_useMeasurementRouting && (object)m_routingTables != null && (object)m_allAdapters != null && m_allAdapters.Initialized)
+            if ((object)m_routingTables != null && (object)m_allAdapters != null && m_allAdapters.Initialized)
                 m_routingTables.CalculateRoutingTables(m_inputMeasurementKeysRestriction);
         }
 

@@ -173,10 +173,11 @@ namespace GSF
         public const long PerDay = 24L * Ticks.PerHour;
 
         // Fields
+
         /// <summary>
         /// Time value stored in ticks.
         /// </summary>
-        public readonly long Value; // Time value stored in ticks
+        public readonly long Value;
 
         #endregion
 

@@ -842,6 +842,204 @@ namespace GSF.Core.Tests
 
         #endregion
 
+        #region [ Static Endian Testing Classes ]
+
+        public class StaticLittleEndianTester
+        {
+            public static StaticLittleEndianTester Default = new StaticLittleEndianTester();
+
+            public Endianness TargetEndianness = Endianness.LittleEndian;
+
+            public byte[] GetBytes<T>(T value) where T : struct, IConvertible
+            {
+                return LittleEndian.GetBytes(value);
+            }
+
+            public byte[] GetBytes(Int24 value)
+            {
+                return LittleEndian.GetBytes(value);
+            }
+
+            public byte[] GetBytes(UInt24 value)
+            {
+                return LittleEndian.GetBytes(value);
+            }
+
+            public int CopyBytes<T>(T value, byte[] destinationArray, int destinationIndex) where T : struct, IConvertible
+            {
+                return LittleEndian.CopyBytes(value, destinationArray, destinationIndex);
+            }
+
+            public int CopyBytes(Int24 value, byte[] destinationArray, int destinationIndex)
+            {
+                return LittleEndian.CopyBytes(value, destinationArray, destinationIndex);
+            }
+
+            public int CopyBytes(UInt24 value, byte[] destinationArray, int destinationIndex)
+            {
+                return LittleEndian.CopyBytes(value, destinationArray, destinationIndex);
+            }
+
+            public bool ToBoolean(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToBoolean(value, startIndex);
+            }
+
+            public char ToChar(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToChar(value, startIndex);
+            }
+
+            public double ToDouble(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToDouble(value, startIndex);
+            }
+
+            public short ToInt16(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToInt16(value, startIndex);
+            }
+
+            public Int24 ToInt24(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToInt24(value, startIndex);
+            }
+
+            public int ToInt32(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToInt32(value, startIndex);
+            }
+
+            public long ToInt64(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToInt64(value, startIndex);
+            }
+
+            public float ToSingle(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToSingle(value, startIndex);
+            }
+
+            public ushort ToUInt16(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToUInt16(value, startIndex);
+            }
+
+            public UInt24 ToUInt24(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToUInt24(value, startIndex);
+            }
+
+            public uint ToUInt32(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToUInt32(value, startIndex);
+            }
+
+            public ulong ToUInt64(byte[] value, int startIndex)
+            {
+                return LittleEndian.ToUInt64(value, startIndex);
+            }
+        }
+
+        public class StaticBigEndianTester
+        {
+            public static StaticBigEndianTester Default = new StaticBigEndianTester();
+
+            public Endianness TargetEndianness = Endianness.BigEndian;
+
+            public byte[] GetBytes<T>(T value) where T : struct, IConvertible
+            {
+                return BigEndian.GetBytes(value);
+            }
+
+            public byte[] GetBytes(Int24 value)
+            {
+                return BigEndian.GetBytes(value);
+            }
+
+            public byte[] GetBytes(UInt24 value)
+            {
+                return BigEndian.GetBytes(value);
+            }
+
+            public int CopyBytes<T>(T value, byte[] destinationArray, int destinationIndex) where T : struct, IConvertible
+            {
+                return BigEndian.CopyBytes(value, destinationArray, destinationIndex);
+            }
+
+            public int CopyBytes(Int24 value, byte[] destinationArray, int destinationIndex)
+            {
+                return BigEndian.CopyBytes(value, destinationArray, destinationIndex);
+            }
+
+            public int CopyBytes(UInt24 value, byte[] destinationArray, int destinationIndex)
+            {
+                return BigEndian.CopyBytes(value, destinationArray, destinationIndex);
+            }
+
+            public bool ToBoolean(byte[] value, int startIndex)
+            {
+                return BigEndian.ToBoolean(value, startIndex);
+            }
+
+            public char ToChar(byte[] value, int startIndex)
+            {
+                return BigEndian.ToChar(value, startIndex);
+            }
+
+            public double ToDouble(byte[] value, int startIndex)
+            {
+                return BigEndian.ToDouble(value, startIndex);
+            }
+
+            public short ToInt16(byte[] value, int startIndex)
+            {
+                return BigEndian.ToInt16(value, startIndex);
+            }
+
+            public Int24 ToInt24(byte[] value, int startIndex)
+            {
+                return BigEndian.ToInt24(value, startIndex);
+            }
+
+            public int ToInt32(byte[] value, int startIndex)
+            {
+                return BigEndian.ToInt32(value, startIndex);
+            }
+
+            public long ToInt64(byte[] value, int startIndex)
+            {
+                return BigEndian.ToInt64(value, startIndex);
+            }
+
+            public float ToSingle(byte[] value, int startIndex)
+            {
+                return BigEndian.ToSingle(value, startIndex);
+            }
+
+            public ushort ToUInt16(byte[] value, int startIndex)
+            {
+                return BigEndian.ToUInt16(value, startIndex);
+            }
+
+            public UInt24 ToUInt24(byte[] value, int startIndex)
+            {
+                return BigEndian.ToUInt24(value, startIndex);
+            }
+
+            public uint ToUInt32(byte[] value, int startIndex)
+            {
+                return BigEndian.ToUInt32(value, startIndex);
+            }
+
+            public ulong ToUInt64(byte[] value, int startIndex)
+            {
+                return BigEndian.ToUInt64(value, startIndex);
+            }
+        }
+
+        #endregion
+
         [TestMethod]
         public void TestDataTypeEncodings()
         {
@@ -974,9 +1172,35 @@ namespace GSF.Core.Tests
             TestValues(ulongValues, BigEndianOrder.Default, BigEndianOrderTester.Default, sizeof(ulong));
             TestValues(floatValues, BigEndianOrder.Default, BigEndianOrderTester.Default, sizeof(float));
             TestValues(doubleValues, BigEndianOrder.Default, BigEndianOrderTester.Default, sizeof(double));
+
+            TestValues(boolValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(bool));
+            TestValues(charValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(char));
+            TestValues(shortValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(short));
+            TestValues(ushortValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(ushort));
+            TestValues(int24Values, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, 3);
+            TestValues(uint24Values, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, 3);
+            TestValues(intValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(int));
+            TestValues(uintValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(uint));
+            TestValues(longValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(long));
+            TestValues(ulongValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(ulong));
+            TestValues(floatValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(float));
+            TestValues(doubleValues, StaticLittleEndianTester.Default, LittleEndianOrderTester.Default, sizeof(double));
+
+            TestValues(boolValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(bool));
+            TestValues(charValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(char));
+            TestValues(shortValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(short));
+            TestValues(ushortValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(ushort));
+            TestValues(int24Values, StaticBigEndianTester.Default, BigEndianOrderTester.Default, 3);
+            TestValues(uint24Values, StaticBigEndianTester.Default, BigEndianOrderTester.Default, 3);
+            TestValues(intValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(int));
+            TestValues(uintValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(uint));
+            TestValues(longValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(long));
+            TestValues(ulongValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(ulong));
+            TestValues(floatValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(float));
+            TestValues(doubleValues, StaticBigEndianTester.Default, BigEndianOrderTester.Default, sizeof(double));
         }
 
-        private void TestValues<T>(IEnumerable<T> values, EndianOrder eOrder, EndianOrderTester eOrderTester, int typeSize) where T : struct, IConvertible
+        private void TestValues<T>(IEnumerable<T> values, dynamic eOrder, EndianOrderTester eOrderTester, int typeSize) where T : struct, IConvertible
         {
             byte[] valueBytes, valueTestBytes, copiedBytes = new byte[typeSize], copiedTestBytes = new byte[typeSize];
             IConvertible convertibleValue;

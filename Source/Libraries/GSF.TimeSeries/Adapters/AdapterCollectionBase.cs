@@ -98,7 +98,6 @@ namespace GSF.TimeSeries.Adapters
         private string m_dataMember;
         private int m_initializationTimeout;
         private bool m_autoStart;
-        private bool m_processMeasurementFilter;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_inputMeasurementKeys;
         private string[] m_inputSourceIDs;
@@ -302,30 +301,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_autoStart = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
-        /// </summary>
-        public virtual bool ProcessMeasurementFilter
-        {
-            get
-            {
-                return m_processMeasurementFilter;
-            }
-            set
-            {
-                m_processMeasurementFilter = value;
-
-                // Update this flag for items in this collection
-                lock (this)
-                {
-                    foreach (T item in this)
-                    {
-                        item.ProcessMeasurementFilter = m_processMeasurementFilter;
-                    }
-                }
             }
         }
 
@@ -688,8 +663,6 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendFormat("    Collection initialized: {0}", Initialized);
                 status.AppendLine();
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
-                status.AppendLine();
-                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
                 status.AppendLine();
                 status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
@@ -1479,9 +1452,6 @@ namespace GSF.TimeSeries.Adapters
                 item.OutputMeasurementsUpdated += item_OutputMeasurementsUpdated;
                 item.ConfigurationChanged += item_ConfigurationChanged;
                 item.Disposed += item_Disposed;
-
-                // Update adapter routing type flag
-                item.ProcessMeasurementFilter = ProcessMeasurementFilter;
 
                 try
                 {

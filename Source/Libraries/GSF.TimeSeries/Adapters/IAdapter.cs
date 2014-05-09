@@ -153,15 +153,6 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
-        /// </summary>
-        bool ProcessMeasurementFilter
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets or sets primary keys of input measurements the adapter expects.
         /// </summary>
         MeasurementKey[] InputMeasurementKeys
