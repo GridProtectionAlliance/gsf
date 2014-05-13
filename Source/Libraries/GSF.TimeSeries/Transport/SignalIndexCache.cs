@@ -31,6 +31,8 @@ using System.Linq;
 using System.Text;
 using GSF.Parsing;
 
+#pragma warning disable 618
+
 namespace GSF.TimeSeries.Transport
 {
     /// <summary>
@@ -281,7 +283,7 @@ namespace GSF.TimeSeries.Transport
             buffer.ValidateParameters(startIndex, binaryLength);
 
             // Byte size of cache
-            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(binaryLength);
+            bigEndianBuffer = BigEndian.GetBytes(binaryLength);
             Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
             offset += bigEndianBuffer.Length;
 
@@ -291,14 +293,14 @@ namespace GSF.TimeSeries.Transport
             offset += bigEndianBuffer.Length;
 
             // Number of references
-            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(m_reference.Count);
+            bigEndianBuffer = BigEndian.GetBytes(m_reference.Count);
             Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
             offset += bigEndianBuffer.Length;
 
             foreach (KeyValuePair<ushort, Tuple<Guid, string, uint>> kvp in m_reference)
             {
                 // Signal index
-                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Key);
+                bigEndianBuffer = BigEndian.GetBytes(kvp.Key);
                 Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
                 offset += bigEndianBuffer.Length;
 
@@ -309,20 +311,20 @@ namespace GSF.TimeSeries.Transport
 
                 // Source
                 unicodeBuffer = m_encoding.GetBytes(kvp.Value.Item2);
-                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(unicodeBuffer.Length);
+                bigEndianBuffer = BigEndian.GetBytes(unicodeBuffer.Length);
                 Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
                 offset += bigEndianBuffer.Length;
                 Buffer.BlockCopy(unicodeBuffer, 0, buffer, offset, unicodeBuffer.Length);
                 offset += unicodeBuffer.Length;
 
                 // ID
-                bigEndianBuffer = EndianOrder.BigEndian.GetBytes(kvp.Value.Item3);
+                bigEndianBuffer = BigEndian.GetBytes(kvp.Value.Item3);
                 Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
                 offset += bigEndianBuffer.Length;
             }
 
             // Number of unauthorized IDs
-            bigEndianBuffer = EndianOrder.BigEndian.GetBytes(unauthorizedSignalIDs.Length);
+            bigEndianBuffer = BigEndian.GetBytes(unauthorizedSignalIDs.Length);
             Buffer.BlockCopy(bigEndianBuffer, 0, buffer, offset, bigEndianBuffer.Length);
             offset += bigEndianBuffer.Length;
 
@@ -367,7 +369,7 @@ namespace GSF.TimeSeries.Transport
                 return 0;
 
             // Byte size of cache
-            binaryLength = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            binaryLength = BigEndian.ToInt32(buffer, offset);
             offset += 4;
 
             if (length < binaryLength)
@@ -381,13 +383,13 @@ namespace GSF.TimeSeries.Transport
             offset += 16;
 
             // Number of references
-            referenceCount = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            referenceCount = BigEndian.ToInt32(buffer, offset);
             offset += 4;
 
             for (int i = 0; i < referenceCount; i++)
             {
                 // Signal index
-                signalIndex = EndianOrder.BigEndian.ToUInt16(buffer, offset);
+                signalIndex = BigEndian.ToUInt16(buffer, offset);
                 offset += 2;
 
                 // Signal ID
@@ -395,20 +397,20 @@ namespace GSF.TimeSeries.Transport
                 offset += 16;
 
                 // Source
-                sourceSize = EndianOrder.BigEndian.ToInt32(buffer, offset);
+                sourceSize = BigEndian.ToInt32(buffer, offset);
                 offset += 4;
                 source = m_encoding.GetString(buffer, offset, sourceSize);
                 offset += sourceSize;
 
                 // ID
-                id = EndianOrder.BigEndian.ToUInt32(buffer, offset);
+                id = BigEndian.ToUInt32(buffer, offset);
                 offset += 4;
 
                 m_reference[signalIndex] = new Tuple<Guid, string, uint>(signalID, source, id);
             }
 
             // Number of unauthorized IDs
-            unauthorizedIDCount = EndianOrder.BigEndian.ToInt32(buffer, offset);
+            unauthorizedIDCount = BigEndian.ToInt32(buffer, offset);
             m_unauthorizedSignalIDs = new Guid[unauthorizedIDCount];
             offset += 4;
 

@@ -210,7 +210,7 @@ namespace GSF.IO.Compression
             const int SizeOf32Bits = sizeof(uint);
             byte* start, iter, end;
 
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer", "Cannot write data to null buffer");
 
             if (length % SizeOf32Bits != 0)
@@ -663,7 +663,7 @@ namespace GSF.IO.Compression
             finally
             {
                 // Return buffer to queue so it can be reused
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
 

@@ -100,14 +100,14 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                if (m_outputSourceIDs == null)
+                if ((object)m_outputSourceIDs == null)
                     return null;
 
                 return m_outputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_outputSourceIDs = null;
                 }

@@ -136,7 +136,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 {
                     byte[] buffer = new byte[2];
 
-                    EndianOrder.BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
+                    BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
 
                     return buffer;
                 }
@@ -161,7 +161,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             // PMUs in PDC block do not include Df/Dt
             if (Definition.Parent.IsPdcBlockSection)
             {
-                UnscaledFrequency = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
+                UnscaledFrequency = BigEndian.ToInt16(buffer, startIndex);
                 return 2;
             }
 

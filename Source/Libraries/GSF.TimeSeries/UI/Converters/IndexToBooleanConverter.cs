@@ -44,11 +44,11 @@ namespace GSF.TimeSeries.UI.Converters
         /// <returns>Boolean value.</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value != null)
+            if ((object)value != null)
             {
-                int temp = (int) value;
+                int temp = (int)value;
                 if (temp > 0)
-                   return false;
+                    return false;
                 else
                     return true;
             }

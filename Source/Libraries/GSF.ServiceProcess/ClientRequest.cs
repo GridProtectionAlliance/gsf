@@ -164,7 +164,7 @@ namespace GSF.ServiceProcess
         public static ClientRequest Parse(string text)
         {
             // Input text can't be null.
-            if (text == null)
+            if ((object)text == null)
                 return null;
 
             // Input text can't be empty.

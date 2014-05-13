@@ -282,7 +282,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         {
             get
             {
-                return EndianOrder.BigEndian.GetBytes(Period);
+                return BigEndian.GetBytes(Period);
             }
         }
 
@@ -380,7 +380,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             // with first (and only) configuration cell, since cell was added during ParseBodyImage
             // of ChannelFrameBase, performing the following succeeds since parsing the footer
             // follows parsing the body :)
-            Period = EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
+            Period = BigEndian.ToUInt16(buffer, startIndex);
             return FixedFooterLength;
         }
 

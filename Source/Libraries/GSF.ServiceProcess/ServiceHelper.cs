@@ -1541,7 +1541,7 @@ namespace GSF.ServiceProcess
         {
             processName = processName.Trim();
 
-            if (FindProcess(processName) == null)
+            if ((object)FindProcess(processName) == null)
                 return false;
 
             // The specified process exists, so we'll schedule it, or update its schedule if it is scheduled already.

@@ -200,9 +200,9 @@ namespace GSF.Historian.Files
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                Time = new TimeTag(EndianOrder.LittleEndian.ToDouble(buffer, startIndex));
-                Flags = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 8);
-                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 12);
+                Time = new TimeTag(LittleEndian.ToDouble(buffer, startIndex));
+                Flags = LittleEndian.ToInt32(buffer, startIndex + 8);
+                Value = LittleEndian.ToSingle(buffer, startIndex + 12);
 
                 return FixedLength;
             }

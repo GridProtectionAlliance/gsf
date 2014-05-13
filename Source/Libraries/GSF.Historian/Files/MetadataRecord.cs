@@ -191,7 +191,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_remarks = value.TruncateRight(512);
@@ -213,7 +213,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_hardwareInfo = value.TruncateRight(512);
@@ -236,7 +236,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_emailAddresses = value.TruncateRight(512);
@@ -258,7 +258,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_description = value.TruncateRight(80);
@@ -280,7 +280,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_currentData = value.TruncateRight(80);
@@ -302,7 +302,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_name = value.TruncateRight(40);
@@ -324,7 +324,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_synonym1 = value.TruncateRight(40);
@@ -346,7 +346,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_synonym2 = value.TruncateRight(40);
@@ -368,7 +368,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_synonym3 = value.TruncateRight(40);
@@ -391,7 +391,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_pagerNumbers = value.TruncateRight(40);
@@ -414,7 +414,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_phoneNumbers = value.TruncateRight(40);
@@ -436,7 +436,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_plantCode = value.TruncateRight(24);
@@ -458,7 +458,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_system = value.TruncateRight(24);
@@ -529,7 +529,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_securityFlags = value;
@@ -548,7 +548,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_generalFlags = value;
@@ -567,7 +567,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_alarmFlags = value;
@@ -647,7 +647,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_analogFields = value;
@@ -666,7 +666,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_digitalFields = value;
@@ -685,7 +685,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_composedFields = value;
@@ -704,7 +704,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_constantFields = value;
@@ -774,14 +774,14 @@ namespace GSF.Historian.Files
                 PlantCode = Encoding.ASCII.GetString(buffer, startIndex + 1936, 24).Trim();
                 SystemName = Encoding.ASCII.GetString(buffer, startIndex + 1960, 24).Trim();
                 EmailTime = Encoding.ASCII.GetString(buffer, startIndex + 1984, 40).Trim();
-                ScanRate = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 2104);
-                UnitNumber = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2108);
-                SecurityFlags.Value = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2112);
-                GeneralFlags.Value = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2116);
-                AlarmFlags.Value = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2120);
-                CompressionMinTime = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2124);
-                CompressionMaxTime = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2128);
-                SourceID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2132);
+                ScanRate = LittleEndian.ToSingle(buffer, startIndex + 2104);
+                UnitNumber = LittleEndian.ToInt32(buffer, startIndex + 2108);
+                SecurityFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2112);
+                GeneralFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2116);
+                AlarmFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2120);
+                CompressionMinTime = LittleEndian.ToInt32(buffer, startIndex + 2124);
+                CompressionMaxTime = LittleEndian.ToInt32(buffer, startIndex + 2128);
+                SourceID = LittleEndian.ToInt32(buffer, startIndex + 2132);
                 switch (GeneralFlags.DataType)
                 {
                     case DataType.Analog:
@@ -839,14 +839,14 @@ namespace GSF.Historian.Files
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_plantCode.PadRight(24)), 0, buffer, startIndex + 1936, 24);
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_system.PadRight(24)), 0, buffer, startIndex + 1960, 24);
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_emailTime.PadRight(40)), 0, buffer, startIndex + 1984, 40);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_scanRate), 0, buffer, startIndex + 2104, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_unitNumber), 0, buffer, startIndex + 2108, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_securityFlags.Value), 0, buffer, startIndex + 2112, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_generalFlags.Value), 0, buffer, startIndex + 2116, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_alarmFlags.Value), 0, buffer, startIndex + 2120, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_compressionMinTime), 0, buffer, startIndex + 2124, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_compressionMaxTime), 0, buffer, startIndex + 2128, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_sourceID), 0, buffer, startIndex + 2132, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_scanRate), 0, buffer, startIndex + 2104, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_unitNumber), 0, buffer, startIndex + 2108, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_securityFlags.Value), 0, buffer, startIndex + 2112, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_generalFlags.Value), 0, buffer, startIndex + 2116, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_alarmFlags.Value), 0, buffer, startIndex + 2120, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionMinTime), 0, buffer, startIndex + 2124, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionMaxTime), 0, buffer, startIndex + 2128, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_sourceID), 0, buffer, startIndex + 2132, 4);
             switch (m_generalFlags.DataType)
             {
                 case DataType.Analog:

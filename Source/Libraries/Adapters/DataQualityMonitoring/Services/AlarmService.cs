@@ -72,7 +72,7 @@ namespace DataQualityMonitoring.Services
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_alarmAdapter = value;

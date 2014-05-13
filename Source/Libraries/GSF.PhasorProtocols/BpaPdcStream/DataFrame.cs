@@ -287,12 +287,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
 
                 if (ConfigurationFrame.RevisionNumber == RevisionNumber.Revision0)
-                    EndianOrder.BigEndian.CopyBytes((uint)Math.Truncate(NtpTimeTag.Value), buffer, 4);
+                    BigEndian.CopyBytes((uint)Math.Truncate(NtpTimeTag.Value), buffer, 4);
                 else
-                    EndianOrder.BigEndian.CopyBytes((uint)Math.Truncate(TimeTag.Value), buffer, 4);
+                    BigEndian.CopyBytes((uint)Math.Truncate(TimeTag.Value), buffer, 4);
 
-                EndianOrder.BigEndian.CopyBytes(m_sampleNumber, buffer, 8);
-                EndianOrder.BigEndian.CopyBytes((ushort)Cells.Count, buffer, 10);
+                BigEndian.CopyBytes(m_sampleNumber, buffer, 8);
+                BigEndian.CopyBytes((ushort)Cells.Count, buffer, 10);
 
                 index += 8;
 
@@ -312,7 +312,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         index += 2;
 
                         // Add offset to data frame header
-                        EndianOrder.BigEndian.CopyBytes(offset, buffer, index);
+                        BigEndian.CopyBytes(offset, buffer, index);
                         index += 2;
 
                         offset += (ushort)dataCell.BinaryLength;
@@ -406,8 +406,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             int index = startIndex + CommonFrameHeader.FixedLength;
 
             // Parse frame timestamp
-            uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, index);
-            m_sampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index + 4);
+            uint secondOfCentury = BigEndian.ToUInt32(buffer, index);
+            m_sampleNumber = BigEndian.ToUInt16(buffer, index + 4);
             index += 6;
 
             if (configurationFrame.RevisionNumber == RevisionNumber.Revision0)
@@ -417,7 +417,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
             // Because in cases where PDCxchng is being used the data cell count will be smaller than the
             // configuration cell count - we save this count to calculate the offsets later
-            state.CellCount = EndianOrder.BigEndian.ToUInt16(buffer, index);
+            state.CellCount = BigEndian.ToUInt16(buffer, index);
             index += 2;
 
             if (state.CellCount > configurationFrame.Cells.Count)
@@ -463,7 +463,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected override void AppendChecksum(byte[] buffer, int startIndex)
         {
             // Oddly enough, check sum for frames in BPA PDC stream is little-endian
-            EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
+            LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
         }
 
         /// <summary>
@@ -482,7 +482,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 return true;
 
             int sumLength = BinaryLength - 2;
-            return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
+            return LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
         }
 
         /// <summary>

@@ -165,11 +165,14 @@ namespace GSF.PhasorProtocols
         /// Gets the number of redundant frames in each packet.
         /// </summary>
         /// <remarks>
-        /// <para>This value is used when calculating statistics. It is assumed that for each
+        /// <para>
+        /// This value is used when calculating statistics. It is assumed that for each
         /// frame that is received, that frame will be included in the next <c>n</c>
-        /// packets, where <c>n</c> is the number of redundant frames per packet.</para>
-        /// 
-        /// <para>This base class returns 0, as most protocols do not support redundant frames.</para>
+        /// packets, where <c>n</c> is the number of redundant frames per packet.
+        /// </para>
+        /// <para>
+        /// This base class returns 0, as most protocols do not support redundant frames.
+        /// </para>
         /// </remarks>
         public virtual int RedundantFramesPerPacket
         {
@@ -183,7 +186,7 @@ namespace GSF.PhasorProtocols
         /// Gets or sets current <see cref="IConfigurationFrame"/> used for parsing <see cref="IDataFrame"/>'s encountered in the data stream from a device.
         /// </summary>
         /// <remarks>
-        /// If a <see cref="IConfigurationFrame"/> has been parsed, this will return a reference to the parsed frame.  Consumer can manually assign a
+        /// If a <see cref="IConfigurationFrame"/> has been parsed, this will return a reference to the parsed frame. Consumer can manually assign a
         /// <see cref="IConfigurationFrame"/> to start parsing data if one has not been encountered in the stream.
         /// </remarks>
         public abstract IConfigurationFrame ConfigurationFrame

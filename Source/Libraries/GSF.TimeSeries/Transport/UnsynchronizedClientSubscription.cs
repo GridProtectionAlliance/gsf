@@ -686,12 +686,12 @@ namespace GSF.TimeSeries.Transport
                         bufferBlock = new byte[6 + bufferBlockMeasurement.Length];
 
                         // Prepend sequence number
-                        EndianOrder.BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
+                        BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
                         m_bufferBlockSequenceNumber++;
 
                         // Copy signal index into buffer
                         bufferBlockSignalIndex = m_signalIndexCache.GetSignalIndex(bufferBlockMeasurement.ID);
-                        EndianOrder.BigEndian.CopyBytes(bufferBlockSignalIndex, bufferBlock, 4);
+                        BigEndian.CopyBytes(bufferBlockSignalIndex, bufferBlock, 4);
 
                         // Append measurement data and send
                         Buffer.BlockCopy(bufferBlockMeasurement.Buffer, 0, bufferBlock, 6, bufferBlockMeasurement.Length);
@@ -765,7 +765,7 @@ namespace GSF.TimeSeries.Transport
             // published upon receipt, however timestamps are optionally included in the serialized measurements.
 
             // Serialize total number of measurement values to follow
-            m_workingBuffer.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
+            m_workingBuffer.Write(BigEndian.GetBytes(measurements.Count()), 0, 4);
 
             // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
             if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(m_workingBuffer, m_compressionStrength, m_includeTime, ref flags))
@@ -838,9 +838,9 @@ namespace GSF.TimeSeries.Transport
                 // to maintaining this memory stream at a member level
                 using (BlockAllocatedMemoryStream responsePacket = new BlockAllocatedMemoryStream())
                 {
-                    responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_timeIndex), 0, 4);
-                    responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
-                    responsePacket.Write(EndianOrder.BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
+                    responsePacket.Write(BigEndian.GetBytes(m_timeIndex), 0, 4);
+                    responsePacket.Write(BigEndian.GetBytes(m_baseTimeOffsets[0]), 0, 8);
+                    responsePacket.Write(BigEndian.GetBytes(m_baseTimeOffsets[1]), 0, 8);
 
                     m_parent.SendClientResponse(m_clientID, ServerResponse.UpdateBaseTimes, ServerCommand.Subscribe, responsePacket.ToArray());
                 }

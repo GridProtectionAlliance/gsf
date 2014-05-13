@@ -160,7 +160,7 @@ namespace PIAdapters
             set
             {
                 base.RequestedOutputMeasurementKeys = value;
-                if (value != null && value.Any())
+                if ((object)value != null && value.Any())
                     HandleNewMeasurementsRequest(value);
             }
         }

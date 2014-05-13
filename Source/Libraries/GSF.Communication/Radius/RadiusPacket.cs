@@ -208,10 +208,10 @@ namespace GSF.Communication.Radius
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
-                if (value == null || value.Length != 16)
+                if ((object)value == null || value.Length != 16)
                     throw new ArgumentException("Value must 16-byte long.");
 
                 m_authenticator = value;
@@ -263,7 +263,7 @@ namespace GSF.Communication.Radius
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
         public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");
 
             int imageLength = BinaryLength;
@@ -289,11 +289,9 @@ namespace GSF.Communication.Radius
 
                 return imageLength;
             }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
+
+            // Binary image does not have sufficient data.
+            return 0;
         }
 
         /// <summary>
@@ -393,7 +391,7 @@ namespace GSF.Communication.Radius
             //   where:
             //   Code, Identifier, Length & Attributes are from the response RADIUS packet
             //   Request Authenticator is from the request RADIUS packet
-            //   Shared Secret is the shared secret ket
+            //   Shared Secret is the shared secret key
             int length = responsePacket.BinaryLength;
             byte[] sharedSecretBytes = Encoding.GetBytes(sharedSecret);
             byte[] buffer = BufferPool.TakeBuffer(length + sharedSecretBytes.Length);
@@ -408,7 +406,7 @@ namespace GSF.Communication.Radius
             }
             finally
             {
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
         }
@@ -423,21 +421,15 @@ namespace GSF.Communication.Radius
         public static byte[] EncryptPassword(string password, string sharedSecret, byte[] requestAuthenticator)
         {
             // Avoiding Null Dereferences
-            if ((string.IsNullOrEmpty(sharedSecret)))
-            {
-                throw new ArgumentException("Shared secret cannot be null or empty."); 
-            }
+            if (string.IsNullOrEmpty(sharedSecret))
+                throw new ArgumentException("Shared secret cannot be null or empty.");
 
-            if ((string.IsNullOrEmpty(password)))
-            {
+            if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("Password cannot be null or empty.");
-            }
 
             if ((object)requestAuthenticator == null)
-            {
                 throw new ArgumentException("Request authenticator cannot be null.");
-            }
-                 
+
             // Max length of the password can be 130 according to RFC 2865. Since 128 is the closest multiple
             // of 16 (password segment length), we allow the password to be no longer than 128 characters.
             if (password.Length <= 128)
@@ -479,8 +471,10 @@ namespace GSF.Communication.Radius
                         // For passwords that are more than 16 characters in length, each consecutive 16-byte
                         // segment of the password is XORed with MD5 hash value that's computed as follows:
                         //   MD5(Shared secret key + XOR bytes used in the previous segment)
+                        // ReSharper disable once PossibleNullReferenceException
                         Buffer.BlockCopy(xorBytes, 0, md5HashInputBytes, sharedSecretBytes.Length, xorBytes.Length);
                     }
+
                     xorBytes = md5Provider.ComputeHash(md5HashInputBytes);
 
                     // XOR the password bytes in the current segment with the XOR bytes.
@@ -492,10 +486,8 @@ namespace GSF.Communication.Radius
 
                 return result;
             }
-            else
-            {
-                throw new ArgumentException("Password can be a maximum of 128 characters in length.");
-            }
+
+            throw new ArgumentException("Password can be a maximum of 128 characters in length.");
         }
 
         #endregion

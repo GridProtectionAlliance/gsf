@@ -260,14 +260,18 @@ namespace GSF.TimeSeries
                             else
                                 frame = null;
 
-                            if (frame == null)
+                            if ((object)frame == null)
+                            {
                                 status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
+                            }
                             else
+                            {
                                 status.AppendFormat("Frame {0} @ {1} - {2} measurements, {3} received",
                                     i.ToString().PadLeft(4, '0'),
                                     (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
                                     frame.Measurements.Count,
                                     (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
+                            }
 
                             status.AppendLine();
                             node = node.Next;

@@ -221,7 +221,7 @@ namespace GSF.Windows.Forms
             //AddListViewItem(ListViewApplicationInfo, "Trademark", AssemblyInfo.EntryAssembly.Trademark);
 
             // Query all the assemblies used by the calling application.
-            if (m_assemblies == null)
+            if ((object)m_assemblies == null)
             {
                 m_assemblies = new List<AssemblyInfo>();
                 foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())

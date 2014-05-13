@@ -403,7 +403,7 @@ namespace AdoAdapters
                             if (data.Read(buffer, 0, 4) != 4)
                                 throw new EndOfStreamException();
 
-                            signalIndexCacheImageSize = EndianOrder.LittleEndian.ToInt32(buffer, 0);
+                            signalIndexCacheImageSize = LittleEndian.ToInt32(buffer, 0);
 
                             // Resize buffer to accomodate exact signal index cache
                             buffer = new byte[signalIndexCacheImageSize];
@@ -419,13 +419,13 @@ namespace AdoAdapters
                             if (data.Read(buffer, 0, 4) != 4)
                                 throw new EndOfStreamException();
 
-                            compactMeasurementSize = EndianOrder.LittleEndian.ToInt32(buffer, 0);
+                            compactMeasurementSize = LittleEndian.ToInt32(buffer, 0);
 
                             // Read the total number of compact measurements from the file
                             if (data.Read(buffer, 0, 4) != 4)
                                 throw new EndOfStreamException();
 
-                            totalMeasurements = EndianOrder.LittleEndian.ToInt32(buffer, 0);
+                            totalMeasurements = LittleEndian.ToInt32(buffer, 0);
 
                             // Resize buffer to accomodate compact measurement if needed (not likely)
                             if (buffer.Length < compactMeasurementSize)
@@ -608,16 +608,16 @@ namespace AdoAdapters
                             int compactMeasurementSize = (new CompactMeasurement(signalIndexCache)).BinaryLength;
 
                             // Write the signal index cache image size to the file
-                            data.Write(EndianOrder.LittleEndian.GetBytes(signalIndexCacheImage.Length), 0, 4);
+                            data.Write(LittleEndian.GetBytes(signalIndexCacheImage.Length), 0, 4);
 
                             // Write the signal index cache image to the file
                             data.Write(signalIndexCacheImage, 0, signalIndexCacheImage.Length);
 
                             // Write the size of each compact measurement to the file
-                            data.Write(EndianOrder.LittleEndian.GetBytes(compactMeasurementSize), 0, 4);
+                            data.Write(LittleEndian.GetBytes(compactMeasurementSize), 0, 4);
 
                             // Write the total number of compact measurements to the file
-                            data.Write(EndianOrder.LittleEndian.GetBytes(m_dbMeasurements.Count), 0, 4);
+                            data.Write(LittleEndian.GetBytes(m_dbMeasurements.Count), 0, 4);
 
                             // Write each compact measurement image to the file
                             for (int i = 0; i < m_dbMeasurements.Count; i++)

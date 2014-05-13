@@ -133,8 +133,8 @@ namespace GSF.Historian.Files
             {
                 buffer.ValidateParameters(startIndex, length);
 
-                double startTime = EndianOrder.LittleEndian.ToDouble(buffer, startIndex);
-                double stopTime = EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 8);
+                double startTime = LittleEndian.ToDouble(buffer, startIndex);
+                double stopTime = LittleEndian.ToDouble(buffer, startIndex + 8);
 
                 // Validate file time tags
                 if (startTime < TimeTag.MinValue.Value || startTime > TimeTag.MaxValue.Value)
@@ -145,10 +145,10 @@ namespace GSF.Historian.Files
 
                 m_parent.FileStartTime = new TimeTag(startTime);
                 m_parent.FileEndTime = new TimeTag(stopTime);
-                m_parent.DataPointsReceived = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 16);
-                m_parent.DataPointsArchived = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 20);
-                m_parent.DataBlockSize = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 24);
-                m_parent.DataBlockCount = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 28);
+                m_parent.DataPointsReceived = LittleEndian.ToInt32(buffer, startIndex + 16);
+                m_parent.DataPointsArchived = LittleEndian.ToInt32(buffer, startIndex + 20);
+                m_parent.DataBlockSize = LittleEndian.ToInt32(buffer, startIndex + 24);
+                m_parent.DataBlockCount = LittleEndian.ToInt32(buffer, startIndex + 28);
 
                 return FixedLength;
             }
@@ -170,12 +170,12 @@ namespace GSF.Historian.Files
 
                 buffer.ValidateParameters(startIndex, length);
 
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_fileStartTime.Value), 0, buffer, startIndex, 8);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_fileEndTime.Value), 0, buffer, startIndex + 8, 8);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_dataPointsReceived), 0, buffer, startIndex + 16, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_dataPointsArchived), 0, buffer, startIndex + 20, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_dataBlockSize), 0, buffer, startIndex + 24, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_parent.m_dataBlockCount), 0, buffer, startIndex + 28, 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_fileStartTime.Value), 0, buffer, startIndex, 8);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_fileEndTime.Value), 0, buffer, startIndex + 8, 8);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_dataPointsReceived), 0, buffer, startIndex + 16, 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_dataPointsArchived), 0, buffer, startIndex + 20, 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_dataBlockSize), 0, buffer, startIndex + 24, 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_parent.m_dataBlockCount), 0, buffer, startIndex + 28, 4);
 
                 return length;
             }
@@ -489,7 +489,7 @@ namespace GSF.Historian.Files
             {
                 ArchiveDataBlock unusedDataBlock = FindDataBlock(-1);
 
-                if (unusedDataBlock != null)
+                if ((object)unusedDataBlock != null)
                     return m_dataBlockCount - unusedDataBlock.Index;
 
                 return 0;
@@ -772,18 +772,18 @@ namespace GSF.Historian.Files
                 // Negative data block index is specified indicating a search must be performed for a data block.
                 dataBlock = FindLastDataBlock(historianID);
 
-                if (dataBlock != null && dataBlock.SlotsAvailable == 0)
+                if ((object)dataBlock != null && dataBlock.SlotsAvailable == 0)
                 {
                     // Previously used data block is full.
                     dataBlock = null;
                 }
 
-                if (dataBlock == null)
+                if ((object)dataBlock == null)
                 {
                     // Look for the first unallocated data block.
                     dataBlock = FindDataBlock(-1);
 
-                    if (dataBlock == null)
+                    if ((object)dataBlock == null)
                     {
                         // Extend the file for historic writes only.
                         if (m_parent.FileType == ArchiveFileType.Historic)
@@ -801,7 +801,7 @@ namespace GSF.Historian.Files
                 }
 
                 // Get the pointer to the data block so that its information can be updated if necessary.
-                if (dataBlock == null)
+                if ((object)dataBlock == null)
                 {
                     dataBlockPointer = null;
                 }
@@ -814,7 +814,7 @@ namespace GSF.Historian.Files
                 }
             }
 
-            if (dataBlockPointer != null && !dataBlockPointer.IsAllocated)
+            if ((object)dataBlockPointer != null && !dataBlockPointer.IsAllocated)
             {
                 // Mark the data block as allocated.
                 dataBlockPointer.HistorianID = historianID;

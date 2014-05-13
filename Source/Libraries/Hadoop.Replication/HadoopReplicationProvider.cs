@@ -604,7 +604,7 @@ namespace Hadoop.Replication
                     while ((bytesRead = fileStream.Read(readBuffer, 0, readBuffer.Length)) != 0)
                     {
                         // Read "bytesPerCrc32" bytes from the file and compute CRC32.
-                        blockCRC = EndianOrder.BigEndian.GetBytes(readBuffer.Crc32Checksum(0, bytesRead));
+                        blockCRC = BigEndian.GetBytes(readBuffer.Crc32Checksum(0, bytesRead));
                         // Add big-endian byte array of the computed CRC32 to CRC32 buffer.
                         blockCRCs.AddRange(blockCRC);
                         // Stop reading and compute block MD5 hash when a HDFS block data has been processed.

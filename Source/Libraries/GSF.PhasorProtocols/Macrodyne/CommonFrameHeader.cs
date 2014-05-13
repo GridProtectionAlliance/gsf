@@ -99,7 +99,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             }
             else
             {
-                switch (EndianOrder.BigEndian.ToUInt16(buffer, startIndex))
+                switch (BigEndian.ToUInt16(buffer, startIndex))
                 {
                     case (ushort)DeviceCommand.RequestOnlineDataFormat:
                         TypeID = Macrodyne.FrameType.ConfigurationFrame;
@@ -254,10 +254,10 @@ namespace GSF.PhasorProtocols.Macrodyne
                         buffer[1] = (byte)m_statusFlags;
                         break;
                     case Macrodyne.FrameType.ConfigurationFrame:
-                        EndianOrder.BigEndian.CopyBytes((ushort)DeviceCommand.RequestOnlineDataFormat, buffer, 0);
+                        BigEndian.CopyBytes((ushort)DeviceCommand.RequestOnlineDataFormat, buffer, 0);
                         break;
                     case Macrodyne.FrameType.HeaderFrame:
-                        EndianOrder.BigEndian.CopyBytes((ushort)DeviceCommand.RequestUnitIDBufferValue, buffer, 0);
+                        BigEndian.CopyBytes((ushort)DeviceCommand.RequestUnitIDBufferValue, buffer, 0);
                         break;
                 }
 

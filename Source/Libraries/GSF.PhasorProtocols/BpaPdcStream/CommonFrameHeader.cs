@@ -122,8 +122,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                         m_fileType = (FileType)buffer[startIndex + 2];
                         m_fileVersion = (FileVersion)buffer[startIndex + 3];
                         m_sourceID = Encoding.ASCII.GetString(buffer, startIndex + 4, 4);
-                        headerLength = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 8);
-                        secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 12);
+                        headerLength = BigEndian.ToUInt32(buffer, startIndex + 8);
+                        secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 12);
 
                         switch (m_fileType)
                         {
@@ -138,12 +138,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                                 break;
                         }
 
-                        m_startSample = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 16);
-                        m_sampleInterval = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 20);
-                        m_sampleRate = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 22);
-                        m_rowLength = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 24);
-                        m_totalRows = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 28);
-                        secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 32);
+                        m_startSample = BigEndian.ToUInt32(buffer, startIndex + 16);
+                        m_sampleInterval = BigEndian.ToUInt16(buffer, startIndex + 20);
+                        m_sampleRate = BigEndian.ToUInt16(buffer, startIndex + 22);
+                        m_rowLength = BigEndian.ToUInt32(buffer, startIndex + 24);
+                        m_totalRows = BigEndian.ToUInt32(buffer, startIndex + 28);
+                        secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 32);
 
                         switch (m_fileType)
                         {
@@ -158,12 +158,12 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                                 break;
                         }
 
-                        m_triggerSample = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 36);
-                        m_preTriggerRows = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 40);
-                        m_triggerPMU = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 44);
-                        m_triggerType = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 46);
+                        m_triggerSample = BigEndian.ToUInt32(buffer, startIndex + 36);
+                        m_preTriggerRows = BigEndian.ToUInt32(buffer, startIndex + 40);
+                        m_triggerPMU = BigEndian.ToUInt16(buffer, startIndex + 44);
+                        m_triggerType = BigEndian.ToUInt16(buffer, startIndex + 46);
                         m_userInformation = Encoding.ASCII.GetString(buffer, startIndex + 48, 80).Trim();
-                        m_pmuCount = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 128);
+                        m_pmuCount = BigEndian.ToUInt32(buffer, startIndex + 128);
                         FrameLength = unchecked((ushort)headerLength);
                     }
                 }
@@ -173,7 +173,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     CommonFrameHeader configFrameHeader;
 
                     m_packetNumber = (byte)BPAPDCstream.FrameType.DataFrame;
-                    m_rowFlags = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
+                    m_rowFlags = BigEndian.ToUInt32(buffer, startIndex);
 
                     if (configFrame != null)
                     {
@@ -217,13 +217,13 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 if (parseWordCountFromByte)
                     m_wordCount = buffer[startIndex + 3];
                 else
-                    m_wordCount = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 2);
+                    m_wordCount = BigEndian.ToUInt16(buffer, startIndex + 2);
 
                 // If this is a data frame get a rough timestamp down to the second (full parse will get accurate timestamp), this way
                 // data frames that don't get fully parsed because configuration hasn't been received will still show a timestamp
                 if (m_packetNumber > 0 && length > 8)
                 {
-                    secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 4);
+                    secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 4);
 
                     // Until configuration is available, we make a guess at time tag type - this will just be
                     // used for display purposes until a configuration frame arrives.  If second of century
@@ -713,7 +713,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
 
                     buffer[0] = PhasorProtocols.Common.SyncByte;
                     buffer[1] = m_packetNumber;
-                    EndianOrder.BigEndian.CopyBytes(m_wordCount, buffer, 2);
+                    BigEndian.CopyBytes(m_wordCount, buffer, 2);
 
                     return buffer;
                 }

@@ -82,12 +82,12 @@ namespace GSF.PhasorProtocols.SelFastMessage
             Command = (DeviceCommand)buffer[startIndex + 9];
 
             if (Command == DeviceCommand.EnableUnsolicitedMessages)
-                m_messagePeriod = (MessagePeriod)EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 14);
+                m_messagePeriod = (MessagePeriod)BigEndian.ToUInt16(buffer, startIndex + 14);
 
             // Validate check-sum
             int sumLength = FrameSize - 2;
 
-            if (EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
+            if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
                 throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
         }
 
@@ -240,7 +240,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
 
                 // Only add desired message rate for enable command
                 if (Command == DeviceCommand.EnableUnsolicitedMessages)
-                    EndianOrder.BigEndian.CopyBytes((ushort)m_messagePeriod, buffer, 5);
+                    BigEndian.CopyBytes((ushort)m_messagePeriod, buffer, 5);
 
                 return buffer;
             }

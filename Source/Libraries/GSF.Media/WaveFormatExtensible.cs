@@ -317,9 +317,9 @@ namespace GSF.Media
         {
             buffer.ValidateParameters(startIndex, length);
 
-            m_sampleValue = EndianOrder.LittleEndian.ToUInt16(buffer, startIndex);
-            m_channelMask = (Speakers)EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2);
-            m_subFormat = EndianOrder.LittleEndian.ToGuid(buffer, startIndex + 6);
+            m_sampleValue = LittleEndian.ToUInt16(buffer, startIndex);
+            m_channelMask = (Speakers)LittleEndian.ToInt32(buffer, startIndex + 2);
+            m_subFormat = new Guid(buffer.BlockCopy(startIndex + 6, 8));
 
             return BinaryLength;
         }
@@ -339,9 +339,9 @@ namespace GSF.Media
         {
             buffer.ValidateParameters(startIndex, FixedLength);
 
-            EndianOrder.LittleEndian.CopyBytes(m_sampleValue, buffer, 0);
-            EndianOrder.LittleEndian.CopyBytes((int)m_channelMask, buffer, 2);
-            EndianOrder.LittleEndian.CopyBytes(m_subFormat, buffer, 6);
+            LittleEndian.CopyBytes(m_sampleValue, buffer, 0);
+            LittleEndian.CopyBytes((int)m_channelMask, buffer, 2);
+            m_subFormat.ToByteArray().CopyTo(buffer, 6);
 
             return FixedLength;
         }

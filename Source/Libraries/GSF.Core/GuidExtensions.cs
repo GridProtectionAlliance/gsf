@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.ComponentModel;
 
 namespace GSF
 {
@@ -30,44 +31,46 @@ namespace GSF
     /// </summary>
     public unsafe static class GuidExtensions
     {
-
         /// <summary>
         /// Encodes a <see cref="Guid"/> following RFC 4122.
         /// </summary>
-        /// <param name="guid">the <see cref="Guid"/> to serialize</param>
-        /// <param name="buffer">where to store the <see cref="guid"/></param>
-        /// <param name="startingIndex">the starting index in <see cref="buffer"/></param>
+        /// <param name="guid">The <see cref="Guid"/> to serialize.</param>
+        /// <param name="buffer">Destination buffer to hold serialized <paramref name="guid"/>.</param>
+        /// <param name="startingIndex">Starting index in <paramref name="buffer"/>.</param>
         public static int ToRfcBytes(this Guid guid, byte[] buffer, int startingIndex)
         {
-            //Since Microsoft is not very clear how Guid.ToByteArray() performs on big endian processors
-            //we are assuming that the internal structure of a Guid will always be the same. Reviewing mono source code
-            //the internal stucture is also the same.
-
+            // Since Microsoft is not very clear how Guid.ToByteArray() performs on big endian processors
+            // we are assuming that the internal structure of a Guid will always be the same. Reviewing
+            // mono source code the internal structure is also the same.
             buffer.ValidateParameters(startingIndex, 16);
 
             byte* src = (byte*)&guid;
+
             fixed (byte* dst = &buffer[startingIndex])
             {
                 if (BitConverter.IsLittleEndian)
                 {
-                    //Guid._a (int)
+                    // Guid._a (int)
                     dst[0] = src[3];
                     dst[1] = src[2];
                     dst[2] = src[1];
                     dst[3] = src[0];
-                    //Guid._b (short)
+
+                    // Guid._b (short)
                     dst[4] = src[5];
                     dst[5] = src[4];
-                    //Guid._c (short)
+
+                    // Guid._c (short)
                     dst[6] = src[7];
                     dst[7] = src[6];
-                    //Guid._d - Guid._k (8 bytes)
-                    //Since already encoded as big endian, just copy the data.
+
+                    // Guid._d - Guid._k (8 bytes)
+                    // Since already encoded as big endian, just copy the data
                     *(long*)(dst + 8) = *(long*)(src + 8);
                 }
                 else
                 {
-                    //all fields are encoded big-endian. Just copy.
+                    // All fields are encoded big-endian, just copy
                     *(long*)(dst + 0) = *(long*)(src + 0);
                     *(long*)(dst + 8) = *(long*)(src + 8);
                 }
@@ -78,8 +81,8 @@ namespace GSF
         /// <summary>
         /// Encodes a <see cref="Guid"/> following RFC 4122.
         /// </summary>
-        /// <param name="guid">the <see cref="Guid"/> to serialize</param>
-        /// <returns>A <see cref="byte"/>[] that represents a big endian encoded Guid.</returns>
+        /// <param name="guid"><see cref="Guid"/> to serialize.</param>
+        /// <returns>A <see cref="byte"/> array that represents a big-endian encoded <see cref="Guid"/>.</returns>
         public static byte[] ToRfcBytes(this Guid guid)
         {
             byte[] rv = new byte[16];
@@ -90,8 +93,8 @@ namespace GSF
         /// <summary>
         /// Decodes a <see cref="Guid"/> following RFC 4122
         /// </summary>
-        /// <param name="buffer">where to read the <see cref="Guid"/>.</param>
-        /// <returns></returns>
+        /// <param name="buffer">Buffer containing a serialized big-endian encoded <see cref="Guid"/>.</param>
+        /// <returns><see cref="Guid"/> deserialized from <paramref name="buffer"/>.</returns>
         public static Guid ToRfcGuid(this byte[] buffer)
         {
             return buffer.ToRfcGuid(0);
@@ -100,40 +103,44 @@ namespace GSF
         /// <summary>
         /// Decodes a <see cref="Guid"/> following RFC 4122
         /// </summary>
-        /// <param name="buffer">where to read the <see cref="Guid"/>.</param>
-        /// <param name="startingIndex">the starting index in <see cref="buffer"/>.</param>
-        /// <returns></returns>
+        /// <param name="buffer">Buffer containing a serialized big-endian encoded <see cref="Guid"/>.</param>
+        /// <param name="startingIndex">Starting index in <paramref name="buffer"/>.</param>
+        /// <returns><see cref="Guid"/> deserialized from <paramref name="buffer"/>.</returns>
         public static Guid ToRfcGuid(this byte[] buffer, int startingIndex)
         {
             buffer.ValidateParameters(startingIndex, 16);
 
-            //Since Microsoft is not very clear how Guid.ToByteArray() performs on big endian processors
-            //we are assuming that the internal structure of a Guid will always be the same. Reviewing mono source code
-            //the internal stucture is also the same.
+            // Since Microsoft is not very clear how Guid.ToByteArray() performs on big endian processors
+            // we are assuming that the internal structure of a Guid will always be the same. Reviewing
+            // mono source code the internal structure is also the same.
             Guid rv;
             byte* dst = (byte*)&rv;
+
             fixed (byte* src = &buffer[startingIndex])
             {
                 if (BitConverter.IsLittleEndian)
                 {
-                    //Guid._a (int)
+                    // Guid._a (int)
                     dst[0] = src[3];
                     dst[1] = src[2];
                     dst[2] = src[1];
                     dst[3] = src[0];
-                    //Guid._b (short)
+
+                    // Guid._b (short)
                     dst[4] = src[5];
                     dst[5] = src[4];
-                    //Guid._c (short)
+
+                    // Guid._c (short)
                     dst[6] = src[7];
                     dst[7] = src[6];
-                    //Guid._d - Guid._k (8 bytes)
-                    //Since already encoded as big endian, just copy the data.
+
+                    // Guid._d - Guid._k (8 bytes)
+                    // Since already encoded as big endian, just copy the data
                     *(long*)(dst + 8) = *(long*)(src + 8);
                 }
                 else
                 {
-                    //all fields are encoded big-endian. Just copy.
+                    // All fields are encoded big-endian, just copy
                     *(long*)(dst + 0) = *(long*)(src + 0);
                     *(long*)(dst + 8) = *(long*)(src + 8);
                 }
@@ -143,7 +150,7 @@ namespace GSF
         }
 
         //---------------------------------------------------------------------------------------------------------
-        // Obsolete methods to support backwards compatibility with a bug that existed in EndianOrder's Guid methods
+        // Obsolete methods for compatibility with incorrectly implemented old code in EndianOrder's Guid methods
         //---------------------------------------------------------------------------------------------------------
 
         /// <summary>
@@ -152,6 +159,7 @@ namespace GSF
         /// <param name="guid">the <see cref="Guid"/> to serialize</param>
         /// <returns>A <see cref="byte"/>[] that represents a big endian encoded Guid.</returns>
         [Obsolete("This method is for backwards compatibility only. Use ToRfcBytes from now on.", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static byte[] __ToBigEndianOrderBytes(Guid guid)
         {
             byte[] rv = new byte[16];
@@ -163,15 +171,12 @@ namespace GSF
         /// Mimicks the encoding that was present in BigEndianOrder. 
         /// </summary>
         /// <param name="guid">the <see cref="Guid"/> to serialize</param>
-        /// <param name="buffer">where to store the <see cref="guid"/></param>
-        /// <param name="startingIndex">the starting index in <see cref="buffer"/></param>
+        /// <param name="buffer">where to store the <paramref name="guid"/></param>
+        /// <param name="startingIndex">the starting index in <paramref name="buffer"/></param>
         [Obsolete("This method is for backwards compatibility only. Use ToRfcBytes from now on.", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static int __ToBigEndianOrderBytes(Guid guid, byte[] buffer, int startingIndex)
         {
-            //Since Microsoft is not very clear how Guid.ToByteArray() performs on big endian processors
-            //we are assuming that the internal structure of a Guid will always be the same. Reviewing mono source code
-            //the internal stucture is also the same.
-
             buffer.ValidateParameters(startingIndex, 16);
 
             byte* src = (byte*)&guid;
@@ -198,8 +203,6 @@ namespace GSF
                 }
                 else
                 {
-                    //ToDo: Test this on a big endian architecture.
-
                     //Guid._a (int)  //swap endian
                     dst[15] = src[3];
                     dst[14] = src[2];
@@ -231,6 +234,7 @@ namespace GSF
         /// <param name="buffer">where to read the <see cref="Guid"/>.</param>
         /// <returns></returns>
         [Obsolete("This method is for backwards compatibility only. Use ToRfcGuid from now on.", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static Guid __ToBigEndianOrderGuid(byte[] buffer)
         {
             return __ToBigEndianOrderGuid(buffer, 0);
@@ -240,14 +244,13 @@ namespace GSF
         /// Mimicks the encoding that was present in BigEndianOrder. 
         /// </summary>
         /// <param name="buffer">where to read the <see cref="Guid"/>.</param>
-        /// <param name="startingIndex">the starting index in <see cref="buffer"/>.</param>
+        /// <param name="startingIndex">the starting index in <paramref name="buffer"/></param>
         /// <returns></returns>
         [Obsolete("This method is for backwards compatibility only. Use ToRfcGuid from now on.", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static Guid __ToBigEndianOrderGuid(byte[] buffer, int startingIndex)
         {
             buffer.ValidateParameters(startingIndex, 16);
-
-            //BigEndianOrder was a reverse of byte ordering that microsoft used.
 
             Guid rv;
             byte* dst = (byte*)&rv;
@@ -301,14 +304,13 @@ namespace GSF
             }
         }
 
-
-
         /// <summary>
         /// Mimicks the encoding that was present in BigEndianOrder. 
         /// </summary>
         /// <param name="guid">the <see cref="Guid"/> to serialize</param>
         /// <returns>A <see cref="byte"/>[] that represents a big endian encoded Guid.</returns>
         [Obsolete("This method is for backwards compatibility only. Use ToRfcBytes from now on.", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static byte[] __ToLittleEndianOrderBytes(Guid guid)
         {
             byte[] rv = new byte[16];
@@ -320,14 +322,12 @@ namespace GSF
         /// Mimicks the encoding that was present in BigEndianOrder. 
         /// </summary>
         /// <param name="guid">the <see cref="Guid"/> to serialize</param>
-        /// <param name="buffer">where to store the <see cref="guid"/></param>
-        /// <param name="startingIndex">the starting index in <see cref="buffer"/></param>
+        /// <param name="buffer">where to store the <paramref name="guid"/></param>
+        /// <param name="startingIndex">the starting index in <paramref name="buffer"/></param>
         [Obsolete("This method is for backwards compatibility only. Use ToRfcBytes from now on.", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static int __ToLittleEndianOrderBytes(Guid guid, byte[] buffer, int startingIndex)
         {
-            //This encoding is the same as the default microsoft encoding. 
-            //Which is each internal word of the guid is stored little endian.
-
             buffer.ValidateParameters(startingIndex, 16);
 
             byte* src = (byte*)&guid;
@@ -341,8 +341,6 @@ namespace GSF
                 }
                 else
                 {
-                    //ToDo: Test this on a big endian architecture.
-
                     //Guid._a (int)  //swap endian
                     dst[0] = src[3];
                     dst[1] = src[2];
@@ -367,6 +365,7 @@ namespace GSF
         /// <param name="buffer">where to read the <see cref="Guid"/>.</param>
         /// <returns></returns>
         [Obsolete("This method is for backwards compatibility only. Use ToRfcGuid from now on.", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static Guid __ToLittleEndianOrderGuid(byte[] buffer)
         {
             return __ToLittleEndianOrderGuid(buffer, 0);
@@ -376,16 +375,14 @@ namespace GSF
         /// Mimicks the encoding that was present in BigEndianOrder. 
         /// </summary>
         /// <param name="buffer">where to read the <see cref="Guid"/>.</param>
-        /// <param name="startingIndex">the starting index in <see cref="buffer"/>.</param>
+        /// <param name="startingIndex">the starting index in <paramref name="buffer"/></param>
         /// <returns></returns>
         [Obsolete("This method is for backwards compatibility only. Use ToRfcGuid from now on.", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static Guid __ToLittleEndianOrderGuid(byte[] buffer, int startingIndex)
         {
             buffer.ValidateParameters(startingIndex, 16);
 
-            //Since Microsoft is not very clear how Guid.ToByteArray() performs on big endian processors
-            //we are assuming that the internal structure of a Guid will always be the same. Reviewing mono source code
-            //the internal stucture is also the same.
             Guid rv;
             byte* dst = (byte*)&rv;
             fixed (byte* src = &buffer[startingIndex])
@@ -398,8 +395,6 @@ namespace GSF
                 }
                 else
                 {
-                    //ToDo: Test this on a big endian architecture.
-
                     //Guid._a (int) //swap endian
                     dst[0] = src[3];
                     dst[1] = src[2];
@@ -418,6 +413,5 @@ namespace GSF
                 return rv;
             }
         }
-
     }
 }

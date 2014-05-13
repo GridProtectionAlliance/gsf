@@ -105,7 +105,7 @@ namespace GSF.TimeSeries.UI.Converters
                 {
                     Dictionary<Type, string> collection = (Dictionary<Type, string>)viewSource.Source;
 
-                    if (value != null)
+                    if ((object)value != null)
                     {
                         KeyValuePair<Type, string> item = collection.ToList().SingleOrDefault(pair => pair.Key.FullName == value.ToString());
 
@@ -128,7 +128,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <returns>Integer, to bind to UI object.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value != null)
+            if ((object)value != null)
             {
                 if (value is KeyValuePair<int, string>)
                     return ((KeyValuePair<int, string>)value).Key == 0 ? (object)DBNull.Value : ((KeyValuePair<int, string>)value).Key;

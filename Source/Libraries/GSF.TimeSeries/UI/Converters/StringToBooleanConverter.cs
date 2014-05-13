@@ -46,7 +46,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <returns>Boolean value.</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value != null)
+            if ((object)value != null)
             {
                 string temp = value.ToString().ToUpper();
                 if (temp == "TRUE" || temp == "1" || temp == "IPHA" || temp == "IPHM" || temp == "VPHA" || temp == "VPHM" || temp == "FREQ")

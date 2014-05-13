@@ -328,7 +328,7 @@ namespace GSF.TimeSeries.Adapters
 
                             // If any of the children expects all measurements (i.e., null InputMeasurementKeys)
                             // then the parent collection must expect all measurements
-                            if (inputMeasurementKeys == null)
+                            if ((object)inputMeasurementKeys == null)
                                 return null;
 
                             if (inputMeasurementKeys.Length > 0)
@@ -830,7 +830,7 @@ namespace GSF.TimeSeries.Adapters
         /// <exception cref="InvalidOperationException">DataMember is null or empty.</exception>
         public virtual void Initialize()
         {
-            if (DataSource == null)
+            if ((object)DataSource == null)
                 throw new NullReferenceException(string.Format("DataSource is null, cannot load {0}", Name));
 
             if (string.IsNullOrWhiteSpace(DataMember))
@@ -877,7 +877,7 @@ namespace GSF.TimeSeries.Adapters
         /// <exception cref="NullReferenceException"><paramref name="adapterRow"/> is null.</exception>
         public virtual bool TryCreateAdapter(DataRow adapterRow, out T adapter)
         {
-            if (adapterRow == null)
+            if ((object)adapterRow == null)
                 throw new NullReferenceException(string.Format("Cannot initialize from null adapter DataRow"));
 
             Assembly assembly;

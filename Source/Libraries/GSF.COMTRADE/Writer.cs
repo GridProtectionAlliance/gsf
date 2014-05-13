@@ -412,8 +412,8 @@ namespace GSF.COMTRADE
             double value;
             bool isFirstDigital = true;
 
-            output.Write(EndianOrder.LittleEndian.GetBytes(sample), 0, 4);
-            output.Write(EndianOrder.LittleEndian.GetBytes(microseconds), 0, 4);
+            output.Write(LittleEndian.GetBytes(sample), 0, 4);
+            output.Write(LittleEndian.GetBytes(microseconds), 0, 4);
 
             for (int i = 0; i < values.Length; i++)
             {
@@ -430,15 +430,15 @@ namespace GSF.COMTRADE
                     isFirstDigital = false;
 
                     if (injectFracSecValue)
-                        output.Write(EndianOrder.LittleEndian.GetBytes(fracSecValue), 0, 2);
+                        output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
                 }
 
-                output.Write(EndianOrder.LittleEndian.GetBytes((ushort)value), 0, 2);
+                output.Write(LittleEndian.GetBytes((ushort)value), 0, 2);
             }
 
             // Make sure FRACSEC values are injected
             if (isFirstDigital && injectFracSecValue)
-                output.Write(EndianOrder.LittleEndian.GetBytes(fracSecValue), 0, 2);
+                output.Write(LittleEndian.GetBytes(fracSecValue), 0, 2);
         }
     }
 }

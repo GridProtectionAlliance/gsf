@@ -234,15 +234,15 @@ namespace GSF.Historian.Packets
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(buffer, startIndex);
+                short packetID = LittleEndian.ToInt16(buffer, startIndex);
                 if (packetID != TypeID)
                     throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
 
                 // We have a binary image with the correct packet id.
-                HistorianID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2);
-                Time = new TimeTag(EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 6));
-                Quality = (Quality)(EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 14));
-                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 18);
+                HistorianID = LittleEndian.ToInt32(buffer, startIndex + 2);
+                Time = new TimeTag(LittleEndian.ToDouble(buffer, startIndex + 6));
+                Quality = (Quality)(LittleEndian.ToInt32(buffer, startIndex + 14));
+                Value = LittleEndian.ToSingle(buffer, startIndex + 18);
 
                 // We'll send an "ACK" to the sender if this is the last packet in the transmission.
                 if (length == FixedLength)
@@ -274,11 +274,11 @@ namespace GSF.Historian.Packets
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex + 2, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_time.Value), 0, buffer, startIndex + 6, 8);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((int)m_quality), 0, buffer, startIndex + 14, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 18, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex + 2, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_time.Value), 0, buffer, startIndex + 6, 8);
+            Buffer.BlockCopy(LittleEndian.GetBytes((int)m_quality), 0, buffer, startIndex + 14, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 18, 4);
 
             return length;
         }

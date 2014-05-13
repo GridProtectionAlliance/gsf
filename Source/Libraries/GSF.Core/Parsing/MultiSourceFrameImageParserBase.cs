@@ -37,7 +37,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Threading;
 using GSF.Collections;
 
 namespace GSF.Parsing
@@ -54,7 +53,7 @@ namespace GSF.Parsing
     /// This class is more specific than the <see cref="BinaryImageParserBase"/> in that it can automate the parsing of a
     /// particular protocol that is formatted as a series of frames that have a common method of identification.
     /// Automation of type creation occurs by loading implementations of common types that implement the
-    /// <see cref="ISupportSourceIdentifiableFrameImage{TSourceIdentifier,TTypeIdentifier}"/> interface. The common method of
+    /// <see cref="ISupportSourceIdentifiableFrameImage{TSourceIdentifier, TTypeIdentifier}"/> interface. The common method of
     /// identification is handled by creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily
     /// includes a TypeID property, but also should include any state information needed to parse a particular frame if necessary.
     /// Derived classes override the <see cref="FrameImageParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
@@ -334,8 +333,10 @@ namespace GSF.Parsing
                     // Copy buffer data for processing (destination buffer pre-allocated from buffer pool)
                     Buffer.BlockCopy(buffer, offset, identifiableBuffer.Buffer, 0, count);
 
-                    // Add buffer to the queue for parsing
-                    m_bufferQueue.Enqueue(new SourceIdentifiableBuffer[] { identifiableBuffer });
+                    // Add buffer to the queue for parsing. Note that buffer is queued for parsing instead 
+                    // of handling parse on this thread - this has become necessary to reduce UDP data loss
+                    // that can happen in-process when system has UDP buffers building up for processing.
+                    m_bufferQueue.Enqueue(new[] { identifiableBuffer });
                 }
             }
             catch
@@ -398,7 +399,7 @@ namespace GSF.Parsing
             throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead.");
         }
 
-        // This method is used by the internal <see cref="ProcessQueue{T}"/> to process all queued data buffers.
+        // This method is used to process all queued data buffers.
         private void ParseQueuedBuffers(IList<SourceIdentifiableBuffer> buffers)
         {
             if (Enabled)
@@ -427,6 +428,16 @@ namespace GSF.Parsing
                 }
                 finally
                 {
+                    // Dispose of source buffers - this returns buffers to pool
+                    if ((object)buffers != null)
+                    {
+                        foreach (SourceIdentifiableBuffer buffer in buffers)
+                        {
+                            if ((object)buffer != null)
+                                buffer.Dispose();
+                        }
+                    }
+
                     // If user has attached to SourceDataParsed event, expose list of parsed data per source
                     if ((object)SourceDataParsed != null)
                     {
@@ -435,28 +446,10 @@ namespace GSF.Parsing
                             OnSourceDataParsed(parsedData.Key, parsedData.Value);
                         }
 
-                        // Clear parsed data dictionary for next pass
+                        // Clear parsed data dictionary for next pass - note that this does not contend with
+                        // OnDataParsed override since the event called synchronously via base.Write above.
                         m_parsedSourceData.Clear();
                     }
-
-                }
-            }
-
-            // Dispose of source buffers - no rush
-            ThreadPool.QueueUserWorkItem(DisposeSourceBuffers, buffers);
-        }
-
-        // Handle disposing of source buffers (this will return items to the reusable object pool)
-        private void DisposeSourceBuffers(object state)
-        {
-            SourceIdentifiableBuffer[] buffers = state as SourceIdentifiableBuffer[];
-
-            if ((object)buffers != null)
-            {
-                foreach (SourceIdentifiableBuffer buffer in buffers)
-                {
-                    if ((object)buffer != null)
-                        buffer.Dispose();
                 }
             }
         }

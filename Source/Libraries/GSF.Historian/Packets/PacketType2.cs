@@ -339,22 +339,22 @@ namespace GSF.Historian.Packets
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(buffer, startIndex);
+                short packetID = LittleEndian.ToInt16(buffer, startIndex);
                 if (packetID != TypeID)
                     throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
 
                 // We have a binary image with the correct packet id.
-                HistorianID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2);
-                Year = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 6);
+                HistorianID = LittleEndian.ToInt32(buffer, startIndex + 2);
+                Year = LittleEndian.ToInt16(buffer, startIndex + 6);
                 Month = Convert.ToInt16(buffer[startIndex + 8]);
                 Day = Convert.ToInt16(buffer[startIndex + 9]);
                 Hour = Convert.ToInt16(buffer[startIndex + 10]);
                 Minute = Convert.ToInt16(buffer[startIndex + 11]);
                 Second = Convert.ToInt16(buffer[startIndex + 12]);
                 Quality = (Quality)(buffer[startIndex + 13]);
-                Millisecond = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 14);
-                GmtOffset = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 16);
-                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 18);
+                Millisecond = LittleEndian.ToInt16(buffer, startIndex + 14);
+                GmtOffset = LittleEndian.ToInt16(buffer, startIndex + 16);
+                Value = LittleEndian.ToSingle(buffer, startIndex + 18);
 
                 // We'll send an "ACK" to the sender if this is the last packet in the transmission.
                 if (length == FixedLength)
@@ -386,18 +386,18 @@ namespace GSF.Historian.Packets
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex + 2, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_year), 0, buffer, startIndex + 6, 2);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_month), 0, buffer, startIndex + 8, 1);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_day), 0, buffer, startIndex + 9, 1);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_hour), 0, buffer, startIndex + 10, 1);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_minute), 0, buffer, startIndex + 11, 1);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_second), 0, buffer, startIndex + 12, 1);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((int)m_quality), 0, buffer, startIndex + 13, 1);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_millisecond), 0, buffer, startIndex + 14, 2);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_gmtOffset), 0, buffer, startIndex + 16, 2);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 18, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex + 2, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_year), 0, buffer, startIndex + 6, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_month), 0, buffer, startIndex + 8, 1);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_day), 0, buffer, startIndex + 9, 1);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_hour), 0, buffer, startIndex + 10, 1);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_minute), 0, buffer, startIndex + 11, 1);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_second), 0, buffer, startIndex + 12, 1);
+            Buffer.BlockCopy(LittleEndian.GetBytes((int)m_quality), 0, buffer, startIndex + 13, 1);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_millisecond), 0, buffer, startIndex + 14, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_gmtOffset), 0, buffer, startIndex + 16, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 18, 4);
 
             return length;
         }

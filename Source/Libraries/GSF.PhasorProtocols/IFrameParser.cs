@@ -33,7 +33,7 @@ namespace GSF.PhasorProtocols
     #region [ Enumerations ]
 
     /// <summary>
-    /// Source channel, i.e., data or command.
+    /// Source channel, e.g., data or command.
     /// </summary>
     [Serializable]
     public enum SourceChannel

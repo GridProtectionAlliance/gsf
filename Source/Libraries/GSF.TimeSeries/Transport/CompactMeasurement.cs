@@ -203,7 +203,7 @@ namespace GSF.TimeSeries.Transport
             m_includeTime = includeTime;
 
             // We keep a clone of the base time offsets, if provided, since array contents can change at any time
-            if (baseTimeOffsets == null)
+            if ((object)baseTimeOffsets == null)
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
@@ -234,7 +234,7 @@ namespace GSF.TimeSeries.Transport
             m_includeTime = includeTime;
 
             // We keep a clone of the base time offsets, if provided, since array contents can change at any time
-            if (baseTimeOffsets == null)
+            if ((object)baseTimeOffsets == null)
                 m_baseTimeOffsets = s_emptyBaseTimeOffsets;
             else
                 m_baseTimeOffsets = new[] { baseTimeOffsets[0], baseTimeOffsets[1] };
@@ -409,11 +409,11 @@ namespace GSF.TimeSeries.Transport
             CompactStateFlags = buffer[index++];
 
             // Decode runtime ID
-            RuntimeID = EndianOrder.BigEndian.ToUInt16(buffer, index);
+            RuntimeID = BigEndian.ToUInt16(buffer, index);
             index += 2;
 
             // Decode value
-            Value = EndianOrder.BigEndian.ToSingle(buffer, index);
+            Value = BigEndian.ToSingle(buffer, index);
             index += 4;
 
             if (m_includeTime)
@@ -426,7 +426,7 @@ namespace GSF.TimeSeries.Transport
                     {
                         // Decode 2-byte millisecond offset timestamp
                         if (baseTimeOffset > 0)
-                            Timestamp = baseTimeOffset + EndianOrder.BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
+                            Timestamp = baseTimeOffset + BigEndian.ToUInt16(buffer, index) * Ticks.PerMillisecond;
 
                         index += 2;
                     }
@@ -434,7 +434,7 @@ namespace GSF.TimeSeries.Transport
                     {
                         // Decode 4-byte tick offset timestamp
                         if (baseTimeOffset > 0)
-                            Timestamp = baseTimeOffset + EndianOrder.BigEndian.ToUInt32(buffer, index);
+                            Timestamp = baseTimeOffset + BigEndian.ToUInt32(buffer, index);
 
                         index += 4;
                     }
@@ -442,7 +442,7 @@ namespace GSF.TimeSeries.Transport
                 else
                 {
                     // Decode 8-byte full fidelity timestamp
-                    Timestamp = EndianOrder.BigEndian.ToInt64(buffer, index);
+                    Timestamp = BigEndian.ToInt64(buffer, index);
                     index += 8;
                 }
             }
@@ -486,10 +486,10 @@ namespace GSF.TimeSeries.Transport
             buffer[startIndex++] = CompactStateFlags;
 
             // Encode runtime ID
-            startIndex += EndianOrder.BigEndian.CopyBytes(RuntimeID, buffer, startIndex);
+            startIndex += BigEndian.CopyBytes(RuntimeID, buffer, startIndex);
 
             // Encode adjusted value (accounts for adder and multiplier)
-            startIndex += EndianOrder.BigEndian.CopyBytes((float)AdjustedValue, buffer, startIndex);
+            startIndex += BigEndian.CopyBytes((float)AdjustedValue, buffer, startIndex);
 
             if (m_includeTime)
             {
@@ -498,18 +498,18 @@ namespace GSF.TimeSeries.Transport
                     if (m_useMillisecondResolution)
                     {
                         // Encode 2-byte millisecond offset timestamp
-                        EndianOrder.BigEndian.CopyBytes(TimestampC2, buffer, startIndex);
+                        BigEndian.CopyBytes(TimestampC2, buffer, startIndex);
                     }
                     else
                     {
                         // Encode 4-byte ticks offset timestamp
-                        EndianOrder.BigEndian.CopyBytes(TimestampC4, buffer, startIndex);
+                        BigEndian.CopyBytes(TimestampC4, buffer, startIndex);
                     }
                 }
                 else
                 {
                     // Encode 8-byte full fidelity timestamp
-                    EndianOrder.BigEndian.CopyBytes((long)Timestamp, buffer, startIndex);
+                    BigEndian.CopyBytes((long)Timestamp, buffer, startIndex);
                 }
             }
 

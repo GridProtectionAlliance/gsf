@@ -147,7 +147,7 @@ namespace GSF.Media
             }
             finally
             {
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
         }
@@ -382,19 +382,19 @@ namespace GSF.Media
             if (length < ChunkSize)
                 throw new InvalidOperationException("WAVE format section too small, wave file corrupted");
 
-            m_audioFormat = EndianOrder.LittleEndian.ToUInt16(buffer, 0);
-            m_channels = EndianOrder.LittleEndian.ToInt16(buffer, 2);
-            m_sampleRate = EndianOrder.LittleEndian.ToInt32(buffer, 4);
-            m_byteRate = EndianOrder.LittleEndian.ToInt32(buffer, 8);
-            m_blockAlignment = EndianOrder.LittleEndian.ToInt16(buffer, 12);
-            m_bitsPerSample = EndianOrder.LittleEndian.ToInt16(buffer, 14);
+            m_audioFormat = LittleEndian.ToUInt16(buffer, 0);
+            m_channels = LittleEndian.ToInt16(buffer, 2);
+            m_sampleRate = LittleEndian.ToInt32(buffer, 4);
+            m_byteRate = LittleEndian.ToInt32(buffer, 8);
+            m_blockAlignment = LittleEndian.ToInt16(buffer, 12);
+            m_bitsPerSample = LittleEndian.ToInt16(buffer, 14);
 
             if (m_bitsPerSample % 8 != 0)
                 throw new InvalidDataException("Invalid bit rate encountered - wave file bit rates must be a multiple of 8");
 
             if (length > 16)
             {
-                m_extraParametersSize = EndianOrder.LittleEndian.ToInt16(buffer, 16);
+                m_extraParametersSize = LittleEndian.ToInt16(buffer, 16);
                 return 18;
             }
 
@@ -419,17 +419,17 @@ namespace GSF.Media
             buffer.ValidateParameters(startIndex, length);
 
             startIndex += base.GenerateBinaryImage(buffer, startIndex);
-            EndianOrder.LittleEndian.CopyBytes(m_audioFormat, buffer, startIndex);
-            EndianOrder.LittleEndian.CopyBytes(m_channels, buffer, startIndex + 2);
-            EndianOrder.LittleEndian.CopyBytes(m_sampleRate, buffer, startIndex + 4);
-            EndianOrder.LittleEndian.CopyBytes(m_byteRate, buffer, startIndex + 8);
-            EndianOrder.LittleEndian.CopyBytes(m_blockAlignment, buffer, startIndex + 12);
-            EndianOrder.LittleEndian.CopyBytes(m_bitsPerSample, buffer, startIndex + 14);
+            LittleEndian.CopyBytes(m_audioFormat, buffer, startIndex);
+            LittleEndian.CopyBytes(m_channels, buffer, startIndex + 2);
+            LittleEndian.CopyBytes(m_sampleRate, buffer, startIndex + 4);
+            LittleEndian.CopyBytes(m_byteRate, buffer, startIndex + 8);
+            LittleEndian.CopyBytes(m_blockAlignment, buffer, startIndex + 12);
+            LittleEndian.CopyBytes(m_bitsPerSample, buffer, startIndex + 14);
             startIndex += 16;
 
             if (m_extraParametersSize > 0)
             {
-                EndianOrder.LittleEndian.CopyBytes(m_extraParametersSize, buffer, startIndex);
+                LittleEndian.CopyBytes(m_extraParametersSize, buffer, startIndex);
                 startIndex += 2;
 
                 if (m_extraParametersSize > 0 && (object)m_extraParameters != null)

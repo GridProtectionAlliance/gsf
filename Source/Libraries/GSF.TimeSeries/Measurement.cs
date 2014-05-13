@@ -561,7 +561,7 @@ namespace GSF.TimeSeries
         /// <returns>A <see cref="String"/> that represents the specified <see cref="IMeasurement"/>.</returns>
         public static string ToString(IMeasurement measurement, bool includeTagName = true)
         {
-            if (measurement == null)
+            if ((object)measurement == null)
                 return "Undefined";
 
             string tagName = measurement.TagName;

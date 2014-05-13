@@ -188,8 +188,8 @@ namespace GSF.Historian.Files
                 // Binary image has sufficient data.
                 SetDescription = Encoding.ASCII.GetString(buffer, startIndex, 24).Trim();
                 ClearDescription = Encoding.ASCII.GetString(buffer, startIndex + 24, 24).Trim();
-                AlarmState = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 48);
-                AlarmDelay = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 52);
+                AlarmState = LittleEndian.ToInt32(buffer, startIndex + 48);
+                AlarmDelay = LittleEndian.ToSingle(buffer, startIndex + 52);
 
                 return FixedLength;
             }
@@ -219,8 +219,8 @@ namespace GSF.Historian.Files
 
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_setDescription.PadRight(24)), 0, buffer, startIndex, 24);
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_clearDescription.PadRight(24)), 0, buffer, startIndex + 24, 24);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_alarmState), 0, buffer, startIndex + 48, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_alarmDelay), 0, buffer, startIndex + 52, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_alarmState), 0, buffer, startIndex + 48, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_alarmDelay), 0, buffer, startIndex + 52, 4);
 
             return length;
         }

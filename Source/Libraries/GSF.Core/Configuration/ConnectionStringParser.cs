@@ -62,7 +62,7 @@ namespace GSF.Configuration
             /// The name of the property as it appears in the connection string.
             /// </summary>
             public string[] Names;
-            
+
             /// <summary>
             /// The default value of the property if its value
             /// is not explicitly specified in the connection string.
@@ -275,7 +275,7 @@ namespace GSF.Configuration
             Dictionary<string, string> settings;
 
             // Null objects don't have properties
-            if (settingsObject == null)
+            if ((object)settingsObject == null)
                 return string.Empty;
 
             // Get the set of properties which are part of the connection string
@@ -307,7 +307,7 @@ namespace GSF.Configuration
             string value;
 
             // Null objects don't have properties
-            if (settingsObject == null)
+            if ((object)settingsObject == null)
                 throw new ArgumentNullException("settingsObject", "Unable to parse connection string because settings object is invalid.");
 
             // Get the set of properties which are part of the connection string

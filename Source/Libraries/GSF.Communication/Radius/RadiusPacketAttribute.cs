@@ -323,7 +323,7 @@ namespace GSF.Communication.Radius
             set
             {
                 // By definition, attribute value cannot be null or zero-length.
-                if (value == null || value.Length == 0)
+                if ((object)value == null || value.Length == 0)
                     throw new ArgumentNullException("value");
 
                 m_value = value;
@@ -359,7 +359,7 @@ namespace GSF.Communication.Radius
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
         public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer");
 
             int imageLength = BinaryLength;

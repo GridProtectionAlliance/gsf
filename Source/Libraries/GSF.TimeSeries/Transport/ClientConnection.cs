@@ -711,22 +711,22 @@ namespace GSF.TimeSeries.Transport
                         using (BlockAllocatedMemoryStream buffer = new BlockAllocatedMemoryStream())
                         {
                             // Write even key
-                            bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[EvenKey][KeyIndex].Length);
+                            bufferLen = BigEndian.GetBytes(m_keyIVs[EvenKey][KeyIndex].Length);
                             buffer.Write(bufferLen, 0, bufferLen.Length);
                             buffer.Write(m_keyIVs[EvenKey][KeyIndex], 0, m_keyIVs[EvenKey][KeyIndex].Length);
 
                             // Write even initialization vector
-                            bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[EvenKey][IVIndex].Length);
+                            bufferLen = BigEndian.GetBytes(m_keyIVs[EvenKey][IVIndex].Length);
                             buffer.Write(bufferLen, 0, bufferLen.Length);
                             buffer.Write(m_keyIVs[EvenKey][IVIndex], 0, m_keyIVs[EvenKey][IVIndex].Length);
 
                             // Write odd key
-                            bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][KeyIndex].Length);
+                            bufferLen = BigEndian.GetBytes(m_keyIVs[OddKey][KeyIndex].Length);
                             buffer.Write(bufferLen, 0, bufferLen.Length);
                             buffer.Write(m_keyIVs[OddKey][KeyIndex], 0, m_keyIVs[OddKey][KeyIndex].Length);
 
                             // Write odd initialization vector
-                            bufferLen = EndianOrder.BigEndian.GetBytes(m_keyIVs[OddKey][IVIndex].Length);
+                            bufferLen = BigEndian.GetBytes(m_keyIVs[OddKey][IVIndex].Length);
                             buffer.Write(bufferLen, 0, bufferLen.Length);
                             buffer.Write(m_keyIVs[OddKey][IVIndex], 0, m_keyIVs[OddKey][IVIndex].Length);
 

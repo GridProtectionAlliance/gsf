@@ -287,7 +287,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             }
 
             // Parse out status flags
-            StatusFlags = (StatusFlags)EndianOrder.BigEndian.ToUInt16(buffer, index);
+            StatusFlags = (StatusFlags)BigEndian.ToUInt16(buffer, index);
             index += 2;
 
             // Return total parsed length

@@ -63,7 +63,7 @@ namespace GSF.IO
             }
             finally
             {
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
         }

@@ -465,7 +465,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 byte[] buffer = new byte[HeaderLength];
 
                 buffer.BlockCopy(0, CommonFrameHeader.FixedLength);
-                EndianOrder.BigEndian.CopyBytes((ushort)m_onlineDataFormatFlags, buffer, 2);
+                BigEndian.CopyBytes((ushort)m_onlineDataFormatFlags, buffer, 2);
 
                 return buffer;
             }
@@ -644,7 +644,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             startIndex += CommonFrameHeader.FixedLength;
 
             // Parse on -line data format
-            m_onlineDataFormatFlags = (OnlineDataFormatFlags)EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
+            m_onlineDataFormatFlags = (OnlineDataFormatFlags)BigEndian.ToUInt16(buffer, startIndex);
 
             return CommonFrameHeader.FixedLength + 2;
         }

@@ -1516,7 +1516,7 @@ namespace GSF.TimeSeries
                 status.Append("Last discarded measurement: ");
 
                 Interlocked.Exchange(ref lastDiscardedMeasurement, m_lastDiscardedMeasurement);
-                if (lastDiscardedMeasurement == null)
+                if ((object)lastDiscardedMeasurement == null)
                 {
                     status.Append("<none>");
                 }
@@ -1581,7 +1581,7 @@ namespace GSF.TimeSeries
                 status.AppendLine();
                 status.Append("      Last published frame: ");
 
-                if (lastFrame == null)
+                if ((object)lastFrame == null)
                 {
                     status.Append("<none>");
                 }
@@ -1846,7 +1846,7 @@ namespace GSF.TimeSeries
                     // Get the destination frame for the measurement. Note that groups of parsed measurements will
                     // typically be coming in from the same source and will have the same ticks. If we have already
                     // found the destination frame for the same ticks, then there is no need to lookup frame again.
-                    if (frame == null || timestamp != lastTimestamp)
+                    if ((object)frame == null || timestamp != lastTimestamp)
                     {
                         if (m_processByReceivedTimestamp)
                         {
@@ -1879,7 +1879,7 @@ namespace GSF.TimeSeries
                         }
                     }
 
-                    if (frame == null)
+                    if ((object)frame == null)
                     {
                         // Measurement is discarded if no bucket (i.e., destination frame) was found for it.
                         discardMeasurement = true;
@@ -1890,7 +1890,7 @@ namespace GSF.TimeSeries
                         // Derive new measurement value applying any needed down-sampling
                         derivedMeasurement = frame.DeriveMeasurementValue(measurement);
 
-                        if (derivedMeasurement == null)
+                        if ((object)derivedMeasurement == null)
                         {
                             // Count this as a discarded measurement if down-sampling derivation was not applied.
                             discardMeasurement = true;
@@ -1949,7 +1949,7 @@ namespace GSF.TimeSeries
                     Interlocked.Increment(ref m_discardedMeasurements);
 
                     // Make sure discarded measurement collection exists
-                    if (discardedMeasurements == null)
+                    if ((object)discardedMeasurements == null)
                         discardedMeasurements = new List<IMeasurement>();
 
                     // Add discarded measurement to local collection
@@ -2118,7 +2118,7 @@ namespace GSF.TimeSeries
                         frame = m_frameQueue.Head;
 
                         // If no frame is ready to publish, exit
-                        if (frame == null)
+                        if ((object)frame == null)
                             break;
 
                         // Get ticks for this frame

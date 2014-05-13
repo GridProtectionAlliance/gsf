@@ -392,10 +392,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
                     buffer[4] = (byte)StreamType;
                     buffer[5] = (byte)RevisionNumber;
-                    EndianOrder.BigEndian.CopyBytes(FrameRate, buffer, 6);
-                    EndianOrder.BigEndian.CopyBytes(RowLength(true), buffer, 8); // <-- Important: This step calculates all PMU row offsets!
-                    EndianOrder.BigEndian.CopyBytes(PacketsPerSample, buffer, 12);
-                    EndianOrder.BigEndian.CopyBytes((ushort)Cells.Count, buffer, 14);
+                    BigEndian.CopyBytes(FrameRate, buffer, 6);
+                    BigEndian.CopyBytes(RowLength(true), buffer, 8); // <-- Important: This step calculates all PMU row offsets!
+                    BigEndian.CopyBytes(PacketsPerSample, buffer, 12);
+                    BigEndian.CopyBytes((ushort)Cells.Count, buffer, 14);
 
                     return buffer;
                 }
@@ -456,10 +456,10 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 // Only need to parse what wan't already parsed in common frame header
                 m_streamType = (StreamType)buffer[startIndex];
                 m_revisionNumber = (RevisionNumber)buffer[startIndex + 1];
-                FrameRate = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 2);
-                m_rowLength = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 4);
-                m_packetsPerSample = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 8);
-                State.CellCount = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 10);
+                FrameRate = BigEndian.ToUInt16(buffer, startIndex + 2);
+                m_rowLength = BigEndian.ToUInt32(buffer, startIndex + 4);
+                m_packetsPerSample = BigEndian.ToUInt16(buffer, startIndex + 8);
+                State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 10);
 
                 // The data that's in the data stream will take precedence over what's in the
                 // in the configuration file.  The configuration file may define more PMU's than
@@ -724,7 +724,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected override void AppendChecksum(byte[] buffer, int startIndex)
         {
             // Oddly enough, check sum for frames in BPA PDC stream is little-endian
-            EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
+            LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
         }
 
         /// <summary>
@@ -746,7 +746,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             else
             {
                 int sumLength = BinaryLength - 2;
-                return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
+                return LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
             }
         }
 

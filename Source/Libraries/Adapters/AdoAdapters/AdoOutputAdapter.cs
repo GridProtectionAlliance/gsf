@@ -266,7 +266,7 @@ namespace AdoAdapters
             }
 
             // Get bulk insert limit
-            if(settings.TryGetValue("bulkInsertLimit", out setting))
+            if (settings.TryGetValue("bulkInsertLimit", out setting))
                 m_bulkInsertLimit = int.Parse(setting);
             else
                 m_bulkInsertLimit = 1024;
@@ -407,7 +407,7 @@ namespace AdoAdapters
                         if (valuesBuilder.Length > 0)
                             valuesBuilder.Append(',');
 
-                        if (value == null)
+                        if ((object)value == null)
                         {
                             valuesBuilder.Append("NULL");
                             continue;

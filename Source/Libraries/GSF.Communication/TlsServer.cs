@@ -23,9 +23,6 @@
 //
 //******************************************************************************************************
 
-using GSF.Configuration;
-using GSF.IO;
-using GSF.Net.Security;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,6 +36,9 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Threading;
+using GSF.Configuration;
+using GSF.IO;
+using GSF.Net.Security;
 
 #if MONO
 #pragma warning disable 649
@@ -251,7 +251,7 @@ namespace GSF.Communication
             }
             set
             {
-                if (value == null || value.Length == 0)
+                if ((object)value == null || value.Length == 0)
                     throw new ArgumentNullException("value");
 
                 m_payloadMarker = value;

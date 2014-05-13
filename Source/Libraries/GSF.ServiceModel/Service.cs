@@ -207,7 +207,7 @@ namespace GSF.ServiceModel
                     return tcpBinding;
                 case "net.p2p":
                     // Create binding.
-                    #pragma warning disable 612, 618
+#pragma warning disable 612, 618
                     NetPeerTcpBinding p2pBinding = new NetPeerTcpBinding();
 
 #if !MONO
@@ -285,7 +285,8 @@ namespace GSF.ServiceModel
         {
             // Find contract interface by service type name.
             Type contract = serviceType.GetInterface("I" + serviceType.Name);
-            if (contract == null)
+
+            if ((object)contract == null)
             {
                 // Fall back to the first interface the service implements.
                 Type[] interfaces = serviceType.GetInterfaces();

@@ -138,7 +138,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 byte[] buffer = new byte[BinaryLength];
 
-                EndianOrder.BigEndian.CopyBytes((ushort)Command, buffer, 0);
+                BigEndian.CopyBytes((ushort)Command, buffer, 0);
 
                 return buffer;
             }

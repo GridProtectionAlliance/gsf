@@ -25,6 +25,8 @@ using System;
 using System.Data;
 using System.Net;
 
+#pragma warning disable 0067
+
 namespace GSF.TimeSeries.Configuration
 {
     /// <summary>

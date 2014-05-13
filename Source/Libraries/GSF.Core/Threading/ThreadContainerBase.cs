@@ -32,6 +32,8 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
+#pragma warning disable 420
+
 namespace GSF.Threading
 {
     internal abstract class ThreadContainerBase

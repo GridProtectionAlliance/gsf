@@ -135,10 +135,10 @@ namespace GSF.Historian.Packets
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                HistorianID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex);
-                Flags = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 8);
-                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 10);
-                Time = new TimeTag(EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 4) +   // Seconds
+                HistorianID = LittleEndian.ToInt32(buffer, startIndex);
+                Flags = LittleEndian.ToInt16(buffer, startIndex + 8);
+                Value = LittleEndian.ToSingle(buffer, startIndex + 10);
+                Time = new TimeTag(LittleEndian.ToInt32(buffer, startIndex + 4) +   // Seconds
                         ((double)(Flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));         // Milliseconds
 
                 return FixedLength;
@@ -167,10 +167,10 @@ namespace GSF.Historian.Packets
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(HistorianID), 0, buffer, startIndex, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((int)Time.Value), 0, buffer, startIndex + 4, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((short)Flags), 0, buffer, startIndex + 8, 2);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(Value), 0, buffer, startIndex + 10, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(HistorianID), 0, buffer, startIndex, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes((int)Time.Value), 0, buffer, startIndex + 4, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes((short)Flags), 0, buffer, startIndex + 8, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(Value), 0, buffer, startIndex + 10, 4);
 
             return length;
         }

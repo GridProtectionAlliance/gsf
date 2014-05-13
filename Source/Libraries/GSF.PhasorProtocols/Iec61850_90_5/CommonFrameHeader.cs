@@ -179,11 +179,11 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 m_frameType = (FrameType)(buffer[startIndex + 1] & ~VersionNumberMask);
                 m_version = (byte)(buffer[startIndex + 1] & VersionNumberMask);
 
-                m_frameLength = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 2);
-                m_idCode = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
+                m_frameLength = BigEndian.ToUInt16(buffer, startIndex + 2);
+                m_idCode = BigEndian.ToUInt16(buffer, startIndex + 4);
 
-                uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 6);
-                uint fractionOfSecond = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 10);
+                uint secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 6);
+                uint fractionOfSecond = BigEndian.ToUInt32(buffer, startIndex + 10);
                 long ticksBeyondSecond;
 
                 // Without timebase, the best timestamp you can get is down to the whole second
@@ -230,7 +230,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             index += 3;
 
                             // Get SPDU length
-                            m_spduLength = EndianOrder.BigEndian.ToUInt32(buffer, index);
+                            m_spduLength = BigEndian.ToUInt32(buffer, index);
                             index += 4;
 
                             // Add SPDU length to total frame length (updated as of 10/3/2012 to accommodate extra 6 bytes)
@@ -241,7 +241,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                             if (length > m_spduLength + 13)
                             {
                                 // Get SPDU packet number
-                                m_packetNumber = EndianOrder.BigEndian.ToUInt32(buffer, index);
+                                m_packetNumber = BigEndian.ToUInt32(buffer, index);
 
                                 // Get security algorithm type
                                 m_securityAlgorithm = (SecurityAlgorithm)buffer[index + 12];
@@ -250,7 +250,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 m_signatureAlgorithm = (SignatureAlgorithm)buffer[index + 13];
 
                                 // Get current key ID
-                                m_keyID = EndianOrder.BigEndian.ToUInt32(buffer, index + 14);
+                                m_keyID = BigEndian.ToUInt32(buffer, index + 14);
 
                                 // Add signature calculation result length to total frame length
                                 switch (m_signatureAlgorithm)
@@ -327,7 +327,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                                 // Get payload length
                                 index += 18;
-                                m_dataLength = (ushort)EndianOrder.BigEndian.ToUInt32(buffer, index);
+                                m_dataLength = (ushort)BigEndian.ToUInt32(buffer, index);
                                 index += 4;
 
                                 // Confirm payload type tag is sampled values
@@ -340,11 +340,11 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                                 m_simulatedData = buffer[index++] != 0;
 
                                 // Get application ID
-                                m_applicationID = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                                m_applicationID = BigEndian.ToUInt16(buffer, index);
                                 index += 2;
 
                                 // Get ASDU payload size
-                                m_payloadSize = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                                m_payloadSize = BigEndian.ToUInt16(buffer, index);
                                 index += 2;
 
                                 // Validate sampled value PDU tag exists and skip past it
@@ -974,20 +974,20 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     index = 6;
 
                     // Encode SPDU length
-                    index += EndianOrder.BigEndian.CopyBytes(m_spduLength, buffer, index);
+                    index += BigEndian.CopyBytes(m_spduLength, buffer, index);
 
                     // Encode SPDU packet number
-                    index += EndianOrder.BigEndian.CopyBytes(m_packetNumber, buffer, index);
+                    index += BigEndian.CopyBytes(m_packetNumber, buffer, index);
 
                     // Encode SPDU version number (hard coded to version 1)
-                    index += EndianOrder.BigEndian.CopyBytes((ushort)1, buffer, index);
+                    index += BigEndian.CopyBytes((ushort)1, buffer, index);
 
                     // Encode time of current key
                     UnixTimeTag time = new UnixTimeTag(DateTime.UtcNow.Ticks);
-                    index += EndianOrder.BigEndian.CopyBytes((uint)time.Value, buffer, index);
+                    index += BigEndian.CopyBytes((uint)time.Value, buffer, index);
 
                     // Encode time to next key (again, TBD once security is actually defined)
-                    index += EndianOrder.BigEndian.CopyBytes((ushort)100, buffer, index);
+                    index += BigEndian.CopyBytes((ushort)100, buffer, index);
 
                     // Encode security algorithm type
                     buffer[index++] = (byte)m_securityAlgorithm;
@@ -996,10 +996,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     buffer[index++] = (byte)m_signatureAlgorithm;
 
                     // Encode current key ID
-                    index += EndianOrder.BigEndian.CopyBytes(m_keyID, buffer, index);
+                    index += BigEndian.CopyBytes(m_keyID, buffer, index);
 
                     // Encode payload length
-                    index += EndianOrder.BigEndian.CopyBytes((uint)m_dataLength, buffer, index);
+                    index += BigEndian.CopyBytes((uint)m_dataLength, buffer, index);
 
                     // Encode payload tag for sampled values
                     buffer[index++] = 0x82;
@@ -1008,10 +1008,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     buffer[index++] = (byte)(m_simulatedData ? 0x01 : 0x00);
 
                     // Encode the application ID
-                    index += EndianOrder.BigEndian.CopyBytes(m_applicationID, buffer, index);
+                    index += BigEndian.CopyBytes(m_applicationID, buffer, index);
 
                     // Encode ASDU payload size
-                    index += EndianOrder.BigEndian.CopyBytes(pduLen, buffer, index);
+                    index += BigEndian.CopyBytes(pduLen, buffer, index);
 
                     // Encode SV PDU tag
                     m_payloadSize.EncodeTagLength(SampledValueTag.SvPdu, buffer, ref index);
@@ -1029,10 +1029,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                     buffer[0] = PhasorProtocols.Common.SyncByte;
                     buffer[1] = (byte)((byte)TypeID | Version);
-                    EndianOrder.BigEndian.CopyBytes(FrameLength, buffer, 2);
-                    EndianOrder.BigEndian.CopyBytes(IDCode, buffer, 4);
-                    EndianOrder.BigEndian.CopyBytes(SecondOfCentury, buffer, 6);
-                    EndianOrder.BigEndian.CopyBytes(FractionOfSecond | (int)m_timeQualityFlags, buffer, 10);
+                    BigEndian.CopyBytes(FrameLength, buffer, 2);
+                    BigEndian.CopyBytes(IDCode, buffer, 4);
+                    BigEndian.CopyBytes(SecondOfCentury, buffer, 6);
+                    BigEndian.CopyBytes(FractionOfSecond | (int)m_timeQualityFlags, buffer, 10);
                 }
 
                 return buffer;

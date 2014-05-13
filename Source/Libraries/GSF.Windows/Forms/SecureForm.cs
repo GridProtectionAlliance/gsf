@@ -119,7 +119,7 @@ namespace GSF.Windows.Forms
                 Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
             // Setup the security provider for role-based security.
-            if (SecurityProviderCache.CurrentProvider == null)
+            if ((object)SecurityProviderCache.CurrentProvider == null)
                 SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             // Verify that the current thread principal has been authenticated.

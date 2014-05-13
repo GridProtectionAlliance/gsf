@@ -157,14 +157,14 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                if (m_inputSourceIDs == null)
+                if ((object)m_inputSourceIDs == null)
                     return null;
 
                 return m_inputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -369,7 +369,7 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                 }
 
-                status.AppendFormat("     Source ID filter list: {0}", (m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
+                status.AppendFormat("     Source ID filter list: {0}", ((object)m_inputSourceIDs == null ? "[No filter applied]" : m_inputSourceIDs.ToDelimitedString(',')));
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();

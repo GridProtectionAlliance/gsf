@@ -88,9 +88,9 @@ namespace GSF.PhasorProtocols.SelFastMessage
 
             // Parse relevant common header values
             m_frameSize = (FrameSize)buffer[startIndex + 2];
-            m_idCode = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 12);
-            sampleCount = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 18);
-            secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, startIndex + 20);
+            m_idCode = BigEndian.ToUInt32(buffer, startIndex + 12);
+            sampleCount = BigEndian.ToUInt16(buffer, startIndex + 18);
+            secondOfCentury = BigEndian.ToUInt32(buffer, startIndex + 20);
 
             // We use an NTP time tag since SEL Fast Message SOC also starts at 1/1/1900
             timetag = new NtpTimeTag(secondOfCentury, 0);
@@ -236,16 +236,16 @@ namespace GSF.PhasorProtocols.SelFastMessage
                 buffer[10] = 0xC0;  // Sequence byte
 
                 // Include destination address (PMADDR setting)
-                EndianOrder.BigEndian.CopyBytes(m_idCode, buffer, 12);
+                BigEndian.CopyBytes(m_idCode, buffer, 12);
 
                 // Include register count
-                EndianOrder.BigEndian.CopyBytes(RegisterCount, buffer, 16);
+                BigEndian.CopyBytes(RegisterCount, buffer, 16);
 
                 // Include sample number
-                EndianOrder.BigEndian.CopyBytes(SampleNumber, buffer, 18);
+                BigEndian.CopyBytes(SampleNumber, buffer, 18);
 
                 // Include second of century
-                EndianOrder.BigEndian.CopyBytes(SecondOfCentury, buffer, 20);
+                BigEndian.CopyBytes(SecondOfCentury, buffer, 20);
 
                 return buffer;
             }

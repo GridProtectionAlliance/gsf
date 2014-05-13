@@ -128,7 +128,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_archivedData = value;
@@ -147,7 +147,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_previousData = value;
@@ -166,7 +166,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_currentData = value;
@@ -295,10 +295,10 @@ namespace GSF.Historian.Files
                 m_archivedData.ParseBinaryImage(buffer, startIndex, length);
                 m_previousData.ParseBinaryImage(buffer, startIndex + 16, length - 16);
                 m_currentData.ParseBinaryImage(buffer, startIndex + 32, length - 32);
-                ActiveDataBlockIndex = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 48) - 1;
-                ActiveDataBlockSlot = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 52);
-                Slope1 = EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 56);
-                Slope2 = EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 64);
+                ActiveDataBlockIndex = LittleEndian.ToInt32(buffer, startIndex + 48) - 1;
+                ActiveDataBlockSlot = LittleEndian.ToInt32(buffer, startIndex + 52);
+                Slope1 = LittleEndian.ToDouble(buffer, startIndex + 56);
+                Slope2 = LittleEndian.ToDouble(buffer, startIndex + 64);
 
                 return FixedLength;
             }

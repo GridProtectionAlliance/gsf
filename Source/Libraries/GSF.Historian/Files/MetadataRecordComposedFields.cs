@@ -234,7 +234,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_engineeringUnits = value.TruncateRight(24);
@@ -253,7 +253,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_equation = value.TruncateRight(256);
@@ -302,20 +302,20 @@ namespace GSF.Historian.Files
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                HighAlarm = EndianOrder.LittleEndian.ToSingle(buffer, startIndex);
-                LowAlarm = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 4);
-                HighRange = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 8);
-                LowRange = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 12);
-                LowWarning = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 16);
-                HighWarning = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 20);
-                DisplayDigits = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 24);
+                HighAlarm = LittleEndian.ToSingle(buffer, startIndex);
+                LowAlarm = LittleEndian.ToSingle(buffer, startIndex + 4);
+                HighRange = LittleEndian.ToSingle(buffer, startIndex + 8);
+                LowRange = LittleEndian.ToSingle(buffer, startIndex + 12);
+                LowWarning = LittleEndian.ToSingle(buffer, startIndex + 16);
+                HighWarning = LittleEndian.ToSingle(buffer, startIndex + 20);
+                DisplayDigits = LittleEndian.ToInt32(buffer, startIndex + 24);
                 for (int i = 0; i < m_inputPointers.Count; i++)
                 {
-                    m_inputPointers[i] = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 28 + (i * 4));
+                    m_inputPointers[i] = LittleEndian.ToInt32(buffer, startIndex + 28 + (i * 4));
                 }
                 EngineeringUnits = Encoding.ASCII.GetString(buffer, startIndex + 76, 24).Trim();
                 Equation = Encoding.ASCII.GetString(buffer, startIndex + 100, 256).Trim();
-                CompressionLimit = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 356);
+                CompressionLimit = LittleEndian.ToSingle(buffer, startIndex + 356);
 
                 return FixedLength;
             }
@@ -343,20 +343,20 @@ namespace GSF.Historian.Files
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highAlarm), 0, buffer, startIndex, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowAlarm), 0, buffer, startIndex + 4, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highRange), 0, buffer, startIndex + 8, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowRange), 0, buffer, startIndex + 12, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowWarning), 0, buffer, startIndex + 16, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highWarning), 0, buffer, startIndex + 20, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 24, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_highAlarm), 0, buffer, startIndex, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_lowAlarm), 0, buffer, startIndex + 4, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_highRange), 0, buffer, startIndex + 8, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_lowRange), 0, buffer, startIndex + 12, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_lowWarning), 0, buffer, startIndex + 16, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_highWarning), 0, buffer, startIndex + 20, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 24, 4);
             for (int i = 0; i < m_inputPointers.Count; i++)
             {
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_inputPointers[i]), 0, buffer, startIndex + 28 + (i * 4), 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_inputPointers[i]), 0, buffer, startIndex + 28 + (i * 4), 4);
             }
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_engineeringUnits.PadRight(24)), 0, buffer, startIndex + 76, 24);
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_equation.PadRight(256)), 0, buffer, startIndex + 100, 256);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_compressionLimit), 0, buffer, startIndex + 356, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionLimit), 0, buffer, startIndex + 356, 4);
 
             return length;
         }

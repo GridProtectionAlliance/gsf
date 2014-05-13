@@ -83,13 +83,13 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
         public CommonFrameHeader(ConfigurationFrame configurationFrame, byte[] buffer, int startIndex)
         {
-            uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
-            m_sampleCount = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
+            uint secondOfCentury = BigEndian.ToUInt32(buffer, startIndex);
+            m_sampleCount = BigEndian.ToUInt16(buffer, startIndex + 4);
 
             // We go ahead and pre-grab cell's status flags so we can determine framelength - we
             // leave startindex at 6 so that cell will be able to parse flags as needed - note
             // this increases needed common frame header size by 2 (i.e., BinaryLength + 2)
-            m_statusFlags = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + FixedLength);
+            m_statusFlags = BigEndian.ToUInt16(buffer, startIndex + FixedLength);
 
             // NTP timestamps based on NtpTimeTag class are designed to work for dates between
             // 1968-01-20 and 2104-02-26 based on recommended bit interpretation in RFC-2030.
@@ -357,8 +357,8 @@ namespace GSF.PhasorProtocols.IEEE1344
                 // Make sure frame length gets included in status flags for generated binary image
                 FrameLength = (ushort)FixedLength;
 
-                EndianOrder.BigEndian.CopyBytes((uint)TimeTag.Value, buffer, 0);
-                EndianOrder.BigEndian.CopyBytes(m_sampleCount, buffer, 4);
+                BigEndian.CopyBytes((uint)TimeTag.Value, buffer, 0);
+                BigEndian.CopyBytes(m_sampleCount, buffer, 4);
 
                 return buffer;
             }
@@ -422,7 +422,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         public static bool ChecksumIsValid(byte[] buffer, int startIndex, int length)
         {
             int sumLength = length - 2;
-            return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == buffer.CrcCCITTChecksum(startIndex, sumLength);
+            return BigEndian.ToUInt16(buffer, startIndex + sumLength) == buffer.CrcCCITTChecksum(startIndex, sumLength);
         }
 
         #endregion

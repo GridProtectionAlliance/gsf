@@ -26,6 +26,8 @@ using System.Data;
 using System.IO;
 using GSF.Data;
 
+#pragma warning disable 0067
+
 namespace GSF.TimeSeries.Configuration
 {
     /// <summary>

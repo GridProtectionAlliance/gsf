@@ -25,8 +25,9 @@
 using System;
 using System.Linq;
 using System.Text;
-using System.Web.ModelBinding;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+#pragma warning disable 618
 
 namespace GSF.Core.Tests
 {

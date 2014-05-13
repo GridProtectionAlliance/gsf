@@ -305,8 +305,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
             if (configurationFrame2 != null)
                 m_configurationFrame2 = configurationFrame2;
-            //FIXME: Add cf3
 
+            // TODO: Add handler for config3 frame
         }
 
         /// <summary>

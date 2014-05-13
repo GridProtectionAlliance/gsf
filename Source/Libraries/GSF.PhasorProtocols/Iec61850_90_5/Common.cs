@@ -598,7 +598,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             if (tagLength < 2)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            ushort result = EndianOrder.BigEndian.ToUInt16(buffer, index);
+            ushort result = BigEndian.ToUInt16(buffer, index);
             index += tagLength;
 
             return result;
@@ -621,7 +621,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             if (tagLength < 3)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            UInt24 result = EndianOrder.BigEndian.ToUInt24(buffer, index);
+            UInt24 result = BigEndian.ToUInt24(buffer, index);
             index += tagLength;
 
             return result;
@@ -644,7 +644,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             if (tagLength < 4)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            uint result = EndianOrder.BigEndian.ToUInt32(buffer, index);
+            uint result = BigEndian.ToUInt32(buffer, index);
             index += tagLength;
 
             return result;
@@ -667,7 +667,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             if (tagLength < 8)
                 throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", tag, tagLength));
 
-            ulong result = EndianOrder.BigEndian.ToUInt64(buffer, index);
+            ulong result = BigEndian.ToUInt64(buffer, index);
             index += tagLength;
 
             return result;
@@ -730,7 +730,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
             buffer[index++] = (byte)tag;
             length.EncodeTagLength(buffer, ref index);
-            index += EndianOrder.BigEndian.CopyBytes(value, buffer, index);
+            index += BigEndian.CopyBytes(value, buffer, index);
         }
 
         /// <summary>

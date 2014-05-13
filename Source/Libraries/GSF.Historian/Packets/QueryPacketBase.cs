@@ -114,12 +114,12 @@ namespace GSF.Historian.Packets
             if (length >= 6)
             {
                 // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(buffer, startIndex);
+                short packetID = LittleEndian.ToInt16(buffer, startIndex);
                 if (packetID != TypeID)
                     throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
 
                 // Ensure that the binary image is complete
-                int requestIDCount = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 2);
+                int requestIDCount = LittleEndian.ToInt32(buffer, startIndex + 2);
                 if (length < 6 + requestIDCount * 4)
                     return 0;
 
@@ -127,7 +127,7 @@ namespace GSF.Historian.Packets
                 m_requestIDs.Clear();
                 for (int i = 0; i < requestIDCount; i++)
                 {
-                    m_requestIDs.Add(EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 6 + (i * 4)));
+                    m_requestIDs.Add(LittleEndian.ToInt32(buffer, startIndex + 6 + (i * 4)));
                 }
 
                 return BinaryLength;
@@ -156,11 +156,11 @@ namespace GSF.Historian.Packets
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_requestIDs.Count), 0, buffer, startIndex + 2, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_requestIDs.Count), 0, buffer, startIndex + 2, 4);
             for (int i = 0; i < m_requestIDs.Count; i++)
             {
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_requestIDs[i]), 0, buffer, startIndex + 6 + (i * 4), 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_requestIDs[i]), 0, buffer, startIndex + 6 + (i * 4), 4);
             }
 
             return length;

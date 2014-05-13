@@ -123,14 +123,14 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 int index = 0;
 
                 base.HeaderImage.CopyImage(buffer, ref index, base.HeaderLength);
-                EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index);
-                EndianOrder.BigEndian.CopyBytes(StationName.Length, buffer, index);
-                EndianOrder.BigEndian.CopyBytes(StationName, buffer, index);
-                EndianOrder.BigEndian.CopyBytes(State.G_PMU_ID, buffer, index);
-                EndianOrder.BigEndian.CopyBytes((ushort)m_formatFlags, buffer, index + 2);
-                EndianOrder.BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 4);
-                EndianOrder.BigEndian.CopyBytes((ushort)AnalogDefinitions.Count, buffer, index + 6);
-                EndianOrder.BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index + 8);
+                BigEndian.CopyBytes(IDCode, buffer, index);
+                BigEndian.CopyBytes(StationName.Length, buffer, index);
+                BigEndian.CopyBytes(StationName, buffer, index);
+                BigEndian.CopyBytes(State.G_PMU_ID, buffer, index);
+                BigEndian.CopyBytes((ushort)m_formatFlags, buffer, index + 2);
+                BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 4);
+                BigEndian.CopyBytes((ushort)AnalogDefinitions.Count, buffer, index + 6);
+                BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index + 8);
 
 
                 return buffer;
@@ -191,7 +191,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                 // Include configuration count (new for version 7.0)
                 if (Parent.DraftRevision > DraftRevision.Draft6)
-                    EndianOrder.BigEndian.CopyBytes(RevisionCount, buffer, index);
+                    BigEndian.CopyBytes(RevisionCount, buffer, index);
 
                 return buffer;
             }
@@ -218,7 +218,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
         string getLengthPrependedString(byte[] buffer, int index, out int length)
         {
-            length = EndianOrder.BigEndian.ToInt16(buffer, index);
+            length = BigEndian.ToInt16(buffer, index);
             return ByteEncoding.ASCII.GetString(buffer, index + 2, length);
         }
 
@@ -240,13 +240,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             int len;
             StationName = getLengthPrependedString(buffer, index, out len);
             index += len + 2;
-            IDCode = EndianOrder.BigEndian.ToUInt16(buffer, index);
-            State.G_PMU_ID = EndianOrder.BigEndian.ToGuid(buffer, index + 2); 
-            m_formatFlags = (FormatFlags)EndianOrder.BigEndian.ToUInt16(buffer, index + 16 + 2); //left as 16+x for clarity while editing, FIXME
+            IDCode = BigEndian.ToUInt16(buffer, index);
+            State.G_PMU_ID = BigEndian.ToGuid(buffer, index + 2); 
+            m_formatFlags = (FormatFlags)BigEndian.ToUInt16(buffer, index + 16 + 2); //left as 16+x for clarity while editing, FIXME
             // Parse out total phasors, analogs and digitals defined for this device
-            State.PhasorCount = EndianOrder.BigEndian.ToUInt16(buffer, index + 16+4); 
-            State.AnalogCount = EndianOrder.BigEndian.ToUInt16(buffer, index + 16+6);
-            State.DigitalCount = EndianOrder.BigEndian.ToUInt16(buffer, index + 16+8);
+            State.PhasorCount = BigEndian.ToUInt16(buffer, index + 16+4); 
+            State.AnalogCount = BigEndian.ToUInt16(buffer, index + 16+6);
+            State.DigitalCount = BigEndian.ToUInt16(buffer, index + 16+8);
             
 
             index += 10+16; //FIXME: merge
@@ -305,21 +305,21 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 index += 4;
             }
             //PMU_LAT, 4 bytes, IEEE float, -90.0 to +90.0
-            State.DeviceLatitude = EndianOrder.BigEndian.ToSingle(buffer, index);
+            State.DeviceLatitude = BigEndian.ToSingle(buffer, index);
             //PMU_LON, 4 bytes, IEEE float, -179.9... to +180
-            State.DeviceLongitude = EndianOrder.BigEndian.ToSingle(buffer, index + 4);
+            State.DeviceLongitude = BigEndian.ToSingle(buffer, index + 4);
             //PMU_ELEV, 4 bytes, IEEE float, infinity for unknown
-            State.DeviceElevation = EndianOrder.BigEndian.ToSingle(buffer, index + 8);
+            State.DeviceElevation = BigEndian.ToSingle(buffer, index + 8);
             //SVC_CLASS, 1 ASCII char
-            State.ServiceClass = EndianOrder.BigEndian.ToChar(buffer, index + 9);
+            State.ServiceClass = BigEndian.ToChar(buffer, index + 9);
             //WINDOW, 4 bytes, signed int
-            State.MeasurementWindow = EndianOrder.BigEndian.ToInt32(buffer, index + 13);
+            State.MeasurementWindow = BigEndian.ToInt32(buffer, index + 13);
             //GRP_DLY, 4 bytes, signed int
-            State.GroupDelay = EndianOrder.BigEndian.ToInt32(buffer, index + 17);
+            State.GroupDelay = BigEndian.ToInt32(buffer, index + 17);
             //FNOM, 2 bytes, unsigned int, Bit 0 is flag (50/60 hz)
-            State.FNOM = EndianOrder.BigEndian.ToUInt16(buffer, index + 19);
+            State.FNOM = BigEndian.ToUInt16(buffer, index + 19);
             //CFGCNT, 2 bytes
-            State.CFGCNT = EndianOrder.BigEndian.ToUInt16(buffer, index + 21);
+            State.CFGCNT = BigEndian.ToUInt16(buffer, index + 21);
 
             return startIndex; //FIXME
         }
@@ -341,7 +341,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // Parse out configuration count (new for version 7.0)
             if (Parent.DraftRevision > DraftRevision.Draft6)
             {
-                RevisionCount = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                RevisionCount = BigEndian.ToUInt16(buffer, index);
                 index += 2;
             }
 

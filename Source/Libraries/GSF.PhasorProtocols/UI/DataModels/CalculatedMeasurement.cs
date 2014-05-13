@@ -201,7 +201,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     m_connectionString = string.Empty;
                 else
                     m_connectionString = value;

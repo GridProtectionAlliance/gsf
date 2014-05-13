@@ -179,7 +179,7 @@ namespace GSF.Web.Embedded
                 // Show reset password.
                 Page.Title = StaticPageTitle + " :: Reset Password";
 
-                if (ViewState[UsernameKey] == null)
+                if ((object)ViewState[UsernameKey] == null)
                 {
                     // Check for reset support.
                     ResetPasswordCheckPanel.Visible = true;

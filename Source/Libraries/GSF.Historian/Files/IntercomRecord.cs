@@ -238,14 +238,14 @@ namespace GSF.Historian.Files
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                DataBlocksUsed = EndianOrder.LittleEndian.ToInt32(buffer, startIndex);
-                RolloverInProgress = EndianOrder.LittleEndian.ToBoolean(buffer, startIndex + 4);
-                LatestDataTime = new TimeTag(EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 8));
-                LatestDataID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 16);
+                DataBlocksUsed = LittleEndian.ToInt32(buffer, startIndex);
+                RolloverInProgress = LittleEndian.ToBoolean(buffer, startIndex + 4);
+                LatestDataTime = new TimeTag(LittleEndian.ToDouble(buffer, startIndex + 8));
+                LatestDataID = LittleEndian.ToInt32(buffer, startIndex + 16);
 
                 for (int i = 0; i < m_sourceLatestDataTime.Count; i++)
                 {
-                    m_sourceLatestDataTime[i] = new TimeTag(EndianOrder.LittleEndian.ToDouble(buffer, startIndex + 20 + (i * 8)));
+                    m_sourceLatestDataTime[i] = new TimeTag(LittleEndian.ToDouble(buffer, startIndex + 20 + (i * 8)));
                 }
 
                 return FixedLength;
@@ -276,14 +276,14 @@ namespace GSF.Historian.Files
 
             lock (this)
             {
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_dataBlocksUsed), 0, buffer, startIndex, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(Convert.ToInt32(m_rolloverInProgress)), 0, buffer, startIndex + 4, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_latestDataTime.Value), 0, buffer, startIndex + 8, 8);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_latestDataID), 0, buffer, startIndex + 16, 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_dataBlocksUsed), 0, buffer, startIndex, 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(Convert.ToInt32(m_rolloverInProgress)), 0, buffer, startIndex + 4, 4);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_latestDataTime.Value), 0, buffer, startIndex + 8, 8);
+                Buffer.BlockCopy(LittleEndian.GetBytes(m_latestDataID), 0, buffer, startIndex + 16, 4);
 
                 for (int i = 0; i < m_sourceLatestDataTime.Count; i++)
                 {
-                    Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_sourceLatestDataTime[i].Value), 0, buffer, startIndex + 20 + (i * 8), 8);
+                    Buffer.BlockCopy(LittleEndian.GetBytes(m_sourceLatestDataTime[i].Value), 0, buffer, startIndex + 20 + (i * 8), 8);
                 }
             }
 

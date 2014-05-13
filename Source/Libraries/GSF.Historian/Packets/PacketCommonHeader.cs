@@ -49,7 +49,7 @@ namespace GSF.Historian.Packets
         public PacketCommonHeader(byte[] buffer, int startIndex, int length)
         {
             if (length > 1)
-                TypeID = EndianOrder.LittleEndian.ToInt16(buffer, startIndex);
+                TypeID = LittleEndian.ToInt16(buffer, startIndex);
             else
                 throw new InvalidOperationException("Not enough length available to parse common header");
         }

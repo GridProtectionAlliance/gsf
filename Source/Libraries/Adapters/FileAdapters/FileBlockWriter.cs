@@ -180,9 +180,9 @@ namespace FileAdapters
             if (bufferBlock[0] != 0)
             {
                 // Start of a new file - read file info
-                int fileNameByteLength = EndianOrder.BigEndian.ToInt32(bufferBlock, 1);
+                int fileNameByteLength = BigEndian.ToInt32(bufferBlock, 1);
                 string fileName = Encoding.Unicode.GetString(bufferBlock, 5, fileNameByteLength);
-                long fileSize = EndianOrder.BigEndian.ToInt64(bufferBlock, 5 + fileNameByteLength);
+                long fileSize = BigEndian.ToInt64(bufferBlock, 5 + fileNameByteLength);
 
                 // Notify of new file creation
                 OnStatusMessage("Now writing to file {0}...", fileName);

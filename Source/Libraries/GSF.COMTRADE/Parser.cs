@@ -355,7 +355,7 @@ namespace GSF.COMTRADE
                     int index = 0;
 
                     // Read sample index
-                    uint sample = EndianOrder.LittleEndian.ToUInt32(buffer, index);
+                    uint sample = LittleEndian.ToUInt32(buffer, index);
                     index += 4;
 
                     // Get timestamp of this record
@@ -372,7 +372,7 @@ namespace GSF.COMTRADE
                     }
 
                     // Read microsecond timestamp
-                    uint microseconds = EndianOrder.LittleEndian.ToUInt32(buffer, index);
+                    uint microseconds = LittleEndian.ToUInt32(buffer, index);
                     index += 4;
 
                     // Fall back on specified microsecond time
@@ -383,7 +383,7 @@ namespace GSF.COMTRADE
                     for (int i = 0; i < m_schema.AnalogChannels.Length; i++)
                     {
                         // Read next value
-                        m_values[i] = EndianOrder.LittleEndian.ToInt16(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
+                        m_values[i] = LittleEndian.ToInt16(buffer, index) * m_schema.AnalogChannels[i].Multiplier + m_schema.AnalogChannels[i].Adder;
                         index += 2;
                     }
 
@@ -394,7 +394,7 @@ namespace GSF.COMTRADE
                     for (int i = 0; i < digitalWords; i++)
                     {
                         // Read next digital word
-                        digitalWord = EndianOrder.LittleEndian.ToUInt16(buffer, index);
+                        digitalWord = LittleEndian.ToUInt16(buffer, index);
                         index += 2;
 
                         // Distribute each bit of digital word through next 16 digital values

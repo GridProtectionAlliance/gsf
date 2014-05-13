@@ -211,7 +211,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 2;
-            return EndianOrder.LittleEndian.ToInt16(m_values, byteIndex);
+            return LittleEndian.ToInt16(m_values, byteIndex);
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 2;
-            EndianOrder.LittleEndian.CopyBytes(value, m_values, byteIndex);
+            LittleEndian.CopyBytes(value, m_values, byteIndex);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 4;
-            return EndianOrder.LittleEndian.ToInt32(m_values, byteIndex);
+            return LittleEndian.ToInt32(m_values, byteIndex);
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 4;
-            EndianOrder.LittleEndian.CopyBytes(value, m_values, byteIndex);
+            LittleEndian.CopyBytes(value, m_values, byteIndex);
         }
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 4;
-            return EndianOrder.LittleEndian.ToUInt32(m_values, byteIndex);
+            return LittleEndian.ToUInt32(m_values, byteIndex);
         }
 
         /// <summary>
@@ -281,7 +281,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 4;
-            EndianOrder.LittleEndian.CopyBytes(value, m_values, byteIndex);
+            LittleEndian.CopyBytes(value, m_values, byteIndex);
         }
 
         /// <summary>
@@ -295,7 +295,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 4;
-            return EndianOrder.LittleEndian.ToSingle(m_values, byteIndex);
+            return LittleEndian.ToSingle(m_values, byteIndex);
         }
 
         /// <summary>
@@ -309,7 +309,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 4;
-            EndianOrder.LittleEndian.CopyBytes(value, m_values, byteIndex);
+            LittleEndian.CopyBytes(value, m_values, byteIndex);
         }
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to retrieve values from uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 8;
-            return EndianOrder.LittleEndian.ToDouble(m_values, byteIndex);
+            return LittleEndian.ToDouble(m_values, byteIndex);
         }
 
         /// <summary>
@@ -337,7 +337,7 @@ namespace GSF.PQDIF.Physical
                 throw new InvalidOperationException("Unable to insert values into uninitialized vector; set the size and physical type of the vector first");
 
             int byteIndex = index * 8;
-            EndianOrder.LittleEndian.CopyBytes(value, m_values, byteIndex);
+            LittleEndian.CopyBytes(value, m_values, byteIndex);
         }
 
         /// <summary>
@@ -353,8 +353,8 @@ namespace GSF.PQDIF.Physical
             int byteIndex = index * 12;
 
             DateTime epoch = new DateTime(1900, 1, 1);
-            uint days = EndianOrder.LittleEndian.ToUInt32(m_values, byteIndex);
-            double seconds = EndianOrder.LittleEndian.ToDouble(m_values, byteIndex + 4);
+            uint days = LittleEndian.ToUInt32(m_values, byteIndex);
+            double seconds = LittleEndian.ToDouble(m_values, byteIndex + 4);
 
             return DateTime.SpecifyKind(epoch.AddDays(days).AddSeconds(seconds), DateTimeKind.Utc);
         }
@@ -376,8 +376,8 @@ namespace GSF.PQDIF.Physical
             TimeSpan daySpan = TimeSpan.FromDays(Math.Floor(sinceEpoch.TotalDays));
             TimeSpan secondSpan = sinceEpoch - daySpan;
 
-            EndianOrder.LittleEndian.CopyBytes((uint)daySpan.TotalDays, m_values, byteIndex);
-            EndianOrder.LittleEndian.CopyBytes(secondSpan.TotalSeconds, m_values, byteIndex + 4);
+            LittleEndian.CopyBytes((uint)daySpan.TotalDays, m_values, byteIndex);
+            LittleEndian.CopyBytes(secondSpan.TotalSeconds, m_values, byteIndex + 4);
         }
 
         /// <summary>

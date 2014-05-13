@@ -73,7 +73,7 @@ namespace GSF.Communication
             Buffer.BlockCopy(marker, 0, result, 0, marker.Length);
 
             // Then, copy the payload's size to the buffer after the payload marker
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(length), 0, result, marker.Length, LengthSegment);
+            Buffer.BlockCopy(LittleEndian.GetBytes(length), 0, result, marker.Length, LengthSegment);
 
             // At last, copy the payload after the payload marker and payload size
             Buffer.BlockCopy(buffer, offset, result, marker.Length + LengthSegment, length);

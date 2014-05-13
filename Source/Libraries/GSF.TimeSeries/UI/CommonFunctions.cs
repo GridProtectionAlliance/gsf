@@ -434,7 +434,7 @@ namespace GSF.TimeSeries.UI
         /// <returns><see cref="DBNull"/> if <paramref name="value"/> is <c>null</c>; otherwise <paramref name="value"/>.</returns>
         public static object ToNotNull(this object value)
         {
-            if (value == null)
+            if ((object)value == null)
                 return (object)DBNull.Value;
 
             if (value is int && (int)value == 0)

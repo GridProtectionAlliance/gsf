@@ -51,7 +51,7 @@ namespace GSF.TimeSeries.UI.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string input = string.Empty;
-            if (value != null)
+            if ((object)value != null)
                 input = value.ToString().ToLower();
 
             switch (input)

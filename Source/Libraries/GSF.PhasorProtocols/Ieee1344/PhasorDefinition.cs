@@ -109,7 +109,7 @@ namespace GSF.PhasorProtocols.IEEE1344
 
                 buffer[0] = (byte)(PhasorType == PhasorType.Voltage ? 0 : 1);
 
-                EndianOrder.BigEndian.CopyBytes(scalingFactor, buffer, 1);
+                BigEndian.CopyBytes(scalingFactor, buffer, 1);
 
                 return buffer;
             }
@@ -130,7 +130,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             PhasorType = (buffer[startIndex] == 0) ? PhasorType.Voltage : PhasorType.Current;
 
             // Last three bytes represent scaling factor
-            ScalingValue = EndianOrder.BigEndian.ToUInt24(buffer, startIndex + 1);
+            ScalingValue = BigEndian.ToUInt24(buffer, startIndex + 1);
 
             return ConversionFactorLength;
         }

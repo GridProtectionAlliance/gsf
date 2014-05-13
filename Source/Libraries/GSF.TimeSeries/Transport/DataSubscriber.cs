@@ -875,7 +875,7 @@ namespace GSF.TimeSeries.Transport
                 base.ProcessingInterval = value;
 
                 // Request server update the processing interval
-                SendServerCommand(ServerCommand.UpdateProcessingInterval, EndianOrder.BigEndian.GetBytes(value));
+                SendServerCommand(ServerCommand.UpdateProcessingInterval, BigEndian.GetBytes(value));
             }
         }
 
@@ -1542,7 +1542,7 @@ namespace GSF.TimeSeries.Transport
                         bytes = bytes.Encrypt(sharedSecret, CipherStrength.Aes256);
 
                         // Write encoded authentication key length into buffer
-                        buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
+                        buffer.Write(BigEndian.GetBytes(bytes.Length), 0, 4);
 
                         // Encode encrypted authentication key into buffer
                         buffer.Write(bytes, 0, bytes.Length);
@@ -2133,7 +2133,7 @@ namespace GSF.TimeSeries.Transport
                         bytes = m_encoding.GetBytes(connectionString);
 
                         // Write encoded connection string length into buffer
-                        buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
+                        buffer.Write(BigEndian.GetBytes(bytes.Length), 0, 4);
 
                         // Encode connection string into buffer
                         buffer.Write(bytes, 0, bytes.Length);
@@ -2248,7 +2248,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     byte[] bytes = m_encoding.GetBytes(message);
 
-                    buffer.Write(EndianOrder.BigEndian.GetBytes(bytes.Length), 0, 4);
+                    buffer.Write(BigEndian.GetBytes(bytes.Length), 0, 4);
                     buffer.Write(bytes, 0, bytes.Length);
 
                     return SendServerCommand(commandCode, buffer.ToArray());
@@ -2418,7 +2418,7 @@ namespace GSF.TimeSeries.Transport
 
                     ServerResponse responseCode = (ServerResponse)buffer[0];
                     ServerCommand commandCode = (ServerCommand)buffer[1];
-                    int responseLength = EndianOrder.BigEndian.ToInt32(buffer, 2);
+                    int responseLength = BigEndian.ToInt32(buffer, 2);
                     int responseIndex = DataPublisher.ClientResponseHeaderSize;
                     bool solicited = false;
                     byte[][][] keyIVs;
@@ -2544,12 +2544,12 @@ namespace GSF.TimeSeries.Transport
                             // Synchronized packets contain a frame level timestamp
                             if (synchronizedMeasurements)
                             {
-                                timestamp = EndianOrder.BigEndian.ToInt64(buffer, responseIndex);
+                                timestamp = BigEndian.ToInt64(buffer, responseIndex);
                                 responseIndex += 8;
                             }
 
                             // Deserialize number of measurements that follow
-                            count = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
+                            count = BigEndian.ToInt32(buffer, responseIndex);
                             responseIndex += 4;
 
                             if (compressedPayload)
@@ -2713,7 +2713,7 @@ namespace GSF.TimeSeries.Transport
                             break;
                         case ServerResponse.BufferBlock:
                             // Buffer block received - wrap as a buffer block measurement and expose back to consumer
-                            uint sequenceNumber = EndianOrder.BigEndian.ToUInt32(buffer, responseIndex);
+                            uint sequenceNumber = BigEndian.ToUInt32(buffer, responseIndex);
                             int cacheIndex = (int)(sequenceNumber - m_expectedBufferBlockSequenceNumber);
                             BufferBlockMeasurement bufferBlockMeasurement;
                             Tuple<Guid, string, uint> measurementKey;
@@ -2726,7 +2726,7 @@ namespace GSF.TimeSeries.Transport
                                 SendServerCommand(ServerCommand.ConfirmBufferBlock, buffer.BlockCopy(responseIndex, 4));
 
                                 // Get measurement key from signal index cache
-                                signalIndex = EndianOrder.BigEndian.ToUInt16(buffer, responseIndex + 4);
+                                signalIndex = BigEndian.ToUInt16(buffer, responseIndex + 4);
 
                                 if (!m_signalIndexCache.Reference.TryGetValue(signalIndex, out measurementKey))
                                     throw new InvalidOperationException("Failed to find associated signal identification for runtime ID " + signalIndex);
@@ -2781,7 +2781,7 @@ namespace GSF.TimeSeries.Transport
                             break;
                         case ServerResponse.DataStartTime:
                             // Raise data start time event
-                            OnDataStartTime(EndianOrder.BigEndian.ToInt64(buffer, responseIndex));
+                            OnDataStartTime(BigEndian.ToInt64(buffer, responseIndex));
                             break;
                         case ServerResponse.ProcessingComplete:
                             // Raise input processing completed event
@@ -2795,11 +2795,11 @@ namespace GSF.TimeSeries.Transport
                             break;
                         case ServerResponse.UpdateBaseTimes:
                             // Get active time index
-                            m_timeIndex = EndianOrder.BigEndian.ToInt32(buffer, responseIndex);
+                            m_timeIndex = BigEndian.ToInt32(buffer, responseIndex);
                             responseIndex += 4;
 
                             // Deserialize new base time offsets
-                            m_baseTimeOffsets = new[] { EndianOrder.BigEndian.ToInt64(buffer, responseIndex), EndianOrder.BigEndian.ToInt64(buffer, responseIndex + 8) };
+                            m_baseTimeOffsets = new[] { BigEndian.ToInt64(buffer, responseIndex), BigEndian.ToInt64(buffer, responseIndex + 8) };
                             break;
                         case ServerResponse.UpdateCipherKeys:
                             // Move past active cipher index (not currently used anywhere else)
@@ -2821,7 +2821,7 @@ namespace GSF.TimeSeries.Transport
                             int bufferLen;
 
                             // Read even key size
-                            bufferLen = EndianOrder.BigEndian.ToInt32(bytes, index);
+                            bufferLen = BigEndian.ToInt32(bytes, index);
                             index += 4;
 
                             // Read even key
@@ -2830,7 +2830,7 @@ namespace GSF.TimeSeries.Transport
                             index += bufferLen;
 
                             // Read even initialization vector size
-                            bufferLen = EndianOrder.BigEndian.ToInt32(bytes, index);
+                            bufferLen = BigEndian.ToInt32(bytes, index);
                             index += 4;
 
                             // Read even initialization vector
@@ -2839,7 +2839,7 @@ namespace GSF.TimeSeries.Transport
                             index += bufferLen;
 
                             // Read odd key size
-                            bufferLen = EndianOrder.BigEndian.ToInt32(bytes, index);
+                            bufferLen = BigEndian.ToInt32(bytes, index);
                             index += 4;
 
                             // Read odd key
@@ -2848,7 +2848,7 @@ namespace GSF.TimeSeries.Transport
                             index += bufferLen;
 
                             // Read odd initialization vector size
-                            bufferLen = EndianOrder.BigEndian.ToInt32(bytes, index);
+                            bufferLen = BigEndian.ToInt32(bytes, index);
                             index += 4;
 
                             // Read odd initialization vector
@@ -4123,7 +4123,7 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Define operational modes as soon as possible
-            SendServerCommand(ServerCommand.DefineOperationalModes, EndianOrder.BigEndian.GetBytes((uint)m_operationalModes));
+            SendServerCommand(ServerCommand.DefineOperationalModes, BigEndian.GetBytes((uint)m_operationalModes));
 
             // Notify input adapter base that asynchronous connection succeeded
             OnConnected();

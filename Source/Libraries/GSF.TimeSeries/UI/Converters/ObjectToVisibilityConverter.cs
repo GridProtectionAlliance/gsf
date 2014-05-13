@@ -47,7 +47,7 @@ namespace GSF.TimeSeries.UI.Converters
         /// <returns><see cref="System.Windows.Visibility"/> enumeration.</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value != null)
+            if ((object)value != null)
             {
                 // if value is int, then if it is greater than zero then, set it to true otherwise false.
                 // Once we set value to boolean instead of integer, next code will take care of visibility.

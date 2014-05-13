@@ -35,7 +35,7 @@ namespace GSF.Parsing
     public interface IBinaryImageParser : IProvideStatus
     {
         /// <summary>
-        /// Occurs when data image fails deserialized due to an exception.
+        /// Occurs when data image fails deserialization due to an exception.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the remaining portion of the binary image that failed to parse.
@@ -63,12 +63,19 @@ namespace GSF.Parsing
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the data parser is currently enabled.
         /// </summary>
-        bool Enabled { get; set; }
+        bool Enabled
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the total number of buffer images processed so far.
         /// </summary>
-        long TotalProcessedBuffers { get; }
+        long TotalProcessedBuffers
+        {
+            get;
+        }
 
         /// <summary>
         /// Writes a sequence of bytes onto the <see cref="IBinaryImageParser"/> stream for parsing.

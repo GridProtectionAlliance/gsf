@@ -306,9 +306,9 @@ namespace GSF.Historian.Files
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                Flags = EndianOrder.LittleEndian.ToInt16(buffer, startIndex + 4);
-                Value = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 6);
-                Time = new TimeTag(EndianOrder.LittleEndian.ToInt32(buffer, startIndex) +   // Seconds
+                Flags = LittleEndian.ToInt16(buffer, startIndex + 4);
+                Value = LittleEndian.ToSingle(buffer, startIndex + 6);
+                Time = new TimeTag(LittleEndian.ToInt32(buffer, startIndex) +   // Seconds
                         ((double)(m_flags.GetMaskedValue(MillisecondMask) >> 5) / 1000));   // Milliseconds
 
                 return FixedLength;
@@ -337,9 +337,9 @@ namespace GSF.Historian.Files
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((int)m_time.Value), 0, buffer, startIndex, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((short)m_flags), 0, buffer, startIndex + 4, 2);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 6, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes((int)m_time.Value), 0, buffer, startIndex, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes((short)m_flags), 0, buffer, startIndex + 4, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_value), 0, buffer, startIndex + 6, 4);
 
             return length;
         }

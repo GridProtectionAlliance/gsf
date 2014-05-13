@@ -295,15 +295,15 @@ namespace GSF.PhasorProtocols.IEEE1344
                 byte[] buffer = new byte[HeaderLength];
                 int index = 0;
 
-                EndianOrder.BigEndian.CopyBytes(m_statusFlags, buffer, index);
+                BigEndian.CopyBytes(m_statusFlags, buffer, index);
 
                 // Copy in station name
                 index += 2;
                 base.HeaderImage.CopyImage(buffer, ref index, base.HeaderLength);
 
-                EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index);
-                EndianOrder.BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 8);
-                EndianOrder.BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index + 10);
+                BigEndian.CopyBytes(IDCode, buffer, index);
+                BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 8);
+                BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index + 10);
 
                 return buffer;
             }
@@ -390,17 +390,17 @@ namespace GSF.PhasorProtocols.IEEE1344
             IConfigurationCellParsingState state = State;
             int index = startIndex;
 
-            m_statusFlags = EndianOrder.BigEndian.ToUInt16(buffer, index);
+            m_statusFlags = BigEndian.ToUInt16(buffer, index);
             index += 2;
 
             // Parse out station name
             index += base.ParseHeaderImage(buffer, index, length);
 
-            IDCode = EndianOrder.BigEndian.ToUInt64(buffer, index);
+            IDCode = BigEndian.ToUInt64(buffer, index);
 
             // Parse out total phasors and digitals defined for this device
-            state.PhasorCount = EndianOrder.BigEndian.ToUInt16(buffer, index + 8);
-            state.DigitalCount = EndianOrder.BigEndian.ToUInt16(buffer, index + 10);
+            state.PhasorCount = BigEndian.ToUInt16(buffer, index + 8);
+            state.DigitalCount = BigEndian.ToUInt16(buffer, index + 10);
             index += 12;
 
             return (index - startIndex);

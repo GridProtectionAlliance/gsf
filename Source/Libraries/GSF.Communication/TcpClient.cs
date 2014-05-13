@@ -301,7 +301,7 @@ namespace GSF.Communication
             }
             set
             {
-                if (value == null || value.Length == 0)
+                if ((object)value == null || value.Length == 0)
                     throw new ArgumentNullException("value");
 
                 m_payloadMarker = value;

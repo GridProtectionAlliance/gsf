@@ -136,8 +136,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
             {
                 byte[] buffer = new byte[8];
 
-                EndianOrder.BigEndian.CopyBytes((float)Magnitude, buffer, 0);
-                EndianOrder.BigEndian.CopyBytes((float)Angle.ToDegrees(), buffer, 4);
+                BigEndian.CopyBytes((float)Magnitude, buffer, 0);
+                BigEndian.CopyBytes((float)Angle.ToDegrees(), buffer, 4);
 
                 return buffer;
             }
@@ -157,8 +157,8 @@ namespace GSF.PhasorProtocols.SelFastMessage
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
             // Parse magnitude and angle in degrees
-            Magnitude = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
-            Angle = Angle.FromDegrees(EndianOrder.BigEndian.ToSingle(buffer, startIndex + 4));
+            Magnitude = BigEndian.ToSingle(buffer, startIndex);
+            Angle = Angle.FromDegrees(BigEndian.ToSingle(buffer, startIndex + 4));
 
             return 8;
         }

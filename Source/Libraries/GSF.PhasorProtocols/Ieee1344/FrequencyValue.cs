@@ -151,12 +151,12 @@ namespace GSF.PhasorProtocols.IEEE1344
 
                     if (definition.FrequencyIsAvailable)
                     {
-                        EndianOrder.BigEndian.CopyBytes((short)UnscaledFrequency, buffer, startIndex);
+                        BigEndian.CopyBytes((short)UnscaledFrequency, buffer, startIndex);
                         startIndex += 2;
                     }
 
                     if (definition.DfDtIsAvailable)
-                        EndianOrder.BigEndian.CopyBytes((short)UnscaledDfDt, buffer, startIndex);
+                        BigEndian.CopyBytes((short)UnscaledDfDt, buffer, startIndex);
                 }
 
                 return buffer;
@@ -188,14 +188,14 @@ namespace GSF.PhasorProtocols.IEEE1344
                 // Note that IEEE 1344 only supports scaled integers (no need to worry about floating points)
                 if (definition.FrequencyIsAvailable)
                 {
-                    UnscaledFrequency = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
+                    UnscaledFrequency = BigEndian.ToInt16(buffer, startIndex);
                     startIndex += 2;
                     parsedLength += 2;
                 }
 
                 if (definition.DfDtIsAvailable)
                 {
-                    UnscaledDfDt = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
+                    UnscaledDfDt = BigEndian.ToInt16(buffer, startIndex);
                     parsedLength += 2;
                 }
             }

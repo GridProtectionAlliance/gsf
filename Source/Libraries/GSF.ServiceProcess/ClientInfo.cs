@@ -220,7 +220,7 @@ namespace GSF.ServiceProcess
         /// <param name="user">New <see cref="IPrincipal"/> object to be assigned to <see cref="ClientUser"/>.</param>
         internal void SetClientUser(IPrincipal user)
         {
-            if (user == null)
+            if ((object)user == null)
                 throw new ArgumentNullException("user");
 
             m_clientUser = user;

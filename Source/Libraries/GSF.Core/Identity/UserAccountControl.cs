@@ -207,7 +207,7 @@ namespace GSF.Identity
                 {
                     object value = key.GetValue(UacRegistryValue);
 
-                    if (value != null)
+                    if ((object)value != null)
                         return value.Equals(1);
                 }
 

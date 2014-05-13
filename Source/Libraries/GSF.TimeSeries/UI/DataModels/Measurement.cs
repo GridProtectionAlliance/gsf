@@ -188,7 +188,7 @@ namespace GSF.TimeSeries.UI.DataModels
             }
             set
             {
-                if (value != null && value.Length > 200)
+                if ((object)value != null && value.Length > 200)
                     m_pointTag = value.Substring(0, 200);
                 else
                     m_pointTag = value;

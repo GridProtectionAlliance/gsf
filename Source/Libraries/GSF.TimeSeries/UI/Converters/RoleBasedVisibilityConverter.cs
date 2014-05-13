@@ -46,10 +46,10 @@ namespace GSF.TimeSeries.UI.Converters
         /// <param name="targetType">The type of the binding target property.</param>
         /// <param name="parameter">The converter parameter to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
-        /// <returns>One of the visibility enummeration</returns>
+        /// <returns>One of the visibility enumeration</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null || string.IsNullOrEmpty(value.ToString()) || value.ToString() == "*" || CommonFunctions.CurrentPrincipal.IsInRole(value.ToString()))
+            if ((object)value == null || string.IsNullOrEmpty(value.ToString()) || value.ToString() == "*" || CommonFunctions.CurrentPrincipal.IsInRole(value.ToString()))
                 return Visibility.Visible;
             else
                 return Visibility.Collapsed;

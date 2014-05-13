@@ -116,7 +116,7 @@ namespace GSF.Historian.Files
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_engineeringUnits = value.TruncateRight(24);
@@ -301,16 +301,16 @@ namespace GSF.Historian.Files
             {
                 // Binary image has sufficient data.
                 EngineeringUnits = Encoding.ASCII.GetString(buffer, startIndex, 24).Trim();
-                HighAlarm = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 24);
-                LowAlarm = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 28);
-                HighRange = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 32);
-                LowRange = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 36);
-                HighWarning = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 40);
-                LowWarning = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 44);
-                ExceptionLimit = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 48);
-                CompressionLimit = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 52);
-                AlarmDelay = EndianOrder.LittleEndian.ToSingle(buffer, startIndex + 56);
-                DisplayDigits = EndianOrder.LittleEndian.ToInt32(buffer, startIndex + 60);
+                HighAlarm = LittleEndian.ToSingle(buffer, startIndex + 24);
+                LowAlarm = LittleEndian.ToSingle(buffer, startIndex + 28);
+                HighRange = LittleEndian.ToSingle(buffer, startIndex + 32);
+                LowRange = LittleEndian.ToSingle(buffer, startIndex + 36);
+                HighWarning = LittleEndian.ToSingle(buffer, startIndex + 40);
+                LowWarning = LittleEndian.ToSingle(buffer, startIndex + 44);
+                ExceptionLimit = LittleEndian.ToSingle(buffer, startIndex + 48);
+                CompressionLimit = LittleEndian.ToSingle(buffer, startIndex + 52);
+                AlarmDelay = LittleEndian.ToSingle(buffer, startIndex + 56);
+                DisplayDigits = LittleEndian.ToInt32(buffer, startIndex + 60);
 
                 return FixedLength;
             }
@@ -339,16 +339,16 @@ namespace GSF.Historian.Files
             buffer.ValidateParameters(startIndex, length);
 
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(m_engineeringUnits.PadRight(24)), 0, buffer, startIndex, 24);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highAlarm), 0, buffer, startIndex + 24, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowAlarm), 0, buffer, startIndex + 28, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highRange), 0, buffer, startIndex + 32, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowRange), 0, buffer, startIndex + 36, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_highWarning), 0, buffer, startIndex + 40, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_lowWarning), 0, buffer, startIndex + 44, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_exceptionLimit), 0, buffer, startIndex + 48, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_compressionLimit), 0, buffer, startIndex + 52, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_alarmDelay), 0, buffer, startIndex + 56, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 60, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_highAlarm), 0, buffer, startIndex + 24, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_lowAlarm), 0, buffer, startIndex + 28, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_highRange), 0, buffer, startIndex + 32, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_lowRange), 0, buffer, startIndex + 36, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_highWarning), 0, buffer, startIndex + 40, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_lowWarning), 0, buffer, startIndex + 44, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_exceptionLimit), 0, buffer, startIndex + 48, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_compressionLimit), 0, buffer, startIndex + 52, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_alarmDelay), 0, buffer, startIndex + 56, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_displayDigits), 0, buffer, startIndex + 60, 4);
 
             return length;
         }

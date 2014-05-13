@@ -184,7 +184,7 @@ namespace GSF.PhasorProtocols
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                     value = "";
 
                 value = value.GetValidLabel();

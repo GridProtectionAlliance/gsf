@@ -126,7 +126,7 @@ namespace GSF.Historian.Files
             }
             private set
             {
-                if (value == null)
+                if ((object)value == null)
                     throw new ArgumentNullException("value");
 
                 m_currentData = value;
@@ -160,7 +160,7 @@ namespace GSF.Historian.Files
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                HistorianID = EndianOrder.LittleEndian.ToInt32(buffer, startIndex);
+                HistorianID = LittleEndian.ToInt32(buffer, startIndex);
                 CurrentData = new StateRecordDataPoint(HistorianID, buffer, startIndex + 4, length - 4);
 
                 return FixedLength;
@@ -189,7 +189,7 @@ namespace GSF.Historian.Files
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(m_historianID), 0, buffer, startIndex, 4);
             m_currentData.GenerateBinaryImage(buffer, startIndex + 4);
 
             return length;

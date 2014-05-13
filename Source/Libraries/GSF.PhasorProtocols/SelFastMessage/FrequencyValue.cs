@@ -126,7 +126,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         {
             get
             {
-                return EndianOrder.BigEndian.GetBytes((float)Frequency);
+                return BigEndian.GetBytes((float)Frequency);
             }
         }
 
@@ -143,7 +143,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
-            Frequency = EndianOrder.BigEndian.ToSingle(buffer, startIndex);
+            Frequency = BigEndian.ToSingle(buffer, startIndex);
             return 4;
         }
 

@@ -29,6 +29,8 @@ using System;
 using System.Text;
 using GSF.Parsing;
 
+#pragma warning disable 618
+
 namespace GSF.TimeSeries.Transport
 {
     /// <summary>
@@ -132,11 +134,11 @@ namespace GSF.TimeSeries.Transport
             string keySource = "";
 
             // Decode key ID
-            keyID = EndianOrder.BigEndian.ToUInt32(buffer, index);
+            keyID = BigEndian.ToUInt32(buffer, index);
             index += 4;
 
             // Decode key source string length
-            size = EndianOrder.BigEndian.ToInt32(buffer, index);
+            size = BigEndian.ToInt32(buffer, index);
             index += 4;
 
             // Decode key source string
@@ -154,7 +156,7 @@ namespace GSF.TimeSeries.Transport
             Key = MeasurementKey.LookUpOrCreate(signalID, keySource, keyID);
 
             // Decode tag name string length
-            size = EndianOrder.BigEndian.ToInt32(buffer, index);
+            size = BigEndian.ToInt32(buffer, index);
             index += 4;
 
             // Decode tag name string
@@ -167,23 +169,23 @@ namespace GSF.TimeSeries.Transport
                 TagName = null;
 
             // Decode value
-            Value = EndianOrder.BigEndian.ToDouble(buffer, index);
+            Value = BigEndian.ToDouble(buffer, index);
             index += 8;
 
             // Decode adder
-            Adder = EndianOrder.BigEndian.ToDouble(buffer, index);
+            Adder = BigEndian.ToDouble(buffer, index);
             index += 8;
 
             // Decode multiplier
-            Multiplier = EndianOrder.BigEndian.ToDouble(buffer, index);
+            Multiplier = BigEndian.ToDouble(buffer, index);
             index += 8;
 
             // Decode timestamp
-            Timestamp = EndianOrder.BigEndian.ToInt64(buffer, index);
+            Timestamp = BigEndian.ToInt64(buffer, index);
             index += 8;
 
             // Decode state flags
-            StateFlags = (MeasurementStateFlags)EndianOrder.BigEndian.ToUInt32(buffer, index);
+            StateFlags = (MeasurementStateFlags)BigEndian.ToUInt32(buffer, index);
             index += 4;
 
             return (index - startIndex);
@@ -233,13 +235,13 @@ namespace GSF.TimeSeries.Transport
             string tagName = TagName.ToNonNullString();
 
             // Encode key ID
-            EndianOrder.BigEndian.CopyBytes(Key.ID, buffer, index);
+            BigEndian.CopyBytes(Key.ID, buffer, index);
             index += 4;
 
             // Encode key source string length
             bytes = m_encoding.GetBytes(source);
             size = bytes.Length;
-            EndianOrder.BigEndian.CopyBytes(size, buffer, index);
+            BigEndian.CopyBytes(size, buffer, index);
             index += 4;
 
             // Encode key source string
@@ -256,7 +258,7 @@ namespace GSF.TimeSeries.Transport
             // Encode tag name string length
             bytes = m_encoding.GetBytes(tagName);
             size = bytes.Length;
-            EndianOrder.BigEndian.CopyBytes(size, buffer, index);
+            BigEndian.CopyBytes(size, buffer, index);
             index += 4;
 
             // Encode tag name string
@@ -267,23 +269,23 @@ namespace GSF.TimeSeries.Transport
             }
 
             // Encode value
-            EndianOrder.BigEndian.CopyBytes(Value, buffer, index);
+            BigEndian.CopyBytes(Value, buffer, index);
             index += 8;
 
             // Encode adder
-            EndianOrder.BigEndian.CopyBytes(Adder, buffer, index);
+            BigEndian.CopyBytes(Adder, buffer, index);
             index += 8;
 
             // Encode multiplier
-            EndianOrder.BigEndian.CopyBytes(Multiplier, buffer, index);
+            BigEndian.CopyBytes(Multiplier, buffer, index);
             index += 8;
 
             // Encode timestamp
-            EndianOrder.BigEndian.CopyBytes((long)Timestamp, buffer, index);
+            BigEndian.CopyBytes((long)Timestamp, buffer, index);
             index += 8;
 
             // Encode state flags
-            EndianOrder.BigEndian.CopyBytes((uint)StateFlags, buffer, index);
+            BigEndian.CopyBytes((uint)StateFlags, buffer, index);
 
             return length;
         }

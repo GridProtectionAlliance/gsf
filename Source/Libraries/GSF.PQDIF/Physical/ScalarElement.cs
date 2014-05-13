@@ -145,7 +145,7 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as a 16-bit unsigned integer.</returns>
         public ushort GetUInt2()
         {
-            return EndianOrder.LittleEndian.ToUInt16(m_value, 0);
+            return LittleEndian.ToUInt16(m_value, 0);
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as a 16-bit unsigned integer.</param>
         public void SetUInt2(ushort value)
         {
-            EndianOrder.LittleEndian.CopyBytes(value, m_value, 0);
+            LittleEndian.CopyBytes(value, m_value, 0);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as a 16-bit signed integer.</returns>
         public short GetInt2()
         {
-            return EndianOrder.LittleEndian.ToInt16(m_value, 0);
+            return LittleEndian.ToInt16(m_value, 0);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as a 16-bit signed integer.</param>
         public void SetInt2(short value)
         {
-            EndianOrder.LittleEndian.CopyBytes(value, m_value, 0);
+            LittleEndian.CopyBytes(value, m_value, 0);
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as a 32-bit unsigned integer.</returns>
         public uint GetUInt4()
         {
-            return EndianOrder.LittleEndian.ToUInt32(m_value, 0);
+            return LittleEndian.ToUInt32(m_value, 0);
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as a 32-bit unsigned integer.</param>
         public void SetUInt4(uint value)
         {
-            EndianOrder.LittleEndian.CopyBytes(value, m_value, 0);
+            LittleEndian.CopyBytes(value, m_value, 0);
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as a 32-bit signed integer.</returns>
         public int GetInt4()
         {
-            return EndianOrder.LittleEndian.ToInt32(m_value, 0);
+            return LittleEndian.ToInt32(m_value, 0);
         }
 
         /// <summary>
@@ -208,7 +208,7 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as a 32-bit signed integer.</param>
         public void SetInt4(int value)
         {
-            EndianOrder.LittleEndian.CopyBytes(value, m_value, 0);
+            LittleEndian.CopyBytes(value, m_value, 0);
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as a 4-byte boolean.</returns>
         public bool GetBool4()
         {
-            return EndianOrder.LittleEndian.ToInt32(m_value, 0) != 0;
+            return LittleEndian.ToInt32(m_value, 0) != 0;
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as a 4-byte boolean.</param>
         public void SetBool4(bool value)
         {
-            EndianOrder.LittleEndian.CopyBytes(value ? 1 : 0, m_value, 0);
+            LittleEndian.CopyBytes(value ? 1 : 0, m_value, 0);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as a 32-bit floating point number.</returns>
         public float GetReal4()
         {
-            return EndianOrder.LittleEndian.ToSingle(m_value, 0);
+            return LittleEndian.ToSingle(m_value, 0);
         }
 
         /// <summary>
@@ -244,7 +244,7 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as a 32-bit floating point number.</param>
         public void SetReal4(float value)
         {
-            EndianOrder.LittleEndian.CopyBytes(value, m_value, 0);
+            LittleEndian.CopyBytes(value, m_value, 0);
         }
 
         /// <summary>
@@ -253,7 +253,7 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as a 64-bit floating point number.</returns>
         public double GetReal8()
         {
-            return EndianOrder.LittleEndian.ToDouble(m_value, 0);
+            return LittleEndian.ToDouble(m_value, 0);
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as a 64-bit floating point number.</param>
         public void SetReal8(double value)
         {
-            EndianOrder.LittleEndian.CopyBytes(value, m_value, 0);
+            LittleEndian.CopyBytes(value, m_value, 0);
         }
 
         /// <summary>
@@ -271,8 +271,8 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as an 8-byte complex number.</returns>
         public ComplexNumber GetComplex8()
         {
-            double real = EndianOrder.LittleEndian.ToSingle(m_value, 0);
-            double imaginary = EndianOrder.LittleEndian.ToSingle(m_value, 4);
+            double real = LittleEndian.ToSingle(m_value, 0);
+            double imaginary = LittleEndian.ToSingle(m_value, 4);
             return new ComplexNumber(real, imaginary);
         }
 
@@ -282,8 +282,8 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as an 8-byte complex number.</param>
         public void SetComplex8(ComplexNumber value)
         {
-            EndianOrder.LittleEndian.CopyBytes((float)value.Real, m_value, 0);
-            EndianOrder.LittleEndian.CopyBytes((float)value.Imaginary, m_value, 4);
+            LittleEndian.CopyBytes((float)value.Real, m_value, 0);
+            LittleEndian.CopyBytes((float)value.Imaginary, m_value, 4);
         }
 
         /// <summary>
@@ -292,8 +292,8 @@ namespace GSF.PQDIF.Physical
         /// <returns>The value as a 16-byte complex number.</returns>
         public ComplexNumber GetComplex16()
         {
-            double real = EndianOrder.LittleEndian.ToDouble(m_value, 0);
-            double imaginary = EndianOrder.LittleEndian.ToDouble(m_value, 8);
+            double real = LittleEndian.ToDouble(m_value, 0);
+            double imaginary = LittleEndian.ToDouble(m_value, 8);
             return new ComplexNumber(real, imaginary);
         }
 
@@ -303,8 +303,8 @@ namespace GSF.PQDIF.Physical
         /// <param name="value">The new value as a 16-byte complex number.</param>
         public void SetComplex16(ComplexNumber value)
         {
-            EndianOrder.LittleEndian.CopyBytes(value.Real, m_value, 0);
-            EndianOrder.LittleEndian.CopyBytes(value.Imaginary, m_value, 0);
+            LittleEndian.CopyBytes(value.Real, m_value, 0);
+            LittleEndian.CopyBytes(value.Imaginary, m_value, 0);
         }
 
         /// <summary>
@@ -332,8 +332,8 @@ namespace GSF.PQDIF.Physical
         public DateTime GetTimestamp()
         {
             DateTime epoch = new DateTime(1900, 1, 1);
-            uint days = EndianOrder.LittleEndian.ToUInt32(m_value, 0);
-            double seconds = EndianOrder.LittleEndian.ToDouble(m_value, 4);
+            uint days = LittleEndian.ToUInt32(m_value, 0);
+            double seconds = LittleEndian.ToDouble(m_value, 4);
 
             return DateTime.SpecifyKind(epoch.AddDays(days).AddSeconds(seconds), DateTimeKind.Utc);
         }
@@ -349,8 +349,8 @@ namespace GSF.PQDIF.Physical
             TimeSpan daySpan = TimeSpan.FromDays(Math.Floor(sinceEpoch.TotalDays));
             TimeSpan secondSpan = sinceEpoch - daySpan;
 
-            EndianOrder.LittleEndian.CopyBytes((uint)daySpan.TotalDays, m_value, 0);
-            EndianOrder.LittleEndian.CopyBytes(secondSpan.TotalSeconds, m_value, 0);
+            LittleEndian.CopyBytes((uint)daySpan.TotalDays, m_value, 0);
+            LittleEndian.CopyBytes(secondSpan.TotalSeconds, m_value, 0);
         }
 
         /// <summary>

@@ -142,7 +142,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         {
             get
             {
-                return EndianOrder.BigEndian.GetBytes(m_statusFlags);
+                return BigEndian.GetBytes(m_statusFlags);
             }
         }
 
@@ -181,7 +181,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
         internal int ParseConversionFactor(byte[] buffer, int startIndex)
         {
-            m_statusFlags = EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
+            m_statusFlags = BigEndian.ToUInt16(buffer, startIndex);
             return ConversionFactorLength;
         }
 

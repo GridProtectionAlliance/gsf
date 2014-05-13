@@ -392,7 +392,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             else
             {
                 // Read sample number for G protocol
-                m_sampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                m_sampleNumber = BigEndian.ToUInt16(buffer, index);
                 index += 2;
             }
 
@@ -402,7 +402,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 m_clockStatusFlags = (ClockStatusFlags)buffer[index];
                 index += 1;
 
-                ushort day = BinaryCodedDecimal.Decode(EndianOrder.BigEndian.ToUInt16(buffer, index));
+                ushort day = BinaryCodedDecimal.Decode(BigEndian.ToUInt16(buffer, index));
                 byte hours = BinaryCodedDecimal.Decode(buffer[index + 2]);
                 byte minutes = BinaryCodedDecimal.Decode(buffer[index + 3]);
                 byte seconds = BinaryCodedDecimal.Decode(buffer[index + 4]);
@@ -412,7 +412,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 // Read sample number for M protocol
                 if (protocolVersion == ProtocolVersion.M)
                 {
-                    m_sampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index + 5);
+                    m_sampleNumber = BigEndian.ToUInt16(buffer, index + 5);
                     timebase = 719.0D;
                     index += 2;
                 }
@@ -425,7 +425,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             {
                 Parent.Timestamp = DateTime.UtcNow.Ticks;
                 SynchronizationIsValid = false;
-                m_sampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                m_sampleNumber = BigEndian.ToUInt16(buffer, index);
                 index += 2;
             }
 
@@ -479,7 +479,7 @@ namespace GSF.PhasorProtocols.Macrodyne
                 // Parse reference phasor information
                 if (configFrame.ReferenceIncluded)
                 {
-                    m_referenceSampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                    m_referenceSampleNumber = BigEndian.ToUInt16(buffer, index);
                     m_referencePhasor = PhasorValue.CreateNewValue(this, new PhasorDefinition(null, "Reference Phasor", PhasorType.Voltage, null), buffer, index, out parsedLength) as PhasorValue;
                     index += 6;
                 }

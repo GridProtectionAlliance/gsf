@@ -521,7 +521,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                     buffer[3] = (byte)PhasorValues.Count;
                 }
 
-                EndianOrder.BigEndian.CopyBytes(m_sampleNumber, buffer, 4);
+                BigEndian.CopyBytes(m_sampleNumber, buffer, 4);
 
                 return buffer;
             }
@@ -586,7 +586,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
             // Read data buffer if using phasor data file format
             if (UsePhasorDataFileFormat && frameState.RemainingPdcBlockPmus == 0)
             {
-                m_dataBuffer = EndianOrder.BigEndian.ToUInt32(buffer, index);
+                m_dataBuffer = BigEndian.ToUInt32(buffer, index);
                 index += 4;
             }
 
@@ -659,7 +659,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 else
                 {
                     // Parse PMU's sample number
-                    m_sampleNumber = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                    m_sampleNumber = BigEndian.ToUInt16(buffer, index);
                     index += 2;
                 }
             }

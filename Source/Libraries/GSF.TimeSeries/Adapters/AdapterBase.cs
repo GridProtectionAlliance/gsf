@@ -1188,7 +1188,7 @@ namespace GSF.TimeSeries.Adapters
                         if (sourceIDKeys != null)
                         {
                             // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
-                            if (adapter.InputMeasurementKeys == null)
+                            if ((object)adapter.InputMeasurementKeys == null)
                                 adapter.InputMeasurementKeys = sourceIDKeys;
                             else
                                 adapter.InputMeasurementKeys = sourceIDKeys.Concat(adapter.InputMeasurementKeys).Distinct().ToArray();
@@ -1281,7 +1281,7 @@ namespace GSF.TimeSeries.Adapters
                             }
 
                             // Combine output measurements for source IDs with any existing output measurements and return unique set
-                            if (adapter.OutputMeasurements == null)
+                            if ((object)adapter.OutputMeasurements == null)
                                 adapter.OutputMeasurements = measurements.ToArray();
                             else
                                 adapter.OutputMeasurements = measurements.Concat(adapter.OutputMeasurements).Distinct().ToArray();

@@ -692,8 +692,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 if (tagLength < 8)
                     throw new InvalidOperationException(string.Format("Unexpected length for \"{0}\" tag: {1}", SampledValueTag.RefrTm, tagLength));
 
-                uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(buffer, index);
-                UInt24 fractionOfSecond = EndianOrder.BigEndian.ToUInt24(buffer, index + 4);
+                uint secondOfCentury = BigEndian.ToUInt32(buffer, index);
+                UInt24 fractionOfSecond = BigEndian.ToUInt24(buffer, index + 4);
                 index += 7;
 
                 // Get whole seconds of timestamp

@@ -188,7 +188,7 @@ namespace GSF.Historian.DataServices
                 while (true)
                 {
                     buffer = Archive.ReadMetaData(++id);
-                    if (buffer == null)
+                    if ((object)buffer == null)
                         // No more records.
                         break;
                     else
@@ -227,7 +227,7 @@ namespace GSF.Historian.DataServices
                 foreach (string singleID in idList.Split(',', ';'))
                 {
                     buffer = Archive.ReadMetaData(id = int.Parse(singleID));
-                    if (buffer == null)
+                    if ((object)buffer == null)
                         // ID is invalid.
                         continue;
                     else
@@ -265,7 +265,7 @@ namespace GSF.Historian.DataServices
                 for (int id = int.Parse(fromID); id <= int.Parse(toID); id++)
                 {
                     buffer = Archive.ReadMetaData(id);
-                    if (buffer == null)
+                    if ((object)buffer == null)
                         // ID is invalid.
                         continue;
                     else

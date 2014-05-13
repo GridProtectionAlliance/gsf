@@ -489,8 +489,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
                 int index = 0;
 
                 IDLabelImage.CopyImage(buffer, ref index, IDLabelLength);   // PMUID
-                EndianOrder.BigEndian.CopyBytes(Reserved, buffer, index);   // Reserved
-                EndianOrder.BigEndian.CopyBytes(Offset, buffer, index + 2); // Offset
+                BigEndian.CopyBytes(Reserved, buffer, index);   // Reserved
+                BigEndian.CopyBytes(Offset, buffer, index + 2); // Offset
 
                 return buffer;
             }
@@ -562,8 +562,8 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
             IDLabel = Encoding.ASCII.GetString(buffer, startIndex, 4);
-            Reserved = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 4);
-            Offset = EndianOrder.BigEndian.ToUInt16(buffer, startIndex + 6);
+            Reserved = BigEndian.ToUInt16(buffer, startIndex + 4);
+            Offset = BigEndian.ToUInt16(buffer, startIndex + 6);
 
             return FixedBodyLength;
         }

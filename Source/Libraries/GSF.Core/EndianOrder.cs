@@ -71,6 +71,7 @@
 //#define ForceBigEndianTesting
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
 namespace GSF
@@ -388,7 +389,7 @@ namespace GSF
         [SuppressMessage("Microsoft.Performance", "CA1822")]
         public bool ToBoolean(byte[] value, int startIndex)
         {
-            if (value == null)
+            if ((object)value == null)
                 throw new ArgumentNullException("value");
 
             return value[startIndex] != 0;
@@ -431,7 +432,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public short ToInt16(byte[] value, int startIndex)
         {
-            if (value == null)
+            if ((object)value == null)
                 throw new ArgumentNullException("value");
 
             if (m_targetIsLittleEndian)
@@ -467,7 +468,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public unsafe int ToInt32(byte[] value, int startIndex)
         {
-            if (value == null)
+            if ((object)value == null)
                 throw new ArgumentNullException("value");
 
             if (startIndex < 0)
@@ -504,7 +505,7 @@ namespace GSF
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public unsafe long ToInt64(byte[] value, int startIndex)
         {
-            if (value == null)
+            if ((object)value == null)
                 throw new ArgumentNullException("value");
 
             if (startIndex < 0)
@@ -618,6 +619,7 @@ namespace GSF
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         [Obsolete("This method may be removed from future builds", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public Guid ToGuid(byte[] value, int startIndex)
         {
             if (TargetEndianness == Endianness.BigEndian)
@@ -849,12 +851,13 @@ namespace GSF
         /// <param name="value">The number to convert.</param>
         /// <returns>An array of bytes with length 16.</returns>
         [Obsolete("This method may be removed from future builds", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public byte[] GetBytes(Guid value)
         {
             if (TargetEndianness == Endianness.BigEndian)
                 return GuidExtensions.__ToBigEndianOrderBytes(value);
-            else
-                return GuidExtensions.__ToLittleEndianOrderBytes(value);
+
+            return GuidExtensions.__ToLittleEndianOrderBytes(value);
         }
 
         /// <summary>
@@ -910,7 +913,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(bool value, byte[] destinationArray, int destinationIndex)
         {
-            if (destinationArray == null)
+            if ((object)destinationArray == null)
                 throw new ArgumentNullException("destinationArray");
 
             if (value)
@@ -954,7 +957,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public int CopyBytes(short value, byte[] destinationArray, int destinationIndex)
         {
-            if (destinationArray == null)
+            if ((object)destinationArray == null)
                 throw new ArgumentNullException("destinationArray");
 
             if (m_targetIsLittleEndian)
@@ -993,7 +996,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public unsafe int CopyBytes(int value, byte[] destinationArray, int destinationIndex)
         {
-            if (destinationArray == null)
+            if ((object)destinationArray == null)
                 throw new ArgumentNullException("destinationArray");
 
             if (destinationIndex < 0)
@@ -1036,7 +1039,7 @@ namespace GSF
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         public unsafe int CopyBytes(long value, byte[] destinationArray, int destinationIndex)
         {
-            if (destinationArray == null)
+            if ((object)destinationArray == null)
                 throw new ArgumentNullException("destinationArray");
 
             if (destinationIndex < 0)
@@ -1147,6 +1150,7 @@ namespace GSF
         /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
         /// <returns>Length of bytes copied into array based on size of <paramref name="value"/>.</returns>
         [Obsolete("This method may be removed from future builds", false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public int CopyBytes(Guid value, byte[] destinationArray, int destinationIndex)
         {
             if (TargetEndianness == Endianness.BigEndian)

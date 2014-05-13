@@ -334,7 +334,7 @@ namespace GSF.Parsing
             }
             finally
             {
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
         }
@@ -507,10 +507,14 @@ namespace GSF.Parsing
                                 OnParsingException(ex);
                             }
                             else
+                            {
                                 throw;
+                            }
                         }
                         else
+                        {
                             throw;
+                        }
                     }
 
                     // Returned value represents total bytes of data in the buffer image that were

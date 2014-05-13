@@ -370,7 +370,10 @@ namespace GSF.TimeSeries
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
             m_reloadConfigQueue = ProcessQueue<Tuple<string, Action<bool>>>.CreateSynchronousQueue(ExecuteReloadConfig, 500.0D, Timeout.Infinite, false, false);
-            m_configurationCacheOperation = new LongSynchronizedOperation(ExecuteConfigurationCache) { IsBackground = true };
+            m_configurationCacheOperation = new LongSynchronizedOperation(ExecuteConfigurationCache)
+            {
+                IsBackground = true
+            };
 
             // Setup default thread pool size
             try
@@ -437,8 +440,14 @@ namespace GSF.TimeSeries
                     break;
             }
 
-            m_binaryCacheConfigurationLoader = new BinaryFileConfigurationLoader() { FilePath = m_cachedBinaryConfigurationFile };
-            m_xmlCacheConfigurationLoader = new XMLConfigurationLoader() { FilePath = m_cachedXmlConfigurationFile };
+            m_binaryCacheConfigurationLoader = new BinaryFileConfigurationLoader()
+            {
+                FilePath = m_cachedBinaryConfigurationFile
+            };
+            m_xmlCacheConfigurationLoader = new XMLConfigurationLoader()
+            {
+                FilePath = m_cachedXmlConfigurationFile
+            };
 
             m_configurationLoader.StatusMessage += (o, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
             m_binaryCacheConfigurationLoader.StatusMessage += (o, args) => DisplayStatusMessage(args.Argument, UpdateType.Information);
@@ -1415,7 +1424,9 @@ namespace GSF.TimeSeries
         /// </remarks>
         private void m_iaonSession_ConfigurationChanged(object sender, EventArgs e)
         {
-            m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success => { })));
+            m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success =>
+            {
+            })));
         }
 
         // Handle task scheduler exceptions
@@ -1874,7 +1885,7 @@ namespace GSF.TimeSeries
                                 if (success)
                                 {
                                     // Return value, if any, will be returned to requesting client as a response attachment
-                                    if (returnValue == null)
+                                    if ((object)returnValue == null)
                                         SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
                                     else
                                         SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
@@ -2889,7 +2900,7 @@ namespace GSF.TimeSeries
                     else if (addSetting)
                     {
                         // Add new setting.
-                        if (setting == null)
+                        if ((object)setting == null)
                         {
                             settings.Add(settingName, settingValue);
                             config.Save();

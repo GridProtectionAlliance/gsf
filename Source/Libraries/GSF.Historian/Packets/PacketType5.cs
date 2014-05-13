@@ -113,7 +113,7 @@ namespace GSF.Historian.Packets
             if (length >= FixedLength)
             {
                 // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(buffer, startIndex);
+                short packetID = LittleEndian.ToInt16(buffer, startIndex);
                 if (packetID != TypeID)
                     throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
 
@@ -143,7 +143,7 @@ namespace GSF.Historian.Packets
 
             buffer.ValidateParameters(startIndex, length);
 
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
+            Buffer.BlockCopy(LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
 
             return length;
         }

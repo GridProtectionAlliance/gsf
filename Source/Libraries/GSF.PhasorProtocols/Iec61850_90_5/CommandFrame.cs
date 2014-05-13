@@ -80,7 +80,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             // Validate check-sum
             int sumLength = m_frameHeader.FrameLength - 2;
 
-            if (EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
+            if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
                 throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
 
             m_frameHeader.State = new CommandFrameParsingState(m_frameHeader.FrameLength, m_frameHeader.DataLength, true, true);

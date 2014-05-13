@@ -207,7 +207,7 @@ namespace GSF.TimeSeries
         /// <param name="key">The measurement key that was created or updated or <see cref="Undefined"/>.</param>
         /// <returns>True if the measurement key was successfully created or updated, false otherwise.</returns>
         /// <exception cref="ArgumentException"><paramref name="signalID"/> cannot be empty.</exception>
-        /// <exception cref="ArgumentNullException"><paramref name="source"/> cannot be null.</exception>
+        /// <exception cref="ArgumentNullException">Measurement key Source cannot be null.</exception>
         public static bool TryCreateOrUpdate(Guid signalID, string value, out MeasurementKey key)
         {
             try

@@ -80,7 +80,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             // Validate check-sum
             int sumLength = FrameLength - 2;
 
-            if (EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
+            if (BigEndian.ToUInt16(buffer, startIndex + sumLength) != CalculateChecksum(buffer, startIndex, sumLength))
                 throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
 
             ParseBinaryImage(buffer, startIndex, length);
@@ -194,8 +194,8 @@ namespace GSF.PhasorProtocols.IEEE1344
             {
                 byte[] buffer = new byte[HeaderLength];
 
-                EndianOrder.BigEndian.CopyBytes((uint)TimeTag.Value, buffer, 0);
-                EndianOrder.BigEndian.CopyBytes(m_idCode, buffer, 4);
+                BigEndian.CopyBytes((uint)TimeTag.Value, buffer, 0);
+                BigEndian.CopyBytes(m_idCode, buffer, 4);
 
                 return buffer;
             }
@@ -229,8 +229,8 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
         {
-            Timestamp = (new NtpTimeTag(EndianOrder.BigEndian.ToUInt32(buffer, startIndex), 0)).ToDateTime().Ticks;
-            m_idCode = EndianOrder.BigEndian.ToUInt64(buffer, startIndex + 4);
+            Timestamp = (new NtpTimeTag(BigEndian.ToUInt32(buffer, startIndex), 0)).ToDateTime().Ticks;
+            m_idCode = BigEndian.ToUInt64(buffer, startIndex + 4);
             return 12;
         }
 

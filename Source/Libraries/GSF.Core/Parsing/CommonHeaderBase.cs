@@ -40,7 +40,7 @@ namespace GSF.Parsing
     /// {
     ///     if (length > 3)
     ///     {
-    ///         TypeID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
+    ///         TypeID = LittleEndian.ToInt32(binaryImage, startIndex);
     ///         State = state;
     ///     }
     ///     else

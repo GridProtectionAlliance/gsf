@@ -225,7 +225,7 @@ namespace GSF.Media
             buffer.ValidateParameters(startIndex, FixedLength);
 
             Buffer.BlockCopy(Encoding.ASCII.GetBytes(TypeID), 0, buffer, 0, 4);
-            Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(ChunkSize), 0, buffer, 4, 4);
+            Buffer.BlockCopy(LittleEndian.GetBytes(ChunkSize), 0, buffer, 4, 4);
 
             return FixedLength;
         }
@@ -274,13 +274,13 @@ namespace GSF.Media
                     throw new InvalidOperationException("RIFF chunk too small, media file corrupted");
 
                 riffChunk.TypeID = Encoding.ASCII.GetString(buffer, 0, 4);
-                riffChunk.ChunkSize = EndianOrder.LittleEndian.ToInt32(buffer, 4);
+                riffChunk.ChunkSize = LittleEndian.ToInt32(buffer, 4);
 
                 return riffChunk;
             }
             finally
             {
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
         }

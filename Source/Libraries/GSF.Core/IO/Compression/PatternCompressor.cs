@@ -172,7 +172,7 @@ namespace GSF.IO.Compression
             int compressedSize = 0;
             byte* iter, end;
 
-            if (value == null)
+            if ((object)value == null)
                 throw new ArgumentNullException("value cannot be null", "value");
 
             bufferLength = value.BinaryLength.AlignDoubleWord();
@@ -235,7 +235,7 @@ namespace GSF.IO.Compression
             int compressedSize = 0;
             byte* start, iter, end;
 
-            if (buffer == null)
+            if ((object)buffer == null)
                 throw new ArgumentNullException("buffer", "Cannot write data to null buffer");
 
             if (length % SizeOf32Bits != 0)
@@ -727,7 +727,7 @@ namespace GSF.IO.Compression
             finally
             {
                 // Return buffer to queue so it can be reused
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
 
@@ -917,7 +917,7 @@ namespace GSF.IO.Compression
         //    finally
         //    {
         //        // Return buffer to queue so it can be reused
-        //        if (buffer != null)
+        //        if ((object)buffer != null)
         //            BufferPool.ReturnBuffer(buffer);
         //    }
 

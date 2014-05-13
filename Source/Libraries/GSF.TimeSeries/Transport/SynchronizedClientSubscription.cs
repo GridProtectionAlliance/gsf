@@ -552,7 +552,7 @@ namespace GSF.TimeSeries.Transport
                     bufferBlock = new byte[4 + bufferBlockMeasurement.Length];
 
                     // Prepend sequence number
-                    EndianOrder.BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
+                    BigEndian.CopyBytes(m_bufferBlockSequenceNumber, bufferBlock, 0);
                     m_bufferBlockSequenceNumber++;
 
                     // Append measurement data and send
@@ -618,10 +618,10 @@ namespace GSF.TimeSeries.Transport
 
             // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
             // unsynchronized subscriptions always include timestamps in the serialized measurements
-            m_workingBuffer.Write(EndianOrder.BigEndian.GetBytes(frameLevelTimestamp), 0, 8);
+            m_workingBuffer.Write(BigEndian.GetBytes(frameLevelTimestamp), 0, 8);
 
             // Serialize total number of measurement values to follow
-            m_workingBuffer.Write(EndianOrder.BigEndian.GetBytes(measurements.Count()), 0, 4);
+            m_workingBuffer.Write(BigEndian.GetBytes(measurements.Count()), 0, 4);
 
             // Attempt compression when requested - encoding of compressed buffer only happens if size would be smaller than normal serialization
             if (!usePayloadCompression || !measurements.Cast<CompactMeasurement>().CompressPayload(m_workingBuffer, m_compressionStrength, false, ref flags))

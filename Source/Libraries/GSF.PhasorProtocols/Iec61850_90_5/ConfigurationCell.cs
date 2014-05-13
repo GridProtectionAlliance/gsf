@@ -240,11 +240,11 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 int index = 0;
 
                 base.HeaderImage.CopyImage(buffer, ref index, base.HeaderLength);
-                EndianOrder.BigEndian.CopyBytes(IDCode, buffer, index);
-                EndianOrder.BigEndian.CopyBytes((ushort)m_formatFlags, buffer, index + 2);
-                EndianOrder.BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 4);
-                EndianOrder.BigEndian.CopyBytes((ushort)AnalogDefinitions.Count, buffer, index + 6);
-                EndianOrder.BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index + 8);
+                BigEndian.CopyBytes(IDCode, buffer, index);
+                BigEndian.CopyBytes((ushort)m_formatFlags, buffer, index + 2);
+                BigEndian.CopyBytes((ushort)PhasorDefinitions.Count, buffer, index + 4);
+                BigEndian.CopyBytes((ushort)AnalogDefinitions.Count, buffer, index + 6);
+                BigEndian.CopyBytes((ushort)DigitalDefinitions.Count, buffer, index + 8);
 
                 return buffer;
             }
@@ -304,7 +304,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
                 // Include configuration count (new for version 7.0)
                 if (Parent.DraftRevision > DraftRevision.Draft6)
-                    EndianOrder.BigEndian.CopyBytes(RevisionCount, buffer, index);
+                    BigEndian.CopyBytes(RevisionCount, buffer, index);
 
                 return buffer;
             }
@@ -344,13 +344,13 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             // Parse out station name
             index += base.ParseHeaderImage(buffer, startIndex, length);
 
-            IDCode = EndianOrder.BigEndian.ToUInt16(buffer, index);
-            m_formatFlags = (FormatFlags)EndianOrder.BigEndian.ToUInt16(buffer, index + 2);
+            IDCode = BigEndian.ToUInt16(buffer, index);
+            m_formatFlags = (FormatFlags)BigEndian.ToUInt16(buffer, index + 2);
 
             // Parse out total phasors, analogs and digitals defined for this device
-            state.PhasorCount = EndianOrder.BigEndian.ToUInt16(buffer, index + 4);
-            state.AnalogCount = EndianOrder.BigEndian.ToUInt16(buffer, index + 6);
-            state.DigitalCount = EndianOrder.BigEndian.ToUInt16(buffer, index + 8);
+            state.PhasorCount = BigEndian.ToUInt16(buffer, index + 4);
+            state.AnalogCount = BigEndian.ToUInt16(buffer, index + 6);
+            state.DigitalCount = BigEndian.ToUInt16(buffer, index + 8);
             index += 10;
 
             return (index - startIndex);
@@ -401,7 +401,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             // Parse out configuration count (new for version 7.0)
             if (Parent.DraftRevision > DraftRevision.Draft6)
             {
-                RevisionCount = EndianOrder.BigEndian.ToUInt16(buffer, index);
+                RevisionCount = BigEndian.ToUInt16(buffer, index);
                 index += 2;
             }
 

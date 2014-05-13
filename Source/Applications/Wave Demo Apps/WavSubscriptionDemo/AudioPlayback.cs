@@ -696,7 +696,7 @@ namespace NAudioWpfDemo
 
                         // Assuming 16-bit integer samples for WAV files
                         if (sample[i] != null)
-                            channelValue = EndianOrder.LittleEndian.GetBytes((short)sample[i].Value);
+                            channelValue = LittleEndian.GetBytes((short)sample[i].Value);
                         else
                             channelValue = new byte[2];
 
@@ -737,7 +737,7 @@ namespace NAudioWpfDemo
             }
             finally
             {
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
         }

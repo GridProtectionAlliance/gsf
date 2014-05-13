@@ -157,7 +157,7 @@ namespace GSF.PhasorProtocols.IEEE1344
                 else
                     m_statusFlags = (ushort)(m_statusFlags & ~(ushort)Bits.Bit00);
 
-                return EndianOrder.BigEndian.GetBytes(m_statusFlags);
+                return BigEndian.GetBytes(m_statusFlags);
             }
         }
 
@@ -194,7 +194,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         /// </remarks>
         protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
         {
-            m_statusFlags = EndianOrder.BigEndian.ToUInt16(buffer, startIndex);
+            m_statusFlags = BigEndian.ToUInt16(buffer, startIndex);
 
             Parent.NominalFrequency = ((m_statusFlags & (ushort)Bits.Bit00) > 0) ? LineFrequency.Hz50 : LineFrequency.Hz60;
 

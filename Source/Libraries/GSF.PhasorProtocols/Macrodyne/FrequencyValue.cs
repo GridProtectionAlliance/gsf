@@ -120,7 +120,7 @@ namespace GSF.PhasorProtocols.Macrodyne
             // 1690G protocol currently requires an INI file - as a result this means there will be on dF/dt value in the stream
             if (Parent.Parent.CommonHeader.ProtocolVersion == ProtocolVersion.G)
             {
-                UnscaledFrequency = EndianOrder.BigEndian.ToInt16(buffer, startIndex);
+                UnscaledFrequency = BigEndian.ToInt16(buffer, startIndex);
                 return 2;
             }
 

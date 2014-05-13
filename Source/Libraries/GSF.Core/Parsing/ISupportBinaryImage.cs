@@ -123,7 +123,7 @@ namespace GSF.Parsing
             }
             finally
             {
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
         }
@@ -153,7 +153,7 @@ namespace GSF.Parsing
             }
             finally
             {
-                if (buffer != null)
+                if ((object)buffer != null)
                     BufferPool.ReturnBuffer(buffer);
             }
         }

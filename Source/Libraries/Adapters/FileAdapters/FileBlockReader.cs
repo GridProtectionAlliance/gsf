@@ -635,9 +635,9 @@ namespace FileAdapters
 
                     // Copy file info into the buffer
                     fileNameByteLength = Encoding.Unicode.GetByteCount(fileInfo.Name);
-                    EndianOrder.BigEndian.CopyBytes(fileNameByteLength, buffer, 1);
+                    BigEndian.CopyBytes(fileNameByteLength, buffer, 1);
                     Encoding.Unicode.GetBytes(fileInfo.Name, 0, fileInfo.Name.Length, buffer, 5);
-                    EndianOrder.BigEndian.CopyBytes(fileInfo.Length, buffer, 5 + fileNameByteLength);
+                    BigEndian.CopyBytes(fileInfo.Length, buffer, 5 + fileNameByteLength);
                     bytesRead = 1 + 4 + fileNameByteLength + 8;
 
                     // Wait for lock to open the file

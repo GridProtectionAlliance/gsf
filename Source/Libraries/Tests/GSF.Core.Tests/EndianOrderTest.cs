@@ -36,6 +36,9 @@ namespace GSF.Core.Tests
     {
         #region [ Byte Swap/Copy Only Endian Order Testing Classes ]
 
+        // These classes represent a brute-force approach to Endian order handling
+        // that are used as a base-line for testing other optimized approaches
+
         /// <summary>
         /// Represents a big-endian byte order interoperability class.
         /// </summary>

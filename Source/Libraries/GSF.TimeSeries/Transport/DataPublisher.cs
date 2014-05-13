@@ -1995,7 +1995,7 @@ namespace GSF.TimeSeries.Transport
                 {
                     foreach (KeyValuePair<int, string> pair in notifications)
                     {
-                        hash = EndianOrder.BigEndian.GetBytes(pair.Key);
+                        hash = BigEndian.GetBytes(pair.Key);
                         message = connection.Encoding.GetBytes(pair.Value);
 
                         buffer.Write(hash, 0, hash.Length);
@@ -2189,7 +2189,7 @@ namespace GSF.TimeSeries.Transport
         /// <param name="startTime">Start time, in <see cref="Ticks"/>, of first measurement transmitted.</param>
         internal protected virtual bool SendDataStartTime(Guid clientID, Ticks startTime)
         {
-            bool result = SendClientResponse(clientID, ServerResponse.DataStartTime, ServerCommand.Subscribe, EndianOrder.BigEndian.GetBytes((long)startTime));
+            bool result = SendClientResponse(clientID, ServerResponse.DataStartTime, ServerCommand.Subscribe, BigEndian.GetBytes((long)startTime));
 
             ClientConnection connection;
 
@@ -2532,12 +2532,12 @@ namespace GSF.TimeSeries.Transport
                             workingBuffer.Seek(2, SeekOrigin.Begin);
 
                             // Add the actual size of payload length to response packet
-                            workingBuffer.Write(EndianOrder.BigEndian.GetBytes(payloadLength), 0, 4);
+                            workingBuffer.Write(BigEndian.GetBytes(payloadLength), 0, 4);
                         }
                         else
                         {
                             // Add size of data buffer to response packet
-                            workingBuffer.Write(EndianOrder.BigEndian.GetBytes(data.Length), 0, 4);
+                            workingBuffer.Write(BigEndian.GetBytes(data.Length), 0, 4);
 
                             // Add data buffer
                             workingBuffer.Write(data, 0, data.Length);
@@ -2877,7 +2877,7 @@ namespace GSF.TimeSeries.Transport
                     if (length >= 5)
                     {
                         // First 4 bytes beyond command byte represent an integer representing the length of the authentication string that follows
-                        int byteLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                        int byteLength = BigEndian.ToInt32(buffer, startIndex);
                         startIndex += 4;
 
                         // Byte length should be reasonable
@@ -2975,7 +2975,7 @@ namespace GSF.TimeSeries.Transport
                         bool addSubscription = false;
 
                         // Next 4 bytes are an integer representing the length of the connection string that follows
-                        int byteLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                        int byteLength = BigEndian.ToInt32(buffer, startIndex);
                         startIndex += 4;
 
                         if (byteLength > 0 && length >= 6 + byteLength)
@@ -3240,7 +3240,7 @@ namespace GSF.TimeSeries.Transport
                 // DataTable.Select() function against an in-memory DataSet and therefore are not subject to SQL injection attacks
                 if (length > 4)
                 {
-                    int responseLength = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                    int responseLength = BigEndian.ToInt32(buffer, startIndex);
                     startIndex += 4;
 
                     if (length >= responseLength + 4)
@@ -3438,7 +3438,7 @@ namespace GSF.TimeSeries.Transport
             if (length >= 4)
             {
                 // Next 4 bytes are an integer representing the new processing interval
-                int processingInterval = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+                int processingInterval = BigEndian.ToInt32(buffer, startIndex);
 
                 IClientSubscription subscription = connection.Subscription;
 
@@ -3470,7 +3470,7 @@ namespace GSF.TimeSeries.Transport
 
             if (length >= 4)
             {
-                operationalModes = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
+                operationalModes = BigEndian.ToUInt32(buffer, startIndex);
 
                 if ((operationalModes & (uint)OperationalModes.VersionMask) != 0u)
                     OnStatusMessage("WARNING: Protocol version not supported. Operational modes may not be set correctly for client {0}.", connection.ClientID);
@@ -3482,7 +3482,7 @@ namespace GSF.TimeSeries.Transport
         // Handle confirmation of receipt of notification
         private void HandleConfirmNotification(ClientConnection connection, byte[] buffer, int startIndex, int length)
         {
-            int hash = EndianOrder.BigEndian.ToInt32(buffer, startIndex);
+            int hash = BigEndian.ToInt32(buffer, startIndex);
             Dictionary<int, string> notifications;
             string notification;
 
@@ -3521,7 +3521,7 @@ namespace GSF.TimeSeries.Transport
 
             if (length >= 4)
             {
-                sequenceNumber = EndianOrder.BigEndian.ToUInt32(buffer, startIndex);
+                sequenceNumber = BigEndian.ToUInt32(buffer, startIndex);
                 connection.Subscription.ConfirmBufferBlock(sequenceNumber);
             }
         }

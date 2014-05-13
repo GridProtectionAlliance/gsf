@@ -135,14 +135,14 @@ namespace GSF.TimeSeries.Adapters
         {
             get
             {
-                if (m_inputSourceIDs == null)
+                if ((object)m_inputSourceIDs == null)
                     return null;
 
                 return m_inputSourceIDs.ToArray();
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_inputSourceIDs = null;
                 }
@@ -175,7 +175,7 @@ namespace GSF.TimeSeries.Adapters
             }
             set
             {
-                if (value == null)
+                if ((object)value == null)
                 {
                     m_outputSourceIDs = null;
                 }
