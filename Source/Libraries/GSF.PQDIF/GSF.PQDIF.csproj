@@ -94,7 +94,9 @@
   <ItemGroup>
     <Compile Include="Logical\ChannelDefinition.cs" />
     <Compile Include="Logical\ChannelInstance.cs" />
+    <Compile Include="Logical\Equipment.cs" />
     <Compile Include="Logical\SeriesValueType.cs" />
+    <Compile Include="Logical\Vendor.cs" />
     <Compile Include="Physical\CollectionElement.cs" />
     <Compile Include="Logical\ContainerRecord.cs" />
     <Compile Include="Logical\DataSourceRecord.cs" />

@@ -61,6 +61,38 @@ namespace GSF.PQDIF.Logical
         #region [ Properties ]
 
         /// <summary>
+        /// Gets the ID of the vendor of the data source.
+        /// </summary>
+        public Guid VendorID
+        {
+            get
+            {
+                ScalarElement vendorIDElement = m_physicalRecord.Body.Collection.GetScalarByTag(VendorIDTag);
+
+                if ((object)vendorIDElement == null)
+                    return Vendor.None;
+
+                return vendorIDElement.GetGuid();
+            }
+        }
+
+        /// <summary>
+        /// Gets the ID of the equipment.
+        /// </summary>
+        public Guid EquipmentID
+        {
+            get
+            {
+                ScalarElement equipmentIDElement = m_physicalRecord.Body.Collection.GetScalarByTag(EquipmentIDTag);
+
+                if ((object)equipmentIDElement == null)
+                    return Guid.Empty;
+
+                return equipmentIDElement.GetGuid();
+            }
+        }
+
+        /// <summary>
         /// Gets the name of the data source.
         /// </summary>
         public string DataSourceName
@@ -69,6 +101,38 @@ namespace GSF.PQDIF.Logical
             {
                 VectorElement dataSourceNameElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceNameTag);
                 return Encoding.ASCII.GetString(dataSourceNameElement.GetValues()).Trim((char)0);
+            }
+        }
+
+        /// <summary>
+        /// Gets the longitude at which the data source is located.
+        /// </summary>
+        public uint Longitude
+        {
+            get
+            {
+                VectorElement dataSourceCoordinatesElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceCoordinatesTag);
+
+                if ((object)dataSourceCoordinatesElement == null)
+                    return uint.MaxValue;
+
+                return dataSourceCoordinatesElement.GetUInt4(0);
+            }
+        }
+
+        /// <summary>
+        /// Gets the latitude at which the device is located.
+        /// </summary>
+        public uint Latitude
+        {
+            get
+            {
+                VectorElement dataSourceCoordinatesElement = m_physicalRecord.Body.Collection.GetVectorByTag(DataSourceCoordinatesTag);
+
+                if ((object)dataSourceCoordinatesElement == null)
+                    return uint.MaxValue;
+
+                return dataSourceCoordinatesElement.GetUInt4(1);
             }
         }
 
@@ -100,9 +164,24 @@ namespace GSF.PQDIF.Logical
         public static readonly Guid DataSourceTypeTag = new Guid("b48d8581-f5f5-11cf-9d89-0080c72e70a3");
 
         /// <summary>
+        /// Tag that identifies the vendor ID.
+        /// </summary>
+        public static readonly Guid VendorIDTag = new Guid("b48d8582-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the equipment ID.
+        /// </summary>
+        public static readonly Guid EquipmentIDTag = new Guid("b48d8583-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
         /// Tag that identifies the data source name.
         /// </summary>
         public static readonly Guid DataSourceNameTag = new Guid("b48d8587-f5f5-11cf-9d89-0080c72e70a3");
+
+        /// <summary>
+        /// Tag that identifies the physical location of the data source.
+        /// </summary>
+        public static readonly Guid DataSourceCoordinatesTag = new Guid("b48d858b-f5f5-11cf-9d89-0080c72e70a3");
 
         /// <summary>
         /// Tag that identifies the channel definitions collection.

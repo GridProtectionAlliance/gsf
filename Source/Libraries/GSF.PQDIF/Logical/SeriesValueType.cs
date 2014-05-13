@@ -221,74 +221,107 @@ namespace GSF.PQDIF.Logical
         {
             if (seriesValueType == Val)
                 return "Values";
-            else if (seriesValueType == Time)
+            
+            if (seriesValueType == Time)
                 return "Time";
-            else if (seriesValueType == Min)
+            
+            if (seriesValueType == Min)
                 return "Minimum";
-            else if (seriesValueType == Max)
+            
+            if (seriesValueType == Max)
                 return "Maximum";
-            else if (seriesValueType == Avg)
+            
+            if (seriesValueType == Avg)
                 return "Average";
-            else if (seriesValueType == Inst)
+            
+            if (seriesValueType == Inst)
                 return "Instantaneous";
-            else if (seriesValueType == PhaseAngle)
+            
+            if (seriesValueType == PhaseAngle)
                 return "Phase Angle";
-            else if (seriesValueType == PhaseAngleMin)
+            
+            if (seriesValueType == PhaseAngleMin)
                 return "Phase Angle Mininum";
-            else if (seriesValueType == PhaseAngleMax)
+            
+            if (seriesValueType == PhaseAngleMax)
                 return "Phase Angle Maximum";
-            else if (seriesValueType == PhaseAngleAvg)
+            
+            if (seriesValueType == PhaseAngleAvg)
                 return "Phase Angle Average";
-            else if (seriesValueType == Area)
+            
+            if (seriesValueType == Area)
                 return "Area";
-            else if (seriesValueType == Latitude)
+            
+            if (seriesValueType == Latitude)
                 return "Latitude";
-            else if (seriesValueType == Duration)
+            
+            if (seriesValueType == Duration)
                 return "Duration";
-            else if (seriesValueType == Longitude)
+            
+            if (seriesValueType == Longitude)
                 return "Longitude";
-            else if (seriesValueType == Polarity)
+            
+            if (seriesValueType == Polarity)
                 return "Polarity";
-            else if (seriesValueType == Ellipse)
+            
+            if (seriesValueType == Ellipse)
                 return "Ellipse";
-            else if (seriesValueType == BinID)
+            
+            if (seriesValueType == BinID)
                 return "Bin ID";
-            else if (seriesValueType == BinHigh)
+            
+            if (seriesValueType == BinHigh)
                 return "Bin High";
-            else if (seriesValueType == BinLow)
+            
+            if (seriesValueType == BinLow)
                 return "Bin Low";
-            else if (seriesValueType == XBinHigh)
+            
+            if (seriesValueType == XBinHigh)
                 return "X Bin High";
-            else if (seriesValueType == XBinLow)
+            
+            if (seriesValueType == XBinLow)
                 return "X Bin Low";
-            else if (seriesValueType == YBinHigh)
+            
+            if (seriesValueType == YBinHigh)
                 return "Y Bin High";
-            else if (seriesValueType == YBinLow)
+            
+            if (seriesValueType == YBinLow)
                 return "Y Bin Low";
-            else if (seriesValueType == Count)
+            
+            if (seriesValueType == Count)
                 return "Count";
-            else if (seriesValueType == Transition)
+            
+            if (seriesValueType == Transition)
                 return "Transition";
-            else if (seriesValueType == Prob)
+            
+            if (seriesValueType == Prob)
                 return "Probability";
-            else if (seriesValueType == Interval)
+            
+            if (seriesValueType == Interval)
                 return "Interval";
-            else if (seriesValueType == P1)
+            
+            if (seriesValueType == P1)
                 return "Probability: 1%";
-            else if (seriesValueType == P5)
+            
+            if (seriesValueType == P5)
                 return "Probability: 5%";
-            else if (seriesValueType == P10)
+            
+            if (seriesValueType == P10)
                 return "Probability: 10%";
-            else if (seriesValueType == P90)
+            
+            if (seriesValueType == P90)
                 return "Probability: 90%";
-            else if (seriesValueType == P95)
+            
+            if (seriesValueType == P95)
                 return "Probability: 95%";
-            else if (seriesValueType == P99)
+            
+            if (seriesValueType == P99)
                 return "Probability: 99%";
-            else if (seriesValueType == Frequency)
+            
+            if (seriesValueType == Frequency)
                 return "Frequency";
 
-            throw new ArgumentOutOfRangeException();
+            return null;
         }
     }
 }

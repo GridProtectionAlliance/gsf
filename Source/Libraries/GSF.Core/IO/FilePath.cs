@@ -464,6 +464,21 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Gets the path to the folder where data related to the current
+        /// application can be stored as well as shared among different users.
+        /// </summary>
+        /// <returns>Path to the folder where data related to the current application can be stored.</returns>
+        public static string GetCommonApplicationDataFolder()
+        {
+            string rootFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+
+            if (string.IsNullOrEmpty(AssemblyInfo.EntryAssembly.Company))
+                return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
+
+            return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Company + "\\" + AssemblyInfo.EntryAssembly.Name);
+        }
+
+        /// <summary>
         /// Makes sure path is suffixed with standard <see cref="Path.DirectorySeparatorChar"/>.
         /// </summary>
         /// <param name="filePath">The file path to be suffixed.</param>
@@ -735,6 +750,42 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Attempts to get read access on a file.
+        /// </summary>
+        /// <param name="fileName">The file to check for read access.</param>
+        /// <returns>True if read access is obtained; false otherwise.</returns>
+        public static bool TryGetReadLock(string fileName)
+        {
+            try
+            {
+                using (File.OpenRead(fileName))
+                    return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to get write access on a file.
+        /// </summary>
+        /// <param name="fileName">The file to check for write access.</param>
+        /// <returns>True if write access is obtained; false otherwise.</returns>
+        public static bool TryGetWriteLock(string fileName)
+        {
+            try
+            {
+                using (File.OpenWrite(fileName))
+                    return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Waits for the default duration (5 seconds) for read access on a file.
         /// </summary>
         /// <param name="fileName">The name of the file to wait for to obtain read access.</param>
@@ -754,34 +805,10 @@ namespace GSF.IO
                 throw new FileNotFoundException("Could not test file lock for \"" + fileName + "\", file does not exist", fileName);
 
             // Keeps trying for a file lock.
-            FileStream targetFile = null;
             double startTime = Common.SystemTimer;
 
-            while (true)
+            while (!TryGetReadLock(fileName))
             {
-                try
-                {
-                    targetFile = File.OpenRead(fileName);
-                    targetFile.Close();
-                    break;
-                }
-                catch
-                {
-                    // Keeps trying to open the file.
-                }
-
-                if ((object)targetFile != null)
-                {
-                    try
-                    {
-                        targetFile.Close();
-                    }
-                    catch
-                    {
-                    }
-                    targetFile = null;
-                }
-
                 if (secondsToWait > 0)
                 {
                     if (Common.SystemTimer > startTime + secondsToWait)
@@ -813,35 +840,10 @@ namespace GSF.IO
                 throw new FileNotFoundException("Could not test file lock for \"" + fileName + "\", file does not exist", fileName);
 
             // Keeps trying for a file lock.
-            FileStream targetFile = null;
             double startTime = Common.SystemTimer;
 
-            while (true)
+            while (!TryGetWriteLock(fileName))
             {
-                try
-                {
-                    targetFile = File.OpenWrite(fileName);
-                    targetFile.Close();
-                    break;
-                }
-                catch
-                {
-                    // Keeps trying to open the file.
-                }
-
-                if ((object)targetFile != null)
-                {
-                    try
-                    {
-                        targetFile.Close();
-                    }
-                    catch
-                    {
-                    }
-
-                    targetFile = null;
-                }
-
                 if (secondsToWait > 0)
                 {
                     if (Common.SystemTimer > startTime + secondsToWait)
