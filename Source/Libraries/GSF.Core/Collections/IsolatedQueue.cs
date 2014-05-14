@@ -254,14 +254,20 @@ namespace GSF.Collections
 
                 //If no more items can fit in parameter: items, then exit
                 if (length == 0)
+                {
+                    m_dequeueCount += itemCount;
                     return itemCount;
+                }
             }
 
             //If tail position of node is not at the end, all of the items in the Isolated Queue have been read.
             //Note: because of a race condition, it may not still be empty,
             //but cordinating that closely may cause drastically decrease performance.
             if (!m_currentTail.DequeueMustMoveToNextNode)
+            {
+                m_dequeueCount += itemCount;
                 return itemCount;
+            }
 
             //Don't reset the node on return since it is still
             //possible for the enqueue thread to be using it. 
@@ -271,6 +277,7 @@ namespace GSF.Collections
 
             if (!m_blocks.TryDequeue(out m_currentTail))
             {
+                m_dequeueCount += itemCount;
                 return itemCount;
             }
 
