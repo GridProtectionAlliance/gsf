@@ -54,6 +54,41 @@ namespace GSF
         /// </summary>
         /// <param name="buffer">Buffer to validate.</param>
         /// <param name="startIndex">0-based start index into the <paramref name="buffer"/>.</param>
+        /// <param name="length">Valid number of items within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> or <paramref name="length"/> is less than 0 -or- 
+        /// <paramref name="startIndex"/> and <paramref name="length"/> will exceed <paramref name="buffer"/> length.
+        /// </exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ValidateParameters<T>(this T[] buffer, int startIndex, int length)
+        {
+            if ((object)buffer == null || startIndex < 0 || length < 0 || startIndex + length > buffer.Length)
+                RaiseValidationError(buffer, startIndex, length);
+        }
+
+        // This method will raise the actual error - this is needed since .NET will not inline anything that might throw an exception
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void RaiseValidationError<T>(T[] buffer, int startIndex, int length)
+        {
+            if ((object)buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("startIndex", "Buffer parameter cannot be negative");
+
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length", "Buffer parameter cannot be negative");
+
+            if (startIndex + length > buffer.Length)
+                throw new ArgumentOutOfRangeException("length", string.Format("Buffer operation with startIndex of {0} and length of {1} will exceed {2} bytes of available buffer space", startIndex, length, buffer.Length));
+        }
+
+        /// <summary>
+        /// Validates that the specified <paramref name="startIndex"/> and <paramref name="length"/> are valid within the given <paramref name="buffer"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer to validate.</param>
+        /// <param name="startIndex">0-based start index into the <paramref name="buffer"/>.</param>
         /// <param name="length">Valid number of bytes within <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
         /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">

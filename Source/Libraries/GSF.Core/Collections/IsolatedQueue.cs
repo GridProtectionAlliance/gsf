@@ -132,6 +132,18 @@ namespace GSF.Collections
                 m_tail = m_tail + 1;
                 return item;
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public int Dequeue(T[] items, ref int startingIndex, ref int length)
+            {
+                int count = Math.Min(m_head - m_tail, length);
+                Array.Copy(m_blocks, m_tail, items, startingIndex, count);
+                Array.Clear(m_blocks, m_tail, count);
+                m_tail += count;
+                startingIndex += count;
+                length -= count;
+                return count;
+            }
         }
 
 
@@ -213,6 +225,58 @@ namespace GSF.Collections
             }
             return TryDequeueSlower(out item);
         }
+
+        /// <summary>
+        /// Dequeues all of the items into the provided array
+        /// </summary>
+        /// <param name="items">where to put the items</param>
+        /// <param name="startingIndex">the starting index</param>
+        /// <param name="length">the maximum number of times to store</param>
+        /// <returns>the number of items dequeued</returns>
+        public int Dequeue(T[] items, int startingIndex, int length)
+        {
+            int itemCount = 0;
+
+        TryAgain:
+
+            if (m_currentTail == null)
+            {
+                if (!m_blocks.TryDequeue(out m_currentTail))
+                {
+                    return 0;
+                }
+            }
+
+            if (m_currentTail.CanDequeue)
+            {
+                //Dequeue as many items as possible
+                itemCount += m_currentTail.Dequeue(items, ref startingIndex, ref length);
+
+                //If no more items can fit in parameter: items, then exit
+                if (length == 0)
+                    return itemCount;
+            }
+
+            //If tail position of node is not at the end, all of the items in the Isolated Queue have been read.
+            //Note: because of a race condition, it may not still be empty,
+            //but cordinating that closely may cause drastically decrease performance.
+            if (!m_currentTail.DequeueMustMoveToNextNode)
+                return itemCount;
+
+            //Don't reset the node on return since it is still
+            //possible for the enqueue thread to be using it. 
+            //Note: If the enqueue thread pulls it off the queue
+            //immediately, this is ok since it will be coordinated at that point.
+            ReleaseNode(m_currentTail);
+
+            if (!m_blocks.TryDequeue(out m_currentTail))
+            {
+                return itemCount;
+            }
+
+            goto TryAgain;
+        }
+
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         bool TryDequeueSlower(out T item)

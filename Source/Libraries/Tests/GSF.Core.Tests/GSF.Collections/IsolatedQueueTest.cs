@@ -175,6 +175,37 @@ namespace GSF.Core.Tests.GSF.Collections
             m_wait.WaitOne();
         }
 
+        private void RunTwo(object state)
+        {
+            m_wait.Set();
+            SpinWait wait = new SpinWait();
+            //Thread.Sleep(1000);
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
+            int value = 0;
+            int count = 0;
+            int countRepeats = 0;
+            while (count < cnt)
+            {
+                while (m_collection.TryDequeue(out value))
+                {
+                    Assert.AreEqual(count, value);
+                    count++;
+                }
+                countRepeats++;
+                Thread.Sleep(1);
+            }
+            sw.Stop();
+            System.Console.WriteLine(sw.Elapsed.TotalSeconds);
+            System.Console.WriteLine(countRepeats);
+            m_wait.Set();
+            Assert.AreEqual(count, cnt);
+        }
+
+
+
+
         [TestMethod]
         public void TestCount()
         {
@@ -206,10 +237,36 @@ namespace GSF.Core.Tests.GSF.Collections
                 if (m_collection.Count != count)
                     Assert.Fail("Count is wrong");
             }
-
         }
 
-        private void RunTwo(object state)
+
+        [TestMethod]
+        public void TestBulkDequeue()
+        {
+            m_wait = new ManualResetEvent(false);
+            m_collection = new IsolatedQueue<int>();
+
+            ThreadPool.QueueUserWorkItem(RunTwoBulkDequeue);
+            m_wait.WaitOne();
+            m_wait.Reset();
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            for (int x = 0; x < cnt; x++)
+            {
+                if (x % 10000 == 0)
+                {
+                    System.Console.WriteLine(m_collection.Count);
+                    Thread.Sleep(1);
+                }
+                m_collection.Enqueue(x);
+            }
+            sw.Stop();
+            System.Console.WriteLine(sw.Elapsed.TotalSeconds);
+            m_wait.WaitOne();
+        }
+
+        private void RunTwoBulkDequeue(object state)
         {
             m_wait.Set();
             SpinWait wait = new SpinWait();
@@ -217,16 +274,31 @@ namespace GSF.Core.Tests.GSF.Collections
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            int value = 0;
+            const int ArrayCount = 140;
+            int[] array = new int[ArrayCount];
+
             int count = 0;
             int countRepeats = 0;
             while (count < cnt)
             {
-                while (m_collection.TryDequeue(out value))
+                int totalCount = 0;
+            ReReadNow:
+
+                int itemCount = m_collection.Dequeue(array, 0, ArrayCount);
+                totalCount += itemCount;
+                if (itemCount > 0)
                 {
-                    Assert.AreEqual(count, value);
-                    count++;
+                    for (int x = 0; x < itemCount; x++)
+                    {
+                        Assert.AreEqual(array[x], count);
+                        count++;
+                    }
+                    if (itemCount == ArrayCount)
+                        goto ReReadNow;
                 }
+
+                System.Console.WriteLine("Dequeued: " + totalCount);
+
                 countRepeats++;
                 Thread.Sleep(1);
             }
@@ -236,5 +308,7 @@ namespace GSF.Core.Tests.GSF.Collections
             m_wait.Set();
             Assert.AreEqual(count, cnt);
         }
+
+
     }
 }
