@@ -610,7 +610,7 @@ namespace PhasorProtocolAdapters
                             company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID = {0}", device.ConvertNullableField<int>("CompanyID") ?? 0));
 
                             if (string.IsNullOrEmpty(company))
-                                company = settings["CompanyAcronym"].Value.TruncateRight(3);
+                                company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
 
                             pointTag = string.Format("{0}_{1}:Q", company, acronym);
                             description = string.Format("{0} Time Quality Flags", device.Field<string>("Name"));
@@ -654,7 +654,7 @@ namespace PhasorProtocolAdapters
                                 firstStatisticExisted = false;
                                 company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", device.ConvertNullableField<int>("CompanyID") ?? 0));
                                 if (string.IsNullOrEmpty(company))
-                                    company = settings["CompanyAcronym"].Value.TruncateRight(3);
+                                    company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
 
                                 vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", device.ConvertNullableField<int>("VendorDeviceID") ?? 0));
                                 pointTag = string.Format("{0}_{1}:ST{2}", company, acronym, signalIndex);
@@ -693,7 +693,7 @@ namespace PhasorProtocolAdapters
                                 firstStatisticExisted = false;
                                 company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", inputStream.ConvertNullableField<int>("CompanyID") ?? 0));
                                 if (string.IsNullOrEmpty(company))
-                                    company = settings["CompanyAcronym"].Value.TruncateRight(3);
+                                    company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
 
                                 vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", inputStream.ConvertNullableField<int>("VendorDeviceID") ?? 0)); // Modified to retrieve VendorDeviceID into nullable of int as it is not a required field.
                                 pointTag = string.Format("{0}_{1}:ST{2}", company, acronym, signalIndex);
@@ -776,7 +776,7 @@ namespace PhasorProtocolAdapters
                             {
                                 firstStatisticExisted = false;
                                 if (nodeCompanyID is DBNull)
-                                    company = settings["CompanyAcronym"].Value.TruncateRight(3);
+                                    company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
                                 else
                                     company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", nodeCompanyID));
 

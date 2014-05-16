@@ -1393,8 +1393,6 @@ namespace GSF.TimeSeries.Adapters
                     if (string.IsNullOrWhiteSpace(item))
                         continue;
 
-                    key = MeasurementKey.Undefined;
-
                     if (Guid.TryParse(item, out id))
                     {
                         // The item was parsed as a signal ID so do a straight lookup
@@ -1406,33 +1404,36 @@ namespace GSF.TimeSeries.Adapters
 
                             if (filteredRows.Length > 0)
                                 MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
-
                         }
                     }
-                    else if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                    else if(!MeasurementKey.TryParse(item, out key))
                     {
-                        DataRow[] filteredRows;
+                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                        {
+                            DataRow[] filteredRows;
 
-                        // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
-                        filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", item));
+                            // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
+                            filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", item));
 
-                        if (filteredRows.Length == 0)
-                            filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
+                            if (filteredRows.Length == 0)
+                                filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
 
-                        if (filteredRows.Length > 0)
-                            key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
+                            if (filteredRows.Length > 0)
+                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
+                        }
+
+                        // If all else fails, attempt to parse the item as a measurement key
+                        if (key == MeasurementKey.Undefined)
+                        {
+                            if (id == Guid.Empty)
+                                throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+
+                            throw new InvalidOperationException(string.Format("Measurement (targeted for input) with an ID of \"{0}\" is not defined or is not enabled", item));
+                        }
                     }
 
-                    // If all else fails, attempt to parse the item as a measurement key
-                    if (key == MeasurementKey.Undefined && !MeasurementKey.TryParse(item, out key))
-                    {
-                        if (id == Guid.Empty)
-                            throw new InvalidOperationException(string.Format("Could not parse input measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
-
-                        throw new InvalidOperationException(string.Format("Measurement (targeted for input) with an ID of \"{0}\" is not defined or is not enabled", item));
-                    }
-
-                    keys.Add(key);
+                    if (key != MeasurementKey.Undefined)
+                        keys.Add(key);
                 }
             }
 
@@ -1552,7 +1553,6 @@ namespace GSF.TimeSeries.Adapters
                     if (string.IsNullOrWhiteSpace(item))
                         continue;
 
-                    key = MeasurementKey.Undefined;
                     elem = item.Trim().Split(',');
 
                     // Trim all tokens ahead of time
@@ -1572,35 +1572,41 @@ namespace GSF.TimeSeries.Adapters
                                 MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
                         }
                     }
-                    else if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
+                    else if (!MeasurementKey.TryParse(elem[0], out key))
                     {
-                        DataRow[] filteredRows;
-
-                        // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
-                        filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", elem[0]));
-
-                        if (filteredRows.Length == 0)
+                        if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            // Point tags can have commas so we do not support specification of adders and multipliers in this case -
-                            // therefore, we must do our lookup based on item (not elem) and clear elem if the lookup is successful
-                            filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item.Trim()));
+                            DataRow[] filteredRows;
+
+                            // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
+                            filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", elem[0]));
+
+                            if (filteredRows.Length == 0)
+                            {
+                                // Point tags can have commas so we do not support specification of adders and multipliers in this case -
+                                // therefore, we must do our lookup based on item (not elem) and clear elem if the lookup is successful
+                                filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item.Trim()));
+
+                                if (filteredRows.Length > 0)
+                                    elem = new string[0];
+                            }
 
                             if (filteredRows.Length > 0)
-                                elem = new string[0];
+                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
                         }
 
-                        if (filteredRows.Length > 0)
-                            key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());
+                        // If all else fails, attempt to parse the item as a measurement key
+                        if (key == MeasurementKey.Undefined)
+                        {
+                            if (id == Guid.Empty)
+                                throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
+
+                            throw new InvalidOperationException(string.Format("Measurement (targeted for output) with an ID of \"{0}\" is not defined or is not enabled", item));
+                        }
                     }
 
-                    // If all else fails, attempt to parse the item as a measurement key
-                    if (key == MeasurementKey.Undefined && !MeasurementKey.TryParse(elem[0], out key))
-                    {
-                        if (id == Guid.Empty)
-                            throw new InvalidOperationException(string.Format("Could not parse output measurement definition \"{0}\" as a filter expression, measurement key, point tag or Guid", item));
-
-                        throw new InvalidOperationException(string.Format("Measurement (targeted for output) with an ID of \"{0}\" is not defined or is not enabled", item));
-                    }
+                    if (key == MeasurementKey.Undefined)
+                        continue;
 
                     // Adder and multiplier may be optionally specified
                     if (elem.Length < 2 || !double.TryParse(elem[1], out adder))
