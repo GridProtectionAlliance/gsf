@@ -171,7 +171,6 @@ namespace DataMigrationUtility
             m_name = Name;
             m_dataType = Type;
             ForeignKeys = new ForeignKeyFields(this);
-
         }
 
         #endregion
@@ -1817,6 +1816,22 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
+        /// Get flag that determines if the table has any foreign keys.
+        /// </summary>
+        public bool ReferencedByForeignKeys
+        {
+            get
+            {
+                foreach (Field field in m_fields)
+                {
+                    if (field.IsPrimaryKey && field.ForeignKeys.Count > 0)
+                        return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Get flag of any foreign key <see cref="Field"/>
         /// </summary>
         public bool IsForeignKeyTable
@@ -2004,33 +2019,33 @@ namespace DataMigrationUtility
         /// <returns></returns>
         public bool DefineForeignKey(string primaryKeyFieldName, string foreignKeyTableName, string foreignKeyFieldName, int foreignKeyOrdinal = -1, string foreignKeyName = "", ReferentialAction foreignKeyUpdateRule = ReferentialAction.NoAction, ReferentialAction foreignKeyDeleteRule = ReferentialAction.NoAction)
         {
-            Field lookupField;
-            Table lookupTable;
-            Field parentLookupField;
+            Field localPrimaryKeyField;
+            Table remoteForeignKeyTable;
+            Field remoteForeignKeyField;
 
-            lookupField = m_fields[primaryKeyFieldName];
+            localPrimaryKeyField = m_fields[primaryKeyFieldName];
 
-            if ((object)lookupField != null)
+            if ((object)localPrimaryKeyField != null)
             {
-                lookupTable = m_parent[foreignKeyTableName];
+                remoteForeignKeyTable = m_parent[foreignKeyTableName];
 
-                if ((object)lookupTable != null)
+                if ((object)remoteForeignKeyTable != null)
                 {
-                    parentLookupField = lookupTable.Fields[foreignKeyFieldName];
+                    remoteForeignKeyField = remoteForeignKeyTable.Fields[foreignKeyFieldName];
 
-                    if ((object)parentLookupField != null)
+                    if ((object)remoteForeignKeyField != null)
                     {
-                        ForeignKeyField foreignKeyField = new ForeignKeyField(lookupField.ForeignKeys);
+                        ForeignKeyField localForeignKeyField = new ForeignKeyField(localPrimaryKeyField.ForeignKeys);
 
-                        foreignKeyField.PrimaryKey = lookupField;
-                        foreignKeyField.ForeignKey = parentLookupField;
-                        foreignKeyField.ForeignKey.ReferencedBy = foreignKeyField.PrimaryKey;
-                        foreignKeyField.Ordinal = (foreignKeyOrdinal == -1 ? lookupField.ForeignKeys.Count + 1 : foreignKeyOrdinal);
-                        foreignKeyField.KeyName = foreignKeyName;
-                        foreignKeyField.UpdateRule = foreignKeyUpdateRule;
-                        foreignKeyField.DeleteRule = foreignKeyDeleteRule;
+                        localForeignKeyField.PrimaryKey = localPrimaryKeyField;
+                        localForeignKeyField.ForeignKey = remoteForeignKeyField;
+                        localForeignKeyField.ForeignKey.ReferencedBy = localForeignKeyField.PrimaryKey;
+                        localForeignKeyField.Ordinal = (foreignKeyOrdinal == -1 ? localPrimaryKeyField.ForeignKeys.Count + 1 : foreignKeyOrdinal);
+                        localForeignKeyField.KeyName = foreignKeyName;
+                        localForeignKeyField.UpdateRule = foreignKeyUpdateRule;
+                        localForeignKeyField.DeleteRule = foreignKeyDeleteRule;
 
-                        lookupField.ForeignKeys.Add(foreignKeyField);
+                        localPrimaryKeyField.ForeignKeys.Add(localForeignKeyField);
 
                         return true;
                     }

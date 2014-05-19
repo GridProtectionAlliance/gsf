@@ -32,6 +32,7 @@ using GSF;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
+using GSF.Units;
 using SerializationFormat = GSF.SerializationFormat;
 
 namespace ConfigurationCacher
@@ -144,7 +145,7 @@ namespace ConfigurationCacher
             DataSet configuration = null;
             bool configException = false;
             Ticks startTime = DateTime.UtcNow.Ticks;
-            double elapsedTime;
+            Time elapsedTime;
             string nodeIDQueryString = null;
 
             switch (s_configurationType)
@@ -210,7 +211,7 @@ namespace ConfigurationCacher
                             nodeIDQueryString = "'" + s_nodeID + "'";
 
                         Ticks operationStartTime;
-                        double operationElapsedTime;
+                        Time operationElapsedTime;
 
                         // Add each configuration entity to the system configuration
                         foreach (DataRow entityRow in entities.Rows)
@@ -223,7 +224,7 @@ namespace ConfigurationCacher
                             // Update table name as defined in configuration entity
                             source.TableName = entityRow["RuntimeName"].ToString();
 
-                            DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
+                            DisplayStatusMessage("Loaded {0} row{1} from \"{2}\" in {3}...", UpdateType.Information, source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime.ToString(2));
 
                             operationStartTime = DateTime.UtcNow.Ticks;
 
@@ -264,7 +265,7 @@ namespace ConfigurationCacher
                             // Add entity configuration data to system configuration
                             configuration.Tables.Add(destination);
 
-                            DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds");
+                            DisplayStatusMessage("{0} configuration pre-cache completed in {1}.", UpdateType.Information, source.TableName, operationElapsedTime.ToString(2));
                         }
 
                         DisplayStatusMessage("Database configuration successfully loaded.", UpdateType.Information);
@@ -352,7 +353,7 @@ namespace ConfigurationCacher
             if (!configException)
             {
                 elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, s_configurationType, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+                DisplayStatusMessage("{0} configuration load process completed in {1}...", UpdateType.Information, s_configurationType, elapsedTime.ToString(2));
             }
 
             return configuration;

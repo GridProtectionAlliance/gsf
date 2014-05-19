@@ -52,6 +52,7 @@ using GSF.Security.Cryptography;
 using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
+using GSF.Units;
 using Random = GSF.Security.Cryptography.Random;
 using TcpClient = GSF.Communication.TcpClient;
 using Timer = System.Timers.Timer;
@@ -3416,7 +3417,7 @@ namespace GSF.TimeSeries.Transport
                 if (m_remoteSignalIndexCache != null)
                     m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
 
-                OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3));
+                OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2));
 
                 // Send notification that system configuration has changed
                 OnConfigurationChanged();
@@ -3553,8 +3554,8 @@ namespace GSF.TimeSeries.Transport
 
             if (rowCount > 0)
             {
-                double elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                OnStatusMessage("Received a total of {0:N0} records spanning {1:N0} tables of meta-data that was {2}deserialized in {3}...", rowCount, deserializedMetadata.Tables.Count, compressMetadata ? "uncompressed and " : "", elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+                Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
+                OnStatusMessage("Received a total of {0:N0} records spanning {1:N0} tables of meta-data that was {2}deserialized in {3}...", rowCount, deserializedMetadata.Tables.Count, compressMetadata ? "uncompressed and " : "", elapsedTime.ToString(2));
             }
 
             return deserializedMetadata;

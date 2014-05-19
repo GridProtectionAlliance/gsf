@@ -447,7 +447,7 @@ namespace AdoAdapters
                                     OnStatusMessage("Loaded {0} records so far...", m_dbMeasurements.Count);
                             }
 
-                            OnStatusMessage("Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
+                            OnStatusMessage("Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2));
                         }
                     }
                     catch (Exception ex)
@@ -596,7 +596,7 @@ namespace AdoAdapters
 
                     m_dbMeasurements = m_dbMeasurements.OrderBy(m => (long)m.Timestamp).ToList();
 
-                    OnStatusMessage("Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(4));
+                    OnStatusMessage("Completed data load in {0}", ((Ticks)(DateTime.UtcNow.Ticks - startTime)).ToElapsedTimeString(2));
 
                     if (m_cacheFileName != null)
                     {

@@ -41,14 +41,21 @@ namespace DataMigrationUtility
     {
         #region [ Members ]
 
-        //Variable Declaration
+        // Constants
+
+        /// <summary>
+        /// Application settings category name.
+        /// </summary>
         public const string ApplicationSettingsCategory = "Application Settings";
+
+        // Fields
         private string m_fromConnectionString;
         private DatabaseType m_fromDataType;
         private string m_toConnectionString;
         private DatabaseType m_toDataType;
-        private bool m_preservePrimaryKeyValue;
+        private bool m_preserveAutoIncValues;
         private bool m_useFromConnectionForRI;
+        private bool m_clearDestinationTables;
 
         #endregion
 
@@ -148,20 +155,35 @@ namespace DataMigrationUtility
             }
         }
 
-
         /// <summary>
-        /// Get or set Preserve Primary Key value flag to Data Migration Utility
+        /// Get or set Preserve Auto-Increment Field Values flag
         /// </summary>
-        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(false), Description("Preserve value of Primary Key value.")]
-        public bool PreservePrimaryKeyValue
+        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(true), Description("Preserve value of auto-increment field values.")]
+        public bool PreserveAutoIncValues
         {
             get
             {
-                return m_preservePrimaryKeyValue;
+                return m_preserveAutoIncValues;
             }
             set
             {
-                m_preservePrimaryKeyValue = value;
+                m_preserveAutoIncValues = value;
+            }
+        }
+
+        /// <summary>
+        /// Get or set Clear Destination Tables flag
+        /// </summary>
+        [Category(ApplicationSettingsCategory), UserScopedSetting, DefaultValue(false), Description("Clear existing data in destination database before migration.")]
+        public bool ClearDestinationTables
+        {
+            get
+            {
+                return m_clearDestinationTables;
+            }
+            set
+            {
+                m_clearDestinationTables = value;
             }
         }
 

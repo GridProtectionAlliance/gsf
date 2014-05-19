@@ -510,7 +510,7 @@ namespace GSF.TimeSeries
                 Environment.MachineName,
                 Environment.OSVersion.VersionString,
                 Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName", null).ToNonNullString("<Unavailable>"),
-                SI2.ToScaledIECString(Environment.WorkingSet, 3, "B"),
+                SI2.ToScaledString(Environment.WorkingSet, 4, "B", SI2.IECSymbols),
                 IntPtr.Size * 8,
                 Environment.ProcessorCount,
                 GCSettings.IsServerGC,
@@ -1424,9 +1424,11 @@ namespace GSF.TimeSeries
         /// </remarks>
         private void m_iaonSession_ConfigurationChanged(object sender, EventArgs e)
         {
-            m_reloadConfigQueue.Add(Tuple.Create("System", new Action<bool>(success =>
+            Action<bool> empty = success =>
             {
-            })));
+            };
+
+            m_reloadConfigQueue.Add(Tuple.Create("System", empty));
         }
 
         // Handle task scheduler exceptions

@@ -207,7 +207,7 @@ namespace GSF.Historian.Packets
         /// <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
         /// <remarks>
         /// Implementers should validate <paramref name="startIndex"/> and <paramref name="length"/> against <paramref name="buffer"/> length.
-        /// The <see cref="GSF.BufferExtensions.ValidateParameters"/> method can be used to perform this validation.
+        /// The <see cref="GSF.ArrayExtensions.ValidateParameters"/> method can be used to perform this validation.
         /// </remarks>
         public abstract int ParseBinaryImage(byte[] buffer, int startIndex, int length);
 
@@ -219,7 +219,7 @@ namespace GSF.Historian.Packets
         /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
         /// <remarks>
         /// Implementers should validate <paramref name="startIndex"/> and <see cref="BinaryLength"/> against <paramref name="buffer"/> length.
-        /// The <see cref="GSF.BufferExtensions.ValidateParameters"/> method can be used to perform this validation.
+        /// The <see cref="GSF.ArrayExtensions.ValidateParameters"/> method can be used to perform this validation.
         /// </remarks>
         public abstract int GenerateBinaryImage(byte[] buffer, int startIndex);
 

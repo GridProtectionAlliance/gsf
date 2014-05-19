@@ -29,6 +29,7 @@ using System.Reflection;
 using GSF.Data;
 using GSF.IO;
 using GSF.Security;
+using GSF.Units;
 
 namespace GSF.TimeSeries.Configuration
 {
@@ -223,7 +224,7 @@ namespace GSF.TimeSeries.Configuration
                 List<int> rowsToRemove;
 
                 Ticks operationStartTime;
-                double operationElapsedTime;
+                Time operationElapsedTime;
                 bool success;
 
                 // First check if we can augment
@@ -358,7 +359,7 @@ namespace GSF.TimeSeries.Configuration
                                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                                 // Display information to the user
-                                OnStatusMessage(string.Format("Loaded {0} change{1} to \"{2}\" in {3}...", changeCount, changeCount == 1 ? "" : "s", runtimeName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds"));
+                                OnStatusMessage(string.Format("Loaded {0} change{1} to \"{2}\" in {3}...", changeCount, changeCount == 1 ? "" : "s", runtimeName, operationElapsedTime.ToString(2)));
                             }
 
                             success = true;
@@ -475,7 +476,7 @@ namespace GSF.TimeSeries.Configuration
                 Dictionary<int, int> columnIndex;
 
                 Ticks operationStartTime;
-                double operationElapsedTime;
+                Time operationElapsedTime;
 
                 // Load configuration entity data filtered by node ID
                 operationStartTime = DateTime.UtcNow.Ticks;
@@ -485,7 +486,7 @@ namespace GSF.TimeSeries.Configuration
                 // Update table name as defined in configuration entity
                 source.TableName = entityRow["RuntimeName"].ToString();
 
-                OnStatusMessage(string.Format("Loaded {0} row{1} from \"{2}\" in {3}...", source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds"));
+                OnStatusMessage(string.Format("Loaded {0} row{1} from \"{2}\" in {3}...", source.Rows.Count, source.Rows.Count == 1 ? "" : "s", source.TableName, operationElapsedTime.ToString(2)));
 
                 operationStartTime = DateTime.UtcNow.Ticks;
 
@@ -523,7 +524,7 @@ namespace GSF.TimeSeries.Configuration
 
                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
-                OnStatusMessage(string.Format("{0} configuration pre-cache completed in {1}.", source.TableName, operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds"));
+                OnStatusMessage(string.Format("{0} configuration pre-cache completed in {1}.", source.TableName, operationElapsedTime.ToString(2)));
             });
 
             return destination;
@@ -618,7 +619,7 @@ namespace GSF.TimeSeries.Configuration
             Execute(database =>
             {
                 Ticks operationStartTime;
-                double operationElapsedTime;
+                Time operationElapsedTime;
 
                 // Extract and begin cache of current security context - this does not require an existing security provider
                 OnStatusMessage("Preparing current security context...");
@@ -627,8 +628,7 @@ namespace GSF.TimeSeries.Configuration
                 AdoSecurityProvider.ExtractSecurityContext(database.Connection);
                 operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
-                OnStatusMessage(string.Format("Security context prepared in {0}.", operationElapsedTime < 0.01D ? "less than a second" : operationElapsedTime.ToString("0.00") + " seconds"));
-
+                OnStatusMessage(string.Format("Security context prepared in {0}.", operationElapsedTime.ToString(2)));
                 OnStatusMessage("Database configuration successfully loaded.");
             });
         }

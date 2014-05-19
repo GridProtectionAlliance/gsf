@@ -33,6 +33,7 @@ using System.Linq;
 using System.Threading;
 using GSF.Collections;
 using GSF.Threading;
+using GSF.Units;
 
 namespace GSF.TimeSeries.Adapters
 {
@@ -47,7 +48,7 @@ namespace GSF.TimeSeries.Adapters
 
         private class GlobalCache
         {
-            public HashSet<IAdapter> ProducerAdapters; 
+            public HashSet<IAdapter> ProducerAdapters;
             public Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
             public Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
             public List<Consumer> BroadcastConsumers;
@@ -176,7 +177,9 @@ namespace GSF.TimeSeries.Adapters
                     if ((object)outputAdapter != null)
                         Manager = new DoubleBufferedQueueManager<IMeasurement>(measurements => outputAdapter.QueueMeasurementsForProcessing(new List<IMeasurement>(measurements)), exceptionAction);
                     else
-                        Manager = new DoubleBufferedQueueManager<IMeasurement>(() => { });
+                        Manager = new DoubleBufferedQueueManager<IMeasurement>(() =>
+                        {
+                        });
                 }
             }
         }
@@ -219,7 +222,10 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public RoutingTables()
         {
-            m_calculateRoutingTablesOperation = new LongSynchronizedOperation(CalculateRoutingTables) { IsBackground = true };
+            m_calculateRoutingTablesOperation = new LongSynchronizedOperation(CalculateRoutingTables)
+            {
+                IsBackground = true
+            };
         }
 
         /// <summary>
@@ -340,7 +346,7 @@ namespace GSF.TimeSeries.Adapters
         private void CalculateRoutingTables()
         {
             long startTime = DateTime.UtcNow.Ticks;
-            double elapsedTime;
+            Time elapsedTime;
 
             int destinationCount = 0;
             int routeCount;
@@ -470,11 +476,11 @@ namespace GSF.TimeSeries.Adapters
 
                 // Start or stop any connect on demand adapters
                 HandleConnectOnDemandAdapters(new HashSet<MeasurementKey>(m_inputMeasurementKeysRestriction ?? Enumerable.Empty<MeasurementKey>()), inputAdapterCollection, actionAdapterCollection, outputAdapterCollection);
-                
+
                 elapsedTime = Ticks.ToSeconds(DateTime.UtcNow.Ticks - startTime);
                 routeCount = globalSignalLookup.Count;
 
-                OnStatusMessage("Calculated {0} route{1} for {2} destination{3} in {4}.", routeCount, (routeCount == 1) ? "" : "s", destinationCount, (destinationCount == 1) ? "" : "s", elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds");
+                OnStatusMessage("Calculated {0} route{1} for {2} destination{3} in {4}.", routeCount, (routeCount == 1) ? "" : "s", destinationCount, (destinationCount == 1) ? "" : "s", elapsedTime.ToString(2));
             }
             catch (ObjectDisposedException)
             {

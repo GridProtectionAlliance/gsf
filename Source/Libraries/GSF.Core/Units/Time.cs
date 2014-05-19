@@ -72,7 +72,7 @@ namespace GSF.Units
 {
     /// <summary>Represents a time measurement, in seconds, as a double-precision floating-point number.</summary>
     /// <remarks>
-    /// This class behaves just like a <see cref="double"/> representing a time in seconds; it is implictly
+    /// This class behaves just like a <see cref="double"/> representing a time in seconds; it is implicitly
     /// castable to and from a <see cref="double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other time representations, specifically
     /// minutes, hours, days, weeks, atomic units of time, Planck time and ke. Metric conversions are handled
@@ -277,8 +277,8 @@ namespace GSF.Units
         /// <para>Set second precision to -1 to suppress seconds display.</para>
         /// <para>
         /// <paramref name="timeNames"/> array needs one string entry for each of the following names:<br/>
-        /// "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds",
-        /// "Less Than 60 Seconds", "0 Seconds".
+        /// " year", " years", " day", " days", " hour", " hours", " minute", " minutes", " second",
+        /// " seconds", "less than a minute", "0 seconds" and "less than a second".
         /// </para>
         /// </remarks>
         /// <returns>

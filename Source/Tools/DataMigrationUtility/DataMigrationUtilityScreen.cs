@@ -55,6 +55,7 @@ namespace DataMigrationUtility
         private bool m_exceptionsEncountered;
         private bool m_verifiedConnectionStringReplacement;
         private long m_yieldIndex;
+        private bool m_screenLoaded;
 
         public DataMigrationUtilityScreen()
         {
@@ -83,7 +84,7 @@ namespace DataMigrationUtility
             m_dataInserter.DelimeterReplacement = " - ";
             m_dataInserter.FromSchema = m_fromSchema;
             m_dataInserter.ToSchema = m_toSchema;
-            m_dataInserter.RowReportInterval = 500;
+            m_dataInserter.RowReportInterval = 10;
 
             m_dataInserter.OverallProgress += DataInserter_OverallProgress;
             m_dataInserter.RowProgress += DataInserter_RowProgress;
@@ -110,7 +111,7 @@ namespace DataMigrationUtility
 
         private void AddSQLErrorMessage(string SQL, string ErrorText)
         {
-            AddMessage(ErrorText + "\n" + "Caused by: " + SQL);
+            AddMessage(ErrorText + "\r\n" + "Caused by: " + SQL);
         }
 
         private bool TestConnection(string connectionString, string title, out DatabaseType databaseType, out bool isAdoConnection)
@@ -157,12 +158,19 @@ namespace DataMigrationUtility
             ToDataType.SelectedIndex = Convert.ToInt32(m_applicationSettings.ToDataType);
             FromConnectString.Text = m_applicationSettings.FromConnectionString;
             ToConnectString.Text = m_applicationSettings.ToConnectionString;
-            chkPreservePrimaryKey.Checked = m_applicationSettings.PreservePrimaryKeyValue;
+            PreserveAutoIncValues.Checked = m_applicationSettings.PreserveAutoIncValues;
+            ClearDestinationTables.Checked = m_applicationSettings.ClearDestinationTables;
 
             if (m_applicationSettings.UseFromConnectionForRI)
+            {
+                UseToForRI.Checked = false;
                 UseFromForRI.Checked = true;
+            }
             else
+            {
+                UseFromForRI.Checked = false;
                 UseToForRI.Checked = true;
+            }
 
             this.RestoreLocation();
 
@@ -176,6 +184,8 @@ namespace DataMigrationUtility
                 MessageBox.Show(this, "Setup is now ready to migrate your existing configuration database to the new schema.\r\n\r\nYou should now have a new blank \"destination\" database ready for this data transfer and the connection settings should show your original \"source\" database in the \"From Connect String\" and the new \"destination\" database in the \"To Connect String\".\r\n\r\nVerify and test the connection settings and make sure the \"To Connect String\" is selected for referential integrity (i.e., \"Use for RI\") before you begin your data operation.\r\n\r\nClick the \"Migrate\" button to begin the data transfer.", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             else
                 MessageBox.Show(this, "IMPORTANT: Always backup database before any mass database update and remember to select the proper data source to use for referential integrity BEFORE you begin your data operation!", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+            m_screenLoaded = true;
         }
 
         private void DataMigrationUtility_Closed(Object eventSender, EventArgs eventArgs)
@@ -190,7 +200,8 @@ namespace DataMigrationUtility
                 m_applicationSettings.FromConnectionString = FromConnectString.Text;
                 m_applicationSettings.ToConnectionString = ToConnectString.Text;
                 m_applicationSettings.UseFromConnectionForRI = UseFromForRI.Checked;
-                m_applicationSettings.PreservePrimaryKeyValue = chkPreservePrimaryKey.Checked;
+                m_applicationSettings.PreserveAutoIncValues = PreserveAutoIncValues.Checked;
+                m_applicationSettings.ClearDestinationTables = ClearDestinationTables.Checked;
 
                 // Save application settings
                 m_applicationSettings.Save();
@@ -274,10 +285,14 @@ namespace DataMigrationUtility
                 m_dataInserter.UseFromSchemaReferentialIntegrity = UseFromForRI.Checked;
 
                 if (!string.IsNullOrEmpty(ExcludedTablesTextBox.Text))
-                {
                     m_dataInserter.ExcludedTables.AddRange(ExcludedTablesTextBox.Text.Split(','));
-                }
-                m_dataInserter.PreservePrimaryKeyValue = chkPreservePrimaryKey.Checked;
+
+                m_dataInserter.PreserveAutoIncValues = PreserveAutoIncValues.Checked;
+                m_dataInserter.ClearDestinationTables = ClearDestinationTables.Checked;
+
+                if (m_dataInserter.ClearDestinationTables && m_toSchema.DataSourceType == DatabaseType.SQLServer)
+                    m_dataInserter.AttemptTruncateTable = true;
+
                 m_dataInserter.Execute();
             }
             catch (Exception ex)
@@ -304,18 +319,17 @@ namespace DataMigrationUtility
 
         private void DataType_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (!m_screenLoaded)
+                return;
+
             ComboBox source = (ComboBox)sender;
             TextBox destination;
             int index = source.SelectedIndex;
 
             if (source.Name == "FromDataType")
-            {
                 destination = FromConnectString;
-            }
             else
-            {
                 destination = ToConnectString;
-            }
 
             if (!string.IsNullOrWhiteSpace(destination.Text) && !m_verifiedConnectionStringReplacement && MessageBox.Show("Do you want to replace existing connection string with an example one for the selected database type?", "Verify Connection String Replacement", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 m_verifiedConnectionStringReplacement = true;
@@ -389,15 +403,29 @@ namespace DataMigrationUtility
             Process.Start("http://www.connectionstrings.com/");
         }
 
+        private void ClearDestinationTables_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!m_screenLoaded)
+                return;
+
+            DatabaseType type = (DatabaseType)ToDataType.SelectedIndex;
+
+            if (ClearDestinationTables.Checked && PreserveAutoIncValues.Checked && !(type == DatabaseType.SQLServer || type == DatabaseType.MySQL || type == DatabaseType.SQLite))
+                MessageBox.Show("WARNING: If there is existing data, some databases may not be able to properly preserve auto-increment values.", "Configuration Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
         private void DataInserter_OverallProgress(object sender, EventArgs<int, int> e) // Current, Total
         {
             OverallProgress.Minimum = 0;
             OverallProgress.Maximum = e.Argument2;
 
-            OverallProgress.Value = e.Argument1;
-            OverallProgress.Refresh();
+            if (OverallProgress.Value != e.Argument1)
+            {
+                OverallProgress.Value = e.Argument1;
+                OverallProgress.Refresh();
+            }
 
-            if (m_yieldIndex++ % 4 == 0)
+            if (m_yieldIndex++ % 5 == 0)
                 Application.DoEvents();
         }
 
@@ -406,32 +434,48 @@ namespace DataMigrationUtility
             ProgressBar.Minimum = 0;
             ProgressBar.Maximum = e.Argument3;
 
-            ProgressBar.Value = (e.Argument2 < e.Argument3 ? e.Argument2 : e.Argument3);
-            ProgressBar.Refresh();
+            int value = e.Argument2 < e.Argument3 ? e.Argument2 : e.Argument3;
 
-            if (m_yieldIndex++ % 4 == 0)
+            if (ProgressBar.Value != value)
+            {
+                ProgressBar.Value = (e.Argument2 < e.Argument3 ? e.Argument2 : e.Argument3);
+                ProgressBar.Refresh();
+            }
+
+            if (m_yieldIndex++ % 5 == 0)
                 Application.DoEvents();
 
             if (e.Argument2 == e.Argument3)
+            {
+                Application.DoEvents();
                 Thread.Sleep(500);
+            }
         }
 
         private void DataInserter_TableProgress(object sender, EventArgs<string, bool, int, int> e) // Name, Executed, CurrentTable, TotalTables
         {
-            if (e.Argument3 == e.Argument4 && e.Argument1.Length == 0)
+            if (e.Argument3 == 0 && e.Argument4 == 0 && e.Argument1.Length > 0)
             {
-                UpdateProgress("Processing complete. (" + e.Argument3 + " / " + e.Argument4 + " )");
+                // When current/total = zero/zero - assuming request for a special message
+                UpdateProgress(e.Argument1);
             }
             else
             {
-                if (e.Argument2)
+                if (e.Argument3 == e.Argument4 && e.Argument1.Length == 0)
                 {
-                    Thread.Sleep(250);
-                    UpdateProgress("Processing " + e.Argument1 + "... ( " + e.Argument3 + " / " + e.Argument4 + " )");
+                    UpdateProgress("Processing complete. (" + e.Argument3 + " / " + e.Argument4 + " )");
                 }
                 else
                 {
-                    UpdateProgress("Skipped " + e.Argument1 + "... ( " + e.Argument3 + " / " + e.Argument4 + " )");
+                    if (e.Argument2)
+                    {
+                        Thread.Sleep(250);
+                        UpdateProgress("Processing " + e.Argument1 + "... ( " + e.Argument3 + " / " + e.Argument4 + " )");
+                    }
+                    else
+                    {
+                        UpdateProgress("Skipped " + e.Argument1 + "... ( " + e.Argument3 + " / " + e.Argument4 + " )");
+                    }
                 }
             }
 
@@ -445,7 +489,7 @@ namespace DataMigrationUtility
 
         private void DataInserter_BulkInsertCompleted(object sender, EventArgs<string, int, int> e) //string TableName, int TotalRows, int TotalSeconds
         {
-            AddMessage("Bulk insert of " + e.Argument2 + " rows into table " + e.Argument1 + " completed in " + Ticks.FromSeconds(e.Argument3).ToElapsedTimeString().ToLower());
+            AddMessage("Bulk insert of " + e.Argument2 + " rows into table " + e.Argument1 + " completed in " + Ticks.FromSeconds(e.Argument3).ToElapsedTimeString(2).ToLower());
         }
 
         private void DataInserter_BulkInsertException(object sender, EventArgs<string, string, Exception> e) // Name, SQL, ex

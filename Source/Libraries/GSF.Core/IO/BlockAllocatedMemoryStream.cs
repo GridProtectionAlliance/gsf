@@ -561,6 +561,9 @@ namespace GSF.IO
 
             buffer.ValidateParameters(startIndex, length);
 
+            if (length == 0)
+                return;
+
             long originalPosition = m_position;
             int count;
 

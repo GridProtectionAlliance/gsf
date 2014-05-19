@@ -83,17 +83,29 @@ namespace GSF
     /// </summary>
     public enum BaselineTimeInterval
     {
-        /// <summary>Baseline timestamp to the second (i.e., starting at zero milliseconds).</summary>
+        /// <summary>
+        /// Baseline timestamp to the second (i.e., starting at zero milliseconds).
+        /// </summary>
         Second,
-        /// <summary>Baseline timestamp to the minute (i.e., starting at zero seconds and milliseconds).</summary>
+        /// <summary>
+        /// Baseline timestamp to the minute (i.e., starting at zero seconds and milliseconds).
+        /// </summary>
         Minute,
-        /// <summary>Baseline timestamp to the hour (i.e., starting at zero minutes, seconds and milliseconds).</summary>
+        /// <summary>
+        /// Baseline timestamp to the hour (i.e., starting at zero minutes, seconds and milliseconds).
+        /// </summary>
         Hour,
-        /// <summary>Baseline timestamp to the day (i.e., starting at zero hours, minutes, seconds and milliseconds).</summary>
+        /// <summary>
+        /// Baseline timestamp to the day (i.e., starting at zero hours, minutes, seconds and milliseconds).
+        /// </summary>
         Day,
-        /// <summary>Baseline timestamp to the month (i.e., starting at day one, zero hours, minutes, seconds and milliseconds).</summary>
+        /// <summary>
+        /// Baseline timestamp to the month (i.e., starting at day one, zero hours, minutes, seconds and milliseconds).
+        /// </summary>
         Month,
-        /// <summary>Baseline timestamp to the year (i.e., starting at month one, day one, zero hours, minutes, seconds and milliseconds).</summary>
+        /// <summary>
+        /// Baseline timestamp to the year (i.e., starting at month one, day one, zero hours, minutes, seconds and milliseconds).
+        /// </summary>
         Year
     }
 
@@ -113,7 +125,7 @@ namespace GSF
     /// act like a long integer but handle time conversions. <see cref="Ticks"/> can also represent a "time period" (e.g., the
     /// number of ticks elapsed since a process started) and thus can also be used like a <see cref="TimeSpan"/>; when used in
     /// this manner the <see cref="Ticks.ToElapsedTimeString()"/> method can be used to convert the <see cref="Ticks"/> value
-    /// into a handy textual representation of elapsed years, days, hours, minutes and seconds.
+    /// into a handy textual representation of elapsed years, days, hours, minutes and seconds or sub-seconds.
     /// </para>
     /// <para>
     /// This class behaves just like an <see cref="Int64"/> representing a time in ticks; it is implicitly castable to and from
@@ -128,6 +140,8 @@ namespace GSF
         #region [ Members ]
 
         // Nested Types
+
+        // Indices into TimeNames array
         private struct TimeName
         {
             // Note that this is a structure so that elements may be used as an
@@ -142,34 +156,41 @@ namespace GSF
             public const int Minutes = 7;
             public const int Second = 8;
             public const int Seconds = 9;
-            public const int LessThan60Seconds = 10;
+            public const int LessThan1Minute = 10;
             public const int NoSeconds = 11;
+            public const int LessThan1Second = 12;
         }
 
         // Constants
 
-        // Standard time names used by ToString method
-        private static readonly string[] s_timeNames = { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 60 Seconds", "0 Seconds" };
-
-        // Standard time names, without seconds, used by ToString method
-        private static readonly string[] s_timeNamesNoSeconds = { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 1 Minute", "0 Minutes" };
-
-        /// <summary>Number of 100-nanosecond ticks in one second.</summary>
+        /// <summary>
+        /// Number of 100-nanosecond ticks in one second.
+        /// </summary>
         public const long PerSecond = 10000000L;
 
-        /// <summary>Number of 100-nanosecond ticks in one millisecond.</summary>
+        /// <summary>
+        /// Number of 100-nanosecond ticks in one millisecond.
+        /// </summary>
         public const long PerMillisecond = (long)(Ticks.PerSecond * SI.Milli);
 
-        /// <summary>Number of 100-nanosecond ticks in one microsecond.</summary>
+        /// <summary>
+        /// Number of 100-nanosecond ticks in one microsecond.
+        /// </summary>
         public const long PerMicrosecond = (long)(Ticks.PerSecond * SI.Micro);
 
-        /// <summary>Number of 100-nanosecond ticks in one minute.</summary>
+        /// <summary>
+        /// Number of 100-nanosecond ticks in one minute.
+        /// </summary>
         public const long PerMinute = 60L * Ticks.PerSecond;
 
-        /// <summary>Number of 100-nanosecond ticks in one hour.</summary>
+        /// <summary>
+        /// Number of 100-nanosecond ticks in one hour.
+        /// </summary>
         public const long PerHour = 60L * Ticks.PerMinute;
 
-        /// <summary>Number of 100-nanosecond ticks in one day.</summary>
+        /// <summary>
+        /// Number of 100-nanosecond ticks in one day.
+        /// </summary>
         public const long PerDay = 24L * Ticks.PerHour;
 
         // Fields
@@ -403,6 +424,7 @@ namespace GSF
         /// </returns>
         public Ticks DistanceBeyondSecond()
         {
+            // Calculate the number of ticks past the top of the second
             return Value - (Value - Value % Ticks.PerSecond);
         }
 
@@ -511,9 +533,9 @@ namespace GSF
         /// minutes and seconds.
         /// </summary>
         /// <remarks>
-        /// Note that this ToString overload will not display fractional seconds. To allow display of
-        /// fractional seconds, or completely remove second resolution from the textual representation,
-        /// use the <see cref="Ticks.ToElapsedTimeString(int)"/> overload instead.
+        /// Note that this ToElapsedTimeString overload will not display fractional seconds. To allow
+        /// display of fractional seconds, or completely remove second resolution from the textual
+        /// representation, use the <see cref="Ticks.ToElapsedTimeString(int)"/> overload instead.
         /// </remarks>
         /// <returns>
         /// The string representation of the value of this instance, consisting of the number of
@@ -521,7 +543,7 @@ namespace GSF
         /// </returns>
         public string ToElapsedTimeString()
         {
-            return ToElapsedTimeString(0, s_timeNames);
+            return ToElapsedTimeString(0, TimeNames);
         }
 
         /// <summary>
@@ -529,17 +551,17 @@ namespace GSF
         /// minutes and seconds with the specified number of fractional digits.
         /// </summary>
         /// <param name="secondPrecision">Number of fractional digits to display for seconds.</param>
-        /// <remarks>Set <paramref name="secondPrecision"/> to -1 to suppress seconds display.</remarks>
+        /// <remarks>
+        /// Set <paramref name="secondPrecision"/> to -1 to suppress seconds display, this will
+        /// force minimum resolution of time display to minutes.
+        /// </remarks>
         /// <returns>
         /// The string representation of the value of this instance, consisting of the number of
         /// years, days, hours, minutes and seconds represented by this value.
         /// </returns>
         public string ToElapsedTimeString(int secondPrecision)
         {
-            if (secondPrecision < 0)
-                return ToElapsedTimeString(secondPrecision, s_timeNamesNoSeconds);
-
-            return ToElapsedTimeString(secondPrecision, s_timeNames);
+            return ToElapsedTimeString(secondPrecision, TimeNames);
         }
 
         /// <summary>
@@ -550,11 +572,14 @@ namespace GSF
         /// <param name="secondPrecision">Number of fractional digits to display for seconds.</param>
         /// <param name="timeNames">Time names array to use during textual conversion.</param>
         /// <remarks>
-        /// <para>Set <paramref name="secondPrecision"/> to -1 to suppress seconds display.</para>
+        /// <para>
+        /// Set <paramref name="secondPrecision"/> to -1 to suppress seconds display, this will
+        /// force minimum resolution of time display to minutes.
+        /// </para>
         /// <para>
         /// <paramref name="timeNames"/> array needs one string entry for each of the following names:<br/>
-        /// "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds",
-        /// "Less Than 60 Seconds", "0 Seconds".
+        /// " year", " years", " day", " days", " hour", " hours", " minute", " minutes", " second",
+        /// " seconds", "less than a minute", "0 seconds" and "less than a second".
         /// </para>
         /// </remarks>
         /// <returns>
@@ -563,25 +588,22 @@ namespace GSF
         /// </returns>
         public string ToElapsedTimeString(int secondPrecision, string[] timeNames)
         {
-            // One year of seconds estimated for display use as 365.2425 days, i.e., 31556952 seconds
+            // One year of seconds estimated for display use as 365.2425 days, i.e., 31,556,952 seconds
             const int SecondsPerYear = 31556952;
-            const int SecondsPerMinute = 60;
-            const int SecondsPerHour = 60 * SecondsPerMinute;
-            const int SecondsPerDay = 24 * SecondsPerHour;
 
             StringBuilder timeImage = new StringBuilder();
             int years, days, hours, minutes;
             double seconds = ToSeconds();
 
-            // Checks if number of seconds ranges in years
+            // Check if number of seconds ranges in years
             years = (int)(seconds / SecondsPerYear);
 
             if (years >= 1)
             {
-                // Removes whole years from remaining seconds
+                // Remove whole years from remaining seconds
                 seconds = seconds - years * SecondsPerYear;
 
-                // Appends textual representation of years
+                // Append textual representation of years
                 timeImage.Append(years);
 
                 if (years == 1)
@@ -590,15 +612,15 @@ namespace GSF
                     timeImage.Append(timeNames[TimeName.Years]);
             }
 
-            // Checks if remaining number of seconds ranges in days
-            days = (int)(seconds / SecondsPerDay);
+            // Check if remaining number of seconds ranges in days
+            days = (int)(seconds / Time.SecondsPerDay);
 
             if (days >= 1)
             {
-                // Removes whole days from remaining seconds
-                seconds = seconds - days * SecondsPerDay;
+                // Remove whole days from remaining seconds
+                seconds = seconds - days * Time.SecondsPerDay;
 
-                // Appends textual representation of days
+                // Append textual representation of days
                 timeImage.Append(' ');
                 timeImage.Append(days);
 
@@ -608,15 +630,15 @@ namespace GSF
                     timeImage.Append(timeNames[TimeName.Days]);
             }
 
-            // Checks if remaining number of seconds ranges in hours
-            hours = (int)(seconds / SecondsPerHour);
+            // Check if remaining number of seconds ranges in hours
+            hours = (int)(seconds / Time.SecondsPerHour);
 
             if (hours >= 1)
             {
-                // Removes whole hours from remaining seconds
-                seconds = seconds - hours * SecondsPerHour;
+                // Remove whole hours from remaining seconds
+                seconds = seconds - hours * Time.SecondsPerHour;
 
-                // Appends textual representation of hours
+                // Append textual representation of hours
                 timeImage.Append(' ');
                 timeImage.Append(hours);
 
@@ -626,23 +648,23 @@ namespace GSF
                     timeImage.Append(timeNames[TimeName.Hours]);
             }
 
-            // Checks if remaining number of seconds ranges in minutes
-            minutes = (int)(seconds / SecondsPerMinute);
+            // Check if remaining number of seconds ranges in minutes
+            minutes = (int)(seconds / Time.SecondsPerMinute);
 
             if (minutes >= 1)
             {
-                // Removes whole minutes from remaining seconds
-                seconds = seconds - minutes * SecondsPerMinute;
+                // Remove whole minutes from remaining seconds
+                seconds = seconds - minutes * Time.SecondsPerMinute;
 
-                // If no fractional seconds were requested and remaining seconds are approximately 60,
-                // then we just add another minute
-                if (secondPrecision == 0 && (int)seconds == 60)
+                // If no fractional seconds were requested and remaining seconds
+                // are approximately 60, add another minute
+                if (secondPrecision == 0 && (int)Math.Round(seconds) == 60)
                 {
                     minutes++;
-                    seconds = 0;
+                    seconds = 0.0D;
                 }
 
-                // Appends textual representation of minutes
+                // Append textual representation of minutes
                 timeImage.Append(' ');
                 timeImage.Append(minutes);
 
@@ -652,51 +674,72 @@ namespace GSF
                     timeImage.Append(timeNames[TimeName.Minutes]);
             }
 
-            // Handles remaining seconds
-            if (secondPrecision == 0)
+            // Handle remaining seconds
+            if (seconds > 0.0D)
             {
-                // No fractional seconds requested. Rounds seconds to nearest integer
-                int wholeSeconds = (int)seconds;
-
-                if (wholeSeconds > 0)
+                if (secondPrecision == 0)
                 {
-                    // Appends textual representation of whole seconds
-                    timeImage.Append(' ');
-                    timeImage.Append(wholeSeconds);
-
-                    if (wholeSeconds == 1)
-                        timeImage.Append(timeNames[TimeName.Second]);
+                    // Handle no fractional seconds request (second precision is zero)
+                    if (seconds < 1.0D)
+                    {
+                        // If no image exists then less than 1 second remains, show "less than a second"
+                        if (timeImage.Length == 0)
+                            timeImage.Append(timeNames[TimeName.LessThan1Second]);
+                    }
                     else
-                        timeImage.Append(timeNames[TimeName.Seconds]);
+                    {
+                        // Round seconds to nearest integer
+                        int wholeSeconds = (int)Math.Round(seconds);
+
+                        if (wholeSeconds > 0)
+                        {
+                            // Append textual representation of whole seconds
+                            timeImage.Append(' ');
+                            timeImage.Append(wholeSeconds);
+
+                            if (wholeSeconds == 1)
+                                timeImage.Append(timeNames[TimeName.Second]);
+                            else
+                                timeImage.Append(timeNames[TimeName.Seconds]);
+                        }
+                    }
                 }
-            }
-            else
-            {
-                // Handles fractional seconds request
-                if (seconds > 0)
+                else
                 {
                     if (secondPrecision < 0)
                     {
-                        // If second display has been disabled and less than 60 seconds remain, we still need
-                        // to show something
+                        // Handle second display suppression (second precision is negative), if no
+                        // image exists then less than 60 seconds remain, show "less than a minute"
                         if (timeImage.Length == 0)
-                            timeImage.Append(timeNames[TimeName.LessThan60Seconds]);
+                            timeImage.Append(timeNames[TimeName.LessThan1Minute]);
                     }
                     else
                     {
-                        // Appends textual representation of fractional seconds
-                        timeImage.Append(' ');
-                        timeImage.Append(seconds.ToString("0." + (new string('0', secondPrecision))));
-
-                        if (seconds == 1)
-                            timeImage.Append(timeNames[TimeName.Second]);
+                        // Handle fractional seconds request (second precision is greater than zero)
+                        if (timeImage.Length == 0 && seconds < SI.Centi)
+                        {
+                            // No image exists and time is sub-second, produce a SI scaled representation of total seconds (e.g., microseconds)
+                            timeImage.Append(SI.ToScaledString(seconds, "R", timeNames[TimeName.Seconds].Trim(), SI.Names, secondPrecision));
+                        }
                         else
-                            timeImage.Append(timeNames[TimeName.Seconds]);
+                        {
+                            // Round remaining seconds to desired precision
+                            seconds = Math.Round(seconds, secondPrecision);
+
+                            // Append textual representation of seconds
+                            timeImage.Append(' ');
+                            timeImage.Append(seconds.ToString("R"));
+
+                            if (seconds == 1.0D)
+                                timeImage.Append(timeNames[TimeName.Second]);
+                            else
+                                timeImage.Append(timeNames[TimeName.Seconds]);
+                        }
                     }
                 }
             }
 
-            // Handles zero seconds display
+            // If no time image exists, show "0 seconds"
             if (timeImage.Length == 0)
                 timeImage.Append(timeNames[TimeName.NoSeconds]);
 
@@ -721,6 +764,7 @@ namespace GSF
                 return 1;
 
             long num;
+
             if (value is long)
                 num = (long)value;
             else if (value is Ticks)
@@ -1307,11 +1351,20 @@ namespace GSF
 
         // Static Fields
 
-        /// <summary>Represents the largest possible value of a <see cref="Ticks"/>. This field is constant.</summary>
+        /// <summary>
+        /// Represents the largest possible value of a <see cref="Ticks"/>. This field is constant.
+        /// </summary>
         public static readonly Ticks MaxValue = (Ticks)long.MaxValue;
 
-        /// <summary>Represents the smallest possible value of a <see cref="Ticks"/>. This field is constant.</summary>
+        /// <summary>
+        /// Represents the smallest possible value of a <see cref="Ticks"/>. This field is constant.
+        /// </summary>
         public static readonly Ticks MinValue = (Ticks)long.MinValue;
+
+        /// <summary>
+        /// Standard time names used by <see cref="ToElapsedTimeString()"/> method.
+        /// </summary>
+        public static readonly string[] TimeNames = { " year", " years", " day", " days", " hour", " hours", " minute", " minutes", " second", " seconds", "less than a minute", "0 seconds", "less than a second" };
 
         // Static Methods
 

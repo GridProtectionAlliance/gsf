@@ -66,7 +66,7 @@ namespace DataMigrationUtility
         private string m_delimeterReplacement = " - ";
         private bool m_clearDestinationTables;
         private bool m_attemptTruncateTable;
-        private bool m_preservePrimaryKeyValue;
+        private bool m_preserveAutoIncValues;
         private bool m_forceTruncateTable;
 
         public event EventHandler<EventArgs<string>> TableCleared;
@@ -115,7 +115,8 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
-        /// Get or set to force use of a BULK INSERT on a destination SQL Server connection regardless of whether or not it looks like the referential integrity definition supports this.
+        /// Get or set to force use of a BULK INSERT on a destination SQL Server connection regardless of whether or not it looks
+        /// like the referential integrity definition supports this.
         /// </summary>
         public bool ForceBulkInsert
         {
@@ -145,7 +146,9 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
-        /// This setting defines the text encoding that will be used when writing a temporary BULK INSERT file that will be needed if a SQL Server BULK INSERT is performed - make sure the encoding output matches the specified CODEPAGE value in the BulkInsertSettings property.
+        /// This setting defines the text encoding that will be used when writing a temporary BULK INSERT file that will be needed
+        /// if a SQL Server BULK INSERT is performed - make sure the encoding output matches the specified CODEPAGE value in the
+        /// BulkInsertSettings property.
         /// </summary>
         public Encoding BulkInsertEncoding
         {
@@ -160,7 +163,8 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
-        /// This setting defines the file path that will be used when writing a temporary BULK INSERT file that will be needed if a SQL Server BULK INSERT is performed - make sure the destination SQL Server has rights to this path.
+        /// This setting defines the file path that will be used when writing a temporary BULK INSERT file that will be needed if a
+        /// SQL Server BULK INSERT is performed - make sure the destination SQL Server has rights to this path.
         /// </summary>
         public string BulkInsertFilePath
         {
@@ -175,7 +179,9 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
-        /// This specifies the string that will be substituted for the field terminator or row terminator if encountered in a database value while creating a BULK INSERT file.  The field terminator and row terminator values are defined in the BulkInsertSettings property specified by the FIELDTERMINATOR and ROWTERMINATOR keywords repectively.
+        /// This specifies the string that will be substituted for the field terminator or row terminator if encountered in a database
+        /// value while creating a BULK INSERT file.  The field terminator and row terminator values are defined in the BulkInsertSettings
+        /// property specified by the FIELDTERMINATOR and ROWTERMINATOR keywords respectively.
         /// </summary>
         public string DelimeterReplacement
         {
@@ -206,7 +212,9 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
-        /// Set to True to attempt use of a TRUNCATE TABLE on a destination SQL Server connection if ClearDestinationTables is True and it looks like the referential integrity definition supports this.  Your SQL Server connection will need the rights to perform this operation.
+        /// Set to True to attempt use of a TRUNCATE TABLE on a destination SQL Server connection if ClearDestinationTables is True
+        /// and it looks like the referential integrity definition supports this.  Your SQL Server connection will need the rights
+        /// to perform this operation.
         /// </summary>
         public bool AttemptTruncateTable
         {
@@ -221,7 +229,9 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
-        /// Set to True to force use of a TRUNCATE TABLE on a destination SQL Server connection if ClearDestinationTables is True regardless of whether or not it looks like the referential integrity definition supports this.  Your SQL Server connection will need the rights to perform this operation
+        /// Set to True to force use of a TRUNCATE TABLE on a destination SQL Server connection if ClearDestinationTables is True regardless
+        /// of whether or not it looks like the referential integrity definition supports this.  Your SQL Server connection will need the
+        /// rights to perform this operation
         /// </summary>
         public bool ForceTruncateTable
         {
@@ -238,15 +248,15 @@ namespace DataMigrationUtility
         /// <summary>
         /// Set to True to preserve primary key value data to the destination database before processing data inserts.
         /// </summary>
-        public bool PreservePrimaryKeyValue
+        public bool PreserveAutoIncValues
         {
             get
             {
-                return m_preservePrimaryKeyValue;
+                return m_preserveAutoIncValues;
             }
             set
             {
-                m_preservePrimaryKeyValue = value;
+                m_preserveAutoIncValues = value;
             }
         }
 
@@ -307,11 +317,14 @@ namespace DataMigrationUtility
             {
                 for (x = tablesList.Count - 1; x >= 0; x += -1)
                 {
-                    // Lookup table name in destination datasource
+                    // Lookup table name in destination data source
                     tableLookup = m_toSchema.Tables.FindByMapName(((Table)tablesList[x]).MapName);
 
                     if ((object)tableLookup != null)
-                        ClearTable(tableLookup);
+                    {
+                        if (ClearTable(tableLookup))
+                            ResetAutoIncValues(tableLookup);
+                    }
                 }
             }
 
@@ -320,7 +333,7 @@ namespace DataMigrationUtility
             {
                 table = (Table)tablesList[x];
 
-                // Lookup table name in destination datasource
+                // Lookup table name in destination data source
                 tableLookup = m_toSchema.Tables.FindByMapName(table.MapName);
 
                 if ((object)tableLookup != null)
@@ -354,8 +367,8 @@ namespace DataMigrationUtility
         /// <summary>
         /// Clear destination schema table
         /// </summary>
-        /// <param name="ToTable">schema table</param>
-        private void ClearTable(Table ToTable)
+        /// <param name="table">schema table</param>
+        private bool ClearTable(Table table)
         {
             string deleteSql;
             bool useTruncateTable = false;
@@ -364,28 +377,64 @@ namespace DataMigrationUtility
             {
                 // We only attempt a truncate table if the destination data source type is SQL Server
                 // and table has no foreign key dependencies (or user forces procedure)
-                useTruncateTable = m_forceTruncateTable || (ToTable.Parent.Parent.DataSourceType == DatabaseType.SQLServer & !ToTable.IsForeignKeyTable);
+                useTruncateTable = m_forceTruncateTable || (table.Parent.Parent.DataSourceType == DatabaseType.SQLServer && !table.ReferencedByForeignKeys);
             }
 
             if (useTruncateTable)
-            {
-                deleteSql = "TRUNCATE TABLE " + ToTable.SQLEscapedName;
-            }
+                deleteSql = "TRUNCATE TABLE " + table.SQLEscapedName;
             else
-            {
-                deleteSql = "DELETE FROM " + ToTable.SQLEscapedName;
-            }
+                deleteSql = "DELETE FROM " + table.SQLEscapedName;
 
             try
             {
-                ToTable.Connection.ExecuteNonQuery(deleteSql, Timeout);
+                table.Connection.ExecuteNonQuery(deleteSql, Timeout);
 
                 if ((object)TableCleared != null)
-                    TableCleared(this, new EventArgs<string>(ToTable.Name));
+                    TableCleared(this, new EventArgs<string>(table.Name));
+
+                return true;
             }
             catch (Exception ex)
             {
+                if (useTruncateTable)
+                {
+                    // SQL Server connection may not have rights to use TRUNCATE TABLE, fall back on DELETE FROM
+                    m_attemptTruncateTable = false;
+                    m_forceTruncateTable = false;
+                    return ClearTable(table);
+                }
+
                 OnSQLFailure(deleteSql, ex);
+            }
+
+            return false;
+        }
+
+        private void ResetAutoIncValues(Table table)
+        {
+            string resetAutoIncValueSQL = "unknown";
+
+            try
+            {
+                switch (table.Parent.Parent.DataSourceType)
+                {
+                    case DatabaseType.SQLServer:
+                        resetAutoIncValueSQL = "DBCC CHECKIDENT('" + table.SQLEscapedName + "', RESEED)";
+                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
+                        break;
+                    case DatabaseType.MySQL:
+                        resetAutoIncValueSQL = "ALTER TABLE " + table.SQLEscapedName + " AUTO_INCREMENT = 1";
+                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
+                        break;
+                    case DatabaseType.SQLite:
+                        resetAutoIncValueSQL = "DELETE FROM sqlite_sequence WHERE name = '" + table.Name + "'";
+                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                OnSQLFailure(resetAutoIncValueSQL, new InvalidOperationException(string.Format("Failed to reset auto-increment seed for table \"{0}\": {1}", table.Name, ex.Message), ex));
             }
         }
 
@@ -396,36 +445,25 @@ namespace DataMigrationUtility
         /// <param name="toTable">Destination table</param>
         private void ExecuteInserts(Table fromTable, Table toTable)
         {
-            Fields fieldCollection;
-            Field lookupField;
-            Field commonField = null;
-            string insertSQLStub;
-            StringBuilder insertSQL;
-            string updateSQLStub;
-            StringBuilder updateSQL;
-            string countSQLStub;
-            StringBuilder countSQL;
-            StringBuilder whereSQL;
-            string value;
-            bool addedFirstInsert;
-            bool addedFirstUpdate;
-            bool isPrimary;
-
-            int progressIndex = 0;
-            int progressTotal;
             Table sourceTable = (m_useFromSchemaRI ? fromTable : toTable);
             Field autoIncField = null;
+            Field lookupField;
+            Field commonField;
+            bool usingIdentityInsert;
 
+            // Progress process variables
+            int progressIndex = 0;
+            int progressTotal;
+
+            // Bulk insert variables
             bool useBulkInsert = false;
-            StringBuilder bulkInsertRow;
             string bulkInsertFile = "";
             string fieldTerminator = "";
             string rowTerminator = "";
             FileStream bulkInsertFileStream = null;
-            byte[] dataRow;
 
             // Create a field list of all of the common fields in both tables
-            fieldCollection = new Fields(toTable);
+            Fields fieldCollection = new Fields(toTable);
 
             foreach (Field field in fromTable.Fields)
             {
@@ -465,7 +503,7 @@ namespace DataMigrationUtility
             OnRowProgress(fromTable.Name, 0, progressTotal);
             OnOverallProgress((int)m_overallProgress, (int)m_overallTotal);
 
-            // Setup to track to and from autoinc values if table has an identity field
+            // Setup to track to and from auto-inc values if table has an identity field
             if (sourceTable.HasAutoIncField)
             {
                 foreach (Field field in fieldCollection)
@@ -477,10 +515,10 @@ namespace DataMigrationUtility
                         // We need only track auto inc translations when field is referenced by foreign keys
                         if (lookupField.AutoIncrement & lookupField.ForeignKeys.Count > 0)
                         {
-                            // Create a new hashtable to hold autoinc translations
+                            // Create a new hash-table to hold auto-inc translations
                             lookupField.AutoIncrementTranslations = new Hashtable();
 
-                            // Create a new autoinc field to hold source value
+                            // Create a new auto-inc field to hold source value
                             autoIncField = new Field(toTable.Fields, field.Name, lookupField.Type);
                             autoIncField.AutoIncrementTranslations = lookupField.AutoIncrementTranslations;
                             break;
@@ -491,22 +529,7 @@ namespace DataMigrationUtility
 
             // See if this table is a candidate for bulk inserts
             if (m_attemptBulkInsert || m_forceBulkInsert)
-            {
-                Schema parentSchema = toTable.Parent.Parent;
-
-                // We only attempt a bulk insert if the destination data source type is SQL Server and we are inserting
-                // fields into a table that has no auto-inc fields with foreign key dependencies (or user forces procedure)
-                useBulkInsert = m_forceBulkInsert || (parentSchema.DataSourceType == DatabaseType.SQLServer & ((object)autoIncField == null || m_tableCollection.Count == 1));
-
-                if (useBulkInsert)
-                {
-                    ParseBulkInsertSettings(out fieldTerminator, out rowTerminator);
-                    if (m_bulkInsertFilePath.Substring(m_bulkInsertFilePath.Length - 1) != "\\")
-                        m_bulkInsertFilePath += "\\";
-                    bulkInsertFile = m_bulkInsertFilePath + (new Guid()) + ".tmp";
-                    bulkInsertFileStream = File.Create(bulkInsertFile);
-                }
-            }
+                useBulkInsert = SetupBulkInsert(toTable, autoIncField, ref bulkInsertFile, ref fieldTerminator, ref rowTerminator, ref bulkInsertFileStream);
 
             string selectString = "SELECT " + fieldCollection.GetList(sqlEscapeFunction: m_fromSchema.SQLEscapeName) + " FROM " + fromTable.SQLEscapedName;
             bool skipKeyValuePreservation = false;
@@ -526,7 +549,8 @@ namespace DataMigrationUtility
                     {
                         if (string.Compare(sourceTable.Name, foreignKey.ForeignKey.Table.Name, StringComparison.OrdinalIgnoreCase) == 0)
                         {
-                            if (m_fromSchema.DataSourceType == DatabaseType.Oracle) // Force Oracle to sort NULLs at a higher level
+                            // If Oracle, force it to sort NULLs at a higher level - note coalesce may fail for non-integer based primary keys for self-referencing tables
+                            if (m_fromSchema.DataSourceType == DatabaseType.Oracle)
                                 selectString += (index > 0 ? ", " : "") + "COALESCE(" + m_fromSchema.SQLEscapeName(foreignKey.ForeignKey.Name) + ", 0)";
                             else
                                 selectString += (index > 0 ? ", " : "") + m_fromSchema.SQLEscapeName(foreignKey.ForeignKey.Name);
@@ -543,429 +567,526 @@ namespace DataMigrationUtility
                     selectString += " ORDER BY " + m_fromSchema.SQLEscapeName(autoIncField.Name);
             }
 
+            // We use an optimization available to some databases when we are preserving the original primary key values
+            if (!skipKeyValuePreservation && m_preserveAutoIncValues && (object)autoIncField != null)
+            {
+                switch (m_toSchema.DataSourceType)
+                {
+                    case DatabaseType.SQLServer:
+                        try
+                        {
+                            toTable.Connection.ExecuteNonQuery("SET IDENTITY_INSERT " + toTable.SQLEscapedName + " ON", Timeout);
+                            usingIdentityInsert = true;
+                        }
+                        catch
+                        {
+                            // This may fail if connected user doesn't have alter rights to destination connection or has
+                            // selected the wrong destination database type, in these cases we just fall back on the
+                            // brute force method of auto-inc identity synchronization
+                            usingIdentityInsert = false;
+                        }
+                        break;
+                    case DatabaseType.MySQL:
+                    case DatabaseType.SQLite:
+                        usingIdentityInsert = true;
+                        break;
+                    default:
+                        usingIdentityInsert = false;
+                        break;
+                }
+            }
+            else
+            {
+                usingIdentityInsert = false;
+            }
+
+            string insertSQLStub = "INSERT INTO " + toTable.SQLEscapedName + " (" + fieldCollection.GetList(usingIdentityInsert) + ") VALUES (";
+            string updateSQLStub = "UPDATE " + toTable.SQLEscapedName + " SET ";
+            string countSQLStub = "SELECT COUNT(*) AS Total FROM " + toTable.SQLEscapedName;
+
             // Execute source query
             using (IDataReader fromReader = fromTable.Connection.ExecuteReader(selectString, CommandBehavior.SequentialAccess, Timeout))
             {
-                insertSQLStub = "INSERT INTO " + toTable.SQLEscapedName + " (" + fieldCollection.GetList(false) + ") VALUES (";
-                updateSQLStub = "UPDATE " + toTable.SQLEscapedName + " SET ";
-                countSQLStub = "SELECT COUNT(*) AS Total FROM " + toTable.SQLEscapedName;
-
+                // Read source records and write each to destination
                 while (fromReader.Read())
                 {
                     if (useBulkInsert)
-                    {
-                        // Handle creating bulk insert file data for each row...
-                        bulkInsertRow = new StringBuilder();
-                        addedFirstInsert = false;
-
-                        // Get all field data to create row for bulk insert
-                        foreach (Field field in toTable.Fields)
-                        {
-                            try
-                            {
-                                // Lookup field in common field list
-                                commonField = fieldCollection[field.Name];
-
-                                if ((object)commonField != null)
-                                {
-                                    // Found it, so use it...
-                                    commonField.Value = fromReader[field.Name];
-                                }
-                                else
-                                {
-                                    // Otherwise just use existing destination field
-                                    commonField = field;
-                                    commonField.Value = "";
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                commonField.Value = "";
-                                OnSQLFailure("Failed to get field value for '" + toTable.Name + "." + commonField.Name + "'", ex);
-                            }
-
-                            // Get translated auto-inc value for field if possible...
-                            commonField.Value = DereferenceValue(sourceTable, commonField.Name, commonField.Value);
-
-                            // Get field value
-                            value = Convert.ToString(Common.NotNull(commonField.Value)).Trim();
-
-                            // We manually parse data type here instead of using SqlEncodedValue because data inserted
-                            // into bulk insert file doesn't need SQL encoding...
-                            switch (commonField.Type)
-                            {
-                                case OleDbType.Boolean:
-                                    if (value.Length > 0)
-                                    {
-                                        int tempValue;
-
-                                        if (int.TryParse(value, out tempValue))
-                                        {
-                                            if (Convert.ToInt32(tempValue) == 0)
-                                            {
-                                                value = "0";
-                                            }
-                                            else
-                                            {
-                                                value = "1";
-                                            }
-                                        }
-                                        else if (Convert.ToBoolean(value))
-                                        {
-                                            value = "1";
-                                        }
-                                        else
-                                        {
-                                            switch (value.Substring(0, 1).ToUpper())
-                                            {
-                                                case "Y":
-                                                case "T":
-                                                    value = "1";
-                                                    break;
-                                                case "N":
-                                                case "F":
-                                                    value = "0";
-                                                    break;
-                                                default:
-                                                    value = "0";
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                    break;
-                                case OleDbType.DBTimeStamp:
-                                case OleDbType.DBDate:
-                                case OleDbType.Date:
-                                    if (value.Length > 0)
-                                    {
-                                        DateTime tempValue;
-                                        if (DateTime.TryParse(value, out tempValue))
-                                            value = tempValue.ToString("MM/dd/yyyy HH:mm:ss");
-                                    }
-                                    break;
-                                case OleDbType.DBTime:
-                                    if (value.Length > 0)
-                                    {
-                                        DateTime tempValue;
-                                        if (DateTime.TryParse(value, out tempValue))
-                                            value = tempValue.ToString("HH:mm:ss");
-                                    }
-                                    break;
-                            }
-
-                            // Make sure field value does not contain field terminator or row terminator
-                            value = value.Replace(fieldTerminator, m_delimeterReplacement);
-                            value = value.Replace(rowTerminator, m_delimeterReplacement);
-
-                            // Construct bulk insert row
-                            if (addedFirstInsert)
-                            {
-                                bulkInsertRow.Append(fieldTerminator);
-                            }
-                            else
-                            {
-                                addedFirstInsert = true;
-                            }
-                            bulkInsertRow.Append(value);
-                        }
-
-                        bulkInsertRow.Append(rowTerminator);
-
-                        // Add new row to temporary bulk insert file
-                        dataRow = m_bulkInsertEncoding.GetBytes(bulkInsertRow.ToString());
-                        bulkInsertFileStream.Write(dataRow, 0, dataRow.Length);
-                    }
+                        WriteBulkInsertRecord(toTable, fieldCollection, sourceTable, fieldTerminator, rowTerminator, bulkInsertFileStream, fromReader);
                     else
-                    {
-                        // Handle creating SQL for inserts or updates for each row...
-                        insertSQL = new StringBuilder(insertSQLStub);
-                        updateSQL = new StringBuilder(updateSQLStub);
-                        countSQL = new StringBuilder(countSQLStub);
-                        whereSQL = new StringBuilder();
-                        addedFirstInsert = false;
-                        addedFirstUpdate = false;
+                        InsertDestinationRecord(toTable, fieldCollection, insertSQLStub, updateSQLStub, countSQLStub, usingIdentityInsert, sourceTable, autoIncField, skipKeyValuePreservation, fromReader);
 
-                        // Coerce all field data into proper SQL formats
-                        foreach (Field field in fieldCollection)
-                        {
-                            try
-                            {
-                                field.Value = fromReader[field.Name];
-                            }
-                            catch (Exception ex)
-                            {
-                                field.Value = "";
-                                OnSQLFailure("Failed to get field value for '" + toTable.Name + "." + field.Name + "'", ex);
-                            }
+                    progressIndex++;
+                    m_overallProgress++;
 
-                            // Get translated auto-inc value for field if necessary...
-                            field.Value = DereferenceValue(sourceTable, field.Name, field.Value);
-
-                            // We don't attempt to insert values into auto-inc fields
-                            if (field.AutoIncrement)
-                            {
-                                if ((object)autoIncField != null)
-                                {
-                                    // Even if database supports multiple autoinc fields, we can only support automatic
-                                    // ID translation for one because the identity SQL can only return one value...
-                                    if (string.Compare(field.Name, autoIncField.Name, StringComparison.OrdinalIgnoreCase) == 0)
-                                    {
-                                        // Track original autoinc value
-                                        autoIncField.Value = field.Value;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // Get SQL encoded field value
-                                value = field.SQLEncodedValue;
-
-                                // Reference source field to check RI properties
-                                lookupField = sourceTable.Fields[field.Name];
-
-                                if ((object)lookupField != null)
-                                {
-                                    // Check for cases where a NULL value is not allowed
-                                    if (!lookupField.AllowsNulls && value.Equals("NULL", StringComparison.CurrentCultureIgnoreCase))
-                                        value = lookupField.NonNullNativeValue;
-
-                                    // Check for possible values that should be interpreted as NULL values in nullable foreign key fields
-                                    if (lookupField.AllowsNulls && lookupField.IsForeignKey && value.Equals(lookupField.NonNullNativeValue, StringComparison.OrdinalIgnoreCase))
-                                        value = "NULL";
-
-                                    // Check to see if this is a key field
-                                    isPrimary = lookupField.IsPrimaryKey;
-                                }
-                                else
-                                {
-                                    isPrimary = false;
-                                }
-
-                                // Construct SQL statements
-                                if (addedFirstInsert)
-                                    insertSQL.Append(", ");
-                                else
-                                    addedFirstInsert = true;
-
-                                insertSQL.Append(value);
-
-                                if (string.Compare(value, "NULL", StringComparison.OrdinalIgnoreCase) != 0)
-                                {
-                                    if (isPrimary)
-                                    {
-                                        if (whereSQL.Length == 0)
-                                        {
-                                            whereSQL.Append(" WHERE ");
-                                        }
-                                        else
-                                        {
-                                            whereSQL.Append(" AND ");
-                                        }
-
-                                        whereSQL.Append(field.SQLEscapedName);
-                                        whereSQL.Append(" = ");
-                                        whereSQL.Append(value);
-                                    }
-                                    else
-                                    {
-                                        if (addedFirstUpdate)
-                                        {
-                                            updateSQL.Append(", ");
-                                        }
-                                        else
-                                        {
-                                            addedFirstUpdate = true;
-                                        }
-
-                                        updateSQL.Append(field.SQLEscapedName);
-                                        updateSQL.Append(" = ");
-                                        updateSQL.Append(value);
-                                    }
-                                }
-                            }
-                        }
-
-                        insertSQL.Append(")");
-
-                        if ((object)autoIncField != null || whereSQL.Length == 0)
-                        {
-                            // For tables with autoinc fields that are referenced by foreign keys or
-                            // tables that have no primary key fields defined, we can only do inserts...
-                            try
-                            {
-                                // Insert record into destination table
-                                if (addedFirstInsert || (object)autoIncField != null)
-                                {
-                                    // Added check to preserve ID number for auto-inc fields
-                                    if (!skipKeyValuePreservation && m_preservePrimaryKeyValue && (object)autoIncField != null)
-                                    {
-                                        IDbCommand command = toTable.Connection.CreateCommand();
-
-                                        command.CommandText = "SELECT MAX(" + autoIncField.SQLEscapedName + ") FROM " + toTable.SQLEscapedName;
-                                        command.CommandTimeout = Timeout;
-                                        command.CommandType = CommandType.Text;
-
-                                        int toTableRowCount = int.Parse(Common.NotNull(command.ExecuteScalar(), "0")) + 1;
-                                        int sourceTablePrimaryFieldValue = int.Parse(Common.NotNull(autoIncField.Value, "0"));
-
-                                        for (int i = toTableRowCount; i < sourceTablePrimaryFieldValue; i++)
-                                        {
-                                            // Insert record into destination table upto Identity Field Value
-                                            toTable.Connection.ExecuteNonQuery(insertSQL.ToString(), Timeout);
-                                            int currentIdentityValue = int.Parse(Common.NotNull(toTable.Connection.ExecuteScalar(toTable.IdentitySQL, Timeout), "0"));
-
-                                            // Delete record which was just inserted
-                                            toTable.Connection.ExecuteNonQuery("DELETE FROM " + toTable.SQLEscapedName + " WHERE " + autoIncField.SQLEscapedName + " = " + currentIdentityValue, Timeout);
-                                        }
-                                    }
-
-                                    // Insert record into destination table
-                                    toTable.Connection.ExecuteNonQuery(insertSQL.ToString(), Timeout);
-                                }
-                                // Save new destination autoinc value
-                                if ((object)autoIncField != null)
-                                {
-                                    try
-                                    {
-                                        autoIncField.AutoIncrementTranslations.Add(Convert.ToString(autoIncField.Value), toTable.Connection.ExecuteScalar(toTable.IdentitySQL, Timeout));
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        OnSQLFailure(toTable.IdentitySQL, ex);
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                OnSQLFailure(insertSQL.ToString(), ex);
-                            }
-                        }
-                        else
-                        {
-                            // Add where criteria to SQL count statement
-                            countSQL.Append(whereSQL);
-
-                            // Make sure record doesn't already exist
-                            try
-                            {
-                                // If record already exists due to triggers or other means we must update it instead of inserting it
-                                IDbCommand command = toTable.Connection.CreateCommand();
-
-                                command.CommandText = countSQL.ToString();
-                                command.CommandTimeout = Timeout;
-                                command.CommandType = CommandType.Text;
-
-                                if (int.Parse(Common.NotNull(command.ExecuteScalar(), "0")) > 0)
-                                {
-                                    // Add where criteria to SQL update statement
-                                    updateSQL.Append(whereSQL);
-
-                                    try
-                                    {
-                                        // Update record in destination table
-                                        if (addedFirstUpdate)
-                                            toTable.Connection.ExecuteNonQuery(updateSQL.ToString(), Timeout);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        OnSQLFailure(updateSQL.ToString(), ex);
-                                    }
-                                }
-                                else
-                                {
-                                    try
-                                    {
-                                        // Insert record into destination table
-                                        if (addedFirstInsert)
-                                            toTable.Connection.ExecuteNonQuery(insertSQL.ToString(), Timeout);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        OnSQLFailure(insertSQL.ToString(), ex);
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                OnSQLFailure(countSQL.ToString(), ex);
-                            }
-                        }
-                    }
-
-                    progressIndex += 1;
-                    m_overallProgress += 1;
-
-                    //Raise event to check status of each row 
                     OnRowProgress(fromTable.Name, progressIndex, progressTotal);
 
                     if (progressIndex % RowReportInterval == 0)
-                    {
-                        OnRowProgress(fromTable.Name, progressIndex, progressTotal);
                         OnOverallProgress((int)m_overallProgress, (int)m_overallTotal);
+                }
+            }
+
+            // Turn off identity inserts and reset auto-inc values if needed
+            if (usingIdentityInsert)
+            {
+                if (m_toSchema.DataSourceType == DatabaseType.SQLServer)
+                {
+                    string setIndentityInsertSQL = "SET IDENTITY_INSERT " + toTable.SQLEscapedName + " OFF";
+
+                    try
+                    {
+                        // Turn off identity inserts
+                        toTable.Connection.ExecuteNonQuery(setIndentityInsertSQL, Timeout);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnSQLFailure(setIndentityInsertSQL, new InvalidOperationException(string.Format("Failed to turn off identity inserts on table \"{0}\": {1}", toTable.Name, ex.Message), ex));
                     }
                 }
 
-                fromReader.Close();
+                ResetAutoIncValues(toTable);
             }
 
             if (useBulkInsert & (object)bulkInsertFileStream != null)
-            {
-                string bulkInsertSql = "BULK INSERT " + toTable.SQLEscapedName + " FROM '" + bulkInsertFile + "'" + (m_bulkInsertSettings.Length > 0 ? " WITH (" + m_bulkInsertSettings + ")" : "");
-
-                double startTime = 0;
-                double stopTime;
-
-                DateTime todayMidNight = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0);
-
-                // Close bulk insert file stream
-                bulkInsertFileStream.Close();
-
-                if ((object)BulkInsertExecuting != null)
-                    BulkInsertExecuting(this, new EventArgs<string>(toTable.Name));
-
-                try
-                {
-                    // Give system a few seconds to close bulk insert file (might have been real big)
-                    FilePath.WaitForReadLock(bulkInsertFile, 15);
-
-                    TimeSpan difference = DateTime.Now - todayMidNight;
-                    startTime = difference.TotalSeconds; //VB.DateAndTime.Timer;
-
-                    toTable.Connection.ExecuteNonQuery(bulkInsertSql, Timeout);
-                }
-                catch (Exception ex)
-                {
-                    if ((object)BulkInsertException != null)
-                        BulkInsertException(this, new EventArgs<string, string, Exception>(toTable.Name, bulkInsertSql, ex));
-                }
-                finally
-                {
-                    TimeSpan difference = DateTime.Now - todayMidNight;
-
-                    stopTime = difference.TotalSeconds; // VB.DateAndTime.Timer;
-
-                    if (Convert.ToInt32(startTime) == 0)
-                        startTime = stopTime;
-                }
-
-                try
-                {
-                    FilePath.WaitForWriteLock(bulkInsertFile, 15);
-                    File.Delete(bulkInsertFile);
-                }
-                catch (Exception ex)
-                {
-                    if ((object)BulkInsertException != null)
-                        BulkInsertException(this, new EventArgs<string, string, Exception>(toTable.Name, bulkInsertSql, new InvalidOperationException("Failed to delete temporary bulk insert file \"" + bulkInsertFile + "\" due to exception [" + ex.Message + "], file will need to be manually deleted.", ex)));
-                }
-
-                if ((object)BulkInsertCompleted != null)
-                    BulkInsertCompleted(this, new EventArgs<string, int, int>(toTable.Name, progressIndex, Convert.ToInt32(stopTime - startTime)));
-            }
+                CompleteBulkInsert(toTable, progressIndex, bulkInsertFile, bulkInsertFileStream);
 
             OnRowProgress(fromTable.Name, progressTotal, progressTotal);
             OnOverallProgress((int)m_overallProgress, (int)m_overallTotal);
+        }
 
+        private void InsertDestinationRecord(Table toTable, Fields fieldCollection, string insertSQLStub, string updateSQLStub, string countSQLStub, bool usingIdentityInsert, Table sourceTable, Field autoIncField, bool skipKeyValuePreservation, IDataReader fromReader)
+        {
+            StringBuilder insertSQL;
+            StringBuilder updateSQL;
+            StringBuilder countSQL;
+            StringBuilder whereSQL;
+
+            Field lookupField;
+            string value;
+            bool isPrimary;
+
+            bool addedFirstInsertField = false;
+            bool addedFirstUpdateField = false;
+
+            // Handle creating SQL for inserts or updates for each row...
+            insertSQL = new StringBuilder(insertSQLStub);
+            updateSQL = new StringBuilder(updateSQLStub);
+            countSQL = new StringBuilder(countSQLStub);
+            whereSQL = new StringBuilder();
+
+            // Coerce all field data into proper SQL formats
+            foreach (Field field in fieldCollection)
+            {
+                try
+                {
+                    field.Value = fromReader[field.Name];
+                }
+                catch (Exception ex)
+                {
+                    field.Value = "";
+                    OnSQLFailure("Failed to get field value for '" + toTable.Name + "." + field.Name + "'", ex);
+                }
+
+                // Get translated auto-inc value for field if necessary...
+                field.Value = DereferenceValue(sourceTable, field.Name, field.Value);
+
+                // If this field is auto-inc we need to track original value
+                if (field.AutoIncrement)
+                {
+                    if ((object)autoIncField != null)
+                    {
+                        // Even if database supports multiple auto-inc fields, we can only support automatic
+                        // ID translation for one because the identity SQL can only return one value...
+                        if (string.Compare(field.Name, autoIncField.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                        {
+                            // Track original auto-inc value
+                            autoIncField.Value = field.Value;
+                        }
+                    }
+                }
+
+                // We don't attempt to insert values into auto-inc fields unless we are using identity inserts
+                if (usingIdentityInsert || !field.AutoIncrement)
+                {
+                    // Get SQL encoded field value
+                    value = field.SQLEncodedValue;
+
+                    // Reference source field to check RI properties
+                    lookupField = sourceTable.Fields[field.Name];
+
+                    if ((object)lookupField != null)
+                    {
+                        // Check for cases where a NULL value is not allowed
+                        if (!lookupField.AllowsNulls && value.Equals("NULL", StringComparison.CurrentCultureIgnoreCase))
+                            value = lookupField.NonNullNativeValue;
+
+                        // Check for possible values that should be interpreted as NULL values in nullable foreign key fields
+                        if (lookupField.AllowsNulls && lookupField.IsForeignKey && value.Equals(lookupField.NonNullNativeValue, StringComparison.OrdinalIgnoreCase))
+                            value = "NULL";
+
+                        // Check to see if this is a key field
+                        isPrimary = lookupField.IsPrimaryKey;
+                    }
+                    else
+                    {
+                        isPrimary = false;
+                    }
+
+                    // Construct SQL statements
+                    if (addedFirstInsertField)
+                        insertSQL.Append(", ");
+                    else
+                        addedFirstInsertField = true;
+
+                    insertSQL.Append(value);
+
+                    if (string.Compare(value, "NULL", StringComparison.OrdinalIgnoreCase) != 0)
+                    {
+                        if (isPrimary)
+                        {
+                            if (whereSQL.Length == 0)
+                                whereSQL.Append(" WHERE ");
+                            else
+                                whereSQL.Append(" AND ");
+
+                            whereSQL.Append(field.SQLEscapedName);
+                            whereSQL.Append(" = ");
+                            whereSQL.Append(value);
+                        }
+                        else
+                        {
+                            if (addedFirstUpdateField)
+                                updateSQL.Append(", ");
+                            else
+                                addedFirstUpdateField = true;
+
+                            updateSQL.Append(field.SQLEscapedName);
+                            updateSQL.Append(" = ");
+                            updateSQL.Append(value);
+                        }
+                    }
+                }
+            }
+
+            insertSQL.Append(")");
+
+            if ((object)autoIncField != null || whereSQL.Length == 0)
+            {
+                try
+                {
+                    // Insert record into destination table
+                    if (addedFirstInsertField || (object)autoIncField != null)
+                    {
+                        // Added check to preserve ID number for auto-inc fields
+                        if (!usingIdentityInsert && !skipKeyValuePreservation && m_preserveAutoIncValues && (object)autoIncField != null)
+                        {
+                            int toTableRowCount = int.Parse(Common.NotNull(toTable.Connection.ExecuteScalar("SELECT MAX(" + autoIncField.SQLEscapedName + ") FROM " + toTable.SQLEscapedName, Timeout), "0")) + 1;
+                            int sourceTablePrimaryFieldValue = int.Parse(Common.NotNull(autoIncField.Value, "0"));
+                            int synchronizations = 0;
+
+                            for (int i = toTableRowCount; i < sourceTablePrimaryFieldValue; i++)
+                            {
+                                // Insert record into destination table up to identity field value
+                                toTable.Connection.ExecuteNonQuery(insertSQL.ToString(), Timeout);
+                                int currentIdentityValue = int.Parse(Common.NotNull(toTable.Connection.ExecuteScalar(toTable.IdentitySQL, Timeout), "0"));
+
+                                // Delete record which was just inserted
+                                toTable.Connection.ExecuteNonQuery("DELETE FROM " + toTable.SQLEscapedName + " WHERE " + autoIncField.SQLEscapedName + " = " + currentIdentityValue, Timeout);
+
+                                // For very long spans of auto-inc identity gaps we at least provide some level of feedback
+                                if (synchronizations++ % 50 == 0)
+                                    OnTableProgress("Processed " + synchronizations + " auto-increment identity synchronizations...", false, 0, 0);
+                            }
+                        }
+
+                        // Insert record into destination table
+                        if (whereSQL.Length > 0)
+                            InsertOrUpdate(toTable, insertSQL, updateSQL, countSQL, whereSQL, addedFirstInsertField, addedFirstUpdateField);
+                        else
+                            toTable.Connection.ExecuteNonQuery(insertSQL.ToString(), Timeout);
+                    }
+
+                    // Save new destination auto-inc value
+                    if ((object)autoIncField != null)
+                    {
+                        try
+                        {
+                            if (usingIdentityInsert || whereSQL.Length > 0)
+                                autoIncField.AutoIncrementTranslations.Add(Convert.ToString(autoIncField.Value), Convert.ToString(autoIncField.Value));
+                            else
+                                autoIncField.AutoIncrementTranslations.Add(Convert.ToString(autoIncField.Value), toTable.Connection.ExecuteScalar(toTable.IdentitySQL, Timeout));
+                        }
+                        catch (Exception ex)
+                        {
+                            OnSQLFailure(toTable.IdentitySQL, ex);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnSQLFailure(insertSQL.ToString(), ex);
+                }
+            }
+            else
+            {
+                InsertOrUpdate(toTable, insertSQL, updateSQL, countSQL, whereSQL, addedFirstInsertField, addedFirstUpdateField);
+            }
+        }
+
+        private void InsertOrUpdate(Table toTable, StringBuilder insertSQL, StringBuilder updateSQL, StringBuilder countSQL, StringBuilder whereSQL, bool addedFirstInsertField, bool addedFirstUpdateField)
+        {
+            // Add where criteria to SQL count statement
+            countSQL.Append(whereSQL);
+
+            // Make sure record doesn't already exist
+            try
+            {
+                // If record already exists due to triggers or other means we must update it instead of inserting it
+                if (int.Parse(Common.NotNull(toTable.Connection.ExecuteScalar(countSQL.ToString(), Timeout), "0")) > 0)
+                {
+                    // Add where criteria to SQL update statement
+                    updateSQL.Append(whereSQL);
+
+                    try
+                    {
+                        // Update record in destination table
+                        if (addedFirstUpdateField)
+                            toTable.Connection.ExecuteNonQuery(updateSQL.ToString(), Timeout);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnSQLFailure(updateSQL.ToString(), ex);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        // Insert record into destination table
+                        if (addedFirstInsertField)
+                            toTable.Connection.ExecuteNonQuery(insertSQL.ToString(), Timeout);
+                    }
+                    catch (Exception ex)
+                    {
+                        OnSQLFailure(insertSQL.ToString(), ex);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnSQLFailure(countSQL.ToString(), ex);
+            }
+        }
+
+        private bool SetupBulkInsert(Table toTable, Field autoIncField, ref string bulkInsertFile, ref string fieldTerminator, ref string rowTerminator, ref FileStream bulkInsertFileStream)
+        {
+            Schema parentSchema = toTable.Parent.Parent;
+
+            // We only attempt a bulk insert if the destination data source type is SQL Server and we are inserting
+            // fields into a table that has no auto-inc fields with foreign key dependencies (or user forces procedure)
+            bool useBulkInsert = m_forceBulkInsert || (parentSchema.DataSourceType == DatabaseType.SQLServer & ((object)autoIncField == null || m_tableCollection.Count == 1));
+
+            if (useBulkInsert)
+            {
+                ParseBulkInsertSettings(out fieldTerminator, out rowTerminator);
+
+                if (m_bulkInsertFilePath.Substring(m_bulkInsertFilePath.Length - 1) != "\\")
+                    m_bulkInsertFilePath += "\\";
+
+                bulkInsertFile = m_bulkInsertFilePath + (new Guid()) + ".tmp";
+                bulkInsertFileStream = File.Create(bulkInsertFile);
+            }
+
+            return useBulkInsert;
+        }
+
+        private void WriteBulkInsertRecord(Table toTable, Fields fieldCollection, Table sourceTable, string fieldTerminator, string rowTerminator, FileStream bulkInsertFileStream, IDataReader fromReader)
+        {
+            Field commonField = new Field(toTable.Fields, "Unused", OleDbType.Integer);
+            byte[] dataRow;
+            StringBuilder bulkInsertRow = new StringBuilder();
+            string value;
+            bool addedFirstInsertField;
+
+            // Handle creating bulk insert file data for each row...
+            addedFirstInsertField = false;
+
+            // Get all field data to create row for bulk insert
+            foreach (Field field in toTable.Fields)
+            {
+                try
+                {
+                    // Lookup field in common field list
+                    commonField = fieldCollection[field.Name];
+
+                    if ((object)commonField != null)
+                    {
+                        // Found it, so use it...
+                        commonField.Value = fromReader[field.Name];
+                    }
+                    else
+                    {
+                        // Otherwise just use existing destination field
+                        commonField = field;
+                        commonField.Value = "";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if ((object)commonField != null)
+                    {
+                        commonField.Value = "";
+                        OnSQLFailure("Failed to get field value for '" + toTable.Name + "." + commonField.Name + "'", ex);
+                    }
+                    else
+                    {
+                        OnSQLFailure("Failed to get field value - field unknown.", ex);
+                    }
+                }
+
+                if ((object)commonField == null)
+                    continue;
+
+                // Get translated auto-inc value for field if possible...
+                commonField.Value = DereferenceValue(sourceTable, commonField.Name, commonField.Value);
+
+                // Get field value
+                value = Convert.ToString(Common.NotNull(commonField.Value)).Trim();
+
+                // We manually parse data type here instead of using SqlEncodedValue because data inserted
+                // into bulk insert file doesn't need SQL encoding...
+                switch (commonField.Type)
+                {
+                    case OleDbType.Boolean:
+                        if (value.Length > 0)
+                        {
+                            int tempValue;
+
+                            if (int.TryParse(value, out tempValue))
+                            {
+                                if (Convert.ToInt32(tempValue) == 0)
+                                {
+                                    value = "0";
+                                }
+                                else
+                                {
+                                    value = "1";
+                                }
+                            }
+                            else if (Convert.ToBoolean(value))
+                            {
+                                value = "1";
+                            }
+                            else
+                            {
+                                switch (value.Substring(0, 1).ToUpper())
+                                {
+                                    case "Y":
+                                    case "T":
+                                        value = "1";
+                                        break;
+                                    case "N":
+                                    case "F":
+                                        value = "0";
+                                        break;
+                                    default:
+                                        value = "0";
+                                        break;
+                                }
+                            }
+                        }
+                        break;
+                    case OleDbType.DBTimeStamp:
+                    case OleDbType.DBDate:
+                    case OleDbType.Date:
+                        if (value.Length > 0)
+                        {
+                            DateTime tempValue;
+                            if (DateTime.TryParse(value, out tempValue))
+                                value = tempValue.ToString("MM/dd/yyyy HH:mm:ss");
+                        }
+                        break;
+                    case OleDbType.DBTime:
+                        if (value.Length > 0)
+                        {
+                            DateTime tempValue;
+                            if (DateTime.TryParse(value, out tempValue))
+                                value = tempValue.ToString("HH:mm:ss");
+                        }
+                        break;
+                }
+
+                // Make sure field value does not contain field terminator or row terminator
+                value = value.Replace(fieldTerminator, m_delimeterReplacement);
+                value = value.Replace(rowTerminator, m_delimeterReplacement);
+
+                // Construct bulk insert row
+                if (addedFirstInsertField)
+                    bulkInsertRow.Append(fieldTerminator);
+                else
+                    addedFirstInsertField = true;
+
+                bulkInsertRow.Append(value);
+            }
+
+            bulkInsertRow.Append(rowTerminator);
+
+            // Add new row to temporary bulk insert file
+            dataRow = m_bulkInsertEncoding.GetBytes(bulkInsertRow.ToString());
+            bulkInsertFileStream.Write(dataRow, 0, dataRow.Length);
+        }
+
+        private void CompleteBulkInsert(Table toTable, int progressIndex, string bulkInsertFile, FileStream bulkInsertFileStream)
+        {
+            string bulkInsertSql = "BULK INSERT " + toTable.SQLEscapedName + " FROM '" + bulkInsertFile + "'" + (m_bulkInsertSettings.Length > 0 ? " WITH (" + m_bulkInsertSettings + ")" : "");
+
+            double startTime = 0;
+            double stopTime;
+
+            DateTime todayMidNight = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0);
+
+            // Close bulk insert file stream
+            bulkInsertFileStream.Close();
+
+            if ((object)BulkInsertExecuting != null)
+                BulkInsertExecuting(this, new EventArgs<string>(toTable.Name));
+
+            try
+            {
+                // Give system a few seconds to close bulk insert file (might have been real big)
+                FilePath.WaitForReadLock(bulkInsertFile, 15);
+
+                TimeSpan difference = DateTime.Now - todayMidNight;
+                startTime = difference.TotalSeconds;
+
+                toTable.Connection.ExecuteNonQuery(bulkInsertSql, Timeout);
+            }
+            catch (Exception ex)
+            {
+                if ((object)BulkInsertException != null)
+                    BulkInsertException(this, new EventArgs<string, string, Exception>(toTable.Name, bulkInsertSql, ex));
+            }
+            finally
+            {
+                TimeSpan difference = DateTime.Now - todayMidNight;
+                stopTime = difference.TotalSeconds;
+
+                if (Convert.ToInt32(startTime) == 0)
+                    startTime = stopTime;
+            }
+
+            try
+            {
+                FilePath.WaitForWriteLock(bulkInsertFile, 15);
+                File.Delete(bulkInsertFile);
+            }
+            catch (Exception ex)
+            {
+                if ((object)BulkInsertException != null)
+                    BulkInsertException(this, new EventArgs<string, string, Exception>(toTable.Name, bulkInsertSql, new InvalidOperationException("Failed to delete temporary bulk insert file \"" + bulkInsertFile + "\" due to exception [" + ex.Message + "], file will need to be manually deleted.", ex)));
+            }
+
+            if ((object)BulkInsertCompleted != null)
+                BulkInsertCompleted(this, new EventArgs<string, int, int>(toTable.Name, progressIndex, Convert.ToInt32(stopTime - startTime)));
         }
 
         /// <summary>
@@ -1021,7 +1142,7 @@ namespace DataMigrationUtility
                         }
                     }
 
-                    // Traverse path to parent autoinc field if it exists
+                    // Traverse path to parent auto-inc field if it exists
                     if (!inStack)
                     {
                         fieldStack.Add(lookupField.ReferencedBy);
@@ -1036,15 +1157,13 @@ namespace DataMigrationUtility
 
         private void ParseBulkInsertSettings(out string fieldTerminator, out string rowTerminator)
         {
-            string setting;
             string[] keyValue;
 
             fieldTerminator = "";
             rowTerminator = "";
 
-            foreach (string strSetting_loopVariable in m_bulkInsertSettings.Split(','))
+            foreach (string setting in m_bulkInsertSettings.Split(','))
             {
-                setting = strSetting_loopVariable;
                 keyValue = setting.Split('=');
 
                 if (keyValue.Length == 2)
@@ -1066,42 +1185,30 @@ namespace DataMigrationUtility
             rowTerminator = UnEncodeSetting(rowTerminator);
         }
 
-        /// <summary>
-        /// Generate unencoded value for SQL statement. <seealso cref="RemoveQuotes"/>
-        /// </summary>
-        /// <param name="setting"></param>
-        /// <returns></returns>
+        // Generate un-encoded value for SQL statement
         private string UnEncodeSetting(string setting)
         {
-
             setting = RemoveQuotes(setting);
+
             setting = setting.Replace("\\\\", "\\");
             setting = setting.Replace("\\'", "'");
             setting = setting.Replace("\\\"", "\"");
-            setting = setting.Replace("\\t", "\t"); // VB.Constants.vbTab);
-            setting = setting.Replace("\\n", "\n"); //VB.Constants.vbCrLf);
+            setting = setting.Replace("\\t", "\t");
+            setting = setting.Replace("\\n", "\n");
+
             return setting;
         }
 
-        /// <summary>
-        /// Remove single quotes from SQL statement
-        /// </summary>
-        /// <param name="value">string to be checked</param>
-        /// <returns></returns>
+        // Remove single quotes from SQL statement
         private string RemoveQuotes(string value)
         {
             if (value.Substring(0, 1) == "'")
                 value = value.Substring(2);
+
             if (value.Substring(value.Length - 1) == "'")
                 value = value.Substring(0, value.Length - 1);
 
-            //if (Strings.Left(Str, 1) == "'")
-            //    Str = Strings.Mid(Str, 2);
-            //if (Strings.Right(Str, 1) == "'")
-            //    Str = Strings.Mid(Str, 1, Strings.Len(Str) - 1);
-
             return value;
-
         }
 
         #endregion

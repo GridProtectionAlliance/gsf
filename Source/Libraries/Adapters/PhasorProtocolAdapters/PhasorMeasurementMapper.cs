@@ -58,6 +58,7 @@ namespace PhasorProtocolAdapters
 
         // Nested Types
 
+        // Represents a defined measurement for the mapper connection
         private class DefinedMeasurement
         {
             public string TagName;
@@ -66,6 +67,9 @@ namespace PhasorProtocolAdapters
             public double Multiplier;
         }
 
+        // Represents a missing data monitor needed to better calculate
+        // total missing data when there are redundant frames in a
+        // packet of data (e.g., when using IEC 61850-90-5)
         private class MissingDataMonitor : ConcentratorBase
         {
             #region [ Members ]
@@ -84,10 +88,6 @@ namespace PhasorProtocolAdapters
             /// </summary>
             public int RedundantFramesPerPacket
             {
-                get
-                {
-                    return m_redundantFramesPerPacket;
-                }
                 set
                 {
                     m_redundantFramesPerPacket = value;
@@ -1038,7 +1038,9 @@ namespace PhasorProtocolAdapters
                 }
             }
             else
+            {
                 m_timezone = TimeZoneInfo.Utc;
+            }
 
             if (settings.TryGetValue("timeAdjustmentTicks", out setting))
                 m_timeAdjustmentTicks = long.Parse(setting);
@@ -1061,7 +1063,9 @@ namespace PhasorProtocolAdapters
                 ConnectionAttemptInterval = interval;
             }
             else
+            {
                 ConnectionAttemptInterval = 1500.0D;
+            }
 
             if (settings.TryGetValue("allowUseOfCachedConfiguration", out setting))
                 m_allowUseOfCachedConfiguration = setting.ParseBoolean();
@@ -1352,26 +1356,22 @@ namespace PhasorProtocolAdapters
             // Update output measurements that input adapter can provide such that it can participate in connect on demand
             if (definedMeasurements.Count > 0)
             {
-                IMeasurement[] measurements = new IMeasurement[definedMeasurements.Count];
-                int i = 0;
-                foreach (var measurement in definedMeasurements.Values)
+                Func<DefinedMeasurement, IMeasurement> converter = measurement => (IMeasurement)new Measurement()
                 {
-                    measurements[i] = new Measurement()
-                    {
-                        Key = measurement.Key,
-                        TagName = measurement.TagName,
-                        Adder = measurement.Adder,
-                        Multiplier = measurement.Multiplier
-                    };
-                    i++;
-                }
-                OutputMeasurements = measurements;
+                    Key = measurement.Key,
+                    TagName = measurement.TagName,
+                    Adder = measurement.Adder,
+                    Multiplier = measurement.Multiplier
+                };
+
+                OutputMeasurements = definedMeasurements.Values.Select(converter).ToArray();
             }
             else
+            {
                 OutputMeasurements = null;
+            }
 
             OnStatusMessage("Loaded {0} active device measurements...", definedMeasurements.Count);
-
         }
 
         /// <summary>
@@ -1470,6 +1470,7 @@ namespace PhasorProtocolAdapters
         /// <summary>
         /// Resets counters related to latency calculations.
         /// </summary>
+        [AdapterCommand("Resets the latency counters for the device without interrupting the adapter's operations.", "Administrator", "Editor")]
         public void ResetLatencyCounters()
         {
             m_minimumLatency = 0;
@@ -1733,7 +1734,6 @@ namespace PhasorProtocolAdapters
             const int MagnitudeIndex = (int)CompositePhasorValue.Magnitude;
             const int FrequencyIndex = (int)CompositeFrequencyValue.Frequency;
             const int DfDtIndex = (int)CompositeFrequencyValue.DfDt;
-
 
             List<IMeasurement> mappedMeasurements = new List<IMeasurement>(m_lastMeasurementMappedCount);
             DeviceStatisticsHelper<ConfigurationCell> statisticsHelper;

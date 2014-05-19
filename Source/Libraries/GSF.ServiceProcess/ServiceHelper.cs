@@ -112,7 +112,6 @@ using GSF.Reflection;
 using GSF.Scheduling;
 using GSF.Security;
 using GSF.Security.Cryptography;
-using GSF.Threading;
 using GSF.Units;
 
 namespace GSF.ServiceProcess
@@ -390,7 +389,6 @@ namespace GSF.ServiceProcess
 
             // Components
             m_statusUpdateQueue = ProcessQueue<StatusUpdate>.CreateRealTimeQueue(ProcessStatusUpdates);
-            m_statusUpdateQueue.SynchronizedOperationType = SynchronizedOperationType.LongBackground;
             m_statusUpdateQueue.Name = "StatusUpdateQueue";
             m_statusUpdateQueue.ProcessException += StatusUpdateQueue_ProcessException;
 

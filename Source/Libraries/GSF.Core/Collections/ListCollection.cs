@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -54,7 +55,8 @@ namespace GSF.Collections
     /// only strongly typed names.
     /// </para>
     /// </remarks>
-    public class ListCollection<T> : Collection<T>
+    // Note that explicit re-declaration of interfaces is required here because of shadowed methods
+    public class ListCollection<T> : Collection<T>, IList<T>, IList, IReadOnlyList<T>
     {
         #region [ Members ]
 

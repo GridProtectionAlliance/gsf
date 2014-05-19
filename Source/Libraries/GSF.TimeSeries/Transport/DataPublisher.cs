@@ -59,6 +59,7 @@ using GSF.Net.Security;
 using GSF.Security.Cryptography;
 using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Statistics;
+using GSF.Units;
 using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries.Transport
@@ -3409,8 +3410,8 @@ namespace GSF.TimeSeries.Transport
 
                     if (rowCount > 0)
                     {
-                        double elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
-                        OnStatusMessage("{0:N0} records spanning {1:N0} tables of meta-data prepared in {2}, sending response to {3}...", rowCount, metadata.Tables.Count, elapsedTime < 0.01D ? "less than a second" : elapsedTime.ToString("0.00") + " seconds", connection.ConnectionID);
+                        Time elapsedTime = (DateTime.UtcNow.Ticks - startTime).ToSeconds();
+                        OnStatusMessage("{0:N0} records spanning {1:N0} tables of meta-data prepared in {2}, sending response to {3}...", rowCount, metadata.Tables.Count, elapsedTime.ToString(2), connection.ConnectionID);
                     }
                     else
                     {

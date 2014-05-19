@@ -32,10 +32,12 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Timers;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.Diagnostics;
 using GSF.IO;
+using GSF.Threading;
 using GSF.TimeSeries.Adapters;
 
 namespace GSF.TimeSeries.Statistics
@@ -49,6 +51,8 @@ namespace GSF.TimeSeries.Statistics
         #region [ Members ]
 
         // Nested Types
+
+        // Represents a source for a statistics
         private class StatisticSource
         {
             public object Source;
@@ -58,6 +62,37 @@ namespace GSF.TimeSeries.Statistics
             public DataRow[] StatisticMeasurements;
         }
 
+        // Represents a signal reference
+        private struct SignalReference
+        {
+            public readonly string Acronym;
+            public readonly bool IsStatistic;
+
+            public SignalReference(string signal)
+            {
+                // Signal reference may contain multiple dashes, we're interested in the last one
+                int splitIndex = signal.LastIndexOf('-');
+                string signalType;
+
+                if (splitIndex > -1)
+                {
+                    Acronym = signal.Substring(0, splitIndex).Trim().ToUpper();
+                    signalType = signal.Substring(splitIndex + 1).Trim().ToUpper();
+
+                    // If the length of the signal type acronym is greater than 2, then this is
+                    // an indexed signal type (e.g., SHELBY!PMU-ST2) - all statistics are indexed
+                    if (signalType.Length > 2)
+                    {
+                        IsStatistic = (signalType.Substring(0, 2) == "ST");
+                        return;
+                    }
+                }
+
+                // This is not a statistic signal reference
+                Acronym = signal;
+                IsStatistic = false;
+            }
+        }
 
         // Events
 
@@ -76,8 +111,10 @@ namespace GSF.TimeSeries.Statistics
         private readonly object m_statisticsLock;
         private readonly List<Statistic> m_statistics;
         private Timer m_statisticCalculationTimer;
+        private readonly LongSynchronizedOperation m_calculateStatisticsOperation;
         private readonly PerformanceMonitor m_performanceMonitor;
         private int m_lastStatisticCalculationCount;
+        private readonly Dictionary<string, List<DataRow>> m_dataSourceCache;
         private bool m_disposed;
 
         #endregion
@@ -92,7 +129,15 @@ namespace GSF.TimeSeries.Statistics
             m_statisticsLock = new object();
             m_statistics = new List<Statistic>();
             m_statisticCalculationTimer = new Timer();
+
+            m_calculateStatisticsOperation = new LongSynchronizedOperation(CalculateStatistics, ex =>
+            {
+                string message = "An error occurred while attempting to calculate statistics: " + ex.Message;
+                OnProcessException(new InvalidOperationException(message, ex));
+            });
+
             m_performanceMonitor = new PerformanceMonitor();
+            m_dataSourceCache = new Dictionary<string, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
@@ -227,6 +272,30 @@ namespace GSF.TimeSeries.Statistics
                     {
                         source.StatisticMeasurements = null;
                     }
+
+                    // Reload data source cache - we do this within existing StatisticSources lock
+                    // such that if contending with lock in CalculateStatistics it will wait for
+                    // this updated data source cache as well before running calculations.
+                    lock (m_dataSourceCache)
+                    {
+                        SignalReference signal;
+                        List<DataRow> dataRows;
+
+                        m_dataSourceCache.Clear();
+
+                        // Create a measurement row cache for each statistic measurement keyed to statistic source (i.e., SourceName!SourceAcronym).
+                        // Using a preprocessed dictionary is much faster than processing a LIKE expression in the Select method later.
+                        foreach (DataRow row in DataSource.Tables["ActiveMeasurements"].Select("SignalType = 'STAT'"))
+                        {
+                            signal = new SignalReference(row["SignalReference"].ToNonNullString());
+
+                            if (signal.IsStatistic)
+                            {
+                                dataRows = m_dataSourceCache.GetOrAdd(signal.Acronym, source => new List<DataRow>());
+                                dataRows.Add(row);
+                            }
+                        }
+                    }
                 }
 
                 lock (m_statisticsLock)
@@ -348,15 +417,8 @@ namespace GSF.TimeSeries.Statistics
 
         private void StatisticCalculationTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            try
-            {
-                CalculateStatistics();
-            }
-            catch (Exception ex)
-            {
-                string message = "An error occurred while attempting to calculate statistics: " + ex.Message;
-                OnProcessException(new InvalidOperationException(message, ex));
-            }
+            // If multiple timer events overlap, try-run will make sure only one is running at once
+            m_calculateStatisticsOperation.TryRun();
         }
 
         private void CalculateStatistics()
@@ -408,15 +470,34 @@ namespace GSF.TimeSeries.Statistics
         {
             List<IMeasurement> calculatedStatistics = new List<IMeasurement>();
             IMeasurement calculatedStatistic;
+            DataRow[] measurements;
 
             try
             {
+                measurements = source.StatisticMeasurements;
+
                 // Load statistic measurements for this source if none are currently loaded
-                if ((object)source.StatisticMeasurements == null)
-                    source.StatisticMeasurements = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalReference LIKE '{0}!{1}-ST%'", source.SourceName, source.SourceAcronym));
+                if ((object)measurements == null)
+                {
+                    List<DataRow> dataRows;
+
+                    lock (m_dataSourceCache)
+                    {
+                        m_dataSourceCache.TryGetValue(string.Format("{0}!{1}", source.SourceName, source.SourceAcronym), out dataRows);
+                    }
+
+                    // It is expected that the statistics source will exist in the data source cache, but just in case
+                    // it's not we fall back on the slower LIKE expression against the active measurements table
+                    if ((object)dataRows != null)
+                        measurements = dataRows.ToArray();
+                    else
+                        measurements = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalReference LIKE '{0}!{1}-ST%'", source.SourceName, source.SourceAcronym));
+
+                    source.StatisticMeasurements = measurements;
+                }
 
                 // Calculate statistics
-                foreach (DataRow measurement in source.StatisticMeasurements)
+                foreach (DataRow measurement in measurements)
                 {
                     calculatedStatistic = CalculateStatistic(statistics, serverTime, source, measurement);
 

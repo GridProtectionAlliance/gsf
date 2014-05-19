@@ -77,19 +77,19 @@ namespace GSF.Units
     public static class SI2
     {
         // Common unit factor SI names
-        private static readonly string[] s_names = new[] { "kilo", "mega", "giga", "tera", "peta", "exa" };
+        private static readonly string[] s_names = { "kilo", "mega", "giga", "tera", "peta", "exa" };
 
         // Common unit factor SI symbols
-        private static readonly string[] s_symbols = new[] { "K", "M", "G", "T", "P", "E", };
+        private static readonly string[] s_symbols = { "K", "M", "G", "T", "P", "E" };
 
         // IEC unit factor SI names
-        private static readonly string[] s_iecNames = new[] { "kibi", "mebi", "gibi", "tebi", "pebi", "exbi" };
+        private static readonly string[] s_iecNames = { "kibi", "mebi", "gibi", "tebi", "pebi", "exbi" };
 
         // IEC unit factor SI symbols
-        private static readonly string[] s_iecSymbols = new[] { "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", };
+        private static readonly string[] s_iecSymbols = { "Ki", "Mi", "Gi", "Ti", "Pi", "Ei" };
 
         // Unit factor SI factors
-        private static readonly long[] s_factors = new[] { Kilo, Mega, Giga, Tera, Peta, Exa };
+        private static readonly long[] s_factors = { Kilo, Mega, Giga, Tera, Peta, Exa };
 
         /// <summary>
         /// 1 exa, binary (E) = 1,152,921,504,606,846,976
@@ -98,7 +98,7 @@ namespace GSF.Units
         /// This is the common name.
         /// </remarks>
         public const long Exa = 1024L * Peta;
-        
+
         /// <summary>
         /// 1 exbi (Ei) = 1,152,921,504,606,846,976
         /// </summary>
@@ -248,14 +248,16 @@ namespace GSF.Units
         /// </summary>
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
+        /// <param name="symbolNames">Optional SI factor symbol or name array to use during textual conversion, defaults to <see cref="Symbols"/>.</param>
         /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
-        /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
+        /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
+        /// least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>), see <see cref="Names"/> or <see cref="Symbols"/>
+        /// arrays for examples.
         /// </remarks>
         /// <returns>A <see cref="string"/> representation of the number of units.</returns>
-        public static string ToScaledString(long totalUnits, string unitName)
+        public static string ToScaledString(long totalUnits, string unitName, string[] symbolNames = null)
         {
-            return ToScaledString(totalUnits, 3, unitName);
+            return ToScaledString(totalUnits, 2, unitName, symbolNames);
         }
 
         /// <summary>
@@ -281,82 +283,20 @@ namespace GSF.Units
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
+        /// <param name="symbolNames">Optional SI factor symbol or name array to use during textual conversion, defaults to <see cref="Symbols"/>.</param>
         /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
+        /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
+        /// least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>), see <see cref="Names"/> or <see cref="Symbols"/>
+        /// arrays for examples.
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName)
+        public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null)
         {
             if (decimalPlaces < 0)
                 throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative");
 
-            string format;
-
-            if (decimalPlaces > 0)
-                format = "0." + new string('0', decimalPlaces);
-            else
-                format = "0";
-
-            return ToScaledString(totalUnits, format, unitName, s_symbols);
-        }
-        /// <summary>
-        /// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
-        /// and IEC named representation (e.g., KiB, MiB, GiB, TiB, etc.).
-        /// </summary>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
-        /// <remarks>
-        /// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
-        /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
-        /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledIECString(long totalUnits, string unitName)
-        {
-            return ToScaledIECString(totalUnits, 3, unitName);
-        }
-
-        /// <summary>
-        /// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
-        /// and IEC named representation (e.g., KiB, MiB, GiB, TiB, etc.).
-        /// </summary>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="format">A numeric string format for scaled <paramref name="totalUnits"/>.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
-        /// <remarks>
-        /// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
-        /// </remarks>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledIECString(long totalUnits, string format, string unitName)
-        {
-            return ToScaledString(totalUnits, format, unitName, s_iecSymbols);
-        }
-
-        /// <summary>
-        /// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
-        /// and IEC named representation (e.g., KiB, MiB, GiB, TiB, etc.).
-        /// </summary>
-        /// <param name="totalUnits">Total units to represent textually.</param>
-        /// <param name="decimalPlaces">Number of decimal places to display.</param>
-        /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
-        /// <remarks>
-        /// <see cref="IECSymbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
-        /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
-        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledIECString(long totalUnits, int decimalPlaces, string unitName)
-        {
-            if (decimalPlaces < 0)
-                throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative");
-
-            string format;
-
-            if (decimalPlaces > 0)
-                format = "0." + new string('0', decimalPlaces);
-            else
-                format = "0";
-
-            return ToScaledString(totalUnits, format, unitName, s_iecSymbols);
+            return ToScaledString(totalUnits, "R", unitName, symbolNames ?? s_symbols, decimalPlaces);
         }
 
         /// <summary>
@@ -367,15 +307,16 @@ namespace GSF.Units
         /// <param name="format">A numeric string format for scaled <paramref name="totalUnits"/>.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <param name="symbolNames">SI factor symbol or name array to use during textual conversion.</param>
+        /// <param name="decimalPlaces">Optional number of decimal places to display.</param>
         /// <remarks>
         /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
         /// least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>), see <see cref="Names"/> or <see cref="Symbols"/>
         /// arrays for examples.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledString(long totalUnits, string format, string unitName, string[] symbolNames)
+        public static string ToScaledString(long totalUnits, string format, string unitName, string[] symbolNames, int decimalPlaces = -1)
         {
-            StringBuilder bytesImage = new StringBuilder();
+            StringBuilder image = new StringBuilder();
 
             double factor;
 
@@ -386,23 +327,26 @@ namespace GSF.Units
 
                 if (factor >= 1.0D)
                 {
-                    bytesImage.Append(factor.ToString(format));
-                    bytesImage.Append(' ');
-                    bytesImage.Append(symbolNames[i]);
-                    bytesImage.Append(unitName);
+                    if (decimalPlaces > -1)
+                        factor = Math.Round(factor, decimalPlaces);
+
+                    image.Append(factor.ToString(format));
+                    image.Append(' ');
+                    image.Append(symbolNames[i]);
+                    image.Append(unitName);
                     break;
                 }
             }
 
-            if (bytesImage.Length == 0)
+            if (image.Length == 0)
             {
                 // Display total number of units
-                bytesImage.Append(totalUnits);
-                bytesImage.Append(' ');
-                bytesImage.Append(unitName);
+                image.Append(totalUnits);
+                image.Append(' ');
+                image.Append(unitName);
             }
 
-            return bytesImage.ToString();
+            return image.ToString();
         }
     }
 }

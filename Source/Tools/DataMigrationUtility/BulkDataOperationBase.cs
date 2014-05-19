@@ -123,7 +123,6 @@ namespace DataMigrationUtility
     /// </summary>
     public abstract class BulkDataOperationBase : IBulkDataOperation, IDisposable
     {
-
         #region [ Members ]
 
         // Fields - Variables Declaration
@@ -305,7 +304,7 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
-        /// These are the tables that were found in both source and dest to be used for data operation...
+        /// These are the tables that were found in both source and destination to be used for data operation...
         /// </summary>
         public virtual Tables WorkTables
         {
@@ -408,9 +407,6 @@ namespace DataMigrationUtility
         }
 
         public abstract void Execute();
-
-
-        //Derived classes can't directly raise base class events, hence the following... 
 
         /// <summary>
         /// Raise an event if table change in data processing

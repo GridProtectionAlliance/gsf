@@ -74,13 +74,13 @@ namespace GSF.Units
     public static class SI
     {
         // Unit factor SI names
-        private static readonly string[] s_names = new[] { "yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli", "centi", "deci", "deca", "hecto", "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta" };
+        private static readonly string[] s_names = { "yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli", "centi", "deci", "deca", "hecto", "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta" };
 
         // Unit factor SI symbols
-        private static readonly string[] s_symbols = new[] { "y", "z", "a", "f", "p", "n", "µ", "m", "c", "d", "da", "h", "k", "M", "G", "T", "P", "E", "Z", "Y" };
-        
+        private static readonly string[] s_symbols = { "y", "z", "a", "f", "p", "n", "µ", "m", "c", "d", "da", "h", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+
         // Unit factor SI factors
-        private static readonly double[] s_factors = new[] { Yocto, Zepto, Atto, Femto, Pico, Nano, Micro, Milli, Centi, Deci, Deca, Hecto, Kilo, Mega, Giga, Tera, Peta, Exa, Zetta, Yotta };
+        private static readonly double[] s_factors = { Yocto, Zepto, Atto, Femto, Pico, Nano, Micro, Milli, Centi, Deci, Deca, Hecto, Kilo, Mega, Giga, Tera, Peta, Exa, Zetta, Yotta };
 
         /// <summary>
         /// SI prefix Y, 10^24
@@ -220,14 +220,16 @@ namespace GSF.Units
         /// </summary>
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        /// <param name="symbolNames">Optional SI factor symbol or name array to use during textual conversion, defaults to <see cref="Symbols"/>.</param>
         /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
-        /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
+        /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
+        /// least (<see cref="Yocto"/>) to greatest (<see cref="Yotta"/>), see <see cref="Names"/> or <see cref="Symbols"/>
+        /// arrays for examples.
         /// </remarks>
         /// <returns>A <see cref="string"/> representation of the number of units.</returns>
-        public static string ToScaledString(double totalUnits, string unitName)
+        public static string ToScaledString(double totalUnits, string unitName, string[] symbolNames = null)
         {
-            return ToScaledString(totalUnits, 3, unitName);
+            return ToScaledString(totalUnits, 2, unitName, symbolNames);
         }
 
         /// <summary>
@@ -251,24 +253,20 @@ namespace GSF.Units
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
+        /// <param name="symbolNames">Optional SI factor symbol or name array to use during textual conversion, defaults to <see cref="Symbols"/>.</param>
         /// <remarks>
-        /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
+        /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
+        /// least (<see cref="Yocto"/>) to greatest (<see cref="Yotta"/>), see <see cref="Names"/> or <see cref="Symbols"/>
+        /// arrays for examples.
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledString(double totalUnits, int decimalPlaces, string unitName)
+        public static string ToScaledString(double totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null)
         {
             if (decimalPlaces < 0)
                 throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative");
 
-            string format;
-
-            if (decimalPlaces > 0)
-                format = "0." + new string('0', decimalPlaces);
-            else
-                format = "0";
-
-            return ToScaledString(totalUnits, format, unitName, s_symbols);
+            return ToScaledString(totalUnits, "R", unitName, symbolNames ?? s_symbols, decimalPlaces);
         }
 
         /// <summary>
@@ -279,15 +277,16 @@ namespace GSF.Units
         /// <param name="format">A numeric string format for scaled <paramref name="totalUnits"/>.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "m/h" for meters per hour).</param>
         /// <param name="symbolNames">SI factor symbol or name array to use during textual conversion.</param>
+        /// <param name="decimalPlaces">Optional number of decimal places to display.</param>
         /// <remarks>
         /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
         /// least (<see cref="Yocto"/>) to greatest (<see cref="Yotta"/>), see <see cref="Names"/> or <see cref="Symbols"/>
         /// arrays for examples.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledString(double totalUnits, string format, string unitName, string[] symbolNames)
+        public static string ToScaledString(double totalUnits, string format, string unitName, string[] symbolNames, int decimalPlaces = -1)
         {
-            StringBuilder bytesImage = new StringBuilder();
+            StringBuilder image = new StringBuilder();
 
             double factor;
 
@@ -298,23 +297,29 @@ namespace GSF.Units
 
                 if (factor >= 1.0D)
                 {
-                    bytesImage.Append(factor.ToString(format));
-                    bytesImage.Append(' ');
-                    bytesImage.Append(symbolNames[i]);
-                    bytesImage.Append(unitName);
+                    if (decimalPlaces > -1)
+                        factor = Math.Round(factor, decimalPlaces);
+
+                    image.Append(factor.ToString(format));
+                    image.Append(' ');
+                    image.Append(symbolNames[i]);
+                    image.Append(unitName);
                     break;
                 }
             }
 
-            if (bytesImage.Length == 0)
+            if (image.Length == 0)
             {
                 // Display total number of units
-                bytesImage.Append(totalUnits.ToString(format));
-                bytesImage.Append(' ');
-                bytesImage.Append(unitName);
+                if (decimalPlaces > -1)
+                    totalUnits = Math.Round(totalUnits, decimalPlaces);
+
+                image.Append(totalUnits.ToString(format));
+                image.Append(' ');
+                image.Append(unitName);
             }
 
-            return bytesImage.ToString();
+            return image.ToString();
         }
     }
 }
