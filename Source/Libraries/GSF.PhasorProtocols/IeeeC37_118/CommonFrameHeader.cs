@@ -55,6 +55,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         private Ticks m_timestamp;
         private uint m_timebase;
         private uint m_timeQualityFlags;
+        private readonly int m_framesPerSecond;
+        private readonly double m_ticksPerFrame;
         private IChannelParsingState m_state;
 
         #endregion
@@ -115,6 +117,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 // m_timebase / 2L is added before dividing by timebase in order to round the result.
                 ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
                 m_timestamp += (ticksBeyondSecond + m_timebase / 2L) / m_timebase;
+
+                // Hang on to configured frame rate and ticks per frame
+                m_framesPerSecond = configurationFrame.FrameRate;
+                m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
             }
 
             m_timeQualityFlags = fractionOfSecond & Common.TimeQualityFlagsMask;
@@ -274,6 +280,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             get
             {
+                if (m_ticksPerFrame > 0.0D)
+                {
+                    // If frames per second is available, a higher precision FRACSEC can be calculated
+                    long frameIndex = (long)Math.Round(m_timestamp.DistanceBeyondSecond() / m_ticksPerFrame);
+                    return (UInt24)(uint)((m_timebase * frameIndex + m_framesPerSecond / 2L) / m_framesPerSecond);
+                }
+
                 // Fraction of second is determined by taking the "actual fractional second" of the timestamp and multiplying by timebase.
                 // Multiplication is done here before division so that the whole operation can be done using integer arithmetic.
                 // Ticks.PerSecond / 2L is added before dividing in order to round the result.

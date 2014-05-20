@@ -106,6 +106,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         private Ticks m_timestamp;
         private uint m_timebase;
         private uint m_timeQualityFlags;
+        private readonly int m_framesPerSecond;
+        private readonly double m_ticksPerFrame;
         private bool m_useETRConfiguration;
         private bool m_guessConfiguration;
         private bool m_parseRedundantASDUs;
@@ -195,6 +197,13 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 // m_timebase / 2L is added before dividing by timebase in order to round the result.
                 ticksBeyondSecond = (fractionOfSecond & ~Common.TimeQualityFlagsMask) * Ticks.PerSecond;
                 m_timestamp += (ticksBeyondSecond + m_timebase / 2L) / m_timebase;
+
+                if ((object)configurationFrame != null)
+                {
+                    // Hang on to configured frame rate and ticks per frame
+                    m_framesPerSecond = configurationFrame.FrameRate;
+                    m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
+                }
 
                 m_timeQualityFlags = fractionOfSecond & Common.TimeQualityFlagsMask;
             }
@@ -683,6 +692,13 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             get
             {
+                if (m_ticksPerFrame > 0.0D)
+                {
+                    // If frames per second is available, a higher precision FRACSEC can be calculated
+                    long frameIndex = (long)Math.Round(m_timestamp.DistanceBeyondSecond() / m_ticksPerFrame);
+                    return (UInt24)(uint)((m_timebase * frameIndex + m_framesPerSecond / 2L) / m_framesPerSecond);
+                }
+
                 // Fraction of second is determined by taking the "actual fractional second" of the timestamp and multiplying by timebase.
                 // Multiplication is done here before division so that the whole operation can be done using integer arithmetic.
                 // Ticks.PerSecond / 2L is added before dividing in order to round the result.

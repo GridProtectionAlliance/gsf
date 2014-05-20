@@ -349,7 +349,7 @@ namespace HistorianView
         }
 
         // Fields
-        private ICollection<ArchiveReader> m_archiveReaders;
+        private readonly ICollection<ArchiveReader> m_archiveReaders;
         private readonly List<MetadataWrapper> m_metadata;
         private string[] m_tokens;
 
@@ -1666,10 +1666,25 @@ namespace HistorianView
         // Clears the archives and closes child windows.
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            SaveSession(Path.Combine(FilePath.GetApplicationDataFolder(), "LastSession.hdv"), false);
-            ClearArchives();
-            m_chartWindow.Closing -= ChildWindow_Closing;
-            m_chartWindow.Close();
+            try
+            {
+                SaveSession(Path.Combine(FilePath.GetApplicationDataFolder(), "LastSession.hdv"), false);
+                ClearArchives();
+            }
+            catch
+            {
+                // Just die...
+            }
+
+            try
+            {
+                m_chartWindow.Closing -= ChildWindow_Closing;
+                m_chartWindow.Close();
+            }
+            catch
+            {
+                // Just die...
+            }
         }
 
         #endregion
