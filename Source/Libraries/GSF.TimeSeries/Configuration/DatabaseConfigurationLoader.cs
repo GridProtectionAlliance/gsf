@@ -171,7 +171,7 @@ namespace GSF.TimeSeries.Configuration
                 DataTable entities;
 
                 configuration = new DataSet("Iaon");
-                latestVersion = GetLatestVersion(0Lu);
+                latestVersion = GetLatestVersion(0LU);
                 ExecuteDataOperations();
 
                 // Load configuration entities defined in database
@@ -260,19 +260,30 @@ namespace GSF.TimeSeries.Configuration
                 // Get the changes since the current version of the configuration data set
                 trackedChanges = GetTrackedChanges(currentVersion);
 
-                // If there is a gap between the version of this configuration and the minimum version
-                // in the changes table, there might be some changes that were unaccounted for. Therefore,
-                // we pretend there are no tracked tables so that all tables will be reloaded from scratch
-                if (trackedChanges.Select().Select(row => Convert.ToUInt64(row["ID"])).DefaultIfEmpty(currentVersion + 1Lu).Min() != currentVersion + 1Lu)
+                if (TrackedChangesAreValid(currentVersion))
                 {
-                    currentVersion = ulong.MinValue;
-                    trackedTables = new string[0];
+                    // If there is a gap between the version of this configuration and the minimum version
+                    // in the changes table, there might be some changes that were unaccounted for. Therefore,
+                    // we pretend there are no tracked tables so that all tables will be reloaded from scratch
+                    if (trackedChanges.Select().Select(row => Convert.ToUInt64(row["ID"])).DefaultIfEmpty(currentVersion + 1LU).Min() != currentVersion + 1LU)
+                    {
+                        currentVersion = ulong.MinValue;
+                        trackedTables = new string[0];
+                    }
+                    else
+                    {
+                        trackedTables = database.Connection.RetrieveData(database.AdapterType, "SELECT Name FROM TrackedTable").Select()
+                            .Select(row => row["Name"].ToNonNullString())
+                            .ToArray();
+                    }
                 }
                 else
                 {
-                    trackedTables = database.Connection.RetrieveData(database.AdapterType, "SELECT Name FROM TrackedTable").Select()
-                        .Select(row => row["Name"].ToNonNullString())
-                        .ToArray();
+                    // If there is any tracked change version in the changes table that is smaller than the current
+                    // version, there may have been an unexpected manual database change or migration. Therefore,
+                    // we pretend there are no tracked tables so that all tables will be reloaded from scratch
+                    currentVersion = ulong.MinValue;
+                    trackedTables = new string[0];
                 }
 
                 foreach (DataRow entityRow in entities.Rows)
@@ -560,13 +571,12 @@ namespace GSF.TimeSeries.Configuration
         private ulong GetLatestVersion(ulong currentVersion)
         {
             ulong version = ulong.MinValue;
-            string query;
 
             Execute(database =>
             {
                 try
                 {
-                    query = string.Format("SELECT CASE WHEN COUNT(ID) = 0 THEN {0} ELSE MAX(ID) END FROM TrackedChange", currentVersion);
+                    string query = string.Format("SELECT CASE WHEN COUNT(ID) = 0 THEN {0} ELSE MAX(ID) END FROM TrackedChange", currentVersion);
                     version = Convert.ToUInt64(database.Connection.ExecuteScalar(query));
                 }
                 catch
@@ -576,6 +586,26 @@ namespace GSF.TimeSeries.Configuration
             });
 
             return version;
+        }
+
+        private bool TrackedChangesAreValid(ulong currentVersion)
+        {
+            bool changesAreValid = false;
+
+            Execute(database =>
+            {
+                try
+                {
+                    string query = string.Format("SELECT COUNT(ID) FROM TrackedChange WHERE ID < {0}", currentVersion);
+                    changesAreValid = Convert.ToInt32(database.Connection.ExecuteScalar(query)) == 0;
+                }
+                catch
+                {
+                    changesAreValid = false;
+                }
+            });
+
+            return changesAreValid;
         }
 
         private DataTable GetTrackedChanges(ulong currentVersion)

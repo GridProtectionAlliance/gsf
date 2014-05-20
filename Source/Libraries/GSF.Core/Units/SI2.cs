@@ -74,6 +74,7 @@ namespace GSF.Units
     /// <remarks>
     /// See <a href="http://physics.nist.gov/cuu/Units/binary.html">NIST Reference</a> for information on IEC standard names.
     /// </remarks>
+    // ReSharper disable RedundantNameQualifier
     public static class SI2
     {
         // Common unit factor SI names
@@ -249,15 +250,18 @@ namespace GSF.Units
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <param name="symbolNames">Optional SI factor symbol or name array to use during textual conversion, defaults to <see cref="Symbols"/>.</param>
+        /// <param name="minimumFactor">Optional minimum SI factor. Defaults to <see cref="SI2.Kilo"/>.</param>
+        /// <param name="maximumFactor">Optional maximum SI factor. Defaults to <see cref="SI2.Exa"/>.</param>
         /// <remarks>
         /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
         /// least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>), see <see cref="Names"/> or <see cref="Symbols"/>
         /// arrays for examples.
         /// </remarks>
         /// <returns>A <see cref="string"/> representation of the number of units.</returns>
-        public static string ToScaledString(long totalUnits, string unitName, string[] symbolNames = null)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
+        public static string ToScaledString(long totalUnits, string unitName, string[] symbolNames = null, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
         {
-            return ToScaledString(totalUnits, 2, unitName, symbolNames);
+            return ToScaledString(totalUnits, 2, unitName, symbolNames, minimumFactor, maximumFactor);
         }
 
         /// <summary>
@@ -267,13 +271,16 @@ namespace GSF.Units
         /// <param name="totalUnits">Total units to represent textually.</param>
         /// <param name="format">A numeric string format for scaled <paramref name="totalUnits"/>.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
+        /// <param name="minimumFactor">Optional minimum SI factor. Defaults to <see cref="SI2.Kilo"/>.</param>
+        /// <param name="maximumFactor">Optional maximum SI factor. Defaults to <see cref="SI2.Exa"/>.</param>
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
         /// <returns>A <see cref="string"/> representation of the number of units.</returns>
-        public static string ToScaledString(long totalUnits, string format, string unitName)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
+        public static string ToScaledString(long totalUnits, string format, string unitName, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
         {
-            return ToScaledString(totalUnits, format, unitName, s_symbols);
+            return ToScaledString(totalUnits, format, unitName, s_symbols, -1, minimumFactor, maximumFactor);
         }
 
         /// <summary>
@@ -284,19 +291,22 @@ namespace GSF.Units
         /// <param name="decimalPlaces">Number of decimal places to display.</param>
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <param name="symbolNames">Optional SI factor symbol or name array to use during textual conversion, defaults to <see cref="Symbols"/>.</param>
+        /// <param name="minimumFactor">Optional minimum SI factor. Defaults to <see cref="SI2.Kilo"/>.</param>
+        /// <param name="maximumFactor">Optional maximum SI factor. Defaults to <see cref="SI2.Exa"/>.</param>
         /// <remarks>
         /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
         /// least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>), see <see cref="Names"/> or <see cref="Symbols"/>
         /// arrays for examples.
         /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
+        public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName, string[] symbolNames = null, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
         {
             if (decimalPlaces < 0)
                 throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative");
 
-            return ToScaledString(totalUnits, "R", unitName, symbolNames ?? s_symbols, decimalPlaces);
+            return ToScaledString(totalUnits, "R", unitName, symbolNames ?? s_symbols, decimalPlaces, minimumFactor, maximumFactor);
         }
 
         /// <summary>
@@ -308,19 +318,33 @@ namespace GSF.Units
         /// <param name="unitName">Name of unit display (e.g., you could use "B" for bytes).</param>
         /// <param name="symbolNames">SI factor symbol or name array to use during textual conversion.</param>
         /// <param name="decimalPlaces">Optional number of decimal places to display.</param>
+        /// <param name="minimumFactor">Optional minimum SI factor. Defaults to <see cref="SI2.Kilo"/>.</param>
+        /// <param name="maximumFactor">Optional maximum SI factor. Defaults to <see cref="SI2.Exa"/>.</param>
         /// <remarks>
         /// The <paramref name="symbolNames"/> array needs one string entry for each defined SI item ordered from
         /// least (<see cref="Kilo"/>) to greatest (<see cref="Exa"/>), see <see cref="Names"/> or <see cref="Symbols"/>
         /// arrays for examples.
         /// </remarks>
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
-        public static string ToScaledString(long totalUnits, string format, string unitName, string[] symbolNames, int decimalPlaces = -1)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="minimumFactor"/> or <paramref name="maximumFactor"/> is not defined in <see cref="Factors"/> array.</exception>
+        public static string ToScaledString(long totalUnits, string format, string unitName, string[] symbolNames, int decimalPlaces = -1, long minimumFactor = SI2.Kilo, long maximumFactor = SI2.Exa)
         {
             StringBuilder image = new StringBuilder();
 
             double factor;
+            int minimumIndex, maximumIndex;
 
-            for (int i = s_factors.Length - 1; i >= 0; i--)
+            minimumIndex = GetFactorIndex(minimumFactor);
+
+            if (minimumIndex < 0)
+                throw new ArgumentOutOfRangeException("minimumFactor", "Unknown SI2 factor " + minimumFactor);
+
+            maximumIndex = GetFactorIndex(maximumFactor);
+
+            if (maximumIndex < 0)
+                throw new ArgumentOutOfRangeException("maximumFactor", "Unknown SI2 factor " + maximumFactor);
+
+            for (int i = maximumIndex; i >= minimumIndex; i--)
             {
                 // See if total number of units ranges in the specified factor range
                 factor = totalUnits / (double)s_factors[i];
@@ -347,6 +371,17 @@ namespace GSF.Units
             }
 
             return image.ToString();
+        }
+
+        private static int GetFactorIndex(long factor)
+        {
+            for (int i = 0; i < s_factors.Length; i++)
+            {
+                if (s_factors[i] == factor)
+                    return i;
+            }
+
+            return -1;
         }
     }
 }

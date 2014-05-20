@@ -444,6 +444,7 @@ namespace GSF.TimeSeries
             {
                 FilePath = m_cachedBinaryConfigurationFile
             };
+
             m_xmlCacheConfigurationLoader = new XMLConfigurationLoader()
             {
                 FilePath = m_cachedXmlConfigurationFile

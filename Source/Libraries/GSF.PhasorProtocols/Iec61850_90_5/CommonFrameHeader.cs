@@ -692,7 +692,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         {
             get
             {
-                if (m_ticksPerFrame > 0.0D)
+                if (m_framesPerSecond > 0)
                 {
                     // If frames per second is available, a higher precision FRACSEC can be calculated
                     long frameIndex = (long)Math.Round(m_timestamp.DistanceBeyondSecond() / m_ticksPerFrame);
