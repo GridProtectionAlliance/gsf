@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5A047659-4C24-4B72-A9F3-6553D91F95DC}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>LibraryTester</RootNamespace>
+    <AssemblyName>LibraryTester</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Adapters\AdoAdapters\AdoAdapters.csproj">
+      <Project>{c4145eb5-fef9-4419-ac5e-31d4f23ad311}</Project>
+      <Name>AdoAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\ArchivistAdapters\ArchivistAdapters.csproj">
+      <Project>{3fd4d092-3e0f-41c1-be8a-e0a924e76039}</Project>
+      <Name>ArchivistAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\AudioAdapters\AudioAdapters.csproj">
+      <Project>{26f261f8-8660-46d3-8090-bcda9eff5427}</Project>
+      <Name>AudioAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\COMTRADEAdapters\COMTRADEAdapters.csproj">
+      <Project>{7b0eeb2b-6f25-4d59-a15d-f39ea9dc94d3}</Project>
+      <Name>COMTRADEAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\CsvAdapters\CsvAdapters.csproj">
+      <Project>{a8861372-0fe2-45e5-9ded-73b55ac4196c}</Project>
+      <Name>CsvAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\DataQualityMonitoring\DataQualityMonitoring.csproj">
+      <Project>{ad054f7a-c944-4ba3-8cd8-ca275184bd33}</Project>
+      <Name>DataQualityMonitoring</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\Dnp3Adapters\DNP3Adapters.csproj">
+      <Project>{a04a48c2-112d-4ee3-a6b0-3784a1315bcf}</Project>
+      <Name>DNP3Adapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\DynamicCalculator\DynamicCalculator.csproj">
+      <Project>{374f5805-28db-4bca-8062-bf802793bd4f}</Project>
+      <Name>DynamicCalculator</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\EpriExport\EpriExport.csproj">
+      <Project>{5e1cd41c-6cb0-45d1-aa73-191a36028ce7}</Project>
+      <Name>EpriExport</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\FileAdapters\FileAdapters.csproj">
+      <Project>{08f5cce4-10c4-477c-b5c9-37f7d49748bc}</Project>
+      <Name>FileAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\FtpAdapters\FtpAdapters.csproj">
+      <Project>{43a322ee-37d2-4b13-ba16-023e88772f8d}</Project>
+      <Name>FtpAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\HistorianAdapters\HistorianAdapters.csproj">
+      <Project>{8a1bcfaa-19e8-408a-8c72-170b1211dc27}</Project>
+      <Name>HistorianAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\ICCPExport\ICCPExport.csproj">
+      <Project>{40face0f-06df-474c-a87c-59c8eac0b3f8}</Project>
+      <Name>ICCPExport</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\MongoAdapters\MongoAdapters.csproj">
+      <Project>{383f4f83-8228-4b9a-9757-250043b6e30b}</Project>
+      <Name>MongoAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\MySqlAdapters\MySqlAdapters.csproj">
+      <Project>{1fec4033-c80f-4cf1-835c-bbee0e7f6803}</Project>
+      <Name>MySqlAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\OneSecondFrequencyAverager\OneSecondFrequencyAverager.csproj">
+      <Project>{af33b063-d523-493e-951a-29c930a49002}</Project>
+      <Name>OneSecondFrequencyAverager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\PhasorProtocolAdapters\PhasorProtocolAdapters.csproj">
+      <Project>{c4f3c41d-d76a-4283-8732-681b67b7ad74}</Project>
+      <Name>PhasorProtocolAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\PIAdapters\PIAdapters.csproj">
+      <Project>{8bda86db-b944-4880-9d97-e4ff04577c03}</Project>
+      <Name>PIAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\PowerCalculations\PowerCalculations.csproj">
+      <Project>{b74cf4da-2972-489b-af08-419560ee57ef}</Project>
+      <Name>PowerCalculations</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\TestingAdapters\TestingAdapters.csproj">
+      <Project>{69846364-e3f5-4086-b9fe-d447bb7e56c3}</Project>
+      <Name>TestingAdapters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Adapters\WavInputAdapter\WavInputAdapter.csproj">
+      <Project>{3f0b62f6-99b8-4f57-8c58-0b4b862358ea}</Project>
+      <Name>WavInputAdapter</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.ASN1\GSF.ASN1.csproj">
+      <Project>{b3fba8d6-7c89-4fe9-8e90-f617604a7c3c}</Project>
+      <Name>GSF.ASN1</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Communication\GSF.Communication.csproj">
+      <Project>{2b2eb9be-e6a9-406f-bfe6-ff46dd6bd264}</Project>
+      <Name>GSF.Communication</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.COMTRADE\GSF.COMTRADE.csproj">
+      <Project>{9b93c212-786c-45c9-9b90-8cefd24ef19d}</Project>
+      <Name>GSF.COMTRADE</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj">
+      <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
+      <Name>GSF.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Historian\GSF.Historian.csproj">
+      <Project>{7e1abf87-8936-44e5-85c0-37044e0d3877}</Project>
+      <Name>GSF.Historian</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Media\GSF.Media.csproj">
+      <Project>{0f8e8efc-e7c7-4843-8ee6-8c7c7353892a}</Project>
+      <Name>GSF.Media</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.MMS\GSF.MMS.csproj">
+      <Project>{74b3264b-4740-4c2f-9dcb-373fdcd3a848}</Project>
+      <Name>GSF.MMS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Net\GSF.Net.csproj">
+      <Project>{72713097-3be3-4fa7-97b5-7ec3a2ba8316}</Project>
+      <Name>GSF.Net</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.PhasorProtocols\GSF.PhasorProtocols.csproj">
+      <Project>{54ca98cc-2f0a-41f2-879d-0e42b17e8544}</Project>
+      <Name>GSF.PhasorProtocols</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.PhasorProtocols\UI\GSF.PhasorProtocols.UI.csproj">
+      <Project>{a818c4b5-52b5-4e12-917e-4854c9ab4ef3}</Project>
+      <Name>GSF.PhasorProtocols.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.PhasorProtocols\UI\WPF\GSF.PhasorProtocols.UI.WPF.csproj">
+      <Project>{57261e91-7636-4f92-8d93-744a4aad7eb0}</Project>
+      <Name>GSF.PhasorProtocols.UI.WPF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.PQDIF\GSF.PQDIF.csproj">
+      <Project>{b4b5a12e-412e-4382-b991-3b67653f533c}</Project>
+      <Name>GSF.PQDIF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Security\GSF.Security.csproj">
+      <Project>{4060e729-effd-4e50-a0d5-99c0990ef7da}</Project>
+      <Name>GSF.Security</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.SELEventParser\GSF.SELEventParser.csproj">
+      <Project>{2c42b95f-a58a-413d-97e2-1968c087c472}</Project>
+      <Name>GSF.SELEventParser</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.ServiceBus\GSF.ServiceBus.csproj">
+      <Project>{c4524980-9901-4370-a49f-657761258e43}</Project>
+      <Name>GSF.ServiceBus</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.ServiceModel\GSF.ServiceModel.csproj">
+      <Project>{0622c318-5032-4d56-bb71-5ce64b502fb0}</Project>
+      <Name>GSF.ServiceModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.ServiceProcess\GSF.ServiceProcess.csproj">
+      <Project>{2e23e926-cf64-4607-bde1-1b2fc76f4919}</Project>
+      <Name>GSF.ServiceProcess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\GSF.TimeSeries.csproj">
+      <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
+      <Name>GSF.TimeSeries</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\Transport\UI\GSF.TimeSeries.Transport.UI.csproj">
+      <Project>{94f36768-e9a0-4783-bb0f-8c2c1771352e}</Project>
+      <Name>GSF.TimeSeries.Transport.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\Transport\UI\WPF\GSF.TimeSeries.Transport.UI.WPF.csproj">
+      <Project>{134819c5-c1bb-4ed1-be23-49ab5fb33744}</Project>
+      <Name>GSF.TimeSeries.Transport.UI.WPF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\UI\GSF.TimeSeries.UI.csproj">
+      <Project>{7ed01b57-dd71-4a38-bb29-65d629224a12}</Project>
+      <Name>GSF.TimeSeries.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.TimeSeries\UI\WPF\GSF.TimeSeries.UI.WPF.csproj">
+      <Project>{5af0d55a-30bf-46a5-8a47-fa885f56bfef}</Project>
+      <Name>GSF.TimeSeries.UI.WPF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Web\GSF.Web.csproj">
+      <Project>{0501c2dc-3428-4413-ae92-f0d82ff3dbbc}</Project>
+      <Name>GSF.Web</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\GSF.Windows\GSF.Windows.csproj">
+      <Project>{ea70c8aa-60de-4ffd-b1d9-b5406395b1af}</Project>
+      <Name>GSF.Windows</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\Hadoop.Replication\Hadoop.Replication.csproj">
+      <Project>{b561487f-79cc-4982-848e-c12f44b4669c}</Project>
+      <Name>Hadoop.Replication</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

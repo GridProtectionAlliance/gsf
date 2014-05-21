@@ -1,0 +1,42 @@
+﻿//******************************************************************************************************
+//  Program.cs - Gbtc
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  05/21/2014 - Ritchie
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using System;
+
+namespace LibraryTester
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Library Testing Host Application");
+            Console.WriteLine();
+            Console.WriteLine("This application simply references all libraries so that when set as the");
+            Console.WriteLine("\"StartUp Project\" in the solution you can use the \"Immediate Window\" to");
+            Console.WriteLine("test any library function.");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
+        }
+    }
+}
