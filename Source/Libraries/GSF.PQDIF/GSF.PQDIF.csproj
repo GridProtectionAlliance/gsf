@@ -95,6 +95,7 @@
     <Compile Include="Logical\ChannelDefinition.cs" />
     <Compile Include="Logical\ChannelInstance.cs" />
     <Compile Include="Logical\Equipment.cs" />
+    <Compile Include="Logical\QuantityCharacteristic.cs" />
     <Compile Include="Logical\SeriesValueType.cs" />
     <Compile Include="Logical\Vendor.cs" />
     <Compile Include="Physical\CollectionElement.cs" />
