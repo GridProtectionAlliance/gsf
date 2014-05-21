@@ -255,6 +255,11 @@ namespace GSF.TimeSeries.Transport
                 connectionString.AppendFormat("outputMeasurements={{{0}}}", outputMeasurements.Select(m => m.ID).ToDelimitedString(";"));
             }
 
+            if (connectionString.Length > 0)
+                connectionString.Append("; ");
+
+            connectionString.Append("respectInputDemands = true");
+
             // Assign critical adapter properties
             proxyAdapterRow["ID"] = 0;
             proxyAdapterRow["AdapterName"] = "PROXY!SERVICES";
