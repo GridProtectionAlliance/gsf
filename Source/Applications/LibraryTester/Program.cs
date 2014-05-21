@@ -23,12 +23,21 @@
 
 using System;
 
+using GSF;
+using GSF.Communication;
+
 namespace LibraryTester
 {
     class Program
     {
         static void Main(string[] args)
         {
+            // Add references for projects as needed, then add a simple call so that immediate window
+            // will have access to assembly. Only a single call per assembly is needed.
+
+            Common.IsDefaultValue(true);            // Call to load GSF.Core
+            Transport.GetDefaultIPStack();          // Call to load GSF.Communications
+
             Console.WriteLine("Library Testing Host Application");
             Console.WriteLine();
             Console.WriteLine("This application simply references all libraries so that when set as the");
