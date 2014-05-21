@@ -130,7 +130,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             {
                 // Make sure frame header exists
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(IEC61850_90_5.FrameType.CommandFrame, base.IDCode, base.Timestamp);
+                    m_frameHeader = new CommonFrameHeader(null, IEC61850_90_5.FrameType.CommandFrame, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
             }

@@ -132,7 +132,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             {
                 // Make sure frame header exists
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(IEEEC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp);
+                    m_frameHeader = new CommonFrameHeader(null, IEEEC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
             }

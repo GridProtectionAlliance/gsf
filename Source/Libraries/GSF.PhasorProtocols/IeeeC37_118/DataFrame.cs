@@ -161,7 +161,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 // Make sure frame header exists - using base class timestamp to
                 // prevent recursion (m_frameHeader doesn't exist yet)
                 if ((object)m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(TypeID, base.IDCode, base.Timestamp);
+                    m_frameHeader = new CommonFrameHeader(ConfigurationFrame, TypeID, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
             }

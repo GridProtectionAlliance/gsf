@@ -66,16 +66,24 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Creates a new <see cref="CommonFrameHeader"/> from specified parameters.
         /// </summary>
+        /// <param name="configurationFrame">IEEE C37.118 <see cref="ConfigurationFrame1"/> if available.</param>
         /// <param name="typeID">The IEEE C37.118 specific frame type of this frame.</param>
         /// <param name="idCode">The ID code of this frame.</param>
         /// <param name="timestamp">The timestamp of this frame.</param>
-        public CommonFrameHeader(FrameType typeID, ushort idCode, Ticks timestamp)
+        public CommonFrameHeader(ConfigurationFrame1 configurationFrame, FrameType typeID, ushort idCode, Ticks timestamp)
         {
             m_frameType = typeID;
             m_idCode = idCode;
             m_timestamp = timestamp;
             m_version = 1;
             m_timebase = (UInt24)100000;
+
+            if ((object)configurationFrame != null)
+            {
+                // Hang on to configured frame rate and ticks per frame
+                m_framesPerSecond = configurationFrame.FrameRate;
+                m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
+            }
         }
 
         /// <summary>

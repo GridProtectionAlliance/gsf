@@ -124,13 +124,14 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         /// <summary>
         /// Creates a new <see cref="CommonFrameHeader"/> from specified parameters.
         /// </summary>
+        /// <param name="configurationFrame">IEC 61850-90-5 <see cref="ConfigurationFrame"/> if available.</param>
         /// <param name="typeID">The IEC 61850-90-5 specific frame type of this frame.</param>
         /// <param name="idCode">The ID code of this frame.</param>
         /// <param name="timestamp">The timestamp of this frame.</param>
         /// <param name="msvID">MSVID to use for this frame, if any.</param>
         /// <param name="asduCount">ASDU count.</param>
         /// <param name="configurationRevision">Configuration revision.</param>
-        public CommonFrameHeader(FrameType typeID, ushort idCode, Ticks timestamp, string msvID = null, int asduCount = 1, uint configurationRevision = 1)
+        public CommonFrameHeader(ConfigurationFrame configurationFrame, FrameType typeID, ushort idCode, Ticks timestamp, string msvID = null, int asduCount = 1, uint configurationRevision = 1)
         {
             m_frameType = typeID;
             m_idCode = idCode;
@@ -143,6 +144,13 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
 
             m_securityAlgorithm = SecurityAlgorithm.None;
             m_signatureAlgorithm = SignatureAlgorithm.None;
+
+            if ((object)configurationFrame != null)
+            {
+                // Hang on to configured frame rate and ticks per frame
+                m_framesPerSecond = configurationFrame.FrameRate;
+                m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
+            }
         }
 
         /// <summary>

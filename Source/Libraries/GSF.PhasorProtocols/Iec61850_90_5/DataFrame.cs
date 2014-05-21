@@ -241,7 +241,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 // prevent recursion (m_frameHeader doesn't exist yet)
                 if ((object)m_frameHeader == null)
                 {
-                    m_frameHeader = new CommonFrameHeader(TypeID, base.IDCode, base.Timestamp, m_msvID, m_asduCount, m_configurationRevision)
+                    m_frameHeader = new CommonFrameHeader(ConfigurationFrame, TypeID, base.IDCode, base.Timestamp, m_msvID, m_asduCount, m_configurationRevision)
                     {
                         ConfigurationFrame = ConfigurationFrame
                     };
