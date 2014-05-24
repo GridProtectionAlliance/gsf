@@ -22,13 +22,12 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GSF.PQDIF.Logical
 {
+    /// <summary>
+    /// Specifies additional detail about the meaning of the series data.
+    /// </summary>
     public static class QuantityCharacteristic
     {
         /// <summary>
@@ -219,27 +218,27 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Sliding PLT.
         /// </summary>
-        public static readonly Guid PLTSlide = new Guid("2257ec05-06ea-4709-b43a-0c00534d554a");
+        public static readonly Guid FlkrPLTSlide = new Guid("2257ec05-06ea-4709-b43a-0c00534d554a");
 
         /// <summary>
         /// Pi LPF.
         /// </summary>
-        public static readonly Guid PiLPF = new Guid("4d693eec-5d1d-4531-993a-793b53563d");
+        public static readonly Guid FlkrPiLPF = new Guid("4d693eec-5d1d-4531-993a-793b5356c63d");
 
         /// <summary>
         /// Pi max.
         /// </summary>
-        public static readonly Guid PiMax = new Guid("126de61c-6691-4d16-8fdf-46482bca4694");
+        public static readonly Guid FlkrPiMax = new Guid("126de61c-6691-4d16-8fdf-46482bca4694");
 
         /// <summary>
         /// Pi root.
         /// </summary>
-        public static readonly Guid PiRoot = new Guid("e065b621-ffdb-4598-9330-4d09353988b6");
+        public static readonly Guid FlkrPiRoot = new Guid("e065b621-ffdb-4598-9330-4d09353988b6");
 
         /// <summary>
         /// Pi root LPF.
         /// </summary>
-        public static readonly Guid PiRootLPF = new Guid("7d11f283-1ce7-4e58-8af0-79048793b8a7");
+        public static readonly Guid FlkrPiRootLPF = new Guid("7d11f283-1ce7-4e58-8af0-79048793b8a7");
 
         /// <summary>
         /// IT.
@@ -538,66 +537,66 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Value of active power integrated over time (Energy - watt-hours).
         /// </summary>
-        public static readonly Guid PIVLIntg = new Guid("f098a9a0-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid PIVLIntg = new Guid("f098a9a0-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of active power integrated over time (Energy - watt-hours) in the positive direction (toward load).
         /// </summary>
-        public static readonly Guid PIVLIntgPos = new Guid("f098a9a1-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid PIVLIntgPos = new Guid("f098a9a1-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of active fundamental frequency power integrated over time
         /// (Energy - watt-hours) in the positive direction (toward load).
         /// </summary>
-        public static readonly Guid PIVLIntgPosFund = new Guid("f098a9a2-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid PIVLIntgPosFund = new Guid("f098a9a2-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of active power integrated over time (Energy - watt-hours) in the negative direction (away from load).
         /// </summary>
-        public static readonly Guid PIVLIntgNeg = new Guid("f098a9a3-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid PIVLIntgNeg = new Guid("f098a9a3-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of active fundamental frequency power integrated over time
         /// (Energy - watt-hours) in the negative direction (away from load).
         /// </summary>
-        public static readonly Guid PIVLIntgNegFund = new Guid("f098a9a4-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid PIVLIntgNegFund = new Guid("f098a9a4-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of reactive power integrated over time (var-hours).
         /// </summary>
-        public static readonly Guid QIVLIntg = new Guid("f098a9a5-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid QIVLIntg = new Guid("f098a9a5-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of reactive power integrated over time (Energy - watt-hours) in the positive direction (toward load).
         /// </summary>
-        public static readonly Guid QIVLIntgPos = new Guid("f098a9a6-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid QIVLIntgPos = new Guid("f098a9a6-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of fundamental frequency reactive power integrated over time
         /// (Energy - watt-hours) in the positive direction (toward load).
         /// </summary>
-        public static readonly Guid QIVLIntgPosFund = new Guid("f098a9a7-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid QIVLIntgPosFund = new Guid("f098a9a7-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of fundamental frequency reactive power integrated over time
         /// (Energy - watt-hours) in the negative direction (away from load).
         /// </summary>
-        public static readonly Guid QIVLIntgNegFund = new Guid("f098a9a8-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid QIVLIntgNegFund = new Guid("f098a9a8-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of reactive power integrated over time (Energy - watt-hours) in the negative direction (away from load).
         /// </summary>
-        public static readonly Guid QIVLIntgNeg = new Guid("f098a9a9-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid QIVLIntgNeg = new Guid("f098a9a9-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of apparent power integrated over time (VA-hours).
         /// </summary>
-        public static readonly Guid SIVLIntg = new Guid("f098a9aa-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid SIVLIntg = new Guid("f098a9aa-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// Value of fundamental frequency apparent power integrated over time (VA-hours).
         /// </summary>
-        public static readonly Guid SIVLIntgFund = new Guid("f098a9ab-3ee4-11d5-a4b3-44453540000");
+        public static readonly Guid SIVLIntgFund = new Guid("f098a9ab-3ee4-11d5-a4b3-444553540000");
 
         /// <summary>
         /// D axis components.
@@ -636,6 +635,367 @@ namespace GSF.PQDIF.Logical
 
         /// <summary>
         /// Returns the name of the given quantity characteristic.
+        /// </summary>
+        /// <param name="quantityCharacteristic">The GUID tag which identifies the quantity characteristic.</param>
+        /// <returns>The name of the given quantity characteristic.</returns>
+        public static string ToName(Guid quantityCharacteristic)
+        {
+            if (quantityCharacteristic == None)
+                return "None";
+
+            if (quantityCharacteristic == Instantaneous)
+                return "Instantaneous";
+
+            if (quantityCharacteristic == Spectra)
+                return "Spectra";
+
+            if (quantityCharacteristic == Peak)
+                return "Peak";
+
+            if (quantityCharacteristic == RMS)
+                return "RMS";
+
+            if (quantityCharacteristic == HRMS)
+                return "HRMS";
+
+            if (quantityCharacteristic == Frequency)
+                return "Frequency";
+
+            if (quantityCharacteristic == TotalTHD)
+                return "TotalTHD";
+
+            if (quantityCharacteristic == EvenTHD)
+                return "EvenTHD";
+
+            if (quantityCharacteristic == OddTHD)
+                return "OddTHD";
+
+            if (quantityCharacteristic == CrestFactor)
+                return "CrestFactor";
+
+            if (quantityCharacteristic == FormFactor)
+                return "FormFactor";
+
+            if (quantityCharacteristic == ArithSum)
+                return "ArithSum";
+
+            if (quantityCharacteristic == S0S1)
+                return "S0S1";
+
+            if (quantityCharacteristic == S2S1)
+                return "S2S1";
+
+            if (quantityCharacteristic == SPos)
+                return "SPos";
+
+            if (quantityCharacteristic == SNeg)
+                return "SNeg";
+
+            if (quantityCharacteristic == SZero)
+                return "SZero";
+
+            if (quantityCharacteristic == AvgImbal)
+                return "AvgImbal";
+
+            if (quantityCharacteristic == TotalTHDRMS)
+                return "TotalTHDRMS";
+
+            if (quantityCharacteristic == OddTHDRMS)
+                return "OddTHDRMS";
+
+            if (quantityCharacteristic == EvenTHDRMS)
+                return "EvenTHDRMS";
+
+            if (quantityCharacteristic == TID)
+                return "TID";
+
+            if (quantityCharacteristic == TIDRMS)
+                return "TIDRMS";
+
+            if (quantityCharacteristic == IHRMS)
+                return "IHRMS";
+
+            if (quantityCharacteristic == SpectraHGroup)
+                return "SpectraHGroup";
+
+            if (quantityCharacteristic == SpectraIGroup)
+                return "SpectraIGroup";
+
+            if (quantityCharacteristic == TIF)
+                return "TIF";
+
+            if (quantityCharacteristic == FlkrMagAvg)
+                return "FlkrMagAvg";
+
+            if (quantityCharacteristic == FlkrMaxDVV)
+                return "FlkrMaxDVV";
+
+            if (quantityCharacteristic == FlkrFreqMax)
+                return "FlkrFreqMax";
+
+            if (quantityCharacteristic == FlkrMagMax)
+                return "FlkrMagMax";
+
+            if (quantityCharacteristic == FlkrWgtAvg)
+                return "FlkrWgtAvg";
+
+            if (quantityCharacteristic == FlkrSpectrum)
+                return "FlkrSpectrum";
+
+            if (quantityCharacteristic == FlkrPST)
+                return "FlkrPST";
+
+            if (quantityCharacteristic == FlkrPLT)
+                return "FlkrPLT";
+
+            if (quantityCharacteristic == TIF)
+                return "TIF";
+
+            if (quantityCharacteristic == FlkrPLTSlide)
+                return "PLTSlide";
+
+            if (quantityCharacteristic == FlkrPiLPF)
+                return "PiLPF";
+
+            if (quantityCharacteristic == FlkrPiMax)
+                return "PiMax";
+
+            if (quantityCharacteristic == FlkrPiRoot)
+                return "PiRoot";
+
+            if (quantityCharacteristic == FlkrPiRootLPF)
+                return "PiRootLPF";
+
+            if (quantityCharacteristic == IT)
+                return "IT";
+
+            if (quantityCharacteristic == RMSDemand)
+                return "RMSDemand";
+
+            if (quantityCharacteristic == ANSITDF)
+                return "ANSITDF";
+
+            if (quantityCharacteristic == KFactor)
+                return "KFactor";
+
+            if (quantityCharacteristic == TDD)
+                return "TDD";
+
+            if (quantityCharacteristic == RMSPeakDemand)
+                return "RMSPeakDemand";
+
+            if (quantityCharacteristic == P)
+                return "P";
+
+            if (quantityCharacteristic == Q)
+                return "Q";
+
+            if (quantityCharacteristic == S)
+                return "S";
+
+            if (quantityCharacteristic == PF)
+                return "PF";
+
+            if (quantityCharacteristic == DF)
+                return "DF";
+
+            if (quantityCharacteristic == PDemand)
+                return "PDemand";
+
+            if (quantityCharacteristic == QDemand)
+                return "QDemand";
+
+            if (quantityCharacteristic == SDemand)
+                return "SDemand";
+
+            if (quantityCharacteristic == DFDemand)
+                return "DFDemand";
+
+            if (quantityCharacteristic == PFDemand)
+                return "PFDemand";
+
+            if (quantityCharacteristic == PPredDemand)
+                return "PPredDemand";
+
+            if (quantityCharacteristic == QPredDemand)
+                return "QPredDemand";
+
+            if (quantityCharacteristic == SPredDemand)
+                return "SPredDemand";
+
+            if (quantityCharacteristic == PCoQDemand)
+                return "PCoQDemand";
+
+            if (quantityCharacteristic == PCoSDemand)
+                return "PCoSDemand";
+
+            if (quantityCharacteristic == QCoPDemand)
+                return "QCoPDemand";
+
+            if (quantityCharacteristic == QCoSDemand)
+                return "QCoSDemand";
+
+            if (quantityCharacteristic == DFCoSDemand)
+                return "DFCoSDemand";
+
+            if (quantityCharacteristic == PFCoSDemand)
+                return "PFCoSDemand";
+
+            if (quantityCharacteristic == PFCoQDemand)
+                return "PFCoQDemand";
+
+            if (quantityCharacteristic == AngleFund)
+                return "AngleFund";
+
+            if (quantityCharacteristic == QFund)
+                return "QFund";
+
+            if (quantityCharacteristic == PFVector)
+                return "PFVector";
+
+            if (quantityCharacteristic == DFVector)
+                return "DFVector";
+
+            if (quantityCharacteristic == SVector)
+                return "SVector";
+
+            if (quantityCharacteristic == SVectorFund)
+                return "SVectorFund";
+
+            if (quantityCharacteristic == SFund)
+                return "SFund";
+
+            if (quantityCharacteristic == SCoPDemand)
+                return "SCoPDemand";
+
+            if (quantityCharacteristic == SCoQDemand)
+                return "SCoQDemand";
+
+            if (quantityCharacteristic == PFArith)
+                return "PFArith";
+
+            if (quantityCharacteristic == DFArith)
+                return "DFArith";
+
+            if (quantityCharacteristic == SArith)
+                return "SArith";
+
+            if (quantityCharacteristic == SArithFund)
+                return "SArithFund";
+
+            if (quantityCharacteristic == SPeakDemand)
+                return "SPeakDemand";
+
+            if (quantityCharacteristic == QPeakDemand)
+                return "QPeakDemand";
+
+            if (quantityCharacteristic == PPeakDemand)
+                return "PPeakDemand";
+
+            if (quantityCharacteristic == PHarmonicUnsigned)
+                return "PHarmonicUnsigned";
+
+            if (quantityCharacteristic == PFund)
+                return "PFund";
+
+            if (quantityCharacteristic == PIntg)
+                return "PIntg";
+
+            if (quantityCharacteristic == PIntgPos)
+                return "PIntgPos";
+
+            if (quantityCharacteristic == PIntgPosFund)
+                return "PIntgPosFund";
+
+            if (quantityCharacteristic == PIntgNeg)
+                return "PIntgNeg";
+
+            if (quantityCharacteristic == PIntgNegFund)
+                return "PIntgNegFund";
+
+            if (quantityCharacteristic == QIntg)
+                return "QIntg";
+
+            if (quantityCharacteristic == QIntgPos)
+                return "QIntgPos";
+
+            if (quantityCharacteristic == QIntgPosFund)
+                return "QIntgPosFund";
+
+            if (quantityCharacteristic == QIntgNegFund)
+                return "QIntgNegFund";
+
+            if (quantityCharacteristic == QIntgNeg)
+                return "QIntgNeg";
+
+            if (quantityCharacteristic == SIntg)
+                return "SIntg";
+
+            if (quantityCharacteristic == SIntgFund)
+                return "SIntgFund";
+
+            if (quantityCharacteristic == PIVLIntg)
+                return "PIVLIntg";
+
+            if (quantityCharacteristic == PIVLIntgPos)
+                return "PIVLIntgPos";
+
+            if (quantityCharacteristic == PIVLIntgPosFund)
+                return "PIVLIntgPosFund";
+
+            if (quantityCharacteristic == PIVLIntgNeg)
+                return "PIVLIntgNeg";
+
+            if (quantityCharacteristic == PIVLIntgNegFund)
+                return "PIVLIntgNegFund";
+
+            if (quantityCharacteristic == QIVLIntg)
+                return "QIVLIntg";
+
+            if (quantityCharacteristic == QIVLIntgPos)
+                return "QIVLIntgPos";
+
+            if (quantityCharacteristic == QIVLIntgPos)
+                return "QIVLIntgPos";
+
+            if (quantityCharacteristic == QIVLIntgNegFund)
+                return "QIVLIntgNegFund";
+
+            if (quantityCharacteristic == QIVLIntgNeg)
+                return "QIVLIntgNeg";
+
+            if (quantityCharacteristic == SIVLIntg)
+                return "SIVLIntg";
+
+            if (quantityCharacteristic == SIVLIntgFund)
+                return "SIVLIntgFund";
+
+            if (quantityCharacteristic == DAxisField)
+                return "DAxisField";
+
+            if (quantityCharacteristic == QAxis)
+                return "QAxis";
+
+            if (quantityCharacteristic == Rotational)
+                return "Rotational";
+
+            if (quantityCharacteristic == DAxis)
+                return "DAxis";
+
+            if (quantityCharacteristic == Linear)
+                return "Linear";
+
+            if (quantityCharacteristic == TransferFunc)
+                return "TransferFunc";
+
+            if (quantityCharacteristic == Status)
+                return "Status";
+
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a string representation of the given quantity characteristic.
         /// </summary>
         /// <param name="quantityCharacteristic">The GUID tag which identifies the quantity characteristic.</param>
         /// <returns>The name of the given quantity characteristic.</returns>
@@ -752,19 +1112,19 @@ namespace GSF.PQDIF.Logical
             if (quantityCharacteristic == TIF)
                 return "TIF normalized to RMS";
 
-            if (quantityCharacteristic == PLTSlide)
+            if (quantityCharacteristic == FlkrPLTSlide)
                 return "Sliding PLT";
 
-            if (quantityCharacteristic == PiLPF)
+            if (quantityCharacteristic == FlkrPiLPF)
                 return "Pi LPF";
 
-            if (quantityCharacteristic == PiMax)
+            if (quantityCharacteristic == FlkrPiMax)
                 return "Pi max";
 
-            if (quantityCharacteristic == PiRoot)
+            if (quantityCharacteristic == FlkrPiRoot)
                 return "Pi root";
 
-            if (quantityCharacteristic == PiRootLPF)
+            if (quantityCharacteristic == FlkrPiRootLPF)
                 return "Pi root LPF";
 
             if (quantityCharacteristic == IT)

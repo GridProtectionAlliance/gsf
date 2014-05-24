@@ -85,7 +85,7 @@ namespace GSF.PQDIF.Logical
         /// <summary>
         /// Area under the signal, usually an rms voltage, current, or other quantity.
         /// </summary>
-        public static readonly Guid Area = new Guid("c7825ce0-8ace-11cf-9d89-0080c72e70a3");
+        public static readonly Guid Area = new Guid("c7825ce0-8ace-11d3-b92f-0050da2b1f4d");
 
         /// <summary>
         /// Latitude.
