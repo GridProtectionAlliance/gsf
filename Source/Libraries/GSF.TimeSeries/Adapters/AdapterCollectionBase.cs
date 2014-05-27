@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -112,6 +113,8 @@ namespace GSF.TimeSeries.Adapters
         private int m_processingInterval;
         private Timer m_monitorTimer;
         private bool m_monitorTimerEnabled;
+        private readonly ConcurrentQueue<T> m_initializationQueue;
+        private int m_initializationThreadCount;
         private bool m_enabled;
         private bool m_disposed;
 
@@ -139,6 +142,8 @@ namespace GSF.TimeSeries.Adapters
             m_monitorTimer.Interval = 60000;
             m_monitorTimer.AutoReset = true;
             m_monitorTimer.Enabled = false;
+
+            m_initializationQueue = new ConcurrentQueue<T>();
         }
 
         /// <summary>
@@ -1082,73 +1087,6 @@ namespace GSF.TimeSeries.Adapters
             }
         }
 
-        // Thread delegate to handle item startup
-        private void InitializeAndStartItem(T item)
-        {
-            Timer initializationTimeoutTimer = null;
-
-            try
-            {
-                // If initialization timeout is specified for this item,
-                // start the initialization timeout timer
-                if (item.InitializationTimeout > 0)
-                {
-                    initializationTimeoutTimer = new Timer(item.InitializationTimeout);
-
-                    initializationTimeoutTimer.Elapsed += (sender, args) =>
-                    {
-                        const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
-                            " its timeout of {1} seconds. The adapter may still initialize, however this" +
-                            " may indicate a problem with the adapter. If you consider this to be normal," +
-                            " try adjusting the initialization timeout to suppress this message during" +
-                            " normal operations.";
-
-                        OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
-                    };
-
-                    initializationTimeoutTimer.AutoReset = false;
-                    initializationTimeoutTimer.Start();
-                }
-
-                // Initialize the item
-                item.Initialize();
-
-                // Initialization successfully completed, so stop the timeout timer
-                if ((object)initializationTimeoutTimer != null)
-                    initializationTimeoutTimer.Stop();
-
-                try
-                {
-                    // If the item is set to auto-start, start it now
-                    if (item.AutoStart)
-                        item.Start();
-                }
-                catch (Exception ex)
-                {
-                    // We report any errors encountered during startup...
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
-                }
-
-                // Set item to its final initialized state so that
-                // start and stop commands may be issued to the adapter
-                item.Initialized = true;
-
-                // If input measurement keys were not updated during initialize of the adapter,
-                // make sure to notify routing tables that adapter is ready for broadcast
-                OnInputMeasurementKeysUpdated();
-            }
-            catch (Exception ex)
-            {
-                // We report any errors encountered during initialization...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to initialize adapter {0}: {1}", item.Name, ex.Message), ex));
-            }
-            finally
-            {
-                if ((object)initializationTimeoutTimer != null)
-                    initializationTimeoutTimer.Dispose();
-            }
-        }
-
         /// <summary>
         /// Stops each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
@@ -1455,13 +1393,26 @@ namespace GSF.TimeSeries.Adapters
 
                 try
                 {
-                    // If automatically initializing new elements, handle object initialization from
-                    // thread pool so it can take needed amount of time
+                    // If automatically initializing new elements, handle object initialization on
+                    // its own thread so it can take needed amount of time
                     if (AutoInitialize)
                     {
-                        Thread itemThread = new Thread(() => InitializeAndStartItem(item));
-                        itemThread.IsBackground = true;
-                        itemThread.Start();
+                        m_initializationQueue.Enqueue(item);
+
+                        lock (m_initializationQueue)
+                        {
+                            // Even on a single processor system we want a few threads such that if an
+                            // adapter is taking a long time to initialize, other adapters can still be
+                            // initializing in the meanwhile
+                            if (m_initializationThreadCount < Math.Max(4, Environment.ProcessorCount))
+                            {
+                                m_initializationThreadCount++;
+
+                                Thread itemThread = new Thread(InitializeQueuedItems);
+                                itemThread.IsBackground = true;
+                                itemThread.Start();
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -1470,6 +1421,104 @@ namespace GSF.TimeSeries.Adapters
                     string errorMessage = string.Format("Failed to queue initialize operation for adapter {0}: {1}", item.Name, ex.Message);
                     OnProcessException(new InvalidOperationException(errorMessage, ex));
                 }
+            }
+        }
+
+        private void InitializeQueuedItems()
+        {
+            T adapter;
+
+            // Loop until there are no more items to process
+            while (true)
+            {
+                // Attempt to dequeue an item and handle initialization/start
+                // procedure on this thread
+                if (m_initializationQueue.TryDequeue(out adapter))
+                    InitializeAndStartItem(adapter);
+
+                // We carefully control thread count in critical section
+                if (Monitor.TryEnter(m_initializationQueue))
+                {
+                    try
+                    {
+                        if (m_initializationQueue.IsEmpty)
+                        {
+                            m_initializationThreadCount--;
+                            break;
+                        }
+                    }
+                    finally
+                    {
+                        Monitor.Exit(m_initializationQueue);
+                    }
+                }
+            }
+        }
+
+        // Handle item initialization and startup
+        private void InitializeAndStartItem(T item)
+        {
+            Timer initializationTimeoutTimer = null;
+
+            try
+            {
+                // If initialization timeout is specified for this item,
+                // start the initialization timeout timer
+                if (item.InitializationTimeout > 0)
+                {
+                    initializationTimeoutTimer = new Timer(item.InitializationTimeout);
+
+                    initializationTimeoutTimer.Elapsed += (sender, args) =>
+                    {
+                        const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
+                            " its timeout of {1} seconds. The adapter may still initialize, however this" +
+                            " may indicate a problem with the adapter. If you consider this to be normal," +
+                            " try adjusting the initialization timeout to suppress this message during" +
+                            " normal operations.";
+
+                        OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
+                    };
+
+                    initializationTimeoutTimer.AutoReset = false;
+                    initializationTimeoutTimer.Start();
+                }
+
+                // Initialize the item
+                item.Initialize();
+
+                // Initialization successfully completed, so stop the timeout timer
+                if ((object)initializationTimeoutTimer != null)
+                    initializationTimeoutTimer.Stop();
+
+                try
+                {
+                    // If the item is set to auto-start, start it now
+                    if (item.AutoStart)
+                        item.Start();
+                }
+                catch (Exception ex)
+                {
+                    // We report any errors encountered during startup...
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter {0}: {1}", item.Name, ex.Message), ex));
+                }
+
+                // Set item to its final initialized state so that
+                // start and stop commands may be issued to the adapter
+                item.Initialized = true;
+
+                // If input measurement keys were not updated during initialize of the adapter,
+                // make sure to notify routing tables that adapter is ready for broadcast
+                OnInputMeasurementKeysUpdated();
+            }
+            catch (Exception ex)
+            {
+                // We report any errors encountered during initialization...
+                OnProcessException(new InvalidOperationException(string.Format("Failed to initialize adapter {0}: {1}", item.Name, ex.Message), ex));
+            }
+            finally
+            {
+                if ((object)initializationTimeoutTimer != null)
+                    initializationTimeoutTimer.Dispose();
             }
         }
 

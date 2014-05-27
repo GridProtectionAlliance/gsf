@@ -369,7 +369,10 @@ namespace GSF.TimeSeries
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
             m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_preferCachedConfiguration = systemSettings["PreferCachedConfiguration"].ValueAsBoolean(false);
+
             m_reloadConfigQueue = ProcessQueue<Tuple<string, Action<bool>>>.CreateSynchronousQueue(ExecuteReloadConfig, 500.0D, Timeout.Infinite, false, false);
+            m_reloadConfigQueue.ProcessException += m_iaonSession.ProcessExceptionHandler;
+
             m_configurationCacheOperation = new LongSynchronizedOperation(ExecuteConfigurationCache)
             {
                 IsBackground = true
@@ -585,44 +588,53 @@ namespace GSF.TimeSeries
         protected virtual void ServiceStoppingHandler(object sender, EventArgs e)
         {
             // Stop generation zero garbage collection timer
-            if (m_gcCollectTimer != null)
+            if ((object)m_gcCollectTimer != null)
             {
                 m_gcCollectTimer.Enabled = false;
                 m_gcCollectTimer.Elapsed -= m_gcCollectTimer_Elapsed;
                 m_gcCollectTimer.Dispose();
+                m_gcCollectTimer = null;
             }
-            m_gcCollectTimer = null;
 
             // Dispose system health exporter
-            if (m_healthExporter != null)
+            if ((object)m_healthExporter != null)
             {
                 m_healthExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_healthExporter);
                 m_healthExporter.Dispose();
                 m_healthExporter.StatusMessage -= m_iaonSession.StatusMessageHandler;
                 m_healthExporter.ProcessException -= m_iaonSession.ProcessExceptionHandler;
+                m_healthExporter = null;
             }
-            m_healthExporter = null;
 
             // Dispose system status exporter
-            if (m_statusExporter != null)
+            if ((object)m_statusExporter != null)
             {
                 m_statusExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_statusExporter);
                 m_statusExporter.Dispose();
                 m_statusExporter.StatusMessage -= m_iaonSession.StatusMessageHandler;
                 m_statusExporter.ProcessException -= m_iaonSession.ProcessExceptionHandler;
+                m_statusExporter = null;
             }
-            m_statusExporter = null;
+
+            // Dispose reload config queue
+            if ((object)m_reloadConfigQueue != null)
+            {
+                m_reloadConfigQueue.ProcessException -= m_iaonSession.ProcessExceptionHandler;
+                m_reloadConfigQueue.Dispose();
+                m_reloadConfigQueue = null;
+            }
 
             // Dispose reporting process
-            if (m_dataQualityReportingProcess != null)
+            if ((object)m_dataQualityReportingProcess != null)
+            {
                 m_serviceHelper.ServiceComponents.Remove(m_dataQualityReportingProcess);
-
-            m_dataQualityReportingProcess = null;
+                m_dataQualityReportingProcess = null;
+            }
 
             // Dispose Iaon session
-            if (m_iaonSession != null)
+            if ((object)m_iaonSession != null)
             {
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.InputAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.ActionAdapters);
@@ -631,20 +643,20 @@ namespace GSF.TimeSeries
                 m_iaonSession.StatusMessage -= m_iaonSession_StatusMessage;
                 m_iaonSession.ProcessException -= m_iaonSession_ProcessException;
                 m_iaonSession.ConfigurationChanged -= m_iaonSession_ConfigurationChanged;
+                m_iaonSession = null;
             }
-            m_iaonSession = null;
 
             m_serviceHelper.ServiceStarting -= ServiceStartingHandler;
             m_serviceHelper.ServiceStarted -= ServiceStartedHandler;
             m_serviceHelper.ServiceStopping -= ServiceStoppingHandler;
 
-            if (m_serviceHelper.StatusLog != null)
+            if ((object)m_serviceHelper.StatusLog != null)
             {
                 m_serviceHelper.StatusLog.Flush();
                 m_serviceHelper.StatusLog.LogException -= LogExceptionHandler;
             }
 
-            if (m_serviceHelper.ErrorLogger != null && m_serviceHelper.ErrorLogger.ErrorLog != null)
+            if ((object)m_serviceHelper.ErrorLogger != null && (object)m_serviceHelper.ErrorLogger.ErrorLog != null)
             {
                 m_serviceHelper.ErrorLogger.ErrorLog.Flush();
                 m_serviceHelper.ErrorLogger.ErrorLog.LogException -= LogExceptionHandler;
