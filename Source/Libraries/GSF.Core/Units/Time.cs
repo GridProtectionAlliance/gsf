@@ -1130,7 +1130,7 @@ namespace GSF.Units
             // Check if number of seconds ranges in years
             years = (int)(seconds / SecondsPerYear);
 
-            if (years >= 1)
+            if (years > 0)
             {
                 // Remove whole years from remaining seconds
                 seconds = seconds - years * SecondsPerYear;
@@ -1147,7 +1147,7 @@ namespace GSF.Units
             // Check if remaining number of seconds ranges in days
             days = (int)(seconds / Time.SecondsPerDay);
 
-            if (days >= 1)
+            if (days > 0)
             {
                 // Remove whole days from remaining seconds
                 seconds = seconds - days * Time.SecondsPerDay;
@@ -1165,7 +1165,7 @@ namespace GSF.Units
             // Check if remaining number of seconds ranges in hours
             hours = (int)(seconds / Time.SecondsPerHour);
 
-            if (hours >= 1)
+            if (hours > 0)
             {
                 // Remove whole hours from remaining seconds
                 seconds = seconds - hours * Time.SecondsPerHour;
@@ -1183,7 +1183,7 @@ namespace GSF.Units
             // Check if remaining number of seconds ranges in minutes
             minutes = (int)(seconds / Time.SecondsPerMinute);
 
-            if (minutes >= 1)
+            if (minutes > 0)
             {
                 // Remove whole minutes from remaining seconds
                 seconds = seconds - minutes * Time.SecondsPerMinute;

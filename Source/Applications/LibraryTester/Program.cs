@@ -40,9 +40,9 @@ namespace LibraryTester
 
             Console.WriteLine("Library Testing Host Application");
             Console.WriteLine();
-            Console.WriteLine("This application simply references all libraries so that when set as the");
+            Console.WriteLine("This application simply references GSF libraries so that when set as the");
             Console.WriteLine("\"StartUp Project\" in the solution you can use the \"Immediate Window\" to");
-            Console.WriteLine("test any library function.");
+            Console.WriteLine("test a function in the referenced libraries.");
             Console.WriteLine();
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
