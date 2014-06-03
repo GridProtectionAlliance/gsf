@@ -356,7 +356,14 @@ namespace GSF.PQDIF.Physical
             uint days = LittleEndian.ToUInt32(m_values, byteIndex);
             double seconds = LittleEndian.ToDouble(m_values, byteIndex + 4);
 
-            return DateTime.SpecifyKind(epoch.AddDays(days).AddSeconds(seconds), DateTimeKind.Utc);
+            // Timestamps in a PQDIF file are represented by two separate numbers, one being the number of
+            // days since January 1, 1900 and the other being the number of seconds since midnight. The
+            // standard implementation also includes a constant for the number of days between January 1,
+            // 1900 and January 1, 1970 to facilitate the conversion between PQDIF timestamps and UNIX
+            // timestamps. However, the constant defined in the standard is 25569 days, whereas the actual
+            // number of days between those two dates is 25567 days; a two day difference. That is why we
+            // need to also subtract two days here when parsing PQDIF timestamps.
+            return DateTime.SpecifyKind(epoch.AddDays(days - 2u).AddSeconds(seconds), DateTimeKind.Utc);
         }
 
         /// <summary>
@@ -376,7 +383,14 @@ namespace GSF.PQDIF.Physical
             TimeSpan daySpan = TimeSpan.FromDays(Math.Floor(sinceEpoch.TotalDays));
             TimeSpan secondSpan = sinceEpoch - daySpan;
 
-            LittleEndian.CopyBytes((uint)daySpan.TotalDays, m_values, byteIndex);
+            // Timestamps in a PQDIF file are represented by two separate numbers, one being the number of
+            // days since January 1, 1900 and the other being the number of seconds since midnight. The
+            // standard implementation also includes a constant for the number of days between January 1,
+            // 1900 and January 1, 1970 to facilitate the conversion between PQDIF timestamps and UNIX
+            // timestamps. However, the constant defined in the standard is 25569 days, whereas the actual
+            // number of days between those two dates is 25567 days; a two day difference. That is why we
+            // need to also add two days here when creating PQDIF timestamps.
+            LittleEndian.CopyBytes((uint)daySpan.TotalDays + 2u, m_values, byteIndex);
             LittleEndian.CopyBytes(secondSpan.TotalSeconds, m_values, byteIndex + 4);
         }
 
