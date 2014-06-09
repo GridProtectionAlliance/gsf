@@ -619,7 +619,7 @@ namespace PhasorProtocolAdapters
                                 "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "historianID", "deviceID", "pointTag",
                                 "signalTypeID", "signalReference", "description");
 
-                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, historianID, deviceID, pointTag, qualityFlagsSignalTypeID, signalReference, description);
+                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, historianID.HasValue ? (object)historianID.Value : (object)DBNull.Value, deviceID, pointTag, qualityFlagsSignalTypeID, signalReference, description);
                         }
                     }
 
