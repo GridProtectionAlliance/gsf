@@ -806,22 +806,22 @@ namespace GSF.TimeSeries.Adapters
                     // If an output adapter queue size exceeds the defined measurement dumping threshold,
                     // then the queue will be truncated before system runs out of memory
                     outputAdapter.RemoveMeasurements(m_measurementDumpingThreshold);
-                    OnStatusMessage(sender, "[{0}] System exercised evasive action to conserve memory and dumped {1} unprocessed measurements from the output queue :(", UpdateType.Alarm, outputAdapter.Name, m_measurementDumpingThreshold);
-                    OnStatusMessage(sender, "[{0}] NOTICE: Please adjust measurement threshold settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdapter.Name);
+                    OnStatusMessage(sender, "[{0}] System exercised evasive action to conserve memory and dumped {1:N0} unprocessed measurements from the output queue :(", UpdateType.Alarm, outputAdapter.Name, m_measurementDumpingThreshold);
+                    OnStatusMessage(sender, "[{0}] NOTICE: Adapter may be offline or processing data too slowly to keep up with incoming data volume. It may be necessary to adjust measurement threshold configuration settings and/or increase amount of available system memory.", UpdateType.Warning, outputAdapter.Name);
                 }
                 else
                 {
                     // It is only expected that output adapters will be mapped to this handler, but in case
                     // another adapter type uses this handler we will still display a message
-                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1} unprocessed measurements in the adapter queue - but sender \"{2}\" is not an IOutputAdapter, so no evasive action can be exercised.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements, sender.GetType().Name);
+                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1:N0} unprocessed measurements in the adapter queue - but sender \"{2}\" is not an IOutputAdapter, so no evasive action can be exercised.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements, sender.GetType().Name);
                 }
             }
             else if (unprocessedMeasurements > m_measurementWarningThreshold)
             {
                 if (unprocessedMeasurements >= m_measurementDumpingThreshold - m_measurementWarningThreshold)
-                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
+                    OnStatusMessage(sender, "[{0}] CRITICAL: There are {1:N0} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
                 else
-                    OnStatusMessage(sender, "[{0}] There are {1} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
+                    OnStatusMessage(sender, "[{0}] There are {1:N0} unprocessed measurements in the output queue.", UpdateType.Warning, GetDerivedName(sender), unprocessedMeasurements);
             }
 
             // Bubble message up to any event subscribers
