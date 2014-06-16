@@ -362,7 +362,7 @@ namespace GSF.ASN1.Coders.PER
             {
                 long exponent = ((0x7ff0000000000000L & asLong) >> 52) - 1023 - 52;
                 long mantissa = 0x000fffffffffffffL & asLong;
-                mantissa |= 0x10000000000000L; // set virtual delimeter
+                mantissa |= 0x10000000000000L; // set virtual delimiter
 
                 // pack mantissa for base 2
                 while ((mantissa & 0xFFL) == 0x0)

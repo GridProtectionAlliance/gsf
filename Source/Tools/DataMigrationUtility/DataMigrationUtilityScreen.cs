@@ -81,7 +81,7 @@ namespace DataMigrationUtility
 
             m_dataInserter.BulkInsertFilePath = "c:\\";
             m_dataInserter.BulkInsertSettings = "FIELDTERMINATOR = \'\\t\', ROWTERMINATOR = \'\\n\', CODEPAGE = \'OEM\', FIRE_TRIGGERS, KEEPNULLS";
-            m_dataInserter.DelimeterReplacement = " - ";
+            m_dataInserter.DelimiterReplacement = " - ";
             m_dataInserter.FromSchema = m_fromSchema;
             m_dataInserter.ToSchema = m_toSchema;
             m_dataInserter.RowReportInterval = 10;

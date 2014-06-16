@@ -444,6 +444,7 @@ namespace GSF.TimeSeries.Transport
         private readonly LongSynchronizedOperation m_synchronizeMetadataOperation;
         private volatile DataSet m_receivedMetadata;
         private DataSet m_synchronizedMetadata;
+        private DateTime m_lastMetaDataRefreshTime;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
 
@@ -495,7 +496,19 @@ namespace GSF.TimeSeries.Transport
             m_encoding = Encoding.Unicode;
             m_operationalModes = DefaultOperationalModes;
             m_metadataSynchronizationTimeout = DefaultMetadataSynchronizationTimeout;
-            m_useTransactionForMetadata = DefaultUseTransactionForMetadata;
+
+            // Default to not using transactions for meta-data on SQL server (helps avoid deadlocks)
+            try
+            {
+                using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+                {
+                    m_useTransactionForMetadata = database.DatabaseType != DatabaseType.SQLServer;
+                }
+            }
+            catch
+            {
+                m_useTransactionForMetadata = DefaultUseTransactionForMetadata;
+            }
 
             DataLossInterval = 10.0D;
 
@@ -3068,6 +3081,7 @@ namespace GSF.TimeSeries.Transport
                             bool vendorAcronymFieldExists = deviceDetailColumns.Contains("VendorAcronym");
                             bool vendorDeviceNameFieldExists = deviceDetailColumns.Contains("VendorDeviceName");
                             bool interconnectionNameFieldExists = deviceDetailColumns.Contains("InterconnectionName");
+                            bool updatedOnFieldExists = deviceDetailColumns.Contains("UpdatedOn");
 
                             // Older versions of GEP did not include the AccessID field, so this is treated as optional
                             int accessID = 0;
@@ -3075,9 +3089,27 @@ namespace GSF.TimeSeries.Transport
                             foreach (DataRow row in deviceRows)
                             {
                                 Guid uniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString());
+                                bool recordNeedsUpdating;
 
                                 // Track unique device Guids in this meta-data session, we'll need to remove any old associated devices that no longer exist
                                 uniqueIDs.Add(uniqueID);
+
+                                // Determine if record has changed since last synchronization
+                                if (updatedOnFieldExists)
+                                {
+                                    try
+                                    {
+                                        recordNeedsUpdating = (Convert.ToDateTime(row["UpdatedOn"]) > m_lastMetaDataRefreshTime);
+                                    }
+                                    catch
+                                    {
+                                        recordNeedsUpdating = true;
+                                    }
+                                }
+                                else
+                                {
+                                    recordNeedsUpdating = true;
+                                }
 
                                 // We will synchronize meta-data only if the source owns this device and it's not defined as a concentrator (these should normally be filtered by publisher - but we check just in case).
                                 if (!row["IsConcentrator"].ToNonNullString("0").ParseBoolean())
@@ -3134,7 +3166,7 @@ namespace GSF.TimeSeries.Transport
                                         // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
                                         command.ExecuteNonQuery(updateDeviceUniqueIDSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), sourcePrefix + row.Field<string>("Acronym"));
                                     }
-                                    else
+                                    else if (recordNeedsUpdating)
                                     {
                                         // Perform safety check to preserve device records which are not safe to overwrite
                                         if (Convert.ToInt32(command.ExecuteScalar(deviceIsUpdatableSql, m_metadataSynchronizationTimeout, database.Guid(uniqueID), parentID)) > 0)
@@ -3231,12 +3263,34 @@ namespace GSF.TimeSeries.Transport
                             else
                                 measurementRows = new DataRow[0];
 
-                            // Older versions of GEP did not include the PhasorSourceIndex field, so this is treated as optional
-                            bool phasorSourceIndexFieldExists = measurementDetail.Columns.Contains("PhasorSourceIndex");
+                            // Check existence of optional meta-data fields
+                            DataColumnCollection measurementDetailColumns = measurementDetail.Columns;
+                            bool phasorSourceIndexFieldExists = measurementDetailColumns.Contains("PhasorSourceIndex");
+                            bool updatedOnFieldExists = measurementDetailColumns.Contains("UpdatedOn");
+
                             object phasorSourceIndex = DBNull.Value;
 
                             foreach (DataRow row in measurementRows)
                             {
+                                bool recordNeedsUpdating;
+
+                                // Determine if record has changed since last synchronization
+                                if (updatedOnFieldExists)
+                                {
+                                    try
+                                    {
+                                        recordNeedsUpdating = (Convert.ToDateTime(row["UpdatedOn"]) > m_lastMetaDataRefreshTime);
+                                    }
+                                    catch
+                                    {
+                                        recordNeedsUpdating = true;
+                                    }
+                                }
+                                else
+                                {
+                                    recordNeedsUpdating = true;
+                                }
+
                                 // Get device and signal type acronyms
                                 deviceAcronym = row.Field<string>("DeviceAcronym") ?? string.Empty;
                                 signalTypeAcronym = row.Field<string>("SignalAcronym") ?? string.Empty;
@@ -3253,13 +3307,17 @@ namespace GSF.TimeSeries.Transport
                                 // Make sure we have an associated device and signal type already defined for the measurement
                                 if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym) && !string.IsNullOrWhiteSpace(signalTypeAcronym) && signalTypeIDs.ContainsKey(signalTypeAcronym))
                                 {
-                                    // Prefix the tag name with the "updated" device name
-                                    deviceID = deviceIDs[deviceAcronym];
-                                    string pointTag = sourcePrefix + row.Field<string>("PointTag");
                                     Guid signalID = Guid.Parse(row.Field<object>("SignalID").ToString());
 
                                     // Track unique measurement signal Guids in this meta-data session, we'll need to remove any old associated measurements that no longer exist
                                     signalIDs.Add(signalID);
+
+
+                                    // Prefix the tag name with the "updated" device name
+                                    string pointTag = sourcePrefix + row.Field<string>("PointTag");
+
+                                    // Look up associated device ID (local DB auto-inc)
+                                    deviceID = deviceIDs[deviceAcronym];
 
                                     // Determine if measurement record already exists
                                     if (Convert.ToInt32(command.ExecuteScalar(measurementExistsSql, m_metadataSynchronizationTimeout, database.Guid(signalID))) == 0)
@@ -3273,7 +3331,7 @@ namespace GSF.TimeSeries.Transport
                                         // scripts have triggers that support properly assigning the Guid during an insert, but this code ensures the Guid will always get assigned.
                                         command.ExecuteNonQuery(updateMeasurementSignalIDSql, m_metadataSynchronizationTimeout, database.Guid(signalID), alternateTag);
                                     }
-                                    else
+                                    else if (recordNeedsUpdating)
                                     {
                                         // Update existing measurement record. Note that this update assumes that measurements will remain associated with a static source device.
                                         command.ExecuteNonQuery(updateMeasurementSql, m_metadataSynchronizationTimeout, historianID, pointTag, signalTypeIDs[signalTypeAcronym], phasorSourceIndex, sourcePrefix + row.Field<string>("SignalReference"), row.Field<string>("Description") ?? string.Empty, database.Bool(m_internal), database.Guid(signalID));
@@ -3347,6 +3405,18 @@ namespace GSF.TimeSeries.Transport
                                 // Make sure we have an associated device already defined for the phasor record
                                 if (!string.IsNullOrWhiteSpace(deviceAcronym) && deviceIDs.ContainsKey(deviceAcronym))
                                 {
+                                    bool recordNeedsUpdating;
+
+                                    // Determine if record has changed since last synchronization
+                                    try
+                                    {
+                                        recordNeedsUpdating = (Convert.ToDateTime(row["UpdatedOn"]) > m_lastMetaDataRefreshTime);
+                                    }
+                                    catch
+                                    {
+                                        recordNeedsUpdating = true;
+                                    }
+
                                     deviceID = deviceIDs[deviceAcronym];
 
                                     // Determine if phasor record already exists
@@ -3355,7 +3425,7 @@ namespace GSF.TimeSeries.Transport
                                         // Insert new phasor record
                                         command.ExecuteNonQuery(insertPhasorSql, m_metadataSynchronizationTimeout, deviceID, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), row.ConvertField<int>("SourceIndex"));
                                     }
-                                    else
+                                    else if (recordNeedsUpdating)
                                     {
                                         // Update existing phasor record
                                         command.ExecuteNonQuery(updatePhasorSql, m_metadataSynchronizationTimeout, row.Field<string>("Label") ?? "undefined", (row.Field<string>("Type") ?? "V").TruncateLeft(1), (row.Field<string>("Phase") ?? "+").TruncateLeft(1), deviceID, row.ConvertField<int>("SourceIndex"));
@@ -3416,6 +3486,8 @@ namespace GSF.TimeSeries.Transport
                 // New signals may have been defined, take original remote signal index cache and apply changes
                 if (m_remoteSignalIndexCache != null)
                     m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
+
+                m_lastMetaDataRefreshTime = DateTime.UtcNow;
 
                 OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2));
 

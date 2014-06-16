@@ -37,7 +37,7 @@ using System.Windows.Input;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.PhasorProtocols.UI.ViewModels;
 using GSF.TimeSeries.UI;
-using GSF.TimeSeries.UI.DataModels;
+using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.PhasorProtocols.UI.UserControls
 {
@@ -118,11 +118,11 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if ((object) CommonFunctions.CurrentPrincipal != null &&
+            if ((object)CommonFunctions.CurrentPrincipal != null &&
                 CommonFunctions.CurrentPrincipal.IsInRole("Administrator, Editor"))
             {
                 MeasurementPager.ClearSelections();
-                PopupAddMore.IsOpen = true;    
+                PopupAddMore.IsOpen = true;
             }
         }
 

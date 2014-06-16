@@ -616,9 +616,10 @@ namespace GSF.TimeSeries.Transport
         /// Default value for <see cref="MetadataTables"/>.
         /// </summary>
         public const string DefaultMetadataTables =
-            "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, AccessID, ParentAcronym, ProtocolName, FramesPerSecond, CompanyAcronym, VendorAcronym, VendorDeviceName, Longitude, Latitude, InterconnectionName, ContactList, Enabled FROM DeviceDetail WHERE IsConcentrator = 0;" +
-            "SELECT DeviceAcronym, ID, SignalID, PointTag, SignalReference, SignalAcronym, PhasorSourceIndex, Description, Internal, Enabled FROM MeasurementDetail;" +
-            "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex FROM PhasorDetail";
+            "SELECT NodeID, UniqueID, OriginalSource, IsConcentrator, Acronym, Name, AccessID, ParentAcronym, ProtocolName, FramesPerSecond, CompanyAcronym, VendorAcronym, VendorDeviceName, Longitude, Latitude, InterconnectionName, ContactList, Enabled, UpdatedOn FROM DeviceDetail WHERE IsConcentrator = 0;" +
+            "SELECT DeviceAcronym, ID, SignalID, PointTag, SignalReference, SignalAcronym, PhasorSourceIndex, Description, Internal, Enabled, UpdatedOn FROM MeasurementDetail;" +
+            "SELECT DeviceAcronym, Label, Type, Phase, SourceIndex, UpdatedOn FROM PhasorDetail;" +
+            "SELECT VersionNumber FROM SchemaVersion";
 
         /// <summary>
         /// Maximum packet size before software fragmentation of payload.

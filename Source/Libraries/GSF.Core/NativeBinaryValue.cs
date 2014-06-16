@@ -67,7 +67,7 @@ namespace GSF
     /// Represents a binary data sample stored as a byte array ordered in the
     /// endianness of the OS, but implicitly castable to most common native types.
     /// </summary>
-    public class BinaryValue : BinaryValueBase<NativeEndianOrder>
+    public class NativeBinaryValue : BinaryValueBase<NativeEndianOrder>
     {
         #region [ Constructors ]
 
@@ -82,7 +82,7 @@ namespace GSF
         /// <paramref name="startIndex"/> and <paramref name="length"/> do not specify a valid region in the <paramref name="buffer"/>
         /// </exception>
         /// <remarks>This constructor assumes a type code of Empty to represent "undefined".</remarks>
-        public BinaryValue(byte[] buffer, int startIndex, int length)
+        public NativeBinaryValue(byte[] buffer, int startIndex, int length)
             : base(TypeCode.Empty, buffer, startIndex, length)
         {
         }
@@ -90,7 +90,7 @@ namespace GSF
         /// <summary>Creates a new binary value, ordered in the endianness of the OS, from the given byte array.</summary>
         /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
         /// <remarks>This constructor assumes a type code of Empty to represent "undefined".</remarks>
-        public BinaryValue(byte[] buffer)
+        public NativeBinaryValue(byte[] buffer)
             : base(TypeCode.Empty, buffer, 0, buffer.Length)
         {
         }
@@ -106,7 +106,7 @@ namespace GSF
         /// <paramref name="length"/> is less than 0 -or-
         /// <paramref name="startIndex"/> and <paramref name="length"/> do not specify a valid region in the <paramref name="buffer"/>
         /// </exception>
-        public BinaryValue(TypeCode typeCode, byte[] buffer, int startIndex, int length)
+        public NativeBinaryValue(TypeCode typeCode, byte[] buffer, int startIndex, int length)
             : base(typeCode, buffer, startIndex, length)
         {
         }
@@ -114,7 +114,7 @@ namespace GSF
         /// <summary>Creates a new binary value, ordered in the endianness of the OS, from the given byte array.</summary>
         /// <param name="typeCode">The type code of the native value that the binary value represents.</param>
         /// <param name="buffer">The buffer which contains the binary representation of the value.</param>
-        public BinaryValue(TypeCode typeCode, byte[] buffer)
+        public NativeBinaryValue(TypeCode typeCode, byte[] buffer)
             : base(typeCode, buffer, 0, buffer.Length)
         {
         }
@@ -124,21 +124,21 @@ namespace GSF
         #region [ Methods ]
 
         /// <summary>
-        /// Returns a <see cref="String"/> that represents the current <see cref="BinaryValue"/>.
+        /// Returns a <see cref="String"/> that represents the current <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <returns>A <see cref="String"/> that represents the current <see cref="BinaryValue"/>.</returns>
+        /// <returns>A <see cref="String"/> that represents the current <see cref="NativeBinaryValue"/>.</returns>
         public override string ToString()
         {
             return ((Double)ConvertToType(TypeCode.Double)).ToString();
         }
 
         /// <summary>
-        /// Returns a <see cref="BinaryValue"/> representation of source value converted to specified <see cref="TypeCode"/>.
+        /// Returns a <see cref="NativeBinaryValue"/> representation of source value converted to specified <see cref="TypeCode"/>.
         /// </summary>
         /// <param name="typeCode">Desired <see cref="TypeCode"/> for destination value.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of source value converted to specified <see cref="TypeCode"/>.</returns>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of source value converted to specified <see cref="TypeCode"/>.</returns>
         /// <exception cref="InvalidOperationException">Unable to convert binary value to specified type.</exception>
-        public BinaryValue ConvertToType(TypeCode typeCode)
+        public NativeBinaryValue ConvertToType(TypeCode typeCode)
         {
             switch (this.TypeCode)
             {
@@ -368,230 +368,230 @@ namespace GSF
         #region [ Operators ]
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="Byte"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="Byte"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="Byte"/>.</param>
-        /// <returns>A <see cref="Byte"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator Byte(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="Byte"/>.</param>
+        /// <returns>A <see cref="Byte"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator Byte(NativeBinaryValue value)
         {
             return value.ToByte();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Byte"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="Byte"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="Byte"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Byte"/>.</returns>
-        public static implicit operator BinaryValue(Byte value)
+        /// <param name="value"><see cref="Byte"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="Byte"/>.</returns>
+        public static implicit operator NativeBinaryValue(Byte value)
         {
-            return new BinaryValue(TypeCode.Byte, new[] { value });
+            return new NativeBinaryValue(TypeCode.Byte, new[] { value });
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="Int16"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="Int16"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="Int16"/>.</param>
-        /// <returns>A <see cref="Int16"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator Int16(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="Int16"/>.</param>
+        /// <returns>A <see cref="Int16"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator Int16(NativeBinaryValue value)
         {
             return value.ToInt16();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Int16"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="Int16"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="Int16"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Int16"/>.</returns>
-        public static implicit operator BinaryValue(Int16 value)
+        /// <param name="value"><see cref="Int16"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="Int16"/>.</returns>
+        public static implicit operator NativeBinaryValue(Int16 value)
         {
-            return new BinaryValue(TypeCode.Int16, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.Int16, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="UInt16"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="UInt16"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="UInt16"/>.</param>
-        /// <returns>A <see cref="UInt16"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator UInt16(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="UInt16"/>.</param>
+        /// <returns>A <see cref="UInt16"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator UInt16(NativeBinaryValue value)
         {
             return value.ToUInt16();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="UInt16"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="UInt16"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="UInt16"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="UInt16"/>.</returns>
-        public static implicit operator BinaryValue(UInt16 value)
+        /// <param name="value"><see cref="UInt16"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="UInt16"/>.</returns>
+        public static implicit operator NativeBinaryValue(UInt16 value)
         {
-            return new BinaryValue(TypeCode.UInt16, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.UInt16, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="Int24"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="Int24"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="Int24"/>.</param>
-        /// <returns>A <see cref="Int24"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator Int24(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="Int24"/>.</param>
+        /// <returns>A <see cref="Int24"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator Int24(NativeBinaryValue value)
         {
             return value.ToInt24();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Int24"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="Int24"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="Int24"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Int24"/>.</returns>
-        public static implicit operator BinaryValue(Int24 value)
+        /// <param name="value"><see cref="Int24"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="Int24"/>.</returns>
+        public static implicit operator NativeBinaryValue(Int24 value)
         {
-            return new BinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="UInt24"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="UInt24"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="UInt24"/>.</param>
-        /// <returns>A <see cref="UInt24"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator UInt24(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="UInt24"/>.</param>
+        /// <returns>A <see cref="UInt24"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator UInt24(NativeBinaryValue value)
         {
             return value.ToUInt24();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="UInt24"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="UInt24"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="UInt24"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="UInt24"/>.</returns>
-        public static implicit operator BinaryValue(UInt24 value)
+        /// <param name="value"><see cref="UInt24"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="UInt24"/>.</returns>
+        public static implicit operator NativeBinaryValue(UInt24 value)
         {
-            return new BinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="Int32"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="Int32"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="Int32"/>.</param>
-        /// <returns>A <see cref="Int32"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator Int32(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="Int32"/>.</param>
+        /// <returns>A <see cref="Int32"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator Int32(NativeBinaryValue value)
         {
             return value.ToInt32();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Int32"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="Int32"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="Int32"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Int32"/>.</returns>
-        public static implicit operator BinaryValue(Int32 value)
+        /// <param name="value"><see cref="Int32"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="Int32"/>.</returns>
+        public static implicit operator NativeBinaryValue(Int32 value)
         {
-            return new BinaryValue(TypeCode.Int32, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.Int32, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="UInt32"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="UInt32"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="UInt32"/>.</param>
-        /// <returns>A <see cref="UInt32"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator UInt32(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="UInt32"/>.</param>
+        /// <returns>A <see cref="UInt32"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator UInt32(NativeBinaryValue value)
         {
             return value.ToUInt32();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="UInt32"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="UInt32"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="UInt32"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="UInt32"/>.</returns>
-        public static implicit operator BinaryValue(UInt32 value)
+        /// <param name="value"><see cref="UInt32"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="UInt32"/>.</returns>
+        public static implicit operator NativeBinaryValue(UInt32 value)
         {
-            return new BinaryValue(TypeCode.UInt32, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.UInt32, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="Int64"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="Int64"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="Int64"/>.</param>
-        /// <returns>A <see cref="Int64"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator Int64(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="Int64"/>.</param>
+        /// <returns>A <see cref="Int64"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator Int64(NativeBinaryValue value)
         {
             return value.ToInt64();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Int64"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="Int64"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="Int64"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Int64"/>.</returns>
-        public static implicit operator BinaryValue(Int64 value)
+        /// <param name="value"><see cref="Int64"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="Int64"/>.</returns>
+        public static implicit operator NativeBinaryValue(Int64 value)
         {
-            return new BinaryValue(TypeCode.Int64, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.Int64, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="UInt64"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="UInt64"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="UInt64"/>.</param>
-        /// <returns>A <see cref="UInt64"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator UInt64(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="UInt64"/>.</param>
+        /// <returns>A <see cref="UInt64"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator UInt64(NativeBinaryValue value)
         {
             return value.ToUInt64();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="UInt64"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="UInt64"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="UInt64"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="UInt64"/>.</returns>
-        public static implicit operator BinaryValue(UInt64 value)
+        /// <param name="value"><see cref="UInt64"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="UInt64"/>.</returns>
+        public static implicit operator NativeBinaryValue(UInt64 value)
         {
-            return new BinaryValue(TypeCode.UInt64, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.UInt64, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="Single"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="Single"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="Single"/>.</param>
-        /// <returns>A <see cref="Single"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator Single(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="Single"/>.</param>
+        /// <returns>A <see cref="Single"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator Single(NativeBinaryValue value)
         {
             return value.ToSingle();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Single"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="Single"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="Single"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Single"/>.</returns>
-        public static implicit operator BinaryValue(Single value)
+        /// <param name="value"><see cref="Single"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="Single"/>.</returns>
+        public static implicit operator NativeBinaryValue(Single value)
         {
-            return new BinaryValue(TypeCode.Single, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.Single, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="BinaryValue"/> to <see cref="Double"/>.
+        /// Implicitly converts <see cref="NativeBinaryValue"/> to <see cref="Double"/>.
         /// </summary>
-        /// <param name="value"><see cref="BinaryValue"/> to convert to <see cref="Double"/>.</param>
-        /// <returns>A <see cref="Double"/> representation of <see cref="BinaryValue"/>.</returns>
-        public static implicit operator Double(BinaryValue value)
+        /// <param name="value"><see cref="NativeBinaryValue"/> to convert to <see cref="Double"/>.</param>
+        /// <returns>A <see cref="Double"/> representation of <see cref="NativeBinaryValue"/>.</returns>
+        public static implicit operator Double(NativeBinaryValue value)
         {
             return value.ToDouble();
         }
 
         /// <summary>
-        /// Implicitly converts <see cref="Double"/> to <see cref="BinaryValue"/>.
+        /// Implicitly converts <see cref="Double"/> to <see cref="NativeBinaryValue"/>.
         /// </summary>
-        /// <param name="value"><see cref="Double"/> to convert to <see cref="BinaryValue"/>.</param>
-        /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Double"/>.</returns>
-        public static implicit operator BinaryValue(Double value)
+        /// <param name="value"><see cref="Double"/> to convert to <see cref="NativeBinaryValue"/>.</param>
+        /// <returns>A <see cref="NativeBinaryValue"/> representation of <see cref="Double"/>.</returns>
+        public static implicit operator NativeBinaryValue(Double value)
         {
-            return new BinaryValue(TypeCode.Double, s_endianOrder.GetBytes(value));
+            return new NativeBinaryValue(TypeCode.Double, s_endianOrder.GetBytes(value));
         }
 
         #endregion
 
         #region [ Static ]
 
-        static BinaryValue()
+        static NativeBinaryValue()
         {
             s_endianOrder = NativeEndianOrder.Default;
         }

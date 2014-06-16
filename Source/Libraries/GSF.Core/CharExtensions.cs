@@ -79,7 +79,7 @@ namespace GSF
             if (char.IsPunctuation(value) || char.IsWhiteSpace(value) || char.IsSymbol(value) || char.IsControl(value))
                 return true;
 
-            return value.IsAny(wordSeperators);
+            return value.IsAnyOf(wordSeperators);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace GSF
             if (char.IsDigit(value))
                 return true;
 
-            return value.IsAny(numericValues);
+            return value.IsAnyOf(numericValues);
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace GSF
         /// <param name="value">The character to check.</param>
         /// <param name="testChars">The array of characters to test.</param>
         /// <returns>Boolean value indicating a that the character is in the array.</returns>
-        public static bool IsAny(this char value, IEnumerable<char> testChars)
+        public static bool IsAnyOf(this char value, IEnumerable<char> testChars)
         {
             if ((object)testChars == null)
                 throw new ArgumentNullException("testChars");

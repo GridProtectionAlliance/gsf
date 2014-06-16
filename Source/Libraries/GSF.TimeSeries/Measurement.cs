@@ -485,13 +485,17 @@ namespace GSF.TimeSeries
 
         #region [ Static ]
 
+        // Static Fields
+
         /// <summary>
         /// Represents an undefined measurement.
         /// </summary>
         public static readonly Measurement Undefined = new Measurement
-            {
-                Key = MeasurementKey.Undefined
-            };
+        {
+            Key = MeasurementKey.Undefined
+        };
+
+        // Static Methods
 
         /// <summary>
         /// Creates a copy of the specified measurement.
@@ -501,15 +505,15 @@ namespace GSF.TimeSeries
         public static Measurement Clone(IMeasurement measurementToClone)
         {
             return new Measurement
-                {
-                    Key = measurementToClone.Key,
-                    Value = measurementToClone.Value,
-                    Adder = measurementToClone.Adder,
-                    Multiplier = measurementToClone.Multiplier,
-                    Timestamp = measurementToClone.Timestamp,
-                    TagName = measurementToClone.TagName,
-                    StateFlags = measurementToClone.StateFlags
-                };
+            {
+                Key = measurementToClone.Key,
+                Value = measurementToClone.Value,
+                Adder = measurementToClone.Adder,
+                Multiplier = measurementToClone.Multiplier,
+                Timestamp = measurementToClone.Timestamp,
+                TagName = measurementToClone.TagName,
+                StateFlags = measurementToClone.StateFlags
+            };
         }
 
         /// <summary>
@@ -521,15 +525,15 @@ namespace GSF.TimeSeries
         public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
         {
             return new Measurement
-                {
-                    Key = measurementToClone.Key,
-                    Value = measurementToClone.Value,
-                    Adder = measurementToClone.Adder,
-                    Multiplier = measurementToClone.Multiplier,
-                    Timestamp = timestamp,
-                    TagName = measurementToClone.TagName,
-                    StateFlags = measurementToClone.StateFlags
-                };
+            {
+                Key = measurementToClone.Key,
+                Value = measurementToClone.Value,
+                Adder = measurementToClone.Adder,
+                Multiplier = measurementToClone.Multiplier,
+                Timestamp = timestamp,
+                TagName = measurementToClone.TagName,
+                StateFlags = measurementToClone.StateFlags
+            };
         }
 
         /// <summary>
@@ -542,15 +546,15 @@ namespace GSF.TimeSeries
         public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
         {
             return new Measurement
-                {
-                    Key = measurementToClone.Key,
-                    Value = value,
-                    Adder = measurementToClone.Adder,
-                    Multiplier = measurementToClone.Multiplier,
-                    Timestamp = timestamp,
-                    TagName = measurementToClone.TagName,
-                    StateFlags = measurementToClone.StateFlags
-                };
+            {
+                Key = measurementToClone.Key,
+                Value = value,
+                Adder = measurementToClone.Adder,
+                Multiplier = measurementToClone.Multiplier,
+                Timestamp = timestamp,
+                TagName = measurementToClone.TagName,
+                StateFlags = measurementToClone.StateFlags
+            };
         }
 
         /// <summary>

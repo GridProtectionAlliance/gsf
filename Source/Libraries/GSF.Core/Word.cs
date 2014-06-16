@@ -34,60 +34,60 @@ namespace GSF
     public static class Word
     {
         /// <summary>
-        /// Aligns word value on a 16-bit boundry.
+        /// Aligns word value on a 16-bit boundary.
         /// </summary>
         /// <param name="word">Word value to align.</param>
-        /// <returns>Word value aligned to next 16-bit boundry.</returns>
+        /// <returns>Word value aligned to next 16-bit boundary.</returns>
         public static short AlignWord(this short word)
         {
             return (short)(word + 1 - (word - 1) % 2);
         }
 
         /// <summary>
-        /// Aligns word value on a 16-bit boundry.
+        /// Aligns word value on a 16-bit boundary.
         /// </summary>
         /// <param name="word">Word value to align.</param>
-        /// <returns>Word value aligned to next 16-bit boundry.</returns>
+        /// <returns>Word value aligned to next 16-bit boundary.</returns>
         public static ushort AlignWord(this ushort word)
         {
             return (ushort)(word + 1 - (word - 1) % 2);
         }
 
         /// <summary>
-        /// Aligns double-word value on a 32-bit boundry.
+        /// Aligns double-word value on a 32-bit boundary.
         /// </summary>
         /// <param name="doubleWord">Double-word value to align.</param>
-        /// <returns>Double-word value aligned to next 32-bit boundry.</returns>
+        /// <returns>Double-word value aligned to next 32-bit boundary.</returns>
         public static int AlignDoubleWord(this int doubleWord)
         {
             return doubleWord + 3 - (doubleWord - 1) % 4;
         }
 
         /// <summary>
-        /// Aligns double-word value on a 32-bit boundry.
+        /// Aligns double-word value on a 32-bit boundary.
         /// </summary>
         /// <param name="doubleWord">Double-word value to align.</param>
-        /// <returns>Double-word value aligned to next 32-bit boundry.</returns>
+        /// <returns>Double-word value aligned to next 32-bit boundary.</returns>
         public static uint AlignDoubleWord(this uint doubleWord)
         {
             return doubleWord + 3 - (doubleWord - 1) % 4;
         }
 
         /// <summary>
-        /// Aligns quad-word value on a 64-bit boundry.
+        /// Aligns quad-word value on a 64-bit boundary.
         /// </summary>
         /// <param name="quadWord">Quad-word value to align.</param>
-        /// <returns>Quad-word value aligned to next 64-bit boundry.</returns>
+        /// <returns>Quad-word value aligned to next 64-bit boundary.</returns>
         public static long AlignQuadWord(this long quadWord)
         {
             return quadWord + 7 - (quadWord - 1) % 8;
         }
 
         /// <summary>
-        /// Aligns quad-word value on a 64-bit boundry.
+        /// Aligns quad-word value on a 64-bit boundary.
         /// </summary>
         /// <param name="quadWord">Quad-word value to align.</param>
-        /// <returns>Quad-word value aligned to next 64-bit boundry.</returns>
+        /// <returns>Quad-word value aligned to next 64-bit boundary.</returns>
         public static ulong AlignQuadWord(this ulong quadWord)
         {
             return quadWord + 7 - (quadWord - 1) % 8;
@@ -129,7 +129,7 @@ namespace GSF
         /// </remarks>
         public static ushort HighWord(this uint doubleWord)
         {
-            return (ushort)((doubleWord & (uint)0xFFFF0000) >> 16);
+            return (ushort)((doubleWord & 0xFFFF0000U) >> 16);
         }
 
         /// <summary>
@@ -142,9 +142,9 @@ namespace GSF
         /// whose in-memory representation is the same as the right-most, most-significant-word
         /// of the integer value.
         /// </remarks>
-        public static uint HighDword(this ulong quadWord)
+        public static uint HighDoubleWord(this ulong quadWord)
         {
-            return (uint)((quadWord & (ulong)0xFFFFFFFF00000000) >> 32);
+            return (uint)((quadWord & 0xFFFFFFFF00000000UL) >> 32);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace GSF
         /// </remarks>
         public static ushort LowWord(this uint doubleWord)
         {
-            return (ushort)(doubleWord & (uint)0x0000FFFF);
+            return (ushort)(doubleWord & 0x0000FFFFU);
         }
 
         /// <summary>
@@ -197,9 +197,9 @@ namespace GSF
         /// whose in-memory representation is the same as the left-most, least-significant-word
         /// of the integer value.
         /// </remarks>
-        public static uint LowDword(this ulong quadWord)
+        public static uint LowDoubleWord(this ulong quadWord)
         {
-            return (uint)(quadWord & (ulong)0x00000000FFFFFFFF);
+            return (uint)(quadWord & 0x00000000FFFFFFFFUL);
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace GSF
         /// <param name="high">High word.</param>
         /// <param name="low">Low word.</param>
         /// <returns>An unsigned 32-bit double-word made from the two specified unsigned 16-bit words.</returns>
-        public static uint MakeDword(ushort high, ushort low)
+        public static uint MakeDoubleWord(ushort high, ushort low)
         {
             return (uint)(low + ((uint)high << 16));
         }
@@ -230,7 +230,7 @@ namespace GSF
         /// <param name="high">High double-word.</param>
         /// <param name="low">Low double-word.</param>
         /// <returns>An unsigned 64-bit quad-word made from the two specified unsigned 32-bit double-words.</returns>
-        public static ulong MakeQword(uint high, uint low)
+        public static ulong MakeQuadWord(uint high, uint low)
         {
             return (ulong)(low + ((ulong)high << 32));
         }

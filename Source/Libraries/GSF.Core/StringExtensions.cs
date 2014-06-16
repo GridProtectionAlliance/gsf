@@ -252,25 +252,25 @@ namespace GSF
         /// Combines a dictionary of key-value pairs in to a string.
         /// </summary>
         /// <param name="pairs">Dictionary of key-value pairs.</param>
-        /// <param name="parameterDelimeter">Character that delimits one key-value pair from another (e.g. ';').</param>
-        /// <param name="keyValueDelimeter">Character that delimits a key from its value (e.g. '=').</param>
-        /// <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
-        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "{").</param>
-        /// <param name="endValueDelimeter">Optional character that marks the end of a value such that value could contain other
-        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "}").</param>
+        /// <param name="parameterDelimiter">Character that delimits one key-value pair from another (e.g. ';').</param>
+        /// <param name="keyValueDelimiter">Character that delimits a key from its value (e.g. '=').</param>
+        /// <param name="startValueDelimiter">Optional character that marks the start of a value such that value could contain other
+        /// <paramref name="parameterDelimiter"/> or <paramref name="keyValueDelimiter"/> characters (e.g., "{").</param>
+        /// <param name="endValueDelimiter">Optional character that marks the end of a value such that value could contain other
+        /// <paramref name="parameterDelimiter"/> or <paramref name="keyValueDelimiter"/> characters (e.g., "}").</param>
         /// <returns>A string of key-value pairs.</returns>
         /// <remarks>
-        /// Values will be escaped within <paramref name="startValueDelimeter"/> and <paramref name="endValueDelimeter"/>
+        /// Values will be escaped within <paramref name="startValueDelimiter"/> and <paramref name="endValueDelimiter"/>
         /// to contain nested key/value pair expressions like the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>,
-        /// when either the <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are detected in the
+        /// when either the <paramref name="parameterDelimiter"/> or <paramref name="keyValueDelimiter"/> are detected in the
         /// value of the key/value pair.
         /// </remarks>
-        public static string JoinKeyValuePairs(this IDictionary<string, string> pairs, char parameterDelimeter = ';', char keyValueDelimeter = '=', char startValueDelimeter = '{', char endValueDelimeter = '}')
+        public static string JoinKeyValuePairs(this IDictionary<string, string> pairs, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}')
         {
             if ((object)pairs == null)
                 throw new ArgumentNullException("pairs");
 
-            char[] delimiters = { parameterDelimeter, keyValueDelimeter };
+            char[] delimiters = { parameterDelimiter, keyValueDelimiter };
             List<string> values = new List<string>();
             string value;
 
@@ -279,25 +279,25 @@ namespace GSF
                 value = pairs[key];
 
                 if (value.IndexOfAny(delimiters) >= 0)
-                    value = startValueDelimeter + value + endValueDelimeter;
+                    value = startValueDelimiter + value + endValueDelimiter;
 
-                values.Add(string.Format("{0}{1}{2}", key, keyValueDelimeter, value));
+                values.Add(string.Format("{0}{1}{2}", key, keyValueDelimiter, value));
             }
 
-            return string.Join(parameterDelimeter + " ", values);
+            return string.Join(parameterDelimiter + " ", values);
         }
 
         /// <summary>
-        /// Parses key/value pair expressions from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>
-        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>. Supports encapsulated nested expressions.
+        /// Parses key/value pair expressions from a string. Parameter pairs are delimited by <paramref name="keyValueDelimiter"/>
+        /// and multiple pairs separated by <paramref name="parameterDelimiter"/>. Supports encapsulated nested expressions.
         /// </summary>
         /// <param name="value">String containing key/value pair expressions to parse.</param>
-        /// <param name="parameterDelimeter">Character that delimits one key/value pair from another.</param>
-        /// <param name="keyValueDelimeter">Character that delimits key from value.</param>
-        /// <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
-        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters.</param>
-        /// <param name="endValueDelimeter">Optional character that marks the end of a value such that value could contain other
-        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters.</param>
+        /// <param name="parameterDelimiter">Character that delimits one key/value pair from another.</param>
+        /// <param name="keyValueDelimiter">Character that delimits key from value.</param>
+        /// <param name="startValueDelimiter">Optional character that marks the start of a value such that value could contain other
+        /// <paramref name="parameterDelimiter"/> or <paramref name="keyValueDelimiter"/> characters.</param>
+        /// <param name="endValueDelimiter">Optional character that marks the end of a value such that value could contain other
+        /// <paramref name="parameterDelimiter"/> or <paramref name="keyValueDelimiter"/> characters.</param>
         /// <param name="ignoreDuplicateKeys">Flag determines whether duplicates are ignored. If flag is set to <c>false</c> an
         /// <see cref="ArgumentException"/> will be thrown when all key parameters are not unique.</param>
         /// <returns>Dictionary of key/value pairs.</returns>
@@ -305,9 +305,9 @@ namespace GSF
         /// <para>
         /// Parses a string containing key/value pair expressions (e.g., "localPort=5001; transportProtocol=UDP; interface=0.0.0.0").
         /// This method treats all "keys" as case-insensitive. Nesting of key/value pair expressions is allowed by encapsulating the
-        /// value using the <paramref name="startValueDelimeter"/> and <paramref name="endValueDelimeter"/> values (e.g., 
+        /// value using the <paramref name="startValueDelimiter"/> and <paramref name="endValueDelimiter"/> values (e.g., 
         /// "dataChannel={Port=-1;Clients=localhost:8800}; commandChannel={Port=8900}; dataFormat=FloatingPoint;"). There must be one
-        /// <paramref name="endValueDelimeter"/> for each encountered <paramref name="startValueDelimeter"/> in the value or a
+        /// <paramref name="endValueDelimiter"/> for each encountered <paramref name="startValueDelimiter"/> in the value or a
         /// <see cref="FormatException"/> will be thrown. Multiple levels of nesting is supported. If the <paramref name="ignoreDuplicateKeys"/>
         /// flag is set to <c>false</c> an <see cref="ArgumentException"/> will be thrown when all key parameters are not unique. Note
         /// that keys within nested expressions are considered separate key/value pair strings and are not considered when checking
@@ -318,30 +318,30 @@ namespace GSF
         /// <exception cref="ArgumentException">All delimiters must be unique -or- all keys must be unique when
         /// <paramref name="ignoreDuplicateKeys"/> is set to <c>false</c>.</exception>
         /// <exception cref="FormatException">Total nested key/value value pair expressions are mismatched -or- encountered
-        /// <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
-        public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter = ';', char keyValueDelimeter = '=', char startValueDelimeter = '{', char endValueDelimeter = '}', bool ignoreDuplicateKeys = true)
+        /// <paramref name="endValueDelimiter"/> before <paramref name="startValueDelimiter"/>.</exception>
+        public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimiter = ';', char keyValueDelimiter = '=', char startValueDelimiter = '{', char endValueDelimiter = '}', bool ignoreDuplicateKeys = true)
         {
             if (value == (string)null)
                 throw new ArgumentNullException("value");
 
-            if (parameterDelimeter == keyValueDelimeter ||
-                parameterDelimeter == startValueDelimeter ||
-                parameterDelimeter == endValueDelimeter ||
-                keyValueDelimeter == startValueDelimeter ||
-                keyValueDelimeter == endValueDelimeter ||
-                startValueDelimeter == endValueDelimeter)
+            if (parameterDelimiter == keyValueDelimiter ||
+                parameterDelimiter == startValueDelimiter ||
+                parameterDelimiter == endValueDelimiter ||
+                keyValueDelimiter == startValueDelimiter ||
+                keyValueDelimiter == endValueDelimiter ||
+                startValueDelimiter == endValueDelimiter)
                 throw new ArgumentException("All delimiters must be unique");
 
             Dictionary<string, string> keyValuePairs = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
             StringBuilder escapedValue = new StringBuilder();
-            string escapedParameterDelimeter = parameterDelimeter.RegexEncode();
-            string escapedKeyValueDelimeter = keyValueDelimeter.RegexEncode();
-            string escapedStartValueDelimeter = startValueDelimeter.RegexEncode();
-            string escapedEndValueDelimeter = endValueDelimeter.RegexEncode();
+            string escapedParameterDelimiter = parameterDelimiter.RegexEncode();
+            string escapedKeyValueDelimiter = keyValueDelimiter.RegexEncode();
+            string escapedStartValueDelimiter = startValueDelimiter.RegexEncode();
+            string escapedEndValueDelimiter = endValueDelimiter.RegexEncode();
             string[] elements;
             string key, unescapedValue;
             bool valueEscaped = false;
-            int delimeterDepth = 0;
+            int delimiterDepth = 0;
             char character;
 
             // Escape any parameter or key/value delimiters within tagged value sequences
@@ -353,7 +353,7 @@ namespace GSF
             {
                 character = value[x];
 
-                if (character == startValueDelimeter)
+                if (character == startValueDelimiter)
                 {
                     if (!valueEscaped)
                     {
@@ -362,17 +362,17 @@ namespace GSF
                     }
 
                     // Handle nested delimiters
-                    delimeterDepth++;
+                    delimiterDepth++;
                 }
 
-                if (character == endValueDelimeter)
+                if (character == endValueDelimiter)
                 {
                     if (valueEscaped)
                     {
-                        if (delimeterDepth > 0)
+                        if (delimiterDepth > 0)
                         {
                             // Handle nested delimiters
-                            delimeterDepth--;
+                            delimiterDepth--;
                         }
                         else
                         {
@@ -382,21 +382,21 @@ namespace GSF
                     }
                     else
                     {
-                        throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter \'{0}\' before start value delimiter \'{1}\'.", endValueDelimeter, startValueDelimeter));
+                        throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered end value delimiter \'{0}\' before start value delimiter \'{1}\'.", endValueDelimiter, startValueDelimiter));
                     }
                 }
 
                 if (valueEscaped)
                 {
                     // Escape any delimiter characters inside nested key/value pair
-                    if (character == parameterDelimeter)
-                        escapedValue.Append(escapedParameterDelimeter);
-                    else if (character == keyValueDelimeter)
-                        escapedValue.Append(escapedKeyValueDelimeter);
-                    else if (character == startValueDelimeter)
-                        escapedValue.Append(escapedStartValueDelimeter);
-                    else if (character == endValueDelimeter)
-                        escapedValue.Append(escapedEndValueDelimeter);
+                    if (character == parameterDelimiter)
+                        escapedValue.Append(escapedParameterDelimiter);
+                    else if (character == keyValueDelimiter)
+                        escapedValue.Append(escapedKeyValueDelimiter);
+                    else if (character == startValueDelimiter)
+                        escapedValue.Append(escapedStartValueDelimiter);
+                    else if (character == endValueDelimiter)
+                        escapedValue.Append(escapedEndValueDelimiter);
                     else
                         escapedValue.Append(character);
                 }
@@ -406,20 +406,20 @@ namespace GSF
                 }
             }
 
-            if (delimeterDepth != 0 || valueEscaped)
+            if (delimiterDepth != 0 || valueEscaped)
             {
                 // If value is still escaped, tagged expression was not terminated
                 if (valueEscaped)
-                    delimeterDepth = 1;
+                    delimiterDepth = 1;
 
-                throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more {0} than {1}.", delimeterDepth > 0 ? "start value delimiters \'" + startValueDelimeter + "\'" : "end value delimiters \'" + endValueDelimeter + "\'", delimeterDepth < 0 ? "start value delimiters \'" + startValueDelimeter + "\'" : "end value delimiters \'" + endValueDelimeter + "\'"));
+                throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimiter mismatch. Encountered more {0} than {1}.", delimiterDepth > 0 ? "start value delimiters \'" + startValueDelimiter + "\'" : "end value delimiters \'" + endValueDelimiter + "\'", delimiterDepth < 0 ? "start value delimiters \'" + startValueDelimiter + "\'" : "end value delimiters \'" + endValueDelimiter + "\'"));
             }
 
             // Parse key/value pairs from escaped value
-            foreach (string parameter in escapedValue.ToString().Split(parameterDelimeter))
+            foreach (string parameter in escapedValue.ToString().Split(parameterDelimiter))
             {
                 // Parse out parameter's key/value elements
-                elements = parameter.Split(keyValueDelimeter);
+                elements = parameter.Split(keyValueDelimiter);
 
                 if (elements.Length == 2)
                 {
@@ -428,10 +428,10 @@ namespace GSF
 
                     // Get unescaped value expression
                     unescapedValue = elements[1].Trim().
-                        Replace(escapedParameterDelimeter, parameterDelimeter.ToString()).
-                        Replace(escapedKeyValueDelimeter, keyValueDelimeter.ToString()).
-                        Replace(escapedStartValueDelimeter, startValueDelimeter.ToString()).
-                        Replace(escapedEndValueDelimeter, endValueDelimeter.ToString());
+                        Replace(escapedParameterDelimiter, parameterDelimiter.ToString()).
+                        Replace(escapedKeyValueDelimiter, keyValueDelimiter.ToString()).
+                        Replace(escapedStartValueDelimiter, startValueDelimiter.ToString()).
+                        Replace(escapedEndValueDelimiter, endValueDelimiter.ToString());
 
                     // Add key/value pair to dictionary
                     if (ignoreDuplicateKeys)

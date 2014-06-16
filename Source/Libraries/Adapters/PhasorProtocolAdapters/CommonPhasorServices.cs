@@ -34,12 +34,15 @@ using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Data;
 using GSF.IO;
+using GSF.Parsing;
 using GSF.PhasorProtocols;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -345,7 +348,133 @@ namespace PhasorProtocolAdapters
         // Static Fields
         private static readonly StatisticValueStateCache s_statisticValueCache = new StatisticValueStateCache();
 
+        // Classic
+        private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-{SignalType.Suffix}{SignalIndex}]]:{VendorAcronym}{SignalType.Abbreviation}[?{SignalType.Source}!=Phasor[?{SignalIndex}!=-1[{SignalIndex}]]]";
+
+        // Classic with condensed phase information
+        //private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-{SignalType.Suffix}{SignalIndex}]]:[?{VendorAcronym}!=[{VendorAcronym}_]][?{Phase}=A[APH]][?{Phase}=B[BPH]][?{Phase}=C[CPH]][?{Phase}=+[PSQ]][?{Phase}=-[NSQ]][?{Phase}=0[ZSQ]]{SignalType.Abbreviation}[?{SignalType.Source}!=Phasor[?{SignalIndex}!=-1[{SignalIndex}]]]";
+
+        // Verbose
+        //private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-{SignalType.Suffix}{SignalIndex}]]:[?{VendorAcronym}!=[{VendorAcronym}_]][?{Phase}=A[PhaseA_]][?{Phase}=B[PhaseB_]][?{Phase}=C[PhaseC_]][?{Phase}=+[PosSeq_]][?{Phase}=-[NegSeq_]][?{Phase}=0[ZeroSeq_]][?{SignalType.Acronym}!=STAT[{SignalType.LongAcronym}]][?{SignalType.Acronym}=STAT[{SignalType.Suffix}]][?{SignalType.Source}!=Phasor[?{SignalIndex}!=-1[{SignalIndex}]]]";
+
+        // Verbose without vendor information
+        //private const string DefaultPointTagNameExpression = "{CompanyAcronym}_{DeviceAcronym}[?{SignalType.Source}=Phasor[-{SignalType.Suffix}{SignalIndex}]]:[?{Phase}=A[PhaseA_]][?{Phase}=B[PhaseB_]][?{Phase}=C[PhaseC_]][?{Phase}=+[PosSeq_]][?{Phase}=-[NegSeq_]][?{Phase}=0[ZeroSeq_]][?{SignalType.Acronym}!=STAT[{SignalType.LongAcronym}]][?{SignalType.Acronym}=STAT[{SignalType.Suffix}]][?{SignalType.Source}!=Phasor[?{SignalIndex}!=-1[{SignalIndex}]]]";
+
+        // Cached point tag name expression fields
+        private static TemplatedExpressionParser s_pointTagExpressionParser;
+        private static Dictionary<string, DataRow> s_signalTypes;
+
         // Static Methods
+
+        /// <summary>
+        /// Create a new point tag using the configured point tag name expression.
+        /// </summary>
+        /// <param name="companyAcronym">Company name acronym to use for the point tag.</param>
+        /// <param name="deviceAcronym">Device name acronym to use for the point tag.</param>
+        /// <param name="vendorAcronym">Vendor name acronym to use for the point tag. Can be null.</param>
+        /// <param name="signalTypeAcronym">Acronym of signal type of the point.</param>
+        /// <param name="signalIndex">Signal index of the point, if any.</param>
+        /// <param name="phase">Signal phase of the point, if any.</param>
+        /// <returns>A new point tag created using the configured point tag name expression.</returns>
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public static string CreatePointTag(string companyAcronym, string deviceAcronym, string vendorAcronym, string signalTypeAcronym, int signalIndex = -1, char phase = '_')
+        {
+            // Initialize point tag expression parser
+            if ((object)s_pointTagExpressionParser == null)
+                s_pointTagExpressionParser = InitializePointTagExpressionParser();
+
+            // Initialize signal type dictionary
+            if ((object)s_signalTypes == null)
+                s_signalTypes = InitializeSignalTypes();
+
+            Dictionary<string, string> substitutions;
+            DataRow signalTypeValues;
+
+            if (!s_signalTypes.TryGetValue(signalTypeAcronym, out signalTypeValues))
+                throw new ArgumentOutOfRangeException("signalTypeAcronym", "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
+
+            // Validate key acronyms
+            if ((object)companyAcronym == null)
+                companyAcronym = "";
+
+            if ((object)deviceAcronym == null)
+                deviceAcronym = "";
+
+            if ((object)vendorAcronym == null)
+                vendorAcronym = "";
+
+            companyAcronym = companyAcronym.Trim();
+            deviceAcronym = deviceAcronym.Trim();
+            vendorAcronym = vendorAcronym.Trim();
+
+            // Define fixed parameter replacements
+            substitutions = new Dictionary<string, string>
+            {
+                { "{CompanyAcronym}", companyAcronym },
+                { "{DeviceAcronym}", deviceAcronym },
+                { "{VendorAcronym}", vendorAcronym },
+                { "{SignalIndex}", signalIndex.ToString() },
+                { "{Phase}", phase.ToString() }
+            };
+
+            // Define signal type field value replacements
+            DataColumnCollection columns = signalTypeValues.Table.Columns;
+
+            for (int i = 0; i < columns.Count; i++)
+            {
+                substitutions.Add(string.Format("{{SignalType.{0}}}", columns[i].ColumnName), signalTypeValues[i].ToNonNullString());
+            }
+
+            return s_pointTagExpressionParser.Execute(substitutions);
+        }
+
+        private static TemplatedExpressionParser InitializePointTagExpressionParser()
+        {
+            TemplatedExpressionParser pointTagExpressionParser;
+
+            // Get point tag name expression from configuration
+            try
+            {
+                // Note that both manager and service application may need this expression and each will have their own setting, users
+                // will need to synchronize these expressions in both config files for consistent custom point tag naming
+                ConfigurationFile configFile = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = configFile.Settings["systemSettings"];
+
+                settings.Add("PointTagNameExpression", DefaultPointTagNameExpression, "Defines the expression used to create point tag names. NOTE: if updating this setting, synchronize value in both the manager and service config files.");
+
+                pointTagExpressionParser = new TemplatedExpressionParser()
+                {
+                    TemplatedExpression = configFile.Settings["systemSettings"]["PointTagNameExpression"].Value
+                };
+            }
+            catch
+            {
+                pointTagExpressionParser = new TemplatedExpressionParser()
+                {
+                    TemplatedExpression = DefaultPointTagNameExpression
+                };
+            }
+
+            return pointTagExpressionParser;
+        }
+
+        private static Dictionary<string, DataRow> InitializeSignalTypes()
+        {
+            Dictionary<string, DataRow> signalTypes;
+
+            // It is expected that when a point tag is needing to be created that the database will be available
+            using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
+            {
+                signalTypes = new Dictionary<string, DataRow>(StringComparer.InvariantCultureIgnoreCase);
+
+                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SignalType").AsEnumerable())
+                {
+                    signalTypes.AddOrUpdate(row["Acronym"].ToString(), row);
+                }
+            }
+
+            return signalTypes;
+        }
 
         /// <summary>
         /// Apply start-up phasor data source validations
@@ -365,190 +494,262 @@ namespace PhasorProtocolAdapters
             settings.Add("ProcessPhasorDataSourceValidation", true, "Determines if the phasor data source validation should be processed at startup");
 
             // See if this node should process phasor source validation
-            if (settings["ProcessPhasorDataSourceValidation"].ValueAsBoolean())
+            if (!settings["ProcessPhasorDataSourceValidation"].ValueAsBoolean())
+                return;
+
+            Dictionary<string, string> args = new Dictionary<string, string>();
+            bool skipOptimization = false, renameAllPointTags = false;
+            string arg, acronym;
+
+            if (!string.IsNullOrEmpty(arguments))
+                args = arguments.ParseKeyValuePairs();
+
+            if (args.TryGetValue("skipOptimization", out arg))
+                skipOptimization = arg.ParseBoolean();
+
+            if (args.TryGetValue("renameAllPointTags", out arg))
+                renameAllPointTags = arg.ParseBoolean();
+
+            CreateDefaultNode(database, nodeIDQueryString, statusMessage, processException);
+            LoadDefaultConfigurationEntity(database, statusMessage, processException);
+            LoadDefaultInterconnection(database, statusMessage, processException);
+            LoadDefaultProtocol(database, statusMessage, processException);
+            LoadDefaultSignalType(database, statusMessage, processException);
+            LoadDefaultStatistic(database, statusMessage, processException);
+            EstablishDefaultMeasurementKeyCache(database, statusMessage, processException);
+
+            statusMessage("Validating signal types...");
+
+            // Validate that the acronym for status flags is FLAG (it was STAT in prior versions)
+            if (database.Connection.ExecuteScalar("SELECT Acronym FROM SignalType WHERE Suffix='SF'").ToNonNullString().ToUpper() == "STAT")
+                database.Connection.ExecuteNonQuery("UPDATE SignalType SET Acronym='FLAG' WHERE Suffix='SF'");
+
+            // Validate that the calculation and statistic signal types are defined (they did not in initial release)
+            if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE Acronym='CALC'")) == 0)
+                database.Connection.ExecuteNonQuery("INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, LongAcronym, Source, EngineeringUnits) VALUES('Calculated Value', 'CALC', 'CV', 'CV', 'Calculated', 'PMU', '')");
+
+            if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE Acronym='STAT'")) == 0)
+                database.Connection.ExecuteNonQuery("INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, LongAcronym, Source, EngineeringUnits) VALUES('Statistic', 'STAT', 'ST', 'ST', 'Statistic', 'Any', '')");
+
+            if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE Acronym='QUAL'")) == 0)
+                database.Connection.ExecuteNonQuery("INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, LongAcronym, Source, EngineeringUnits) VALUES('Quality Flags', 'QUAL', 'QF', 'QF', 'QualityFlags', 'Frame', '')");
+
+            // Make sure values are defined for long acronyms (did not exist in prior versions)
+            if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE LongAcronym='Undefined'")) > 0)
             {
-                Dictionary<string, string> args = new Dictionary<string, string>();
-                bool skipOptimization = false;
-                string arg;
+                // Update abbreviations to better values for consistent custom point tag naming convention
+                if (database.Connection.ExecuteScalar("SELECT Abbreviation FROM SignalType WHERE Acronym='ALOG'").ToNonNullString().ToUpper() == "A")
+                    database.Connection.ExecuteNonQuery("UPDATE SignalType SET Abbreviation='AV' WHERE Acronym='ALOG'");
 
-                if (!string.IsNullOrEmpty(arguments))
-                    args = arguments.ParseKeyValuePairs();
+                if (database.Connection.ExecuteScalar("SELECT Abbreviation FROM SignalType WHERE Acronym='DIGI'").ToNonNullString().ToUpper() == "D")
+                    database.Connection.ExecuteNonQuery("UPDATE SignalType SET Abbreviation='DV' WHERE Acronym='DIGI'");
 
-                if (args.TryGetValue("skipOptimization", out arg))
-                    skipOptimization = arg.ParseBoolean();
+                if (database.Connection.ExecuteScalar("SELECT Abbreviation FROM SignalType WHERE Acronym='CALC'").ToNonNullString().ToUpper() == "C")
+                    database.Connection.ExecuteNonQuery("UPDATE SignalType SET Abbreviation='CV' WHERE Acronym='CALC'");
 
-                CreateDefaultNode(database, nodeIDQueryString, statusMessage, processException);
-                LoadDefaultConfigurationEntity(database, statusMessage, processException);
-                LoadDefaultInterconnection(database, statusMessage, processException);
-                LoadDefaultProtocol(database, statusMessage, processException);
-                LoadDefaultSignalType(database, statusMessage, processException);
-                LoadDefaultStatistic(database, statusMessage, processException);
-                EstablishDefaultMeasurementKeyCache(database, statusMessage, processException);
+                if (database.Connection.ExecuteScalar("SELECT Abbreviation FROM SignalType WHERE Acronym='STAT'").ToNonNullString().ToUpper() == "P")
+                    database.Connection.ExecuteNonQuery("UPDATE SignalType SET Abbreviation='ST' WHERE Acronym='STAT'");
 
-                statusMessage("Validating signal types...");
+                if (database.Connection.ExecuteScalar("SELECT Abbreviation FROM SignalType WHERE Acronym='QUAL'").ToNonNullString().ToUpper() == "Q")
+                    database.Connection.ExecuteNonQuery("UPDATE SignalType SET Abbreviation='QF' WHERE Acronym='QUAL'");
 
-                // Validate that the acronym for status flags is FLAG (it was STAT in prior versions)
-                if (database.Connection.ExecuteScalar("SELECT Acronym FROM SignalType WHERE Suffix='SF'").ToNonNullString().ToUpper() == "STAT")
-                    database.Connection.ExecuteNonQuery("UPDATE SignalType SET Acronym='FLAG' WHERE Suffix='SF'");
+                IEnumerable<DataRow> signalTypes = database.Connection.RetrieveData(database.AdapterType, "SELECT Name, Acronym FROM SignalType WHERE LongAcronym='Undefined'").AsEnumerable();
+                string longAcronym;
 
-                // Validate that the calculation and statistic signal types are defined (they did not in initial release)
-                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE Acronym='CALC'")) == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, Source, EngineeringUnits) VALUES('Calculated Value', 'CALC', 'CV', 'C', 'PMU', '')");
-
-                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE Acronym='STAT'")) == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, Source, EngineeringUnits) VALUES('Statistic', 'STAT', 'ST', 'P', 'Any', '')");
-
-                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM SignalType WHERE Acronym='QUAL'")) == 0)
-                    database.Connection.ExecuteNonQuery("INSERT INTO SignalType(Name, Acronym, Suffix, Abbreviation, Source, EngineeringUnits) VALUES('Quality Flags', 'QUAL', 'QF', 'Q', 'Frame', '')");
-
-                statusMessage("Validating output stream device ID codes...");
-
-                // Validate all ID codes for output stream devices are not set their default value
-                database.Connection.ExecuteNonQuery("UPDATE OutputStreamDevice SET IDCode = ID WHERE IDCode = 0");
-
-                statusMessage("Verifying statistics archive exists...");
-
-                // Validate that the statistics historian exists
-                if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Historian WHERE Acronym='STAT' AND NodeID={0}", nodeIDQueryString))) == 0)
-                    database.Connection.ExecuteNonQuery(string.Format("INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'HistorianAdapters.dll', 'HistorianAdapters.LocalOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)", nodeIDQueryString));
-
-                // Make sure statistics path exists to hold historian files
-                string statisticsPath = FilePath.GetAbsolutePath(FilePath.AddPathSuffix("Statistics"));
-
-                if (!Directory.Exists(statisticsPath))
-                    Directory.CreateDirectory(statisticsPath);
-
-                // Make sure needed statistic historian configuration settings are properly defined
-                settings = configFile.Settings["statMetadataFile"];
-                settings.Add("FileName", "Statistics\\stat_dbase.dat", "Name of the statistics meta-data file including its path.");
-                settings.Add("LoadOnOpen", true, "True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the statistics meta-data file.");
-                settings.Add("ReloadOnModify", false, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the statistics meta-data file.");
-                settings["LoadOnOpen"].Update(true);
-                settings["ReloadOnModify"].Update(false);
-
-                settings = configFile.Settings["statStateFile"];
-                settings.Add("FileName", "Statistics\\stat_startup.dat", "Name of the statistics state file including its path.");
-                settings.Add("AutoSaveInterval", 10000, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving - this defaults to 10,000 for the statistics state file.");
-                settings.Add("LoadOnOpen", true, "True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the statistics state file.");
-                settings.Add("SaveOnClose", true, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False - this defaults to True for the statistics state file.");
-                settings.Add("ReloadOnModify", false, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the statistics state file.");
-                settings["AutoSaveInterval"].Update(10000);
-                settings["LoadOnOpen"].Update(true);
-                settings["SaveOnClose"].Update(true);
-                settings["ReloadOnModify"].Update(false);
-
-                settings = configFile.Settings["statIntercomFile"];
-                settings.Add("FileName", "Statistics\\scratch.dat", "Name of the statistics intercom file including its path.");
-                settings.Add("AutoSaveInterval", 10000, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving - this defaults to 10,000 for the statistics intercom file.");
-                settings.Add("LoadOnOpen", true, "True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the statistics intercom file.");
-                settings.Add("SaveOnClose", true, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False - this defaults to True for the statistics intercom file.");
-                settings.Add("ReloadOnModify", false, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the statistics intercom file.");
-                settings["AutoSaveInterval"].Update(1000);
-                settings["LoadOnOpen"].Update(true);
-                settings["SaveOnClose"].Update(true);
-                settings["ReloadOnModify"].Update(false);
-
-                settings = configFile.Settings["statArchiveFile"];
-                settings.Add("FileName", "Statistics\\stat_archive.d", "Name of the statistics working archive file including its path.");
-                settings.Add("CacheWrites", true, "True if writes are to be cached for performance; otherwise False - this defaults to True for the statistics working archive file.");
-                settings.Add("ConserveMemory", false, "True if attempts are to be made to conserve memory; otherwise False - this defaults to False for the statistics working archive file.");
-                settings["CacheWrites"].Update(true);
-                settings["ConserveMemory"].Update(false);
-
-                settings = configFile.Settings["statMetadataService"];
-                settings.Add("Endpoints", "http.rest://localhost:6051/historian", "Semicolon delimited list of URIs where the web service can be accessed - this defaults to http.rest://localhost:6051/historian for the statistics meta-data service.");
-
-                settings = configFile.Settings["statTimeSeriesDataService"];
-                settings.Add("Endpoints", "http.rest://localhost:6052/historian", "Semicolon delimited list of URIs where the web service can be accessed - this defaults to http.rest://localhost:6052/historian for the statistics time-series data service.");
-
-                configFile.Save();
-
-                // Get the needed statistic related IDs
-                int statSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='STAT'"));
-                int statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT ID FROM Historian WHERE Acronym='STAT' AND NodeID={0}", nodeIDQueryString)));
-                object nodeCompanyID = database.Connection.ExecuteScalar(string.Format("SELECT CompanyID FROM Node WHERE ID={0}", nodeIDQueryString));
-
-                // Load the defined system statistics
-                IEnumerable<DataRow> statistics = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Statistic ORDER BY Source, SignalIndex").AsEnumerable();
-
-                // Filter statistics to device, input stream and output stream types            
-                IEnumerable<DataRow> deviceStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "Device", true) == 0).ToList();
-                IEnumerable<DataRow> inputStreamStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "InputStream", true) == 0).ToList();
-                IEnumerable<DataRow> outputStreamStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "OutputStream", true) == 0).ToList();
-
-                // Define kinds of output signal that will designate a location in an output stream protocol frame - other non-mappable measurements will be removed from output stream measurements
-                SignalKind[] validOutputSignalKinds = { SignalKind.Angle, SignalKind.Magnitude, SignalKind.Frequency, SignalKind.DfDt, SignalKind.Status, SignalKind.Analog, SignalKind.Digital, SignalKind.Quality };
-
-                HashSet<int> measurementIDsToDelete = new HashSet<int>();
-                SignalReference deviceSignalReference;
-                string query, acronym, signalReference, pointTag, company, vendorDevice, description, protocolIDs;
-                int adapterID, deviceID, signalIndex;
-                bool firstStatisticExisted;
-                int? historianID;
-
-                string[] trackedTables;
-                ulong changes;
-
-                try
+                foreach (DataRow row in signalTypes)
                 {
-                    // Determine the tables for which changes are tracked
-                    if (trackingVersion != ulong.MinValue)
+                    acronym = row.Field<string>("Acronym").ToUpperInvariant().Trim();
+
+                    switch (acronym)
                     {
-                        trackedTables = database.Connection.RetrieveData(database.AdapterType, "SELECT Name FROM TrackedTable").Select()
-                            .Select(row => row["Name"].ToNonNullString())
-                            .ToArray();
+                        case "IPHM":
+                            longAcronym = "CurrentMagnitude";
+                            break;
+                        case "IPHA":
+                            longAcronym = "CurrentAngle";
+                            break;
+                        case "VPHM":
+                            longAcronym = "VoltageMagnitude";
+                            break;
+                        case "VPHA":
+                            longAcronym = "VoltageAngle";
+                            break;
+                        case "FREQ":
+                            longAcronym = "Frequency";
+                            break;
+                        case "DFDT":
+                            longAcronym = "DfDt";
+                            break;
+                        case "ALOG":
+                            longAcronym = "Analog";
+                            break;
+                        case "FLAG":
+                            longAcronym = "StatusFlags";
+                            break;
+                        case "DIGI":
+                            longAcronym = "Digital";
+                            break;
+                        case "CALC":
+                            longAcronym = "Calculated";
+                            break;
+                        case "STAT":
+                            longAcronym = "Statistic";
+                            break;
+                        case "ALRM":
+                            longAcronym = "Alarm";
+                            break;
+                        case "QUAL":
+                            longAcronym = "QualityFlags";
+                            break;
+                        default:
+                            longAcronym = row.Field<string>("Name").Trim().RemoveWhiteSpace();
+
+                            if (string.IsNullOrEmpty(longAcronym))
+                                longAcronym = acronym.ToNonNullString("?");
+
+                            break;
                     }
-                    else
-                    {
-                        trackedTables = new string[0];
-                    }
+
+                    database.Connection.ExecuteNonQuery(string.Format("UPDATE SignalType SET LongAcronym='{0}' WHERE Acronym='{1}'", longAcronym, acronym));
                 }
-                catch
+            }
+
+            statusMessage("Validating output stream device ID codes...");
+
+            // Validate all ID codes for output stream devices are not set their default value
+            database.Connection.ExecuteNonQuery("UPDATE OutputStreamDevice SET IDCode = ID WHERE IDCode = 0");
+
+            statusMessage("Verifying statistics archive exists...");
+
+            // Validate that the statistics historian exists
+            if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Historian WHERE Acronym='STAT' AND NodeID={0}", nodeIDQueryString))) == 0)
+                database.Connection.ExecuteNonQuery(string.Format("INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'HistorianAdapters.dll', 'HistorianAdapters.LocalOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)", nodeIDQueryString));
+
+            // Make sure statistics path exists to hold historian files
+            string statisticsPath = FilePath.GetAbsolutePath(FilePath.AddPathSuffix("Statistics"));
+
+            if (!Directory.Exists(statisticsPath))
+                Directory.CreateDirectory(statisticsPath);
+
+            // Make sure needed statistic historian configuration settings are properly defined
+            settings = configFile.Settings["statMetadataFile"];
+            settings.Add("FileName", "Statistics\\stat_dbase.dat", "Name of the statistics meta-data file including its path.");
+            settings.Add("LoadOnOpen", true, "True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the statistics meta-data file.");
+            settings.Add("ReloadOnModify", false, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the statistics meta-data file.");
+            settings["LoadOnOpen"].Update(true);
+            settings["ReloadOnModify"].Update(false);
+
+            settings = configFile.Settings["statStateFile"];
+            settings.Add("FileName", "Statistics\\stat_startup.dat", "Name of the statistics state file including its path.");
+            settings.Add("AutoSaveInterval", 10000, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving - this defaults to 10,000 for the statistics state file.");
+            settings.Add("LoadOnOpen", true, "True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the statistics state file.");
+            settings.Add("SaveOnClose", true, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False - this defaults to True for the statistics state file.");
+            settings.Add("ReloadOnModify", false, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the statistics state file.");
+            settings["AutoSaveInterval"].Update(10000);
+            settings["LoadOnOpen"].Update(true);
+            settings["SaveOnClose"].Update(true);
+            settings["ReloadOnModify"].Update(false);
+
+            settings = configFile.Settings["statIntercomFile"];
+            settings.Add("FileName", "Statistics\\scratch.dat", "Name of the statistics intercom file including its path.");
+            settings.Add("AutoSaveInterval", 10000, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving - this defaults to 10,000 for the statistics intercom file.");
+            settings.Add("LoadOnOpen", true, "True if file records are to be loaded in memory when opened; otherwise False - this defaults to True for the statistics intercom file.");
+            settings.Add("SaveOnClose", true, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False - this defaults to True for the statistics intercom file.");
+            settings.Add("ReloadOnModify", false, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False - this defaults to False for the statistics intercom file.");
+            settings["AutoSaveInterval"].Update(1000);
+            settings["LoadOnOpen"].Update(true);
+            settings["SaveOnClose"].Update(true);
+            settings["ReloadOnModify"].Update(false);
+
+            settings = configFile.Settings["statArchiveFile"];
+            settings.Add("FileName", "Statistics\\stat_archive.d", "Name of the statistics working archive file including its path.");
+            settings.Add("CacheWrites", true, "True if writes are to be cached for performance; otherwise False - this defaults to True for the statistics working archive file.");
+            settings.Add("ConserveMemory", false, "True if attempts are to be made to conserve memory; otherwise False - this defaults to False for the statistics working archive file.");
+            settings["CacheWrites"].Update(true);
+            settings["ConserveMemory"].Update(false);
+
+            settings = configFile.Settings["statMetadataService"];
+            settings.Add("Endpoints", "http.rest://localhost:6051/historian", "Semicolon delimited list of URIs where the web service can be accessed - this defaults to http.rest://localhost:6051/historian for the statistics meta-data service.");
+
+            settings = configFile.Settings["statTimeSeriesDataService"];
+            settings.Add("Endpoints", "http.rest://localhost:6052/historian", "Semicolon delimited list of URIs where the web service can be accessed - this defaults to http.rest://localhost:6052/historian for the statistics time-series data service.");
+
+            configFile.Save();
+
+            // Get the needed statistic related IDs
+            int statSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='STAT'"));
+            int statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT ID FROM Historian WHERE Acronym='STAT' AND NodeID={0}", nodeIDQueryString)));
+            object nodeCompanyID = database.Connection.ExecuteScalar(string.Format("SELECT CompanyID FROM Node WHERE ID={0}", nodeIDQueryString));
+
+            // Load the defined system statistics
+            IEnumerable<DataRow> statistics = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Statistic ORDER BY Source, SignalIndex").AsEnumerable();
+
+            // Filter statistics to device, input stream and output stream types            
+            IEnumerable<DataRow> deviceStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "Device", true) == 0).ToList();
+            IEnumerable<DataRow> inputStreamStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "InputStream", true) == 0).ToList();
+            IEnumerable<DataRow> outputStreamStatistics = statistics.Where(row => string.Compare(row.Field<string>("Source"), "OutputStream", true) == 0).ToList();
+
+            // Define kinds of output signal that will designate a location in an output stream protocol frame - other non-mappable measurements will be removed from output stream measurements
+            SignalKind[] validOutputSignalKinds = { SignalKind.Angle, SignalKind.Magnitude, SignalKind.Frequency, SignalKind.DfDt, SignalKind.Status, SignalKind.Analog, SignalKind.Digital, SignalKind.Quality };
+
+            HashSet<int> measurementIDsToDelete = new HashSet<int>();
+            SignalReference deviceSignalReference;
+            string query, signalReference, pointTag, company, vendorDevice, description, protocolIDs;
+            int adapterID, deviceID, signalIndex;
+            bool firstStatisticExisted;
+            int? historianID;
+
+            string[] trackedTables;
+            ulong changes;
+
+            try
+            {
+                // Determine the tables for which changes are tracked
+                if (trackingVersion != ulong.MinValue)
                 {
-                    trackedTables = new string[0];
-                }
-
-                statusMessage("Validating device protocols...");
-
-                // Extract IDs for phasor protocols
-                StringBuilder protocolIDList = new StringBuilder();
-                DataTable protocols = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Protocol");
-
-                if (protocols.Columns.Contains("Category"))
-                {
-                    // Make sure new protocol types exist
-                    if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='GatewayTransport'"))) == 0)
-                    {
-                        database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('GatewayTransport', 'Gateway Transport', 'Measurement', 'Gateway', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataSubscriber', " + (protocols.Rows.Count + 1) + ")");
-
-                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='WAV'"))) == 0)
-                            database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('WAV', 'Wave Form Input Adapter', 'Frame', 'Audio', 'WavInputAdapter.dll', 'WavInputAdapter.WavInputAdapter', " + (protocols.Rows.Count + 2) + ")");
-
-                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='IeeeC37_118V2'"))) == 0)
-                            database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('IeeeC37_118V2', 'IEEE C37.118.2-2011', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', 2)");
-
-                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='VirtualInput'"))) == 0)
-                            database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('VirtualInput', 'Virtual Device', 'Frame', 'Virtual', 'TestingAdapters.dll', 'TestingAdapters.VirtualInputAdapter', " + (protocols.Rows.Count + 4) + ")");
-                    }
-
-                    if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='Iec61850_90_5'"))) == 0)
-                        database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('Iec61850_90_5', 'IEC 61850-90-5', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', 12)");
-
-                    foreach (DataRow protocol in protocols.Rows)
-                    {
-                        if (string.Compare(protocol.Field<string>("Category"), "Phasor", true) == 0)
-                        {
-                            if (protocolIDList.Length > 0)
-                                protocolIDList.Append(", ");
-
-                            protocolIDList.Append(protocol.ConvertField<int>("ID"));
-                        }
-                    }
+                    trackedTables = database.Connection.RetrieveData(database.AdapterType, "SELECT Name FROM TrackedTable").Select()
+                        .Select(row => row["Name"].ToNonNullString())
+                        .ToArray();
                 }
                 else
                 {
-                    // Older schemas do not include protocol categories and assembly info
-                    foreach (DataRow protocol in protocols.Rows)
+                    trackedTables = new string[0];
+                }
+            }
+            catch
+            {
+                trackedTables = new string[0];
+            }
+
+            statusMessage("Validating device protocols...");
+
+            // Extract IDs for phasor protocols
+            StringBuilder protocolIDList = new StringBuilder();
+            DataTable protocols = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Protocol");
+
+            if (protocols.Columns.Contains("Category"))
+            {
+                // Make sure new protocol types exist
+                if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='GatewayTransport'"))) == 0)
+                {
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('GatewayTransport', 'Gateway Transport', 'Measurement', 'Gateway', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataSubscriber', " + (protocols.Rows.Count + 1) + ")");
+
+                    if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='WAV'"))) == 0)
+                        database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('WAV', 'Wave Form Input Adapter', 'Frame', 'Audio', 'WavInputAdapter.dll', 'WavInputAdapter.WavInputAdapter', " + (protocols.Rows.Count + 2) + ")");
+
+                    if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='IeeeC37_118V2'"))) == 0)
+                        database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('IeeeC37_118V2', 'IEEE C37.118.2-2011', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', 2)");
+
+                    if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='VirtualInput'"))) == 0)
+                        database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('VirtualInput', 'Virtual Device', 'Frame', 'Virtual', 'TestingAdapters.dll', 'TestingAdapters.VirtualInputAdapter', " + (protocols.Rows.Count + 4) + ")");
+                }
+
+                if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Protocol WHERE Acronym='Iec61850_90_5'"))) == 0)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('Iec61850_90_5', 'IEC 61850-90-5', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', 12)");
+
+                foreach (DataRow protocol in protocols.Rows)
+                {
+                    if (string.Compare(protocol.Field<string>("Category"), "Phasor", true) == 0)
                     {
                         if (protocolIDList.Length > 0)
                             protocolIDList.Append(", ");
@@ -556,305 +757,365 @@ namespace PhasorProtocolAdapters
                         protocolIDList.Append(protocol.ConvertField<int>("ID"));
                     }
                 }
-
-                protocolIDs = protocolIDList.ToString();
-
-                try
+            }
+            else
+            {
+                // Older schemas do not include protocol categories and assembly info
+                foreach (DataRow protocol in protocols.Rows)
                 {
-                    // Determine how many changes were made to devices and measurements -
-                    // if no changes were made, we can skip the next few steps
-                    if (trackedTables.Contains("Device") && trackedTables.Contains("Measurement"))
-                        changes = Convert.ToUInt64(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'Device' OR TableName = 'Measurement') AND ID > {0}", trackingVersion)));
-                    else
-                        changes = ulong.MaxValue;
+                    if (protocolIDList.Length > 0)
+                        protocolIDList.Append(", ");
+
+                    protocolIDList.Append(protocol.ConvertField<int>("ID"));
                 }
-                catch
-                {
+            }
+
+            protocolIDs = protocolIDList.ToString();
+
+            try
+            {
+                // Determine how many changes were made to devices and measurements -
+                // if no changes were made, we can skip the next few steps
+                if (trackedTables.Contains("Device") && trackedTables.Contains("Measurement"))
+                    changes = Convert.ToUInt64(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'Device' OR TableName = 'Measurement') AND ID > {0}", trackingVersion)));
+                else
                     changes = ulong.MaxValue;
+            }
+            catch
+            {
+                changes = ulong.MaxValue;
+            }
+
+            if (skipOptimization || changes != 0L)
+            {
+                statusMessage("Validating device measurements...");
+
+                // Get protocol ID list for those protocols that support time quality flags
+                DataTable timeQualityProtocols = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM Protocol WHERE Acronym = 'IeeeC37_118V1' OR Acronym = 'IeeeC37_118V2' OR Acronym = 'IeeeC37_118D6' OR Acronym = 'Iec61850_90_5'");
+                StringBuilder timeQualityProtocolIDList = new StringBuilder();
+                string timeQualityProtocolIDs;
+
+                foreach (DataRow timeQualityProtocol in timeQualityProtocols.Rows)
+                {
+                    if (timeQualityProtocolIDList.Length > 0)
+                        timeQualityProtocolIDList.Append(", ");
+
+                    timeQualityProtocolIDList.Append(timeQualityProtocol.ConvertField<int>("ID"));
                 }
 
-                if (skipOptimization || changes != 0L)
+                timeQualityProtocolIDs = timeQualityProtocolIDList.ToString();
+
+                string qualityFlagsAcronym = SignalReference.GetSignalKindAcronym(SignalKind.Quality);
+                int qualityFlagsSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='QUAL'"));
+
+                // Make sure one device quality flags measurement exists for each "connection" for devices that support time quality flags
+                foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE ((IsConcentrator = 0 AND ParentID IS NULL) OR IsConcentrator = 1) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, timeQualityProtocolIDs)).Rows)
                 {
-                    statusMessage("Validating device measurements...");
+                    deviceID = device.ConvertField<int>("ID");
+                    acronym = device.Field<string>("Acronym");
+                    signalReference = string.Format("{0}-{1}", acronym, qualityFlagsAcronym);
 
-                    // Get protocol ID list for those protocols that support time quality flags
-                    DataTable timeQualityProtocols = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM Protocol WHERE Acronym = 'IeeeC37_118V1' OR Acronym = 'IeeeC37_118V2' OR Acronym = 'IeeeC37_118D6' OR Acronym = 'Iec61850_90_5'");
-                    StringBuilder timeQualityProtocolIDList = new StringBuilder();
-                    string timeQualityProtocolIDs;
-
-                    foreach (DataRow timeQualityProtocol in timeQualityProtocols.Rows)
+                    // See if quality flags measurement exists for device
+                    if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND DeviceID = {1}", signalReference, deviceID))) == 0)
                     {
-                        if (timeQualityProtocolIDList.Length > 0)
-                            timeQualityProtocolIDList.Append(", ");
+                        historianID = device.ConvertNullableField<int>("HistorianID");
 
-                        timeQualityProtocolIDList.Append(timeQualityProtocol.ConvertField<int>("ID"));
+                        company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID = {0}", device.ConvertNullableField<int>("CompanyID") ?? 0));
+
+                        if (string.IsNullOrEmpty(company))
+                            company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
+
+                        pointTag = CreatePointTag(company, acronym, null, "QUAL");
+                        description = string.Format("{0} Time Quality Flags", device.Field<string>("Name"));
+
+                        query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
+                                                                  "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "historianID", "deviceID", "pointTag",
+                            "signalTypeID", "signalReference", "description");
+
+                        database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, historianID.HasValue ? (object)historianID.Value : (object)DBNull.Value, deviceID, pointTag, qualityFlagsSignalTypeID, signalReference, description);
                     }
+                }
 
-                    timeQualityProtocolIDs = timeQualityProtocolIDList.ToString();
+                // Make sure needed device statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
+                foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
+                {
+                    firstStatisticExisted = true;
 
-                    string qualityFlagsAcronym = SignalReference.GetSignalKindAcronym(SignalKind.Quality);
-                    int qualityFlagsSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='QUAL'"));
-
-                    // Make sure one device quality flags measurement exists for each "connection" for devices that support time quality flags
-                    foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE ((IsConcentrator = 0 AND ParentID IS NULL) OR IsConcentrator = 1) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, timeQualityProtocolIDs)).Rows)
+                    foreach (DataRow statistic in deviceStatistics)
                     {
-                        deviceID = device.ConvertField<int>("ID");
-                        acronym = device.Field<string>("Acronym");
-                        signalReference = string.Format("{0}-{1}", acronym, qualityFlagsAcronym);
+                        string oldAcronym;
+                        string oldSignalReference;
 
-                        // See if quality flags measurement exists for device
-                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND DeviceID = {1}", signalReference, deviceID))) == 0)
+                        signalIndex = statistic.ConvertField<int>("SignalIndex");
+                        oldAcronym = device.Field<string>("Acronym");
+                        acronym = oldAcronym + "!PMU";
+                        oldSignalReference = SignalReference.ToString(oldAcronym, SignalKind.Statistic, signalIndex);
+                        signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
+
+                        // If the original format for device statistics is found in the database, update to new format
+                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", oldSignalReference, statHistorianID))) > 0)
                         {
-                            historianID = device.ConvertNullableField<int>("HistorianID");
+                            database.Connection.ExecuteNonQuery(string.Format("UPDATE Measurement SET SignalReference='{0}' WHERE SignalReference='{1}' AND HistorianID={2}", signalReference, oldSignalReference, statHistorianID));
 
-                            company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID = {0}", device.ConvertNullableField<int>("CompanyID") ?? 0));
+                            // No need to insert it since we
+                            // can guarantee its existence
+                            continue;
+                        }
 
+                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
+                        {
+                            firstStatisticExisted = false;
+                            company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", device.ConvertNullableField<int>("CompanyID") ?? 0));
                             if (string.IsNullOrEmpty(company))
                                 company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
 
-                            pointTag = string.Format("{0}_{1}:Q", company, acronym);
-                            description = string.Format("{0} Time Quality Flags", device.Field<string>("Name"));
+                            vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", device.ConvertNullableField<int>("VendorDeviceID") ?? 0));
+                            pointTag = CreatePointTag(company, acronym, null, "STAT", signalIndex);
+                            description = string.Format("{0}{1} Statistic for {2}", device.Field<string>("Name"), string.IsNullOrWhiteSpace(vendorDevice) ? "" : " " + vendorDevice, statistic.Field<string>("Description"));
 
                             query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
-                                "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "historianID", "deviceID", "pointTag",
-                                "signalTypeID", "signalReference", "description");
+                                                                      "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "statHistorianID", "deviceID", "pointTag",
+                                "statSignalTypeID", "signalReference", "description");
 
-                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, historianID.HasValue ? (object)historianID.Value : (object)DBNull.Value, deviceID, pointTag, qualityFlagsSignalTypeID, signalReference, description);
+                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, device.ConvertField<int>("ID"), pointTag, statSignalTypeID, signalReference, description);
                         }
-                    }
-
-                    // Make sure needed device statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
-                    foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
-                    {
-                        firstStatisticExisted = true;
-
-                        foreach (DataRow statistic in deviceStatistics)
+                        else
                         {
-                            string oldAcronym;
-                            string oldSignalReference;
-
-                            signalIndex = statistic.ConvertField<int>("SignalIndex");
-                            oldAcronym = device.Field<string>("Acronym");
-                            acronym = oldAcronym + "!PMU";
-                            oldSignalReference = SignalReference.ToString(oldAcronym, SignalKind.Statistic, signalIndex);
-                            signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
-
-                            // If the original format for device statistics is found in the database, update to new format
-                            if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", oldSignalReference, statHistorianID))) > 0)
-                            {
-                                database.Connection.ExecuteNonQuery(string.Format("UPDATE Measurement SET SignalReference='{0}' WHERE SignalReference='{1}' AND HistorianID={2}", signalReference, oldSignalReference, statHistorianID));
-
-                                // No need to insert it since we
-                                // can guarantee its existence
-                                continue;
-                            }
-
-                            if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
-                            {
-                                firstStatisticExisted = false;
-                                company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", device.ConvertNullableField<int>("CompanyID") ?? 0));
-                                if (string.IsNullOrEmpty(company))
-                                    company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
-
-                                vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", device.ConvertNullableField<int>("VendorDeviceID") ?? 0));
-                                pointTag = string.Format("{0}_{1}:ST{2}", company, acronym, signalIndex);
-                                description = string.Format("{0}{1} Statistic for {2}", device.Field<string>("Name"), string.IsNullOrWhiteSpace(vendorDevice) ? "" : " " + vendorDevice, statistic.Field<string>("Description"));
-
-                                query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
-                                    "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "statHistorianID", "deviceID", "pointTag",
-                                    "statSignalTypeID", "signalReference", "description");
-
-                                database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, device.ConvertField<int>("ID"), pointTag, statSignalTypeID, signalReference, description);
-                            }
-                            else
-                            {
-                                // To reduce time required to execute these steps, only first statistic is verified to exist
-                                if (!skipOptimization && firstStatisticExisted)
-                                    break;
-                            }
-                        }
-                    }
-
-                    statusMessage("Validating input stream measurements...");
-
-                    // Make sure needed input stream statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
-                    foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE ((IsConcentrator <> 0) OR (IsConcentrator = 0 AND ParentID IS NULL)) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
-                    {
-                        firstStatisticExisted = true;
-
-                        foreach (DataRow statistic in inputStreamStatistics)
-                        {
-                            acronym = inputStream.Field<string>("Acronym") + "!IS";
-                            signalIndex = statistic.ConvertField<int>("SignalIndex");
-                            signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
-
-                            if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
-                            {
-                                firstStatisticExisted = false;
-                                company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", inputStream.ConvertNullableField<int>("CompanyID") ?? 0));
-                                if (string.IsNullOrEmpty(company))
-                                    company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
-
-                                vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", inputStream.ConvertNullableField<int>("VendorDeviceID") ?? 0)); // Modified to retrieve VendorDeviceID into nullable of int as it is not a required field.
-                                pointTag = string.Format("{0}_{1}:ST{2}", company, acronym, signalIndex);
-                                description = string.Format("{0}{1} Statistic for {2}", inputStream.Field<string>("Name"), string.IsNullOrWhiteSpace(vendorDevice) ? "" : " " + vendorDevice, statistic.Field<string>("Description"));
-
-                                query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
-                                    "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "statHistorianID", "deviceID", "pointTag",
-                                    "statSignalTypeID", "signalReference", "description");
-
-                                database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, inputStream.ConvertField<int>("ID"), pointTag, statSignalTypeID, signalReference, description);
-                            }
-                            else
-                            {
-                                // To reduce time required to execute these steps, only first statistic is verified to exist
-                                if (!skipOptimization && firstStatisticExisted)
-                                    break;
-                            }
-                        }
-                    }
-
-                    // Make sure devices associated with a concentrator do not have any extraneous input stream statistic measurements - this can happen
-                    // when a device was once a direct connect device but now is part of a concentrator...
-                    foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE (IsConcentrator = 0 AND ParentID IS NOT NULL) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
-                    {
-                        firstStatisticExisted = false;
-
-                        foreach (DataRow statistic in inputStreamStatistics)
-                        {
-                            acronym = inputStream.Field<string>("Acronym") + "!IS";
-                            signalIndex = statistic.ConvertField<int>("SignalIndex");
-                            signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
-
                             // To reduce time required to execute these steps, only first statistic is verified to exist
-                            if (!skipOptimization && !firstStatisticExisted)
-                            {
-                                firstStatisticExisted = (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}'", signalReference))) > 0);
-
-                                // If the first extraneous input statistic doesn't exist, we assume no others do as well
-                                if (!firstStatisticExisted)
-                                    break;
-                            }
-
-                            // Remove extraneous input statistics
-                            database.Connection.ExecuteNonQuery(string.Format("DELETE FROM Measurement WHERE SignalReference = '{0}'", signalReference));
+                            if (!skipOptimization && firstStatisticExisted)
+                                break;
                         }
                     }
                 }
 
-                try
-                {
-                    // Determine how many changes were made to output streams, devices, and measurements -
-                    // if no changes were made, we can skip the next few steps
-                    if (trackedTables.Contains("OutputStream") && trackedTables.Contains("OutputStreamDevice") && trackedTables.Contains("OutputStreamMeasurement") && trackedTables.Contains("Measurement"))
-                        changes = Convert.ToUInt64(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'OutputStream' OR TableName = 'OutputStreamDevice' OR TableName = 'OutputStreamMeasurement' OR TableName = 'Measurement') AND ID > {0}", trackingVersion)));
-                    else
-                        changes = ulong.MaxValue;
-                }
-                catch
-                {
-                    changes = ulong.MaxValue;
-                }
+                statusMessage("Validating input stream measurements...");
 
-                if (skipOptimization || changes != 0L)
+                // Make sure needed input stream statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
+                foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE ((IsConcentrator <> 0) OR (IsConcentrator = 0 AND ParentID IS NULL)) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
                 {
-                    statusMessage("Validating output stream measurements...");
+                    firstStatisticExisted = true;
 
-                    // Make sure needed output stream statistic measurements exist
-                    foreach (DataRow outputStream in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM OutputStream WHERE NodeID = {0}", nodeIDQueryString)).Rows)
+                    foreach (DataRow statistic in inputStreamStatistics)
                     {
-                        firstStatisticExisted = true;
-                        adapterID = outputStream.ConvertField<int>("ID");
-                        acronym = outputStream.Field<string>("Acronym") + "!OS";
+                        acronym = inputStream.Field<string>("Acronym") + "!IS";
+                        signalIndex = statistic.ConvertField<int>("SignalIndex");
+                        signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
 
-                        foreach (DataRow statistic in outputStreamStatistics)
+                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
                         {
-                            signalIndex = statistic.ConvertField<int>("SignalIndex");
-                            signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
+                            firstStatisticExisted = false;
+                            company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", inputStream.ConvertNullableField<int>("CompanyID") ?? 0));
+                            if (string.IsNullOrEmpty(company))
+                                company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
 
-                            if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
-                            {
-                                firstStatisticExisted = false;
-                                if (nodeCompanyID is DBNull)
-                                    company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
-                                else
-                                    company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", nodeCompanyID));
+                            vendorDevice = (string)database.Connection.ExecuteScalar(string.Format("SELECT Name FROM VendorDevice WHERE ID={0}", inputStream.ConvertNullableField<int>("VendorDeviceID") ?? 0)); // Modified to retrieve VendorDeviceID into nullable of int as it is not a required field.
+                            pointTag = CreatePointTag(company, acronym, null, "STAT", signalIndex);
+                            description = string.Format("{0}{1} Statistic for {2}", inputStream.Field<string>("Name"), string.IsNullOrWhiteSpace(vendorDevice) ? "" : " " + vendorDevice, statistic.Field<string>("Description"));
 
-                                pointTag = string.Format("{0}_{1}:ST{2}", company, acronym, signalIndex);
-                                description = string.Format("{0} Statistic for {1}", outputStream.Field<string>("Name"), statistic.Field<string>("Description"));
+                            query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
+                                                                      "SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, NULL, {4}, {5}, 1)", "statHistorianID", "deviceID", "pointTag",
+                                "statSignalTypeID", "signalReference", "description");
 
-                                query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
-                                    "SignalReference, Description, Enabled) VALUES({0}, NULL, {1}, {2}, NULL, {3}, {4}, 1)", "statHistorianID", "pointTag", "statSignalTypeID",
-                                    "signalReference", "description");
+                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, inputStream.ConvertField<int>("ID"), pointTag, statSignalTypeID, signalReference, description);
+                        }
+                        else
+                        {
+                            // To reduce time required to execute these steps, only first statistic is verified to exist
+                            if (!skipOptimization && firstStatisticExisted)
+                                break;
+                        }
+                    }
+                }
 
-                                database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, pointTag, statSignalTypeID, signalReference, description);
-                            }
-                            else
-                            {
-                                // To reduce time required to execute these steps, only first statistic is verified to exist
-                                if (!skipOptimization && firstStatisticExisted)
-                                    break;
-                            }
+                // Make sure devices associated with a concentrator do not have any extraneous input stream statistic measurements - this can happen
+                // when a device was once a direct connect device but now is part of a concentrator...
+                foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM Device WHERE (IsConcentrator = 0 AND ParentID IS NOT NULL) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs)).Rows)
+                {
+                    firstStatisticExisted = false;
+
+                    foreach (DataRow statistic in inputStreamStatistics)
+                    {
+                        acronym = inputStream.Field<string>("Acronym") + "!IS";
+                        signalIndex = statistic.ConvertField<int>("SignalIndex");
+                        signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
+
+                        // To reduce time required to execute these steps, only first statistic is verified to exist
+                        if (!skipOptimization && !firstStatisticExisted)
+                        {
+                            firstStatisticExisted = (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}'", signalReference))) > 0);
+
+                            // If the first extraneous input statistic doesn't exist, we assume no others do as well
+                            if (!firstStatisticExisted)
+                                break;
                         }
 
-                        // Load devices acronyms associated with this output stream
-                        List<string> deviceAcronyms =
-                            database.Connection.RetrieveData(database.AdapterType,
+                        // Remove extraneous input statistics
+                        database.Connection.ExecuteNonQuery(string.Format("DELETE FROM Measurement WHERE SignalReference = '{0}'", signalReference));
+                    }
+                }
+            }
+
+            try
+            {
+                // Determine how many changes were made to output streams, devices, and measurements -
+                // if no changes were made, we can skip the next few steps
+                if (trackedTables.Contains("OutputStream") && trackedTables.Contains("OutputStreamDevice") && trackedTables.Contains("OutputStreamMeasurement") && trackedTables.Contains("Measurement"))
+                    changes = Convert.ToUInt64(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'OutputStream' OR TableName = 'OutputStreamDevice' OR TableName = 'OutputStreamMeasurement' OR TableName = 'Measurement') AND ID > {0}", trackingVersion)));
+                else
+                    changes = ulong.MaxValue;
+            }
+            catch
+            {
+                changes = ulong.MaxValue;
+            }
+
+            if (skipOptimization || changes != 0L)
+            {
+                statusMessage("Validating output stream measurements...");
+
+                // Make sure needed output stream statistic measurements exist
+                foreach (DataRow outputStream in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM OutputStream WHERE NodeID = {0}", nodeIDQueryString)).Rows)
+                {
+                    firstStatisticExisted = true;
+                    adapterID = outputStream.ConvertField<int>("ID");
+                    acronym = outputStream.Field<string>("Acronym") + "!OS";
+
+                    foreach (DataRow statistic in outputStreamStatistics)
+                    {
+                        signalIndex = statistic.ConvertField<int>("SignalIndex");
+                        signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
+
+                        if (Convert.ToInt32(database.Connection.ExecuteScalar(string.Format("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", signalReference, statHistorianID))) == 0)
+                        {
+                            firstStatisticExisted = false;
+                            if (nodeCompanyID is DBNull)
+                                company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
+                            else
+                                company = (string)database.Connection.ExecuteScalar(string.Format("SELECT MapAcronym FROM Company WHERE ID={0}", nodeCompanyID));
+
+                            pointTag = CreatePointTag(company, acronym, null, "STAT", signalIndex);
+                            description = string.Format("{0} Statistic for {1}", outputStream.Field<string>("Name"), statistic.Field<string>("Description"));
+
+                            query = database.ParameterizedQueryString("INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, PhasorSourceIndex, " +
+                                                                      "SignalReference, Description, Enabled) VALUES({0}, NULL, {1}, {2}, NULL, {3}, {4}, 1)", "statHistorianID", "pointTag", "statSignalTypeID",
+                                "signalReference", "description");
+
+                            database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, statHistorianID, pointTag, statSignalTypeID, signalReference, description);
+                        }
+                        else
+                        {
+                            // To reduce time required to execute these steps, only first statistic is verified to exist
+                            if (!skipOptimization && firstStatisticExisted)
+                                break;
+                        }
+                    }
+
+                    // Load devices acronyms associated with this output stream
+                    List<string> deviceAcronyms =
+                        database.Connection.RetrieveData(database.AdapterType,
                             string.Format("SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString))
                             .AsEnumerable()
                             .Select(row => row.Field<string>("Acronym"))
                             .ToList();
 
-                        // Since measurements can be added to the output stream device itself (e.g., quality flags) - we add it as a valid mapping destination as well
-                        deviceAcronyms.Add(outputStream.Field<string>("Acronym"));
+                    // Since measurements can be added to the output stream device itself (e.g., quality flags) - we add it as a valid mapping destination as well
+                    deviceAcronyms.Add(outputStream.Field<string>("Acronym"));
 
-                        // Sort list so binary search can be used to speed lookups
-                        deviceAcronyms.Sort(StringComparer.InvariantCultureIgnoreCase);
+                    // Sort list so binary search can be used to speed lookups
+                    deviceAcronyms.Sort(StringComparer.InvariantCultureIgnoreCase);
 
-                        // Validate measurements associated with this output stream
-                        foreach (DataRow outputStreamMeasurement in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM OutputStreamMeasurement WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString)).Rows)
+                    // Validate measurements associated with this output stream
+                    foreach (DataRow outputStreamMeasurement in database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT * FROM OutputStreamMeasurement WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString)).Rows)
+                    {
+                        // Parse output stream measurement signal reference
+                        deviceSignalReference = new SignalReference(outputStreamMeasurement.Field<string>("SignalReference"));
+
+                        // Validate that the signal reference is associated with one of the output stream's devices
+                        if (deviceAcronyms.BinarySearch(deviceSignalReference.Acronym, StringComparer.InvariantCultureIgnoreCase) < 0)
                         {
-                            // Parse output stream measurement signal reference
-                            deviceSignalReference = new SignalReference(outputStreamMeasurement.Field<string>("SignalReference"));
+                            // This measurement has a signal reference for a device that is not part of the associated output stream, so we mark it for deletion
+                            measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
+                        }
 
-                            // Validate that the signal reference is associated with one of the output stream's devices
-                            if (deviceAcronyms.BinarySearch(deviceSignalReference.Acronym, StringComparer.InvariantCultureIgnoreCase) < 0)
-                            {
-                                // This measurement has a signal reference for a device that is not part of the associated output stream, so we mark it for deletion
-                                measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
-                            }
-
-                            // Validate that the signal reference type is valid for an output stream
-                            if (!validOutputSignalKinds.Any(validSignalKind => deviceSignalReference.Kind == validSignalKind))
-                            {
-                                // This measurement has a signal reference type that is not valid for an output stream, so we mark it for deletion
-                                measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
-                            }
+                        // Validate that the signal reference type is valid for an output stream
+                        if (!validOutputSignalKinds.Any(validSignalKind => deviceSignalReference.Kind == validSignalKind))
+                        {
+                            // This measurement has a signal reference type that is not valid for an output stream, so we mark it for deletion
+                            measurementIDsToDelete.Add(outputStreamMeasurement.ConvertField<int>("ID"));
                         }
                     }
                 }
+            }
 
-                if (measurementIDsToDelete.Count > 0)
+            if (measurementIDsToDelete.Count > 0)
+            {
+                statusMessage(string.Format("Removing {0} unused output stream device measurements...", measurementIDsToDelete.Count));
+
+                foreach (int measurementID in measurementIDsToDelete)
                 {
-                    statusMessage(string.Format("Removing {0} unused output stream device measurements...", measurementIDsToDelete.Count));
+                    database.Connection.ExecuteNonQuery(string.Format("DELETE FROM OutputStreamMeasurement WHERE ID = {0} AND NodeID = {1}", measurementID, nodeIDQueryString));
+                }
+            }
 
-                    foreach (int measurementID in measurementIDsToDelete)
+            if (renameAllPointTags)
+            {
+                statusMessage("Renaming all point tags...");
+
+                string device, vendor, signalAcronym;
+                char? phase;
+                int? vendorDeviceID;
+                SignalReference signal;
+
+                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, CompanyAcronym, DeviceAcronym, VendorDeviceID, SignalReference, SignalAcronym, Phase FROM MeasurementDetail WHERE SignalAcronym <> 'STAT' AND Internal <> 0 AND Subscribed = 0").Rows)
+                {
+                    company = measurement.ConvertField<string>("CompanyAcronym");
+
+                    if (string.IsNullOrEmpty(company))
+                        company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
+
+                    device = measurement.ConvertField<string>("DeviceAcronym");
+
+                    if ((object)device != null)
                     {
-                        database.Connection.ExecuteNonQuery(string.Format("DELETE FROM OutputStreamMeasurement WHERE ID = {0} AND NodeID = {1}", measurementID, nodeIDQueryString));
+                        vendorDeviceID = measurement.ConvertNullableField<int>("VendorDeviceID");
+
+                        if (vendorDeviceID.HasValue)
+                            vendor = (string)database.Connection.ExecuteScalar("SELECT Acronym FROM Vendor WHERE ID = " + vendorDeviceID.Value);
+                        else
+                            vendor = null;
+
+                        signalAcronym = measurement.ConvertField<string>("SignalAcronym");
+
+                        try
+                        {
+                            signal = new SignalReference(measurement.ConvertField<string>("SignalReference"));
+                            signalIndex = signal.Index;
+
+                            if (signalIndex <= 0)
+                                signalIndex = -1;
+                        }
+                        catch
+                        {
+                            signalIndex = -1;
+                        }
+
+                        phase = measurement.ConvertNullableField<char>("Phase");
+
+                        database.Connection.ExecuteNonQuery(string.Format("UPDATE Measurement SET PointTag = '{0}' WHERE SignalID = '{1}'", CreatePointTag(company, device, vendor, signalAcronym, signalIndex, phase ?? '_'), database.Guid(measurement, "SignalID")));
                     }
                 }
+            }
 
-                if (skipOptimization)
-                {
-                    // If skipOptimization is set to true, automatically set it back to false
-                    const string UnskipOptimizationQuery =
-                        "UPDATE DataOperation SET Arguments = '' " +
-                        "WHERE AssemblyName = 'PhasorProtocolAdapters.dll' " +
-                        "AND TypeName = 'PhasorProtocolAdapters.CommonPhasorServices' " +
-                        "AND MethodName = 'PhasorDataSourceValidation'";
+            if (skipOptimization || renameAllPointTags)
+            {
+                // If skipOptimization is set to true, automatically set it back to false
+                const string clearParametersQuery =
+                    "UPDATE DataOperation SET Arguments = '' " +
+                    "WHERE AssemblyName = 'PhasorProtocolAdapters.dll' " +
+                    "AND TypeName = 'PhasorProtocolAdapters.CommonPhasorServices' " +
+                    "AND MethodName = 'PhasorDataSourceValidation'";
 
-                    database.Connection.ExecuteNonQuery(UnskipOptimizationQuery);
-                }
+                database.Connection.ExecuteNonQuery(clearParametersQuery);
             }
         }
 

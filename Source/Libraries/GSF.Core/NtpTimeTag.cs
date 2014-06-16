@@ -101,7 +101,7 @@ namespace GSF
         /// </summary>
         /// <param name="timestamp">NTP timestamp containing number of seconds since 1/1/1900 in high-word and fractional seconds in low-word.</param>
         public NtpTimeTag(ulong timestamp)
-            : this(timestamp.HighDword(), timestamp.LowDword())
+            : this(timestamp.HighDoubleWord(), timestamp.LowDoubleWord())
         {
         }
 
@@ -178,8 +178,8 @@ namespace GSF
         {
             if (timestamp < NtpDateOffsetTicksAlt)
                 return NtpDateOffsetTicks;
-            else
-                return NtpDateOffsetTicksAlt;
+
+            return NtpDateOffsetTicksAlt;
         }
 
         /// <summary>
@@ -191,8 +191,8 @@ namespace GSF
         {
             if ((seconds & 0x80000000) > 0)
                 return NtpDateOffsetTicks;
-            else
-                return NtpDateOffsetTicksAlt;
+
+            return NtpDateOffsetTicksAlt;
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace GSF
             uint seconds = (uint)Math.Truncate(timestamp.ToSeconds());
             uint fraction = (uint)(timestamp.DistanceBeyondSecond().ToSeconds() * uint.MaxValue);
 
-            return Word.MakeQword(seconds, fraction);
+            return Word.MakeQuadWord(seconds, fraction);
         }
 
         #endregion

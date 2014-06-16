@@ -1406,17 +1406,17 @@ namespace GSF.TimeSeries.Adapters
                                 MeasurementKey.TryCreateOrUpdate(id, filteredRows[0]["ID"].ToString(), out key);
                         }
                     }
-                    else if(!MeasurementKey.TryParse(item, out key))
+                    else if (!MeasurementKey.TryParse(item, out key))
                     {
                         if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
                             DataRow[] filteredRows;
 
                             // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
-                            filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", item));
+                            filteredRows = dataSource.Tables[measurementTable].Select(string.Format("ID = '{0}'", item.Trim()));
 
                             if (filteredRows.Length == 0)
-                                filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item));
+                                filteredRows = dataSource.Tables[measurementTable].Select(string.Format("PointTag = '{0}'", item.Trim()));
 
                             if (filteredRows.Length > 0)
                                 key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0]["ID"].ToString());

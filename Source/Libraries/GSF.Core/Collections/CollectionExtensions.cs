@@ -664,17 +664,17 @@ namespace GSF.Collections
             if (Common.IsReference(delimiter) && (object)delimiter == null)
                 throw new ArgumentNullException("delimiter", "delimiter cannot be null");
 
-            StringBuilder delimetedString = new StringBuilder();
+            StringBuilder delimitedString = new StringBuilder();
 
             foreach (TSource item in source)
             {
-                if (delimetedString.Length > 0)
-                    delimetedString.Append(delimiter);
+                if (delimitedString.Length > 0)
+                    delimitedString.Append(delimiter);
 
-                delimetedString.Append(item);
+                delimitedString.Append(item);
             }
 
-            return delimetedString.ToString();
+            return delimitedString.ToString();
         }
 
         /// <summary>Appends items parsed from delimited string, created with ToDelimitedString, using the default

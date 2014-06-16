@@ -34,7 +34,6 @@ using System.IO;
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
 using GSF.Parsing;
-using GSF.TimeSeries;
 
 namespace GSF.PhasorProtocols
 {

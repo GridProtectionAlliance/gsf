@@ -22,11 +22,12 @@
 //       Added OnPropertyChanged() on all properties to reflect changes on UI.
 //       Fixed Load() and GetLookupList() static methods.
 //   09/21/2011 - Aniket Salver
-//       Fixed Bug, which helps in enabling the save button on the screen
+//       Fixed issue, which helps in enabling the save button on the screen
 //   08/03/2012 - Vijay Sukhavasi
 //       Fix add digitals/analogs check boxes while configuring output stream
 //   08/14/2012 - Aniket Salver 
 //       Added paging and sorting technique.
+//
 //******************************************************************************************************
 
 using System;
@@ -37,7 +38,7 @@ using System.Data;
 using System.Linq;
 using GSF.Data;
 using GSF.TimeSeries.UI;
-using GSF.TimeSeries.UI.DataModels;
+using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.PhasorProtocols.UI.DataModels
 {
@@ -656,7 +657,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     OutputStreamDevice outputStreamDevice = new OutputStreamDevice();
                     outputStreamDevice.NodeID = device.NodeID;
                     outputStreamDevice.AdapterID = outputStreamID;
-                    outputStreamDevice.Acronym = device.Acronym.Substring(device.Acronym.LastIndexOf("!") + 1);
+                    outputStreamDevice.Acronym = device.Acronym.Substring(device.Acronym.LastIndexOf("!", StringComparison.Ordinal) + 1);
                     outputStreamDevice.BpaAcronym = string.Empty;
                     outputStreamDevice.Name = device.Name;
                     outputStreamDevice.LoadOrder = device.LoadOrder;
@@ -688,7 +689,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         {
                             if (measurement.SignalAcronym != "STAT" && measurement.SignalAcronym != "QUAL")
                             {
-                                measurement.SignalReference = measurement.SignalReference.Substring(measurement.SignalReference.LastIndexOf("!") + 1);
+                                measurement.SignalReference = measurement.SignalReference.Substring(measurement.SignalReference.LastIndexOf("!", StringComparison.Ordinal) + 1);
 
                                 if ((measurement.SignalAcronym != "ALOG" && measurement.SignalAcronym != "DIGI") || (measurement.SignalAcronym == "ALOG" && addAnalogs) || (measurement.SignalAcronym == "DIGI" && addDigitals))
                                 {
@@ -706,8 +707,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     OutputStreamDeviceAnalog outputStreamDeviceAnalog = new OutputStreamDeviceAnalog();
                                     outputStreamDeviceAnalog.NodeID = device.NodeID;
                                     outputStreamDeviceAnalog.OutputStreamDeviceID = outputStreamDevice.ID;
-                                    outputStreamDeviceAnalog.Label = string.IsNullOrEmpty(measurement.AlternateTag) ? device.Acronym.Length > 12 ? device.Acronym.Substring(0, 12) + ":A" + analogIndex.ToString() : device.Acronym + ":A" + analogIndex.ToString() : measurement.AlternateTag; // measurement.PointTag;                                    
-                                    outputStreamDeviceAnalog.LoadOrder = Convert.ToInt32(measurement.SignalReference.Substring((measurement.SignalReference.LastIndexOf("-") + 3)));
+                                    outputStreamDeviceAnalog.Label = string.IsNullOrEmpty(measurement.AlternateTag) ? device.Acronym.Length > 12 ? device.Acronym.Substring(0, 12) + ":A" + analogIndex : device.Acronym + ":A" + analogIndex : measurement.AlternateTag; // measurement.PointTag;                                    
+                                    outputStreamDeviceAnalog.LoadOrder = Convert.ToInt32(measurement.SignalReference.Substring((measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal) + 3)));
                                     OutputStreamDeviceAnalog.Save(database, outputStreamDeviceAnalog);
                                     analogIndex++;
                                 }
@@ -717,7 +718,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     outputStreamDeviceDigital.NodeID = device.NodeID;
                                     outputStreamDeviceDigital.OutputStreamDeviceID = outputStreamDevice.ID;
                                     outputStreamDeviceDigital.Label = string.IsNullOrEmpty(measurement.AlternateTag) ? DefaultDigitalLabel : measurement.AlternateTag;     // measurement.PointTag;
-                                    outputStreamDeviceDigital.LoadOrder = Convert.ToInt32(measurement.SignalReference.Substring((measurement.SignalReference.LastIndexOf("-") + 3)));
+                                    outputStreamDeviceDigital.LoadOrder = Convert.ToInt32(measurement.SignalReference.Substring((measurement.SignalReference.LastIndexOf("-", StringComparison.Ordinal) + 3)));
                                     OutputStreamDeviceDigital.Save(database, outputStreamDeviceDigital);
                                 }
                             }
@@ -734,11 +735,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
         }
 
-        //                                                    1         2         3         4         5         6         7         8         9         10        11        12
-        //                                           12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
-        private static string DefaultDigitalLabel = "DIGITAL0        DIGITAL1        DIGITAL2        DIGITAL3        DIGITAL4        DIGITAL5        DIGITAL6        DIGITAL7        " +
-                                                    "DIGITAL8        DIGITAL9        DIGITAL10       DIGITAL11       DIGITAL12       DIGITAL13       DIGITAL14       DIGITAL15       ";
-        //                                           *23456789012345+*23456789012345+*23456789012345+*23456789012345+*23456789012345+*23456789012345+*23456789012345+*23456789012345+
+        //                                                   1         2         3         4         5         6         7         8         9         10        11        12
+        //                                          12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
+        private const string DefaultDigitalLabel = "DIGITAL0        DIGITAL1        DIGITAL2        DIGITAL3        DIGITAL4        DIGITAL5        DIGITAL6        DIGITAL7        " +
+                                                   "DIGITAL8        DIGITAL9        DIGITAL10       DIGITAL11       DIGITAL12       DIGITAL13       DIGITAL14       DIGITAL15       ";
+        //                                          *23456789012345+*23456789012345+*23456789012345+*23456789012345+*23456789012345+*23456789012345+*23456789012345+*23456789012345+
 
         /// <summary>
         /// Gets output stream device from the database based on where condition provided.

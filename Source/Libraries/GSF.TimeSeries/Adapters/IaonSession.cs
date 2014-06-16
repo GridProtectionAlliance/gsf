@@ -27,6 +27,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using GSF.Collections;
 using GSF.Configuration;
@@ -870,6 +871,10 @@ namespace GSF.TimeSeries.Adapters
 
         #region [ Static ]
 
+        // Static Fields
+        private static DataSet s_currentRealTimeConfiguration;
+        private static DataSet s_currentTemporalConfiguration;
+
         // Static Methods
 
         /// <summary>
@@ -877,56 +882,75 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         /// <param name="realtimeConfiguration">Real-time <see cref="DataSet"/> configuration.</param>
         /// <returns>A new <see cref="DataSet"/> configuration for adapters that support temporal processing.</returns>
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public static DataSet ExtractTemporalConfiguration(DataSet realtimeConfiguration)
         {
-            // Duplicate current run-time session configuration that has temporal support
-            DataSet temporalConfiguration = new DataSet("IaonTemporal");
-            DataTable temporalSupport = realtimeConfiguration.Tables["TemporalSupport"];
-            string tableName;
+            // Since the same real-time configuration is shared among all adapters we can return
+            // existing cached temporal configuration if real-time configuration hasn't changed
+            if ((object)s_currentRealTimeConfiguration != null && (object)s_currentTemporalConfiguration != null && ReferenceEquals(s_currentRealTimeConfiguration, realtimeConfiguration))
+                return s_currentTemporalConfiguration;
 
-            foreach (DataTable table in realtimeConfiguration.Tables)
+            try
             {
-                tableName = table.TableName;
+                // Duplicate current run-time session configuration that has temporal support
+                DataSet temporalConfiguration = new DataSet("IaonTemporal");
+                DataTable temporalSupport = realtimeConfiguration.Tables["TemporalSupport"];
+                string tableName;
 
-                switch (tableName.ToLower())
+                foreach (DataTable table in realtimeConfiguration.Tables)
                 {
-                    case "inputadapters":
-                    case "actionadapters":
-                    case "outputadapters":
-                        // For Iaon adapter tables, we only copy in adapters that support temporal processing
-                        temporalConfiguration.Tables.Add(table.Clone());
+                    tableName = table.TableName;
 
-                        // Check for adapters with temporal support in this adapter collection
-                        DataRow[] temporalAdapters = temporalSupport.Select(string.Format("Source = '{0}'", tableName));
+                    switch (tableName.ToLower())
+                    {
+                        case "inputadapters":
+                        case "actionadapters":
+                        case "outputadapters":
+                            // For Iaon adapter tables, we only copy in adapters that support temporal processing
+                            temporalConfiguration.Tables.Add(table.Clone());
 
-                        // If any adapters support temporal processing, add them to the temporal configuration
-                        if (temporalAdapters.Length > 0)
-                        {
-                            DataTable realtimeTable = realtimeConfiguration.Tables[tableName];
-                            DataTable temporalTable = temporalConfiguration.Tables[tableName];
+                            // Check for adapters with temporal support in this adapter collection
+                            DataRow[] temporalAdapters = temporalSupport.Select(string.Format("Source = '{0}'", tableName));
 
-                            foreach (DataRow row in realtimeTable.Select(string.Format("ID IN ({0})", temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(','))))
+                            // If any adapters support temporal processing, add them to the temporal configuration
+                            if (temporalAdapters.Length > 0)
                             {
-                                DataRow newRow = temporalTable.NewRow();
+                                DataTable realtimeTable = realtimeConfiguration.Tables[tableName];
+                                DataTable temporalTable = temporalConfiguration.Tables[tableName];
 
-                                for (int x = 0; x < realtimeTable.Columns.Count; x++)
+                                foreach (DataRow row in realtimeTable.Select(string.Format("ID IN ({0})", temporalAdapters.Select(row => row["ID"].ToString()).ToDelimitedString(','))))
                                 {
-                                    newRow[x] = row[x];
+                                    DataRow newRow = temporalTable.NewRow();
+
+                                    for (int x = 0; x < realtimeTable.Columns.Count; x++)
+                                    {
+                                        newRow[x] = row[x];
+                                    }
+
+                                    temporalConfiguration.Tables[tableName].Rows.Add(newRow);
                                 }
-
-                                temporalConfiguration.Tables[tableName].Rows.Add(newRow);
                             }
-                        }
 
-                        break;
-                    default:
-                        // For all other tables we add configuration information as-is
-                        temporalConfiguration.Tables.Add(table.Copy());
-                        break;
+                            break;
+                        default:
+                            // For all other tables we add configuration information as-is
+                            temporalConfiguration.Tables.Add(table.Copy());
+                            break;
+                    }
                 }
-            }
 
-            return temporalConfiguration;
+                // Cache new temporal configuration
+                s_currentRealTimeConfiguration = realtimeConfiguration;
+                s_currentTemporalConfiguration = temporalConfiguration;
+
+                return temporalConfiguration;
+            }
+            catch
+            {
+                s_currentRealTimeConfiguration = null;
+                s_currentTemporalConfiguration = null;
+                throw;
+            }
         }
 
         #endregion

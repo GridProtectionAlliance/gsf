@@ -263,6 +263,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Structured Data Encoding", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraryTester", "Applications\LibraryTester\LibraryTester.csproj", "{5A047659-4C24-4B72-A9F3-6553D91F95DC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{B006EF23-CE75-47CB-A985-5087C5C94CBC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Report.NET", "Report.NET", "{C0356FC1-70D4-4D26-8A9E-50399028489C}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\Report.NET\Reports.dll = Dependencies\Report.NET\Reports.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "D3", "D3", "{7D17290A-2661-4D58-803E-676A1235CB57}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\Microsoft\D3\DynamicDataDisplay.dll = Dependencies\Microsoft\D3\DynamicDataDisplay.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WPF", "WPF", "{954399E1-542B-4CC1-BBF2-77FA3516EA68}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\Microsoft\WPF\System.Windows.Controls.DataVisualization.Toolkit.dll = Dependencies\Microsoft\WPF\System.Windows.Controls.DataVisualization.Toolkit.dll
+		Dependencies\Microsoft\WPF\System.Windows.Controls.Input.Toolkit.dll = Dependencies\Microsoft\WPF\System.Windows.Controls.Input.Toolkit.dll
+		Dependencies\Microsoft\WPF\System.Windows.Controls.Layout.Toolkit.dll = Dependencies\Microsoft\WPF\System.Windows.Controls.Layout.Toolkit.dll
+		Dependencies\Microsoft\WPF\WPFToolkit.dll = Dependencies\Microsoft\WPF\WPFToolkit.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 82
@@ -1468,6 +1488,8 @@ Global
 		{00B924AB-0DC8-4826-8A63-3263E39C2EBF} = {13006BBE-434A-4027-940B-EAD752844137}
 		{6DCB8ABF-D899-41A9-BBCD-556590754175} = {13006BBE-434A-4027-940B-EAD752844137}
 		{D429E017-FC8B-4077-8CEB-CCA277008091} = {13006BBE-434A-4027-940B-EAD752844137}
+		{B006EF23-CE75-47CB-A985-5087C5C94CBC} = {13006BBE-434A-4027-940B-EAD752844137}
+		{C0356FC1-70D4-4D26-8A9E-50399028489C} = {13006BBE-434A-4027-940B-EAD752844137}
 		{B3986636-8741-4D97-AE46-2A5BA1338B41} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
@@ -1570,5 +1592,7 @@ Global
 		{2C42B95F-A58A-413D-97E2-1968C087C472} = {F68BED5B-410C-4D02-87C0-8AC74E374821}
 		{B4B5A12E-412E-4382-B991-3B67653F533C} = {F68BED5B-410C-4D02-87C0-8AC74E374821}
 		{9B93C212-786C-45C9-9B90-8CEFD24EF19D} = {F68BED5B-410C-4D02-87C0-8AC74E374821}
+		{7D17290A-2661-4D58-803E-676A1235CB57} = {B006EF23-CE75-47CB-A985-5087C5C94CBC}
+		{954399E1-542B-4CC1-BBF2-77FA3516EA68} = {B006EF23-CE75-47CB-A985-5087C5C94CBC}
 	EndGlobalSection
 EndGlobal

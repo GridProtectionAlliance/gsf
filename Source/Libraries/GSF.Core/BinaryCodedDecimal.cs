@@ -113,7 +113,7 @@ namespace GSF
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
         public static ulong Decode(ulong bcd)
         {
-            return (ulong)(Decode(bcd.HighDword()) * TenP8 + Decode(bcd.LowDword()));
+            return (ulong)(Decode(bcd.HighDoubleWord()) * TenP8 + Decode(bcd.LowDoubleWord()));
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace GSF
             ushort high = Encode((ushort)(value / TenP4));
             ushort low = Encode((ushort)(value % TenP4));
 
-            return Word.MakeDword(high, low);
+            return Word.MakeDoubleWord(high, low);
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace GSF
             uint high = Encode((uint)(value / TenP8));
             uint low = Encode((uint)(value % TenP8));
 
-            return Word.MakeQword(high, low);
+            return Word.MakeQuadWord(high, low);
         }
     }
 }

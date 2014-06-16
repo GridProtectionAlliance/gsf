@@ -1241,7 +1241,7 @@ namespace GSF.Units
                     if (secondPrecision < 0)
                     {
                         // Handle second display suppression (second precision is negative), if no
-                        // image exists then less than 60 seconds remain, show "less than 1 minute"
+                        // image exists and less than 60 seconds remain, show "less than 1 minute"
                         if (timeImage.Length == 0)
                             timeImage.AppendFormat("{0}1{1}", timeNames[TimeName.LessThan], timeNames[TimeName.Minute]);
                     }

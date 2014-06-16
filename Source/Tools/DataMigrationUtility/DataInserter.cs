@@ -63,7 +63,7 @@ namespace DataMigrationUtility
         private Encoding m_bulkInsertEncoding = Encoding.ASCII;
 
         private string m_bulkInsertFilePath = AssemblyInfo.ExecutingAssembly.Location;
-        private string m_delimeterReplacement = " - ";
+        private string m_delimiterReplacement = " - ";
         private bool m_clearDestinationTables;
         private bool m_attemptTruncateTable;
         private bool m_preserveAutoIncValues;
@@ -183,15 +183,15 @@ namespace DataMigrationUtility
         /// value while creating a BULK INSERT file.  The field terminator and row terminator values are defined in the BulkInsertSettings
         /// property specified by the FIELDTERMINATOR and ROWTERMINATOR keywords respectively.
         /// </summary>
-        public string DelimeterReplacement
+        public string DelimiterReplacement
         {
             get
             {
-                return m_delimeterReplacement;
+                return m_delimiterReplacement;
             }
             set
             {
-                m_delimeterReplacement = value;
+                m_delimiterReplacement = value;
             }
         }
 
@@ -1016,8 +1016,8 @@ namespace DataMigrationUtility
                 }
 
                 // Make sure field value does not contain field terminator or row terminator
-                value = value.Replace(fieldTerminator, m_delimeterReplacement);
-                value = value.Replace(rowTerminator, m_delimeterReplacement);
+                value = value.Replace(fieldTerminator, m_delimiterReplacement);
+                value = value.Replace(rowTerminator, m_delimiterReplacement);
 
                 // Construct bulk insert row
                 if (addedFirstInsertField)

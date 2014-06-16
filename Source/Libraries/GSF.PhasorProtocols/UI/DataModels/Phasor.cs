@@ -40,6 +40,8 @@ using System.Linq;
 using GSF.Data;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
+using PhasorProtocolAdapters;
+using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.PhasorProtocols.UI.DataModels
 {
@@ -494,6 +496,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 // Get Phasor signal types.
                 ObservableCollection<SignalType> signals;
+
                 if (phasor.Type == "V")
                     signals = SignalType.GetVoltagePhasorSignalTypes();
                 else
@@ -512,7 +515,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                         measurement.DeviceID = device.ID;
                         measurement.HistorianID = device.HistorianID;
-                        measurement.PointTag = device.CompanyAcronym + "_" + device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex + ":" + device.VendorAcronym + signal.Abbreviation;
+                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.SourceIndex, addedPhasor.Phase[0]);
                         measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
                         measurement.SignalTypeID = signal.ID;
                         measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;
@@ -525,7 +528,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     {
                         // Update existing record when needed or when phasor source index has changed
                         measurement.HistorianID = device.HistorianID;
-                        measurement.PointTag = device.CompanyAcronym + "_" + device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex + ":" + device.VendorAcronym + signal.Abbreviation;
+                        measurement.PointTag = CommonPhasorServices.CreatePointTag(device.CompanyAcronym, device.Acronym, device.VendorAcronym, signal.Acronym, addedPhasor.SourceIndex, addedPhasor.Phase[0]);
                         measurement.SignalReference = device.Acronym + "-" + signal.Suffix + addedPhasor.SourceIndex;
                         measurement.SignalTypeID = signal.ID;
                         measurement.Description = device.Name + " " + addedPhasor.Label + " " + device.VendorDeviceName + " " + addedPhasor.Phase + " " + signal.Name;

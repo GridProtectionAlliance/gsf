@@ -18,10 +18,13 @@
 //  -----------------------------------------------------------------------------------------------------
 //  12/14/2008 - F. Russell Robertson
 //       Generated original version of source code.
+//  05/30/2008 - J. Ritchie Carroll
+//       Updated to use existing elapsed time string function of GSF.Units.Time.
 //
 //*******************************************************************************************************
 
 using System;
+using GSF.Units;
 
 namespace GSF
 {
@@ -31,58 +34,30 @@ namespace GSF
     public static class TimeSpanExtensions
     {
         /// <summary>
-        /// Returns a simple string format for a broad range of timespans.
+        /// Converts the <see cref="TimeSpan"/> value into a textual representation of years, days, hours,
+        /// minutes and seconds with the specified number of fractional digits.
         /// </summary>
-        /// <param name="value">The timespan to process.</param>
-        /// <returns>A formated string with time lables.</returns>
+        /// <param name="value">The <see cref="TimeSpan"/> to process.</param>
+        /// <param name="secondPrecision">Number of fractional digits to display for seconds. Defaults to 2.</param>
+        /// <param name="minimumSubSecondResolution">Minimum sub-second resolution to display. Defaults to <see cref="SI.Milli"/>.</param>
+        /// <remarks>Set second precision to -1 to suppress seconds display.</remarks>
+        /// <returns>
+        /// The string representation of the value of this <see cref="TimeSpan"/>, consisting of the number of
+        /// years, days, hours, minutes and seconds represented by this value.
+        /// </returns>
         /// <example>
-        ///   DateTime g_start = DateTime.Now;
-        ///   ...
-        ///   DateTime EndTime = DateTime.Now;
+        ///   DateTime g_start = DateTime.UtcNow;
+        ///   DateTime EndTime = DateTime.UtcNow;
         ///   TimeSpan duration = EndTime.Subtract(g_start);
-        ///   Console.WriteLine("Elasped Time = " + duration.ToFormatedString());
-        ///   
-        ///   --- OR --- (See DateTimeExtensions, ElaspedTime)
-        /// 
-        ///   TimeSpan duration = g_start.ElaspedTime();
-        ///   Console.WriteLine("Elasped Time = " + duration.ToFormatedString();
-        ///
+        ///   Console.WriteLine("Elapsed Time = " + duration.ToElapsedTimeString());
         /// </example>
-        public static string ToFormattedString(this TimeSpan value)
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="minimumSubSecondResolution"/> is not less than or equal to <see cref="SI.Milli"/> or
+        /// <paramref name="minimumSubSecondResolution"/> is not defined in <see cref="SI.Factors"/> array.
+        /// </exception>
+        public static string ToElapsedTimeString(this TimeSpan value, int secondPrecision = 2, double minimumSubSecondResolution = SI.Milli)
         {
-            string sign = "";
-
-            if (value.TotalMilliseconds < 0)
-            {
-                value = value.Negate();
-                sign = "-";
-            }
-
-            if (value.TotalMilliseconds < 0.001)
-                return "0.0 sec";
-
-            if (value.TotalMilliseconds < 0.5)
-            {
-                double t = value.TotalMilliseconds * 1000.0; // convert to nanoseconds
-                return string.Concat(sign, string.Format("{0:0} nsec", t));
-            }
-
-            if (value.TotalMilliseconds < 10.0)
-                return string.Concat(sign, string.Format("{0:0.00} msec", value.TotalMilliseconds));
-
-            if (value.TotalMilliseconds < 100.0)
-                return string.Concat(sign, string.Format("{0:0.0} msec", value.TotalMilliseconds));
-
-            if (value.TotalMilliseconds < 1000.0)
-                return string.Concat(sign, string.Format("{0:000} msec", value.TotalMilliseconds));
-
-            if (value.TotalSeconds < 10.0)
-                return string.Concat(sign, string.Format("{0:0.00} sec", value.TotalSeconds));
-
-            if (value.TotalMinutes < 60.0)
-                return string.Concat(sign, string.Format("{0} min {1} sec", value.Minutes, value.Seconds));
-
-            return string.Concat(sign, string.Format("{0:#,##0} hr {1} min", value.Hours, value.Minutes));
+            return Time.ToElapsedTimeString(value.TotalSeconds, secondPrecision, null, minimumSubSecondResolution);
         }
     }
 }

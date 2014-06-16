@@ -641,8 +641,8 @@ namespace PIAdapters
                                         values.Add("exdesc", rows[0]["SignalID"].ToString());
                                         values.Add("sourcetag", rows[0]["PointTag"].ToString());
 
-                                        // TODO: Add this field to the ActiveMeasurement view
-                                        if (measurements.Columns.Contains("EngineeringUnits")) // engineering units is a new field for this view -- handle the case that it's not there
+                                        // Engineering units is a new field for this view -- handle the case that it's not there
+                                        if (measurements.Columns.Contains("EngineeringUnits"))
                                             values.Add("engunits", rows[0]["EngineeringUnits"].ToString());
 
                                         lock (m_piServer)
@@ -683,11 +683,19 @@ namespace PIAdapters
 
                                 try
                                 {
-                                    // Attempt to lookup last update time for record
-                                    if ((object)database == null)
-                                        database = new AdoDataConnection("systemSettings");
+                                    // See if ActiveMeasurements contains updated on column
+                                    if (measurements.Columns.Contains("UpdatedOn"))
+                                    {
+                                        updatedOn = Convert.ToDateTime(rows[0]["UpdatedOn"]);
+                                    }
+                                    else
+                                    {
+                                        // Attempt to lookup last update time for record
+                                        if ((object)database == null)
+                                            database = new AdoDataConnection("systemSettings");
 
-                                    updatedOn = Convert.ToDateTime(database.Connection.ExecuteScalar(string.Format("SELECT UpdatedOn FROM Measurement WHERE SignalID = '{0}'", key.SignalID)));
+                                        updatedOn = Convert.ToDateTime(database.Connection.ExecuteScalar(string.Format("SELECT UpdatedOn FROM Measurement WHERE SignalID = '{0}'", key.SignalID)));
+                                    }
                                 }
                                 catch (Exception)
                                 {
@@ -709,8 +717,8 @@ namespace PIAdapters
                                         edit.Add("exdesc", rows[0]["SignalID"].ToString());
                                         edit.Add("sourcetag", rows[0]["PointTag"].ToString());
 
-                                        // TODO: Add this field to the ActiveMeasurement view
-                                        if (measurements.Columns.Contains("EngineeringUnits")) // engineering units is a new field for this view -- handle the case that it's not there
+                                        // Engineering units is a new field for this view -- handle the case that it's not there
+                                        if (measurements.Columns.Contains("EngineeringUnits"))
                                             edit.Add("engunits", rows[0]["EngineeringUnits"].ToString());
 
                                         edits.Add(rows[0]["PointTag"].ToString(), edit);

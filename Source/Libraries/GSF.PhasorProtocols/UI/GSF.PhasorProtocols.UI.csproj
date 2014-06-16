@@ -136,6 +136,10 @@
     <Resource Include="Images\HMC - Use Local Clock as RealTime.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Adapters\PhasorProtocolAdapters\PhasorProtocolAdapters.csproj">
+      <Project>{c4f3c41d-d76a-4283-8732-681b67b7ad74}</Project>
+      <Name>PhasorProtocolAdapters</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>

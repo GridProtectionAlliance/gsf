@@ -160,7 +160,7 @@
     <Compile Include="BigBinaryValue.cs" />
     <Compile Include="BigEndian.cs" />
     <Compile Include="BinaryCodedDecimal.cs" />
-    <Compile Include="BinaryValue.cs" />
+    <Compile Include="NativeBinaryValue.cs" />
     <Compile Include="BinaryValueBase.cs" />
     <Compile Include="BitExtensions.cs" />
     <Compile Include="BitwiseCast.cs" />
@@ -313,6 +313,7 @@
     <Compile Include="Parsing\ISupportSourceIdentifiableFrameImage.cs" />
     <Compile Include="Parsing\MultiSourceFrameImageParserBase.cs" />
     <Compile Include="Parsing\NamespaceDoc.cs" />
+    <Compile Include="Parsing\TemplatedExpressionParser.cs" />
     <Compile Include="PrecisionTimer.cs" />
     <Compile Include="ProcessProgress.cs" />
     <Compile Include="ProcessProgressHandler.cs" />

@@ -37,6 +37,7 @@ using System.Windows;
 using GSF.Data;
 using GSF.TimeSeries.UI;
 using GSF.TimeSeries.UI.DataModels;
+using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.PhasorProtocols.UI.DataModels
 {
@@ -906,7 +907,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
             try
             {
-                OutputStream oldOutputStream = null;
+                OutputStream oldOutputStream;
                 createdConnection = CreateConnection(ref database);
 
                 if (outputStream.ID == 0)

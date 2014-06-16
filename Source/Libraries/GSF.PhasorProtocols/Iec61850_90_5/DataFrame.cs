@@ -502,7 +502,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 m_configurationRevision.EncodeTagValue(SampledValueTag.ConfRev, asduImage, ref index);
 
                 // Encode timestamp
-                ulong timestamp = Word.MakeQword(header.SecondOfCentury, (uint)(((uint)header.FractionOfSecond << 8) | (uint)header.TimeQualityFlags));
+                ulong timestamp = Word.MakeQuadWord(header.SecondOfCentury, (uint)(((uint)header.FractionOfSecond << 8) | (uint)header.TimeQualityFlags));
                 timestamp.EncodeTagValue(SampledValueTag.RefrTm, asduImage, ref index);
 
                 // Defaulting sample synchronization state to true - not sure what value this has

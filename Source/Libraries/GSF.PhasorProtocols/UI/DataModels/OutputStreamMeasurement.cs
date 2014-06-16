@@ -38,7 +38,7 @@ using System.Data;
 using System.Linq;
 using GSF.Data;
 using GSF.TimeSeries.UI;
-using GSF.TimeSeries.UI.DataModels;
+using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.PhasorProtocols.UI.DataModels
 {

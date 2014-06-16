@@ -48,7 +48,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using GSF.Data;
 using GSF.TimeSeries.UI;
-using GSF.TimeSeries.UI.DataModels;
+using PhasorProtocolAdapters;
+using Measurement = GSF.TimeSeries.UI.DataModels.Measurement;
 
 namespace GSF.PhasorProtocols.UI.DataModels
 {
@@ -1333,7 +1334,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (!savedDevice.IsConcentrator && deviceIsUsingPhasorProtocol)
                 {
                     // Setup and/or validate default signals associated with non-concentrator devices (e.g., directly connected PMUs or PMUs in a concentrator)
-                    foreach (SignalType signal in SignalType.GetPmuSignalTypes())
+                    foreach (TimeSeries.UI.DataModels.SignalType signal in TimeSeries.UI.DataModels.SignalType.GetPmuSignalTypes())
                     {
                         Measurement measurement;
 
@@ -1349,7 +1350,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                     measurement.DeviceID = savedDevice.ID;
                                     measurement.HistorianID = savedDevice.HistorianID;
-                                    measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + "A" + i;
+                                    measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "ALOG", i);
                                     measurement.SignalReference = savedDevice.Acronym + "-AV" + i;
                                     measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " Analog Value " + i;
                                     measurement.SignalTypeID = signal.ID;
@@ -1381,7 +1382,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                     measurement.DeviceID = savedDevice.ID;
                                     measurement.HistorianID = savedDevice.HistorianID;
-                                    measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + "D" + i;
+                                    measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, "DIGI", i);
                                     measurement.SignalReference = savedDevice.Acronym + "-DV" + i;
                                     measurement.SignalTypeID = signal.ID;
                                     measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " Digital Value " + i;
@@ -1411,7 +1412,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                                 measurement.DeviceID = savedDevice.ID;
                                 measurement.HistorianID = savedDevice.HistorianID;
-                                measurement.PointTag = savedDevice.CompanyAcronym + "_" + savedDevice.Acronym + ":" + savedDevice.VendorAcronym + signal.Abbreviation;
+                                measurement.PointTag = CommonPhasorServices.CreatePointTag(savedDevice.CompanyAcronym, savedDevice.Acronym, savedDevice.VendorAcronym, signal.Acronym);
                                 measurement.SignalReference = savedDevice.Acronym + "-" + signal.Suffix;
                                 measurement.SignalTypeID = signal.ID;
                                 measurement.Description = savedDevice.Name + (string.IsNullOrWhiteSpace(savedDevice.VendorDeviceName) ? "" : " " + savedDevice.VendorDeviceName) + " " + signal.Name;
@@ -1467,6 +1468,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                             {
                                 if (companyUpdated)
                                 {
+                                    // WARNING: This assumes company name is followed by an underscore - this may not be a valid assumption for custom point tag naming conventions
                                     underScoreIndex = measurement.PointTag.ToNonNullString().IndexOf('_');
 
                                     if (underScoreIndex > -1)

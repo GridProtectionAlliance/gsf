@@ -1052,7 +1052,7 @@ namespace PhasorProtocolAdapters
             }
             else
             {
-                m_digitalMaskValue = Word.MakeDword(0xFFFF, 0x0000);
+                m_digitalMaskValue = Word.MakeDoubleWord(0xFFFF, 0x0000);
             }
 
             if (settings.TryGetValue("processDataValidFlag", out setting))
