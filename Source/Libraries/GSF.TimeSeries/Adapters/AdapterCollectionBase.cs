@@ -1462,38 +1462,41 @@ namespace GSF.TimeSeries.Adapters
 
             try
             {
-                // If initialization timeout is specified for this item,
-                // start the initialization timeout timer
-                if (item.InitializationTimeout > 0)
+                // Initialize item if not initialized already
+                if (!item.Initialized)
                 {
-                    initializationTimeoutTimer = new Timer(item.InitializationTimeout);
-
-                    initializationTimeoutTimer.Elapsed += (sender, args) =>
+                    // If initialization timeout is specified for this item, start the initialization timeout timer
+                    if (item.InitializationTimeout > 0)
                     {
-                        const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
-                            " its timeout of {1} seconds. The adapter may still initialize, however this" +
-                            " may indicate a problem with the adapter. If you consider this to be normal," +
-                            " try adjusting the initialization timeout to suppress this message during" +
-                            " normal operations.";
+                        initializationTimeoutTimer = new Timer(item.InitializationTimeout);
 
-                        OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
-                    };
+                        initializationTimeoutTimer.Elapsed += (sender, args) =>
+                        {
+                            const string MessageFormat = "WARNING: Initialization of adapter {0} has exceeded" +
+                                " its timeout of {1} seconds. The adapter may still initialize, however this" +
+                                " may indicate a problem with the adapter. If you consider this to be normal," +
+                                " try adjusting the initialization timeout to suppress this message during" +
+                                " normal operations.";
 
-                    initializationTimeoutTimer.AutoReset = false;
-                    initializationTimeoutTimer.Start();
+                            OnStatusMessage(MessageFormat, item.Name, item.InitializationTimeout / 1000.0);
+                        };
+
+                        initializationTimeoutTimer.AutoReset = false;
+                        initializationTimeoutTimer.Start();
+                    }
+
+                    // Initialize the item
+                    item.Initialize();
+
+                    // Initialization successfully completed, so stop the timeout timer
+                    if ((object)initializationTimeoutTimer != null)
+                        initializationTimeoutTimer.Stop();
                 }
-
-                // Initialize the item
-                item.Initialize();
-
-                // Initialization successfully completed, so stop the timeout timer
-                if ((object)initializationTimeoutTimer != null)
-                    initializationTimeoutTimer.Stop();
 
                 try
                 {
-                    // If the item is set to auto-start, start it now
-                    if (item.AutoStart)
+                    // If the item is set to auto-start and not already started, start it now
+                    if (item.AutoStart && !item.Enabled)
                         item.Start();
                 }
                 catch (Exception ex)

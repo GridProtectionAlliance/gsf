@@ -61,6 +61,9 @@ namespace HistorianAdapters
         private long m_publicationInterval;
         private long m_publicationTime;
         private bool m_simulateTimestamp;
+        private int[] m_historianIDs;
+        private TimeTag m_startTime;
+        private TimeTag m_stopTime;
         private bool m_autoRepeat;
         private bool m_disposed;
 
@@ -223,7 +226,7 @@ namespace HistorianAdapters
         /// </summary>
         /// <remarks>
         /// With the exception of the values of -1 and 0, this value specifies the desired processing interval for data, i.e.,
-        /// basically a delay, or timer interval, overwhich to process data. A value of -1 means to use the default processing
+        /// basically a delay, or timer interval, over which to process data. A value of -1 means to use the default processing
         /// interval while a value of 0 means to process data as fast as possible.
         /// </remarks>
         public override int ProcessingInterval
@@ -266,6 +269,8 @@ namespace HistorianAdapters
                 status.AppendFormat("          Archive location: {0}\r\n", FilePath.TrimFileName(m_archiveLocation, 51));
                 status.AppendFormat("      Publication interval: {0}\r\n", m_publicationInterval);
                 status.AppendFormat("               Auto-repeat: {0}\r\n", m_autoRepeat);
+                status.AppendFormat("            Start time-tag: {0}\r\n", m_startTime);
+                status.AppendFormat("             Stop time-tag: {0}\r\n", m_stopTime);
 
                 if (m_archiveFile != null)
                     status.Append(m_archiveFile.Status);
@@ -319,10 +324,12 @@ namespace HistorianAdapters
         /// <exception cref="ArgumentException"><b>HistorianID</b>, <b>Server</b>, <b>Port</b>, <b>Protocol</b>, or <b>InitiateConnection</b> is missing from the <see cref="AdapterBase.Settings"/>.</exception>
         public override void Initialize()
         {
+            const string errorMessage = "{0} is missing from settings - Example: instanceName=PPA; archiveLocation=D:\\ArchiveFiles\\; publicationInterval=333333";
+
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting, errorMessage = "{0} is missing from settings - Example: instanceName=PPA; archiveLocation=D:\\ArchiveFiles\\; publicationInterval=333333";
+            string setting;
 
             // Validate settings.
             if (!settings.TryGetValue("instanceName", out m_instanceName))
@@ -462,16 +469,16 @@ namespace HistorianAdapters
 
             if (Enabled && m_archiveFile != null && requestedKeys != null && requestedKeys.Length > 0)
             {
-                IEnumerable<int> historianIDs = requestedKeys.Select(key => unchecked((int)key.ID));
+                m_historianIDs = requestedKeys.Select(key => unchecked((int)key.ID)).ToArray();
                 m_publicationTime = 0;
 
                 // Start data read from historian
                 lock (m_readTimer)
                 {
-                    TimeTag startTime = base.StartTimeConstraint < TimeTag.MinValue ? TimeTag.MinValue : base.StartTimeConstraint > TimeTag.MaxValue ? TimeTag.MaxValue : new TimeTag(base.StartTimeConstraint);
-                    TimeTag stopTime = base.StopTimeConstraint < TimeTag.MinValue ? TimeTag.MinValue : base.StopTimeConstraint > TimeTag.MaxValue ? TimeTag.MaxValue : new TimeTag(base.StopTimeConstraint);
+                    m_startTime = base.StartTimeConstraint < TimeTag.MinValue ? TimeTag.MinValue : base.StartTimeConstraint > TimeTag.MaxValue ? TimeTag.MaxValue : new TimeTag(base.StartTimeConstraint);
+                    m_stopTime = base.StopTimeConstraint < TimeTag.MinValue ? TimeTag.MinValue : base.StopTimeConstraint > TimeTag.MaxValue ? TimeTag.MaxValue : new TimeTag(base.StopTimeConstraint);
 
-                    m_dataReader = m_archiveFile.ReadData(historianIDs, startTime, stopTime).GetEnumerator();
+                    m_dataReader = m_archiveFile.ReadData(m_historianIDs, m_startTime, m_stopTime).GetEnumerator();
                     m_readTimer.Enabled = m_dataReader.MoveNext();
 
                     if (m_readTimer.Enabled)
@@ -510,7 +517,7 @@ namespace HistorianAdapters
                         m_publicationTime = timestamp;
 
                     // Set next reasonable publication time
-                    while (timestamp > m_publicationTime)
+                    while (m_publicationTime < timestamp)
                         m_publicationTime += m_publicationInterval;
 
                     do
@@ -536,13 +543,34 @@ namespace HistorianAdapters
                         }
                         else
                         {
-                            // Finished reading all available data
-                            m_readTimer.Enabled = false;
+                            if (timestamp < m_stopTime.ToDateTime().Ticks && m_startTime.ToDateTime().Ticks < timestamp)
+                            {
+                                // Could be attempting read with a future end time - in these cases attempt to re-read current data
+                                // from now to end time in case any new data as been archived in the mean-time
+                                m_startTime = new TimeTag(timestamp + Ticks.PerMillisecond);
+                                m_dataReader = m_archiveFile.ReadData(m_historianIDs, m_startTime, m_stopTime).GetEnumerator();
 
-                            if (m_autoRepeat)
-                                ThreadPool.QueueUserWorkItem(StartDataReader);
+                                if (!m_dataReader.MoveNext())
+                                {
+                                    // Finished reading all available data
+                                    m_readTimer.Enabled = false;
+
+                                    if (m_autoRepeat)
+                                        ThreadPool.QueueUserWorkItem(StartDataReader);
+                                    else
+                                        OnProcessingComplete();
+                                }
+                            }
                             else
-                                OnProcessingComplete();
+                            {
+                                // Finished reading all available data
+                                m_readTimer.Enabled = false;
+
+                                if (m_autoRepeat)
+                                    ThreadPool.QueueUserWorkItem(StartDataReader);
+                                else
+                                    OnProcessingComplete();
+                            }
 
                             break;
                         }

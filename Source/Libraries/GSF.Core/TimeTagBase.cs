@@ -70,7 +70,7 @@ using System.Security.Permissions;
 namespace GSF
 {
     /// <summary>
-    /// Represents tha base class for alternate timetag implementations.
+    /// Represents the base class for alternate timetag implementations.
     /// </summary>
     [Serializable]
     public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IComparable<DateTime>, IEquatable<TimeTagBase>, IEquatable<DateTime>, IFormattable

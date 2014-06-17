@@ -1968,7 +1968,7 @@ namespace GSF.Historian.Files
 
             // Ensure that the start and end time are valid.
             if (startTime.CompareTo(endTime) > 0)
-                throw new ArgumentException("End Time preceeds Start Time in the specified timespan");
+                throw new ArgumentException("End Time precedes Start Time in the specified time span");
 
             List<Info> dataFiles = new List<Info>();
             bool pendingRollover = false;

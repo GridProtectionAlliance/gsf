@@ -1073,6 +1073,10 @@ namespace GSF.TimeSeries.Adapters
         ///         <term>*-1d</term>
         ///         <description>Evaluates to 1 day before <see cref="DateTime.UtcNow"/>.</description>
         ///     </item>
+        ///     <item>
+        ///         <term>*+2d</term>
+        ///         <description>Evaluates to 2 days from <see cref="DateTime.UtcNow"/>.</description>
+        ///     </item>
         /// </list>
         /// </para>
         /// </remarks>
@@ -1094,6 +1098,7 @@ namespace GSF.TimeSeries.Adapters
                 // 3) *-10m (10 minutes ago)
                 // 4) *-1h (1 hour ago)
                 // 5) *-1d (1 day ago)
+                // 6) *+2d (2 days from now)
 
                 dateTime = DateTime.UtcNow;
                 timetag = timetag.RemoveWhiteSpace();

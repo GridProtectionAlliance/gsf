@@ -53,7 +53,7 @@ namespace GSF.Historian
         /// </summary>
         /// <param name="ticks">Number of ticks since the <see cref="BaseDate"/>.</param>
         public TimeTag(long ticks)
-            : base(BaseDate.Ticks, Ticks.ToSeconds(ticks))
+            : base(BaseDate.Ticks, ticks)
         {
         }
 
