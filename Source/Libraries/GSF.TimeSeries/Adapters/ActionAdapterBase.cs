@@ -97,7 +97,6 @@ namespace GSF.TimeSeries.Adapters
         private List<string> m_inputSourceIDs;
         private List<string> m_outputSourceIDs;
         private int m_minimumMeasurementsToUse;
-        private ManualResetEvent m_initializeWaitHandle;
         private DateTime m_startTimeConstraint;
         private DateTime m_stopTimeConstraint;
         private int m_hashCode;
@@ -121,10 +120,6 @@ namespace GSF.TimeSeries.Adapters
 
             // Set incoming measurements to none by default
             m_inputMeasurementKeys = new MeasurementKey[0];
-
-            // Create wait handle to use for adapter initialization
-            m_initializeWaitHandle = new ManualResetEvent(false);
-            m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
 
             // For most implementations millisecond resolution will be sufficient
             base.TimeResolution = Ticks.PerMillisecond;
@@ -620,15 +615,6 @@ namespace GSF.TimeSeries.Adapters
             set
             {
                 m_initialized = value;
-
-                // When initialization is complete we send notification
-                if ((object)m_initializeWaitHandle != null)
-                {
-                    if (value)
-                        m_initializeWaitHandle.Set();
-                    else
-                        m_initializeWaitHandle.Reset();
-                }
             }
         }
 
@@ -815,21 +801,8 @@ namespace GSF.TimeSeries.Adapters
         {
             if (!m_disposed)
             {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_initializeWaitHandle != null)
-                            m_initializeWaitHandle.Close();
-
-                        m_initializeWaitHandle = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 

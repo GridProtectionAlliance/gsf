@@ -237,9 +237,11 @@ namespace GSF.TimeSeries.Transport
             // Duplicate current real-time session configuration for adapters that report temporal support
             session.DataSource = IaonSession.ExtractTemporalConfiguration(clientSubscription.DataSource);
 
+            // Initialize temporal session adapters without starting them
+            session.Initialize(false);
+
             // Define an in-situ action adapter for the temporal Iaon session used to proxy data back to the client subscription
-            DataTable actionAdapters = session.DataSource.Tables["ActionAdapters"];
-            DataRow proxyAdapterRow = actionAdapters.NewRow();
+            DataRow proxyAdapterRow = session.DataSource.Tables["ActionAdapters"].Clone().NewRow();
 
             // Define connection string for proxy adapter based on original inputs and outputs as requested by client subscription
             StringBuilder connectionString = new StringBuilder();
@@ -267,19 +269,16 @@ namespace GSF.TimeSeries.Transport
             proxyAdapterRow["TypeName"] = "GSF.TimeSeries.Transport.TemporalClientSubscriptionProxy";
             proxyAdapterRow["ConnectionString"] = connectionString.ToString();
 
-            // Add proxy row to Iaon action adapter definitions
-            actionAdapters.Rows.Add(proxyAdapterRow);
-
-            // Initialize temporal session adapters without starting them
-            session.Initialize(false);
-
-            // Get reference to temporal session proxy adapter to it can be associated with the client subscription
             TemporalClientSubscriptionProxy proxyAdapter = null;
             IActionAdapter adapter0;
 
-            // Lookup proxy adapter defined with reserved ID zero
-            if (session.ActionAdapters.TryGetAdapterByID(0, out adapter0))
+            // Create new proxy adapter
+            if (session.ActionAdapters.TryCreateAdapter(proxyAdapterRow, out adapter0))
+            {
+                // Add new proxy adapter to temporal session action adapter collection
+                session.ActionAdapters.Add(adapter0);
                 proxyAdapter = adapter0 as TemporalClientSubscriptionProxy;
+            }
 
             if ((object)proxyAdapter == null)
                 throw new InvalidOperationException("Failed to define temporal subscription proxy adapter - cannot complete temporal session initialization.");
