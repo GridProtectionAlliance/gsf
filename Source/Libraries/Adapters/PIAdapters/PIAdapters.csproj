@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PIConnection.cs" />
     <Compile Include="PIOutputAdapter.cs" />
     <Compile Include="PIPBInputAdapter.cs" />
     <Compile Include="PIRTInputAdapter.cs" />

@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/13/2012 - Ryan McCoy
 //       Generated original version of source code.
+//  06/18/2014 - J. Ritchie Carroll
+//       Updated code to use PIConnection instance.
 //
 //******************************************************************************************************
 
@@ -47,12 +49,12 @@ namespace PIAdapters
         private const int QueryTimeSpan = 5;                        // Minutes of data to pull per query
 
         // Fields
+        private PIConnection m_connection;                          // PI server connection from which this adapter connects to get data
+        private string m_serverName;                                // server name where PI connection should be established for connection string
         private string m_userName;                                  // username for PI connection string
         private string m_password;                                  // password for PI connection string
-        private string m_servername;                                // server name where PI connection should be established for connection string
+        private int m_connectTimeout;                               // PI connection timeout
         private string m_tagFilter;                                 // caching the string used to filter down to PI points that can be provided from this adapter
-        private PISDK.PISDK m_pisdk;                                // PI SDK object
-        private Server m_server;                                    // PI server from which this adapter connects to get data
         private PointList m_points;                                 // List of points this adapter queries from PI
         private Dictionary<string, MeasurementKey> m_tagKeyMap;     // Provides quick look ups of GSFSchema keys by PI point tag
         private List<IMeasurement> m_measurements;                  // Queried measurements that are prepared to be published  
@@ -72,11 +74,7 @@ namespace PIAdapters
         /// </summary>
         public PIPBInputAdapter()
         {
-            m_userName = string.Empty;
-            m_password = string.Empty;
-            m_servername = string.Empty;
             m_tagKeyMap = new Dictionary<string, MeasurementKey>();
-            m_pisdk = new PISDK.PISDK();
             m_measurements = new List<IMeasurement>();
         }
 
@@ -136,11 +134,11 @@ namespace PIAdapters
         {
             get
             {
-                return m_servername;
+                return m_serverName;
             }
             set
             {
-                m_servername = value;
+                m_serverName = value;
             }
         }
 
@@ -176,6 +174,22 @@ namespace PIAdapters
             }
         }
 
+        /// <summary>
+        /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the timeout interval (in milliseconds) for the adapter's connection"), DefaultValue(30000)]
+        public int ConnectTimeout
+        {
+            get
+            {
+                return m_connectTimeout;
+            }
+            set
+            {
+                m_connectTimeout = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -194,11 +208,13 @@ namespace PIAdapters
                     {
                         m_userName = null;
                         m_password = null;
-                        m_servername = null;
+                        m_serverName = null;
                         m_tagFilter = null;
 
-                        m_pisdk = null;
-                        m_server = null;
+                        if ((object)m_connection != null)
+                            m_connection.Dispose();
+
+                        m_connection = null;
                         m_points = null;
                         m_tagKeyMap.Clear();
                         m_tagKeyMap = null;
@@ -235,15 +251,26 @@ namespace PIAdapters
         {
             base.Initialize();
 
-            m_processedMeasurements = 0;
-
             Dictionary<string, string> settings = Settings;
+            string setting;
 
-            if (!settings.TryGetValue("servername", out m_servername))
-                throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format server=myservername to the connection string.");
+            if (!settings.TryGetValue("ServerName", out m_serverName))
+                throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format servername=myservername to the connection string.");
 
-            settings.TryGetValue("username", out m_userName);
-            settings.TryGetValue("password", out m_password);
+            if (settings.TryGetValue("UserName", out setting))
+                m_userName = setting;
+            else
+                m_userName = null;
+
+            if (settings.TryGetValue("Password", out setting))
+                m_password = setting;
+            else
+                m_password = null;
+
+            if (settings.TryGetValue("ConnectTimeout", out setting))
+                m_connectTimeout = Convert.ToInt32(setting);
+            else
+                m_connectTimeout = 30000;
 
             m_measurements = new List<IMeasurement>();
         }
@@ -263,35 +290,17 @@ namespace PIAdapters
         /// </summary>
         protected override void AttemptConnection()
         {
-            m_server = m_pisdk.Servers[m_servername];
+            m_processedMeasurements = 0;
 
-            // PI server only allows independent connections to the same PI server from STA threads.
-            // We're spinning up a thread here to connect STA, since our current thread is MTA.
-            ManualResetEvent connectionEvent = new ManualResetEvent(false);
-            Thread connectThread = new Thread(() =>
+            m_connection = new PIConnection
             {
-                try
-                {
-                    if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
-                        m_server.Open(string.Format("UID={0};PWD={1}", m_userName, m_password));
-                    else
-                        m_server.Open();
-                    connectionEvent.Set();
-                }
-                catch (Exception e)
-                {
-                    OnProcessException(e);
-                }
-            });
+                ServerName = m_serverName,
+                UserName = m_userName,
+                Password = m_password,
+                ConnectTimeout = m_connectTimeout
+            };
 
-            connectThread.SetApartmentState(ApartmentState.STA);
-            connectThread.Start();
-
-            if (!connectionEvent.WaitOne(30000))
-            {
-                connectThread.Abort();
-                throw new InvalidOperationException("Timeout occurred while connecting to configured PI server.");
-            }
+            m_connection.Open();
         }
 
         /// <summary>
@@ -299,8 +308,11 @@ namespace PIAdapters
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            if (m_server != null && m_server.Connected)
-                m_server.Close();
+            if ((object)m_connection != null)
+            {
+                m_connection.Dispose();
+                m_connection = null;
+            }
         }
 
         /// <summary>
@@ -355,7 +367,7 @@ namespace PIAdapters
         {
             try
             {
-                m_points = m_server.GetPoints(m_tagFilter);
+                m_connection.Execute(server => m_points = server.GetPoints(m_tagFilter));
 
                 m_dataThread = new Thread(QueryData);
                 m_dataThread.IsBackground = true;
@@ -416,22 +428,29 @@ namespace PIAdapters
                 {
                     DateTime endTime = currentTime.AddMinutes(QueryTimeSpan);
 
+                    DateTime localCurrentTime = currentTime.ToLocalTime();
+                    DateTime localEndTime = endTime.ToLocalTime();
                     List<IMeasurement> measToAdd = new List<IMeasurement>();
-                    foreach (PIPoint point in m_points)
+
+                    m_connection.Execute(server =>
                     {
-                        PIValues values = point.Data.RecordedValues(currentTime.ToLocalTime(), endTime.ToLocalTime());
-                        foreach (PIValue value in values)
+                        foreach (PIPoint point in m_points)
                         {
-                            if (!value.Value.GetType().IsCOMObject)
+                            PIValues values = point.Data.RecordedValues(localCurrentTime, localEndTime);
+
+                            foreach (PIValue value in values)
                             {
-                                Measurement measurement = new Measurement();
-                                measurement.Key = m_tagKeyMap[point.Name];
-                                measurement.Value = (double)value.Value;
-                                measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
-                                measToAdd.Add(measurement);
+                                if (!value.Value.GetType().IsCOMObject)
+                                {
+                                    Measurement measurement = new Measurement();
+                                    measurement.Key = m_tagKeyMap[point.Name];
+                                    measurement.Value = (double)value.Value;
+                                    measurement.Timestamp = value.TimeStamp.LocalDate.ToUniversalTime();
+                                    measToAdd.Add(measurement);
+                                }
                             }
                         }
-                    }
+                    });
 
                     if (measToAdd.Any())
                     {

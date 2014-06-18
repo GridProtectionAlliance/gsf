@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/13/2012 - Ryan McCoy
 //       Generated original version of source code.
+//  06/18/2014 - J. Ritchie Carroll
+//       Updated code to use pooled PIConnection instances.
 //
 //******************************************************************************************************
 
@@ -26,15 +28,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.IO;
-using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using GSF;
-using GSF.Collections;
 using GSF.Data;
-using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using PISDK;
@@ -50,22 +47,34 @@ namespace PIAdapters
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Default value for <see cref="PointsPerConnection"/>.
+        /// </summary>
+        public const int DefaultPointsPerConnection = 20;
+
         // Fields
-        private string m_servername;                                            // Server for PI connection
-        private string m_userName;                                              // Username for PI connection
-        private string m_password;                                              // Password for PI connection
-        private int m_connectTimeout;                                           // PI connection timeout
-        private PISDK.PISDK m_pi;                                               // PI SDK object
-        private Server m_piServer;                                              // PI server object for archiving data
-        private ConcurrentDictionary<MeasurementKey, PIPoint> m_tagMap;         // Cache the mapping between GSFSchema measurements and PI points
-        private int m_processedMeasurements;                                    // Track the processed measurements
-        private bool m_runMetadataSync;                                         // Whether or not to automatically create/update PI points on the server
-        private string m_piPointSource;                                         // Point source to set on PI points when automatically created by the adapter
-        private string m_piPointClass;                                          // Point class to use for new PI points when automatically created by the adapter
-        private bool m_bulkUpdate;                                              // Flags whether the adapter will update each point in bulk or one update at a time
-        private string m_tagMapCacheFileName;                                   // Tag map cache file name
-        private DateTime m_lastMetadataRefresh;                                 // Tracks time of last meta-data refresh
-        private bool m_disposed;
+        private PIConnection m_connection;                          // PI server connection for meta-data synchronization
+        private readonly List<PIConnection> m_connectionPool;       // PI server connection object pool for data writes
+        private readonly HashSet<MeasurementKey> m_pendingMappings; // List of pending measurement mappings
+        private string m_serverName;                                // Server for PI connection
+        private string m_userName;                                  // Username for PI connection
+        private string m_password;                                  // Password for PI connection
+        private int m_connectTimeout;                               // PI connection timeout
+        private int m_processedMeasurements;                        // Track the processed measurements
+        private bool m_runMetadataSync;                             // Whether or not to automatically create/update PI points on the server
+        private string m_pointSource;                               // Point source to set on PI points when automatically created by the adapter
+        private string m_pointClass;                                // Point class to use for new PI points when automatically created by the adapter
+        private int m_pointsPerConnection;                          // Number of points each PI connection is set to handle
+        private int m_currentConnectionPoints;                      // Total number of measurements mapped to current pool item
+        private DateTime m_lastMetadataRefresh;                     // Tracks time of last meta-data refresh
+        private int m_processedMappings;                            // Total number of mappings processed so far
+        private bool m_refreshingMetadata;                          // Flag that determines if meta-data is currently refreshing
+        private bool m_disposed;                                    // Flag that determines if class is disposed
+
+        // Cache the mapping between GSFSchema measurements and PI points
+        private readonly ConcurrentDictionary<MeasurementKey, Tuple<PIConnection, PIPoint>> m_tagMap;
 
         #endregion
 
@@ -76,10 +85,10 @@ namespace PIAdapters
         /// </summary>
         public PIOutputAdapter()
         {
-            m_connectTimeout = 30000;
-            m_tagMap = new ConcurrentDictionary<MeasurementKey, PIPoint>();
-            m_processedMeasurements = 0;
-            m_runMetadataSync = true;
+            m_pointsPerConnection = DefaultPointsPerConnection;
+            m_connectionPool = new List<PIConnection>();
+            m_pendingMappings = new HashSet<MeasurementKey>();
+            m_tagMap = new ConcurrentDictionary<MeasurementKey, Tuple<PIConnection, PIPoint>>();
         }
 
         #endregion
@@ -87,18 +96,18 @@ namespace PIAdapters
         #region [ Properties ]
 
         /// <summary>
-        /// Set this property true to force the adapter to send bulk updates to PI with the UpdateValues method. Set this property to false to update points one value at a time using UpdateValue method.
+        /// Gets or sets total number of points a single <see cref="PIConnection"/> will handle for archiving data.
         /// </summary>
-        [ConnectionStringParameter, Description("Set this property true to force the adapter to send bulk updates to PI with the UpdateValues method. Set this property to false to update points one value at a time using UpdateValue method.")]
-        public bool BulkUpdate
+        [ConnectionStringParameter, Description("Defines the total number of points a single PI connection will handle for archiving data. This variable is dependent upon the sample rate of incoming data, i.e., if sample rate is low then points per connection can be high."), DefaultValue(DefaultPointsPerConnection)]
+        public int PointsPerConnection
         {
             get
             {
-                return m_bulkUpdate;
+                return m_pointsPerConnection;
             }
             set
             {
-                m_bulkUpdate = value;
+                m_pointsPerConnection = value;
             }
         }
 
@@ -132,11 +141,11 @@ namespace PIAdapters
         {
             get
             {
-                return m_servername;
+                return m_serverName;
             }
             set
             {
-                m_servername = value;
+                m_serverName = value;
             }
         }
 
@@ -207,16 +216,16 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the point source string used when automatically creating new PI points during the metadata update
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the point source string used when automatically creating new PI points during the metadata update"), DefaultValue("TSF")]
+        [ConnectionStringParameter, Description("Defines the point source string used when automatically creating new PI points during the metadata update"), DefaultValue("GSF")]
         public string PIPointSource
         {
             get
             {
-                return m_piPointSource;
+                return m_pointSource;
             }
             set
             {
-                m_piPointSource = value;
+                m_pointSource = value;
             }
         }
 
@@ -228,29 +237,14 @@ namespace PIAdapters
         {
             get
             {
-                return m_piPointClass;
+                return m_pointClass;
             }
             set
             {
-                m_piPointClass = value;
+                m_pointClass = value;
             }
         }
 
-        /// <summary>
-        /// Gets or sets the filename to be used for tag map cache.
-        /// </summary>
-        [ConnectionStringParameter, Description("Defines the filename to be used for tag map cache file name. Leave blank for cache name to be same as adapter name with a \".cache\" extension."), DefaultValue("")]
-        public string TagMapCacheFileName
-        {
-            get
-            {
-                return m_tagMapCacheFileName;
-            }
-            set
-            {
-                m_tagMapCacheFileName = value;
-            }
-        }
         /// <summary>
         /// Returns the detailed status of the data output source.
         /// </summary>
@@ -262,26 +256,26 @@ namespace PIAdapters
 
                 status.Append(base.Status);
                 status.AppendLine();
-                status.AppendFormat("        OSI-PI server name: {0}", m_servername);
+                status.AppendFormat("        OSI-PI server name: {0}", m_serverName);
                 status.AppendLine();
-                status.AppendFormat("       Connected to server: {0}", (object)m_piServer == null ? "No" : m_piServer.Connected ? "Yes" : "No");
+                status.AppendFormat("       Connected to server: {0}", (object)m_connection == null ? "No" : m_connection.Connected ? "Yes" : "No");
                 status.AppendLine();
                 status.AppendFormat("    Meta-data sync enabled: {0}", m_runMetadataSync);
                 status.AppendLine();
 
                 if (m_runMetadataSync)
                 {
-                    status.AppendFormat("       OSI-PI point source: {0}", m_piPointSource);
+                    status.AppendFormat("       OSI-PI point source: {0}", m_pointSource);
                     status.AppendLine();
-                    status.AppendFormat("        OSI-PI point class: {0}", m_piPointClass);
+                    status.AppendFormat("        OSI-PI point class: {0}", m_pointClass);
                     status.AppendLine();
                 }
 
-                status.AppendFormat("    Using bulk tag updates: {0}", m_bulkUpdate);
-                status.AppendLine();
-                status.AppendFormat("   Tag-map cache file name: {0}", FilePath.TrimFileName(m_tagMapCacheFileName.ToNonNullString("[undefined]"), 51));
-                status.AppendLine();
                 status.AppendFormat(" Active tag-map cache size: {0:N0} mappings", m_tagMap.Count);
+                status.AppendLine();
+                status.AppendFormat("      Pending tag-mappings: {0:N0} mappings", m_pendingMappings.Count);
+                status.AppendLine();
+                status.AppendFormat("   PI connection pool size: {0:N0}", m_connectionPool.Count);
                 status.AppendLine();
 
                 return status.ToString();
@@ -304,14 +298,24 @@ namespace PIAdapters
                 {
                     if (disposing)
                     {
-                        m_pi = null;
-                        m_piServer = null;
+                        if ((object)m_connection != null)
+                        {
+                            m_connection.Dispose();
+                            m_connection = null;
+                        }
+
+                        if ((object)m_connectionPool != null)
+                        {
+                            foreach (PIConnection connection in m_connectionPool)
+                            {
+                                connection.Dispose();
+                            }
+
+                            m_connectionPool.Clear();
+                        }
 
                         if ((object)m_tagMap != null)
-                        {
                             m_tagMap.Clear();
-                            m_tagMap = null;
-                        }
                     }
                 }
                 finally
@@ -325,7 +329,6 @@ namespace PIAdapters
         /// <summary>
         /// Initializes this <see cref="PIOutputAdapter"/>.
         /// </summary>
-        [HandleProcessCorruptedStateExceptions]
         public override void Initialize()
         {
             base.Initialize();
@@ -333,8 +336,8 @@ namespace PIAdapters
             Dictionary<string, string> settings = Settings;
             string setting;
 
-            if (!settings.TryGetValue("ServerName", out m_servername))
-                throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format server=myservername to the connection string.");
+            if (!settings.TryGetValue("ServerName", out m_serverName))
+                throw new InvalidOperationException("Server name is a required setting for PI connections. Please add a server in the format servername=myservername to the connection string.");
 
             if (settings.TryGetValue("UserName", out setting))
                 m_userName = setting;
@@ -357,93 +360,33 @@ namespace PIAdapters
                 m_runMetadataSync = true; // By default, assume that PI tags will be automatically maintained
 
             if (settings.TryGetValue("PIPointSource", out setting))
-                m_piPointSource = setting;
+                m_pointSource = setting;
             else
-                m_piPointSource = "GSF";
+                m_pointSource = "GSF";
 
             if (settings.TryGetValue("PIPointClass", out setting))
-                m_piPointClass = setting;
+                m_pointClass = setting;
             else
-                m_piPointClass = "classic";
-
-            if (settings.TryGetValue("BulkUpdate", out setting))
-                m_bulkUpdate = Convert.ToBoolean(setting);
-            else
-                m_bulkUpdate = true;
-
-            if (!settings.TryGetValue("TagCacheName", out setting) || string.IsNullOrWhiteSpace(setting))
-                setting = Name + "_TagMap.cache";
-
-            m_tagMapCacheFileName = FilePath.GetAbsolutePath(setting);
-
-            try
-            {
-                // Initialize PI SDK
-                m_pi = new PISDK.PISDK();
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(string.Format("Failed to initialize OSI-PI SDK: {0}", ex.Message), ex);
-            }
-
-            try
-            {
-                // Locate configured PI server
-                m_piServer = m_pi.Servers[m_servername];
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(string.Format("Failed to locate configured OSI-PI server '{0}': {1}", m_servername, ex.Message), ex);
-            }
+                m_pointClass = "classic";
         }
 
         /// <summary>
         /// Connects to the configured PI server.
         /// </summary>
-        [HandleProcessCorruptedStateExceptions]
         protected override void AttemptConnection()
         {
             m_tagMap.Clear();
+            m_processedMappings = 0;
 
-            // PI server only allows independent connections to the same PI server from STA threads.
-            // We're spinning up a thread here to connect STA, since our current thread is MTA.
-            ManualResetEventSlim connectionEvent = new ManualResetEventSlim(false);
-
-            Exception connectionException = null;
-
-            Thread connectionThread = new Thread(() =>
+            m_connection = new PIConnection
             {
-                try
-                {
-                    lock (m_piServer)
-                    {
-                        if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
-                            m_piServer.Open(string.Format("UID={0};PWD={1}", m_userName, m_password));
-                        else
-                            m_piServer.Open();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    connectionException = ex;
-                }
-                finally
-                {
-                    connectionEvent.Set();
-                }
-            });
+                ServerName = m_serverName,
+                UserName = m_userName,
+                Password = m_password,
+                ConnectTimeout = m_connectTimeout
+            };
 
-            connectionThread.SetApartmentState(ApartmentState.STA);
-            connectionThread.Start();
-
-            if (!connectionEvent.Wait(m_connectTimeout))
-            {
-                connectionThread.Abort();
-                throw new TimeoutException(string.Format("Timeout occurred while attempting connection to configured OSI-PI server '{0}'.", m_servername));
-            }
-
-            if ((object)connectionException != null)
-                throw new InvalidOperationException(string.Format("Failed to connect to configured OSI-PI server '{0}': {1}", m_servername, connectionException.Message), connectionException);
+            m_connection.Open();
 
             // Kick off meta-data refresh
             RefreshMetadata();
@@ -452,16 +395,12 @@ namespace PIAdapters
         /// <summary>
         /// Closes this <see cref="PIOutputAdapter"/> connections to the PI server.
         /// </summary>
-        [HandleProcessCorruptedStateExceptions]
         protected override void AttemptDisconnection()
         {
-            if ((object)m_piServer != null)
+            if ((object)m_connection != null)
             {
-                lock (m_piServer)
-                {
-                    if (m_piServer.Connected)
-                        m_piServer.Close();
-                }
+                m_connection.Dispose();
+                m_connection = null;
             }
         }
 
@@ -469,122 +408,232 @@ namespace PIAdapters
         /// Sorts measurements and sends them to the configured PI server in batches
         /// </summary>
         /// <param name="measurements">Measurements to queue</param>
-        [HandleProcessCorruptedStateExceptions]
         protected override void ProcessMeasurements(IMeasurement[] measurements)
         {
-            if ((object)measurements == null || measurements.Length <= 0 || (object)m_piServer == null)
+            if ((object)measurements == null || measurements.Length <= 0 || (object)m_connection == null)
                 return;
 
-            lock (m_piServer)
+            Tuple<PIConnection, PIPoint> mapValue;
+
+            foreach (IMeasurement measurement in measurements)
             {
-                if (!m_piServer.Connected)
-                    return;
-            }
-
-            PIValues values;
-            PIPoint point;
-
-            if (m_bulkUpdate)
-            {
-                // Group measurement values by ID
-                Dictionary<MeasurementKey, PIValues> measurementValues = new Dictionary<MeasurementKey, PIValues>();
-
-                foreach (IMeasurement measurement in measurements)
+                try
                 {
-                    if (m_tagMap.ContainsKey(measurement.Key))
+                    // Lookup tag-mapping for this measurement
+                    if (!m_tagMap.TryGetValue(measurement.Key, out mapValue))
+                        continue;
+
+                    // If mapping value is not defined, kick off process to create a new mapping
+                    if ((object)mapValue == null)
                     {
-                        values = measurementValues.GetOrAdd(measurement.Key, key => new PIValues()
+                        lock (m_pendingMappings)
                         {
-                            ReadOnly = false
-                        });
-
-                        values.Add(new DateTime(measurement.Timestamp).ToLocalTime(), measurement.AdjustedValue, null);
-                    }
-                }
-
-                foreach (MeasurementKey key in measurementValues.Keys)
-                {
-                    try
-                    {
-                        if (m_tagMap.TryGetValue(key, out point))
-                        {
-                            values = measurementValues[key];
-
-                            lock (m_piServer)
+                            // Only start mapping process if one is not already pending
+                            if (!m_pendingMappings.Contains(measurement.Key))
                             {
-                                // Add values for given PI point
-                                point.Data.UpdateValues(values);
+                                // No mapping is defined for this point, get a connection from the
+                                // server pool and establish a mapping for this point
+                                m_pendingMappings.Add(measurement.Key);
+                                ThreadPool.QueueUserWorkItem(CreatePooledConnectionMapping, measurement.Key);
                             }
-
-                            m_processedMeasurements += values.Count;
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point values for '{0}': {1}", key, ex.Message), ex));
+                        PIConnection connection = mapValue.Item1;
+                        PIPoint point = mapValue.Item2;
+
+                        double value = measurement.AdjustedValue;
+                        DateTime timestamp = new DateTime(measurement.Timestamp).ToLocalTime();
+
+                        connection.Execute(server => point.Data.UpdateValue(value, timestamp));
+
+                        m_processedMeasurements++;
                     }
                 }
-            }
-            else
-            {
-                foreach (IMeasurement measurement in measurements)
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        if (m_tagMap.TryGetValue(measurement.Key, out point))
-                        {
-                            lock (m_piServer)
-                            {
-                                point.Data.UpdateValue(measurement.AdjustedValue, new DateTime(measurement.Timestamp).ToLocalTime());
-                            }
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point value for '{0}': {1}", measurement.Key, ex.Message), ex));
+                }
+            }
+        }
 
-                            m_processedMeasurements++;
+        private void CreatePooledConnectionMapping(object state)
+        {
+            MeasurementKey key = (MeasurementKey)state;
+            Tuple<PIConnection, PIPoint> mapValue;
+
+            try
+            {
+                mapValue = GetPooledConnectionMapping(key);
+
+                if ((object)mapValue == null)
+                    m_tagMap.TryRemove(key, out mapValue);
+                else
+                    m_tagMap[key] = mapValue;
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Failed to create tag-mapping for '{0}': {1}", key, ex.Message), ex));
+            }
+            finally
+            {
+                lock (m_pendingMappings)
+                {
+                    m_pendingMappings.Remove(key);
+                }
+            }
+        }
+
+        private Tuple<PIConnection, PIPoint> GetPooledConnectionMapping(MeasurementKey key)
+        {
+            PIConnection connection;
+            PIPoint point = null;
+
+            lock (m_connectionPool)
+            {
+                // We dynamically allocate pooled PI server connections each handling a maximum number of points.
+                // PI's threading model can handle many connections archiving a small volume of points, but
+                // falls behind under load when archiving a large volume of points from a single connection.
+                if (m_currentConnectionPoints <= m_pointsPerConnection && m_connectionPool.Count > 0)
+                {
+                    // Last connection has points available
+                    connection = m_connectionPool[m_connectionPool.Count - 1];
+                }
+                else
+                {
+                    // Create a new connection
+                    connection = new PIConnection
+                    {
+                        ServerName = m_serverName,
+                        UserName = m_userName,
+                        Password = m_password,
+                        ConnectTimeout = m_connectTimeout
+                    };
+
+                    connection.Open();
+
+                    // Add the new connection to the server pool
+                    m_connectionPool.Add(connection);
+
+                    // Reset current connection point count
+                    m_currentConnectionPoints = 0;
+                }
+            }
+
+            // Increment current connection point count
+            m_currentConnectionPoints++;
+
+            // Map measurement to PI point
+            try
+            {
+                DataRow[] rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID='{0}'", key.SignalID));
+
+                if (rows.Length > 0)
+                {
+                    string tagname = rows[0]["PointTag"].ToNonNullString().Trim();
+
+                    // Use alternate tag if one is defined
+                    if (!string.IsNullOrWhiteSpace(rows[0]["AlternateTag"].ToString()) && !rows[0]["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
+                        tagname = rows[0]["AlternateTag"].ToString().Trim();
+
+                    // Two ways to find points here
+                    // 1. if we are running metadata sync from the adapter, look for the signal ID in the exdesc field
+                    // 2. if the pi points are being manually maintained, look for either the point tag or alternate tag in the actual pi point tag
+                    PointList points = null;
+                    bool foundPoint = false;
+
+                    // Attempt lookup by EXDESC signal ID
+                    if (m_runMetadataSync)
+                    {
+                        connection.Execute(server => points = server.GetPoints(string.Format("EXDESC='{0}'", key.SignalID)));
+
+                        if ((object)points != null && points.Count > 0)
+                        {
+                            point = points[1];
+                            foundPoint = true;
                         }
                     }
-                    catch (Exception ex)
+
+                    if (!foundPoint)
                     {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point value for '{0}': {1}", measurement.Key, ex.Message), ex));
+                        try
+                        {
+                            connection.Execute(server => point = server.PIPoints[tagname]);
+                        }
+                        catch
+                        {
+                            point = null;
+                        }
+
+                        if ((object)point == null)
+                        {
+                            connection.Execute(server => points = server.GetPoints(string.Format("TAG='{0}'", tagname)));
+
+                            if ((object)points != null && points.Count > 0)
+                            {
+                                point = points[1];
+                            }
+                            else
+                            {
+                                point = null;
+                                m_currentConnectionPoints--;
+
+                                if (!m_refreshingMetadata)
+                                    OnStatusMessage("[WARNING] No PI points found for tag '{0}'. Data will not be archived for '{1}'.", tagname, key);
+                            }
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Failed to map '{0}' to a PI tag: {1}", key, ex.Message), ex));
+            }
+
+            // If no point could be mapped - return null connection mapping so key can be removed from tag-map
+            if ((object)point == null)
+                return null;
+
+            // Provide some level of feed back on progress of mapping process
+            m_processedMappings++;
+
+            if (m_processedMappings % 100 == 0)
+                OnStatusMessage("Mapped {0:N0} PI tags to measurements, {1:0.00%} complete...", m_processedMappings, m_processedMappings / (double)m_tagMap.Count);
+
+            return new Tuple<PIConnection, PIPoint>(connection, point);
         }
 
         /// <summary>
         /// Sends updated metadata to PI.
         /// </summary>
-        [HandleProcessCorruptedStateExceptions]
         protected override void ExecuteMetadataRefresh()
         {
-            if (!Initialized || (object)m_piServer == null)
+            if (!Initialized || (object)m_connection == null)
                 return;
 
-            lock (m_piServer)
-            {
-                if (!m_piServer.Connected)
-                    return;
-            }
+            if (!m_connection.Connected)
+                return;
 
             MeasurementKey[] inputMeasurements = InputMeasurementKeys;
-            int previousMeasurementReportingInterval = MeasurementReportingInterval;
 
-            MeasurementReportingInterval = 0;
+            // Establish initial tag-map (much of the meta-data may already exist)
+            LoadTagMap(inputMeasurements);
 
-            // Attempt to load tag-map from existing cache, if any
-            LoadCachedTagMap();
-
-            if (m_tagMap.Count > 0)
-                MeasurementReportingInterval = previousMeasurementReportingInterval;
-
-            OnStatusMessage("Beginning metadata refresh...");
+            if (!m_runMetadataSync)
+                return;
 
             try
             {
+                OnStatusMessage("Beginning metadata refresh...");
+                m_refreshingMetadata = true;
+
                 if ((object)inputMeasurements != null && inputMeasurements.Length > 0)
                 {
                     int processed = 0, total = inputMeasurements.Length;
 
                     AdoDataConnection database = null;
-                    PointList pointList;
+                    PointList pointList = null;
                     DataTable measurements = DataSource.Tables["ActiveMeasurements"];
                     DataRow[] rows;
 
@@ -605,22 +654,17 @@ namespace PIAdapters
                                 tagname = rows[0]["AlternateTag"].ToString().Trim();
 
                             // Attempt to lookup tag using signal ID stored in extended description field
-                            lock (m_piServer)
-                            {
-                                pointList = m_piServer.GetPoints(string.Format("EXDESC='{0}'", rows[0]["SignalID"]));
-                            }
+                            string signalID = rows[0]["SignalID"].ToNonNullString("undefined");
+                            m_connection.Execute(server => pointList = server.GetPoints(string.Format("EXDESC='{0}'", signalID)));
 
-                            if (pointList.Count == 0)
+                            if ((object)pointList == null || pointList.Count == 0)
                             {
                                 // Did not find tag using signal ID, see if desired point tag already exists
-                                PIPoint point;
+                                PIPoint point = null;
 
                                 try
                                 {
-                                    lock (m_piServer)
-                                    {
-                                        point = m_piServer.PIPoints[tagname];
-                                    }
+                                    m_connection.Execute(server => point = server.PIPoints[tagname]);
                                 }
                                 catch
                                 {
@@ -630,13 +674,11 @@ namespace PIAdapters
                                 if ((object)point == null)
                                 {
                                     // Attempt to add point if it doesn't exist
-                                    OnStatusMessage("PI point lookup for '{0} [{1}]' by tag-name and \"EXDESC='{2}'\" returned no data, attempting to add new PI point...", tagname, key, rows[0]["SignalID"]);
-
                                     try
                                     {
                                         NamedValues values = new NamedValues();
 
-                                        values.Add("pointsource", m_piPointSource);
+                                        values.Add("pointsource", m_pointSource);
                                         values.Add("Descriptor", rows[0]["Description"].ToString());
                                         values.Add("exdesc", rows[0]["SignalID"].ToString());
                                         values.Add("sourcetag", rows[0]["PointTag"].ToString());
@@ -645,17 +687,14 @@ namespace PIAdapters
                                         if (measurements.Columns.Contains("EngineeringUnits"))
                                             values.Add("engunits", rows[0]["EngineeringUnits"].ToString());
 
-                                        lock (m_piServer)
-                                        {
-                                            m_piServer.PIPoints.Add(tagname, m_piPointClass, PointTypeConstants.pttypFloat32, values);
-                                        }
-
-                                        addedNewPoint = true;
+                                        m_connection.Execute(server => server.PIPoints.Add(tagname, m_pointClass, PointTypeConstants.pttypFloat32, values));
                                     }
                                     catch (Exception ex)
                                     {
                                         OnProcessException(new InvalidOperationException(string.Format("Failed to add PI tag '{0}' for measurement '{1}': {2}", tagname, key, ex.Message), ex));
                                     }
+
+                                    addedNewPoint = true;
                                 }
                             }
                             else
@@ -664,12 +703,7 @@ namespace PIAdapters
                                 {
                                     // Rename tag-name if needed
                                     if (string.CompareOrdinal(pointList[1].Name, tagname) != 0)
-                                    {
-                                        lock (m_piServer)
-                                        {
-                                            m_piServer.PIPoints.Rename(pointList[1].Name, tagname);
-                                        }
-                                    }
+                                        m_connection.Execute(server => server.PIPoints.Rename(pointList[1].Name, tagname));
                                 }
                                 catch (Exception ex)
                                 {
@@ -708,11 +742,11 @@ namespace PIAdapters
                                     try
                                     {
                                         // Update tag meta-data
-                                        PIErrors errors;
+                                        PIErrors errors = null;
                                         NamedValues edits = new NamedValues();
                                         NamedValues edit = new NamedValues();
 
-                                        edit.Add("pointsource", m_piPointSource);
+                                        edit.Add("pointsource", m_pointSource);
                                         edit.Add("Descriptor", rows[0]["Description"].ToString());
                                         edit.Add("exdesc", rows[0]["SignalID"].ToString());
                                         edit.Add("sourcetag", rows[0]["PointTag"].ToString());
@@ -723,13 +757,13 @@ namespace PIAdapters
 
                                         edits.Add(rows[0]["PointTag"].ToString(), edit);
 
-                                        lock (m_piServer)
+                                        m_connection.Execute(server =>
                                         {
-                                            IPIPoints2 pts2 = (IPIPoints2)m_piServer.PIPoints;
+                                            IPIPoints2 pts2 = (IPIPoints2)server.PIPoints;
                                             pts2.EditTags(edits, out errors);
-                                        }
+                                        });
 
-                                        if (errors.Count > 0)
+                                        if ((object)errors != null && errors.Count > 0)
                                         {
                                             StringBuilder description = new StringBuilder();
 
@@ -770,176 +804,42 @@ namespace PIAdapters
             {
                 OnProcessException(ex);
             }
+            finally
+            {
+                m_refreshingMetadata = false;
+            }
 
             m_lastMetadataRefresh = DateTime.UtcNow;
 
             OnStatusMessage("Completed metadata refresh successfully.");
 
-            // Map measurements to point tags and re-establish tag-map cache
+            // Re-establish tag-map cache since meta-data and tags may exist now that didn't before
             LoadTagMap(inputMeasurements);
-
-            // Restore original measurement reporting interval
-            MeasurementReportingInterval = previousMeasurementReportingInterval;
         }
 
-        private void LoadCachedTagMap()
-        {
-            // Map measurements to any existing point tags to start archiving what is possible right away...
-            if (File.Exists(m_tagMapCacheFileName))
-            {
-                // Attempt to load tag-map from existing cache file
-                try
-                {
-                    using (FileStream tagMapCache = File.Open(m_tagMapCacheFileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    {
-                        Dictionary<MeasurementKey, string> tagNames = Serialization.Deserialize<Dictionary<MeasurementKey, string>>(tagMapCache, GSF.SerializationFormat.Binary);
-                        PIPoint point;
-
-                        OnStatusMessage("Mapping measurements to PI tags using cached tag-map...");
-
-                        int processed = 0, total = tagNames.Count;
-
-                        foreach (KeyValuePair<MeasurementKey, string> kvp in tagNames)
-                        {
-                            try
-                            {
-                                lock (m_piServer)
-                                {
-                                    point = m_piServer.PIPoints[kvp.Value];
-                                }
-
-                                m_tagMap.AddOrUpdate(kvp.Key, point, (k, v) => point);
-                            }
-                            catch (Exception ex)
-                            {
-                                OnProcessException(new InvalidOperationException(string.Format("Failed to map '{0}' to a PI tag '{1}' loaded from tag-map cache: {2}", kvp.Key, kvp.Value, ex.Message), ex));
-                            }
-
-                            processed++;
-
-                            if (processed % 100 == 0)
-                                OnStatusMessage("Mapped {0:N0} PI tags to measurements using tag-map cache, {1:0.00%} complete...", processed, processed / (double)total);
-                        }
-
-                        OnStatusMessage("Mapped {0:N0} keys to points successfully using tag-map cache .", tagNames.Count);
-
-                        // Use last write time of file as the last meta-data refresh time
-                        m_lastMetadataRefresh = File.GetLastWriteTimeUtc(m_tagMapCacheFileName);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to map measurements from cached tag-map to file '{0}': {1}", m_tagMapCacheFileName, ex.Message), ex));
-                }
-            }
-
-        }
         // Resets the PI tag to MeasurementKey mapping for loading data into PI by finding PI points that match either the GSFSchema point tag or alternate tag
-        [HandleProcessCorruptedStateExceptions]
         private void LoadTagMap(MeasurementKey[] inputMeasurements)
         {
-            OnStatusMessage("Mapping measurements to PI tags...");
+            OnStatusMessage("Establishing tag-map dictionary...");
 
             List<MeasurementKey> newTags = new List<MeasurementKey>();
 
             if ((object)inputMeasurements != null && inputMeasurements.Length > 0)
             {
-                int processed = 0, total = inputMeasurements.Length;
-
                 foreach (MeasurementKey key in inputMeasurements)
                 {
-                    try
-                    {
-                        DataRow[] rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID='{0}'", key.SignalID));
+                    // Add key to dictionary with null value if not defined, actual mapping will happen dynamically as needed
+                    if (!m_tagMap.ContainsKey(key))
+                        m_tagMap[key] = null;
 
-                        if (rows.Length > 0)
-                        {
-                            string tagname = rows[0]["PointTag"].ToNonNullString().Trim();
-
-                            // Use alternate tag if one is defined
-                            if (!string.IsNullOrWhiteSpace(rows[0]["AlternateTag"].ToString()) && !rows[0]["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
-                                tagname = rows[0]["AlternateTag"].ToString().Trim();
-
-                            // Two ways to find points here
-                            // 1. if we are running metadata sync from the adapter, look for the signal ID in the exdesc field
-                            // 2. if the pi points are being manually maintained, look for either the point tag or alternate tag in the actual pi point tag
-                            PointList points;
-                            bool foundPoint = false;
-
-                            // Attempt lookup by EXDESC signal ID
-                            if (m_runMetadataSync)
-                            {
-                                lock (m_piServer)
-                                {
-                                    points = m_piServer.GetPoints(string.Format("EXDESC='{0}'", key.SignalID));
-                                }
-
-                                if ((object)points != null && points.Count > 0)
-                                {
-                                    m_tagMap.AddOrUpdate(key, points[1], (k, v) => points[1]);
-                                    newTags.Add(key);
-                                    foundPoint = true;
-                                }
-                            }
-
-                            if (!foundPoint)
-                            {
-                                PIPoint point;
-
-                                try
-                                {
-                                    lock (m_piServer)
-                                    {
-                                        point = m_piServer.PIPoints[tagname];
-                                    }
-
-                                    m_tagMap.AddOrUpdate(key, point, (k, v) => point);
-                                    newTags.Add(key);
-                                }
-                                catch
-                                {
-                                    point = null;
-                                }
-
-                                if ((object)point == null)
-                                {
-                                    lock (m_piServer)
-                                    {
-                                        points = m_piServer.GetPoints(string.Format("TAG='{0}'", tagname));
-                                    }
-
-                                    if ((object)points != null && points.Count > 0)
-                                    {
-                                        // NOTE - The PointList is NOT 0-based (index 1 is the first item in points)
-                                        m_tagMap.AddOrUpdate(key, points[1], (k, v) => points[1]);
-                                        newTags.Add(key);
-                                    }
-                                    else
-                                    {
-                                        OnStatusMessage("No PI points found for tag '{0}'. Data will not be archived for '{1}'.", tagname, key);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to map '{0}' to a PI tag: {1}", key, ex.Message), ex));
-                    }
-
-                    processed++;
-
-                    if (processed % 100 == 0)
-                        OnStatusMessage("Mapped {0:N0} PI tags to measurements, {1:0.00%} complete...", newTags.Count, processed / (double)total);
+                    newTags.Add(key);
                 }
             }
 
             if (newTags.Count > 0)
             {
-                OnStatusMessage("Mapped {0:N0} PI tags to measurements, checking for removed tags...", newTags.Count);
-
                 // Determine which tags no longer exist
-                PIPoint removedPoint;
+                Tuple<PIConnection, PIPoint> removedPoint;
                 HashSet<MeasurementKey> tagsToRemove = new HashSet<MeasurementKey>(m_tagMap.Keys);
 
                 // If there are existing tags that are not part of new updates, these need to be removed
@@ -948,45 +848,25 @@ namespace PIAdapters
                 if (tagsToRemove.Count > 0)
                 {
                     foreach (MeasurementKey key in tagsToRemove)
+                    {
                         m_tagMap.TryRemove(key, out removedPoint);
+
+                        if ((object)removedPoint != null)
+                            m_processedMappings--;
+                    }
 
                     OnStatusMessage("Detected {0:N0} tags that have been removed from OSI-PI output - primary tag-map has been updated...", tagsToRemove.Count);
                 }
 
-                if (m_tagMap.Count > 0)
-                {
-                    // Cache tag-map for faster future PI adapter startup
-                    try
-                    {
-                        OnStatusMessage("Caching tag-map for faster future loads...");
-
-                        using (FileStream tagMapCache = File.Create(m_tagMapCacheFileName))
-                        {
-                            Stream fileStream = tagMapCache;
-                            Dictionary<MeasurementKey, string> tagNames = m_tagMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name);
-                            Serialization.Serialize(tagNames, GSF.SerializationFormat.Binary, ref fileStream);
-                        }
-
-                        OnStatusMessage("Tag-map cached for faster future loads.");
-                    }
-                    catch (Exception ex)
-                    {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to cache tag-map to file '{0}': {1}", m_tagMapCacheFileName, ex.Message), ex));
-                    }
-
-                    OnStatusMessage("Mapped {0:N0} PI tags to measurements successfully.", m_tagMap.Count);
-                }
-                else
-                {
-                    OnStatusMessage("[WARNING] No PI tags were mapped to measurements - no tag-map exists so no points can be archived.");
-                }
+                if (m_tagMap.Count == 0)
+                    OnStatusMessage("[WARNING] No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
             }
             else
             {
                 if (m_tagMap.Count > 0)
                     OnStatusMessage("[WARNING] No PI tags were mapped to measurements - existing tag-map with {0:N0} tags remains in use.", m_tagMap.Count);
                 else
-                    OnStatusMessage("[WARNING] No PI tags were mapped to measurements - no tag-map exists so no points can be archived.");
+                    OnStatusMessage("[WARNING] No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
             }
         }
 
