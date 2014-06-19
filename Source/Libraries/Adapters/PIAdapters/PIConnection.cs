@@ -32,9 +32,17 @@ namespace PIAdapters
     /// <summary>
     /// Represents a STA connection to a PI server that handles open, close and execute operations.
     /// </summary>
+    // ReSharper disable SuspiciousTypeConversion.Global
     public class PIConnection : IDisposable
     {
         #region [ Members ]
+
+        // Events
+
+        /// <summary>
+        /// Raised when <see cref="PIConnection"/> has been disconnected from server.
+        /// </summary>
+        public event EventHandler Disconnected;
 
         // Fields
         private Server m_server;                                    // SDK Server object for PI connection
@@ -42,10 +50,10 @@ namespace PIAdapters
         private string m_userName;                                  // Username for PI connection
         private string m_password;                                  // Password for PI connection
         private int m_connectTimeout;                               // PI connection timeout
-        private bool m_connected;                                   // Flag that determines connectivity
-        private Exception m_connectionException;                    // Last connection exception
-        private Exception m_operationException;                     // Last operation exception
-        private Action<Server> m_operation;                         // Current operation
+        private volatile bool m_connected;                          // Flag that determines connectivity
+        private volatile Exception m_connectionException;           // Last connection exception
+        private volatile Exception m_operationException;            // Last operation exception
+        private volatile Action<Server> m_operation;                // Current operation
         private readonly AutoResetEvent m_pendingOperation;         // Pending operation wait event
         private readonly ManualResetEventSlim m_executingOperation; // Executing operation wait event
         private bool m_disposed;
@@ -244,6 +252,7 @@ namespace PIAdapters
                 lock (s_piSDKLock)
                 {
                     m_server = s_piSDK.Servers[m_serverName];
+                    ((_DServerDisconnectEvents_Event)m_server).OnDisconnect += PIConnection_OnDisconnect;
                 }
             }
             catch (Exception ex)
@@ -369,8 +378,14 @@ namespace PIAdapters
                 }
 
                 // Attempt to close OSI-PI connection
-                if ((object)m_server != null && m_server.Connected)
-                    m_server.Close();
+                if ((object)m_server != null)
+                {
+                    if (m_server.Connected)
+                        m_server.Close();
+
+                    // Detach from server disconnected event
+                    ((_DServerDisconnectEvents_Event)m_server).OnDisconnect -= PIConnection_OnDisconnect;
+                }
             }
             catch (Exception ex)
             {
@@ -381,6 +396,20 @@ namespace PIAdapters
             {
                 // Always clear PI server object before thread exit
                 m_server = null;
+            }
+        }
+
+        private void PIConnection_OnDisconnect(Server server)
+        {
+            if ((object)m_server == null || server.ServerID != m_server.ServerID)
+                return;
+
+            if (m_connected)
+            {
+                if ((object)Disconnected != null)
+                    Disconnected(this, EventArgs.Empty);
+
+                Close();
             }
         }
 
