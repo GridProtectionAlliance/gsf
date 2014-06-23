@@ -446,8 +446,8 @@ namespace PIAdapters
             if ((object)measurements == null || measurements.Length <= 0 || (object)m_connection == null)
                 return;
 
-            // We use dictionaries to create a grouping construct whereby each PI connection will have its own set of points and associated values
-            // so that archive operations for each PI connection can be processed in parallel
+            // We use dictionaries to create grouping constructs whereby each PI connection will have its own set of points
+            // and associated values so that archive operations for each PI connection can be processed in parallel
             Dictionary<PIConnection, Dictionary<PIPoint, PIValues>> connectionPointValues = new Dictionary<PIConnection, Dictionary<PIPoint, PIValues>>();
             ConnectionPoint connectionPoint;
 
@@ -476,15 +476,24 @@ namespace PIAdapters
                     }
                     else
                     {
-                        // Get PI values collection for this connection point
-                        Dictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connectionPoint.Item1, connection => new Dictionary<PIPoint, PIValues>());
-                        PIValues values = pointValues.GetOrAdd(connectionPoint.Item2, point => new PIValues()
-                        {
-                            ReadOnly = false
-                        });
+                        PIConnection connection = connectionPoint.Item1;
+                        PIPoint point = connectionPoint.Item2;
+                        DateTime timestamp = new DateTime(measurement.Timestamp).ToLocalTime();
+                        double value = measurement.AdjustedValue;
 
-                        // Add measurement value to PI values collection
-                        values.Add(new DateTime(measurement.Timestamp).ToLocalTime(), measurement.AdjustedValue, null);
+                        // Get PI values collection for this connection point
+                        Dictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connection, c => new Dictionary<PIPoint, PIValues>());
+
+                        connection.Execute(server =>
+                        {
+                            PIValues values = pointValues.GetOrAdd(point, p => new PIValues()
+                            {
+                                ReadOnly = false
+                            });
+
+                            // Add measurement value to PI values collection
+                            values.Add(timestamp, value, null);
+                        });
                     }
                 }
                 catch (Exception ex)
@@ -493,10 +502,9 @@ namespace PIAdapters
                 }
             }
 
-            // Handle inserts for each PI connection in parallel
-            Parallel.ForEach(connectionPointValues, connectionPointValue =>
+            // Handle inserts for each PI connection in parallel - note each connection performs these steps in their own STA space
+            Parallel.ForEach(connectionPointValues, connectionPointValue => connectionPointValue.Key.Execute(server =>
             {
-                PIConnection connection = connectionPointValue.Key;
                 Dictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
 
                 foreach (KeyValuePair<PIPoint, PIValues> pointValue in pointValues)
@@ -507,15 +515,16 @@ namespace PIAdapters
                     try
                     {
                         // Add values for current PI point
-                        connection.Execute(server => point.Data.UpdateValues(values));
+                        point.Data.UpdateValues(values);
                         Interlocked.Add(ref m_processedMeasurements, values.Count);
                     }
                     catch (Exception ex)
                     {
-                        OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point values tag '{0}': {1}", point.Name, ex.Message), ex));
+                        // Raise event in MTA space
+                        ThreadPool.QueueUserWorkItem(state => OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point values tag '{0}': {1}", point.Name, ex.Message), ex)));
                     }
                 }
-            });
+            }));
         }
 
         private void EstablishConnectionPointMapping(object state)
@@ -578,7 +587,7 @@ namespace PIAdapters
                         ConnectTimeout = m_connectTimeout
                     };
 
-                    // Since PI doesn't detection disconnection until an operation is attempted,
+                    // Since PI doesn't detect disconnection until an operation is attempted,
                     // we must monitor for disconnections from the pooled connections as well
                     connection.Disconnected += m_connection_Disconnected;
                     connection.Open();
@@ -597,39 +606,44 @@ namespace PIAdapters
             // Map measurement to PI point
             try
             {
-                DataRow[] rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID='{0}'", key.SignalID));
+                Guid signalID = key.SignalID;
+                DataRow[] rows = DataSource.Tables["ActiveMeasurements"].Select(string.Format("SignalID='{0}'", signalID));
 
                 if (rows.Length > 0)
                 {
-                    string tagname = rows[0]["PointTag"].ToNonNullString().Trim();
+                    DataRow measurementRow = rows[0];
+                    string tagName = measurementRow["PointTag"].ToNonNullString().Trim();
 
                     // Use alternate tag if one is defined
-                    if (!string.IsNullOrWhiteSpace(rows[0]["AlternateTag"].ToString()) && !rows[0]["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
-                        tagname = rows[0]["AlternateTag"].ToString().Trim();
+                    if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && !measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
+                        tagName = measurementRow["AlternateTag"].ToString().Trim();
 
                     // Two ways to find points here
-                    // 1. if we are running metadata sync from the adapter, look for the signal ID in the exdesc field
+                    // 1. if we are running metadata sync from the adapter, look for the signal ID in the EXDESC field
                     // 2. if the pi points are being manually maintained, look for either the point tag or alternate tag in the actual pi point tag
-                    PointList points = null;
                     bool foundPoint = false;
 
-                    // Attempt lookup by EXDESC signal ID
                     if (m_runMetadataSync)
                     {
-                        connection.Execute(server => points = server.GetPoints(string.Format("EXDESC='{0}'", key.SignalID)));
-
-                        if ((object)points != null && points.Count > 0)
+                        connection.Execute(server =>
                         {
-                            point = points[1];
-                            foundPoint = true;
-                        }
+                            // Attempt lookup by EXDESC signal ID
+                            PointList points = server.GetPoints(string.Format("EXDESC='{0}'", signalID));
+
+                            if ((object)points != null && points.Count > 0)
+                            {
+                                point = points[1];
+                                foundPoint = true;
+                            }
+                        });
                     }
 
                     if (!foundPoint)
                     {
                         try
                         {
-                            connection.Execute(server => point = server.PIPoints[tagname]);
+                            // Attempt lookup by tag name
+                            connection.Execute(server => point = server.PIPoints[tagName]);
                         }
                         catch
                         {
@@ -638,20 +652,10 @@ namespace PIAdapters
 
                         if ((object)point == null)
                         {
-                            connection.Execute(server => points = server.GetPoints(string.Format("TAG='{0}'", tagname)));
+                            m_currentConnectionPoints--;
 
-                            if ((object)points != null && points.Count > 0)
-                            {
-                                point = points[1];
-                            }
-                            else
-                            {
-                                point = null;
-                                m_currentConnectionPoints--;
-
-                                if (!m_refreshingMetadata)
-                                    OnStatusMessage("[WARNING] No PI points found for tag '{0}'. Data will not be archived for '{1}'.", tagname, key);
-                            }
+                            if (!m_refreshingMetadata)
+                                OnStatusMessage("[WARNING] No PI points found for tag '{0}'. Data will not be archived for '{1}'.", tagName, key);
                         }
                     }
                 }
@@ -694,41 +698,42 @@ namespace PIAdapters
 
                 if ((object)inputMeasurements != null && inputMeasurements.Length > 0)
                 {
-                    int processed = 0, total = inputMeasurements.Length;
-
-                    AdoDataConnection database = null;
-                    PointList pointList = null;
-                    DataTable measurements = DataSource.Tables["ActiveMeasurements"];
-                    DataRow[] rows;
-
-                    foreach (MeasurementKey key in inputMeasurements)
+                    m_connection.Execute(server =>
                     {
-                        rows = measurements.Select(string.Format("SignalID='{0}'", key.SignalID));
+                        int processed = 0, total = inputMeasurements.Length;
 
-                        if (rows.Length <= 0)
-                            continue;
+                        AdoDataConnection database = null;
+                        DataTable measurements = DataSource.Tables["ActiveMeasurements"];
 
-                        string tagname = rows[0]["PointTag"].ToNonNullString().Trim();
-                        bool addedNewPoint = false;
-
-                        if (!string.IsNullOrWhiteSpace(tagname))
+                        foreach (MeasurementKey key in inputMeasurements)
                         {
+                            Guid signalID = key.SignalID;
+                            DataRow[] rows = measurements.Select(string.Format("SignalID='{0}'", signalID));
+
+                            if (rows.Length <= 0)
+                                continue;
+
+                            DataRow measurementRow = rows[0];
+                            string tagName = measurementRow["PointTag"].ToNonNullString().Trim();
+                            bool addedNewPoint = false;
+
+                            if (string.IsNullOrWhiteSpace(tagName))
+                                continue;
+
                             // Use alternate tag if one is defined - note that digitals are an exception since they use this field for special labeling
-                            if (!string.IsNullOrWhiteSpace(rows[0]["AlternateTag"].ToString()) && !rows[0]["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
-                                tagname = rows[0]["AlternateTag"].ToString().Trim();
+                            if (!string.IsNullOrWhiteSpace(measurementRow["AlternateTag"].ToString()) && !measurementRow["SignalType"].ToString().Equals("DIGI", StringComparison.OrdinalIgnoreCase))
+                                tagName = measurementRow["AlternateTag"].ToString().Trim();
 
                             // Attempt to lookup tag using signal ID stored in extended description field
-                            string signalID = rows[0]["SignalID"].ToNonNullString("undefined");
-                            m_connection.Execute(server => pointList = server.GetPoints(string.Format("EXDESC='{0}'", signalID)));
+                            PointList points = server.GetPoints(string.Format("EXDESC='{0}'", signalID));
+                            PIPoint point;
 
-                            if ((object)pointList == null || pointList.Count == 0)
+                            if ((object)points == null || points.Count == 0)
                             {
-                                // Did not find tag using signal ID, see if desired point tag already exists
-                                PIPoint point = null;
-
                                 try
                                 {
-                                    m_connection.Execute(server => point = server.PIPoints[tagname]);
+                                    // Attempt to lookup tag using tag name
+                                    point = server.PIPoints[tagName];
                                 }
                                 catch
                                 {
@@ -740,22 +745,23 @@ namespace PIAdapters
                                     // Attempt to add point if it doesn't exist
                                     try
                                     {
+
                                         NamedValues values = new NamedValues();
 
                                         values.Add("pointsource", m_pointSource);
-                                        values.Add("Descriptor", rows[0]["Description"].ToString());
-                                        values.Add("exdesc", rows[0]["SignalID"].ToString());
-                                        values.Add("sourcetag", rows[0]["PointTag"].ToString());
+                                        values.Add("Descriptor", measurementRow["Description"].ToString());
+                                        values.Add("exdesc", measurementRow["SignalID"].ToString());
+                                        values.Add("sourcetag", measurementRow["PointTag"].ToString());
 
                                         // Engineering units is a new field for this view -- handle the case that it's not there
                                         if (measurements.Columns.Contains("EngineeringUnits"))
-                                            values.Add("engunits", rows[0]["EngineeringUnits"].ToString());
+                                            values.Add("engunits", measurementRow["EngineeringUnits"].ToString());
 
-                                        m_connection.Execute(server => server.PIPoints.Add(tagname, m_pointClass, PointTypeConstants.pttypFloat32, values));
+                                        server.PIPoints.Add(tagName, m_pointClass, PointTypeConstants.pttypFloat32, values);
                                     }
                                     catch (Exception ex)
                                     {
-                                        OnProcessException(new InvalidOperationException(string.Format("Failed to add PI tag '{0}' for measurement '{1}': {2}", tagname, key, ex.Message), ex));
+                                        OnProcessException(new InvalidOperationException(string.Format("Failed to add PI tag '{0}' for measurement '{1}': {2}", tagName, key, ex.Message), ex));
                                     }
 
                                     addedNewPoint = true;
@@ -763,20 +769,22 @@ namespace PIAdapters
                             }
                             else
                             {
-                                try
-                                {
-                                    // Rename tag-name if needed
-                                    if (string.CompareOrdinal(pointList[1].Name, tagname) != 0)
-                                        m_connection.Execute(server => server.PIPoints.Rename(pointList[1].Name, tagname));
-                                }
-                                catch (Exception ex)
-                                {
-                                    OnProcessException(new InvalidOperationException(string.Format("Failed to rename PI tag '{0}' to '{1}' for measurement '{2}': {3}", pointList[1].Name, tagname, key, ex.Message), ex));
-                                }
+                                point = points[1];
                             }
 
                             if (!addedNewPoint)
                             {
+                                try
+                                {
+                                    // Rename tag-name if needed
+                                    if (string.CompareOrdinal(point.Name, tagName) != 0)
+                                        server.PIPoints.Rename(point.Name, tagName);
+                                }
+                                catch (Exception ex)
+                                {
+                                    OnProcessException(new InvalidOperationException(string.Format("Failed to rename PI tag '{0}' to '{1}' for measurement '{2}': {3}", point.Name, tagName, key, ex.Message), ex));
+                                }
+
                                 DateTime updatedOn;
 
                                 try
@@ -784,7 +792,7 @@ namespace PIAdapters
                                     // See if ActiveMeasurements contains updated on column
                                     if (measurements.Columns.Contains("UpdatedOn"))
                                     {
-                                        updatedOn = Convert.ToDateTime(rows[0]["UpdatedOn"]);
+                                        updatedOn = Convert.ToDateTime(measurementRow["UpdatedOn"]);
                                     }
                                     else
                                     {
@@ -792,7 +800,7 @@ namespace PIAdapters
                                         if ((object)database == null)
                                             database = new AdoDataConnection("systemSettings");
 
-                                        updatedOn = Convert.ToDateTime(database.Connection.ExecuteScalar(string.Format("SELECT UpdatedOn FROM Measurement WHERE SignalID = '{0}'", key.SignalID)));
+                                        updatedOn = Convert.ToDateTime(database.Connection.ExecuteScalar(string.Format("SELECT UpdatedOn FROM Measurement WHERE SignalID = '{0}'", signalID)));
                                     }
                                 }
                                 catch (Exception)
@@ -806,26 +814,23 @@ namespace PIAdapters
                                     try
                                     {
                                         // Update tag meta-data
-                                        PIErrors errors = null;
+                                        PIErrors errors;
                                         NamedValues edits = new NamedValues();
                                         NamedValues edit = new NamedValues();
 
                                         edit.Add("pointsource", m_pointSource);
-                                        edit.Add("Descriptor", rows[0]["Description"].ToString());
-                                        edit.Add("exdesc", rows[0]["SignalID"].ToString());
-                                        edit.Add("sourcetag", rows[0]["PointTag"].ToString());
+                                        edit.Add("Descriptor", measurementRow["Description"].ToString());
+                                        edit.Add("exdesc", measurementRow["SignalID"].ToString());
+                                        edit.Add("sourcetag", measurementRow["PointTag"].ToString());
 
                                         // Engineering units is a new field for this view -- handle the case that it's not there
                                         if (measurements.Columns.Contains("EngineeringUnits"))
-                                            edit.Add("engunits", rows[0]["EngineeringUnits"].ToString());
+                                            edit.Add("engunits", measurementRow["EngineeringUnits"].ToString());
 
-                                        edits.Add(rows[0]["PointTag"].ToString(), edit);
+                                        edits.Add(measurementRow["PointTag"].ToString(), edit);
 
-                                        m_connection.Execute(server =>
-                                        {
-                                            IPIPoints2 pts2 = (IPIPoints2)server.PIPoints;
-                                            pts2.EditTags(edits, out errors);
-                                        });
+                                        IPIPoints2 pts2 = (IPIPoints2)server.PIPoints;
+                                        pts2.EditTags(edits, out errors);
 
                                         if ((object)errors != null && errors.Count > 0)
                                         {
@@ -839,25 +844,33 @@ namespace PIAdapters
                                                 description.Append(error.Description);
                                             }
 
-                                            OnStatusMessage("[WARNING] Error(s) reported during update of PI tag '{0}' metadata from measurement '{1}': {2}", tagname, key, description.ToString());
+                                            // Raise event in MTA space
+                                            string message = string.Format("[WARNING] Error(s) reported during update of PI tag '{0}' metadata from measurement '{1}': {2}", tagName, key, description.ToString());
+                                            ThreadPool.QueueUserWorkItem(state => OnStatusMessage(message));
                                         }
                                     }
                                     catch (Exception ex)
                                     {
-                                        OnProcessException(new InvalidOperationException(string.Format("Failed to update PI tag '{0}' metadata from measurement '{1}': {2}", tagname, key, ex.Message), ex));
+                                        // Raise event in MTA space
+                                        string message = string.Format("Failed to update PI tag '{0}' metadata from measurement '{1}': {2}", tagName, key, ex.Message);
+                                        ThreadPool.QueueUserWorkItem(state => OnProcessException(new InvalidOperationException(message, ex)));
                                     }
                                 }
                             }
+
+                            processed++;
+
+                            if (processed % 100 == 0)
+                            {
+                                // Raise event in MTA space
+                                string message = string.Format("Updated {0:N0} PI tags and associated metadata, {1:0.00%} complete...", processed, processed / (double)total);
+                                ThreadPool.QueueUserWorkItem(state => OnStatusMessage(message));
+                            }
                         }
 
-                        processed++;
-
-                        if (processed % 100 == 0)
-                            OnStatusMessage("Updated {0:N0} PI tags and associated metadata, {1:0.00%} complete...", processed, processed / (double)total);
-                    }
-
-                    if ((object)database != null)
-                        database.Dispose();
+                        if ((object)database != null)
+                            database.Dispose();
+                    });
                 }
                 else
                 {

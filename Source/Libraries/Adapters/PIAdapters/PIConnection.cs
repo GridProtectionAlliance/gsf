@@ -45,7 +45,7 @@ namespace PIAdapters
         public event EventHandler Disconnected;
 
         // Fields
-        private Server m_server;                                    // SDK Server object for PI connection
+        private string m_serverID;                                  // Unique ID of server connection
         private string m_serverName;                                // Server name for PI connection
         private string m_userName;                                  // Username for PI connection
         private string m_password;                                  // Password for PI connection
@@ -67,25 +67,6 @@ namespace PIAdapters
         /// </summary>
         public PIConnection()
         {
-            // Make sure shared instance of OSI-PI SDK is available - we wait to do this until an initial
-            // instance of this class is created so that any possible exceptions related to SDK creation
-            // can be better managed. If PI-SDK is not installed, this will throw an exception.
-            lock (s_piSDKLock)
-            {
-                if ((object)s_piSDK == null)
-                {
-                    try
-                    {
-                        // Initialize PI SDK
-                        s_piSDK = new PISDK.PISDK();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException(string.Format("Failed to initialize OSI-PI SDK: {0}", ex.Message), ex);
-                    }
-                }
-            }
-
             m_connectTimeout = 30000;
             m_pendingOperation = new AutoResetEvent(false);
             m_executingOperation = new ManualResetEventSlim(true);
@@ -240,30 +221,23 @@ namespace PIAdapters
         [HandleProcessCorruptedStateExceptions]
         public void Open()
         {
-            if (m_connected || (object)m_server != null)
+            if (m_connected || (object)m_serverID != null)
                 throw new InvalidOperationException("OSI-PI server connection is already open.");
 
             if (string.IsNullOrWhiteSpace(m_serverName))
                 throw new InvalidOperationException("Cannot open OSI-PI server connection without a defined server name.");
 
-            // Locate configured PI server
-            try
-            {
-                lock (s_piSDKLock)
-                {
-                    m_server = s_piSDK.Servers[m_serverName];
-                    ((_DServerDisconnectEvents_Event)m_server).OnDisconnect += PIConnection_OnDisconnect;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(string.Format("Failed to locate configured OSI-PI server '{0}': {1}", m_serverName, ex.Message), ex);
-            }
-
-            ManualResetEventSlim connectionEvent = new ManualResetEventSlim(false);
+            // Reset operational variables
             m_operation = null;
             m_connectionException = null;
             m_operationException = null;
+
+            // Clear any pending events
+            m_executingOperation.Set();
+            m_pendingOperation.Set();
+
+            // Create a wait handle for connection on STA thread
+            ManualResetEventSlim connectionEvent = new ManualResetEventSlim(false);
 
             // PI server only allows independent connections to the same PI server using a single-threaded apartment state.
             Thread operationsThread = new Thread(OperationsThread);
@@ -328,33 +302,66 @@ namespace PIAdapters
             //   -- close connection
             try
             {
+                Server server = null;
                 m_connected = false;
 
-                // Attempt to open OSI-PI connection
                 try
                 {
-                    if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
-                        m_server.Open(string.Format("UID={0};PWD={1}", m_userName, m_password));
-                    else
-                        m_server.Open();
+                    // Initialize PI SDK
+                    PISDK.PISDK sdk = new PISDK.PISDK();
 
-                    m_connected = true;
+                    try
+                    {
+                        // Locate configured PI server
+                        server = sdk.Servers[m_serverName];
+                        ((_DServerDisconnectEvents_Event)server).OnDisconnect += PIConnection_OnDisconnect;
+
+                        try
+                        {
+                            // Attempt to open OSI-PI connection
+                            if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
+                                server.Open(string.Format("UID={0};PWD={1}", m_userName, m_password));
+                            else
+                                server.Open();
+
+                            m_serverID = server.ServerID;
+                            m_connected = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            m_connectionException = ex;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        m_connectionException = new InvalidOperationException(string.Format("Failed to locate configured OSI-PI server '{0}': {1}", m_serverName, ex.Message), ex);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    m_connectionException = ex;
+                    m_connectionException = new InvalidOperationException(string.Format("Failed to initialize OSI-PI SDK: {0}", ex.Message), ex);
                 }
-                finally
-                {
-                    ManualResetEventSlim connectionEvent = state as ManualResetEventSlim;
 
-                    if ((object)connectionEvent != null)
-                        connectionEvent.Set();
-                }
+                ManualResetEventSlim connectionEvent = state as ManualResetEventSlim;
+
+                // Unblock any threads waiting for connection to complete or fail
+                if ((object)connectionEvent != null)
+                    connectionEvent.Set();
 
                 // Exit thread if connection failed
                 if ((object)m_connectionException != null)
+                {
+                    m_serverID = null;
                     return;
+                }
+
+                // Not expected, but if we get here with no server object we need fail connection
+                if ((object)server == null)
+                {
+                    m_connectionException = new NullReferenceException("Failed to create PI server connection.");
+                    m_serverID = null;
+                    return;
+                }
 
                 // Perform operations on OSI-PI connection
                 while (m_connected)
@@ -364,7 +371,7 @@ namespace PIAdapters
                         m_operationException = null;
 
                         if ((object)m_operation != null)
-                            m_operation(m_server);
+                            m_operation(server);
 
                         m_executingOperation.Set();
                     }
@@ -378,48 +385,44 @@ namespace PIAdapters
                 }
 
                 // Attempt to close OSI-PI connection
-                if ((object)m_server != null)
-                {
-                    if (m_server.Connected)
-                        m_server.Close();
+                if (server.Connected)
+                    server.Close();
 
-                    // Detach from server disconnected event
-                    ((_DServerDisconnectEvents_Event)m_server).OnDisconnect -= PIConnection_OnDisconnect;
-                }
+                // Detach from server disconnected event
+                ((_DServerDisconnectEvents_Event)server).OnDisconnect -= PIConnection_OnDisconnect;
             }
             catch (Exception ex)
             {
                 if (!m_disposed)
+                {
                     m_operationException = ex;
+                    m_executingOperation.Set();
+                }
             }
             finally
             {
-                // Always clear PI server object before thread exit
-                m_server = null;
+                // Always clear server ID before thread exit
+                m_serverID = null;
             }
         }
 
         private void PIConnection_OnDisconnect(Server server)
         {
-            if ((object)m_server == null || server.ServerID != m_server.ServerID)
+            if ((object)m_serverID == null || server.ServerID != m_serverID)
                 return;
 
             if (m_connected)
             {
-                if ((object)Disconnected != null)
-                    Disconnected(this, EventArgs.Empty);
+                // Raise event in MTA space
+                ThreadPool.QueueUserWorkItem(state =>
+                {
+                    if ((object)Disconnected != null)
+                        Disconnected(this, EventArgs.Empty);
 
-                Close();
+                    Close();
+                });
             }
         }
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-        private static readonly object s_piSDKLock = new object();
-        private static PISDK.PISDK s_piSDK;
 
         #endregion
     }
