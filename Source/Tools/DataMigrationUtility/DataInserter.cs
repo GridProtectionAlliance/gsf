@@ -35,6 +35,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.IO;
+using System.Linq;
 using System.Text;
 using GSF;
 using GSF.Data;
@@ -52,7 +53,7 @@ namespace DataMigrationUtility
     /// <summary>
     /// This class defines a common set of functionality that any data operation implementation can use 
     /// </summary>
-    class DataInserter : BulkDataOperationBase
+    public class DataInserter : BulkDataOperationBase
     {
         #region [ Members ]
 
@@ -294,6 +295,28 @@ namespace DataMigrationUtility
             if ((object)m_tableCollection == null)
                 throw new NullReferenceException("No table collection found even after analyze.");
 
+            // Clear data from destination tables, if requested
+            if (m_clearDestinationTables)
+            {
+                // We do not consider table exclusions when deleting data from destination tables as these may have triggered inserts
+                List<Table> allSourceTables = new List<Table>(m_fromSchema.Tables.Cast<Table>());
+
+                // Clear data in a child to parent direction to help avoid potential constraint issues
+                allSourceTables.Sort((table1, table2) => table1.Priority > table2.Priority ? 1 : (table1.Priority < table2.Priority ? -1 : 0));
+
+                for (x = allSourceTables.Count - 1; x >= 0; x += -1)
+                {
+                    // Lookup table name in destination data source
+                    tableLookup = m_toSchema.Tables.FindByMapName(((Table)allSourceTables[x]).MapName);
+
+                    if ((object)tableLookup != null)
+                    {
+                        if (ClearTable(tableLookup) && tableLookup.HasAutoIncField)
+                            ResetAutoIncValues(tableLookup);
+                    }
+                }
+            }
+
             // We copy the tables into an array list so we can sort and process them in priority order
             foreach (Table sourceTable in m_tableCollection)
             {
@@ -310,23 +333,6 @@ namespace DataMigrationUtility
             }
 
             tablesList.Sort((table1, table2) => table1.Priority > table2.Priority ? 1 : (table1.Priority < table2.Priority ? -1 : 0));
-
-            // Clear data from destination tables, if requested - we do this in a child to parent
-            // direction to help avoid potential constraint issues
-            if (m_clearDestinationTables)
-            {
-                for (x = tablesList.Count - 1; x >= 0; x += -1)
-                {
-                    // Lookup table name in destination data source
-                    tableLookup = m_toSchema.Tables.FindByMapName(((Table)tablesList[x]).MapName);
-
-                    if ((object)tableLookup != null)
-                    {
-                        if (ClearTable(tableLookup))
-                            ResetAutoIncValues(tableLookup);
-                    }
-                }
-            }
 
             // Begin inserting data into destination tables
             for (x = 0; x <= tablesList.Count - 1; x++)

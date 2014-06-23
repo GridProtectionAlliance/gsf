@@ -1150,7 +1150,7 @@ namespace DataMigrationUtility
     /// Represents a collection of <see cref="ForeignKeyField"/> values.
     /// </summary>
     [Serializable]
-    public class ForeignKeyFields
+    public class ForeignKeyFields : IEnumerable
     {
         #region [ Members ]
 
@@ -1305,7 +1305,7 @@ namespace DataMigrationUtility
     /// Represents a collection of <see cref="Field"/> values.
     /// </summary>
     [Serializable]
-    public class Fields
+    public class Fields : IEnumerable
     {
         #region [ Members ]
 
@@ -1414,13 +1414,23 @@ namespace DataMigrationUtility
         #region [ Methods ]
 
         /// <summary>
-        /// Add new <see cref="Field"/> to this collection
+        /// Add new <see cref="Field"/> to this collection.
         /// </summary>
-        /// <param name="newField"></param>
+        /// <param name="newField">Field to add.</param>
         internal void Add(Field newField)
         {
             m_fields.Add(newField.Name, newField);
             m_fieldList.Add(newField);
+        }
+
+        /// <summary>
+        /// Removes <see cref="Field"/> from the collection.
+        /// </summary>
+        /// <param name="field">Field to remove.</param>
+        internal void Remove(Field field)
+        {
+            m_fields.Remove(field.Name);
+            m_fieldList.Remove(field);
         }
 
         /// <summary>
@@ -1848,18 +1858,30 @@ namespace DataMigrationUtility
         }
 
         /// <summary>
-        /// Get flag for auto incremented <see cref="Field"/>
+        /// Gets flag that determines if the <see cref="Table"/> has an auto-increment field.
         /// </summary>
         public bool HasAutoIncField
+        {
+            get
+            {
+                return (object)AutoIncField != null;
+            }
+        }
+
+        /// <summary>
+        /// Gets auto-increment field for the <see cref="Table"/>, if any.
+        /// </summary>
+        public Field AutoIncField
         {
             get
             {
                 foreach (Field field in m_fields)
                 {
                     if (field.AutoIncrement)
-                        return true;
+                        return field;
                 }
-                return false;
+
+                return null;
             }
         }
 
@@ -2100,7 +2122,7 @@ namespace DataMigrationUtility
     /// List of <see cref="Table"/> collection
     /// </summary>
     [Serializable]
-    public class Tables
+    public class Tables : IEnumerable
     {
         #region [ Memebers ]
 
@@ -2178,6 +2200,12 @@ namespace DataMigrationUtility
         {
             m_tables.Add(table.Name, table);
             m_tableList.Add(table);
+        }
+
+        internal void Remove(Table table)
+        {
+            m_tables.Remove(table.Name);
+            m_tableList.Remove(table);
         }
 
         public Table this[int index]
@@ -2543,6 +2571,61 @@ namespace DataMigrationUtility
                 if (databaseType == DatabaseType.MySQL)
                     m_schemaConnection.ExecuteNonQuery("SET sql_mode='ANSI_QUOTES'");
 
+                // Validate table / field existence against open connection as defined in serialized schema
+                List<Table> tablesToRemove = new List<Table>();
+
+                foreach (Table table in m_tables)
+                {
+                    try
+                    {
+                        // Make sure table exists
+                        m_schemaConnection.ExecuteScalar("SELECT COUNT(*) FROM " + table.SQLEscapedName);
+
+                        List<Field> fieldsToRemove = new List<Field>();
+                        string testFieldSQL;
+
+                        try
+                        {
+                            // If table has an auto-inc field, this will typically be indexed and will allow for a faster field check than a count
+                            if (table.HasAutoIncField)
+                                testFieldSQL = "SELECT {0} FROM " + table.SQLEscapedName + " WHERE " + table.AutoIncField.SQLEscapedName + " < 0";
+                            else
+                                testFieldSQL = "SELECT COUNT({0}) FROM " + table.SQLEscapedName;
+                        }
+                        catch
+                        {
+                            testFieldSQL = "SELECT COUNT({0}) FROM " + table.SQLEscapedName;
+                        }
+
+                        foreach (Field field in table.Fields)
+                        {
+                            try
+                            {
+                                // Make sure field exists
+                                m_schemaConnection.ExecuteScalar(string.Format(testFieldSQL, field.SQLEscapedName));
+                            }
+                            catch
+                            {
+                                fieldsToRemove.Add(field);
+                            }
+                        }
+
+                        foreach (Field field in fieldsToRemove)
+                        {
+                            table.Fields.Remove(field);
+                        }
+                    }
+                    catch
+                    {
+                        tablesToRemove.Add(table);
+                    }
+                }
+
+                foreach (Table table in tablesToRemove)
+                {
+                    m_tables.Remove(table);
+                }
+
                 // Check to see if user requested to keep connection open, this is just for convience...
                 if (m_immediateClose)
                     Close();
@@ -2550,6 +2633,12 @@ namespace DataMigrationUtility
                 return;
             }
 
+            // If connection is OleDB, attempt to directly infer schema
+            AnalyzeOleDbSchema();
+        }
+
+        private void AnalyzeOleDbSchema()
+        {
             DataRow row;
             Table table;
             Field field;
