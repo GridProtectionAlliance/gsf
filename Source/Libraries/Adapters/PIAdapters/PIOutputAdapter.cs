@@ -60,7 +60,7 @@ namespace PIAdapters
 
         // Fields
 
-        // Cached mapping between GSFSchema measurements and PI points
+        // Define cached mapping between GSFSchema measurements and PI points
         private readonly ConcurrentDictionary<MeasurementKey, ConnectionPoint> m_mappedConnectionPoints;
 
         private readonly ShortSynchronizedOperation m_restartConnection;    // Restart connection operation
@@ -521,7 +521,7 @@ namespace PIAdapters
                     catch (Exception ex)
                     {
                         // Raise event in MTA space
-                        ThreadPool.QueueUserWorkItem(state => OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point values tag '{0}': {1}", point.Name, ex.Message), ex)));
+                        ThreadPool.QueueUserWorkItem(state => OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point values for tag '{0}': {1}", point.Name, ex.Message), ex)));
                     }
                 }
             }));
@@ -534,7 +534,7 @@ namespace PIAdapters
 
             try
             {
-                connectionPoint = CreateMappedConnectionPoint(key);
+                connectionPoint = CreateConnectionPoint(key);
 
                 if ((object)connectionPoint == null)
                     m_mappedConnectionPoints.TryRemove(key, out connectionPoint);
@@ -561,7 +561,7 @@ namespace PIAdapters
             }
         }
 
-        private ConnectionPoint CreateMappedConnectionPoint(MeasurementKey key)
+        private ConnectionPoint CreateConnectionPoint(MeasurementKey key)
         {
             PIConnection connection;
             PIPoint point = null;
@@ -698,6 +698,7 @@ namespace PIAdapters
 
                 if ((object)inputMeasurements != null && inputMeasurements.Length > 0)
                 {
+                    // Execute all meta-data refresh operations in STA space
                     m_connection.Execute(server =>
                     {
                         int processed = 0, total = inputMeasurements.Length;

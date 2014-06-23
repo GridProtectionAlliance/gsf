@@ -342,6 +342,10 @@ namespace PIAdapters
                     m_connectionException = new InvalidOperationException(string.Format("Failed to initialize OSI-PI SDK: {0}", ex.Message), ex);
                 }
 
+                // Not expected, but if we get here with no server object we need to fail connection
+                if ((object)server == null && (object)m_connectionException == null)
+                    m_connectionException = new NullReferenceException("Failed to create PI server connection.");
+
                 ManualResetEventSlim connectionEvent = state as ManualResetEventSlim;
 
                 // Unblock any threads waiting for connection to complete or fail
@@ -350,18 +354,7 @@ namespace PIAdapters
 
                 // Exit thread if connection failed
                 if ((object)m_connectionException != null)
-                {
-                    m_serverID = null;
                     return;
-                }
-
-                // Not expected, but if we get here with no server object we need fail connection
-                if ((object)server == null)
-                {
-                    m_connectionException = new NullReferenceException("Failed to create PI server connection.");
-                    m_serverID = null;
-                    return;
-                }
 
                 // Perform operations on OSI-PI connection
                 while (m_connected)
