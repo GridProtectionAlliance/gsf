@@ -313,6 +313,8 @@ namespace PIAdapters
                 status.AppendLine();
                 status.AppendFormat("   PI connection pool size: {0:N0}", m_connectionPool.Size);
                 status.AppendLine();
+                status.AppendFormat("  PI points per connection: {0:N0}", m_pointsPerConnection);
+                status.AppendLine();
 
                 return status.ToString();
             }
@@ -494,16 +496,17 @@ namespace PIAdapters
 
             // We use dictionaries to create grouping constructs whereby each PI connection will have its own set of points
             // and associated values so that archive operations for each PI connection can be processed in parallel
-            Dictionary<PIConnection, Dictionary<PIPoint, PIValues>> connectionPointValues = new Dictionary<PIConnection, Dictionary<PIPoint, PIValues>>();
+            ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, PIValues>> connectionPointValues = new ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, PIValues>>();
             ConnectionPoint connectionPoint;
 
-            foreach (IMeasurement measurement in measurements)
+            // Handle measurement grouping and mapping operations in parallel
+            Parallel.ForEach(measurements, measurement =>
             {
                 try
                 {
                     // Lookup connection point mapping for this measurement
                     if (!m_mappedConnectionPoints.TryGetValue(measurement.Key, out connectionPoint))
-                        continue;
+                        return;
 
                     // If connection point is not defined, kick off process to create a new mapping
                     if ((object)connectionPoint == null)
@@ -541,7 +544,7 @@ namespace PIAdapters
                         double value = measurement.AdjustedValue;
 
                         // Get PI values collection for this connection point
-                        Dictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connection, c => new Dictionary<PIPoint, PIValues>());
+                        ConcurrentDictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connection, c => new ConcurrentDictionary<PIPoint, PIValues>());
 
                         connection.Execute(server =>
                         {
@@ -559,12 +562,12 @@ namespace PIAdapters
                 {
                     OnProcessException(new InvalidOperationException(string.Format("Failed to collate measurement value into OSI-PI point value collection for '{0}': {1}", measurement.Key, ex.Message), ex));
                 }
-            }
+            });
 
             // Handle inserts for each PI connection in parallel - note each connection performs these steps in their own STA space
             Parallel.ForEach(connectionPointValues, connectionPointValue => connectionPointValue.Key.Execute(server =>
             {
-                Dictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
+                ConcurrentDictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
 
                 foreach (KeyValuePair<PIPoint, PIValues> pointValue in pointValues)
                 {
@@ -790,8 +793,8 @@ namespace PIAdapters
 
                                 try
                                 {
-                                    // Rename tag-name if needed
-                                    if (string.CompareOrdinal(point.Name, tagName) != 0)
+                                    // Rename tag-name if needed - PI tags are not case sensitive
+                                    if (string.Compare(point.Name, tagName, StringComparison.InvariantCultureIgnoreCase) != 0)
                                         server.PIPoints.Rename(point.Name, tagName);
                                 }
                                 catch (Exception ex)
