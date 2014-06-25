@@ -78,13 +78,13 @@ namespace GSF
                 throw new ArgumentNullException("array");
 
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex", "Array parameter cannot be negative");
+                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
 
             if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "Array parameter cannot be negative");
+                throw new ArgumentOutOfRangeException("length", "cannot be negative");
 
             if (startIndex + length > array.Length)
-                throw new ArgumentOutOfRangeException("length", string.Format("Array operation with startIndex of {0} and length of {1} will exceed array length of {2}", startIndex, length, array.Length));
+                throw new ArgumentOutOfRangeException("length", string.Format("startIndex of {0} and length of {1} will exceed array size of {2}", startIndex, length, array.Length));
         }
 
         /// <summary>

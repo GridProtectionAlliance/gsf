@@ -1208,6 +1208,22 @@ namespace GSF.Collections
         }
 
         /// <summary>
+        /// Manually signals that data has been modified and processing should resume.
+        /// </summary>
+        /// <remarks>
+        /// This function should be called in cases where a user may need to signal data modification. For example,
+        /// if <typeparamref name="T"/> was a dictionary or list that was updated - you would need to manually
+        /// signal that data had changed in this item.
+        /// </remarks>
+        public virtual void SignalDataModified()
+        {
+            lock (SyncRoot)
+            {
+                DataAdded();
+            }
+        }
+
+        /// <summary>
         /// Determines whether an element is in the <see cref="ProcessQueue{T}"/>.
         /// </summary>
         /// <returns>True, if item is found in the <see cref="ProcessQueue{T}"/>; otherwise, false.</returns>
@@ -1455,7 +1471,7 @@ namespace GSF.Collections
         }
 
         /// <summary>
-        /// Notifies a class that data was added, so it can begin processing data.
+        /// Notifies queue that data was added and/or modified, so it can begin processing data.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -2737,6 +2753,8 @@ namespace GSF.Collections
                     // Enabled flag changes are always in a critical section to ensure all items will be processed
                     if (IsEmpty)
                         m_processTimer.Enabled = false;
+                    else if (m_enabled && !m_processTimer.Enabled)
+                        m_processTimer.Enabled = true;
                 }
             }
         }

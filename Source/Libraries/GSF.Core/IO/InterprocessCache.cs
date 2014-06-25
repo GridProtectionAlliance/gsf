@@ -18,10 +18,6 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/21/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  04/06/2011 - J. Ritchie Carroll
-//       Added Flush() method to block current thread and wait for any pending save to complete.
-//  12/14/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
 

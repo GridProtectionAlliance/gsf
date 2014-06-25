@@ -2983,6 +2983,8 @@ namespace GSF.TimeSeries.Transport
 
                 // Track total meta-data synchronization process time
                 Ticks startTime = DateTime.UtcNow.Ticks;
+                DateTime updateTime;
+                DateTime latestUpdateTime = DateTime.MinValue;
 
                 // Open the configuration database using settings found in the config file
                 using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
@@ -3099,7 +3101,11 @@ namespace GSF.TimeSeries.Transport
                                 {
                                     try
                                     {
-                                        recordNeedsUpdating = (Convert.ToDateTime(row["UpdatedOn"]) > m_lastMetaDataRefreshTime);
+                                        updateTime = Convert.ToDateTime(row["UpdatedOn"]);
+                                        recordNeedsUpdating = updateTime > m_lastMetaDataRefreshTime;
+
+                                        if (updateTime > latestUpdateTime)
+                                            latestUpdateTime = updateTime;
                                     }
                                     catch
                                     {
@@ -3279,7 +3285,11 @@ namespace GSF.TimeSeries.Transport
                                 {
                                     try
                                     {
-                                        recordNeedsUpdating = (Convert.ToDateTime(row["UpdatedOn"]) > m_lastMetaDataRefreshTime);
+                                        updateTime = Convert.ToDateTime(row["UpdatedOn"]);
+                                        recordNeedsUpdating = updateTime > m_lastMetaDataRefreshTime;
+
+                                        if (updateTime > latestUpdateTime)
+                                            latestUpdateTime = updateTime;
                                     }
                                     catch
                                     {
@@ -3410,7 +3420,11 @@ namespace GSF.TimeSeries.Transport
                                     // Determine if record has changed since last synchronization
                                     try
                                     {
-                                        recordNeedsUpdating = (Convert.ToDateTime(row["UpdatedOn"]) > m_lastMetaDataRefreshTime);
+                                        updateTime = Convert.ToDateTime(row["UpdatedOn"]);
+                                        recordNeedsUpdating = updateTime > m_lastMetaDataRefreshTime;
+
+                                        if (updateTime > latestUpdateTime)
+                                            latestUpdateTime = updateTime;
                                     }
                                     catch
                                     {
@@ -3487,7 +3501,7 @@ namespace GSF.TimeSeries.Transport
                 if (m_remoteSignalIndexCache != null)
                     m_signalIndexCache = new SignalIndexCache(DataSource, m_remoteSignalIndexCache);
 
-                m_lastMetaDataRefreshTime = DateTime.UtcNow;
+                m_lastMetaDataRefreshTime = latestUpdateTime > DateTime.MinValue ? latestUpdateTime : DateTime.UtcNow;
 
                 OnStatusMessage("Meta-data synchronization completed successfully in {0}", (DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(2));
 

@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -33,9 +34,16 @@ namespace PIAdapters
     /// Represents a STA connection to a PI server that handles open, close and execute operations.
     /// </summary>
     // ReSharper disable SuspiciousTypeConversion.Global
-    public class PIConnection : IDisposable
+    public class PIConnection : IComparable<PIConnection>, IComparable, IDisposable
     {
         #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// Default value for <see cref="ConnectTimeout"/>.
+        /// </summary>
+        public const int DefaultConnectTimeout = 30000;
 
         // Events
 
@@ -56,7 +64,11 @@ namespace PIAdapters
         private volatile Action<Server> m_operation;                // Current operation
         private readonly AutoResetEvent m_pendingOperation;         // Pending operation wait event
         private readonly ManualResetEventSlim m_executingOperation; // Executing operation wait event
+        private readonly Guid m_instanceID;                         // Unique instance ID for this connection
         private bool m_disposed;
+
+        // Connection pool access count
+        internal volatile int AccessCount;
 
         #endregion
 
@@ -67,9 +79,10 @@ namespace PIAdapters
         /// </summary>
         public PIConnection()
         {
-            m_connectTimeout = 30000;
+            m_connectTimeout = DefaultConnectTimeout;
             m_pendingOperation = new AutoResetEvent(false);
             m_executingOperation = new ManualResetEventSlim(true);
+            m_instanceID = Guid.NewGuid();
         }
 
         /// <summary>
@@ -130,7 +143,7 @@ namespace PIAdapters
         }
 
         /// <summary>
-        /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
+        /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection.
         /// </summary>
         public int ConnectTimeout
         {
@@ -415,6 +428,34 @@ namespace PIAdapters
                     Close();
                 });
             }
+        }
+
+        /// <summary>
+        /// Compares the current object with another object of the same type.
+        /// </summary>
+        /// <returns>
+        /// A value that indicates the relative order of the objects being compared. The return value has the following meanings: 
+        /// Value Meaning Less than zero This object is less than the <paramref name="other"/> parameter.
+        /// Zero This object is equal to <paramref name="other"/>.
+        /// Greater than zero This object is greater than <paramref name="other"/>. 
+        /// </returns>
+        /// <param name="other">An object to compare with this object.</param>
+        public int CompareTo(PIConnection other)
+        {
+            if ((object)other == null)
+                return 1;
+
+            return Comparer<Guid>.Default.Compare(m_instanceID, other.m_instanceID);
+        }
+
+        int IComparable.CompareTo(object obj)
+        {
+            PIConnection other = obj as PIConnection;
+
+            if ((object)other != null)
+                return CompareTo(other);
+
+            throw new ArgumentException();
         }
 
         #endregion

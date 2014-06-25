@@ -896,8 +896,6 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 // Generate authorization request
                 SaveFileDialog saveFileDialog;
-                Stream requestStream;
-
                 WindowsServiceClient serviceClient;
                 ClientRequest clientRequest;
                 AuthenticationRequest request;
@@ -987,9 +985,9 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
                     }
 
                     // Create the request
-                    using (requestStream = File.OpenWrite(saveFileDialog.FileName))
+                    using (FileStream requestStream = File.OpenWrite(saveFileDialog.FileName))
                     {
-                        Serialization.Serialize(request, SerializationFormat.Binary, ref requestStream);
+                        Serialization.Serialize(request, SerializationFormat.Binary, requestStream);
                     }
 
                     // Send ReloadCryptoCache to service

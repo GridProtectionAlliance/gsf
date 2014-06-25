@@ -159,7 +159,7 @@ namespace GSF.Collections
         /// <para>A <see cref="ProcessDictionary{TKey,TValue}"/> must be defined to process either a single item at a time or many items at once.</para>
         /// <para>Implementation of this function makes <see cref="QueueProcessingStyle"/> = OneAtATime.</para>
         /// </remarks>
-        public virtual new ProcessItemFunctionSignature ProcessItemFunction
+        public new virtual ProcessItemFunctionSignature ProcessItemFunction
         {
             get
             {
@@ -204,7 +204,7 @@ namespace GSF.Collections
         /// <summary>
         /// Gets or sets the user function used to determine if an item is ready to be processed.
         /// </summary>
-        public virtual new CanProcessItemFunctionSignature CanProcessItemFunction
+        public new virtual CanProcessItemFunctionSignature CanProcessItemFunction
         {
             get
             {
@@ -316,8 +316,8 @@ namespace GSF.Collections
                 }
                 finally
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true; // Prevent duplicate dispose.
+                    base.Dispose(disposing); // Call base class Dispose().
                 }
             }
         }
@@ -448,6 +448,96 @@ namespace GSF.Collections
             lock (SyncRoot)
             {
                 return InternalDictionary.TryGetValue(key, out value);
+            }
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ProcessDictionary{TKey, TValue}"/> if the key does not already exist.
+        /// </summary>
+        /// <param name="key">The key to be added to the dictionary if it does not already exist.</param>
+        /// <param name="valueFactory">The function used to generate a value for the key.</param>
+        /// <returns>The value of the key in the dictionary.</returns>
+        public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
+        {
+            lock (SyncRoot)
+            {
+                return InternalDictionary.GetOrAdd(key, valueFactory);
+            }
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ProcessDictionary{TKey, TValue}"/> if the key does not already exist.
+        /// </summary>
+        /// <param name="key">The key to be added to the dictionary if it does not already exist.</param>
+        /// <param name="value">The value to assign to the key if the key does not already exist.</param>
+        /// <returns>The value of the key in the dictionary.</returns>
+        public TValue GetOrAdd(TKey key, TValue value)
+        {
+            lock (SyncRoot)
+            {
+                return InternalDictionary.GetOrAdd(key, value);
+            }
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ProcessDictionary{TKey, TValue}"/> if the key does not already exist,
+        /// or updates a key/value pair in the <see cref="ProcessDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
+        /// <param name="key">The key to be added or whose value should be updated</param>
+        /// <param name="addValueFactory">The function used to generate a value for an absent key</param>
+        /// <param name="updateValueFactory">The function used to generate a new value for an existing key based on the key's existing value</param>
+        /// <returns>The new value for the key. This will be either be the result of addValueFactory (if the key was absent) or the result of updateValueFactory (if the key was present).</returns>
+        public TValue AddOrUpdate(TKey key, Func<TKey, TValue> addValueFactory, Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            lock (SyncRoot)
+            {
+                return InternalDictionary.AddOrUpdate(key, addValueFactory, updateValueFactory);
+            }
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ProcessDictionary{TKey, TValue}"/> if the key does not already exist,
+        /// or updates a key/value pair in the <see cref="ProcessDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
+        /// <param name="key">The key to be added or whose value should be updated</param>
+        /// <param name="addValue">The value to be added for an absent key</param>
+        /// <param name="updateValueFactory">The function used to generate a new value for an existing key based on the key's existing value</param>
+        /// <returns>The new value for the key. This will be either be the result of addValueFactory (if the key was absent) or the result of updateValueFactory (if the key was present).</returns>
+        public TValue AddOrUpdate(TKey key, TValue addValue, Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            lock (SyncRoot)
+            {
+                return InternalDictionary.AddOrUpdate(key, addValue, updateValueFactory);
+            }
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ProcessDictionary{TKey, TValue}"/> if the key does not already exist,
+        /// or updates a key/value pair in the <see cref="ProcessDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
+        /// <param name="key">The key to be added or updated.</param>
+        /// <param name="valueFactory">The function used to generate a value for the key.</param>
+        /// <returns>The value of the key in the dictionary after updating.</returns>
+        public TValue AddOrUpdate(TKey key, Func<TKey, TValue> valueFactory)
+        {
+            lock (SyncRoot)
+            {
+                return InternalDictionary.AddOrUpdate(key, valueFactory);
+            }
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to the <see cref="ProcessDictionary{TKey, TValue}"/> if the key does not already exist,
+        /// or updates a key/value pair in the <see cref="ProcessDictionary{TKey, TValue}"/> if the key already exists.
+        /// </summary>
+        /// <param name="key">The key to be added or updated.</param>
+        /// <param name="value">The value to be assigned to the key.</param>
+        /// <returns>The value of the key in the dictionary after updating.</returns>
+        public TValue AddOrUpdate(TKey key, TValue value)
+        {
+            lock (SyncRoot)
+            {
+                return InternalDictionary.AddOrUpdate(key, value);
             }
         }
 

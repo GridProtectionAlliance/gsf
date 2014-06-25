@@ -349,7 +349,7 @@ namespace GSF
             try
             {
                 stream = new BlockAllocatedMemoryStream();
-                Serialize(serializableObject, serializationFormat, ref stream);
+                Serialize(serializableObject, serializationFormat, stream);
                 return ((BlockAllocatedMemoryStream)stream).ToArray();
             }
             finally
@@ -368,7 +368,7 @@ namespace GSF
         /// <param name="serializedOutput"><see cref="Stream"/> where the <paramref name="serializableObject"/> is to be serialized.</param>
         /// <exception cref="ArgumentNullException"><paramref name="serializedOutput"/> or <paramref name="serializableObject"/> is null.</exception>
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
-        public static void Serialize<T>(T serializableObject, SerializationFormat serializationFormat, ref Stream serializedOutput)
+        public static void Serialize<T>(T serializableObject, SerializationFormat serializationFormat, Stream serializedOutput)
         {
             if ((object)serializedOutput == null)
                 throw new ArgumentNullException("serializedOutput");

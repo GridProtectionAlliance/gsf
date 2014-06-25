@@ -81,7 +81,7 @@ namespace GSF.Collections
     /// </para>
     /// </remarks>
     /// <typeparam name="TKey">Generic key type.</typeparam>
-    /// <typeparam name="TValue">Genervic value type.</typeparam>
+    /// <typeparam name="TValue">Generic value type.</typeparam>
     public class DictionaryList<TKey, TValue> : IList<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
     {
         #region [ Members ]

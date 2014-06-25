@@ -42,8 +42,8 @@ namespace GSF.IO
         #region [ Members ]
 
         // Fields
-        private string m_fullPath;
-        private bool m_alreadyProcessed;
+        private readonly string m_fullPath;
+        private readonly bool m_alreadyProcessed;
 
         #endregion
 
@@ -90,7 +90,7 @@ namespace GSF.IO
     }
 
     /// <summary>
-    /// Trackes files processed in a list of directories, and
+    /// Tracks files processed in a list of directories, and
     /// notifies when new files become available to be processed.
     /// </summary>
     public class FileProcessor : IDisposable
@@ -134,12 +134,12 @@ namespace GSF.IO
         private bool m_trackChanges;
         private string m_cachePath;
 
-        private List<FileSystemWatcher> m_fileWatchers;
+        private readonly List<FileSystemWatcher> m_fileWatchers;
         private ProcessQueue<Action> m_processingQueue;
         private Timer m_fileWatchTimer;
 
-        private Dictionary<string, DateTime> m_touchedFiles; 
-        private HashSet<string> m_processedFiles;
+        private readonly Dictionary<string, DateTime> m_touchedFiles;
+        private readonly HashSet<string> m_processedFiles;
 
         private bool m_disposed;
 
@@ -387,7 +387,7 @@ namespace GSF.IO
             if (FilePath.TryGetReadLock(filePath))
                 m_processingQueue.Add(() => ProcessFile(filePath));
             else
-                ThreadPool.RegisterWaitForSingleObject(new Mutex(true),  (state, timeout) => LockAndQueue(filePath), null, 250, true);
+                ThreadPool.RegisterWaitForSingleObject(new Mutex(true), (state, timeout) => LockAndQueue(filePath), null, 250, true);
         }
 
         // Processes the given file.
@@ -563,7 +563,7 @@ namespace GSF.IO
             m_processingQueue.Add(() =>
             {
                 m_touchedFiles.Remove(args.FullPath);
-                
+
                 if (m_processedFiles.Remove(args.FullPath))
                     SaveProcessedFiles();
             });

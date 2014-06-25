@@ -177,7 +177,7 @@ namespace PIAdapters
         /// <summary>
         /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the timeout interval (in milliseconds) for the adapter's connection"), DefaultValue(30000)]
+        [ConnectionStringParameter, Description("Defines the timeout interval (in milliseconds) for the adapter's connection"), DefaultValue(PIConnection.DefaultConnectTimeout)]
         public int ConnectTimeout
         {
             get
@@ -270,7 +270,7 @@ namespace PIAdapters
             if (settings.TryGetValue("ConnectTimeout", out setting))
                 m_connectTimeout = Convert.ToInt32(setting);
             else
-                m_connectTimeout = 30000;
+                m_connectTimeout = PIConnection.DefaultConnectTimeout;
 
             m_measurements = new List<IMeasurement>();
         }

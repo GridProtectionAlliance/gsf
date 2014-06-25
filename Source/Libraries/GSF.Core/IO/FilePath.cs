@@ -191,18 +191,13 @@ namespace GSF.IO
         /// <returns><c>true</c> if the specified file name matches any of the given file specs; otherwise <c>false</c>.</returns>
         public static bool IsFilePatternMatch(string[] fileSpecs, string fileName, bool ignoreCase)
         {
-            bool found = false;
-
             foreach (string fileSpec in fileSpecs)
             {
                 if (IsFilePatternMatch(fileSpec, fileName, ignoreCase))
-                {
-                    found = true;
-                    break;
-                }
+                    return true;
             }
 
-            return found;
+            return false;
         }
 
         /// <summary>
