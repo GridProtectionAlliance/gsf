@@ -80,6 +80,7 @@ namespace PIAdapters
         private volatile int m_processedMappings;                           // Total number of mappings processed so far
         private volatile int m_processedMeasurements;                       // Total number of measurements processed so far
         private volatile bool m_refreshingMetadata;                         // Flag that determines if meta-data is currently refreshing
+        private double m_metadataRefreshProgress;                           // Current meta-data refresh progress
         private bool m_disposed;                                            // Flag that determines if class is disposed
 
         #endregion
@@ -93,7 +94,7 @@ namespace PIAdapters
         {
             m_pointsPerConnection = PIConnectionPool.DefaultAccessCountPerConnection;
             m_mappedConnectionPoints = new ConcurrentDictionary<MeasurementKey, ConnectionPoint>();
-            m_queuedMappingRequests = ProcessDictionary<PIConnection, List<MeasurementKey>>.CreateAsynchronousQueue(EstablishConnectionPointMapping);
+            m_queuedMappingRequests = ProcessDictionary<PIConnection, List<MeasurementKey>>.CreateAsynchronousQueue(EstablishConnectionPointMapping, 1.0D, PIConnectionPool.DefaultMinimumPoolSize / 2, Timeout.Infinite, false, false);
             m_restartConnection = new ShortSynchronizedOperation(Start);
             m_tagMap = new ConcurrentDictionary<Guid, string>();
             m_pendingMappings = new HashSet<MeasurementKey>();
@@ -311,6 +312,13 @@ namespace PIAdapters
                 status.AppendLine();
                 status.AppendFormat("      Pending tag-mappings: {0:N0} mappings, {1:0.00%} complete", m_pendingMappings.Count, 1.0D - m_pendingMappings.Count / (double)m_mappedConnectionPoints.Count);
                 status.AppendLine();
+
+                if (m_runMetadataSync)
+                {
+                    status.AppendFormat("    Meta-data sync process: {0}, {1:0.00%} complete", m_refreshingMetadata ? "Active" : "Idle", m_metadataRefreshProgress);
+                    status.AppendLine();
+                }
+
                 status.AppendFormat("   PI connection pool size: {0:N0}", m_connectionPool.Size);
                 status.AppendLine();
                 status.AppendFormat("  PI points per connection: {0:N0}", m_pointsPerConnection);
@@ -496,7 +504,7 @@ namespace PIAdapters
 
             // We use dictionaries to create grouping constructs whereby each PI connection will have its own set of points
             // and associated values so that archive operations for each PI connection can be processed in parallel
-            ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, PIValues>> connectionPointValues = new ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, PIValues>>();
+            ConcurrentDictionary<PIConnection, Dictionary<PIPoint, PIValues>> connectionPointValues = new ConcurrentDictionary<PIConnection, Dictionary<PIPoint, PIValues>>();
             ConnectionPoint connectionPoint;
 
             // Handle measurement grouping and mapping operations in parallel
@@ -544,7 +552,7 @@ namespace PIAdapters
                         double value = measurement.AdjustedValue;
 
                         // Get PI values collection for this connection point
-                        ConcurrentDictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connection, c => new ConcurrentDictionary<PIPoint, PIValues>());
+                        Dictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connection, c => new Dictionary<PIPoint, PIValues>());
 
                         connection.Execute(server =>
                         {
@@ -567,7 +575,7 @@ namespace PIAdapters
             // Handle inserts for each PI connection in parallel - note each connection performs these steps in their own STA space
             Parallel.ForEach(connectionPointValues, connectionPointValue => connectionPointValue.Key.Execute(server =>
             {
-                ConcurrentDictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
+                Dictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
 
                 foreach (KeyValuePair<PIPoint, PIValues> pointValue in pointValues)
                 {
@@ -891,11 +899,12 @@ namespace PIAdapters
                             }
 
                             processed++;
+                            m_metadataRefreshProgress = processed / (double)total;
 
                             if (processed % 100 == 0)
                             {
                                 // Raise event in MTA space
-                                string message = string.Format("Updated {0:N0} PI tags and associated metadata, {1:0.00%} complete...", processed, processed / (double)total);
+                                string message = string.Format("Updated {0:N0} PI tags and associated metadata, {1:0.00%} complete...", processed, m_metadataRefreshProgress);
                                 ThreadPool.QueueUserWorkItem(state => OnStatusMessage(message));
                             }
 
@@ -1059,7 +1068,7 @@ namespace PIAdapters
         {
             PIPoint point = null;
 
-            // See if cached mapping exists between guid and tag name - tag name lookups are faster then GetPoints query
+            // See if cached mapping exists between guid and tag name - tag name lookups are faster than GetPoints query
             if (m_tagMap.TryGetValue(signalID, out cachedTagName))
                 point = GetPIPoint(server, cachedTagName);
 

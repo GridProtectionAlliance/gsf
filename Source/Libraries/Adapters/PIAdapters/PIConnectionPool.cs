@@ -42,6 +42,11 @@ namespace PIAdapters
         /// </summary>
         public const int DefaultAccessCountPerConnection = 100;
 
+        /// <summary>
+        /// Default value for <see cref="MinimumPoolSize"/>.
+        /// </summary>
+        public const int DefaultMinimumPoolSize = 10;
+
         // Events
 
         /// <summary>
@@ -51,6 +56,8 @@ namespace PIAdapters
 
         // Fields
         private readonly List<PIConnection> m_connectionPool;
+        private readonly int m_minimumPoolSize;
+
         private int m_accessCountPerConnection;
         private bool m_disposed;
 
@@ -62,8 +69,21 @@ namespace PIAdapters
         /// Creates a new <see cref="PIConnectionPool"/>.
         /// </summary>
         public PIConnectionPool()
+            : this(DefaultMinimumPoolSize)
         {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PIConnectionPool"/>.
+        /// </summary>
+        /// <param name="minimumPoolSize">Minimum pool size to maintain.</param>
+        public PIConnectionPool(int minimumPoolSize)
+        {
+            if (minimumPoolSize < 1)
+                throw new ArgumentOutOfRangeException("minimumPoolSize");
+
             m_connectionPool = new List<PIConnection>();
+            m_minimumPoolSize = minimumPoolSize;
             m_accessCountPerConnection = DefaultAccessCountPerConnection;
         }
 
@@ -78,6 +98,17 @@ namespace PIAdapters
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets minimum pool size for the <see cref="PIConnectionPool"/>.
+        /// </summary>
+        public int MinimumPoolSize
+        {
+            get
+            {
+                return m_minimumPoolSize;
+            }
+        }
 
         /// <summary>
         /// Gets or sets maximum accessibility count for each <see cref="PIConnection"/>.
@@ -172,30 +203,35 @@ namespace PIAdapters
             {
                 lock (m_connectionPool)
                 {
-                    // Get next connection from the pool that has not exceeded its accessibility count
-                    connection = m_connectionPool.FirstOrDefault(c => c.AccessCount < m_accessCountPerConnection);
+                    // Get next connection from the pool with lowest accessibility count
+                    connection = m_connectionPool.Where(c => c.AccessCount < m_accessCountPerConnection).Aggregate((currentMin, nextItem) => currentMin.AccessCount < nextItem.AccessCount ? currentMin : nextItem);
 
                     if ((object)connection == null)
                     {
-                        // Create a new connection
-                        connection = new PIConnection
+                        // Add pooled connections in groups for better distribution
+                        for (int i = 0; i < m_minimumPoolSize; i++)
                         {
-                            ServerName = serverName,
-                            UserName = userName,
-                            Password = password,
-                            ConnectTimeout = connectTimeout
-                        };
+                            // Create a new connection
+                            connection = new PIConnection
+                            {
+                                ServerName = serverName,
+                                UserName = userName,
+                                Password = password,
+                                ConnectTimeout = connectTimeout
+                            };
 
-                        // Since PI doesn't detect disconnection until an operation is attempted,
-                        // we must monitor for disconnections from the pooled connections as well
-                        connection.Disconnected += connection_Disconnected;
-                        connection.Open();
+                            // Since PI doesn't detect disconnection until an operation is attempted,
+                            // we must monitor for disconnections from the pooled connections as well
+                            connection.Disconnected += connection_Disconnected;
+                            connection.Open();
 
-                        // Add the new connection to the server pool
-                        m_connectionPool.Add(connection);
+                            // Add the new connection to the server pool
+                            m_connectionPool.Add(connection);
+                        }
                     }
 
                     // Increment current connection access count
+                    // ReSharper disable once PossibleNullReferenceException
                     connection.AccessCount++;
                 }
             }
@@ -211,6 +247,7 @@ namespace PIAdapters
         /// Returns <see cref="PIConnection"/> to the pool.
         /// </summary>
         /// <param name="connection"><see cref="PIConnection"/> to return to the pool.</param>
+        /// <exception cref="InvalidOperationException">Provided PIConnection does not belong to this connection pool.</exception>
         public void ReturnPooledConnection(PIConnection connection)
         {
             if ((object)connection == null)
@@ -218,11 +255,15 @@ namespace PIAdapters
 
             lock (m_connectionPool)
             {
-                connection.AccessCount--;
+                if (!m_connectionPool.Contains(connection))
+                    throw new InvalidOperationException("Provided PIConnection does not belong to this connection pool");
+
+                if (connection.AccessCount > 0)
+                    connection.AccessCount--;
 
                 if (connection.AccessCount < 1)
                 {
-                    if (m_connectionPool.Remove(connection))
+                    if (m_connectionPool.Count > m_minimumPoolSize && m_connectionPool.Remove(connection))
                     {
                         connection.Disconnected -= connection_Disconnected;
                         connection.Dispose();
