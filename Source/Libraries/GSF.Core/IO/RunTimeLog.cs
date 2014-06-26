@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Timers;
 using Timer = System.Timers.Timer;
@@ -34,12 +35,15 @@ namespace GSF.IO
     /// <summary>
     /// Represents a persisted run-time log that tracks last start, stop and running times.
     /// </summary>
-    public class RunTimeLog : ISupportLifecycle
+    public class RunTimeLog : ISupportLifecycle, IProvideStatus
     {
         #region [ Members ]
 
         // Constants
         private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+        private const string LastStartTimeKey = "Last Start Time";
+        private const string LastStopTimeKey = "Last Stop Time";
+        private const string LastRunningTimeKey = "Last Running Time";
 
         // Events
 
@@ -110,7 +114,7 @@ namespace GSF.IO
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentNullException("value");
 
-                m_fileName = FilePath.GetAbsolutePath(value);
+                m_fileName = FilePath.GetAbsolutePath(FilePath.GetValidFileName(value));
             }
         }
 
@@ -174,6 +178,39 @@ namespace GSF.IO
             set
             {
                 m_flushTimer.Enabled = value;
+            }
+        }
+
+        // Gets the name of the run-time log
+        string IProvideStatus.Name
+        {
+            get
+            {
+                return FilePath.GetFileNameWithoutExtension(m_fileName.ToNonNullString("undefined"));
+            }
+        }
+
+        /// <summary>
+        /// Gets the current status details about <see cref="RunTimeLog"/>.
+        /// </summary>
+        public virtual string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.AppendFormat("    Run-time log file name: {0}", FilePath.TrimFileName(m_fileName.ToNonNullString("undefined"), 51));
+                status.AppendLine();
+                status.AppendFormat("  Auto-flush timer enabled: {0}", Enabled);
+                status.AppendLine();
+                status.AppendFormat("           Last start time: {0}", m_startTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                status.AppendLine();
+                status.AppendFormat("            Last stop time: {0}", m_stopTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                status.AppendLine();
+                status.AppendFormat("         Last running time: {0}", m_runningTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                status.AppendLine();
+
+                return status.ToString();
             }
         }
 
@@ -245,6 +282,9 @@ namespace GSF.IO
         /// </remarks>
         public virtual void Initialize()
         {
+            if (string.IsNullOrWhiteSpace(m_fileName))
+                throw new NullReferenceException("No run-time log file name was specified");
+
             ReadLog();
             m_startTime = DateTime.UtcNow.Ticks;
             m_flushTimer.Start();
@@ -258,13 +298,13 @@ namespace GSF.IO
         /// <summary>
         /// Reads the run-time log.
         /// </summary>
-        public void ReadLog()
+        protected void ReadLog()
         {
-            if (string.IsNullOrWhiteSpace(m_fileName))
-                throw new NullReferenceException("No run-time log file name was specified");
-
             try
             {
+                if (string.IsNullOrWhiteSpace(m_fileName))
+                    throw new NullReferenceException("No run-time log file name was specified");
+
                 lock (m_readerWriterLock)
                 {
                     if (File.Exists(m_fileName))
@@ -277,20 +317,20 @@ namespace GSF.IO
                             {
                                 Dictionary<string, string> settings = fileData.Replace(Environment.NewLine, ";").ParseKeyValuePairs();
                                 string setting;
-                                DateTime time;
+                                DateTime startTime, stopTime, runningTime;
 
-                                if (settings.TryGetValue("startTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
-                                    m_startTime = time.Ticks;
+                                if (settings.TryGetValue(LastStartTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out startTime))
+                                    m_startTime = startTime;
                                 else
                                     m_startTime = DateTime.UtcNow.Ticks;
 
-                                if (settings.TryGetValue("stopTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
-                                    m_stopTime = time.Ticks;
+                                if (settings.TryGetValue(LastStopTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out stopTime))
+                                    m_stopTime = stopTime;
                                 else
                                     m_stopTime = DateTime.UtcNow.Ticks;
 
-                                if (settings.TryGetValue("runningTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
-                                    m_runningTime = time.Ticks;
+                                if (settings.TryGetValue(LastRunningTimeKey, out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out runningTime))
+                                    m_runningTime = runningTime;
                                 else
                                     m_runningTime = DateTime.UtcNow.Ticks;
                             }
@@ -316,30 +356,33 @@ namespace GSF.IO
         /// <summary>
         /// Writes the run-time log - times are in a human readable format.
         /// </summary>
-        public void WriteLog()
+        protected void WriteLog()
         {
-            if (string.IsNullOrWhiteSpace(m_fileName))
-                throw new NullReferenceException("No run-time log file name was specified");
-
-            if (Monitor.TryEnter(m_readerWriterLock))
+            try
             {
-                try
+                if (Monitor.TryEnter(m_readerWriterLock))
                 {
-                    using (StreamWriter writer = File.CreateText(m_fileName))
+                    try
                     {
-                        writer.WriteLine("startTime={0}", m_startTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
-                        writer.WriteLine("stopTime={0}", m_stopTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
-                        writer.WriteLine("runningTime={0}", m_runningTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                        if (string.IsNullOrWhiteSpace(m_fileName))
+                            throw new NullReferenceException("No run-time log file name was specified");
+
+                        using (StreamWriter writer = File.CreateText(m_fileName))
+                        {
+                            writer.WriteLine("{0}={1}", LastStartTimeKey, m_startTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                            writer.WriteLine("{0}={1}", LastStopTimeKey, m_stopTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                            writer.WriteLine("{0}={1}", LastRunningTimeKey, m_runningTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
+                        }
+                    }
+                    finally
+                    {
+                        Monitor.Exit(m_readerWriterLock);
                     }
                 }
-                catch (Exception ex)
-                {
-                    OnProcessException(new InvalidOperationException("Failed to write run-time log: " + ex.Message, ex));
-                }
-                finally
-                {
-                    Monitor.Exit(m_readerWriterLock);
-                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException("Failed to write run-time log: " + ex.Message, ex));
             }
         }
 

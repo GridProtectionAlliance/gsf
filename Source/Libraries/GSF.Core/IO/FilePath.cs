@@ -250,6 +250,20 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Gets a valid file name by replacing invalid file name characters with <paramref name="replaceWithCharacter"/>.
+        /// </summary>
+        /// <param name="filePath">File path to validate.</param>
+        /// <param name="replaceWithCharacter">Character to replace invalid file name characters with. Set to '\0' to remove invalid file name characters.</param>
+        /// <returns>A valid file name with no invalid file name characters.</returns>
+        public static string GetValidFileName(string filePath, char replaceWithCharacter = '_')
+        {
+            if (replaceWithCharacter == '\0')
+                return filePath.RemoveInvalidFileNameCharacters();
+
+            return filePath.ReplaceInvalidFileNameCharacters(replaceWithCharacter);
+        }
+
+        /// <summary>
         /// Gets the file name and extension from the specified file path.
         /// </summary>
         /// <param name="filePath">The file path from which the file name and extension is to be obtained.</param>

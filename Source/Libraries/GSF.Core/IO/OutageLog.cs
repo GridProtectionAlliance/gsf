@@ -27,6 +27,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using GSF.Threading;
 
 namespace GSF.IO
@@ -121,7 +122,7 @@ namespace GSF.IO
     /// synchronized when simultaneously accessed from different threads.
     /// </para>
     /// </remarks>
-    public class OutageLog : Collection<Outage>, ISupportLifecycle
+    public class OutageLog : Collection<Outage>, ISupportLifecycle, IProvideStatus
     {
         #region [ Members ]
 
@@ -145,8 +146,8 @@ namespace GSF.IO
 
         // Fields
         private readonly ShortSynchronizedOperation m_flushLog;
+        private volatile bool m_loadInProgress;
         private string m_fileName;
-        private bool m_loadInProgress;
         private bool m_enabled;
         private bool m_disposed;
 
@@ -188,14 +189,14 @@ namespace GSF.IO
                 if (string.IsNullOrWhiteSpace(value))
                     throw new ArgumentNullException("value");
 
-                m_fileName = FilePath.GetAbsolutePath(value);
+                m_fileName = FilePath.GetAbsolutePath(FilePath.GetValidFileName(value));
             }
         }
 
         /// <summary>        
         /// Gets or sets a boolean value that indicates whether the run-time log is enabled.
         /// </summary>
-        public bool Enabled
+        public virtual bool Enabled
         {
             get
             {
@@ -204,6 +205,37 @@ namespace GSF.IO
             set
             {
                 m_enabled = value;
+            }
+        }
+
+        // Gets the name of the run-time log
+        string IProvideStatus.Name
+        {
+            get
+            {
+                return FilePath.GetFileNameWithoutExtension(m_fileName.ToNonNullString("undefined"));
+            }
+        }
+
+        /// <summary>
+        /// Gets the current status details about <see cref="RunTimeLog"/>.
+        /// </summary>
+        public virtual string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.AppendFormat("      Outage log file name: {0}", FilePath.TrimFileName(m_fileName.ToNonNullString("undefined"), 51));
+                status.AppendLine();
+                status.AppendFormat("      Log flushing enabled: {0}", Enabled);
+                status.AppendLine();
+                status.AppendFormat("     Actively flushing log: {0}", m_flushLog.IsRunning);
+                status.AppendLine();
+                status.AppendFormat("          Outage log count: {0}", Count);
+                status.AppendLine();
+
+                return status.ToString();
             }
         }
 
@@ -260,6 +292,9 @@ namespace GSF.IO
         /// </remarks>
         public void Initialize()
         {
+            if (string.IsNullOrWhiteSpace(m_fileName))
+                throw new NullReferenceException("No outage log file name was specified");
+
             ReadLog();
         }
 
@@ -276,13 +311,13 @@ namespace GSF.IO
         /// <summary>
         /// Reads the outage log.
         /// </summary>
-        public void ReadLog()
+        protected void ReadLog()
         {
-            if (string.IsNullOrWhiteSpace(m_fileName))
-                throw new NullReferenceException("No outage log file name was specified");
-
             try
             {
+                if (string.IsNullOrWhiteSpace(m_fileName))
+                    throw new NullReferenceException("No outage log file name was specified");
+
                 List<Outage> outages = new List<Outage>();
 
                 if (File.Exists(m_fileName))
@@ -350,13 +385,13 @@ namespace GSF.IO
         /// <summary>
         /// Writes the outage log - times are in a human readable format.
         /// </summary>
-        public void WriteLog()
+        protected void WriteLog()
         {
-            if (string.IsNullOrWhiteSpace(m_fileName))
-                throw new NullReferenceException("No outage log file name was specified");
-
             try
             {
+                if (string.IsNullOrWhiteSpace(m_fileName))
+                    throw new NullReferenceException("No outage log file name was specified");
+
                 Outage[] outages;
 
                 lock (this)

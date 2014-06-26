@@ -447,6 +447,8 @@ namespace GSF.TimeSeries.Transport
         private DateTime m_lastMetaDataRefreshTime;
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
+        private RunTimeLog m_runTimeLog;
+        //private OutageLog m_outageLog;
 
         private readonly List<BufferBlockMeasurement> m_bufferBlockCache;
         private uint m_expectedBufferBlockSequenceNumber;
@@ -964,6 +966,12 @@ namespace GSF.TimeSeries.Transport
                 status.AppendFormat("      Data monitor enabled: {0}", (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled);
                 status.AppendLine();
 
+                if ((object)m_runTimeLog != null)
+                {
+                    status.AppendFormat("    Run-time log file name: {0}", FilePath.TrimFileName(m_runTimeLog.FileName, 51));
+                    status.AppendLine();
+                }
+
                 if (DataLossInterval > 0.0D)
                     status.AppendFormat("No data reconnect interval: {0} seconds", DataLossInterval.ToString("0.000"));
                 else
@@ -1196,6 +1204,13 @@ namespace GSF.TimeSeries.Transport
                         DataChannel = null;
                         DisposeLocalConcentrator();
 
+                        if ((object)m_runTimeLog != null)
+                        {
+                            m_runTimeLog.ProcessException -= m_runTimeLog_ProcessException;
+                            m_runTimeLog.Dispose();
+                            m_runTimeLog = null;
+                        }
+
                         if ((object)m_subscribedDevicesTimer != null)
                         {
                             m_subscribedDevicesTimer.Elapsed -= SubscribedDevicesTimer_Elapsed;
@@ -1322,6 +1337,12 @@ namespace GSF.TimeSeries.Transport
             // Define buffer size
             if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out bufferSize))
                 bufferSize = ClientBase.DefaultReceiveBufferSize;
+
+            // Establish run-time log for subscriber
+            m_runTimeLog = new RunTimeLog();
+            m_runTimeLog.FileName = Name + "_RunTimeLog.txt";
+            m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
+            m_runTimeLog.Initialize();
 
             if (m_autoConnect)
             {
@@ -4197,6 +4218,11 @@ namespace GSF.TimeSeries.Transport
             {
                 return true;
             }
+        }
+
+        private void m_runTimeLog_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnProcessException(e.Argument);
         }
 
         #region [ Command Channel Event Handlers ]

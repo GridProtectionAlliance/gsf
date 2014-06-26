@@ -33,7 +33,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -44,7 +43,6 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using System.Xml;
 using GSF.Collections;
 using GSF.Communication;
@@ -61,7 +59,6 @@ using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Configuration;
 using GSF.Units;
 using Microsoft.Win32;
-using Timer = System.Timers.Timer;
 
 namespace GSF.TimeSeries
 {
@@ -102,7 +99,6 @@ namespace GSF.TimeSeries
         // Constants
         private const int DefaultMinThreadPoolSize = 25;
         private const int DefaultMaxThreadPoolSize = 2048;
-        private const int DefaultGCCollectInterval = 500;
         private const int DefaultConfigurationBackups = 5;
 
         // Fields
@@ -118,13 +114,13 @@ namespace GSF.TimeSeries
         private bool m_uniqueAdapterIDs;
         private bool m_allowRemoteRestart;
         private bool m_preferCachedConfiguration;
-        private Timer m_gcCollectTimer;
         private MultipleDestinationExporter m_healthExporter;
         private MultipleDestinationExporter m_statusExporter;
         private DataQualityReportingProcess m_dataQualityReportingProcess;
         private ProcessQueue<Tuple<string, Action<bool>>> m_reloadConfigQueue;
         private LongSynchronizedOperation m_configurationCacheOperation;
         private volatile DataSet m_latestConfiguration;
+        private RunTimeLog m_runTimeLog;
 
         private ServiceHelper m_serviceHelper;
         private ServerBase m_remotingServer;
@@ -296,11 +292,17 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void ServiceStartingHandler(object sender, EventArgs<string[]> e)
         {
+            // Define a run-time log
+            m_runTimeLog = new RunTimeLog();
+            m_runTimeLog.FileName = "RunTimeLog.txt";
+            m_runTimeLog.ProcessException += ProcessExceptionHandler;
+            m_runTimeLog.Initialize();
+
             // Initialize Iaon session
             m_iaonSession = new IaonSession();
-            m_iaonSession.StatusMessage += m_iaonSession_StatusMessage;
-            m_iaonSession.ProcessException += m_iaonSession_ProcessException;
-            m_iaonSession.ConfigurationChanged += m_iaonSession_ConfigurationChanged;
+            m_iaonSession.StatusMessage += StatusMessageHandler;
+            m_iaonSession.ProcessException += ProcessExceptionHandler;
+            m_iaonSession.ConfigurationChanged += ConfigurationChangedHandler;
 
             // Create a handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
@@ -323,7 +325,6 @@ namespace GSF.TimeSeries
             systemSettings.Add("MaxThreadPoolWorkerThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool worker threads.");
             systemSettings.Add("MinThreadPoolIOPortThreads", DefaultMinThreadPoolSize, "Defines the minimum number of allowed thread pool I/O completion port threads (used by socket layer).");
             systemSettings.Add("MaxThreadPoolIOPortThreads", DefaultMaxThreadPoolSize, "Defines the maximum number of allowed thread pool I/O completion port threads (used by socket layer).");
-            systemSettings.Add("GCCollectInterval", DefaultGCCollectInterval, "Defines the interval, in milliseconds, over which to force a garbage collection. Set to -1 to disable.");
             systemSettings.Add("ConfigurationBackups", DefaultConfigurationBackups, "Defines the total number of older backup configurations to maintain.");
             systemSettings.Add("PreferCachedConfiguration", "False", "Set to true to try the cached configuration first, before loading database configuration - typically used when cache is updated by external process.");
             systemSettings.Add("LocalCertificate", string.Format("{0}.cer", ServiceName), "Path to the local certificate used by this server for authentication.");
@@ -388,17 +389,6 @@ namespace GSF.TimeSeries
             {
                 DisplayStatusMessage("Failed to set desired thread pool size due to exception: {0}", UpdateType.Alarm, ex.Message);
                 m_serviceHelper.ErrorLogger.Log(ex);
-            }
-
-            // Define a generation zero garbage collection timer
-            int gcCollectInterval = systemSettings["GCCollectInterval"].ValueAs(DefaultGCCollectInterval);
-
-            if (gcCollectInterval > 0)
-            {
-                m_gcCollectTimer = new Timer();
-                m_gcCollectTimer.Elapsed += m_gcCollectTimer_Elapsed;
-                m_gcCollectTimer.Interval = gcCollectInterval;
-                m_gcCollectTimer.Enabled = true;
             }
 
             // Define guid with query string delimiters according to database needs
@@ -523,6 +513,9 @@ namespace GSF.TimeSeries
                 Environment.UserName,
                 stars);
 
+            // Add run-time log as a service component
+            m_serviceHelper.ServiceComponents.Add(m_runTimeLog);
+
             // Create health exporter
             m_healthExporter = new MultipleDestinationExporter("HealthExporter", Timeout.Infinite);
             m_healthExporter.Initialize(new[] { new ExportDestination(FilePath.GetAbsolutePath("Health.txt"), false) });
@@ -587,15 +580,6 @@ namespace GSF.TimeSeries
         /// </remarks>
         protected virtual void ServiceStoppingHandler(object sender, EventArgs e)
         {
-            // Stop generation zero garbage collection timer
-            if ((object)m_gcCollectTimer != null)
-            {
-                m_gcCollectTimer.Enabled = false;
-                m_gcCollectTimer.Elapsed -= m_gcCollectTimer_Elapsed;
-                m_gcCollectTimer.Dispose();
-                m_gcCollectTimer = null;
-            }
-
             // Dispose system health exporter
             if ((object)m_healthExporter != null)
             {
@@ -639,11 +623,21 @@ namespace GSF.TimeSeries
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.InputAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.ActionAdapters);
                 m_serviceHelper.ServiceComponents.Remove(m_iaonSession.OutputAdapters);
+
                 m_iaonSession.Dispose();
-                m_iaonSession.StatusMessage -= m_iaonSession_StatusMessage;
-                m_iaonSession.ProcessException -= m_iaonSession_ProcessException;
-                m_iaonSession.ConfigurationChanged -= m_iaonSession_ConfigurationChanged;
+                m_iaonSession.StatusMessage -= StatusMessageHandler;
+                m_iaonSession.ProcessException -= ProcessExceptionHandler;
+                m_iaonSession.ConfigurationChanged -= ConfigurationChangedHandler;
                 m_iaonSession = null;
+            }
+
+            // Dispose of run-time log
+            if ((object)m_runTimeLog != null)
+            {
+                m_serviceHelper.ServiceComponents.Remove(m_runTimeLog);
+                m_runTimeLog.ProcessException -= ProcessExceptionHandler;
+                m_runTimeLog.Dispose();
+                m_runTimeLog = null;
             }
 
             m_serviceHelper.ServiceStarting -= ServiceStartingHandler;
@@ -664,27 +658,6 @@ namespace GSF.TimeSeries
 
             // Unattach from handler for unobserved task exceptions
             TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
-        }
-
-        // Generation zero garbage collection handler
-        [SuppressMessage("Microsoft.Reliability", "CA2002")]
-        private void m_gcCollectTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            // The time-series framework can allocate hundreds of thousands of measurements per second, non-stop, as a result the typical
-            // wait for breathing room style algorithms for timing garbage collections are not practical. A simple forced generation zero
-            // collection on a timer is often the best way to stabilize garbage collection so that it can stay ahead of the curve and
-            // reduce overall garbage collection times, which pauses all threads, for the large volumes of short lifespan data.
-            if (Monitor.TryEnter(m_gcCollectTimer))
-            {
-                try
-                {
-                    GC.Collect(3, GCCollectionMode.Optimized, false);
-                }
-                finally
-                {
-                    Monitor.Exit(m_gcCollectTimer);
-                }
-            }
         }
 
         #endregion
@@ -1409,7 +1382,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report adapter status messages (e.g., to a log file or console window).
         /// </remarks>
-        private void m_iaonSession_StatusMessage(object sender, EventArgs<string, UpdateType> e)
+        private void StatusMessageHandler(object sender, EventArgs<string, UpdateType> e)
         {
             DisplayStatusMessage(e.Argument1, e.Argument2);
         }
@@ -1422,7 +1395,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report exceptions.
         /// </remarks>
-        private void m_iaonSession_ProcessException(object sender, EventArgs<Exception> e)
+        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
         {
             m_serviceHelper.ErrorLogger.Log(e.Argument, false);
         }
@@ -1435,7 +1408,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report configuration changes.
         /// </remarks>
-        private void m_iaonSession_ConfigurationChanged(object sender, EventArgs e)
+        private void ConfigurationChangedHandler(object sender, EventArgs e)
         {
             Action<bool> empty = success =>
             {
