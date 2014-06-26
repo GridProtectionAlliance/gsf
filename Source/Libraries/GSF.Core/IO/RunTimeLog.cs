@@ -32,7 +32,7 @@ using Timer = System.Timers.Timer;
 namespace GSF.IO
 {
     /// <summary>
-    /// Represents a run-time log that tracks last start, stop and running times.
+    /// Represents a persisted run-time log that tracks last start, stop and running times.
     /// </summary>
     public class RunTimeLog : ISupportLifecycle
     {
@@ -227,7 +227,7 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Initialized the run-time log.
+        /// Initialize the run-time log.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -237,6 +237,10 @@ namespace GSF.IO
         /// Last logged stop time will be validated against last logged running time. If the last logged running time is later
         /// than the last logged stop time, the stop time will be set to the running time with the assumption that the log file
         /// was not properly shut down (e.g., due to abnormal host termination).
+        /// </para>
+        /// <para>
+        /// It is important to separate initialization from construction such that consumer can attach to events before class
+        /// is initialized in case initialization causes events to be raised.
         /// </para>
         /// </remarks>
         public virtual void Initialize()
@@ -267,24 +271,33 @@ namespace GSF.IO
                     {
                         using (StreamReader reader = File.OpenText(m_fileName))
                         {
-                            Dictionary<string, string> settings = reader.ReadToEnd().Replace(Environment.NewLine, ";").ParseKeyValuePairs();
-                            string setting;
-                            DateTime time;
+                            string fileData = reader.ReadToEnd();
 
-                            if (settings.TryGetValue("startTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
-                                m_startTime = time.Ticks;
-                            else
-                                m_startTime = DateTime.UtcNow.Ticks;
+                            if (fileData.Length > 0)
+                            {
+                                Dictionary<string, string> settings = fileData.Replace(Environment.NewLine, ";").ParseKeyValuePairs();
+                                string setting;
+                                DateTime time;
 
-                            if (settings.TryGetValue("stopTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
-                                m_stopTime = time.Ticks;
-                            else
-                                m_stopTime = DateTime.UtcNow.Ticks;
+                                if (settings.TryGetValue("startTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
+                                    m_startTime = time.Ticks;
+                                else
+                                    m_startTime = DateTime.UtcNow.Ticks;
 
-                            if (settings.TryGetValue("runningTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
-                                m_runningTime = time.Ticks;
+                                if (settings.TryGetValue("stopTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
+                                    m_stopTime = time.Ticks;
+                                else
+                                    m_stopTime = DateTime.UtcNow.Ticks;
+
+                                if (settings.TryGetValue("runningTime", out setting) && DateTime.TryParseExact(setting, DateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out time))
+                                    m_runningTime = time.Ticks;
+                                else
+                                    m_runningTime = DateTime.UtcNow.Ticks;
+                            }
                             else
-                                m_runningTime = DateTime.UtcNow.Ticks;
+                            {
+                                m_startTime = m_stopTime = m_runningTime = DateTime.UtcNow.Ticks;
+                            }
                         }
                     }
                     else
@@ -301,7 +314,7 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Writes the run-time log.
+        /// Writes the run-time log - times are in a human readable format.
         /// </summary>
         public void WriteLog()
         {
