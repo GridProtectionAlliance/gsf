@@ -190,7 +190,8 @@ namespace DataQualityMonitoring
         {
             lock (m_alarms)
             {
-                return m_alarms.Where(alarm => alarm.State == AlarmState.Raised)
+                return m_alarms
+                    .Where(alarm => alarm.State == AlarmState.Raised)
                     .ToList();
             }
         }

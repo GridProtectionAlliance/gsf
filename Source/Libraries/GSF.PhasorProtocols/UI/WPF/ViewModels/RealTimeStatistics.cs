@@ -160,8 +160,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 {
                                     if ((measurement.Source == "System" && RealTimeStatistic.SystemStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
                                         (measurement.Source == "InputStream" && RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
+                                        (measurement.Source == "OutputStream" && RealTimeStatistic.OutputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
                                         (measurement.Source == "Publisher" && RealTimeStatistic.DataPublisherStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
-                                        (measurement.Source == "OutputStream" && RealTimeStatistic.OutputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)))
+                                        (measurement.Source == "Subscriber" && RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)))
                                     {
                                         if (Convert.ToBoolean(newMeasurement.AdjustedValue))
                                             streamStatistic.StatusColor = "Green";

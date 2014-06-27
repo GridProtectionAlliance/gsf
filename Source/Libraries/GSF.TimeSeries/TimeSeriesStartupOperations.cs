@@ -393,7 +393,7 @@ namespace GSF.TimeSeries
             }
 
             // Ensure that subscriber statistics exist
-            if (subscriberStatCount == SubscriberStatNames.Length)
+            if (subscriberStatCount != SubscriberStatNames.Length)
             {
                 database.Connection.ExecuteNonQuery(string.Format(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length));
 
@@ -410,7 +410,7 @@ namespace GSF.TimeSeries
             }
 
             // Ensure that subscriber statistics exist
-            if (publisherStatCount == PublisherStatNames.Length)
+            if (publisherStatCount != PublisherStatNames.Length)
             {
                 database.Connection.ExecuteNonQuery(string.Format(PublisherStatisticDeleteFormat, PublisherStatNames.Length));
 
