@@ -160,7 +160,9 @@
     <Compile Include="BigBinaryValue.cs" />
     <Compile Include="BigEndian.cs" />
     <Compile Include="BinaryCodedDecimal.cs" />
+    <Compile Include="IO\Outage.cs" />
     <Compile Include="IO\OutageLog.cs" />
+    <Compile Include="IO\OutageLogProcessor.cs" />
     <Compile Include="IO\RunTimeLog.cs" />
     <Compile Include="NativeBinaryValue.cs" />
     <Compile Include="BinaryValueBase.cs" />

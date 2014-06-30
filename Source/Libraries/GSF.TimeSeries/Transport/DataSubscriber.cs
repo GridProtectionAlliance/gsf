@@ -448,7 +448,8 @@ namespace GSF.TimeSeries.Transport
         private OperationalModes m_operationalModes;
         private Encoding m_encoding;
         private RunTimeLog m_runTimeLog;
-        //private OutageLog m_outageLog;
+        private bool m_dataGapRecoveryEnabled;
+        private DataGapRecoverer m_dataGapRecoverer;
 
         private readonly List<BufferBlockMeasurement> m_bufferBlockCache;
         private uint m_expectedBufferBlockSequenceNumber;
@@ -966,18 +967,26 @@ namespace GSF.TimeSeries.Transport
                 status.AppendFormat("      Data monitor enabled: {0}", (object)m_dataStreamMonitor != null && m_dataStreamMonitor.Enabled);
                 status.AppendLine();
 
-                if ((object)m_runTimeLog != null)
-                {
-                    status.AppendFormat("    Run-time log file name: {0}", FilePath.TrimFileName(m_runTimeLog.FileName, 51));
-                    status.AppendLine();
-                }
-
                 if (DataLossInterval > 0.0D)
                     status.AppendFormat("No data reconnect interval: {0} seconds", DataLossInterval.ToString("0.000"));
                 else
                     status.Append("No data reconnect interval: disabled");
 
                 status.AppendLine();
+
+                status.AppendFormat("    Data gap recovery mode: {0}", m_dataGapRecoveryEnabled ? "Enabled" : "Disabled");
+                status.AppendLine();
+
+                if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
+                    status.Append(m_dataGapRecoverer.Status);
+
+                if ((object)m_runTimeLog != null)
+                {
+                    status.AppendLine();
+                    status.AppendLine("Run-Time Log Status".CenterText(50));
+                    status.AppendLine("-------------------".CenterText(50));
+                    status.AppendFormat(m_runTimeLog.Status);
+                }
 
                 if ((object)m_dataChannel != null)
                 {
@@ -1204,6 +1213,15 @@ namespace GSF.TimeSeries.Transport
                         DataChannel = null;
                         DisposeLocalConcentrator();
 
+                        if ((object)m_dataGapRecoverer != null)
+                        {
+                            m_dataGapRecoverer.RecoveredMeasurements -= m_dataGapRecoverer_RecoveredMeasurements;
+                            m_dataGapRecoverer.StatusMessage -= m_dataGapRecoverer_StatusMessage;
+                            m_dataGapRecoverer.ProcessException -= m_dataGapRecoverer_ProcessException;
+                            m_dataGapRecoverer.Dispose();
+                            m_dataGapRecoverer = null;
+                        }
+
                         if ((object)m_runTimeLog != null)
                         {
                             m_runTimeLog.ProcessException -= m_runTimeLog_ProcessException;
@@ -1338,12 +1356,6 @@ namespace GSF.TimeSeries.Transport
             if (!settings.TryGetValue("bufferSize", out setting) || !int.TryParse(setting, out bufferSize))
                 bufferSize = ClientBase.DefaultReceiveBufferSize;
 
-            // Establish run-time log for subscriber
-            m_runTimeLog = new RunTimeLog();
-            m_runTimeLog.FileName = Name + "_RunTimeLog.txt";
-            m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
-            m_runTimeLog.Initialize();
-
             if (m_autoConnect)
             {
                 // Connect to local events when automatically engaging connection cycle
@@ -1400,12 +1412,44 @@ namespace GSF.TimeSeries.Transport
                 CommandChannel = commandChannel;
             }
 
-            // Get proper connection string - either from specified command channel
-            // or from base connection string
+            // Get proper connection string - either from specified command channel or from base connection string
             if (settings.TryGetValue("commandChannel", out setting))
                 m_commandChannel.ConnectionString = setting;
             else
                 m_commandChannel.ConnectionString = ConnectionString;
+
+            // Initialize data gap recovery processing, if requested
+            if (settings.TryGetValue("dataGapRecovery", out setting))
+            {
+                // Example connection string for data gap recovery:
+                //  dataGapRecovery={enabled=true; recoveryStartDelay=10.0; minimumRecoverySpan=0.0; maximumRecoverySpan=3600.0}
+                Dictionary<string, string> dataGapSettings = setting.ParseKeyValuePairs();
+
+                if (dataGapSettings.TryGetValue("enabled", out setting) && setting.ParseBoolean())
+                {
+                    // Remove dataGapRecovery connection setting from command channel connection string, if defined. This
+                    // will prevent any recursive data gap recovery operations from being established:
+                    Dictionary<string, string> connectionSettings = m_commandChannel.ConnectionString.ParseKeyValuePairs();
+                    connectionSettings.Remove("dataGapRecovery");
+
+                    m_dataGapRecoveryEnabled = true;
+                    m_dataGapRecoverer = new DataGapRecoverer();
+                    m_dataGapRecoverer.SourceConnectionName = Name;
+                    m_dataGapRecoverer.ConnectionString = string.Join("; ", dataGapSettings.JoinKeyValuePairs(), connectionSettings.JoinKeyValuePairs());
+                    m_dataGapRecoverer.RecoveredMeasurements += m_dataGapRecoverer_RecoveredMeasurements;
+                    m_dataGapRecoverer.StatusMessage += m_dataGapRecoverer_StatusMessage;
+                    m_dataGapRecoverer.ProcessException += m_dataGapRecoverer_ProcessException;
+                    m_dataGapRecoverer.Initialize();
+                }
+                else
+                {
+                    m_dataGapRecoveryEnabled = false;
+                }
+            }
+            else
+            {
+                m_dataGapRecoveryEnabled = false;
+            }
 
             // Register subscriber with the statistics engine
             StatisticsEngine.Register(this, "Subscriber", "SUB");
@@ -2249,6 +2293,19 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets the status of the temporal <see cref="DataSubscriber"/> used by the data gap recovery module.
+        /// </summary>
+        /// <returns>Status of the temporal <see cref="DataSubscriber"/> used by the data gap recovery module.</returns>
+        [AdapterCommand("Gets the status of the temporal subscription used by the data gap recovery module.", "Administrator", "Editor", "Viewer")]
+        public virtual string GetDataGapRecoverySubscriptionStatus()
+        {
+            if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
+                return m_dataGapRecoverer.TemporalSubscriptionStatus;
+
+            return "Data gap recovery not enabled";
+        }
+
+        /// <summary>
         /// Spawn meta-data synchronization.
         /// </summary>
         /// <param name="metadata"><see cref="DataSet"/> to use for synchronization.</param>
@@ -2359,13 +2416,15 @@ namespace GSF.TimeSeries.Transport
             m_expectedBufferBlockSequenceNumber = 0u;
             m_commandChannelConnectionAttempts = 0;
             m_dataChannelConnectionAttempts = 0;
-            m_commandChannel.ConnectAsync();
+
             m_authenticated = (m_securityMode == SecurityMode.TLS);
             m_subscribed = false;
             m_keyIVs = null;
             m_totalBytesReceived = 0L;
             m_monitoredBytesReceived = 0L;
             m_lastBytesReceived = 0;
+
+            m_commandChannel.ConnectAsync();
 
             if ((object)m_subscribedDevicesTimer == null)
             {
@@ -2547,9 +2606,29 @@ namespace GSF.TimeSeries.Transport
                             Ticks timestamp = 0;
                             int count;
 
-                            // At the point when data is being received, data monitor should be enabled
-                            if (m_totalBytesReceived == 0 && (object)m_dataStreamMonitor != null && !m_dataStreamMonitor.Enabled)
-                                m_dataStreamMonitor.Enabled = true;
+                            if (m_totalBytesReceived == 0)
+                            {
+                                // At the point when data is being received, data monitor should be enabled
+                                if ((object)m_dataStreamMonitor != null && !m_dataStreamMonitor.Enabled)
+                                    m_dataStreamMonitor.Enabled = true;
+
+                                // Establish run-time log for subscriber
+                                if ((object)m_runTimeLog == null)
+                                {
+                                    m_runTimeLog = new RunTimeLog();
+                                    m_runTimeLog.FileName = Name + "_RunTimeLog.txt";
+                                    m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
+                                }
+
+                                // Mark the start of any data transmissions
+                                m_runTimeLog.Initialize();
+
+                                // The duration between last disconnection and start of data transmissions
+                                // represents a gap in data - if data gap recovery is enabled, we log
+                                // this as a gap for recovery:
+                                if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
+                                    m_dataGapRecoverer.LogDataGap(m_runTimeLog.StopTime, m_runTimeLog.StartTime);
+                            }
 
                             // Track total data packet bytes received from any channel
                             m_totalBytesReceived += m_lastBytesReceived;
@@ -3738,6 +3817,28 @@ namespace GSF.TimeSeries.Transport
         // Disconnect client, restarting if disconnect was not intentional
         private void DisconnectClient()
         {
+            // Dispose of run-time log - this marks the end of any data transmissions
+            if ((object)m_runTimeLog != null)
+            {
+                m_runTimeLog.Dispose();
+                m_runTimeLog.ProcessException -= m_runTimeLog_ProcessException;
+                m_runTimeLog = null;
+            }
+
+            // Stop data gap recovery operations
+            if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
+            {
+                try
+                {
+                    m_dataGapRecoverer.Enabled = false;
+                    m_dataGapRecoverer.FlushLog(5000);
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(new InvalidOperationException(string.Format("Exception while attempting to flush data gap recoverer log: {0}", ex.Message), ex));
+                }
+            }
+
             DataChannel = null;
 
             // If user didn't initiate disconnect, restart the connection
@@ -4133,40 +4234,6 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
-        /// <summary>
-        /// Disposes of any previously defined local concentrator.
-        /// </summary>
-        protected internal void DisposeLocalConcentrator()
-        {
-            if ((object)m_localConcentrator != null)
-            {
-                m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
-                m_localConcentrator.Dispose();
-            }
-
-            m_localConcentrator = null;
-        }
-
-        private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e)
-        {
-            // Make sure any exceptions reported by local concentrator get exposed as needed
-            OnProcessException(e.Argument);
-        }
-
-        private void m_dataStreamMonitor_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            if (m_monitoredBytesReceived == 0)
-            {
-                // If we've received no data in the last time-span, we restart connect cycle...
-                m_dataStreamMonitor.Enabled = false;
-                OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
-                ThreadPool.QueueUserWorkItem(state => Restart());
-            }
-
-            // Reset bytes received bytes being monitored
-            m_monitoredBytesReceived = 0L;
-        }
-
         // Updates the measurements per second counters after receiving another set of measurements.
         private void UpdateMeasurementsPerSecond(int measurementCount)
         {
@@ -4220,9 +4287,58 @@ namespace GSF.TimeSeries.Transport
             }
         }
 
+        /// <summary>
+        /// Disposes of any previously defined local concentrator.
+        /// </summary>
+        protected internal void DisposeLocalConcentrator()
+        {
+            if ((object)m_localConcentrator != null)
+            {
+                m_localConcentrator.ProcessException -= m_localConcentrator_ProcessException;
+                m_localConcentrator.Dispose();
+            }
+
+            m_localConcentrator = null;
+        }
+
+        private void m_localConcentrator_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            // Make sure any exceptions reported by local concentrator get exposed as needed
+            OnProcessException(e.Argument);
+        }
+
+        private void m_dataStreamMonitor_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (m_monitoredBytesReceived == 0)
+            {
+                // If we've received no data in the last time-span, we restart connect cycle...
+                m_dataStreamMonitor.Enabled = false;
+                OnStatusMessage("\r\nNo data received in {0} seconds, restarting connect cycle...\r\n", (m_dataStreamMonitor.Interval / 1000.0D).ToString("0.0"));
+                ThreadPool.QueueUserWorkItem(state => Restart());
+            }
+
+            // Reset bytes received bytes being monitored
+            m_monitoredBytesReceived = 0L;
+        }
+
         private void m_runTimeLog_ProcessException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(e.Argument);
+        }
+
+        private void m_dataGapRecoverer_RecoveredMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
+        {
+            OnNewMeasurements(e.Argument);
+        }
+
+        private void m_dataGapRecoverer_StatusMessage(object sender, EventArgs<string> e)
+        {
+            OnStatusMessage("[DataGapRecoverer] " + e.Argument);
+        }
+
+        private void m_dataGapRecoverer_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnProcessException(new InvalidOperationException("[DataGapRecoverer] " + e.Argument.Message, e.Argument.InnerException));
         }
 
         #region [ Command Channel Event Handlers ]
@@ -4254,6 +4370,9 @@ namespace GSF.TimeSeries.Transport
                 else
                     StartSubscription();
             }
+
+            if (m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null)
+                m_dataGapRecoverer.Enabled = true;
         }
 
         private void m_commandChannel_ConnectionTerminated(object sender, EventArgs e)

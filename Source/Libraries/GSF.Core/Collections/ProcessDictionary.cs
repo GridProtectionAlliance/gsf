@@ -36,11 +36,6 @@ namespace GSF.Collections
     /// <typeparam name="TValue">Type of values to process.</typeparam>
     /// <remarks>
     /// <para>This class acts as a strongly-typed sorted dictionary of objects to be processed.</para>
-    /// <para>
-    /// Consumers are expected to create new instances of this class through the static construction functions (e.g., 
-    /// <see cref="ProcessDictionary{TKey,TValue}.CreateAsynchronousQueue(ProcessItemFunctionSignature)"/>, 
-    /// <see cref="ProcessDictionary{TKey,TValue}.CreateSynchronousQueue(ProcessItemFunctionSignature)"/>, etc.)
-    /// </para>
     /// <para>Note that the <see cref="ProcessDictionary{TKey,TValue}"/> will not start processing until the Start method is called.</para>
     /// <para>Because this <see cref="ProcessDictionary{TKey,TValue}"/> represents a dictionary style collection, all keys must be unique.</para>
     /// <para>
@@ -108,13 +103,27 @@ namespace GSF.Collections
         /// Creates a <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="DictionaryList{TKey, TValue}"/> class.
         /// </summary>
         /// <param name="processItemFunction">A delegate <see cref="ProcessItemFunctionSignature"/> that defines a function signature to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
         /// <param name="processInterval">A <see cref="double"/> which represents the process interval.</param>
         /// <param name="maximumThreads">An <see cref="int"/> that represents the max number of threads to use.</param>
         /// <param name="processTimeout">An <see cref="int"/> that represents the amount of time before a process times out.</param>
         /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether the process should requeue the item after a timeout.</param>
         /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether the process should requeue the item after an exception.</param>
-        protected ProcessDictionary(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        public ProcessDictionary(ProcessItemFunctionSignature processItemFunction, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
+            : this(processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+        {
+        }
+
+        /// <summary>
+        /// Creates a <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="DictionaryList{TKey, TValue}"/> class.
+        /// </summary>
+        /// <param name="processItemFunction">A delegate <see cref="ProcessItemFunctionSignature"/> that defines a function signature to process a key and value one at a time.</param>
+        /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines if a key and value can currently be processed.</param>
+        /// <param name="processInterval">A <see cref="double"/> which represents the process interval.</param>
+        /// <param name="maximumThreads">An <see cref="int"/> that represents the max number of threads to use.</param>
+        /// <param name="processTimeout">An <see cref="int"/> that represents the amount of time before a process times out.</param>
+        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether the process should requeue the item after a timeout.</param>
+        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether the process should requeue the item after an exception.</param>
+        public ProcessDictionary(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction = null, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
             : base(null, null, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
             m_processItemFunction = processItemFunction; // Defining this function creates a ProcessingStyle = OneAtATime keyed process queue
@@ -130,14 +139,28 @@ namespace GSF.Collections
         /// <summary>
         /// Creates a bulk-item <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="DictionaryList{TKey, TValue}"/> class.
         /// </summary>
-        /// <param name="processItemsFunction">A delegate ProcessItemsFunctionSignature that defines a function signature to process multiple items at once.</param>
-        /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines of a key and value can currently be processed.</param>
+        /// <param name="processItemsFunction">A delegate <see cref="ProcessItemFunctionSignature"/> that defines a function signature to process multiple items at once.</param>
         /// <param name="processInterval">A <see cref="double"/> which represents the process interval.</param>
         /// <param name="maximumThreads">An <see cref="int"/> that represents the max number of threads to use.</param>
         /// <param name="processTimeout">An <see cref="int"/> that represents the amount of time before a process times out.</param>
         /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether the process should requeue the item after a timeout.</param>
         /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether the process should requeue the item after an exception.</param>
-        protected ProcessDictionary(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        public ProcessDictionary(ProcessItemsFunctionSignature processItemsFunction, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
+            : this(processItemsFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+        {
+        }
+
+        /// <summary>
+        /// Creates a bulk-item <see cref="ProcessDictionary{TKey, TValue}"/> based on the generic <see cref="DictionaryList{TKey, TValue}"/> class.
+        /// </summary>
+        /// <param name="processItemsFunction">A delegate <see cref="ProcessItemFunctionSignature"/> that defines a function signature to process multiple items at once.</param>
+        /// <param name="canProcessItemFunction">A delegate <see cref="CanProcessItemFunctionSignature"/> that determines if a key and value can currently be processed.</param>
+        /// <param name="processInterval">A <see cref="double"/> which represents the process interval.</param>
+        /// <param name="maximumThreads">An <see cref="int"/> that represents the max number of threads to use.</param>
+        /// <param name="processTimeout">An <see cref="int"/> that represents the amount of time before a process times out.</param>
+        /// <param name="requeueOnTimeout">A <see cref="bool"/> value that indicates whether the process should requeue the item after a timeout.</param>
+        /// <param name="requeueOnException">A <see cref="bool"/> value that indicates whether the process should requeue the item after an exception.</param>
+        public ProcessDictionary(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction = null, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
             : base(null, processItemsFunction, null, new DictionaryList<TKey, TValue>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
             m_canProcessItemFunction = canProcessItemFunction;
@@ -717,380 +740,6 @@ namespace GSF.Collections
         public override void Sort(int index, int count, IComparer<KeyValuePair<TKey, TValue>> comparer)
         {
             // This list is already sorted.
-        }
-
-        #endregion
-
-        #endregion
-
-        #region [ Static ]
-
-        #region [ Single-Item Processing Constructors ]
-
-        /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
-        /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction)
-        {
-            return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
-        /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, int maximumThreads)
-        {
-            return CreateAsynchronousQueue(processItemFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
-        {
-            return CreateAsynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
-        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateAsynchronousQueue(processItemFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, asynchronous <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
-        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessDictionary<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, synchronous <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread) with the default settings:
-        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction)
-        {
-            return CreateSynchronousQueue(processItemFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, synchronous <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread) with the default settings:
-        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateSynchronousQueue(processItemFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, synchronous <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread), using specified settings.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateSynchronousQueue(processItemFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, synchronous <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread), using specified settings.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessDictionary<TKey, TValue>(processItemFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, real-time <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
-        /// RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction)
-        {
-            return CreateRealTimeQueue(processItemFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, real-time <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
-        /// RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateRealTimeQueue(processItemFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, real-time <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateRealTimeQueue(processItemFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new, keyed, real-time <see cref="ProcessDictionary{TKey,TValue}"/>, using the specified settings.
-        /// </summary>
-        /// <param name="processItemFunction">Delegate which defines a method to process a key and value one at a time.</param>
-        /// <param name="canProcessItemFunction">A delegate which defines a method to indicate whether a key and value can be processed at this time.</param>
-        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue ProcessDictionary.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessDictionary<TKey, TValue>(processItemFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        #endregion
-
-        #region [ Multi-Item Processing Constructors ]
-
-        /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
-        /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static new ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
-        /// MaximumThreads = 5, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultMaximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="maximumThreads">An <see cref="Int32"/> value indicating the maximum number of threads to use for processing items.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static new ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, int maximumThreads)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, null, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessInterval = 100,
-        /// ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <param name="maximumThreads">An <see cref="Int32"/> value indicating the maximum number of threads to use for processing items.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int maximumThreads)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, maximumThreads, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="processInterval">Number of milliseconds between each process.</param>
-        /// <param name="maximumThreads">An <see cref="Int32"/> value indicating the maximum number of threads to use for processing items.</param>
-        /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static new ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateAsynchronousQueue(processItemsFunction, null, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new asynchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <param name="processInterval">Number of milliseconds between each process.</param>
-        /// <param name="maximumThreads">An <see cref="Int32"/> value indicating the maximum number of threads to use for processing items.</param>
-        /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateAsynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessDictionary<TKey, TValue>(processItemsFunction, canProcessItemFunction, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread) with the default settings:
-        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static new ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction)
-        {
-            return CreateSynchronousQueue(processItemsFunction, null, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread) with the default settings:
-        /// ProcessInterval = 100, ProcessTimeout = Infinite, RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateSynchronousQueue(processItemsFunction, canProcessItemFunction, DefaultProcessInterval, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread), using specified settings.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="processInterval">Number of milliseconds between each process.</param>
-        /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static new ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateSynchronousQueue(processItemsFunction, null, processInterval, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new synchronous bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> (i.e., single process thread), using specified settings.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <param name="processInterval">Number of milliseconds between each process.</param>
-        /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateSynchronousQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessDictionary<TKey, TValue>(processItemsFunction, canProcessItemFunction, processInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
-        /// RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static new ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction)
-        {
-            return CreateRealTimeQueue(processItemsFunction, null, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time bulk-item <see cref="ProcessDictionary{TKey,TValue}"/> with the default settings: ProcessTimeout = Infinite,
-        /// RequeueOnTimeout = False, RequeueOnException = False.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction)
-        {
-            return CreateRealTimeQueue(processItemsFunction, canProcessItemFunction, DefaultProcessTimeout, DefaultRequeueOnTimeout, DefaultRequeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time bulk-item <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static new ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return CreateRealTimeQueue(processItemsFunction, null, processTimeout, requeueOnTimeout, requeueOnException);
-        }
-
-        /// <summary>
-        /// Creates a new real-time bulk-item <see cref="ProcessDictionary{TKey,TValue}"/>, using specified settings.
-        /// </summary>
-        /// <param name="processItemsFunction">Delegate which defines a method to process at once.</param>
-        /// <param name="canProcessItemFunction">Delegate which defines a method to know if a key and value can currently be processed.</param>
-        /// <param name="processTimeout">An <see cref="Int32"/> value indicating the number of seconds to wait for a process timeout.</param>
-        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
-        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        /// <returns>Returns the process queue <see cref="ProcessDictionary{TKey,TValue}"/>.</returns>
-        public static ProcessDictionary<TKey, TValue> CreateRealTimeQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
-        {
-            return new ProcessDictionary<TKey, TValue>(processItemsFunction, canProcessItemFunction, RealTimeProcessInterval, 1, processTimeout, requeueOnTimeout, requeueOnException);
         }
 
         #endregion

@@ -40,10 +40,26 @@ namespace GSF.IO
         #region [ Members ]
 
         // Constants
-        private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
-        private const string LastStartTimeKey = "Last Start Time";
-        private const string LastStopTimeKey = "Last Stop Time";
-        private const string LastRunningTimeKey = "Last Running Time";
+
+        /// <summary>
+        /// Date-time format used by <see cref="RunTimeLog"/>.
+        /// </summary>
+        public const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+
+        /// <summary>
+        /// Log file key name for last start time used by <see cref="RunTimeLog"/>.
+        /// </summary>
+        public const string LastStartTimeKey = "Last Start Time";
+
+        /// <summary>
+        /// Log file key name for last stop time used by <see cref="RunTimeLog"/>.
+        /// </summary>
+        public const string LastStopTimeKey = "Last Stop Time";
+
+        /// <summary>
+        /// Log file key name for last running time used by <see cref="RunTimeLog"/>.
+        /// </summary>
+        public const string LastRunningTimeKey = "Last Running Time";
 
         // Events
 

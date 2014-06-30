@@ -27,7 +27,6 @@ using System;
 
 namespace GSF.TimeSeries.Transport
 {
-
     /// <summary>
     /// Configuration object for data subscriptions.
     /// </summary>

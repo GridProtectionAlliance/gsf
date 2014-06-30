@@ -155,6 +155,7 @@
     <Compile Include="Transport\ClientConnection.cs" />
     <Compile Include="Transport\Common.cs" />
     <Compile Include="Transport\DataPublisher.cs" />
+    <Compile Include="Transport\DataGapRecoverer.cs" />
     <Compile Include="Transport\DataSubscriber.cs" />
     <Compile Include="DebugHostBase.cs">
       <SubType>Form</SubType>

@@ -165,7 +165,6 @@ namespace GSF.Collections
     /// <typeparam name="T">Type of object to process</typeparam>
     /// <remarks>
     /// <para>This class acts as a strongly-typed collection of objects to be processed.</para>
-    /// <para>Consumers are expected to create new instances of this class through the static construction functions (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
     /// <para>Note that the <see cref="ProcessQueue{T}"/> will not start processing until the Start method is called.</para>
     /// </remarks>
     public class ProcessQueue<T> : IList<T>, IProvideStatus, ISupportLifecycle
@@ -438,14 +437,42 @@ namespace GSF.Collections
         /// Creates a <see cref="ProcessQueue{T}"/> based on the generic List(Of T) class.
         /// </summary>
         /// <param name="processItemFunction">Delegate that defines a method to process one item at a time.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        public ProcessQueue(ProcessItemFunctionSignature processItemFunction, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
+            : this(processItemFunction, null, null, new List<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+        {
+        }
+
+        /// <summary>
+        /// Creates a <see cref="ProcessQueue{T}"/> based on the generic List(Of T) class.
+        /// </summary>
+        /// <param name="processItemFunction">Delegate that defines a method to process one item at a time.</param>
         /// <param name="canProcessItemFunction">Delegate that determines if an item can currently be processed.</param>
         /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
         /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        public ProcessQueue(ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction = null, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
             : this(processItemFunction, null, canProcessItemFunction, new List<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
+        {
+        }
+
+        /// <summary>
+        /// Creates a bulk item <see cref="ProcessQueue{T}"/> based on the generic List(Of T) class.
+        /// </summary>
+        /// <param name="processItemsFunction">Delegate that defines a method to process multiple items at once.</param>
+        /// <param name="processInterval">a <see cref="double"/> value which represents the process interval in milliseconds.</param>
+        /// <param name="maximumThreads">The maximum number of threads for the queue to use.</param>
+        /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
+        /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
+        /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
+        public ProcessQueue(ProcessItemsFunctionSignature processItemsFunction, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
+            : this(null, processItemsFunction, null, new List<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
         }
 
@@ -459,7 +486,7 @@ namespace GSF.Collections
         /// <param name="processTimeout">The number of seconds before a process should timeout.</param>
         /// <param name="requeueOnTimeout">A <see cref="Boolean"/> value that indicates whether a process should requeue an item on timeout.</param>
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
-        protected ProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
+        public ProcessQueue(ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction = null, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
             : this(null, processItemsFunction, canProcessItemFunction, new List<T>(), processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
         }
@@ -478,6 +505,9 @@ namespace GSF.Collections
         /// <param name="requeueOnException">A <see cref="Boolean"/> value that indicates whether a process should requeue after an exception.</param>
         protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, IList<T> processList, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
+            if ((object)processList == null)
+                throw new NullReferenceException("ProcessQueue<T> base list cannot be null");
+
             m_processItemFunction = processItemFunction;    // Defining this function creates a ProcessingStyle = OneAtATime process queue
             m_processItemsFunction = processItemsFunction;  // Defining this function creates a ProcessingStyle = ManyAtOnce process queue
             m_canProcessItemFunction = canProcessItemFunction;

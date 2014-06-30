@@ -28,86 +28,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using GSF.Threading;
 
 namespace GSF.IO
 {
-    /// <summary>
-    /// Represents an outage as a start time and an end time.
-    /// </summary>
-    public class Outage
-    {
-        #region [ Members ]
-
-        // Fields
-        private Ticks m_startTime;
-        private Ticks m_endTime;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="Outage"/>.
-        /// </summary>
-        public Outage()
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Outage"/> with the specified start and end time.
-        /// </summary>
-        /// <param name="startTime">Start time for outage.</param>
-        /// <param name="endTime">End time for outage.</param>
-        public Outage(Ticks startTime, Ticks endTime)
-        {
-            StartTime = startTime;
-            EndTime = endTime;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets start time for <see cref="Outage"/>.
-        /// </summary>
-        public Ticks StartTime
-        {
-            get
-            {
-                return m_startTime;
-            }
-            set
-            {
-                if (m_endTime > 0 && value > m_endTime)
-                    throw new ArgumentOutOfRangeException("value", "Outage start time is past end time");
-
-                m_startTime = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets end time for <see cref="Outage"/>.
-        /// </summary>
-        public Ticks EndTime
-        {
-            get
-            {
-                return m_endTime;
-            }
-            set
-            {
-                if (m_startTime > value)
-                    throw new ArgumentOutOfRangeException("value", "Outage start time is past end time");
-
-                m_endTime = value;
-            }
-        }
-
-        #endregion
-    }
-
     /// <summary>
     /// Represents a persisted log of outages as a list of start and stop times.
     /// </summary>
@@ -127,7 +52,11 @@ namespace GSF.IO
         #region [ Members ]
 
         // Constants
-        private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
+
+        /// <summary>
+        /// Date-time format used by <see cref="OutageLog"/>.
+        /// </summary>
+        public const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss.fff";
 
         // Events
 
@@ -145,8 +74,12 @@ namespace GSF.IO
         public event EventHandler Disposed;
 
         // Fields
-        private readonly ShortSynchronizedOperation m_flushLog;
-        private volatile bool m_loadInProgress;
+        private readonly ManualResetEventSlim m_writeLogWaitHandle;
+        private readonly ShortSynchronizedOperation m_readLogOperation;
+        private readonly ShortSynchronizedOperation m_writeLogOperation;
+        private volatile bool m_logLoadInProgress;
+        private long m_totalReads;
+        private long m_totalWrites;
         private string m_fileName;
         private bool m_enabled;
         private bool m_disposed;
@@ -160,7 +93,9 @@ namespace GSF.IO
         /// </summary>
         public OutageLog()
         {
-            m_flushLog = new ShortSynchronizedOperation(WriteLog);
+            m_writeLogWaitHandle = new ManualResetEventSlim(false);
+            m_readLogOperation = new ShortSynchronizedOperation(ReadLog);
+            m_writeLogOperation = new ShortSynchronizedOperation(WriteLog);
         }
 
         /// <summary>
@@ -205,10 +140,11 @@ namespace GSF.IO
             set
             {
                 m_enabled = value;
+                QueueWriteLog();
             }
         }
 
-        // Gets the name of the run-time log
+        // Gets the name of the outage log
         string IProvideStatus.Name
         {
             get
@@ -218,7 +154,7 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Gets the current status details about <see cref="RunTimeLog"/>.
+        /// Gets the current status details about <see cref="OutageLog"/>.
         /// </summary>
         public virtual string Status
         {
@@ -230,7 +166,9 @@ namespace GSF.IO
                 status.AppendLine();
                 status.AppendFormat("      Log flushing enabled: {0}", Enabled);
                 status.AppendLine();
-                status.AppendFormat("     Actively flushing log: {0}", m_flushLog.IsRunning);
+                status.AppendFormat("      Actively reading log: {0} - {1} total reads", m_readLogOperation.IsRunning, m_totalReads);
+                status.AppendLine();
+                status.AppendFormat("      Actively writing log: {0} - {1} total writes", m_writeLogOperation.IsRunning, m_totalWrites);
                 status.AppendLine();
                 status.AppendFormat("          Outage log count: {0}", Count);
                 status.AppendLine();
@@ -262,11 +200,15 @@ namespace GSF.IO
             {
                 try
                 {
-                    //if (disposing)
-                    //{
-                    //}
-
-                    WriteLog();
+                    if (disposing)
+                    {
+                        if ((object)m_writeLogWaitHandle != null)
+                        {
+                            // Signal any waiting threads
+                            m_writeLogWaitHandle.Set();
+                            m_writeLogWaitHandle.Dispose();
+                        }
+                    }
                 }
                 finally
                 {
@@ -295,7 +237,10 @@ namespace GSF.IO
             if (string.IsNullOrWhiteSpace(m_fileName))
                 throw new NullReferenceException("No outage log file name was specified");
 
-            ReadLog();
+            m_totalReads = 0;
+            m_totalWrites = 0;
+
+            m_readLogOperation.RunOnce();
         }
 
         /// <summary>
@@ -309,9 +254,42 @@ namespace GSF.IO
         }
 
         /// <summary>
-        /// Reads the outage log.
+        /// Requests that outage log be flushed to disk.
         /// </summary>
-        protected void ReadLog()
+        /// <remarks>
+        /// Any change in <see cref="OutageLog"/> contents will automatically queue a log file flush.
+        /// This function only exists to force a flush and allow consumer to use returned wait handle
+        /// to block calling thread until flush has completed.
+        /// </remarks>
+        /// <returns>
+        /// Wait handle that can block a calling thread until flush completes.
+        /// </returns>
+        public ManualResetEventSlim Flush()
+        {
+            m_writeLogWaitHandle.Reset();
+            m_writeLogOperation.RunOnceAsync();
+
+            return m_writeLogWaitHandle;
+        }
+
+        /// <summary>
+        /// Initiates a log read.
+        /// </summary>
+        protected void InitiateRead()
+        {
+            m_readLogOperation.RunOnceAsync();
+        }
+
+        /// <summary>
+        /// Initiates a log write.
+        /// </summary>
+        protected void InitiateWrite()
+        {
+            m_writeLogOperation.RunOnceAsync();
+        }
+
+        // Reads the outage log.
+        private void ReadLog()
         {
             try
             {
@@ -360,8 +338,8 @@ namespace GSF.IO
                 {
                     try
                     {
-                        // Don't kick off flush operations during load
-                        m_loadInProgress = true;
+                        // Don't kick off write log operations during load
+                        m_logLoadInProgress = true;
 
                         Clear();
 
@@ -372,9 +350,11 @@ namespace GSF.IO
                     }
                     finally
                     {
-                        m_loadInProgress = false;
+                        m_logLoadInProgress = false;
                     }
                 }
+
+                m_totalReads++;
             }
             catch (Exception ex)
             {
@@ -382,10 +362,8 @@ namespace GSF.IO
             }
         }
 
-        /// <summary>
-        /// Writes the outage log - times are in a human readable format.
-        /// </summary>
-        protected void WriteLog()
+        // Writes the outage log - times are in a human readable format.
+        private void WriteLog()
         {
             try
             {
@@ -408,6 +386,11 @@ namespace GSF.IO
                             outage.EndTime.ToString(DateTimeFormat, CultureInfo.InvariantCulture));
                     }
                 }
+
+                if (!m_disposed)
+                    m_writeLogWaitHandle.Set();
+
+                m_totalWrites++;
             }
             catch (Exception ex)
             {
@@ -431,7 +414,7 @@ namespace GSF.IO
         protected override void ClearItems()
         {
             base.ClearItems();
-            FlushLog();
+            QueueWriteLog();
         }
 
         /// <summary>
@@ -446,7 +429,7 @@ namespace GSF.IO
         protected override void InsertItem(int index, Outage outage)
         {
             base.InsertItem(index, outage);
-            FlushLog();
+            QueueWriteLog();
         }
 
         /// <summary>
@@ -460,7 +443,7 @@ namespace GSF.IO
         protected override void RemoveItem(int index)
         {
             base.RemoveItem(index);
-            FlushLog();
+            QueueWriteLog();
         }
 
         /// <summary>
@@ -475,14 +458,14 @@ namespace GSF.IO
         protected override void SetItem(int index, Outage outage)
         {
             base.SetItem(index, outage);
-            FlushLog();
+            QueueWriteLog();
         }
 
-        // Kick off a flush operation after any kind of change to the outage log
-        private void FlushLog()
+        // Queues a write log operation after any kind of change to the outage log.
+        private void QueueWriteLog()
         {
-            if (m_enabled && !m_loadInProgress)
-                m_flushLog.RunOnceAsync();
+            if (m_enabled && !m_logLoadInProgress)
+                m_writeLogOperation.RunOnceAsync();
         }
 
         #endregion

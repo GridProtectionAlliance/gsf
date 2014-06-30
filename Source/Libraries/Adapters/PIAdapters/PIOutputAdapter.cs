@@ -49,6 +49,7 @@ namespace PIAdapters
     /// <summary>
     /// Exports measurements to PI if the point tag or alternate tag corresponds to a PI point's tag name.
     /// </summary>
+    // ReSharper disable RedundantArgumentDefaultValue
     [Description("OSI-PI : Archives measurements to an OSI-PI server using 64-bit PI SDK")]
     public class PIOutputAdapter : OutputAdapterBase
     {
@@ -94,7 +95,7 @@ namespace PIAdapters
         {
             m_pointsPerConnection = PIConnectionPool.DefaultAccessCountPerConnection;
             m_mappedConnectionPoints = new ConcurrentDictionary<MeasurementKey, ConnectionPoint>();
-            m_queuedMappingRequests = ProcessDictionary<PIConnection, List<MeasurementKey>>.CreateAsynchronousQueue(EstablishConnectionPointMapping, 1.0D, PIConnectionPool.DefaultMinimumPoolSize / 2, Timeout.Infinite, false, false);
+            m_queuedMappingRequests = new ProcessDictionary<PIConnection, List<MeasurementKey>>(EstablishConnectionPointMapping, 1.0D, PIConnectionPool.DefaultMinimumPoolSize / 2);
             m_restartConnection = new ShortSynchronizedOperation(Start);
             m_tagMap = new ConcurrentDictionary<Guid, string>();
             m_pendingMappings = new HashSet<MeasurementKey>();
@@ -680,7 +681,7 @@ namespace PIAdapters
                         if ((object)point == null)
                         {
                             if (!m_refreshingMetadata)
-                                OnStatusMessage("[WARNING] No PI points found for tag '{0}'. Data will not be archived for '{1}'.", tagName, key);
+                                OnStatusMessage("WARNING: No PI points found for tag '{0}'. Data will not be archived for '{1}'.", tagName, key);
                         }
                     }
                 }
@@ -886,7 +887,7 @@ namespace PIAdapters
                                         }
 
                                         // Raise event in MTA space
-                                        string message = string.Format("[WARNING] Error(s) reported during update of PI tag '{0}' metadata from measurement '{1}': {2}", tagName, key, description.ToString());
+                                        string message = string.Format("WARNING: Error(s) reported during update of PI tag '{0}' metadata from measurement '{1}': {2}", tagName, key, description.ToString());
                                         ThreadPool.QueueUserWorkItem(state => OnStatusMessage(message));
                                     }
                                 }
@@ -1004,14 +1005,14 @@ namespace PIAdapters
                 }
 
                 if (m_mappedConnectionPoints.Count == 0)
-                    OnStatusMessage("[WARNING] No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
+                    OnStatusMessage("WARNING: No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
             }
             else
             {
                 if (m_mappedConnectionPoints.Count > 0)
-                    OnStatusMessage("[WARNING] No PI tags were mapped to measurements - existing tag-map with {0:N0} tags remains in use.", m_mappedConnectionPoints.Count);
+                    OnStatusMessage("WARNING: No PI tags were mapped to measurements - existing tag-map with {0:N0} tags remains in use.", m_mappedConnectionPoints.Count);
                 else
-                    OnStatusMessage("[WARNING] No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
+                    OnStatusMessage("WARNING: No PI tags were mapped to measurements - no tag-map exists so no points will be archived.");
             }
         }
 
