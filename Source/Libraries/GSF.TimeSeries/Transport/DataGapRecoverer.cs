@@ -72,6 +72,11 @@ namespace GSF.TimeSeries.Transport
         public const double DefaultMaximumRecoverySpan = Time.SecondsPerHour * 6;
 
         /// <summary>
+        /// Default value for <see cref="FilterExpression"/>.
+        /// </summary>
+        public const string DefaultFilterExpression = "FILTER ActiveMeasurements WHERE Internal <> 0";
+
+        /// <summary>
         /// Default value for <see cref="RecoveryProcessingInterval"/>.
         /// </summary>
         public const int DefaultRecoveryProcessingInterval = 0;
@@ -127,7 +132,7 @@ namespace GSF.TimeSeries.Transport
         private Ticks m_mostRecentRecoveredTime;
         private long m_measurementsRecoveredForDataGap;
         private long m_measurementsRecoveredOverLastInterval;
-        private volatile bool m_abnormalProcessDisconnection;
+        private volatile bool m_abnormalTermination;
         private volatile bool m_enabled;
         private bool m_disposed;
 
@@ -140,15 +145,16 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public DataGapRecoverer()
         {
-            m_subscriptionInfo = new UnsynchronizedSubscriptionInfo(false);
-            m_subscriptionInfo.ProcessingInterval = DefaultRecoveryProcessingInterval;
-            m_subscriptionInfo.UseMillisecondResolution = DefaultUseMillisecondResolution;
-
             m_dataGapRecoveryCompleted = new ManualResetEventSlim(false);
 
             m_recoveryStartDelay = DefaultRecoveryStartDelay;
             m_minimumRecoverySpan = DefaultMinimumRecoverySpan;
             m_maximumRecoverySpan = DefaultMaximumRecoverySpan;
+
+            m_subscriptionInfo = new UnsynchronizedSubscriptionInfo(false);
+            m_subscriptionInfo.FilterExpression = DefaultFilterExpression;
+            m_subscriptionInfo.ProcessingInterval = DefaultRecoveryProcessingInterval;
+            m_subscriptionInfo.UseMillisecondResolution = DefaultUseMillisecondResolution;
 
             m_dataStreamMonitor = new Timer();
             m_dataStreamMonitor.Elapsed += DataStreamMonitor_Elapsed;
@@ -319,6 +325,21 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Gets or sets the filter expression used to define which measurements are being requested for data recovery during an <see cref="Outage"/>.
+        /// </summary>
+        public string FilterExpression
+        {
+            get
+            {
+                return m_subscriptionInfo.FilterExpression;
+            }
+            set
+            {
+                m_subscriptionInfo.FilterExpression = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the data recovery processing interval, in whole milliseconds, to use in the temporal data
         /// subscription when recovering data for an <see cref="Outage"/>.<br/>
         /// A value of <c>-1</c> indicates the default processing interval will be requested.<br/>
@@ -461,13 +482,15 @@ namespace GSF.TimeSeries.Transport
             {
                 StringBuilder status = new StringBuilder();
 
-                status.AppendFormat(" Data recovery start delay: {0} seconds", Time.ToElapsedTimeString(RecoveryStartDelay, 2));
+                status.AppendFormat(" Data recovery start delay: {0} seconds", RecoveryStartDelay.ToString(2));
                 status.AppendLine();
-                status.AppendFormat("  Data monitoring interval: {0} seconds", Time.ToElapsedTimeString(DataMonitoringInterval, 2));
+                status.AppendFormat("  Data monitoring interval: {0} seconds", DataMonitoringInterval.ToString(2));
                 status.AppendLine();
-                status.AppendFormat("Minimum data recovery span: {0} seconds", Time.ToElapsedTimeString(MinimumRecoverySpan, 2));
+                status.AppendFormat("Minimum data recovery span: {0} seconds", MinimumRecoverySpan.ToString(2));
                 status.AppendLine();
-                status.AppendFormat("Maximum data recovery span: {0} seconds", Time.ToElapsedTimeString(MaximumRecoverySpan, 2));
+                status.AppendFormat("Maximum data recovery span: {0} seconds", MaximumRecoverySpan.ToString(2));
+                status.AppendLine();
+                status.AppendFormat("Recovery filter expression: {0}", FilterExpression);
                 status.AppendLine();
                 status.AppendFormat(" Recovery processing speed: {0}", RecoveryProcessingInterval < 0 ? "Default" : (RecoveryProcessingInterval == 0 ? "As fast as possible" : RecoveryProcessingInterval + " milliseconds"));
                 status.AppendLine();
@@ -517,7 +540,7 @@ namespace GSF.TimeSeries.Transport
                         if ((object)m_dataGapRecoveryCompleted != null)
                         {
                             // Signal any waiting threads
-                            m_abnormalProcessDisconnection = true;
+                            m_abnormalTermination = true;
                             m_dataGapRecoveryCompleted.Set();
                             m_dataGapRecoveryCompleted.Dispose();
                             m_dataGapRecoveryCompleted = null;
@@ -572,6 +595,9 @@ namespace GSF.TimeSeries.Transport
         /// </summary>
         public void Initialize()
         {
+            if (m_disposed)
+                throw new InvalidOperationException("Data gap recoverer has been disposed. Cannot initialize.");
+
             Dictionary<string, string> settings = m_connectionString.ToNonNullString().ParseKeyValuePairs();
             string setting;
             double timeInterval;
@@ -591,6 +617,9 @@ namespace GSF.TimeSeries.Transport
 
             if (settings.TryGetValue("maximumRecoverySpan", out setting) && double.TryParse(setting, out timeInterval))
                 MaximumRecoverySpan = timeInterval;
+
+            if (settings.TryGetValue("filterExpression", out setting) && !string.IsNullOrWhiteSpace(setting))
+                FilterExpression = setting;
 
             if (settings.TryGetValue("recoveryProcessingInterval", out setting) && int.TryParse(setting, out processingInterval))
                 RecoveryProcessingInterval = processingInterval;
@@ -657,6 +686,14 @@ namespace GSF.TimeSeries.Transport
         }
 
         /// <summary>
+        /// Queues up a flush to happen asynchronously.
+        /// </summary>
+        public void FlushLogAsync()
+        {
+            ThreadPool.QueueUserWorkItem(start => FlushLog());
+        }
+
+        /// <summary>
         /// Blocks calling thread until data gap <see cref="OutageLog"/> has been flushed to disk.
         /// </summary>
         /// <param name="timeout">Optional time-out for waiting thread block. Defaults to waiting indefinitely.</param>
@@ -707,7 +744,7 @@ namespace GSF.TimeSeries.Transport
 
             // Reset processing fields
             m_mostRecentRecoveredTime = dataGap.StartTime;
-            m_abnormalProcessDisconnection = false;
+            m_abnormalTermination = false;
 
             // Reset process completion wait handle
             m_dataGapRecoveryCompleted.Reset();
@@ -719,7 +756,7 @@ namespace GSF.TimeSeries.Transport
             m_dataGapRecoveryCompleted.Wait();
 
             // If temporal session failed to connect, retry data recovery for this outage
-            if (m_abnormalProcessDisconnection)
+            if (m_abnormalTermination)
             {
                 // Make sure any data recovered so far doesn't get unnecessarily re-recovered, this requires that source historian report data in time-sorted order
                 dataGap.StartTime = GSF.Common.Max(dataGap.StartTime, m_mostRecentRecoveredTime - (m_subscriptionInfo.UseMillisecondResolution ? Ticks.PerMillisecond : 1L));
@@ -808,7 +845,7 @@ namespace GSF.TimeSeries.Transport
 
         private void TemporalSubscription_ConnectionEstablished(object sender, EventArgs e)
         {
-            // Start temporal data subscription
+            // Connection established, start temporal data subscription
             m_temporalSubscription.Subscribe(m_subscriptionInfo);
 
             // Enable data monitor            
@@ -824,8 +861,8 @@ namespace GSF.TimeSeries.Transport
 
                 if ((object)m_temporalSubscription != null)
                 {
-                    // If temporal subscriptions is currently enabled - connection termination was not expected
-                    m_abnormalProcessDisconnection = m_temporalSubscription.Enabled;
+                    // If temporal subscription is currently enabled - connection termination was not expected
+                    m_abnormalTermination = m_temporalSubscription.Enabled;
 
                     // Disable temporal subscription so it doesn't attempt an auto-reconnection - we will
                     // simply requeue data gap so it will be processed again. This is safer since the gap
@@ -869,7 +906,7 @@ namespace GSF.TimeSeries.Transport
             // See if consumer has requested to stop recovery operations
             if (!m_enabled)
             {
-                m_abnormalProcessDisconnection = true;
+                m_abnormalTermination = true;
 
                 if ((object)m_dataGapRecoveryCompleted != null)
                     m_dataGapRecoveryCompleted.Set();

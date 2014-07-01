@@ -31,7 +31,7 @@ namespace GSF.Threading
     /// </summary>
     /// <remarks>
     /// This class handles the synchronization between the methods defined in the
-    /// <see cref="ISynchronizedOperation"/> interface. Implementors should only need
+    /// <see cref="ISynchronizedOperation"/> interface. Implementers should only need
     /// to implement the <see cref="ExecuteActionAsync"/> method to provide a mechanism
     /// for executing the action on a separate thread.
     /// </remarks>
@@ -45,8 +45,8 @@ namespace GSF.Threading
         private const int Pending = 2;
 
         // Fields
-        private Action m_action;
-        private Action<Exception> m_exceptionAction;
+        private readonly Action m_action;
+        private readonly Action<Exception> m_exceptionAction;
         private int m_state;
 
         #endregion
@@ -222,7 +222,7 @@ namespace GSF.Threading
         /// Executes the action on a separate thread.
         /// </summary>
         /// <remarks>
-        /// Implementors should call <see cref="ExecuteAction"/> on a separate thread
+        /// Implementers should call <see cref="ExecuteAction"/> on a separate thread
         /// and check the return value. If it returns true, that means it needs to run
         /// again. The following is a sample implementation using a regular dedicated
         /// thread.

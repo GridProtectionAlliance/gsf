@@ -1427,11 +1427,13 @@ namespace GSF.TimeSeries.Transport
 
                 if (dataGapSettings.TryGetValue("enabled", out setting) && setting.ParseBoolean())
                 {
-                    // Remove dataGapRecovery connection setting from command channel connection string, if defined. This
-                    // will prevent any recursive data gap recovery operations from being established:
+                    // Remove dataGapRecovery connection setting from command channel connection string, if defined there.
+                    // This will prevent any recursive data gap recovery operations from being established:
                     Dictionary<string, string> connectionSettings = m_commandChannel.ConnectionString.ParseKeyValuePairs();
                     connectionSettings.Remove("dataGapRecovery");
 
+                    // Note that the data gap recoverer will connect on the same command channel port as
+                    // the real-time subscriber (TCP only)
                     m_dataGapRecoveryEnabled = true;
                     m_dataGapRecoverer = new DataGapRecoverer();
                     m_dataGapRecoverer.SourceConnectionName = Name;
@@ -1686,7 +1688,7 @@ namespace GSF.TimeSeries.Transport
                 connectionString.AppendFormat("timeResolution={0};", info.TimeResolution);
                 connectionString.AppendFormat("allowPreemptivePublishing={0};", info.AllowPreemptivePublishing);
                 connectionString.AppendFormat("requestNaNValueFilter={0};", info.RequestNaNValueFilter);
-                connectionString.AppendFormat("downsamplingMethod={0};", info.DownsamplingMethod.ToString());
+                connectionString.AppendFormat("downsamplingMethod={0};", info.DownsamplingMethod);
                 connectionString.AppendFormat("processingInterval={0};", info.ProcessingInterval);
                 connectionString.AppendFormat("assemblyInfo={{source={0};version={1}.{2}.{3};buildDate={4}}};", assemblyInfo.Name, assemblyInfo.Version.Major, assemblyInfo.Version.Minor, assemblyInfo.Version.Build, assemblyInfo.BuildDate.ToString("yyyy-MM-dd HH:mm:ss"));
 
@@ -3831,7 +3833,7 @@ namespace GSF.TimeSeries.Transport
                 try
                 {
                     m_dataGapRecoverer.Enabled = false;
-                    m_dataGapRecoverer.FlushLog(5000);
+                    m_dataGapRecoverer.FlushLogAsync();
                 }
                 catch (Exception ex)
                 {

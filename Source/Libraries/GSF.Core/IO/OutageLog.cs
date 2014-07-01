@@ -27,6 +27,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using GSF.Threading;
@@ -264,6 +265,7 @@ namespace GSF.IO
         /// <returns>
         /// Wait handle that can block a calling thread until flush completes.
         /// </returns>
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public ManualResetEventSlim Flush()
         {
             m_writeLogWaitHandle.Reset();
