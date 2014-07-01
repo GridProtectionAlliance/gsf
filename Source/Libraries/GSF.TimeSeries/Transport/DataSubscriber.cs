@@ -450,6 +450,9 @@ namespace GSF.TimeSeries.Transport
         private RunTimeLog m_runTimeLog;
         private bool m_dataGapRecoveryEnabled;
         private DataGapRecoverer m_dataGapRecoverer;
+        //private Ticks m_lastMeasurementCheck;
+        //private Ticks m_minimumMissingMeasurementThreshold = 5;
+        //private double m_transmissionDelayTimeAdjustment = 5.0;
 
         private readonly List<BufferBlockMeasurement> m_bufferBlockCache;
         private uint m_expectedBufferBlockSequenceNumber;
@@ -4274,7 +4277,17 @@ namespace GSF.TimeSeries.Transport
             List<DeviceStatisticsHelper<SubscribedDevice>> statisticsHelpers = m_statisticsHelpers;
 
             foreach (DeviceStatisticsHelper<SubscribedDevice> statisticsHelper in statisticsHelpers)
+            {
                 statisticsHelper.Update(now);
+
+                // TODO: Missing data detection could be complex. For example, no need to continue logging data outages for devices that are offline - but how to detect?
+                //// If data channel is UDP, measurements are missing for time span and data gap recovery enabled, request missing
+                //if ((object)m_dataChannel != null && m_dataGapRecoveryEnabled && (object)m_dataGapRecoverer != null && m_lastMeasurementCheck > 0 &&
+                //    statisticsHelper.Device.MeasurementsExpected - statisticsHelper.Device.MeasurementsReceived > m_minimumMissingMeasurementThreshold)
+                //    m_dataGapRecoverer.LogDataGap(m_lastMeasurementCheck - Ticks.FromSeconds(m_transmissionDelayTimeAdjustment), now);
+            }
+
+            //m_lastMeasurementCheck = now;
         }
 
         private bool SynchronizedMetadataChanged(DataSet newSynchronizedMetadata)

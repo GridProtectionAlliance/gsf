@@ -506,7 +506,7 @@ namespace GSF.Collections
         protected ProcessQueue(ProcessItemFunctionSignature processItemFunction, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction, IList<T> processList, double processInterval, int maximumThreads, int processTimeout, bool requeueOnTimeout, bool requeueOnException)
         {
             if ((object)processList == null)
-                throw new NullReferenceException("ProcessQueue<T> base list cannot be null");
+                throw new ArgumentNullException("processList", "ProcessQueue<T> base list cannot be null");
 
             m_processItemFunction = processItemFunction;    // Defining this function creates a ProcessingStyle = OneAtATime process queue
             m_processItemsFunction = processItemsFunction;  // Defining this function creates a ProcessingStyle = ManyAtOnce process queue

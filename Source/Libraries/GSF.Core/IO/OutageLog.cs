@@ -30,6 +30,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using GSF.Collections;
 using GSF.Threading;
 
 namespace GSF.IO
@@ -48,7 +49,7 @@ namespace GSF.IO
     /// synchronized when simultaneously accessed from different threads.
     /// </para>
     /// </remarks>
-    public class OutageLog : Collection<Outage>, ISupportLifecycle, IProvideStatus
+    public class OutageLog : ObservableCollection<Outage>, ISupportLifecycle, IProvideStatus
     {
         #region [ Members ]
 
@@ -78,9 +79,12 @@ namespace GSF.IO
         private readonly ManualResetEventSlim m_writeLogWaitHandle;
         private readonly ShortSynchronizedOperation m_readLogOperation;
         private readonly ShortSynchronizedOperation m_writeLogOperation;
-        private volatile bool m_logLoadInProgress;
+        private readonly ShortSynchronizedOperation m_condenseLogOperation;
+        private readonly object m_readerWriterLock;
+        private volatile bool m_postponeWriteOperations;
         private long m_totalReads;
         private long m_totalWrites;
+        private long m_totalCondenses;
         private string m_fileName;
         private bool m_enabled;
         private bool m_disposed;
@@ -97,6 +101,8 @@ namespace GSF.IO
             m_writeLogWaitHandle = new ManualResetEventSlim(false);
             m_readLogOperation = new ShortSynchronizedOperation(ReadLog);
             m_writeLogOperation = new ShortSynchronizedOperation(WriteLog);
+            m_condenseLogOperation = new ShortSynchronizedOperation(CondenseLog);
+            m_readerWriterLock = new object();
         }
 
         /// <summary>
@@ -167,11 +173,13 @@ namespace GSF.IO
                 status.AppendLine();
                 status.AppendFormat("      Log flushing enabled: {0}", Enabled);
                 status.AppendLine();
-                status.AppendFormat("      Actively reading log: {0} - {1} total reads", m_readLogOperation.IsRunning, m_totalReads);
+                status.AppendFormat("      Actively reading log: {0} - {1:N0} total reads", m_readLogOperation.IsRunning, m_totalReads);
                 status.AppendLine();
-                status.AppendFormat("      Actively writing log: {0} - {1} total writes", m_writeLogOperation.IsRunning, m_totalWrites);
+                status.AppendFormat("      Actively writing log: {0} - {1:N0} total writes", m_writeLogOperation.IsRunning, m_totalWrites);
                 status.AppendLine();
-                status.AppendFormat("          Outage log count: {0}", Count);
+                status.AppendFormat("   Actively condensing log: {0} - {1:N0} total condenses (with action)", m_condenseLogOperation.IsRunning, m_totalCondenses);
+                status.AppendLine();
+                status.AppendFormat("           Outage log size: {0:N0} outages", Count);
                 status.AppendLine();
 
                 return status.ToString();
@@ -240,6 +248,7 @@ namespace GSF.IO
 
             m_totalReads = 0;
             m_totalWrites = 0;
+            m_totalCondenses = 0;
 
             m_readLogOperation.RunOnce();
         }
@@ -336,12 +345,12 @@ namespace GSF.IO
                     }
                 }
 
-                lock (this)
+                lock (m_readerWriterLock)
                 {
                     try
                     {
                         // Don't kick off write log operations during load
-                        m_logLoadInProgress = true;
+                        m_postponeWriteOperations = true;
 
                         Clear();
 
@@ -352,7 +361,7 @@ namespace GSF.IO
                     }
                     finally
                     {
-                        m_logLoadInProgress = false;
+                        m_postponeWriteOperations = false;
                     }
                 }
 
@@ -374,7 +383,7 @@ namespace GSF.IO
 
                 Outage[] outages;
 
-                lock (this)
+                lock (m_readerWriterLock)
                 {
                     outages = this.ToArray();
                 }
@@ -400,6 +409,64 @@ namespace GSF.IO
             }
         }
 
+        // Condenses the outage log (i.e., reduces the overlapping outages into single outages)
+        private void CondenseLog()
+        {
+            lock (m_readerWriterLock)
+            {
+                Dictionary<Outage, HashSet<Outage>> outageOverlaps = new Dictionary<Outage, HashSet<Outage>>();
+
+                // Detect overlapping outages
+                foreach (Outage outage in this)
+                {
+                    Outage a = outage;
+                    foreach (Outage overlap in this.Where(b => !ReferenceEquals(a, b) && a.StartTime <= b.EndTime && b.StartTime <= a.EndTime))
+                        outageOverlaps.GetOrAdd(outage, o => new HashSet<Outage>()).Add(overlap);
+                }
+
+                // If there are any overlapping outages, we need to reduce set
+                if (outageOverlaps.Count > 0)
+                {
+                    bool originalPostponeState = m_postponeWriteOperations;
+
+                    try
+                    {
+                        // In this "fix-up" mode, we delay write subsequent log operations until process is complete
+                        m_postponeWriteOperations = true;
+
+                        foreach (KeyValuePair<Outage, HashSet<Outage>> overlap in outageOverlaps)
+                        {
+                            HashSet<Outage> overlaps = overlap.Value;
+
+                            // Add base outage to overlaps so full minimum and maximum range can be determined
+                            overlaps.Add(overlap.Key);
+
+                            Outage combinedOutage = new Outage(overlaps.Min(o => o.StartTime.Value), overlaps.Max(o => o.EndTime.Value));
+                            bool outagesRemoved = false;
+
+                            // Remove each overlapping outage
+                            foreach (Outage outage in overlaps)
+                            {
+                                if (Remove(outage))
+                                    outagesRemoved = true;
+                            }
+
+                            // Add a new combined outage of the complete span, assuming any of the outages were removed (could have already been handled)
+                            if (outagesRemoved)
+                                Add(combinedOutage);
+                        }
+
+                        m_totalCondenses++;
+                    }
+                    finally
+                    {
+                        m_postponeWriteOperations = originalPostponeState;
+                        QueueWriteLog();
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Raises <see cref="ProcessException"/> event.
         /// </summary>
@@ -420,6 +487,31 @@ namespace GSF.IO
         }
 
         /// <summary>
+        /// Removes the element at the specified index of the <see cref="OutageLog"/>.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to remove.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="index"/> is less than zero.-or-
+        /// <paramref name="index"/> is equal to or greater than <see cref="Collection{T}.Count"/>.
+        /// </exception>
+        protected override void RemoveItem(int index)
+        {
+            base.RemoveItem(index);
+            QueueWriteLog();
+        }
+
+        /// <summary>
+        /// Moves the item at the specified index to a new location in the <see cref="OutageLog"/>.
+        /// </summary>
+        /// <param name="oldIndex">The zero-based index specifying the location of the <see cref="Outage"/> to be moved.</param>
+        /// <param name="newIndex">The zero-based index specifying the new location of the <see cref="Outage"/>.</param>
+        protected override void MoveItem(int oldIndex, int newIndex)
+        {
+            base.MoveItem(oldIndex, newIndex);
+            QueueWriteLog();
+        }
+
+        /// <summary>
         /// Inserts an element into the <see cref="OutageLog"/> at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index at which <paramref name="outage"/> should be inserted.</param>
@@ -431,20 +523,7 @@ namespace GSF.IO
         protected override void InsertItem(int index, Outage outage)
         {
             base.InsertItem(index, outage);
-            QueueWriteLog();
-        }
-
-        /// <summary>
-        /// Removes the element at the specified index of the <see cref="OutageLog"/>.
-        /// </summary>
-        /// <param name="index">The zero-based index of the element to remove.</param>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="index"/> is less than zero.-or-
-        /// <paramref name="index"/> is equal to or greater than <see cref="Collection{T}.Count"/>.
-        /// </exception>
-        protected override void RemoveItem(int index)
-        {
-            base.RemoveItem(index);
+            m_condenseLogOperation.RunOnceAsync();
             QueueWriteLog();
         }
 
@@ -460,13 +539,14 @@ namespace GSF.IO
         protected override void SetItem(int index, Outage outage)
         {
             base.SetItem(index, outage);
+            m_condenseLogOperation.RunOnceAsync();
             QueueWriteLog();
         }
 
         // Queues a write log operation after any kind of change to the outage log.
         private void QueueWriteLog()
         {
-            if (m_enabled && !m_logLoadInProgress)
+            if (m_enabled && !m_postponeWriteOperations)
                 m_writeLogOperation.RunOnceAsync();
         }
 

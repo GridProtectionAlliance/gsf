@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Specialized;
 using GSF.Collections;
 
 namespace GSF.IO
@@ -39,6 +40,13 @@ namespace GSF.IO
     /// </remarks>
     public class OutageLogProcessor : ProcessQueue<Outage>
     {
+        #region [ Members ]
+
+        // Fields
+        private bool m_disposed;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -70,6 +78,7 @@ namespace GSF.IO
         public OutageLogProcessor(OutageLog outageLog, ProcessItemFunctionSignature processItemFunction, CanProcessItemFunctionSignature canProcessItemFunction = null, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
             : base(processItemFunction, null, canProcessItemFunction, outageLog, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
+            outageLog.CollectionChanged += outageLog_CollectionChanged;
         }
 
         /// <summary>
@@ -101,6 +110,44 @@ namespace GSF.IO
         public OutageLogProcessor(OutageLog outageLog, ProcessItemsFunctionSignature processItemsFunction, CanProcessItemFunctionSignature canProcessItemFunction = null, double processInterval = DefaultProcessInterval, int maximumThreads = DefaultMaximumThreads, int processTimeout = DefaultProcessTimeout, bool requeueOnTimeout = DefaultRequeueOnTimeout, bool requeueOnException = DefaultRequeueOnException)
             : base(null, processItemsFunction, canProcessItemFunction, outageLog, processInterval, maximumThreads, processTimeout, requeueOnTimeout, requeueOnException)
         {
+            outageLog.CollectionChanged += outageLog_CollectionChanged;
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="OutageLogProcessor"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        OutageLog outageLog = InternalList as OutageLog;
+
+                        if ((object)outageLog != null)
+                            outageLog.CollectionChanged -= outageLog_CollectionChanged;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
+
+        // Since base outage log collection may be independently modified outside purview of process queue wrapper,
+        // we need to let process queue know when things have changed
+        private void outageLog_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            SignalDataModified();
         }
 
         #endregion
