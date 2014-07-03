@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -65,7 +66,7 @@ namespace GSF.TimeSeries.Adapters
         public event EventHandler<EventArgs<int>> UnprocessedMeasurements;
 
         // Fields
-        private LongSynchronizedOperation m_metadataRefreshOperation;
+        private readonly LongSynchronizedOperation m_metadataRefreshOperation;
         private ProcessQueue<IMeasurement> m_measurementQueue;
         private List<string> m_inputSourceIDs;
         private MeasurementKey[] m_requestedInputMeasurementKeys;
@@ -131,9 +132,7 @@ namespace GSF.TimeSeries.Adapters
         /// Gets or sets whether or not to automatically place measurements back into the processing
         /// queue if an exception occurs while processing.  Defaults to false.
         /// </summary>
-        /// <remarks>
-        /// Note that items being requeued will be added to the bottom of queue by default.
-        /// </remarks>
+        [ConnectionStringParameter, Description("Defines whether or not to automatically place measurements back into the processing queue if an exception occurs while processing.  Defaults to false."), DefaultValue(false)]
         public virtual bool RequeueOnException
         {
             get
@@ -354,7 +353,7 @@ namespace GSF.TimeSeries.Adapters
 
                 if (RequestedInputMeasurementKeys != null && RequestedInputMeasurementKeys.Length > 0)
                 {
-                    status.AppendFormat("      Requested input keys: {0} defined measurements", RequestedInputMeasurementKeys.Length);
+                    status.AppendFormat("      Requested input keys: {0:N0} defined measurements", RequestedInputMeasurementKeys.Length);
                     status.AppendLine();
                     status.AppendLine();
 
@@ -374,8 +373,6 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();
                 status.AppendFormat("     Output is for archive: {0}", OutputIsForArchive);
-                status.AppendLine();
-                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
                 status.Append(m_measurementQueue.Status);
 
@@ -462,6 +459,9 @@ namespace GSF.TimeSeries.Adapters
                 InputSourceIDs = setting.Split(',');
             else
                 InputSourceIDs = null;
+
+            if (settings.TryGetValue("requeueOnException", out setting))
+                RequeueOnException = setting.ParseBoolean();
 
             // Start data monitor...
             if (m_monitorTimer != null)

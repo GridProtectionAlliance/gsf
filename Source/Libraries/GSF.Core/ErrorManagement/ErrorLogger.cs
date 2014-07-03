@@ -1760,36 +1760,52 @@ namespace GSF.ErrorManagement
         {
             StringBuilder info = new StringBuilder();
 
-            if ((object)ex.InnerException != null)
+            AggregateException aggregateException = ex as AggregateException;
+
+            if ((object)aggregateException != null && (object)aggregateException.InnerExceptions != null && aggregateException.InnerExceptions.Count > 0)
             {
-                // Sometimes the original exception is wrapped in a more relevant outer exception
-                // the detail exception is the "inner" exception
-                // See: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
-                info.Append("(Inner Exception)");
+                int aggregateCount = 1;
+
+                foreach (Exception innerException in aggregateException.InnerExceptions)
+                {
+                    info.AppendFormat("(Aggregate Exception {0})", aggregateCount++);
+                    info.AppendLine();
+                    info.Append(GetExceptionInfo(innerException, includeUserInfo));
+                }
+            }
+            else
+            {
+                if ((object)ex.InnerException != null)
+                {
+                    // Sometimes the original exception is wrapped in a more relevant outer exception
+                    // the detail exception is the "inner" exception
+                    // See: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
+                    info.Append("(Inner Exception)");
+                    info.AppendLine();
+                    info.Append(GetExceptionInfo(ex.InnerException, includeUserInfo));
+                    info.AppendLine();
+                    info.Append("(Outer Exception)");
+                    info.AppendLine();
+                }
+
+                // Get general system information.
+                info.Append(GetSystemInfo(includeUserInfo));
                 info.AppendLine();
-                info.Append(GetExceptionInfo(ex.InnerException, includeUserInfo));
+
+                // Get general application information.
+                info.Append(GetApplicationInfo());
                 info.AppendLine();
-                info.Append("(Outer Exception)");
+
+                // Get general exception information.
+                info.Append(GetExceptionGeneralInfo(ex));
+                info.AppendLine();
+
+                // Get the stack trace for the exception.
+                info.Append("---- Stack Trace ----");
+                info.AppendLine();
+                info.Append(GetExceptionStackTrace(ex));
                 info.AppendLine();
             }
-
-            // Get general system information.
-            info.Append(GetSystemInfo(includeUserInfo));
-            info.AppendLine();
-
-            // Get general application information.
-            info.Append(GetApplicationInfo());
-            info.AppendLine();
-
-            // Get general exception information.
-            info.Append(GetExceptionGeneralInfo(ex));
-            info.AppendLine();
-
-            // Get the stack trace for the exception.
-            info.Append("---- Stack Trace ----");
-            info.AppendLine();
-            info.Append(GetExceptionStackTrace(ex));
-            info.AppendLine();
 
             return info.ToString();
         }

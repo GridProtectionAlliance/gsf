@@ -557,10 +557,10 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 if (dataSource != null)
                 {
-                    status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
+                    status.AppendFormat("    Referenced data source: {0}, {1:N0} tables", dataSource.DataSetName, dataSource.Tables.Count);
                     status.AppendLine();
                 }
-                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
+                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString("N0") + " milliseconds");
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
@@ -568,9 +568,9 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendLine();
                 status.AppendFormat("         Connect on demand: {0}", !AutoStart);
                 status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
+                status.AppendFormat("    Processed measurements: {0:N0}", ProcessedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
+                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString(2));
                 status.AppendLine();
                 status.AppendFormat("       Temporal processing: {0}", SupportsTemporalProcessing ? "Supported" : "Unsupported");
                 status.AppendLine();
@@ -580,10 +580,10 @@ namespace GSF.TimeSeries.Adapters
                     status.AppendLine();
                     status.AppendFormat("      Stop time constraint: {0}", StopTimeConstraint == DateTime.MaxValue ? "Unspecified" : StopTimeConstraint.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                     status.AppendLine();
-                    status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval + " milliseconds"));
+                    status.AppendFormat("       Processing interval: {0}", ProcessingInterval < 0 ? "Default" : (ProcessingInterval == 0 ? "As fast as possible" : ProcessingInterval.ToString("N0") + " milliseconds"));
                     status.AppendLine();
                 }
-                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
+                status.AppendFormat("   Item reporting interval: Every {0:N0} items", MeasurementReportingInterval);
                 status.AppendLine();
                 status.AppendFormat("                Adapter ID: {0}", ID);
                 status.AppendLine();
@@ -592,7 +592,7 @@ namespace GSF.TimeSeries.Adapters
                 char[] keyChars;
                 string value;
 
-                status.AppendFormat("         Connection string: {0} key/value pairs", keyValuePairs.Count);
+                status.AppendFormat("         Connection string: {0:N0} key/value pairs", keyValuePairs.Count);
                 //                            1         2         3         4         5         6         7
                 //                   123456789012345678901234567890123456789012345678901234567890123456789012345678
                 //                                         Key = Value
@@ -618,7 +618,7 @@ namespace GSF.TimeSeries.Adapters
 
                 if (OutputMeasurements != null && OutputMeasurements.Length > OutputMeasurements.Count(m => m.Key == MeasurementKey.Undefined))
                 {
-                    status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
+                    status.AppendFormat("       Output measurements: {0:N0} defined measurements", OutputMeasurements.Length);
                     status.AppendLine();
                     status.AppendLine();
 
@@ -637,7 +637,7 @@ namespace GSF.TimeSeries.Adapters
 
                 if (InputMeasurementKeys != null && InputMeasurementKeys.Length > InputMeasurementKeys.Count(k => k == MeasurementKey.Undefined))
                 {
-                    status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
+                    status.AppendFormat("        Input measurements: {0:N0} defined measurements", InputMeasurementKeys.Length);
                     status.AppendLine();
                     status.AppendLine();
 

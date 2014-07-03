@@ -1473,5 +1473,15 @@ namespace GSF
 
             return string.Concat(value.Substring(0, length - 3), "...");
         }
+
+        /// <summary>
+        /// Escapes string using URL encoding.
+        /// </summary>
+        /// <param name="value">The string to escape.</param>
+        /// <returns>URL encoded string.</returns>
+        public static string UriEncode(this string value)
+        {
+            return Uri.EscapeDataString(value);
+        }
     }
 }

@@ -267,9 +267,6 @@ namespace GSF.TimeSeries.Transport
         {
             get
             {
-                if ((object)m_dataStreamMonitor == null)
-                    throw new ArgumentNullException();
-
                 return m_dataStreamMonitor.Interval / 1000.0D;
             }
             set
@@ -492,7 +489,7 @@ namespace GSF.TimeSeries.Transport
                 status.AppendLine();
                 status.AppendFormat("Recovery filter expression: {0}", FilterExpression);
                 status.AppendLine();
-                status.AppendFormat(" Recovery processing speed: {0}", RecoveryProcessingInterval < 0 ? "Default" : (RecoveryProcessingInterval == 0 ? "As fast as possible" : RecoveryProcessingInterval + " milliseconds"));
+                status.AppendFormat(" Recovery processing speed: {0}", RecoveryProcessingInterval < 0 ? "Default" : (RecoveryProcessingInterval == 0 ? "As fast as possible" : RecoveryProcessingInterval.ToString("N0") + " milliseconds"));
                 status.AppendLine();
                 status.AppendFormat("Use millisecond resolution: {0}", UseMillisecondResolution);
                 status.AppendLine();

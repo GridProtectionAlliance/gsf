@@ -176,8 +176,8 @@ namespace GSF.Collections
         // Limits item processing time, if requested.
         private sealed class TemporalTask : IDisposable
         {
-            private ProcessQueue<T> m_parent;
-            private Task m_task;
+            private readonly ProcessQueue<T> m_parent;
+            private readonly Task m_task;
             private readonly T m_item;
             private readonly T[] m_items;
             private bool m_disposed;
@@ -233,9 +233,6 @@ namespace GSF.Collections
                         {
                             if ((object)m_task != null && (m_task.Status == TaskStatus.RanToCompletion || m_task.Status == TaskStatus.Faulted || m_task.Status == TaskStatus.Canceled))
                                 m_task.Dispose();
-
-                            m_task = null;
-                            m_parent = null;
                         }
                     }
                     finally
@@ -420,8 +417,9 @@ namespace GSF.Collections
 
         private volatile bool m_enabled;
         private int m_threadCount;
-        private long m_itemsProcessing;
-        private long m_itemsProcessed;
+        private long m_itemsBeingProcessed;
+        private long m_totalProcessedItems;
+        private long m_totalFunctionCalls;
         private long m_startTime;
         private long m_stopTime;
         private string m_name;
@@ -955,24 +953,33 @@ namespace GSF.Collections
         /// <summary>
         /// Gets the total number of items currently being processed.
         /// </summary>
-        /// <returns>Total number of items currently being processed.</returns>
         public long ItemsBeingProcessed
         {
             get
             {
-                return m_itemsProcessing;
+                return m_itemsBeingProcessed;
             }
         }
 
         /// <summary>
         /// Gets the total number of items processed so far.
         /// </summary>
-        /// <returns>Total number of items processed so far.</returns>
         public long TotalProcessedItems
         {
             get
             {
-                return m_itemsProcessed;
+                return m_totalProcessedItems;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of calls to <see cref="ProcessItemFunction"/> or <see cref="ProcessItemsFunction"/>.
+        /// </summary>
+        public long TotalFunctionCalls
+        {
+            get
+            {
+                return m_totalFunctionCalls;
             }
         }
 
@@ -1073,8 +1080,8 @@ namespace GSF.Collections
                 statistics.ProcessTimeout = m_processTimeout;
                 statistics.ThreadingMode = ThreadingMode;
                 statistics.ActiveThreads = m_threadCount;
-                statistics.ItemsBeingProcessed = m_itemsProcessing;
-                statistics.TotalProcessedItems = m_itemsProcessed;
+                statistics.ItemsBeingProcessed = m_itemsBeingProcessed;
+                statistics.TotalProcessedItems = m_totalProcessedItems;
                 statistics.QueueCount = Count;
                 statistics.RunTime = RunTime;
 
@@ -1091,14 +1098,13 @@ namespace GSF.Collections
             {
                 StringBuilder status = new StringBuilder();
 
-                status.Append("       Queue processing is: ");
-                status.Append(m_enabled ? "Enabled" : "Disabled");
+                status.AppendFormat("       Queue processing is: {0}", m_enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
-                status.Append("  Current processing state: ");
-                status.Append(IsProcessing ? "Executing" : "Idle");
+                status.AppendFormat("  Current processing state: {0}", IsProcessing ? "Executing" : "Idle");
                 status.AppendLine();
+
                 status.Append("       Processing interval: ");
-                if (m_processingIsRealTime)
+                if (ProcessingIsRealTime)
                 {
                     status.Append("Real-time");
                 }
@@ -1108,8 +1114,9 @@ namespace GSF.Collections
                     status.Append(" milliseconds");
                 }
                 status.AppendLine();
+
                 status.Append("        Processing timeout: ");
-                if (m_processTimeout == Timeout.Infinite)
+                if (ProcessTimeout == Timeout.Infinite)
                 {
                     status.Append("Infinite");
                 }
@@ -1119,6 +1126,7 @@ namespace GSF.Collections
                     status.Append(" milliseconds");
                 }
                 status.AppendLine();
+
                 status.Append("      Queue threading mode: ");
                 if (ThreadingMode == QueueThreadingMode.Asynchronous)
                 {
@@ -1131,27 +1139,68 @@ namespace GSF.Collections
                     status.Append("Synchronous");
                 }
                 status.AppendLine();
+
                 status.Append("    Queue processing style: ");
                 status.Append(ProcessingStyle == QueueProcessingStyle.OneAtATime ? "One at a time" : "Many at once");
                 status.AppendLine();
-                status.Append("    Total process run time: ");
-                status.Append(RunTime.ToString());
+
+                status.AppendFormat("      Requeue on exception: {0}", RequeueOnException);
                 status.AppendLine();
-                status.Append("      Total active threads: ");
-                status.Append(m_threadCount);
+
+                if (RequeueOnException)
+                {
+                    status.AppendFormat(" Requeue mode on exception: {0}", RequeueModeOnException);
+                    status.AppendLine();
+                }
+
+                status.AppendFormat("       Requeue on time-out: {0}", RequeueOnTimeout);
                 status.AppendLine();
-                status.Append("   Queued items to process: ");
-                status.Append(Count);
+
+                if (RequeueOnTimeout)
+                {
+                    status.AppendFormat("  Requeue mode on time-out: {0}", RequeueModeOnTimeout);
+                    status.AppendLine();
+                }
+
+                status.AppendFormat("    Total process run time: {0}", RunTime.ToString(2));
                 status.AppendLine();
-                status.Append("     Items being processed: ");
-                status.Append(m_itemsProcessing);
+                status.AppendFormat("      Total active threads: {0:N0}", m_threadCount);
                 status.AppendLine();
-                status.Append("     Total items processed: ");
-                status.Append(m_itemsProcessed);
+                status.AppendFormat("   Queued items to process: {0:N0}", Count);
                 status.AppendLine();
+                status.AppendFormat("     Items being processed: {0:N0}", m_itemsBeingProcessed);
+                status.AppendLine();
+                status.AppendFormat("     Total items processed: {0:N0}", m_totalProcessedItems);
+                status.AppendLine();
+                status.AppendFormat("      Total function calls: {0:N0} to {1}", m_totalFunctionCalls, GetProcessingFunctionName());
+                status.AppendLine();
+
+                if (ProcessingStyle == QueueProcessingStyle.ManyAtOnce && m_totalFunctionCalls > 0)
+                {
+                    status.AppendFormat("   Average items processed: {0:R} per function call", Math.Round(m_totalProcessedItems / (double)m_totalFunctionCalls, 2));
+                    status.AppendLine();
+                }
 
                 return status.ToString();
             }
+        }
+
+        private string GetProcessingFunctionName()
+        {
+            string functionName = "undetermined";
+
+            if (ProcessingStyle == QueueProcessingStyle.OneAtATime)
+            {
+                if ((object)ProcessItemFunction != null && (object)ProcessItemFunction.Method != null)
+                    functionName = ProcessItemFunction.Method.Name.ToNonNullString(functionName);
+            }
+            else
+            {
+                if ((object)ProcessItemsFunction != null && (object)ProcessItemsFunction.Method != null)
+                    functionName = ProcessItemsFunction.Method.Name.ToNonNullString(functionName);
+            }
+
+            return functionName;
         }
 
         /// <summary>
@@ -1294,7 +1343,7 @@ namespace GSF.Collections
         {
             m_enabled = true;
             m_threadCount = 0;
-            m_itemsProcessed = 0;
+            m_totalProcessedItems = 0;
             m_stopTime = 0;
             m_startTime = DateTime.UtcNow.Ticks;
 
@@ -2696,7 +2745,8 @@ namespace GSF.Collections
             {
                 // Invokes user function to process item.
                 m_processItemFunction(item);
-                Interlocked.Increment(ref m_itemsProcessed);
+                Interlocked.Increment(ref m_totalProcessedItems);
+                Interlocked.Increment(ref m_totalFunctionCalls);
 
                 // Notifies consumers of successfully processed items.
                 OnItemProcessed(item);
@@ -2727,7 +2777,8 @@ namespace GSF.Collections
             {
                 // Invokes user function to process items.
                 m_processItemsFunction(items);
-                Interlocked.Add(ref m_itemsProcessed, items.Length);
+                Interlocked.Add(ref m_totalProcessedItems, items.Length);
+                Interlocked.Increment(ref m_totalFunctionCalls);
 
                 // Notifies consumers of successfully processed items.
                 OnItemsProcessed(items);
@@ -2807,7 +2858,7 @@ namespace GSF.Collections
                     if (CanProcessItem(nextItem))
                     {
                         Interlocked.Increment(ref m_threadCount);
-                        Interlocked.Increment(ref m_itemsProcessing);
+                        Interlocked.Increment(ref m_itemsBeingProcessed);
                         processingItem = true;
                     }
                     else
@@ -2866,7 +2917,7 @@ namespace GSF.Collections
                 if (processingItem)
                 {
                     Interlocked.Decrement(ref m_threadCount);
-                    Interlocked.Decrement(ref m_itemsProcessing);
+                    Interlocked.Decrement(ref m_itemsBeingProcessed);
                 }
             }
         }
@@ -2889,7 +2940,7 @@ namespace GSF.Collections
                     if (CanProcessItems(nextItems))
                     {
                         Interlocked.Increment(ref m_threadCount);
-                        Interlocked.Add(ref m_itemsProcessing, nextItems.Length);
+                        Interlocked.Add(ref m_itemsBeingProcessed, nextItems.Length);
                         processingItems = true;
                     }
                     else
@@ -2948,7 +2999,7 @@ namespace GSF.Collections
                 if (processingItems)
                 {
                     Interlocked.Decrement(ref m_threadCount);
-                    Interlocked.Add(ref m_itemsProcessing, -nextItems.Length);
+                    Interlocked.Add(ref m_itemsBeingProcessed, -nextItems.Length);
                 }
             }
         }

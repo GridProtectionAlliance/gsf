@@ -77,7 +77,7 @@ namespace GSF
         /// </summary>
         /// <param name="seconds">Number of seconds since 1/1/1970.</param>
         public UnixTimeTag(double seconds)
-            : base(UnixDateOffsetTicks, seconds)
+            : base(BaseTicks, seconds)
         {
         }
 
@@ -86,7 +86,7 @@ namespace GSF
         /// </summary>
         /// <param name="seconds">Number of seconds since 1/1/1970.</param>
         public UnixTimeTag(uint seconds)
-            : base(UnixDateOffsetTicks, (double)seconds)
+            : base(BaseTicks, (double)seconds)
         {
         }
 
@@ -98,7 +98,7 @@ namespace GSF
         /// This constructor will accept a <see cref="DateTime"/> parameter since <see cref="Ticks"/> is implicitly castable to a <see cref="DateTime"/>.
         /// </remarks>
         public UnixTimeTag(Ticks timestamp)
-            : base(UnixDateOffsetTicks, timestamp)
+            : base(BaseTicks, timestamp)
         {
         }
 
@@ -118,9 +118,13 @@ namespace GSF
 
         // Static Fields
 
-        // Unix dates are measured as the number of seconds since 1/1/1970, so this class calculates this
-        // date to get the offset in ticks for later conversion.
-        private static readonly long UnixDateOffsetTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
+        /// <summary>
+        /// Number of ticks since 1/1/1970.
+        /// </summary>
+        /// <remarks>
+        /// Unix dates are measured as the number of seconds since 1/1/1970.
+        /// </remarks>
+        public static readonly Ticks BaseTicks = (new DateTime(1970, 1, 1, 0, 0, 0)).Ticks;
 
         #endregion
     }

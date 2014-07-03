@@ -200,7 +200,7 @@ namespace GSF.TimeSeries.Adapters
 
                 if (RequestedOutputMeasurementKeys != null && RequestedOutputMeasurementKeys.Length > 0)
                 {
-                    status.AppendFormat("     Requested output keys: {0} defined measurements", RequestedOutputMeasurementKeys.Length);
+                    status.AppendFormat("     Requested output keys: {0:N0} defined measurements", RequestedOutputMeasurementKeys.Length);
                     status.AppendLine();
                     status.AppendLine();
 
@@ -218,8 +218,6 @@ namespace GSF.TimeSeries.Adapters
                 status.AppendFormat("    Connection established: {0}", IsConnected);
                 status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
-                status.AppendLine();
-                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
 
                 return status.ToString();

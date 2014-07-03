@@ -138,7 +138,7 @@ namespace GSF
         {
             get
             {
-                return GetNTPTimestampFromTicks(ToDateTime());
+                return FromTicks(ToDateTime());
             }
         }
 
@@ -148,14 +148,22 @@ namespace GSF
 
         // Static Fields
 
-        // NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this date to
-        // get offset in ticks for later conversion.
-        private static readonly long NtpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
+        /// <summary>
+        /// Number of ticks since 1/1/1900.
+        /// </summary>
+        /// <remarks>
+        /// NTP dates are measured as the number of seconds since 1/1/1900.
+        /// </remarks>
+        public static readonly Ticks BaseTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
 
-        // According to RFC-2030, NTP dates can also be measured as the number of seconds since 2/7/2036
-        // at 6h 28m 16s UTC if MSB is set, so we also calculate this date to get offset in ticks for
-        // later conversion as well.
-        private static readonly long NtpDateOffsetTicksAlt = (new DateTime(2036, 2, 7, 6, 28, 16)).Ticks;
+        /// <summary>
+        /// Number of ticks since since 2/7/2036 at 6h 28m 16s UTC when MSB is set.
+        /// </summary>
+        /// <remarks>
+        /// According to RFC-2030, NTP dates can also be measured as the number of seconds since 2/7/2036
+        /// at 6h 28m 16s UTC if MSB is set.
+        /// </remarks>
+        public static readonly Ticks AlternateBaseTicks = (new DateTime(2036, 2, 7, 6, 28, 16)).Ticks;
 
         // Static Methods
 
@@ -164,7 +172,7 @@ namespace GSF
         /// </summary>
         /// <param name="seconds">Seconds value.</param>
         /// <returns>Proper NTP offset.</returns>
-        protected static long GetBaseDateOffsetTicks(double seconds)
+        public static long GetBaseDateOffsetTicks(double seconds)
         {
             return GetBaseDateOffsetTicks(Ticks.FromSeconds(seconds));
         }
@@ -174,12 +182,12 @@ namespace GSF
         /// </summary>
         /// <param name="timestamp"><see cref="Ticks"/> timestamp value.</param>
         /// <returns>Proper NTP offset.</returns>
-        protected static long GetBaseDateOffsetTicks(Ticks timestamp)
+        public static long GetBaseDateOffsetTicks(Ticks timestamp)
         {
-            if (timestamp < NtpDateOffsetTicksAlt)
-                return NtpDateOffsetTicks;
+            if (timestamp < AlternateBaseTicks)
+                return BaseTicks;
 
-            return NtpDateOffsetTicksAlt;
+            return AlternateBaseTicks;
         }
 
         /// <summary>
@@ -187,12 +195,12 @@ namespace GSF
         /// </summary>
         /// <param name="seconds">NTP seconds timestamp value.</param>
         /// <returns>Proper NTP offset.</returns>
-        protected static long GetBaseDateOffsetTicks(uint seconds)
+        public static long GetBaseDateOffsetTicks(uint seconds)
         {
             if ((seconds & 0x80000000) > 0)
-                return NtpDateOffsetTicks;
+                return BaseTicks;
 
-            return NtpDateOffsetTicksAlt;
+            return AlternateBaseTicks;
         }
 
         /// <summary>
@@ -200,7 +208,7 @@ namespace GSF
         /// </summary>
         /// <param name="timestamp">Timestamp in <see cref="Ticks"/>.</param>
         /// <returns>Seconds in NTP from given <paramref name="timestamp"/>.</returns>
-        protected static ulong GetNTPTimestampFromTicks(Ticks timestamp)
+        public static ulong FromTicks(Ticks timestamp)
         {
             timestamp -= GetBaseDateOffsetTicks(timestamp);
 

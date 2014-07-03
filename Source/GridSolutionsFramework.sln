@@ -283,9 +283,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WPF", "WPF", "{954399E1-542
 		Dependencies\Microsoft\WPF\WPFToolkit.dll = Dependencies\Microsoft\WPF\WPFToolkit.dll
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfluxDBAdapters", "Libraries\Adapters\InfluxDBAdapters\InfluxDBAdapters.csproj", "{FC374324-D282-49B1-A189-01339542512D}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 82
+		SccNumberOfProjects = 83
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -613,6 +615,10 @@ Global
 		SccProjectTopLevelParentUniqueName81 = GridSolutionsFramework.sln
 		SccProjectName81 = Applications/LibraryTester
 		SccLocalPath81 = Applications\\LibraryTester
+		SccProjectUniqueName82 = Libraries\\Adapters\\InfluxDBAdapters\\InfluxDBAdapters.csproj
+		SccProjectTopLevelParentUniqueName82 = GridSolutionsFramework.sln
+		SccProjectName82 = Libraries/Adapters/InfluxDBAdapters
+		SccLocalPath82 = Libraries\\Adapters\\InfluxDBAdapters
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = GSF.Core.Tests.vsmdi
@@ -1477,6 +1483,15 @@ Global
 		{5A047659-4C24-4B72-A9F3-6553D91F95DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A047659-4C24-4B72-A9F3-6553D91F95DC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5A047659-4C24-4B72-A9F3-6553D91F95DC}.Release|x86.ActiveCfg = Release|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Mono|Any CPU.ActiveCfg = Release|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Mono|Any CPU.Build.0 = Release|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Mono|x86.ActiveCfg = Release|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC374324-D282-49B1-A189-01339542512D}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1581,6 +1596,7 @@ Global
 		{8A1BCFAA-19E8-408A-8C72-170B1211DC27} = {CD3C7F74-B7F2-422F-8417-1E9045155352}
 		{8BDA86DB-B944-4880-9D97-E4FF04577C03} = {CD3C7F74-B7F2-422F-8417-1E9045155352}
 		{3FD4D092-3E0F-41C1-BE8A-E0A924E76039} = {CD3C7F74-B7F2-422F-8417-1E9045155352}
+		{FC374324-D282-49B1-A189-01339542512D} = {CD3C7F74-B7F2-422F-8417-1E9045155352}
 		{7FB89A9F-D6FD-46CD-960A-7A9E90D82C2C} = {78C67B09-D6EB-4A79-A591-47146025A277}
 		{E4120DD8-64F7-4D60-8B41-F2FDC27CC708} = {78C67B09-D6EB-4A79-A591-47146025A277}
 		{F68BED5B-410C-4D02-87C0-8AC74E374821} = {78C67B09-D6EB-4A79-A591-47146025A277}
