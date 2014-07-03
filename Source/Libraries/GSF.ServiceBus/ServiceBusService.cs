@@ -432,7 +432,7 @@ namespace GSF.ServiceBus
     /// <seealso cref="RegistrationInfo"/>
     /// <seealso cref="RegistrationRequest"/>
     /// <seealso cref="ServiceBusSecurityPolicy"/>
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, UseSynchronizationContext = false)]
     public class ServiceBusService : SelfHostingService, IServiceBusService
     {
         #region [ Members ]
