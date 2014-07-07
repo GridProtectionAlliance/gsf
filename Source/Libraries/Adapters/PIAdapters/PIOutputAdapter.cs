@@ -505,7 +505,7 @@ namespace PIAdapters
 
             // We use dictionaries to create grouping constructs whereby each PI connection will have its own set of points
             // and associated values so that archive operations for each PI connection can be processed in parallel
-            ConcurrentDictionary<PIConnection, Dictionary<PIPoint, PIValues>> connectionPointValues = new ConcurrentDictionary<PIConnection, Dictionary<PIPoint, PIValues>>();
+            ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, PIValues>> connectionPointValues = new ConcurrentDictionary<PIConnection, ConcurrentDictionary<PIPoint, PIValues>>();
             ConnectionPoint connectionPoint;
 
             // Handle measurement grouping and mapping operations in parallel
@@ -549,14 +549,15 @@ namespace PIAdapters
                     {
                         PIConnection connection = connectionPoint.Item1;
                         PIPoint point = connectionPoint.Item2;
-                        DateTime timestamp = new DateTime(measurement.Timestamp).ToLocalTime();
-                        double value = measurement.AdjustedValue;
 
-                        // Get PI values collection for this connection point
-                        Dictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connection, c => new Dictionary<PIPoint, PIValues>());
-
-                        connection.Execute(server =>
+                        if ((object)connection != null && (object)point != null)
                         {
+                            DateTime timestamp = new DateTime(measurement.Timestamp).ToLocalTime();
+                            double value = measurement.AdjustedValue;
+
+                            // Get PI values collection for this connection point
+                            ConcurrentDictionary<PIPoint, PIValues> pointValues = connectionPointValues.GetOrAdd(connection, c => new ConcurrentDictionary<PIPoint, PIValues>());
+
                             PIValues values = pointValues.GetOrAdd(point, p => new PIValues()
                             {
                                 ReadOnly = false
@@ -564,7 +565,7 @@ namespace PIAdapters
 
                             // Add measurement value to PI values collection
                             values.Add(timestamp, value, null);
-                        });
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -576,23 +577,26 @@ namespace PIAdapters
             // Handle inserts for each PI connection in parallel - note each connection performs these steps in their own STA space
             Parallel.ForEach(connectionPointValues, connectionPointValue => connectionPointValue.Key.Execute(server =>
             {
-                Dictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
+                ConcurrentDictionary<PIPoint, PIValues> pointValues = connectionPointValue.Value;
 
                 foreach (KeyValuePair<PIPoint, PIValues> pointValue in pointValues)
                 {
                     PIPoint point = pointValue.Key;
                     PIValues values = pointValue.Value;
 
-                    try
+                    if ((object)point != null && (object)values != null)
                     {
-                        // Add values for current PI point
-                        point.Data.UpdateValues(values);
-                        m_processedMeasurements += values.Count;
-                    }
-                    catch (Exception ex)
-                    {
-                        // Raise event in MTA space
-                        ThreadPool.QueueUserWorkItem(state => OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point values for tag '{0}': {1}", point.Name, ex.Message), ex)));
+                        try
+                        {
+                            // Add values for current PI point
+                            point.Data.UpdateValues(values);
+                            m_processedMeasurements += values.Count;
+                        }
+                        catch (Exception ex)
+                        {
+                            // Raise event in MTA space
+                            ThreadPool.QueueUserWorkItem(state => OnProcessException(new InvalidOperationException(string.Format("Failed to archive OSI-PI point values for tag '{0}': {1}", point.Name, ex.Message), ex)));
+                        }
                     }
                 }
             }));
@@ -605,6 +609,10 @@ namespace PIAdapters
 
             foreach (MeasurementKey key in keys)
             {
+                // If adapter gets disabled while executing this thread - go ahead and exit
+                if (!Enabled)
+                    return;
+
                 try
                 {
                     connectionPoint = CreateMappedConnectionPoint(connection, key);

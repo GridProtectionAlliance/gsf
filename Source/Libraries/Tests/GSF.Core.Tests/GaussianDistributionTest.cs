@@ -23,6 +23,7 @@
 
 using System.Text;
 using System.Windows.Forms;
+using GSF.NumericalAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace GSF.Core.Tests

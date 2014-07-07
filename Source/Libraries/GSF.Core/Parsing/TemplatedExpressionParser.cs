@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using ParsedExpression = System.Tuple<string, bool, string>;
 
 namespace GSF.Parsing
 {
@@ -263,10 +264,10 @@ namespace GSF.Parsing
             if (evaluateExpressions)
             {
                 // Parse expressions
-                List<Tuple<string, bool, string>> parsedExpressions = ParseExpressions(result, ignoreCase);
+                List<ParsedExpression> parsedExpressions = ParseExpressions(result, ignoreCase);
 
                 // Execute expression replacements
-                foreach (Tuple<string, bool, string> parsedExpression in parsedExpressions)
+                foreach (ParsedExpression parsedExpression in parsedExpressions)
                 {
                     result = result.Replace(parsedExpression.Item1, parsedExpression.Item2 ? parsedExpression.Item3 : "");
                 }
@@ -283,9 +284,9 @@ namespace GSF.Parsing
 
         // Parses expressions of the form "[?expression[result]]". Expressions can be nested, e.g., "[?expression1[?expression2[result]]]".
         // Returns list of complete expressions (used as base replacement text), cumulative boolean expression evaluations and expression results
-        private List<Tuple<string, bool, string>> ParseExpressions(string fieldReplacedTemplatedExpression, bool ignoreCase)
+        private List<ParsedExpression> ParseExpressions(string fieldReplacedTemplatedExpression, bool ignoreCase)
         {
-            List<Tuple<string, bool, string>> parsedExpressions = new List<Tuple<string, bool, string>>();
+            List<ParsedExpression> parsedExpressions = new List<ParsedExpression>();
 
             // Find all expressions using regular expression
             Match match = m_expressionParser.Match(fieldReplacedTemplatedExpression);
@@ -382,7 +383,7 @@ namespace GSF.Parsing
                             completeExpression.Append(new string(m_endExpressionDelimiter, depth));
 
                             // Add complete expression, cumulative boolean expression evaluation and expression result to parsed expression list
-                            parsedExpressions.Add(new Tuple<string, bool, string>(completeExpression.ToString(), evaluations.All(item => item), capture.Value.Substring(1)));
+                            parsedExpressions.Add(new ParsedExpression(completeExpression.ToString(), evaluations.All(item => item), capture.Value.Substring(1)));
 
                             // Reset for next expression
                             depth = 0;

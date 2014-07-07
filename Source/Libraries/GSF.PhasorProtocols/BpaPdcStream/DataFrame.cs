@@ -449,7 +449,7 @@ namespace GSF.PhasorProtocols.BPAPDCstream
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
             // PDCstream uses a 16-bit XOR based check sum
-            return buffer.Xor16CheckSum(offset, length);
+            return buffer.Xor16Checksum(offset, length);
         }
 
         /// <summary>

@@ -194,7 +194,7 @@ namespace PIAdapters
         /// <exception cref="InvalidOperationException">Failed to get a pooled PI connection.</exception>
         public PIConnection GetPooledConnection(string serverName, string userName = null, string password = null, int connectTimeout = PIConnection.DefaultConnectTimeout)
         {
-            PIConnection connection;
+            PIConnection connection = null;
 
             // We dynamically allocate pooled PI server connections each having a maximum accessibility count.
             // PI's threading model can handle many connections each archiving a small volume of points, but
@@ -204,7 +204,13 @@ namespace PIAdapters
                 lock (m_connectionPool)
                 {
                     // Get next connection from the pool with lowest accessibility count
-                    connection = m_connectionPool.Where(c => c.AccessCount < m_accessCountPerConnection).Aggregate((currentMin, nextItem) => currentMin.AccessCount < nextItem.AccessCount ? currentMin : nextItem);
+                    if (m_connectionPool.Count > 0)
+                    {
+                        PIConnection[] availableConnections = m_connectionPool.Where(c => c.AccessCount < m_accessCountPerConnection).ToArray();
+
+                        if (availableConnections.Length > 0)
+                            connection = availableConnections.Aggregate((currentMin, nextItem) => (object)nextItem != null && currentMin.AccessCount < nextItem.AccessCount ? currentMin : nextItem);
+                    }
 
                     if ((object)connection == null)
                     {

@@ -257,7 +257,7 @@ namespace GSF.PhasorProtocols.Macrodyne
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
             // Macrodyne uses 8-bit Xor checksum for frames
-            return (ushort)buffer.Xor8CheckSum(offset, length);
+            return (ushort)buffer.Xor8Checksum(offset, length);
         }
 
         /// <summary>

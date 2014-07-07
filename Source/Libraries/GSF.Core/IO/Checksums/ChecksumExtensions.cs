@@ -118,7 +118,7 @@ namespace GSF.IO.Checksums
         /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
         /// perform XOR check-sum over.</param>
         /// <returns>Byte length XOR check-sum.</returns>
-        public static byte Xor8CheckSum(this byte[] data, int startIndex, int length)
+        public static byte Xor8Checksum(this byte[] data, int startIndex, int length)
         {
             Xor8 checksum = new Xor8();
 
@@ -133,7 +133,7 @@ namespace GSF.IO.Checksums
         /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
         /// perform XOR check-sum overs</param>
         /// <returns>Word length XOR check-sum.</returns>
-        public static ushort Xor16CheckSum(this byte[] data, int startIndex, int length)
+        public static ushort Xor16Checksum(this byte[] data, int startIndex, int length)
         {
             Xor16 checksum = new Xor16();
 
@@ -148,7 +148,7 @@ namespace GSF.IO.Checksums
         /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
         /// perform XOR check-sum over.</param>
         /// <returns>Double-word length XOR check-sum.</returns>
-        public static uint Xor32CheckSum(this byte[] data, int startIndex, int length)
+        public static uint Xor32Checksum(this byte[] data, int startIndex, int length)
         {
             Xor32 checksum = new Xor32();
 
@@ -163,7 +163,7 @@ namespace GSF.IO.Checksums
         /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
         /// perform XOR check-sum over.</param>
         /// <returns>Quad-word length XOR check-sum.</returns>
-        public static ulong Xor64CheckSum(this byte[] data, int startIndex, int length)
+        public static ulong Xor64Checksum(this byte[] data, int startIndex, int length)
         {
             Xor64 checksum = new Xor64();
 

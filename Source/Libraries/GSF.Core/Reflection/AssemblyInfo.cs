@@ -55,7 +55,9 @@ using GSF.IO;
 
 namespace GSF.Reflection
 {
-    /// <summary>Assembly Information Class.</summary>
+    /// <summary>
+    /// Represents a common information provider for an assembly.
+    /// </summary>
     public class AssemblyInfo
     {
         #region [ Members ]
@@ -97,10 +99,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyTitleAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -112,10 +115,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyDescriptionAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -127,10 +131,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyCompanyAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -142,10 +147,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyProductAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -157,10 +163,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyCopyrightAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -172,10 +179,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyTrademarkAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -187,10 +195,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyConfigurationAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -202,10 +211,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyDelaySignAttribute));
+
                 if ((object)attribute == null)
                     return false;
-                else
-                    return (bool)attribute.ConstructorArguments[0].Value;
+
+                return (bool)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -217,10 +227,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -232,10 +243,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyKeyFileAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -247,10 +259,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(NeutralResourcesLanguageAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -263,10 +276,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(SatelliteContractVersionAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -279,13 +293,14 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(ComCompatibleVersionAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return attribute.ConstructorArguments[0].Value + "." +
-                           attribute.ConstructorArguments[1].Value + "." +
-                           attribute.ConstructorArguments[2].Value + "." +
-                           attribute.ConstructorArguments[3].Value;
+
+                return attribute.ConstructorArguments[0].Value + "." +
+                       attribute.ConstructorArguments[1].Value + "." +
+                       attribute.ConstructorArguments[2].Value + "." +
+                       attribute.ConstructorArguments[3].Value;
             }
         }
 
@@ -297,10 +312,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(ComVisibleAttribute));
+
                 if ((object)attribute == null)
                     return false;
-                else
-                    return (bool)attribute.ConstructorArguments[0].Value;
+
+                return (bool)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -312,10 +328,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(GuidAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return (string)attribute.ConstructorArguments[0].Value;
+
+                return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -327,11 +344,12 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(TypeLibVersionAttribute));
+
                 if ((object)attribute == null)
                     return string.Empty;
-                else
-                    return attribute.ConstructorArguments[0].Value + "." +
-                           attribute.ConstructorArguments[1].Value;
+
+                return attribute.ConstructorArguments[0].Value + "." +
+                       attribute.ConstructorArguments[1].Value;
             }
         }
 
@@ -343,10 +361,11 @@ namespace GSF.Reflection
             get
             {
                 CustomAttributeData attribute = GetCustomAttribute(typeof(CLSCompliantAttribute));
+
                 if ((object)attribute == null)
                     return false;
-                else
-                    return (bool)attribute.ConstructorArguments[0].Value;
+
+                return (bool)attribute.ConstructorArguments[0].Value;
             }
         }
 
@@ -541,14 +560,29 @@ namespace GSF.Reflection
                     StackTrace trace = new StackTrace();
                     Assembly caller = Assembly.GetCallingAssembly();
                     Assembly current = Assembly.GetExecutingAssembly();
-                    foreach (StackFrame frame in trace.GetFrames())
+
+                    StackFrame[] stackFrames = trace.GetFrames();
+
+                    if ((object)stackFrames != null)
                     {
-                        Assembly assembly = Assembly.GetAssembly(frame.GetMethod().DeclaringType);
-                        if (assembly != caller && assembly != current)
+                        foreach (StackFrame frame in stackFrames)
                         {
-                            // Assembly is neither the current assembly or the calling assembly.
-                            s_callingAssembly = new AssemblyInfo(assembly);
-                            break;
+                            if ((object)frame != null)
+                            {
+                                MethodBase method = frame.GetMethod();
+
+                                if ((object)method != null && (object)method.DeclaringType != null)
+                                {
+                                    Assembly assembly = Assembly.GetAssembly(method.DeclaringType);
+
+                                    if (assembly != caller && assembly != current)
+                                    {
+                                        // Assembly is neither the current assembly or the calling assembly.
+                                        s_callingAssembly = new AssemblyInfo(assembly);
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -627,13 +661,19 @@ namespace GSF.Reflection
                     {
                         // If so, loads embedded resource assembly into a binary buffer.
                         Stream resourceStream = Assembly.GetEntryAssembly().GetManifestResourceStream(name);
-                        byte[] buffer = new byte[resourceStream.Length];
-                        resourceStream.Read(buffer, 0, (int)resourceStream.Length);
-                        resourceStream.Close();
 
-                        // Loads assembly from binary buffer.
-                        resourceAssembly = Assembly.Load(buffer);
-                        s_assemblyCache.Add(shortName, resourceAssembly);
+                        if ((object)resourceStream != null)
+                        {
+                            byte[] buffer = new byte[resourceStream.Length];
+                            resourceStream.Read(buffer, 0, (int)resourceStream.Length);
+                            resourceStream.Close();
+
+                            // Loads assembly from binary buffer.
+                            resourceAssembly = Assembly.Load(buffer);
+
+                            // Add assembly to the cache
+                            s_assemblyCache.Add(shortName, resourceAssembly);
+                        }
                         break;
                     }
                 }
