@@ -27,6 +27,7 @@
 
 using System;
 using System.Text;
+using GSF.IO;
 using GSF.Parsing;
 
 namespace GSF.PhasorProtocols.SelFastMessage
@@ -141,7 +142,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
                 StringBuilder status = new StringBuilder();
 
                 status.Append("    Defined message period: ");
-                status.Append(m_messagePeriod.ToString());
+                status.Append(m_messagePeriod);
                 status.AppendLine();
                 status.Append(base.Status);
 
@@ -244,6 +245,46 @@ namespace GSF.PhasorProtocols.SelFastMessage
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Queues a sequence of bytes, from the specified data source, onto the stream for parsing.
+        /// </summary>
+        /// <param name="source">Identifier of the data source.</param>
+        /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the queue.</param>
+        /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
+        /// <param name="count">The number of bytes to be written to the current stream.</param>
+        public override void Parse(SourceChannel source, byte[] buffer, int offset, int count)
+        {
+            // When SEL Fast Message is transmitted over Ethernet it is embedded in a Telnet stream. As a result
+            // any 0xFF will be encoded for Telnet compliance as a duplicate, i.e., 0xFF 0xFF. We remove these
+            // duplications when encountered to make sure check-sums and parsing work as expected.
+            int doubleFFPosition = buffer.IndexOfSequence(new byte[] { 0xFF, 0xFF }, offset, count);
+
+            while (doubleFFPosition > -1)
+            {
+                using (BlockAllocatedMemoryStream newBuffer = new BlockAllocatedMemoryStream())
+                {
+                    // Write buffer before repeated byte
+                    newBuffer.Write(buffer, offset, doubleFFPosition - offset + 1);
+
+                    int nextByte = doubleFFPosition + 2;
+
+                    // Write buffer after repeated byte, if any
+                    if (nextByte < offset + count)
+                        newBuffer.Write(buffer, nextByte, offset + count - nextByte);
+
+                    buffer = newBuffer.ToArray();
+                }
+
+                offset = 0;
+                count = buffer.Length;
+
+                // Find next 0xFF 0xFF sequence
+                doubleFFPosition = buffer.IndexOfSequence(new byte[] { 0xFF, 0xFF }, offset, count);
+            }
+
+            base.Parse(source, buffer, offset, count);
         }
 
         /// <summary>
