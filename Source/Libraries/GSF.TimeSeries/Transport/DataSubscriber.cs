@@ -2618,15 +2618,18 @@ namespace GSF.TimeSeries.Transport
                                     m_dataStreamMonitor.Enabled = true;
 
                                 // Establish run-time log for subscriber
-                                if ((object)m_runTimeLog == null)
+                                if (m_autoConnect || m_dataGapRecoveryEnabled)
                                 {
-                                    m_runTimeLog = new RunTimeLog();
-                                    m_runTimeLog.FileName = Name + "_RunTimeLog.txt";
-                                    m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
-                                }
+                                    if ((object)m_runTimeLog == null)
+                                    {
+                                        m_runTimeLog = new RunTimeLog();
+                                        m_runTimeLog.FileName = Name + "_RunTimeLog.txt";
+                                        m_runTimeLog.ProcessException += m_runTimeLog_ProcessException;
+                                    }
 
-                                // Mark the start of any data transmissions
-                                m_runTimeLog.Initialize();
+                                    // Mark the start of any data transmissions
+                                    m_runTimeLog.Initialize();
+                                }
 
                                 // The duration between last disconnection and start of data transmissions
                                 // represents a gap in data - if data gap recovery is enabled, we log
